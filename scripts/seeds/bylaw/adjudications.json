@@ -79773,6 +79773,58 @@
         "secondary_suite": "a residential building with a secondary suite",
         "semi_detached_houseplex": "semi-detached houseplex or a residential building"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.8.60.20(3)#(3)(C)/target",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": "upper_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.8.60.20(3)#(3)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": [
+        "upper_side_setback_m = 1.5 m @(3)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.8.60.20(3)#(3)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m. Class data (M-177(1)): no user input.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": {
+        "description": "If the side lot line abuts a lot in the R, RD, RS, RT or RM zone and the rear lot line abuts a lane, the part of the laneway-suite building above a height of 4.0 m must be set back 1.5 m from a side lot line that abuts the rear lot line of another lot.",
+        "gaps": "Layer 2 answers the 1.5 m upper side setback of the part above 4.0 m (upper_side_setback_m); Layer 3 draws the step-back over the 1.0 m side setback below (Spec 78 P5.5). Which side line abuts another lot's rear lot line, and that lot's zone, have no tokens (lot-line classification, Spec 78 P5.14 ML-1): the step-back is applied on the lane lot as the larger setback (M-198, M-197).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.20(3)#(3)(C)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m. The \"tell us\" sentence predates M-177(1) (class data, no user input).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75; Spec 78 P5.12 laneway_upper_side_stepback",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m."
     }
   ]
 }

@@ -95,6 +95,12 @@
       "concept": "minimum distance the front and rear main walls above the main-wall height limit are set back from the front and rear main walls below (flat or shallow roof); only the storey above the limit is set back, the storeys below are unchanged (Spec 69a M-223(3), M-218; operator 2026-10-19 Q-M218)",
       "patterns": ["additional front main walls and rear main walls"]
     },
+    "upper_side_setback_m": {
+      "unit": "m",
+      "aspect": "envelope",
+      "concept": "minimum setback from a side lot line of the portion of a building above a stated height; the building below keeps its own side setback (side_setback_m), and Layer 3 draws the step-back (150.8.60.20(3)(C): a laneway suite, 1.5 m from the side lot line abutting another lot's rear lot line, beginning from a height of 4.0 m; Spec 69a M-198(4), M-219; operator chat 2026-10-20 CHAT-7)",
+      "patterns": ["beginning from a height of"]
+    },
     "roof_slope_max": {
       "unit": "ratio",
       "aspect": "envelope",

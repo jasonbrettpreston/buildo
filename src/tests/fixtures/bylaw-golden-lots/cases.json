@@ -38720,7 +38720,7 @@
     "owed": [
      "suite classes and the applies() suite match (M-182, M-177) — P2-10 / by-law keying/evaluator lane",
      "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1) — Spec 130 lane / enrich_centreline WF3",
-     "M-219 remainder: 150.8.60.20(3)(C) is keyed as a whole-building 1.5 m side setback on a lane lot, so Layer 2 answers 1.5 m where (3)(D) gives 1.0 m below 4.0 m (M-198(4) step-back; ruling drafted 2026-10-20) — by-law keying/evaluator lane"
+     "the laneway step-back geometry: 150.8.60.20(3)(C) upper_side_setback_m 1.5 m above 4.0 m over the (3)(D) 1.0 m side setback (Spec 69a M-236, CHAT-7; M-198(4)) — compute_maxbld_scenarios ① (Spec 78 P5.5)"
     ],
     "regulation_ids": 3
    }
@@ -38785,7 +38785,7 @@
     "owed": [
      "suite classes and the applies() suite match (M-182, M-177) — P2-10 / by-law keying/evaluator lane",
      "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1) — Spec 130 lane / enrich_centreline WF3",
-     "M-219 remainder: 150.8.60.20(3)(C) is keyed as a whole-building 1.5 m side setback on a lane lot, so Layer 2 answers 1.5 m where (3)(D) gives 1.0 m below 4.0 m (M-198(4) step-back; ruling drafted 2026-10-20) — by-law keying/evaluator lane"
+     "the laneway step-back geometry: 150.8.60.20(3)(C) upper_side_setback_m 1.5 m above 4.0 m over the (3)(D) 1.0 m side setback (Spec 69a M-236, CHAT-7; M-198(4)) — compute_maxbld_scenarios ① (Spec 78 P5.5)"
     ],
     "regulation_ids": 3
    }
@@ -56341,7 +56341,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `laneway_upper_side_stepback`)",
-   "keyed_disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "keyed_disclosure": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -56403,7 +56403,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `laneway_upper_side_stepback`)",
-   "keyed_disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "keyed_disclosure": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -56465,7 +56465,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `laneway_upper_side_stepback`)",
-   "keyed_disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "keyed_disclosure": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -56527,7 +56527,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `laneway_upper_side_stepback`)",
-   "keyed_disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "keyed_disclosure": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -56589,7 +56589,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `laneway_upper_side_stepback`)",
-   "keyed_disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "keyed_disclosure": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {

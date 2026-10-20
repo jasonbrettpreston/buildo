@@ -157,3 +157,34 @@ describe('CHAT-6 — 150.7.60.20(6)(A) closes on M-198 (M-193 dropped as a mis-c
     expect([row.state, row.fix_ids]).toEqual(['INCORPORATED', ['M-198']]);
   });
 });
+
+// CHAT-7 (operator chat 2026-10-20, approve: "Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target
+// (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the
+// step-back geometry"). M-198(4): (3)(C) is a mandatory upper-storey rule; M-219 remainder: it was keyed as the whole
+// building's side_setback_m, so a lane lot answered 1.5 m where (3)(D) gives 1.0 m.
+describe('CHAT-7 / M-198(4) / M-219 — the laneway 1.5 m step-back above 4.0 m is upper_side_setback_m; the side setback stays 1.0 m', () => {
+  it('upper_side_setback_m is a vocab dsl_target in metres', () => {
+    expect(I.vocab.dsl_target.upper_side_setback_m?.unit).toBe('m');
+  });
+  it('150.8.60.20(3)(C) is keyed on upper_side_setback_m, laneway suite only', () => {
+    const u = unitOf('150.8.60.20(3)#(3)(C)');
+    expect([u.target, u.numeric_expression, u.application.building_types]).toEqual(['upper_side_setback_m', ['upper_side_setback_m = 1.5 m @(3)(C)'], ['laneway_suite']]);
+  });
+  it('a 6.3 m laneway suite on a lane lot: side setback 1.0 m from (3)(D), upper side setback 1.5 m from (3)(C)', () => {
+    for (const zone of ZONES) {
+      const l = lot(zone, 'laneway_suite', { flags: { abuts_lane: true }, vars: { proposed_height_m: 6.3 } });
+      const side = eff(l, 'side_setback_m');
+      expect([zone, side.value, side.winner]).toEqual([zone, 1, '150.8.60.20(3)#(3)(D)']);
+      const up = eff(l, 'upper_side_setback_m');
+      expect([zone, up.value, up.winner]).toEqual([zone, 1.5, '150.8.60.20(3)#(3)(C)']);
+    }
+  });
+  it('a 4.0 m laneway suite has no step-back; no house or garden suite takes one', () => {
+    const low = eff(lot('R', 'laneway_suite', { flags: { abuts_lane: true }, vars: { proposed_height_m: 4 } }), 'upper_side_setback_m');
+    expect(touched(low)).not.toContain('150.8.60.20(3)#(3)(C)');
+    for (const bt of ['detached_house', 'garden_suite', 'ancillary_building']) {
+      const r = eff(lot('R', bt, { flags: { abuts_lane: true }, vars: { proposed_height_m: 6.3 } }), 'upper_side_setback_m');
+      expect([bt, touched(r)]).toEqual([bt, []]);
+    }
+  });
+});
