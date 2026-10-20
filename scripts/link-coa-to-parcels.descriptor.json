@@ -255,7 +255,7 @@
         "text": "Ruling 1 (LCTP-D3/D6/D7): every eligible CoA is re-matched every run; departed pairs and vanished leads are retracted; coa_applications is written only for a CoA whose link changed this run, so a never-linked no-match CoA keeps parcel_linked_at unset and the 3,773 already-stamped no-match CoAs keep their stamp until their link changes. Declared consumer effect: assert_global_coverage's coa_step4_parcel_linked_at population stops growing with no-match CoAs.",
         "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
       },
-      "adjudicated_by": "Operator y 2026-10-18, wave-4 plan question 10 (assessment §12 ruling 1)",
+      "adjudicated_by": "Operator y 2026-10-18, wave-4 plan question 10 (assessment §12 ruling 1) [register: Spec 124 R-GN; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-18"
     },
     {
@@ -264,7 +264,7 @@
         "text": "Ruling 2 (LCTP-D4): set-based fail_fast; the runner owns the batch transaction and one bad row fails the step with its key in the error. The per_row_errors row is retired with the mechanism.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
       },
-      "adjudicated_by": "Operator y 2026-10-18, wave-4 plan question 10 (assessment §12 ruling 2)",
+      "adjudicated_by": "Operator y 2026-10-18, wave-4 plan question 10 (assessment §12 ruling 2) [register: Spec 124 R-GN; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-18"
     },
     {

@@ -757,7 +757,7 @@
           "ref": "docs/specs/01-pipeline/runbooks/83_archetype_cost_rollback.md"
         }
       },
-      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
+      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md) [register: Spec 124 R-GO; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-18"
     },
     {

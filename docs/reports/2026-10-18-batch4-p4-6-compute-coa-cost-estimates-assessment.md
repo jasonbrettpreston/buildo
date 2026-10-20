@@ -343,7 +343,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md`; this list is the 
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=28995B notes=2001B checks=2 rows records_meta=(no capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=29057B notes=2001B checks=2 rows records_meta=(no capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 

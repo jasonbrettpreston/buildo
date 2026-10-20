@@ -261,7 +261,7 @@ The coa target runs the same module, so its purity rows are the twin's §8 (G1 c
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=112448B notes=7903B checks=55 rows records_meta=(no capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=112510B notes=7903B checks=55 rows records_meta=(no capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 
