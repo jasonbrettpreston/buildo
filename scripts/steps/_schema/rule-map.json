@@ -4915,27 +4915,27 @@
     {
       "id": "R-J",
       "class": "none",
-      "reason": "none: none (document governance)"
+      "reason": "no machine check: document governance"
     },
     {
       "id": "R-N",
       "class": "none",
-      "reason": "none: none named (commit e01cad11)"
+      "reason": "no lock named (commit e01cad11)"
     },
     {
       "id": "R-O",
       "class": "none",
-      "reason": "none: none (assessment-report narrative only)"
+      "reason": "no machine check: assessment-report narrative only"
     },
     {
       "id": "R-AB",
       "class": "none",
-      "reason": "none: none (cloud acceptance procedure)"
+      "reason": "no machine check: cloud acceptance procedure"
     },
     {
       "id": "R-BT",
       "class": "none",
-      "reason": "none: none — \"no lock yet — PLANNED with the step\" (124a:237)"
+      "reason": "no lock: \"no lock yet — PLANNED with the step\" (124a:237)"
     },
     {
       "id": "R-BY",
@@ -4985,17 +4985,17 @@
     {
       "id": "Rule-10-addendum-R-H",
       "class": "none",
-      "reason": "none: none for INFO-vs-WARN (GAP G-5)"
+      "reason": "no machine check for INFO-vs-WARN (GAP G-5)"
     },
     {
       "id": "P4-1",
       "class": "none",
-      "reason": "none: none (procedural)"
+      "reason": "no machine check: procedural"
     },
     {
       "id": "P4-2",
       "class": "none",
-      "reason": "none: none machine-checked except R-EZ commit-msg citation for integrate branches"
+      "reason": "no machine check except R-EZ commit-msg citation for integrate branches"
     },
     {
       "id": "P4-4",
@@ -5005,17 +5005,17 @@
     {
       "id": "P4-6",
       "class": "none",
-      "reason": "none: none (G9 checks the Reflection section exists)"
+      "reason": "no machine check: G9 checks the Reflection section exists"
     },
     {
       "id": "L7-0",
       "class": "none",
-      "reason": "none: none"
+      "reason": "no machine check found (consolidate-1 inventory)"
     },
     {
       "id": "L7-3",
       "class": "none",
-      "reason": "none: none"
+      "reason": "no machine check found (consolidate-1 inventory)"
     },
     {
       "id": "R1",
@@ -5050,7 +5050,7 @@
     {
       "id": "K2",
       "class": "none",
-      "reason": "none: none (programme stop criterion; UNCERTAIN who checks)"
+      "reason": "no machine check: programme stop criterion; UNCERTAIN who checks"
     },
     {
       "id": "M2",
@@ -5120,12 +5120,12 @@
     {
       "id": "GAP-G-3",
       "class": "none",
-      "reason": "none: none (completeness half open)"
+      "reason": "no machine check: completeness half open"
     },
     {
       "id": "GAP-G-5",
       "class": "none",
-      "reason": "none: none (author judgment)"
+      "reason": "no machine check: author judgment"
     },
     {
       "id": "R-BI",
@@ -5135,12 +5135,12 @@
     {
       "id": "W4A-R2",
       "class": "none",
-      "reason": "none: none found beyond step deviation"
+      "reason": "no machine check beyond step deviation"
     },
     {
       "id": "Q-B1",
       "class": "none",
-      "reason": "none: none"
+      "reason": "no machine check found (consolidate-1 inventory)"
     }
   ]
 }

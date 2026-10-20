@@ -319,9 +319,11 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     'node scripts/violations/generate-conversion-roadmap.mjs --check',
     'node scripts/violations/generate-programme-backlog.mjs --check',
     'node scripts/violations/generate-surface-registry.mjs --check',
+    // Operator y 2026-10-20 consolidation 1-4: the generated step-standard handbook (rule-map.json → docs/handbook/step-standard.md).
+    'node scripts/generate-step-handbook.mjs --check',
   ];
 
-  it('GREEN — runs all 12 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
+  it('GREEN — runs all 13 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
     const code = stripComments(PRE_COMMIT);
     const bylaw = code.indexOf('node scripts/generate-bylaw-provisions.mjs --check');
     const sv = code.indexOf('step-validate.mjs --staged --fast');
