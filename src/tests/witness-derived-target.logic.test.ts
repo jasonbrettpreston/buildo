@@ -77,3 +77,12 @@ describe('R-HA — #44 (b)/(c) for an R-DY derived target (coa, Night P4 traces)
     expect(bc(descriptor({ statements: 4 }), traces(['coa-forced-status']))).toEqual(['FAIL:WITNESS:coa:c:statements:4!=3']);
   });
 });
+
+describe('COA-D16 — the committed coa write_inventory counts write statements only', () => {
+  it('the real scripts/load-coa.descriptor.json passes (b)/(c) over the four Night P4 POST traces', () => {
+    const d = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/load-coa.descriptor.json'), 'utf8'));
+    expect(bc(d, traces())).toEqual([]);
+    expect(d.outputs.write_inventory.statements).toBe(2);
+    expect(d.outputs.write_inventory.derived_statements).toBe(1);
+  });
+});
