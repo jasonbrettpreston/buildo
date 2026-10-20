@@ -1,0 +1,32 @@
+# Verification index — wf2/p4-integrate-13
+
+R-EZ (Spec 124 §5 register; verification before integration, operator y 2026-10-20). Every branch merged by
+`wf2/p4-integrate-13` was verified by a lane that did not write it (verify-13, verify-13b), read-only. The
+per-branch reports are copied verbatim from the verify lanes' scratchpad into this directory's parent
+(`docs/reports/verification/`).
+
+- **Integrate base:** `208e8a82` (= `wf2/p4-integrate-12` tip)
+- **Collision plan:** verify-13b's integrate-13 plan v2, [`../integrate-13-plan-v2.md`](../integrate-13-plan-v2.md) (merge order, the
+  69a and golden-lot conflict resolutions, the integration fix commits, the identifier ledger).
+
+## Merged branches (in merge order)
+
+| # | Branch @ tip | Verdict | Reports |
+|---|---|---|---|
+| 0 | `wf2/fix-lockless-env` @ `02aa999f` | one-test determinism fix (R-DF locks count only `git ls-files`-tracked files); read by verify-13b and passing in the trial merge (plan v2 §2.3) | [`../integrate-13-plan-v2.md`](../integrate-13-plan-v2.md) |
+| 1 | `wf2/spec-132` @ `1fb8bd07` | **PASS-WITH-NOTES** | [`../wf2-spec-132.md`](../wf2-spec-132.md) |
+| 2 | `wf2/layer2-spec` @ `89708c1a` (contains 1) | **PASS-WITH-NOTES** (aed98413 PASS-WITH-NOTES → 89708c1a PASS-WITH-NOTES) | [`../wf2-layer2-spec.md`](../wf2-layer2-spec.md), [`../wf2-layer2-spec-fix.md`](../wf2-layer2-spec-fix.md) |
+| 3 | `wf2/report-schema` @ `6e97f7c1` | **PASS-WITH-NOTES** alone (326eca17 → 6e97f7c1); RED on a merge with bylaw-fix-1 until the F2 integration fix | [`../wf2-report-schema.md`](../wf2-report-schema.md), [`../wf2-report-schema-fix.md`](../wf2-report-schema-fix.md) |
+| 4 | `wf1/bylaw-e2e-1` @ `fe1b02ce` | **PASS-WITH-NOTES** (53a21030 BLOCK (B1) → fe1b02ce PASS-WITH-NOTES, B1 closed) | [`../wf1-bylaw-e2e-1.md`](../wf1-bylaw-e2e-1.md), [`../wf1-bylaw-e2e-1-fix.md`](../wf1-bylaw-e2e-1-fix.md) |
+| 5 | `wf1/bylaw-fix-1` @ `3266cb59` | **PASS-WITH-NOTES** | [`../wf1-bylaw-fix-1.md`](../wf1-bylaw-fix-1.md) |
+
+Not merged: `wf2/p4-night-c` (separate verification; integrate-14).
+
+## Commit order note
+
+`spec-split-check --check` accepted every report at the integrate base (0 dangling), so all reports land in the
+first integrate commit with this index; none had to wait for the merge that introduces its ids.
+
+## Integration actions taken on the verify findings
+
+(Filled in by the integration fix commits; see below.)
