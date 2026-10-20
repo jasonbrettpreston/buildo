@@ -57,9 +57,13 @@ const isAcc = (u) => (u.application?.uses || []).map((x) => (x && typeof x === '
 // ------------------------------------------------------------------ hand-specified effect checks (value-bearing answers)
 // Each: unit → { zone → [ [lotId, scenario, target, expect, rationale] ] , class?, finding?, note }
 const GS = { building_type: 'garden_suite' };
-// the step's lot vector supplies the M-169(1) site-fact defaults (no data fills them → false) and the restrictive design
-// choice garage_entrance_faces_street as not taken (M-172(3)); this harness snapshots data-filled tokens only
-const GS_THROUGH = { building_type: 'garden_suite', flags: { adjacent_lot_fronts_rear_street: false, garage_entrance_faces_street: false } }; const LS = { building_type: 'laneway_suite' };
+// Spec 69a M-198(1): on a through lot the step supplies abutting_front_setback_m as the lot's own Layer 2 front_setback_m
+// (the principal house, with the step's front-averaging and named-street flags), and the restrictive design choice
+// garage_entrance_faces_street as not taken (M-172(3)); this harness snapshots data-filled tokens only
+const PROXY_FLAGS = { front_averaging_not_applicable: true, abuts_named_street: false };
+const proxyFront = (id) => { const v = H.vectorOf(L(id), { building_type: 'detached_house', flags: PROXY_FLAGS }, A.defaults); const r = A.E.effective(v, 'front_setback_m', A.E.loadCandidates(v, A.units).candidates, A.C); if (r.status !== 'value' || typeof r.value !== 'number') throw new Error(`M-198(1) proxy not evaluated on ${id}: ${r.reason}`); return r.value; };
+const GS_THROUGH = (id) => ({ building_type: 'garden_suite', flags: { garage_entrance_faces_street: false }, vars: { abutting_front_setback_m: proxyFront(id) } });
+const throughCheck = (id, why) => [id, GS_THROUGH(id), 'rear_setback_m', { value: Math.max(proxyFront(id), 1.5), winner: '150.7.60.20(3)#(3)(A)' }, why]; const LS = { building_type: 'laneway_suite' };
 const PLAIN = { R: '5403712', RD: '5118342', RS: '5124393', RT: '5071329', RM: '5059565' };
 const DEEP = { R: '5363005', RD: '5159934', RS: '5131054', RT: '5156521', RM: '5175239' };
 const LANE = { R: '5401117', RD: '5463382', RS: '5357962', RT: '5326708', RM: '5498745' };
@@ -77,8 +81,8 @@ const HAND = {
   '150.7.60.20(5)#(5)(A)': { z: each(PLAIN, (id) => [id, GS, 'side_setback_m', { applied_includes: false, unit_applies: false, value: sideGS(id) }, 'openings taken as absent (vocab default suite_wall_openings=false, M-197): the with-openings arm is not bound']) },
   '150.7.60.20(6)#(6)(C)': { z: { R: [['5396831', GS, 'side_setback_m', { value: 1.5 }, 'corner lot (6.1 m frontage): (C) = max(the principal house\'s side setback 0.9 m (10.10.40.70(3)(A), evaluated on this lot), 1.5 m) = 1.5 m']], RD: [['5144129', GS, 'side_setback_m', { value: 1.8 }, 'corner lot (18.0 m frontage): (C) = max(the principal house\'s side setback 1.8 m (10.20.40.70(3)(E), evaluated on this lot), 1.5 m) = 1.8 m']] },
     note: 'E2E-F-01 fixed (bylaw-fix-1, 2026-10-20): (C) is keyed as the 1.5 m floor (M-179(2)); the larger-of with the principal house\'s required side yard is Layer 3 (M-198(2)). Before: not_evaluated:missing_input:side_setback_m (the unit read its own target)' },
-  '150.7.60.20(3)#(3)(A)': { z: { R: [['5370045', GS_THROUGH, 'rear_setback_m', { value: 1.5, unit_applies: false }, 'through lot: the adjacent lot\'s front setback is not held, so the answer is disclosed, not bound (the 1.5 m default answers)'], ['5397229', GS_THROUGH, 'rear_setback_m', { value: 1.5, unit_applies: false }, 'through lot, as above']] },
-    note: 'E2E-F-02 fixed (bylaw-fix-1, 2026-10-20): (A)\'s second condition is the lot condition adjacent_lot_fronts_rear_street, which no data fills, so it is taken as not holding (M-169(1)) and (B) / (2)(B) 1.5 m answers. Before: not_evaluated:missing_input:abutting_front_setback_m' },
+  '150.7.60.20(3)#(3)(A)': { z: { R: [throughCheck('5370045', 'through lot (M-198(1)): the neighbour\'s required front yard is approximated by this lot\'s Layer 2 front_setback_m; the larger of it and (B) 1.5 m'), throughCheck('5397229', 'through lot, as above')] },
+    note: 'E2E-F-02 fixed (bylaw-fix-1, 2026-10-20; coordinator correction): with the M-198(1) proxy the step supplies (abutting_front_setback_m = the lot\'s own Layer 2 front_setback_m), (A) answers the larger of the proxy and (B) 1.5 m. Before: not_evaluated:missing_input:abutting_front_setback_m' },
   '150.7.60.40(1)#(1)(A)': { z: each(PLAIN, (id) => [id, { ...GS, vars: { distance_to_residential_m: 6.0 } }, 'height_m', { value: 4.0 }, 'suite 6.0 m (< 7.5 m) from the house: 4.0 m']) },
   '150.7.60.40(1)#(1)(B)': { z: each(PLAIN, (id) => [id, { ...GS, vars: { distance_to_residential_m: 8.0 } }, 'height_m', { value: 6.3 }, 'suite 8.0 m (≥ 7.5 m) from the house: 6.3 m']) },
   '150.7.60.40(2)#whole': { z: each(PLAIN, (id) => [id, GS, 'height_storeys', { value: 2 }, 'a garden suite may have two storeys']) },

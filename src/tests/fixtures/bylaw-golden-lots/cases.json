@@ -36539,7 +36539,7 @@
    "class": "PROVEN",
    "finding": null,
    "owed_field": null,
-   "reason": "E2E-F-02 fixed (bylaw-fix-1, 2026-10-20): (A)'s second condition is the lot condition adjacent_lot_fronts_rear_street, which no data fills, so it is taken as not holding (M-169(1)) and (B) / (2)(B) 1.5 m answers. Before: not_evaluated:missing_input:abutting_front_setback_m",
+   "reason": "E2E-F-02 fixed (bylaw-fix-1, 2026-10-20; coordinator correction): with the M-198(1) proxy the step supplies (abutting_front_setback_m = the lot's own Layer 2 front_setback_m), (A) answers the larger of the proxy and (B) 1.5 m. Before: not_evaluated:missing_input:abutting_front_setback_m",
    "checks": [
     {
      "kind": "value",
@@ -36548,28 +36548,31 @@
      "scenario": {
       "building_type": "garden_suite",
       "flags": {
-       "adjacent_lot_fronts_rear_street": false,
        "garage_entrance_faces_street": false
+      },
+      "vars": {
+       "abutting_front_setback_m": 6
       }
      },
      "target": "rear_setback_m",
      "expect": {
-      "value": 1.5,
-      "unit_applies": false
+      "value": 6,
+      "winner": "150.7.60.20(3)#(3)(A)"
      },
-     "rationale": "through lot: the adjacent lot's front setback is not held, so the answer is disclosed, not bound (the 1.5 m default answers)",
+     "rationale": "through lot (M-198(1)): the neighbour's required front yard is approximated by this lot's Layer 2 front_setback_m; the larger of it and (B) 1.5 m",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
-       "applies": false,
-       "why": "condition adjacent_lot_fronts_rear_street",
+       "applies": true,
+       "why": null,
        "status": "value",
-       "value": 1.5,
+       "value": 6,
        "reason": null,
-       "winner": "150.7.60.20(2)#(2)(B)",
+       "winner": "150.7.60.20(3)#(3)(A)",
        "applied": [
         "150.7.60.20(2)#(2)(B)",
+        "150.7.60.20(3)#(3)(A)",
         "150.7.60.20(3)#(3)(B)"
        ],
        "disclosures": [],
@@ -36584,28 +36587,31 @@
      "scenario": {
       "building_type": "garden_suite",
       "flags": {
-       "adjacent_lot_fronts_rear_street": false,
        "garage_entrance_faces_street": false
+      },
+      "vars": {
+       "abutting_front_setback_m": 6
       }
      },
      "target": "rear_setback_m",
      "expect": {
-      "value": 1.5,
-      "unit_applies": false
+      "value": 6,
+      "winner": "150.7.60.20(3)#(3)(A)"
      },
      "rationale": "through lot, as above",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
-       "applies": false,
-       "why": "condition adjacent_lot_fronts_rear_street",
+       "applies": true,
+       "why": null,
        "status": "value",
-       "value": 1.5,
+       "value": 6,
        "reason": null,
-       "winner": "150.7.60.20(2)#(2)(B)",
+       "winner": "150.7.60.20(3)#(3)(A)",
        "applied": [
         "150.7.60.20(2)#(2)(B)",
+        "150.7.60.20(3)#(3)(A)",
         "150.7.60.20(3)#(3)(B)"
        ],
        "disclosures": [],

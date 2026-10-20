@@ -125,13 +125,18 @@ describe('M-198 / M-197 — garden-suite setbacks: the blank wall and the smalle
   it('M-198: 150.7.60.20(2)(B) the garden-suite rear setback is 1.5 m in all other cases', () => {
     for (const zone of ZONES) expect([eff(lot(zone, 'garden_suite'), 'rear_setback_m').value, eff(lot(zone, 'garden_suite'), 'rear_setback_m').winner]).toEqual([1.5, '150.7.60.20(2)#(2)(B)']);
   });
-  it('M-198(1) / M-169(1): 150.7.60.20(3)(A) a through lot whose rear-street neighbour fact is not held takes the 1.5 m fallback (the neighbour-front-yard proxy is owed to P5.13)', () => {
+  it('M-198(1): 150.7.60.20(3)(A) on a through lot takes the larger of the neighbour-front-yard proxy (the lot\'s own Layer 2 front_setback_m, supplied by the step) and 1.5 m', () => {
     const u = unitOf('150.7.60.20(3)#(3)(A)');
-    expect([u.condition, u.numeric_expression]).toEqual([{ tokens: ['through_lot', 'adjacent_lot_fronts_rear_street'] }, ['rear_setback_m = abutting_front_setback_m @(3)(A)']]);
-    // E2E-F-02: the step supplies the undetermined site fact as not holding (M-169(1)) and the restrictive garage choice as not taken (M-172(3))
-    const r = eff(lot('RD', 'garden_suite', { flags: { through_lot: true, adjacent_lot_fronts_rear_street: false, garage_entrance_faces_street: false } }), 'rear_setback_m');
-    expect([r.value, (r.applied ?? []).includes('150.7.60.20(3)#(3)(A)')]).toEqual([1.5, false]);
-    expect(eff(lot('RD', 'garden_suite', { flags: { through_lot: true, adjacent_lot_fronts_rear_street: true } }), 'rear_setback_m').reason).toBe('missing_input:abutting_front_setback_m');
+    expect([u.condition, u.numeric_expression]).toEqual([{ tokens: ['through_lot'] }, ['rear_setback_m = abutting_front_setback_m @(3)(A)']]);
+    // E2E-F-02 (coordinator correction 2026-10-20): the step supplies abutting_front_setback_m = the principal house's
+    // front_setback_m; the restrictive garage choice is not taken (M-172(3))
+    const flags = { through_lot: true, garage_entrance_faces_street: false };
+    const house = eff(lot('RD', 'detached_house', { flags: { front_averaging_not_applicable: true, abuts_named_street: false } }), 'front_setback_m');
+    expect(house.status).toBe('value');
+    const r = eff(lot('RD', 'garden_suite', { flags, vars: { abutting_front_setback_m: house.value } }), 'rear_setback_m');
+    expect([r.value, r.winner]).toEqual([Math.max(house.value, 1.5), '150.7.60.20(3)#(3)(A)']);
+    // without the step's proxy the input is missing, never guessed
+    expect(eff(lot('RD', 'garden_suite', { flags }), 'rear_setback_m').reason).toBe('missing_input:abutting_front_setback_m');
   });
   it('M-198: 150.7.60.20(3)(B) the through-lot fallback is 1.5 m', () => {
     expect(unitOf('150.7.60.20(3)#(3)(B)').numeric_expression).toEqual(['rear_setback_m = 1.5 m @(3)(B)']);

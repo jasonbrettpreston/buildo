@@ -79366,6 +79366,71 @@
       "rule": "Spec 69a M-230 (operator 2026-10-20, chat decision CHAT-5: read \"Despite regulation 10.20.40.20(1)\" as 10.40.40.20(1), disclose the mis-citation); M-75",
       "unit": "10.40.40.20(4)#(4)(B)",
       "value": "On a lot abutting a major street an apartment building may be 25.0 m long. The by-law text says \"Despite regulation 10.20.40.20(1)\" (an RD regulation); we read it as the RS length rule 10.40.40.20(1), as intended."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(3)#(3)(A)/condition~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/condition",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "tokens": [
+          "through_lot"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.20(3)#(3)(A)/application.lot_conditions~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/application.lot_conditions",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": [
+        "through_lot"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.20(3)#(3)(A)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/application.evidence",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "garden_suite": "containing a garden suite",
+        "through_lot": "a through lot"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(3)#(3)(A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/calculation_handling",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "description": "On a through lot where a residential building on an adjacent lot fronts on the street abutting the rear lot line, the garden suite building's minimum rear yard setback equals the required minimum front yard setback for the residential building on the adjacent lot.",
+        "gaps": "The adjacent-lot fact is taken as holding (M-176, larger setback); abutting_front_setback_m is the lot's own Layer 2 front_setback_m, supplied by the step (Spec 69a M-198(1); Spec 78 P5.13). With no input the answer is not_evaluated:missing_input.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
     }
   ]
 }

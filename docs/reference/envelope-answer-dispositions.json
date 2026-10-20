@@ -4852,15 +4852,15 @@
    ],
    "corrected_value": "On a through lot the rear setback equals the adjacent lot's required front setback; that neighbour fact is not held and is disclosed.",
    "disclosure_code": "suite_lot_fact_unknown",
-   "basis": "findings B1 + M-198 lot fact not held; suite keying lane 2026-10-20 (Spec 131 LC-53): named lock in src/tests/bylaw-suite-owed.logic.test.ts; bylaw fix lane 2026-10-20 (golden-lot finding E2E-F-02: real through lots answered not_evaluated:missing_input:abutting_front_setback_m): the adjacent-lot-fronts-rear-street fact is keyed as the lot condition adjacent_lot_fronts_rear_street, taken as not holding (M-169(1)), so 1.5 m answers",
+   "basis": "findings B1 + M-198 lot fact not held; suite keying lane 2026-10-20 (Spec 131 LC-53): named lock in src/tests/bylaw-suite-owed.logic.test.ts; bylaw fix lane 2026-10-20 (golden-lot finding E2E-F-02: real through lots answered not_evaluated:missing_input:abutting_front_setback_m): corrected the same day by the coordinator: per the ratified M-198(1) the step supplies abutting_front_setback_m as the lot's own Layer 2 front_setback_m and (A) answers the larger of it and (B) 1.5 m (about 6 m on the golden lots)",
    "locks": [
     {
      "file": "src/tests/bylaw-suite-owed.logic.test.ts",
      "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
-     "it": "M-198(1) / M-169(1): 150.7.60.20(3)(A) a through lot whose rear-street neighbour fact is not held takes the 1.5 m fallback (the neighbour-front-yard proxy is owed to P5.13)",
+     "it": "M-198(1): 150.7.60.20(3)(A) on a through lot takes the larger of the neighbour-front-yard proxy (the lot\u0027s own Layer 2 front_setback_m, supplied by the step) and 1.5 m",
      "asserts": [
       "'150.7.60.20(3)#(3)(A)'",
-      "adjacent_lot_fronts_rear_street"
+      "abutting_front_setback_m"
      ],
      "satisfies": [
       "M-198"

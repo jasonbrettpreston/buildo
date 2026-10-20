@@ -13650,10 +13650,10 @@
     {
      "file": "src/tests/bylaw-suite-owed.logic.test.ts",
      "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
-     "it": "M-198(1) / M-169(1): 150.7.60.20(3)(A) a through lot whose rear-street neighbour fact is not held takes the 1.5 m fallback (the neighbour-front-yard proxy is owed to P5.13)",
+     "it": "M-198(1): 150.7.60.20(3)(A) on a through lot takes the larger of the neighbour-front-yard proxy (the lot's own Layer 2 front_setback_m, supplied by the step) and 1.5 m",
      "asserts": [
       "'150.7.60.20(3)#(3)(A)'",
-      "adjacent_lot_fronts_rear_street"
+      "abutting_front_setback_m"
      ],
      "satisfies": [
       "M-198"
@@ -13662,7 +13662,7 @@
    ],
    "owed": [],
    "checks": [
-    "correction COR-150.7.60.20(3)#(3)(A)/condition, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions, COR-150.7.60.20(3)#(3)(A)/application.evidence, COR-150.7.60.20(3)#(3)(A)/calculation_handling",
+    "correction COR-150.7.60.20(3)#(3)(A)/condition, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions, COR-150.7.60.20(3)#(3)(A)/application.evidence, COR-150.7.60.20(3)#(3)(A)/calculation_handling, COR-150.7.60.20(3)#(3)(A)/condition~s1, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions~s1, COR-150.7.60.20(3)#(3)(A)/application.evidence~s1, COR-150.7.60.20(3)#(3)(A)/calculation_handling~s1",
     "verified by named lock: M-198"
    ],
    "state": "INCORPORATED",
