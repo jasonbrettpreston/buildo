@@ -13,6 +13,15 @@
 //   node scripts/analysis/generate-last-measured.mjs --check   write nothing; exitCode 1 when any entry
 //                                                              would change (a hand edit / stale value) or
 //                                                              carries a last_measured with no measured source
+//   node scripts/analysis/generate-last-measured.mjs --shrink-baseline   drop every baseline entry that is now
+//                                                              fresh (never adds one)
+//
+// STALE BASELINE (Spec 124 R-GQ, operator y 2026-10-20): `--check` runs at pre-commit (R-DJ (1)). The 84
+// entries that were stale when it was wired cannot be synced before REFREEZE-BUNDLE-1 (a resync moves
+// descriptor fingerprints and stales POST goldens), so they are listed by step and key in the CLOSED,
+// SHRINK-ONLY `scripts/steps/_schema/last-measured-stale-baseline.json`, each citing REFREEZE-BUNDLE-1.
+// RED: a stale entry not on the list; a listed entry that is now fresh (it must leave, R-X); a listed
+// entry with no REFREEZE-BUNDLE-1 citation, a duplicate, or any unsourced entry.
 //
 // Formatting: a descriptor that is byte-identical to JSON.stringify(doc, null, 2) + '\n' is
 // re-serialised that way; any other descriptor keeps every byte except the replaced
@@ -179,8 +188,44 @@ export function measuredEntriesFor(slug, root = REPO_ROOT) {
   return { ...((b && b.entries) || {}), ...((a && a.entries) || {}) };
 }
 
+export const BASELINE_REL_PATH = 'scripts/steps/_schema/last-measured-stale-baseline.json';
+export const BASELINE_PIN = 'REFREEZE-BUNDLE-1';
+const entryKey = (e) => `${e.step}\u0000${e.key}`;
+
+/** Every stale (would-change) entry in a run report, as {step, key}, sorted. PURE. */
+export function staleEntries(report) {
+  const out = [];
+  for (const r of report || []) for (const key of [...new Set(r.changed || [])]) out.push({ step: r.slug, key });
+  return out.sort((a, b) => (a.step < b.step ? -1 : a.step > b.step ? 1 : a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+}
+
+/**
+ * R-GQ: the closed, shrink-only baseline verdict. PURE.
+ * @param {Array<{step:string,key:string}>} stale
+ * @param {{entries?: Array<{step:string,key:string,pin?:string}>}|null} baseline
+ * @returns {{pass: boolean, problems: string[], fresh: Array<{step:string,key:string}>}}
+ */
+export function baselineDecision(stale, baseline) {
+  const problems = [];
+  const rows = Array.isArray(baseline && baseline.entries) ? baseline.entries : null;
+  if (!rows) return { pass: false, problems: [`${BASELINE_REL_PATH} is missing or has no entries[]`], fresh: [] };
+  const listed = new Map();
+  for (const r of rows) {
+    const k = entryKey(r);
+    if (listed.has(k)) problems.push(`duplicate baseline entry ${r.step}.${r.key}`);
+    listed.set(k, r);
+    if (!r || typeof r.step !== 'string' || typeof r.key !== 'string') problems.push(`malformed baseline entry ${JSON.stringify(r)}`);
+    else if (r.pin !== BASELINE_PIN) problems.push(`baseline entry ${r.step}.${r.key} must cite pin ${BASELINE_PIN}`);
+  }
+  const staleKeys = new Set(stale.map(entryKey));
+  for (const e of stale) if (!listed.has(entryKey(e))) problems.push(`NEW stale last_measured ${e.step}.${e.key} — regenerate (node scripts/analysis/generate-last-measured.mjs); the baseline never grows`);
+  const fresh = rows.filter((r) => r && !staleKeys.has(entryKey(r)));
+  for (const r of fresh) problems.push(`baseline entry ${r.step}.${r.key} is fresh now — remove it (node scripts/analysis/generate-last-measured.mjs --shrink-baseline)`);
+  return { pass: problems.length === 0, problems, fresh: fresh.map((r) => ({ step: r.step, key: r.key })) };
+}
+
 /** Run the generator over the estate; writes only when `check` is false. */
-export function run({ check = false, root = REPO_ROOT, log = console.log } = {}) {
+export function run({ check = false, dryRun = false, root = REPO_ROOT, log = console.log } = {}) {
   const report = [];
   for (const p of descriptorPaths(root)) {
     const text = fs.readFileSync(p, 'utf8');
@@ -189,7 +234,7 @@ export function run({ check = false, root = REPO_ROOT, log = console.log } = {})
     const slug = doc.identity && doc.identity.name;
     const res = applyMeasuredText(text, measuredEntriesFor(slug, root));
     report.push({ path: path.relative(root, p).replace(/\\/g, '/'), slug, ...res, text: undefined });
-    if (!check && res.changed.length > 0) fs.writeFileSync(p, res.text);
+    if (!check && !dryRun && res.changed.length > 0) fs.writeFileSync(p, res.text);
   }
   const sum = (k) => report.reduce((n, r) => n + r[k].length, 0);
   for (const r of report) {
@@ -198,11 +243,35 @@ export function run({ check = false, root = REPO_ROOT, log = console.log } = {})
     }
   }
   log(`[generate-last-measured] ${check ? 'CHECK' : 'WRITE'}: ${report.length} descriptor(s); changed ${sum('changed')}, unsourced ${sum('unsourced')}, skipped ${sum('skipped')}, missing ${sum('missing')}`);
-  const red = check && (sum('changed') > 0 || sum('unsourced') > 0);
+  let red = false;
+  if (check) {
+    const baseline = readJson(path.join(root, BASELINE_REL_PATH));
+    const decision = baselineDecision(staleEntries(report), baseline);
+    for (const p of decision.problems) log(`[generate-last-measured] RED: ${p}`);
+    log(`[generate-last-measured] baseline (R-GQ): ${(baseline && baseline.entries || []).length} listed stale entr${(baseline && baseline.entries || []).length === 1 ? 'y' : 'ies'} (${BASELINE_PIN}), ${decision.problems.length} problem(s)`);
+    red = !decision.pass || sum('unsourced') > 0;
+  }
   return { report, red };
 }
 
+/** --shrink-baseline: drop the entries that are now fresh; never adds one. Returns the removed entries. */
+export function shrinkBaseline({ root = REPO_ROOT, log = console.log } = {}) {
+  const p = path.join(root, BASELINE_REL_PATH);
+  const baseline = readJson(p);
+  if (!baseline || !Array.isArray(baseline.entries)) throw new Error(`${BASELINE_REL_PATH} is missing`);
+  const { report } = run({ check: false, dryRun: true, root, log: () => {} });
+  const staleKeys = new Set(staleEntries(report).map(entryKey));
+  const keep = baseline.entries.filter((r) => staleKeys.has(entryKey(r)));
+  const removed = baseline.entries.filter((r) => !staleKeys.has(entryKey(r)));
+  if (removed.length) fs.writeFileSync(p, JSON.stringify({ ...baseline, entries: keep }, null, 2) + '\n');
+  log(`[generate-last-measured] --shrink-baseline: removed ${removed.length}, ${keep.length} remain`);
+  return removed;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { red } = run({ check: process.argv.includes('--check') });
-  if (red) process.exitCode = 1;
+  if (process.argv.includes('--shrink-baseline')) shrinkBaseline();
+  else {
+    const { red } = run({ check: process.argv.includes('--check') });
+    if (red) process.exitCode = 1;
+  }
 }

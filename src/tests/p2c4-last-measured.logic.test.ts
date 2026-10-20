@@ -384,3 +384,63 @@ describe('step-validate --write → measured-validate.json (R1 writer)', () => {
     expect(body.split('writeFileSync(sidecarPath').length - 1).toBe(1);
   });
 });
+
+// R-GQ (tooling-fix-1 follow-on, operator y 2026-10-20 "a & b y"): generate-last-measured.mjs --check runs
+// at pre-commit (R-DJ (1)) against a CLOSED, SHRINK-ONLY baseline of the 84 entries that were stale when it
+// was wired, each waiting for REFREEZE-BUNDLE-1. RED before R-GQ because … the generator exports no
+// staleEntries / baselineDecision, and its --check is RED on any stale entry at all.
+describe('generate-last-measured --check stale baseline (R-GQ)', () => {
+  type Entry = { step: string; key: string; pin?: string };
+  type Decision = { pass: boolean; problems: string[]; fresh: Array<{ step: string; key: string }> };
+  const load = async () => (await import(pathToFileURL(join(process.cwd(), 'scripts/analysis/generate-last-measured.mjs')).href)) as {
+    staleEntries?: (report: unknown[]) => Entry[];
+    baselineDecision?: (stale: Entry[], baseline: unknown) => Decision;
+    run: (o: { check?: boolean; dryRun?: boolean; log?: (s: string) => void }) => { red: boolean; report: unknown[] };
+    BASELINE_REL_PATH?: string;
+  };
+  const PIN = 'REFREEZE-BUNDLE-1';
+  const base = (rows: Entry[]) => ({ entries: rows });
+
+  it('B1 GREEN — exactly the listed stale entries, each citing REFREEZE-BUNDLE-1, pass', async () => {
+    const g = await load();
+    expect(typeof g.baselineDecision).toBe('function');
+    const d = g.baselineDecision!([{ step: 's', key: 'a' }], base([{ step: 's', key: 'a', pin: PIN }]));
+    expect(d).toEqual({ pass: true, problems: [], fresh: [] });
+  });
+
+  it('B2 RED — a NEW stale entry not on the list fails (the baseline never grows)', async () => {
+    const g = await load();
+    const d = g.baselineDecision!([{ step: 's', key: 'a' }, { step: 's', key: 'b' }], base([{ step: 's', key: 'a', pin: PIN }]));
+    expect(d.pass).toBe(false);
+    expect(d.problems.join('\n')).toContain('NEW stale last_measured s.b');
+  });
+
+  it('B3 RED — a listed entry that is fresh now must leave the list (shrink-only, R-X orphan)', async () => {
+    const g = await load();
+    const d = g.baselineDecision!([], base([{ step: 's', key: 'a', pin: PIN }]));
+    expect(d.pass).toBe(false);
+    expect(d.fresh).toEqual([{ step: 's', key: 'a' }]);
+  });
+
+  it('B4 RED — an entry without the REFREEZE-BUNDLE-1 citation, a duplicate, or a missing file fails', async () => {
+    const g = await load();
+    expect(g.baselineDecision!([{ step: 's', key: 'a' }], base([{ step: 's', key: 'a' }])).pass).toBe(false);
+    expect(g.baselineDecision!([{ step: 's', key: 'a' }], base([{ step: 's', key: 'a', pin: PIN }, { step: 's', key: 'a', pin: PIN }])).pass).toBe(false);
+    expect(g.baselineDecision!([], null).pass).toBe(false);
+  });
+
+  it('B5 staleEntries — one {step, key} per changed id, deduplicated and sorted', async () => {
+    const g = await load();
+    expect(g.staleEntries!([{ slug: 'b', changed: ['y', 'x', 'x'] }, { slug: 'a', changed: ['z'] }]))
+      .toEqual([{ step: 'a', key: 'z' }, { step: 'b', key: 'x' }, { step: 'b', key: 'y' }]);
+  });
+
+  it('B6 LIVE — the committed baseline lists exactly the live stale set (84 at R-GQ, shrink-only) and --check is GREEN', async () => {
+    const g = await load();
+    const baseline = JSON.parse(readFileSync(join(process.cwd(), g.BASELINE_REL_PATH ?? 'missing'), 'utf8')) as { entries: Entry[] };
+    expect(baseline.entries.length).toBeLessThanOrEqual(84);
+    expect(baseline.entries.every((e) => e.pin === PIN)).toBe(true);
+    const out = g.run({ check: true, log: () => {} });
+    expect(out.red).toBe(false);
+  });
+});

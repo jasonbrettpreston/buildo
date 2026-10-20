@@ -454,7 +454,7 @@ Operator decisions (2026-10-20, verbatim): "the label V3 should only apply if al
 | SIMPLE | One rule: the line above a separator is the header. |
 | EXTERNALIZED | No threshold. |
 
-**Bundled RE-FREEZE night (operator y 2026-10-20, "(c) bundle the two queued RE-FREEZEs into one night").** The two queued library RE-FREEZEs ride ONE replay night: (1) Draft B — `runLinkPhase` `extra_counters` (PIN DRAFT-B-REFREEZE, §B15); (2) the recorder producer-read for refresh_snapshot (`sync_runs` → `pipeline_runs`, D-P1, timed with permits ③). One fleet recapture covers both `computeLibFingerprint` changes; neither lands alone. PIN REFREEZE-BUNDLE-1. *(Added 2026-10-20, operator y, rulings-8: (3) neighbourhoods' U+2019 apostrophe rule and (4) assert_global_coverage IL-11/IL-12's `has_bldg` scoping, two Rule 4 gaps, ride the same night and its one recapture; detail in §B19.)*
+**Bundled RE-FREEZE night (operator y 2026-10-20, "(c) bundle the two queued RE-FREEZEs into one night").** The two queued library RE-FREEZEs ride ONE replay night: (1) Draft B — `runLinkPhase` `extra_counters` (PIN DRAFT-B-REFREEZE, §B15); (2) the recorder producer-read for refresh_snapshot (`sync_runs` → `pipeline_runs`, D-P1, timed with permits ③). One fleet recapture covers both `computeLibFingerprint` changes; neither lands alone. PIN REFREEZE-BUNDLE-1. *(Added 2026-10-20, operator y, rulings-8: (3) neighbourhoods' U+2019 apostrophe rule and (4) assert_global_coverage IL-11/IL-12's `has_bldg` scoping, two Rule 4 gaps, ride the same night and its one recapture; detail in §B19.)* *(Added 2026-10-20, operator y "a & b y", tooling-fix-1, Spec 124 R-GQ: (5) resync every descriptor `last_measured` listed in `scripts/steps/_schema/last-measured-stale-baseline.json` (84 entries, 17 steps) with `node scripts/analysis/generate-last-measured.mjs`, then `--shrink-baseline` to empty, inside the same night's one recapture; detail in §B20.)*
 
 **PINs carried (v3-label lane).** V3-BACKFILL-9 — 28 of 29 converted steps fail R-EY (9), 14 of them on (9) alone, for uncited exceptions (most cite an operator queue item or plan id, not a register id); the backfill lanes cite or rule each (no citation was added here: none was unambiguous and already cited elsewhere for the same entry). E3-SWITCH-ON — the operator flips `gate_v3_hard_gate_enabled` to 1 (seed + new migration) once the backfill lanes land. MIG-279-NUMBER — migration 279 is renumbered at integration if another lane took 279. G3-INTENT-UNKNOWN — `DISPOSITION_VOCAB` lacks Spec 123's `INTENT-UNKNOWN`. REFREEZE-BUNDLE-1 — above.
 
@@ -551,3 +551,29 @@ Operator decision (2026-10-20, verbatim): "y to all", on two items: (1) gate #36
 
 - **PIN MV-SCHEMA-TEXT** (owner: next RE-FREEZE night). `step.schema.json` `lastMeasured.at` / `sample_n` descriptions still read "the measurement" / "timings"; restate them as "the measurement that last changed the value" / "value-changing folds" when the template is next unfrozen.
 - **Integration note.** R-GP is a new register row: `rule-map.json` (on `wf2/handbook-1`) needs an entry at integration.
+
+**Follow-on (a) — R-GQ, operator y 2026-10-20 ("a & b y").** Wiring authority (existing): R-DJ (1) (124a:472), "Every chain-era generator `--check` runs at pre-commit"; `generate-last-measured.mjs` is a chain-era generator (P2-C4, 2026-10-06) that was missing from the hook. The baseline needs a rule: R-BA (124a:211) admits only "a dated row in the ONE shared allowlist `scripts/steps/_schema/standard-gates-ledger.json`". Hence R-GQ.
+
+**R-GQ conflict check (existing text, cited).**
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| R-DJ (1) | 124a:472 | "Every chain-era generator `--check` runs at pre-commit" | Supports R-GQ: the check is wired in the same block, locked by `hooks-composition.infra` (13 arms, GREEN and RED). |
+| R-BA | 124a:211 | "a dated row in the ONE shared allowlist `scripts/steps/_schema/standard-gates-ledger.json` … An ORPHAN row (its violation since fixed) is RED" | Conflict on the allowlist home, resolved by amendment for this check only: the 84 entries are generated-artifact drift, not a step-gate finding; as ledger rows they would read as gate allowances against 17 steps (R-BC (b), R-EY (2)). The orphan posture is kept: a fresh entry is RED until removed. |
+| R-BC (b) | 124a:213 | "(b) admits NO ledger row of any disposition — pending or permanent" | No conflict: no standard-gates-ledger row is added. The baseline is time-boxed to REFREEZE-BUNDLE-1 (item (5)) and only shrinks. |
+| R-DW | Spec 124:277 | "The rest is a closed, shrink-only grandfather list of 12 unconverted steps" | Precedent for the form. |
+| R-EB | Spec 124:243; `scripts/steps/_schema/estate-literal-high-water-mark.json` | "Monotonic: --write only lowers a mark; a rise is RED" | Precedent: `--shrink-baseline` only removes. |
+| R-EC | Spec 124:244 | "`scripts/analysis/precommit-budget.mjs --measure` times ea[ch stage]" | Re-measured with the new stage, inside both budgets (`docs/reports/generated/precommit-budget.json`). |
+| R-GP | Spec 124 §5 | "an unchanged `step-validate --write` leaves `measured-validate.json` byte-identical" | No conflict: R-GP keeps the sidecar still; R-GQ checks the descriptors generated from it. |
+
+**R-GQ — seven questions.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One form, the shrink-only list (R-DW, R-EB); one pin (REFREEZE-BUNDLE-1); one entry shape `{step, key, pin}`. |
+| OBSERVABLE | Pre-commit prints `baseline (R-GQ): <n> listed stale entries … <m> problem(s)` and one `RED:` line per problem; locks `p2c4-last-measured.logic` B1–B6, `hooks-composition.infra`. |
+| RECORDED | Spec 124 §5 R-GQ, dated 2026-10-20, operator y; bundled-night item (5) in §B17. |
+| SCALABLE | Every descriptor with `invariants[]`/`plausibility[]`; no slug list in code. |
+| ACCURATE | The 84 entries are the generator's own report at `47de0640` (17 steps); red-first: B1–B6 RED on `47de0640` (`docs/reports/red-evidence/tooling-fix-1/r-gq-red.json`), green after. |
+| SIMPLE | One pure decision, one JSON list, one hook line; no descriptor or golden moves. |
+| EXTERNALIZED | No threshold: set equality (zero tolerance). |
