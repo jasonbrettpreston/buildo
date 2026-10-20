@@ -1176,7 +1176,7 @@ describe('Pipeline SDK', () => {
 
     const PIPELINE_SCRIPTS = [
       'load-permits.js',
-      'load-coa.js',
+      // load-coa.js RE-HOMED (Night P4 R-EQ shell swap, 42c9d3d5, 2026-10-20) — same treatment, same successor lock.
       // load-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②,
       // 2026-09-28) — same treatment, same successor lock (step-conformance.infra.test.ts).
       // load-wsib.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.5, commit ②, 2026-09-29) — same treatment, same successor lock (step-conformance.infra.test.ts at ③; the row 3.5 violations suite D1 until then).

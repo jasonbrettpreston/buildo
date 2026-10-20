@@ -18,6 +18,9 @@
 //   - Per-tier audit breakdown (R2.v5 fix #12)
 //   - Day-1 coa_unmatched_threshold_pct logic_variable (R2.v5 fix #9)
 //   - centroid_outside_polygon_count audit metric (R2.v5 plan-review fix #2)
+// RE-HOMED (Night P4 R-EQ shell swap, 2f0d4446, 2026-10-20): the shipped script is now the frozen pipeline.step()
+// shell (Spec 122 §5.1); these legacy pins read the verbatim legacy text kept as the red suite's oracle
+// (src/tests/steps/link_coa_to_parcels/fixtures/legacy-link-coa-to-parcels.js.txt). The converted behaviour is pinned by src/tests/steps/link_coa_to_parcels/violations.test.ts.
 
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -25,7 +28,7 @@ import path from 'node:path';
 
 describe('link-coa-to-parcels.js — Spec 47 §R1-R12 + R5.2 contract', () => {
   const src = fs.readFileSync(
-    path.resolve(__dirname, '../../scripts/link-coa-to-parcels.js'),
+    path.resolve(__dirname, './steps/link_coa_to_parcels/fixtures/legacy-link-coa-to-parcels.js.txt'),
     'utf-8',
   );
 
@@ -159,7 +162,7 @@ describe('link-coa-to-parcels.js — Spec 47 §R1-R12 + R5.2 contract', () => {
 
 describe('link-coa-to-parcels.js — WF1 #parcel-address-bridge Phase 2e bridge path', () => {
   const src = fs.readFileSync(
-    path.resolve(__dirname, '../../scripts/link-coa-to-parcels.js'),
+    path.resolve(__dirname, './steps/link_coa_to_parcels/fixtures/legacy-link-coa-to-parcels.js.txt'),
     'utf-8',
   );
   // WF2 brief L extracted the tier-1a bridge SQL into scripts/lib/coa-link-sql.js
