@@ -630,6 +630,19 @@
       "content_sha256": "6b5b409de89579baa57e1523e0a39bf14dd990f782f0f4ead02dab8f25b6df20",
       "moved_at": "2026-10-20",
       "commit": "6d63db74"
+    },
+    {
+      "id": "M34",
+      "from_spec": "124",
+      "anchor": "| R-FC | **W4A-R1 — a converting step's logic variables are renamed into the `<slug>_*` form by migration, values carried, old names retired at ③ (McDonald's Airtight V3, operator y 2026-10-18; recorded 2026-10-20 (operator y, consolidation decision 3)).** Operator y 2026-10-18 20:30 (`docs/reports/2026-10-20-operator-queue-snapshot.md`:1190: \"4. y: wave-4 rulings Q-MZ, W4A-R1..R6, Q-C2..C4, Q-CE1..CE3, lane B drafts 1–9\"); `docs/reports/2026-10-18-v3-runner-standardization-trace.md`:26 \"Wave-4 rulings, split library / step-local (operator item 4 = y)\"; `docs/reports/2026-10-18-v3-runner-standardization-trace.md`:36 \"W4A-R1 rename by migration ... STEP-LOCAL ... Lanes' ② migrations (270/271/274/275)\"; draft `docs/reports/2026-10-20-operator-queue-snapshot.md`:1159 \"R1 rename to <slug>_ via migration\". Applied by migrations 270, 271, 272, 274, 275, 278 (copy form while the legacy shell is live, W4A-R6). | Applies R-DE (v) to converting steps; no amendment | `r-de-vocabulary.logic` |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B21 — Register rows R-FC…R-GO (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20",
+      "line_count": 39,
+      "classification": "REGISTER",
+      "evidence": "backfill-9 (operator y 2026-10-20: the V3 condition-9 backfill, and consolidation decision 3, the W4A rulings): Spec 124 was at 372/380 lines and owes 39 rows, R-FC…R-GO. They stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections. wf2/p4-rulings-7 also allocated 124a §B17/§B18 and M33 and rulings-8 used §B19: §B20 and M34 are renumbered at integration if taken. Re-performed 2026-10-20 after verify-12c (R-EZ) corrected rows R-FF, R-FJ, R-FL, R-FT, R-FY, R-FZ, R-GA, R-GB, R-GC, R-GF, R-GI, R-GL before integration.",
+      "content_sha256": "19c880f9286273413feb62a91f18760fe1813a0e1fe35d565a823f205400a2b5",
+      "moved_at": "2026-10-20",
+      "commit": "a906623f"
     }
   ]
 }

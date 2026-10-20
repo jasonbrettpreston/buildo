@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+// rule-map: R-FH — the register row for W4A-R6 (integrate-12): the stage-gated capture predicate
 describe('W4A-R6 — stageAwaitsCaptures (one predicate for the capture-derived gates)', () => {
   it('is true exactly for the stages that exclude G8, and agrees with stageExcludesRegistry on #30/#31/#38-#40', async () => {
     const sv = (await import(pathToFileURL(path.join(process.cwd(), 'scripts/analysis/step-validate.mjs')).href)) as {

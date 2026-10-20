@@ -30,6 +30,7 @@ function stepCtxLiteralKeys(): string[] {
   return [...new Set(found[0]!)].sort();
 }
 
+// rule-map: R-FG — the register row for W4A-R5 (integrate-12): STEP_CTX_KEYS (incl. contextRow) equals the stepCtx literal
 describe('LW-D11 — STEP_CTX_KEYS equals the stepCtx literal (W4A-R5)', () => {
   it('every key the runner assigns onto stepCtx is in STEP_CTX_KEYS, and nothing else is', () => {
     const literal = stepCtxLiteralKeys();

@@ -27,16 +27,9 @@
       "note": "Empty. A future branch that cites ids before they land lists them here; the lock requires each to NOT yet resolve. On landing, the integrator follows docs/handbook/INTEGRATION.md in the same commit. Emptied at wf2/p4-integrate-12 (R-EW, R-EX, COA-D13, COA-D14 resolve on the integrated tree)."
     },
     "register_rows_owed": {
-      "ids": [
-        "W4A-R1",
-        "W4A-R2",
-        "W4A-R3",
-        "W4A-R4",
-        "W4A-R5",
-        "W4A-R6"
-      ],
+      "ids": [],
       "lane": "backfill-9 (operator decision 3)",
-      "note": "When their rows land, add each new register id with its handbook_line and point the W4A id at it via by + status_reason; steps in docs/handbook/INTEGRATION.md."
+      "note": "Empty. W4A-R1…R6 landed as register rows R-FC…R-FH (backfill-9, M34 → 124a §B21) at wf2/p4-integrate-12; each W4A id is superseded by its row."
     }
   },
   "statuses": {
@@ -66,7 +59,9 @@
         "GAP-G-4",
         "W4A-R1",
         "W4A-R3",
-        "Q-C3"
+        "Q-C3",
+        "R-FC",
+        "R-FE"
       ]
     },
     {
@@ -111,7 +106,8 @@
         "R-EA",
         "R-ER",
         "R-ES",
-        "W4A-R4"
+        "W4A-R4",
+        "R-FF"
       ]
     },
     {
@@ -173,7 +169,8 @@
         "M5",
         "R-K.2",
         "W4A-R6",
-        "Q-R-EQ-1"
+        "Q-R-EQ-1",
+        "R-FH"
       ]
     },
     {
@@ -202,7 +199,8 @@
         "Rule-10",
         "Rule-10-addendum-R-H",
         "GAP-G-5",
-        "W4A-R2"
+        "W4A-R2",
+        "R-FD"
       ]
     },
     {
@@ -670,6 +668,12 @@
       "section": "x-v3",
       "text": "`standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`.",
       "why": "One list replaces the older \"five words\", \"six parts\" and \"four conditions\"; the label means the same thing everywhere."
+    },
+    {
+      "id": "x-v3.2",
+      "section": "x-v3",
+      "text": "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint.",
+      "why": "Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate."
     },
     {
       "id": "x-rulings.1",
@@ -1195,7 +1199,7 @@
     {
       "id": "W4A-R2",
       "kind": "draft-outside-register",
-      "status": "active",
+      "status": "superseded",
       "handbook_line": "core.6",
       "enforcement": {
         "kind": "none",
@@ -1206,9 +1210,11 @@
         "file": "docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md",
         "anchor": "ation), W4A-R2 (inclusive ceiling), W4A-R3 (`pip"
       },
-      "register_row_owed": "lane backfill-9 (operator decision 3)",
       "merge": "MERGE-8",
-      "status_reason": "inventory UNCERTAIN (draft) -> active: steps already declare it (inclusive ceiling_max deviations, R-DC precedent); register row owed to backfill-9"
+      "status_reason": "register row R-FD landed (backfill-9 M34, 124a §B21; integrate-12) and restates this draft; the W4A id resolves to it",
+      "by": [
+        "R-FD"
+      ]
     },
     {
       "id": "Rule-4",
@@ -1450,7 +1456,7 @@
     {
       "id": "W4A-R1",
       "kind": "draft-outside-register",
-      "status": "active",
+      "status": "superseded",
       "handbook_line": "core.8",
       "enforcement": {
         "kind": "lock",
@@ -1461,14 +1467,16 @@
         "file": "docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md",
         "anchor": "ion):** W4A-R1 (rename into `<slug>_*` by migrat"
       },
-      "register_row_owed": "lane backfill-9 (operator decision 3)",
       "merge": "MERGE-1",
-      "status_reason": "inventory UNCERTAIN (draft outside the register) -> active: applied fleet-wide through R-DE (v) renames and locked by r-de-vocabulary.logic; its register row is owed to backfill-9 (meta.register_rows_owed)"
+      "status_reason": "register row R-FC landed (backfill-9 M34, 124a §B21; integrate-12) and restates this draft; the W4A id resolves to it",
+      "by": [
+        "R-FC"
+      ]
     },
     {
       "id": "W4A-R3",
       "kind": "draft-outside-register",
-      "status": "active",
+      "status": "superseded",
       "handbook_line": "core.8",
       "enforcement": {
         "kind": "lock",
@@ -1479,8 +1487,11 @@
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "wave-4 W4A-R3 + Q-C3, operator y: a name read b"
       },
-      "register_row_owed": "lane backfill-9 (operator decision 3)",
-      "merge": "MERGE-1"
+      "merge": "MERGE-1",
+      "by": [
+        "R-FE"
+      ],
+      "status_reason": "register row R-FE landed (backfill-9 M34, 124a §B21; integrate-12) and restates this draft; the W4A id resolves to it"
     },
     {
       "id": "Q-C3",
@@ -2234,7 +2245,7 @@
     {
       "id": "W4A-R4",
       "kind": "draft-outside-register",
-      "status": "active",
+      "status": "superseded",
       "handbook_line": "core.14",
       "enforcement": {
         "kind": "none",
@@ -2245,9 +2256,11 @@
         "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
         "anchor": "its ② (W4A-R4 (a)). First member: classify_coa_"
       },
-      "register_row_owed": "lane backfill-9 (operator decision 3)",
       "merge": "MERGE-3",
-      "status_reason": "inventory UNCERTAIN (cited by R-ER as live) -> active: R-ER, an in-force register row, depends on it; register row owed to backfill-9"
+      "status_reason": "register row R-FF landed (backfill-9 M34, 124a §B21; integrate-12) and restates this draft; the W4A id resolves to it",
+      "by": [
+        "R-FF"
+      ]
     },
     {
       "id": "Q-B1",
@@ -3172,10 +3185,9 @@
     {
       "id": "W4A-R6",
       "kind": "draft-outside-register",
-      "status": "amended-by",
+      "status": "superseded",
       "by": [
-        "R-EF",
-        "R-EQ"
+        "R-FH"
       ],
       "handbook_line": "x-stages.2",
       "enforcement": {
@@ -3187,8 +3199,8 @@
         "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
         "anchor": "-EF | **W4A-R6 amended: gate F's score floor tak"
       },
-      "register_row_owed": "lane backfill-9 (operator decision 3)",
-      "merge": "MERGE-6"
+      "merge": "MERGE-6",
+      "status_reason": "register row R-FH landed (backfill-9 M34, 124a §B21; integrate-12) and restates this draft; the W4A id resolves to it"
     },
     {
       "id": "Q-R-EQ-1",
@@ -3966,6 +3978,562 @@
         "ref": "src/tests/g3-ledger-tables.logic.test.ts"
       },
       "statement": "G3 scores only intent-ledger tables (a header naming a Disposition column); other PH-3 tables are evidence, not scored.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FC",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/r-de-vocabulary.logic.test.ts"
+      },
+      "statement": "W4A-R1 recorded: a converting step's logic variables are renamed into the <slug>_* form by migration, values carried, old names retired at ③.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-FD",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "W4A-R2 recorded: bounds are inclusive two-tier (value_max); the legacy fail>warn refusal is retired and the one-day boundary move is a declared deviation.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "R-FE",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/r-de-vocabulary.logic.test.ts"
+      },
+      "statement": "W4A-R3 recorded: pipeline_timezone and the Q-C3 shared list are shared logic variables, exempt from R-DE (v)'s <slug>_* form (the shared arm).",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-FF",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "W4A-R4 recorded: a classifier re-run after its root touches a row is the §6.3 watermark pin (by:\"pin\" + staleness.pins) with a source:\"run_at\" stamp, never a new by:\"seen\".",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-FG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.10",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-ctx-keys.logic.test.ts"
+      },
+      "statement": "W4A-R5 recorded: contextRow is in STEP_CTX_KEYS, and the list equals the stepCtx literal's key set.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FH",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EF",
+        "R-EQ"
+      ],
+      "handbook_line": "x-stages.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-validate-stage-captures.logic.test.ts"
+      },
+      "statement": "W4A-R6 recorded: a pending step at a stage that excludes G8 is awaiting captures (#30/#31/#38–#40 stage-gated); ② lands at compute_ported, runner_wired at the shell swap.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-FI",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Spec 122's programme rulings R1–R6 (the schema is the canonical vocabulary over prose) govern a pilot's write-class and emission deviations.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FJ",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Pilot 2 (load_ravines) plan, incl. D-8: every converted check is declared `blocking: false` at the conversion; promoting a halt is a separate peel with its own lock.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FK",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: LR-D9: a count-drift check runs `when: \"pre_write\"`, after validation and before the write.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FL",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Pilot 3 (link_massing) plan: the E1 clear-then-reassign UPDATE is a correct unguarded write (Rule 9 grandfather), and the pre-conversion full-gate prior-run read and phase ternary are retired as declared.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FM",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Pilot 4 (link_wsib) plan, incl. A-1/A-2 and Fold B.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FN",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Pilot 5 (link_parcel_addresses) plan: the insert-only no-retraction write is grandfathered under Rule 9.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FO",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Pilot 6 (compute_centroids) plan: the write-once NULL-scoped backfill UPDATE is grandfathered unguarded (Rule 9).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FP",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Pilot 9 (enrich_parcels) plan: the run-clock stamp writes and the no_retraction shape are grandfathered (Rule 9).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FQ",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: link_neighbourhoods plan, six Asks at their defaults (incl. Ask 2 RETIRE BOTH).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FR",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: assert_parcel_sanity plan rulings A1 and A3.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FS",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: enrich_heritage plan, H-A1 = (a).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FT",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: address_points plan (row 3.1), incl. Fold B3: `txn_scope:\"step\"` widens the per-batch transaction to all-or-nothing, declared as a deviation; Fold B4 batching.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FU",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: AP-D1: Spec 54's narrated REGULAR filter is wrong; the loader keeps no filter.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FV",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: load_centreline plan (row 3.2): its LC-D deviations (HEAD-error WARN, acquisition FAIL, validation batching, override set, phase order, config source).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FW",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: load_centreline's class-C `staging_full_replace` is grandfathered (Rule 9) — option A.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FX",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: massing plan (row 3.6): M-D1, M-D3, M-D6, M-D7, M-D10, M-D12 and the cadence retirement.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FY",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: neighbourhoods plan (row 3.8): the N-D deviations it lists.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FZ",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: load_wsib plan (row 3.5): WS-D2, WS-D4 and its batching, ledger, emit and null-address deviations.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GA",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: A `pct` bound is inclusive (`<=`, no strict form): the legacy `>=` FAIL moves one boundary value, declared as a deviation.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GB",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: load_heritage plan (row 3.4): audit row set, the per-primary skip re-emit, config source, validation SQL, force switch.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GC",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: load_zoning plan (row 3.3): LZ-D1, LZ-D11, LZ-D18, LZ-D19.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GD",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: A guarded write with a step-written `wkb_geometry` column names it in `guard_columns`.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GE",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: enrich_centreline plan, D1–D5 (incl. D3 = (a)): EC-D6 and its audit-shape and force-full deviations.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GF",
+      "kind": "register-ruling",
+      "status": "historical",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "INGESTOR prerequisite 0x (multi-primary), the O-1 scope cut: 0x ships two of D1 (a)'s three axes, `target` and `on_failure`; the skip-scope axis is deferred.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "recorded by the V3 condition-9 backfill as a historical operator decision (2026-09-29 O-1 y); the 0x prerequisite it scoped has shipped and no exception entry cites it (124a §B22), so it governs no step today"
+    },
+    {
+      "id": "R-GG",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: New conversions author `inputs.reads` from the reads evidence table; an intentional omission is an explicit deviation.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GH",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: parcels lot-size WF3: a prior stated lot value is preserved on publisher retraction.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GI",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: INGESTOR prerequisite 0y (CKAN DataStore), all recommended operator decisions adopted: LZ-D6, LZ-D13…LZ-D17.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GJ",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: MQ-B5 (a): `on_batch_error:\"fail_step\"` on address_points and parcels replaces the legacy batch-drop catch.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GK",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: enrich_parcels defer observability: INFO as a declared interim; per-pass rows go to the library batch.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GL",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: load_bylaw_map_areas: one seed file and the text key `area_key = source:source_feature_id`.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GM",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: coa (wave 1) CoA decisions 1–5: portal rot measured from the newest hearing on or before the run date; the log-only stats query is dropped at ②.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GN",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Wave-4 plan (6 CoA steps), all 15 recommendations: Q10 link_coa_to_parcels re-checks every run with a keyed retraction and set-based `fail_fast`; Q12 the two legacy parity defects stay declared deviations.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GO",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Wave-4 step-local rulings Q-C2…Q-C4, Q-CE1…Q-CE3 and lane B drafts 1–9 (e.g. Q-CE1 kill switch → shared `archetype_cost_enabled`; Q-CE2 watermark updates stay unguarded; lane B 7 always-render `*_count_zero`).",
       "source": {
         "register": true
       }
@@ -4982,7 +5550,7 @@
     {
       "id": "W4A-R5",
       "kind": "draft-outside-register",
-      "status": "historical",
+      "status": "superseded",
       "handbook_line": "history.3",
       "enforcement": {
         "kind": "none",
@@ -4993,7 +5561,10 @@
         "file": "docs/reports/red-evidence/runner-lane/w4a-r5-step-ctx-keys.json",
         "anchor": "iteral (W4A-R5)\"],\"fullName\":\"LW-D11 — STEP_CTX_"
       },
-      "register_row_owed": "lane backfill-9 (operator decision 3)"
+      "by": [
+        "R-FG"
+      ],
+      "status_reason": "register row R-FG landed (backfill-9 M34, 124a §B21; integrate-12) and restates this draft; the W4A id resolves to it"
     },
     {
       "id": "Q-W4G-1",
@@ -5255,9 +5826,9 @@
       "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none)"
     },
     {
-      "id": "W4A-R2",
+      "id": "R-FD",
       "class": "none",
-      "reason": "no machine check beyond step deviation"
+      "reason": "no machine check: assert-coa-freshness.infra locks the two bounds' externalization, not the inclusive form or the retired fail>warn refusal (moved from W4A-R2, whose register row R-FD is)"
     },
     {
       "id": "Q-B1",
@@ -5285,9 +5856,9 @@
       "reason": "partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check"
     },
     {
-      "id": "W4A-R1",
+      "id": "R-FC",
       "class": "partial",
-      "reason": "partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted"
+      "reason": "partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted (moved from W4A-R1, whose register row R-FC is)"
     },
     {
       "id": "R-CF",
@@ -5300,9 +5871,9 @@
       "reason": "partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested"
     },
     {
-      "id": "W4A-R4",
+      "id": "R-FF",
       "class": "none",
-      "reason": "no machine check: no test asserts that a producer declares its by:\"pin\" row (only the reader side, R-DO/R-ER) (verify-12 N1 re-audit)"
+      "reason": "no machine check: classify-coa-scope.infra asserts the legacy script contract, not the by:\"pin\" watermark form; only the reader side is locked (R-DO/R-ER) (moved from W4A-R4, whose register row R-FF is)"
     },
     {
       "id": "R-AY",

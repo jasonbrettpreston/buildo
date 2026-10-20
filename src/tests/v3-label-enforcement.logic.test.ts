@@ -152,3 +152,47 @@ describe('R-EY E3 — the hard gate: built OFF behind one pinned switch, one clo
     expect(src).toContain("else if (a.startsWith('--v3-json=')) out.v3Json");
   });
 });
+
+// rule-map: R-FI R-FJ R-FK R-FL R-FM R-FN R-FO R-FP R-FQ R-FR R-FS R-FT R-FU R-FV R-FW R-FX R-FY R-FZ R-GA R-GB R-GC
+// R-GD R-GE R-GG R-GH R-GI R-GJ R-GK R-GL R-GM R-GN R-GO — each is a historical operator decision recorded as a
+// register row by the V3 condition-9 backfill (backfill-9, operator y 2026-10-20; 124a §B21/§B22). The decision
+// is what makes the exception entries it governs acceptable under R-EY (9); this lock asserts that record end to
+// end: the row is a LIVE register row, every entry the citations record assigns to it exists where it says, an
+// entry applied now carries the citation text in its file, and a converted-descriptor entry (applied on the
+// bundled RE-FREEZE night, PIN FP-RECAPTURE) still names its declared deviation by index and `from`. R-GF is a
+// register row that no entry cites (historical: the 0x O-1 scope cut), asserted as such. (integrate-12)
+describe('V3 condition-9 backfill — rows R-FI…R-GO govern the exception entries they are cited by', () => {
+  type Cite = { ref: string; step: string; source: string; file: string; key: string; deviation_index: number | null; rule_id: string | null; apply: string; append_text: string | null };
+  const CITED_ROWS = ['R-FI', 'R-FJ', 'R-FK', 'R-FL', 'R-FM', 'R-FN', 'R-FO', 'R-FP', 'R-FQ', 'R-FR', 'R-FS', 'R-FT', 'R-FU', 'R-FV', 'R-FW', 'R-FX', 'R-FY', 'R-FZ', 'R-GA', 'R-GB', 'R-GC', 'R-GD', 'R-GE', 'R-GG', 'R-GH', 'R-GI', 'R-GJ', 'R-GK', 'R-GL', 'R-GM', 'R-GN', 'R-GO'];
+  const record = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'docs/reports/2026-10-20-v3-condition9-backfill-citations.json'), 'utf8')) as { entries: Cite[] };
+  const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+  let registerIds: Set<string>;
+  beforeAll(async () => {
+    const ssc = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/spec-split-check.mjs')).href)) as unknown as { extractRegisterRulingIds: (a: string, b: string) => Set<string> };
+    registerIds = ssc.extractRegisterRulingIds(read('docs/specs/01-pipeline/124_step_standard_policy.md'), read('docs/specs/01-pipeline/124a_step_standard_policy_appendix.md'));
+  });
+
+  it('every row is a LIVE register row, and R-GF is too', () => {
+    for (const id of [...CITED_ROWS, 'R-GF']) expect(registerIds.has(id), id).toBe(true);
+  });
+
+  it.each(CITED_ROWS)('%s is cited by at least one exception entry, and each such entry is where the record says', (id) => {
+    const mine = record.entries.filter((e) => e.rule_id === id);
+    expect(mine.length).toBeGreaterThan(0);
+    for (const e of mine) {
+      const text = read(e.file);
+      if (e.apply === 'now') {
+        expect(e.append_text, e.ref).toContain(`Spec 124 ${id}`);
+        expect(text.includes(e.append_text!), `${e.ref} ${e.file} carries "${e.append_text}"`).toBe(true);
+      } else {
+        expect(e.apply, e.ref).toBe('bundled-night');
+        const dev = (JSON.parse(text) as { deviations?: Array<{ from?: string }> }).deviations?.[e.deviation_index ?? -1];
+        expect(dev?.from, `${e.ref} ${e.file} deviations[${e.deviation_index}]`).toBe(e.key);
+      }
+    }
+  });
+
+  it('R-GF is cited by no entry (historical record of the 0x scope cut)', () => {
+    expect(record.entries.filter((e) => e.rule_id === 'R-GF')).toEqual([]);
+  });
+});

@@ -83,12 +83,14 @@ describe('R-DE cross-step vocabulary locks (McDonald\'s Airtight V3)', () => {
     expect(e('LINK', [{ key: 'detail', type: 'object' }])).toBe(1);
   });
 
+  // rule-map: R-FC (partial; the register row for W4A-R1, integrate-12) — same assertion and same gap as W4A-R1 below
   // rule-map: W4A-R1 (partial) — <slug>_<name> end-state naming; migration with values carried not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('(v) logic variables are <slug>_<name> or sources_*', () => {
     expect(items({ config: { logic_variables: [{ name: 'sources_parcels_floor' }] } })).toEqual([]);
     expect(items({ config: { logic_variables: [{ name: 'floor_pct' }] } })).toContain('vocab.config.logic_variables.floor_pct');
   });
 
+  // rule-map: R-FE — the register row for W4A-R3 (integrate-12): the shared arm is a closed list with listed consumers
   it('(v) shared arm (W4A-R3 + Q-C3, operator y 2026-10-18): a name read by two or more steps keeps its name only on the closed SHARED_LOGIC_VARIABLES list, and only for a listed consumer', () => {
     const shared = (CB as unknown as { SHARED_LOGIC_VARIABLES: Record<string, { consumers: string[]; owner: string }> }).SHARED_LOGIC_VARIABLES;
     expect(shared, 'the closed shared list is exported').toBeDefined();

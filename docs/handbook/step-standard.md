@@ -137,7 +137,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.6** The verdict comes only from check rows. Each row is PASS, WARN (through `warn_limit` / `warn_limit_from_config`) or its declared severity. `checks_failed` counts FAIL rows and `checks_warned` counts WARN rows. A metric that is never zero is WARN with a stated retighten condition; INFO is only for a purely descriptive counter. A uniqueness invariant is a check row, not a throw. A legacy exclusive ceiling becomes an inclusive `ceiling_max` with a declared deviation.
   *Why:* A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page.
-  Rules: `R-H` `R-Q` `R-AD` `R-CL` `Rule-10` `Rule-10-addendum-R-H` `GAP-G-5` `W4A-R2`
+  Rules: `R-H` `R-Q` `R-AD` `R-CL` `Rule-10` `Rule-10-addendum-R-H` `GAP-G-5` `R-FD` · history: `W4A-R2`
 
 - **core.7** A rule kept inside compute is still written down: as a check's `why`, or as an Intent Ledger row naming where it lives, never only as a code comment (`checkPreservedInComputeHasWhy`).
   *Why:* Nothing about a step's behaviour may live only in code.
@@ -145,7 +145,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.8** EXTERNALIZED. Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero. Step variables are named `<slug>_<name>`; a name shared by two or more steps comes only from the closed `SHARED_LOGIC_VARIABLES` map, and legacy shared names are renamed by migration with values carried. Unit constants and definitional windows are pinned (min = max). Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables. A missing `logic_variables` row fails the run; `on_invalid` is `fail` for any verdict- or write-affecting variable. A variable is retired by a `config.retired[]` declaration, never deleted. A model constant ratified elsewhere becomes a variable with its existing value as default.
   *Why:* The operator tunes the system from the admin page; a literal in code is a setting nobody can see or change.
-  Rules: `R-A` `R-G` `R-AW` `R-CV` `R-DR` `R-EB` `Rule-3` `W4A-R1` `W4A-R3` · history: `R-AU` `Rule-3-addendum-R-AU` `P4` `GAP-G-4` `Q-C3`
+  Rules: `R-A` `R-G` `R-AW` `R-CV` `R-DR` `R-EB` `Rule-3` `R-FC` `R-FE` · history: `R-AU` `Rule-3-addendum-R-AU` `P4` `GAP-G-4` `W4A-R1` `W4A-R3` `Q-C3`
 
 - **core.9** Compute is pure. It receives `ctx` (config with `$meta`, clock, catalog, descriptor, `withinLimit`), reports every check value through `ctx.report(id, value)` and returns rows, a `write_plan` or `records_meta`. The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict. An ASSERT may read `ctx.pool` read-only over declared relations (R-CA (i)). Compute never branches on PostGIS; it never reads `logic_variables` SQL; a config value aliased inside a check body still counts as compute deciding (PURITY-G7). Gate E purity codes PURITY-G0…PURITY-G13 must read zero for a new conversion; the escape-hatch ban is an ast-grep rule.
   *Why:* Pure compute can be tested with plain inputs, replayed from captures and reviewed without a database.
@@ -153,7 +153,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.10** Compute reads the `ctx` shape the runner's dispatch for its descriptor actually builds (a multi-primary INGESTOR gets `acquired.primaries[id]` and `written.by_target.<table>`, not the flat shape), and its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers.
   *Why:* A hand-built ctx in a test can pass while the real run reads zeros.
-  Rules: `R-EW`
+  Rules: `R-EW` `R-FG`
 
 - **core.11** Output is observable. `emits[]` equals what the captures emit and stays flat; dynamic-keyed telemetry rides a check row's `detail`, capped by a variable. A step that can skip declares a `when:"pre"` check; one that can scope-defer also declares a `deferred_to_full` terminal. Every run row carries the propagated `chain_run_id`.
   *Why:* A skipped or deferred run must say why in its own audit table, and runs correlate by id, not by time window.
@@ -169,7 +169,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.14** Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.
   *Why:* The cross-step ledger is only true if it is measured, never re-typed.
-  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `W4A-R4`
+  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` · history: `W4A-R4`
 
 - **core.15** Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.
   *Why:* A field that looks enforced but has no executor is a promise nobody keeps.
@@ -331,7 +331,7 @@ How a step moves from legacy script to converted.
 
 - **x-stages.2** The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.
   *Why:* A downstream step never runs on a converted shell before its producer.
-  Rules: `R-EQ` `W4A-R6` `Q-R-EQ-1`
+  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` · history: `W4A-R6`
 
 - **x-stages.3** A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: "none"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.
   *Why:* There is nothing older to compare against.
@@ -392,6 +392,10 @@ What `standard=V3` means and how it is enforced.
 - **x-v3.1** `standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`.
   *Why:* One list replaces the older "five words", "six parts" and "four conditions"; the label means the same thing everywhere.
   Rules: `R-BA` `R-CN` `R-DT` `R-EY` `STD-VERSIONS`
+
+- **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint.
+  *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` · history: `R-GF`
 
 ### Rulings protocol and the resolution ladder
 
@@ -480,7 +484,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 263 mapped ids: 151 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 44 none (see the glossary).
+Enforcement across all 302 mapped ids: 187 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
@@ -509,16 +513,16 @@ Enforcement across all 263 mapped ids: 151 lock, 1 lock-db, 37 check, 0 hook, 30
 | K2 | none | x-tooling.3 | no machine check: programme stop criterion; UNCERTAIN who checks |
 | GAP-G-3 | none | ingestor.1 | no machine check: completeness half open |
 | GAP-G-5 | none | core.6 | no machine check: author judgment |
-| W4A-R2 | none | core.6 | no machine check beyond step deviation |
+| R-FD | none | core.6 | no machine check: assert-coa-freshness.infra locks the two bounds' externalization, not the inclusive form or the retired fail>warn refusal (moved from W4A-R2, whose register row R-FD is) |
 | Q-B1 | none | link.4 | no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row |
 | Rule-1 | partial | core.1 | partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only) |
 | Rule-5 | partial | core.2 | partial: step-schema.logic — checks may never be "none" (checks:[] minItems not fixture-tested) |
 | V6 | partial | core.3 | partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) |
 | R-AW | partial | core.8 | partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check |
-| W4A-R1 | partial | core.8 | partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted |
+| R-FC | partial | core.8 | partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted (moved from W4A-R1, whose register row R-FC is) |
 | R-CF | partial | core.9 | partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted |
 | Rule-8 | partial | core.12 | partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested |
-| W4A-R4 | none | core.14 | no machine check: no test asserts that a producer declares its by:"pin" row (only the reader side, R-DO/R-ER) (verify-12 N1 re-audit) |
+| R-FF | none | core.14 | no machine check: classify-coa-scope.infra asserts the legacy script contract, not the by:"pin" watermark form; only the reader side is locked (R-DO/R-ER) (moved from W4A-R4, whose register row R-FF is) |
 | R-AY | partial | core.17 | partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide |
 | R-EV | partial | ingestor.6 | partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted |
 | R-CR | partial | link.3 | partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted |
@@ -554,14 +558,14 @@ The Spec 124 register is the authority; the handbook is the reading surface; Spe
 
 **Merged families.** Each merge puts a family of amendments behind one line; the old ids stay resolvable.
 
-- MERGE-1 EXTERNALIZED → core.8 (14 ids)
+- MERGE-1 EXTERNALIZED → core.8 (16 ids)
 - MERGE-2 Compute is pure → core.9 (14 ids)
-- MERGE-3 Declared == witnessed → core.14 (17 ids)
+- MERGE-3 Declared == witnessed → core.14 (18 ids)
 - MERGE-4 Captures are reproducible and every diff is explained → x-captures.1, x-captures.2, x-captures.3, x-captures.4 (16 ids)
 - MERGE-5 The V3 label → x-v3.1 (5 ids)
-- MERGE-6 Lifecycle stage is declared data → x-stages.1, x-stages.2, x-stages.3 (11 ids)
+- MERGE-6 Lifecycle stage is declared data → x-stages.1, x-stages.2, x-stages.3 (12 ids)
 - MERGE-7 Truthful crash posture → core.13, link.1 (4 ids)
-- MERGE-8 Verdict and severity → core.6 (8 ids)
+- MERGE-8 Verdict and severity → core.6 (9 ids)
 - MERGE-9 Skips are observable and safe → core.11, ingestor.2, enricher.1 (8 ids)
 - MERGE-10 Hook placement and host → x-tooling.1 (8 ids)
 
