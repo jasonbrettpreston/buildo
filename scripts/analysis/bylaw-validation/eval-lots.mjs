@@ -1,32 +1,10 @@
 // Bylaw real-lot validation (2026-10-19): evaluates sampled lots with the committed evaluator (no re-implementation):
 // agreed units (agree.mjs) + generated fields (authored.mjs) + displacement links (xref.mjs displacesOf, as G-EVAL) +
-// makeContext(evaluatorVocab, enactments) — the same assembly as validate.mjs G-EVAL and the review builder.
+// makeContext(evaluatorVocab, enactments) — the same assembly as validate.mjs G-EVAL and the review builder (assembly.mjs).
 // Pure apart from reading the tree and the lots file. Usage: node eval-lots.mjs <root> <lots.json> <out.json>
 import fs from 'node:fs'; import path from 'node:path'; import crypto from 'node:crypto'; import { pathToFileURL } from 'node:url';
 const [ROOT, LOTS, OUT] = process.argv.slice(2);
-const mod = (rel) => import(pathToFileURL(path.join(ROOT, rel)).href);
-const V = await mod('scripts/analysis/bylaw/validate.mjs'); const AU = await mod('scripts/analysis/bylaw/authored.mjs');
-const AG = await mod('scripts/analysis/bylaw/agree.mjs'); const VO = await mod('scripts/analysis/bylaw/vocab.mjs');
-const E = await mod('scripts/analysis/bylaw/evaluate.mjs'); const X = await mod('scripts/analysis/bylaw/xref.mjs');
-const I = V.loadInputs({ root: ROOT });
-const external = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/external.json'), 'utf8'));
-const ag = AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab });
-const index = AU.buildIndex(I.slice);
-const base = [...AG.agreedUnits(ag).values()].map(AU.withGeneratedFields);
-const units = base.map((u) => { let d = { targets: [], optional_variation: false }; try { d = X.displacesOf(index, u.unit_id, I.vocab, external); } catch { /* unresolved: no links */ } return { ...u, displaces: d.targets.map((t) => t.id), displaces_optional: d.optional_variation === true }; });
-const enactments = {}; for (const p of I.snap.pages || []) Object.assign(enactments, E.enactedDatesFromText(p.normalized || ''));
-// exception authoring state (ruling (d)), as the review builder: authored when every unit of the exception is agreed / adjudicated
-const isExcReg = (r) => /^900\.\d+\.10\(/.test(r);
-const excState = new Map();
-for (const [id, rec] of ag.units) {
-  const reg = AU.splitUnitId(id).reg.replace(/~.*$/, ''); if (!isExcReg(reg)) continue;
-  const s = excState.get(reg) || { agreed: new Set(), pending: new Set(), pendingN: 0 };
-  const tg = [].concat((rec.unit && rec.unit.target) || []).filter((t) => t && t !== 'none');
-  if (rec.state === 'agreed' || rec.state === 'adjudicated') tg.forEach((t) => s.agreed.add(t)); else { s.pendingN++; tg.forEach((t) => s.pending.add(t)); }
-  excState.set(reg, s);
-}
-const authored = {}; for (const [reg, s] of excState) authored[reg] = s.pendingN === 0 ? 'authored' : { status: 'partial', targets: [...s.agreed].filter((t) => !s.pending.has(t)).sort() };
-const C = E.makeContext(VO.evaluatorVocab(I.vocab), { enactments, absences: I.absences, authored });
+const { E, units, C } = await (await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw-validation/assembly.mjs')).href)).loadRealLotAssembly(ROOT); // shared with the golden-lot helper
 const TARGETS = ['required_lot_frontage_m', 'required_lot_area_m2', 'front_setback_m', 'rear_setback_m', 'side_setback_m', 'side_setback_street_m',
   'height_m', 'main_wall_height_m', 'height_storeys', 'fsi', 'gfa_m2', 'lot_coverage_pct', 'building_length_m', 'building_depth_m', 'upper_storey_setback_m', 'dwelling_units_max'];
 const SCEN = { R: ['detached_house', 'detached_houseplex', 'semi_detached_houseplex'], RD: ['detached_house', 'detached_houseplex'], RS: ['detached_house', 'semi_detached_house', 'semi_detached_houseplex'], RT: ['detached_house', 'townhouse', 'detached_houseplex'], RM: ['detached_house', 'semi_detached_houseplex', 'townhouse'] };

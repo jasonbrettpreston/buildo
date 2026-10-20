@@ -17,8 +17,9 @@
 //   NOT_EXERCISABLE no real lot can exercise it (or the operator pinned it out of scope)         → it (the reason holds)
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { loadAssembly, runCheck, type Check, type GoldenLot } from './helpers/bylaw-golden-lots';
+import { loadAssembly, runCheck, vectorOf, type Check, type GoldenLot } from './helpers/bylaw-golden-lots';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped fixture JSON
 interface Case {
@@ -54,6 +55,15 @@ const byFamily = (cls: Case['class']): Map<string, Case[]> => {
 };
 
 describe('golden-lot fixtures are complete and self-contained', () => {
+  it('cases.json is fresh against the tree (golden-lots-cases.mjs --check): a tracker, disposition, unit or evaluator change that moves a case turns this red', () => {
+    let out = ''; let code = 0;
+    try { out = execFileSync(process.execPath, [path.join(ROOT, 'scripts/analysis/bylaw-validation/golden-lots-cases.mjs'), '--check'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
+    catch (err) { code = (err as { status?: number }).status ?? 1; out = String((err as { stderr?: string }).stderr || ''); }
+    expect({ code, stale: /stale/.test(out) }).toEqual({ code: 0, stale: false });
+  }, 180_000);
+  it('every case is in one of the four classes (no UNREACHED case: every answer reaches a real lot or is pinned / not exercisable)', () => {
+    expect(CASES.filter((c) => !['PROVEN', 'FAILS', 'OWED', 'NOT_EXERCISABLE'].includes(c.class)).map(label)).toEqual([]);
+  });
   it('every "wrong" and "disclose" answer in the tracker has at least one golden-lot case', () => {
     const have = new Set(CASES.map((c) => c.unit_id));
     const missing = tracker.filter((r) => (r.verdict === 'wrong' || r.verdict === 'disclose') && !have.has(r.unit_id)).map((r) => r.unit_id);
@@ -122,8 +132,15 @@ describe('NOT-EXERCISABLE — no real lot can exercise the answer', () => {
   for (const c of CASES.filter((x) => x.class === 'NOT_EXERCISABLE')) {
     it(`${label(c)}: ${c.reason.slice(0, 120)}`, () => {
       const d = disp.get(c.unit_id);
-      if (/^pinned out of scope/.test(c.reason)) expect(d?.scope_pin).toBeTruthy();
-      else expect(c.reason.length).toBeGreaterThan(40);
+      if (/^pinned out of scope/.test(c.reason)) { expect(d?.scope_pin).toBeTruthy(); return; }
+      // the R exception-vs-houseplex coverage comparison (M-180) arises on no golden R exception lot
+      const lots = [...LOTS.values()].filter((l) => l.lot.zone === c.zone && l.lot.exception);
+      expect(lots.length).toBeGreaterThan(0);
+      for (const l of lots) {
+        const lot = vectorOf(l, { building_type: 'detached_houseplex' }, A.defaults);
+        const r = A.E.effective(lot, 'lot_coverage_pct', A.E.loadCandidates(lot, A.units).candidates, A.C);
+        expect((r.disclosures || []).some((x: unknown) => String(x).includes('more permissive than the exception')), l.id).toBe(false);
+      }
     });
   }
 });

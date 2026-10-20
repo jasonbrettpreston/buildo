@@ -2939,72 +2939,76 @@
    "disclosure_code": "suite_lot_fact_unknown",
    "corrected_value": "On a through lot the rear setback equals the adjacent lot's required front setback; that neighbour fact is not held and is disclosed.",
    "zone": "R",
-   "class": "FAILS",
-   "finding": "E2E-F-02",
-   "owed_field": null,
-   "reason": "on real through lots the unit is applied and the garden-suite rear setback answers not_evaluated:missing_input:abutting_front_setback_m (tracker: UNFIXED, \"ruled; keyed correction not applied yet\")",
+   "class": "OWED",
+   "finding": null,
+   "owed_field": "suite_rear_setback_m (M-198(1): max(the subject lot's Layer 2 front_setback_m as the neighbour proxy, 1.5 m), disclosed suite_lot_fact_unknown; P5.13)",
+   "reason": "M-198(1) (69a:326): \"the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken\". The proxy is a Layer 2 value that today's path does not supply (the evaluator answers not_evaluated:missing_input:abutting_front_setback_m on both through lots), so the value is owed to ① (P5.13)",
    "checks": [
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(3)#(3)(A)",
      "lot": "5370045",
      "scenario": {
       "building_type": "garden_suite"
      },
-     "target": "rear_setback_m",
-     "expect": {
-      "value": 1.5
-     },
-     "rationale": "through lot: the adjacent lot's front setback is not held, so the answer is disclosed, not bound (the 1.5 m default answers)",
+     "rationale": "through lot (27 Gibson Ave): the through-lot arm (A) applies",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "not_evaluated",
-       "value": null,
-       "reason": "missing_input:abutting_front_setback_m",
-       "winner": null,
-       "applied": [
-        "150.7.60.20(3)#(3)(A)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
       }
      }
     },
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(3)#(3)(A)",
      "lot": "5397229",
      "scenario": {
       "building_type": "garden_suite"
      },
-     "target": "rear_setback_m",
-     "expect": {
-      "value": 1.5
-     },
-     "rationale": "through lot, as above",
+     "rationale": "through lot (167 Ashdale Ave): (A) applies",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "not_evaluated",
-       "value": null,
-       "reason": "missing_input:abutting_front_setback_m",
-       "winner": null,
-       "applied": [
-        "150.7.60.20(3)#(3)(A)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "excluded",
+     "unit": "150.7.60.20(3)#(3)(A)",
+     "lot": "5403712",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "why": "condition through_lot",
+     "rationale": "not a through lot: (A) is set aside and (B) 1.5 m answers (proven under 150.7.60.20(3)(B))",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": false,
+       "why": "condition through_lot",
+       "disclosures": []
       }
      }
     }
-   ]
+   ],
+   "lineage": {
+    "field": "suite_rear_setback_m",
+    "owed": [
+     "suite classes and the applies() suite match (M-182, M-177) — P2-10 / by-law keying/evaluator lane",
+     "M-219 principal setbacks applied to the suite — by-law keying/evaluator lane",
+     "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1) — Spec 130 lane / enrich_centreline WF3"
+    ],
+    "regulation_ids": 4
+   }
   },
   {
    "unit_id": "150.7.60.20(3)#(3)(B)",
@@ -7532,7 +7536,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "as E2E-F-03: 1.5 m from (3)(C) answers instead of the 1.0 m default",
+   "reason": "the (3)(C) step-back (M-198(4): mandatory above 4.0 m only) is keyed on the ground-level side setback, so 1.5 m answers instead of the 1.0 m default for a 4.0 m suite",
    "checks": [
     {
      "kind": "value",
@@ -7587,7 +7591,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "as E2E-F-03: 1.5 m from (3)(C) answers instead of the 1.0 m default",
+   "reason": "the (3)(C) step-back (M-198(4): mandatory above 4.0 m only) is keyed on the ground-level side setback, so 1.5 m answers instead of the 1.0 m default for a 4.0 m suite",
    "checks": [
     {
      "kind": "value",
@@ -7642,7 +7646,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "as E2E-F-03: 1.5 m from (3)(C) answers instead of the 1.0 m default",
+   "reason": "the (3)(C) step-back (M-198(4): mandatory above 4.0 m only) is keyed on the ground-level side setback, so 1.5 m answers instead of the 1.0 m default for a 4.0 m suite",
    "checks": [
     {
      "kind": "value",
@@ -7697,7 +7701,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "as E2E-F-03: 1.5 m from (3)(C) answers instead of the 1.0 m default",
+   "reason": "the (3)(C) step-back (M-198(4): mandatory above 4.0 m only) is keyed on the ground-level side setback, so 1.5 m answers instead of the 1.0 m default for a 4.0 m suite",
    "checks": [
     {
      "kind": "value",
@@ -7752,7 +7756,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "as E2E-F-03: 1.5 m from (3)(C) answers instead of the 1.0 m default",
+   "reason": "the (3)(C) step-back (M-198(4): mandatory above 4.0 m only) is keyed on the ground-level side setback, so 1.5 m answers instead of the 1.0 m default for a 4.0 m suite",
    "checks": [
     {
      "kind": "value",
@@ -8116,7 +8120,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\") is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it wins the ground-level side setback on every lane lot, even for a 4.0 m suite",
+   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\", MANDATORY above 4.0 m by M-198(4)) is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it binds the ground-level side setback on every lane lot, even for a 4.0 m suite with no part above 4.0 m",
    "checks": [
     {
      "kind": "value",
@@ -8170,7 +8174,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\") is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it wins the ground-level side setback on every lane lot, even for a 4.0 m suite",
+   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\", MANDATORY above 4.0 m by M-198(4)) is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it binds the ground-level side setback on every lane lot, even for a 4.0 m suite with no part above 4.0 m",
    "checks": [
     {
      "kind": "value",
@@ -8224,7 +8228,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\") is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it wins the ground-level side setback on every lane lot, even for a 4.0 m suite",
+   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\", MANDATORY above 4.0 m by M-198(4)) is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it binds the ground-level side setback on every lane lot, even for a 4.0 m suite with no part above 4.0 m",
    "checks": [
     {
      "kind": "value",
@@ -8278,7 +8282,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\") is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it wins the ground-level side setback on every lane lot, even for a 4.0 m suite",
+   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\", MANDATORY above 4.0 m by M-198(4)) is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it binds the ground-level side setback on every lane lot, even for a 4.0 m suite with no part above 4.0 m",
    "checks": [
     {
      "kind": "value",
@@ -8332,7 +8336,7 @@
    "class": "FAILS",
    "finding": "E2E-F-03",
    "owed_field": null,
-   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\") is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it wins the ground-level side setback on every lane lot, even for a 4.0 m suite",
+   "reason": "150.8.60.20(3)(C) (the 1.5 m step-back \"beginning from a height of 4.0 metres\", MANDATORY above 4.0 m by M-198(4)) is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it binds the ground-level side setback on every lane lot, even for a 4.0 m suite with no part above 4.0 m",
    "checks": [
     {
      "kind": "value",
@@ -12145,7 +12149,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `main_entrance_height`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",
@@ -12600,7 +12604,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `r_pre1953_fsi_relief`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",
@@ -13013,6 +13017,38 @@
        "disclosures": []
       }
      }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.80(2)#(2)(A)",
+     "lot": "5396488",
+     "scenario": {
+      "building_type": "townhouse"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "10.10.40.80(1)#(1)(C)",
+       "applied": [
+        "10.10.40.80(1)#(1)(A)",
+        "10.10.40.80(1)#(1)(B)",
+        "10.10.40.80(1)#(1)(C)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
     }
    ],
    "lineage": {
@@ -13073,6 +13109,38 @@
        "applies": true,
        "why": null,
        "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.80(2)#(2)(B)",
+     "lot": "5396488",
+     "scenario": {
+      "building_type": "townhouse"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "10.10.40.80(1)#(1)(C)",
+       "applied": [
+        "10.10.40.80(1)#(1)(A)",
+        "10.10.40.80(1)#(1)(B)",
+        "10.10.40.80(1)#(1)(C)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
       }
      }
     }
@@ -13621,7 +13689,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `main_entrance_height`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",
@@ -14335,6 +14403,38 @@
        "disclosures": []
       }
      }
+    },
+    {
+     "kind": "value",
+     "unit": "10.20.40.80(2)#(2)(A)",
+     "lot": "5271366",
+     "scenario": {
+      "building_type": "townhouse"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "10.20.40.80(1)#(1)(C)",
+       "applied": [
+        "10.20.40.80(1)#(1)(A)",
+        "10.20.40.80(1)#(1)(B)",
+        "10.20.40.80(1)#(1)(C)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
     }
    ],
    "lineage": {
@@ -14395,6 +14495,38 @@
        "applies": true,
        "why": null,
        "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.20.40.80(2)#(2)(B)",
+     "lot": "5271366",
+     "scenario": {
+      "building_type": "townhouse"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "10.20.40.80(1)#(1)(C)",
+       "applied": [
+        "10.20.40.80(1)#(1)(A)",
+        "10.20.40.80(1)#(1)(B)",
+        "10.20.40.80(1)#(1)(C)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
       }
      }
     }
@@ -14759,7 +14891,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `bedroom_cap`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",
@@ -14939,7 +15071,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `major_street_forms_not_modelled`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",
@@ -15738,6 +15870,38 @@
        "disclosures": []
       }
      }
+    },
+    {
+     "kind": "value",
+     "unit": "10.40.40.80(2)#(2)(A)",
+     "lot": "5161500",
+     "scenario": {
+      "building_type": "townhouse"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "10.40.40.80(1)#(1)(C)",
+       "applied": [
+        "10.40.40.80(1)#(1)(A)",
+        "10.40.40.80(1)#(1)(B)",
+        "10.40.40.80(1)#(1)(C)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
     }
    ],
    "lineage": {
@@ -15800,6 +15964,38 @@
        "disclosures": []
       }
      }
+    },
+    {
+     "kind": "value",
+     "unit": "10.40.40.80(2)#(2)(B)",
+     "lot": "5161500",
+     "scenario": {
+      "building_type": "townhouse"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "10.40.40.80(1)#(1)(C)",
+       "applied": [
+        "10.40.40.80(1)#(1)(A)",
+        "10.40.40.80(1)#(1)(B)",
+        "10.40.40.80(1)#(1)(C)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
     }
    ],
    "lineage": {
@@ -21040,7 +21236,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `rooftop_elements_exempt`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",
@@ -21097,7 +21293,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `rooftop_elements_exempt`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",
@@ -40284,6 +40480,33 @@
        "disclosures": []
       }
      }
+    },
+    {
+     "kind": "value",
+     "unit": "10.60.40.80(2)#(2)(A)",
+     "lot": "10594343",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "not_evaluated",
+       "value": null,
+       "reason": "exception_not_authored:900.5.10(123)",
+       "winner": null,
+       "applied": [],
+       "disclosures": []
+      }
+     }
     }
    ],
    "lineage": {
@@ -40346,6 +40569,33 @@
        "disclosures": []
       }
      }
+    },
+    {
+     "kind": "value",
+     "unit": "10.60.40.80(2)#(2)(B)",
+     "lot": "10594343",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "not_evaluated",
+       "value": null,
+       "reason": "exception_not_authored:900.5.10(123)",
+       "winner": null,
+       "applied": [],
+       "disclosures": []
+      }
+     }
     }
    ],
    "lineage": {
@@ -40405,6 +40655,33 @@
        "candidate": true,
        "applies": true,
        "why": null,
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.60.40.80(2)#(2)(C)",
+     "lot": "10594343",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "not_evaluated",
+       "value": null,
+       "reason": "exception_not_authored:900.5.10(123)",
+       "winner": null,
+       "applied": [],
        "disclosures": []
       }
      }
@@ -41855,6 +42132,34 @@
        "disclosures": []
       }
      }
+    },
+    {
+     "kind": "value",
+     "unit": "10.80.40.80(2)#(2)(A)",
+     "lot": "5019578",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "not_evaluated",
+       "value": null,
+       "reason": "no_candidate",
+       "winner": null,
+       "applied": [],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
     }
    ],
    "lineage": {
@@ -41915,6 +42220,34 @@
        "applies": true,
        "why": null,
        "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.80.40.80(2)#(2)(B)",
+     "lot": "5019578",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "separation_m",
+     "expect": {
+      "applied_includes": false
+     },
+     "rationale": "a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "not_evaluated",
+       "value": null,
+       "reason": "no_candidate",
+       "winner": null,
+       "applied": [],
+       "disclosures": [],
+       "alternate_paths": 30
       }
      }
     }
@@ -45141,42 +45474,57 @@
    "disclosure_code": null,
    "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
    "zone": "R",
-   "class": "FAILS",
-   "finding": "E2E-F-01",
-   "owed_field": null,
-   "reason": "the corner arm is keyed side_setback_m = max(side_setback_m; 1.5 m): the unit reads its own target, so a real corner lot answers not_evaluated:missing_input:side_setback_m instead of the 1.5 m minimum",
+   "class": "OWED",
+   "finding": null,
+   "owed_field": "suite_side_setbacks_m (M-198(2): the larger of (A) — the Layer 2 front_setback_m proxy averaged with the principal's required side yard, min 1.5 m — and (C) max(principal side yard, 1.5 m); disposition owed M-198 → P5.13)",
+   "reason": "the corner-lot-only half is proven (the arm applies on corner lots and is set aside on interior lots). The value needs the principal building's side yard and the Layer 2 front-setback proxy (cross-structure, M-198(2)); the disposition owes it to P5.13. Today the evaluator answers not_evaluated:missing_input:side_setback_m on a corner lot, which is the input ① supplies",
    "checks": [
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(6)#(6)(C)",
      "lot": "5396831",
      "scenario": {
       "building_type": "garden_suite"
      },
-     "target": "side_setback_m",
-     "expect": {
-      "value": 1.5
-     },
-     "rationale": "corner lot (6.1 m frontage): (C) = max(the principal house's side setback 0.9 m (10.10.40.70(3)(A), evaluated on this lot), 1.5 m) = 1.5 m",
+     "rationale": "corner lot (20 Athletic Ave): the corner arm (C) applies",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "not_evaluated",
-       "value": null,
-       "reason": "missing_input:side_setback_m",
-       "winner": null,
-       "applied": [
-        "150.7.60.20(6)#(6)(C)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "excluded",
+     "unit": "150.7.60.20(6)#(6)(C)",
+     "lot": "5403712",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "why": "condition corner_lot",
+     "rationale": "interior lot (36 Hallam St): (C) is set aside, so 1.5 m is not every garden suite's default (M-179(2)); (5)(B) answers there (proven under 150.7.60.20(5)(B))",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": false,
+       "why": "condition corner_lot",
+       "disclosures": []
       }
      }
     }
-   ]
+   ],
+   "lineage": {
+    "field": "suite_side_setbacks_m",
+    "owed": [
+     "suite classes and the applies() suite match (M-182, M-177) — P2-10 / by-law keying/evaluator lane",
+     "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1) — Spec 130 lane / enrich_centreline WF3"
+    ],
+    "regulation_ids": 3
+   }
   },
   {
    "unit_id": "150.7.60.20(6)#(6)(C)",
@@ -45190,42 +45538,57 @@
    "disclosure_code": null,
    "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
    "zone": "RD",
-   "class": "FAILS",
-   "finding": "E2E-F-01",
-   "owed_field": null,
-   "reason": "the corner arm is keyed side_setback_m = max(side_setback_m; 1.5 m): the unit reads its own target, so a real corner lot answers not_evaluated:missing_input:side_setback_m instead of the 1.5 m minimum",
+   "class": "OWED",
+   "finding": null,
+   "owed_field": "suite_side_setbacks_m (M-198(2): the larger of (A) — the Layer 2 front_setback_m proxy averaged with the principal's required side yard, min 1.5 m — and (C) max(principal side yard, 1.5 m); disposition owed M-198 → P5.13)",
+   "reason": "the corner-lot-only half is proven (the arm applies on corner lots and is set aside on interior lots). The value needs the principal building's side yard and the Layer 2 front-setback proxy (cross-structure, M-198(2)); the disposition owes it to P5.13. Today the evaluator answers not_evaluated:missing_input:side_setback_m on a corner lot, which is the input ① supplies",
    "checks": [
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(6)#(6)(C)",
      "lot": "5144129",
      "scenario": {
       "building_type": "garden_suite"
      },
-     "target": "side_setback_m",
-     "expect": {
-      "value": 1.8
-     },
-     "rationale": "corner lot (18.0 m frontage): (C) = max(the principal house's side setback 1.8 m (10.20.40.70(3)(E), evaluated on this lot), 1.5 m) = 1.8 m",
+     "rationale": "corner lot (68 Aviemore Dr): the corner arm (C) applies",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "not_evaluated",
-       "value": null,
-       "reason": "missing_input:side_setback_m",
-       "winner": null,
-       "applied": [
-        "150.7.60.20(6)#(6)(C)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "excluded",
+     "unit": "150.7.60.20(6)#(6)(C)",
+     "lot": "5118342",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "why": "condition corner_lot",
+     "rationale": "interior lot: (C) is set aside",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": false,
+       "why": "condition corner_lot",
+       "disclosures": []
       }
      }
     }
-   ]
+   ],
+   "lineage": {
+    "field": "suite_side_setbacks_m",
+    "owed": [
+     "suite classes and the applies() suite match (M-182, M-177) — P2-10 / by-law keying/evaluator lane",
+     "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1) — Spec 130 lane / enrich_centreline WF3"
+    ],
+    "regulation_ids": 3
+   }
   },
   {
    "unit_id": "150.7.60.21(2)#(2)(A)",
@@ -68325,7 +68688,7 @@
    "class": "OWED",
    "finding": null,
    "owed_field": "disclosures (P5.12 `sixplex_height_conditions`)",
-   "reason": "",
+   "reason": "the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "value",

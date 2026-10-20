@@ -4,11 +4,10 @@
 //
 // Golden-lot end-to-end harness (lane e2e-verify-1, 2026-10-20): runs the committed evaluator on real-lot inputs
 // snapshotted in src/tests/fixtures/bylaw-golden-lots/lots.json. No DB. The unit assembly is the production one
-// used by scripts/analysis/bylaw-validation/eval-lots.mjs and validate.mjs G-EVAL: agreed units (agree.mjs,
+// shared with scripts/analysis/bylaw-validation/eval-lots.mjs (assembly.mjs) and validate.mjs G-EVAL: agreed units (agree.mjs,
 // adjudications applied) + generated fields (authored.mjs) + displacement links (xref.mjs) + makeContext(evaluator
 // vocab, enactments, absences, exception authoring state). Nothing here re-implements a by-law rule: a check only
 // reads what the evaluator returns. Erasable TypeScript only, so `node` can import it directly.
-import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -49,40 +48,12 @@ const UNITS_OF: Record<string, number> = { detached_house: 1, semi_detached_hous
   garden_suite: 1, laneway_suite: 1, ancillary_building: 1, apartment_building: 6 };
 
 export async function loadAssembly(root: string): Promise<Assembly> {
-  const mod = async (rel: string): Promise<Json> => import(pathToFileURL(path.join(root, rel)).href);
-  const V = await mod('scripts/analysis/bylaw/validate.mjs');
-  const AU = await mod('scripts/analysis/bylaw/authored.mjs');
-  const AG = await mod('scripts/analysis/bylaw/agree.mjs');
-  const VO = await mod('scripts/analysis/bylaw/vocab.mjs');
-  const E = await mod('scripts/analysis/bylaw/evaluate.mjs');
-  const X = await mod('scripts/analysis/bylaw/xref.mjs');
-  const I = V.loadInputs({ root });
-  const external = JSON.parse(fs.readFileSync(path.join(root, 'scripts/seeds/bylaw/external.json'), 'utf8'));
-  const ag = AG.checkAgree({ shards: AU.loadAuthored(root), adjudications: I.adjudications, vocab: I.vocab });
-  const index = AU.buildIndex(I.slice);
-  const base: Json[] = [...AG.agreedUnits(ag).values()].map(AU.withGeneratedFields);
-  const units: Json[] = base.map((u: Json) => {
-    let d: Json = { targets: [], optional_variation: false };
-    try { d = X.displacesOf(index, u.unit_id, I.vocab, external); } catch { /* unresolved: no links (as eval-lots.mjs) */ }
-    return { ...u, displaces: d.targets.map((t: Json) => t.id), displaces_optional: d.optional_variation === true };
-  });
-  const enactments: Json = {};
-  for (const p of I.snap.pages || []) Object.assign(enactments, E.enactedDatesFromText(p.normalized || ''));
-  const excState = new Map<string, { agreed: Set<string>; pending: Set<string>; pendingN: number }>();
-  for (const [id, rec] of ag.units as Map<string, Json>) {
-    const reg = AU.splitUnitId(id).reg.replace(/~.*$/, '');
-    if (!/^900\.\d+\.10\(/.test(reg)) continue;
-    const s = excState.get(reg) || { agreed: new Set<string>(), pending: new Set<string>(), pendingN: 0 };
-    const tg = ([] as string[]).concat((rec.unit && rec.unit.target) || []).filter((t) => t && t !== 'none');
-    if (rec.state === 'agreed' || rec.state === 'adjudicated') tg.forEach((t) => s.agreed.add(t)); else { s.pendingN++; tg.forEach((t) => s.pending.add(t)); }
-    excState.set(reg, s);
-  }
-  const authored: Json = {};
-  for (const [reg, s] of excState) authored[reg] = s.pendingN === 0 ? 'authored' : { status: 'partial', targets: [...s.agreed].filter((t) => !s.pending.has(t)).sort() };
-  const C = E.makeContext(VO.evaluatorVocab(I.vocab), { enactments, absences: I.absences, authored });
+  // the shared real-lot assembly (scripts/analysis/bylaw-validation/assembly.mjs), the one eval-lots.mjs uses
+  const S: Json = await import(pathToFileURL(path.join(root, 'scripts/analysis/bylaw-validation/assembly.mjs')).href);
+  const { I, E, units, C } = await S.loadRealLotAssembly(root);
   const defaults: Json = {};
   for (const [k, v] of Object.entries((I.vocab.design_choice_disclosure || {}).default_overrides || {})) if (k !== '$comment' && v && typeof (v as Json).taken_as === 'boolean') defaults[k] = (v as Json).taken_as;
-  return { defaults, E, C, units, byId: new Map(units.map((u) => [u.unit_id, u])) };
+  return { defaults, E, C, units, byId: new Map((units as Json[]).map((u) => [u.unit_id, u])) };
 }
 
 /**

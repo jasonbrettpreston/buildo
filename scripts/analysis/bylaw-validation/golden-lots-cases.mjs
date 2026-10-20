@@ -72,10 +72,13 @@ const HAND = {
   '150.7.60.20(3)#(3)(B)': { z: each(PLAIN, (id) => [id, GS, 'rear_setback_m', { value: 1.5 }, 'not a through lot ("all other cases"): 1.5 m']) },
   '150.7.60.20(5)#(5)(B)': { z: { ...each(PLAIN, (id) => [id, GS, 'side_setback_m', { value: sideGS(id) }, `max(0.6, min(10 % × ${f(id).toFixed(3)} m, 3.0)) = ${sideGS(id)} m`]), RT: [['5071329', GS, 'side_setback_m', { value: sideGS('5071329') }, `max(0.6, min(10 % × ${f('5071329').toFixed(3)}, 3.0))`], ['5106285', GS, 'side_setback_m', { value: 3.0 }, `frontage ${f('5106285').toFixed(1)} m: the 3.0 m cap binds`]] } },
   '150.7.60.20(5)#(5)(A)': { z: each(PLAIN, (id) => [id, GS, 'side_setback_m', { applied_includes: false, unit_applies: false, value: sideGS(id) }, 'openings taken as absent (vocab default suite_wall_openings=false, M-197): the with-openings arm is not bound']) },
-  '150.7.60.20(6)#(6)(C)': { z: { R: [['5396831', GS, 'side_setback_m', { value: 1.5 }, 'corner lot (6.1 m frontage): (C) = max(the principal house\'s side setback 0.9 m (10.10.40.70(3)(A), evaluated on this lot), 1.5 m) = 1.5 m']], RD: [['5144129', GS, 'side_setback_m', { value: 1.8 }, 'corner lot (18.0 m frontage): (C) = max(the principal house\'s side setback 1.8 m (10.20.40.70(3)(E), evaluated on this lot), 1.5 m) = 1.8 m']] },
-    class: 'FAILS', finding: 'E2E-F-01', note: 'the corner arm is keyed side_setback_m = max(side_setback_m; 1.5 m): the unit reads its own target, so a real corner lot answers not_evaluated:missing_input:side_setback_m instead of the 1.5 m minimum' },
-  '150.7.60.20(3)#(3)(A)': { z: { R: [['5370045', GS, 'rear_setback_m', { value: 1.5 }, 'through lot: the adjacent lot\'s front setback is not held, so the answer is disclosed, not bound (the 1.5 m default answers)'], ['5397229', GS, 'rear_setback_m', { value: 1.5 }, 'through lot, as above']] },
-    class: 'FAILS', finding: 'E2E-F-02', note: 'on real through lots the unit is applied and the garden-suite rear setback answers not_evaluated:missing_input:abutting_front_setback_m (tracker: UNFIXED, "ruled; keyed correction not applied yet")' },
+  '150.7.60.20(6)#(6)(C)': { z: { R: [{ kind: 'reach', lot: '5396831', scenario: GS, rationale: 'corner lot (20 Athletic Ave): the corner arm (C) applies' }, { kind: 'excluded', lot: '5403712', scenario: GS, why: 'condition corner_lot', rationale: 'interior lot (36 Hallam St): (C) is set aside, so 1.5 m is not every garden suite\'s default (M-179(2)); (5)(B) answers there (proven under 150.7.60.20(5)(B))' }],
+    RD: [{ kind: 'reach', lot: '5144129', scenario: GS, rationale: 'corner lot (68 Aviemore Dr): the corner arm (C) applies' }, { kind: 'excluded', lot: '5118342', scenario: GS, why: 'condition corner_lot', rationale: 'interior lot: (C) is set aside' }] },
+    owed: 'suite_side_setbacks_m (M-198(2): the larger of (A) — the Layer 2 front_setback_m proxy averaged with the principal\'s required side yard, min 1.5 m — and (C) max(principal side yard, 1.5 m); disposition owed M-198 → P5.13)',
+    note: 'the corner-lot-only half is proven (the arm applies on corner lots and is set aside on interior lots). The value needs the principal building\'s side yard and the Layer 2 front-setback proxy (cross-structure, M-198(2)); the disposition owes it to P5.13. Today the evaluator answers not_evaluated:missing_input:side_setback_m on a corner lot, which is the input ① supplies' },
+  '150.7.60.20(3)#(3)(A)': { z: { R: [{ kind: 'reach', lot: '5370045', scenario: GS, rationale: 'through lot (27 Gibson Ave): the through-lot arm (A) applies' }, { kind: 'reach', lot: '5397229', scenario: GS, rationale: 'through lot (167 Ashdale Ave): (A) applies' }, { kind: 'excluded', lot: '5403712', scenario: GS, why: 'condition through_lot', rationale: 'not a through lot: (A) is set aside and (B) 1.5 m answers (proven under 150.7.60.20(3)(B))' }] },
+    owed: 'suite_rear_setback_m (M-198(1): max(the subject lot\'s Layer 2 front_setback_m as the neighbour proxy, 1.5 m), disclosed suite_lot_fact_unknown; P5.13)',
+    note: 'M-198(1) (69a:326): "the neighbour\'s required front yard is approximated by the subject lot\'s Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken". The proxy is a Layer 2 value that today\'s path does not supply (the evaluator answers not_evaluated:missing_input:abutting_front_setback_m on both through lots), so the value is owed to ① (P5.13)' },
   '150.7.60.40(1)#(1)(A)': { z: each(PLAIN, (id) => [id, { ...GS, vars: { distance_to_residential_m: 6.0 } }, 'height_m', { value: 4.0 }, 'suite 6.0 m (< 7.5 m) from the house: 4.0 m']) },
   '150.7.60.40(1)#(1)(B)': { z: each(PLAIN, (id) => [id, { ...GS, vars: { distance_to_residential_m: 8.0 } }, 'height_m', { value: 6.3 }, 'suite 8.0 m (≥ 7.5 m) from the house: 6.3 m']) },
   '150.7.60.40(2)#whole': { z: each(PLAIN, (id) => [id, GS, 'height_storeys', { value: 2 }, 'a garden suite may have two storeys']) },
@@ -90,9 +93,9 @@ const HAND = {
   '150.8.60.40(1)#(1)(B)': { z: each(LANE, (id) => [id, { ...LS, vars: { distance_to_residential_m: 8.0 } }, 'height_m', { value: 6.3 }, 'laneway suite 8.0 m (≥ 7.5 m) from the house: 6.3 m']) },
   '150.8.60.20(2)#(2)(A)': { z: each(LANE, (id) => [id, LS, 'rear_setback_m', { value: 1.0, winner: '150.8.60.20(2)#(2)(B)' }, 'openings taken as none: the 0.0 m arm is not bound; the 1.0 m (2)(B) setback answers']) },
   '150.8.60.20(3)#(3)(D)': { z: each(LANE, (id) => [id, { ...LS, vars: { proposed_height_m: 4.0 } }, 'side_setback_m', { value: 1.0 }, 'a 4.0 m laneway suite (no part above 4.0 m): the default side setback is 1.0 m']),
-    class: 'FAILS', finding: 'E2E-F-03', note: '150.8.60.20(3)(C) (the 1.5 m step-back "beginning from a height of 4.0 metres") is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it wins the ground-level side setback on every lane lot, even for a 4.0 m suite' },
+    class: 'FAILS', finding: 'E2E-F-03', note: '150.8.60.20(3)(C) (the 1.5 m step-back "beginning from a height of 4.0 metres", MANDATORY above 4.0 m by M-198(4)) is keyed side_setback_m = 1.5 m on condition abuts_lane only, so it binds the ground-level side setback on every lane lot, even for a 4.0 m suite with no part above 4.0 m' },
   '150.8.60.20(3)#(3)(A)': { z: each(LANE, (id) => [id, { ...LS, vars: { proposed_height_m: 4.0 } }, 'side_setback_m', { value: 1.0 }, 'side lot line facts not held: "as keyed the 1.0 m default answers"']),
-    class: 'FAILS', finding: 'E2E-F-03', note: 'as E2E-F-03: 1.5 m from (3)(C) answers instead of the 1.0 m default' },
+    class: 'FAILS', finding: 'E2E-F-03', note: 'the (3)(C) step-back (M-198(4): mandatory above 4.0 m only) is keyed on the ground-level side setback, so 1.5 m answers instead of the 1.0 m default for a 4.0 m suite' },
   '10.10.40.1(2)#(2)(A)': { z: { R: [['5403712', { building_type: 'detached_house' }, 'buildings_on_lot', { value: 1 }, 'one residential building per lot']] } },
   '10.10.40.1(3)#(3)(A)': { z: { R: [['5265152', { building_type: 'detached_house' }, 'dwelling_units_max', { value: 4 }, 'R (f9.0; u4): the u label caps dwelling units at 4'], ['5403712', { building_type: 'detached_house' }, 'dwelling_units_max', { value: 'unregulated', unit_applies: false }, 'R (d0.6), no u label: no u cap']] } },
   '10.60.40.1(2)#(2)(A)': { z: { RT: [['5152702', { building_type: 'detached_house' }, 'dwelling_units_max', { value: 97 }, 'RT (u97): the u label caps dwelling units at 97'], ['5071329', { building_type: 'detached_house' }, 'dwelling_units_max', { value: 'unregulated', unit_applies: false }, 'RT (au220.0), no u label: no cap']] } },
@@ -174,6 +177,10 @@ const OWED_FIELD = {
   '150.7.80.1(1)#(1)(A)': 'disclosures (suite_parking_bicycle report field)', '150.7.80.1(1)#(1)(B)': 'disclosures (suite_parking_bicycle)', '150.8.80.1(1)#(1)(A)': 'disclosures (suite_parking_bicycle)', '150.7.80.1(2)#whole': 'disclosures (suite_parking_bicycle)',
   '150.7.60.20(6)#(6)(A)': 'disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)',
 };
+// the half of an OWED answer that is checkable on today's path, by P5.12 code
+const PARTIAL = {
+  buildings_on_same_lot: { target: 'separation_m', expect: { applied_includes: false }, rationale: 'a multi-building separation rule is not bound on a single-building lot: the unit never limits separation_m' },
+};
 const NOT_EX_ZONE = {};
 const NOT_EX = { // answer → reason (no real lot can exercise it in the local dev DB / it is pinned)
   '10.10.30.1(2)#whole': 'no authored R exception (Chapter 900.2, 63 authored) keys lot_coverage_pct, and an unauthored exception blocks every target (ruling (d)): the R exception-vs-houseplex coverage comparison cannot arise on any real R lot today (454 R lots carry an LC overlay, none with an authored coverage exception)',
@@ -201,7 +208,8 @@ for (const r of rows) {
     if (h) {
       const checks = h.z[zone].map((x) => mk(u, zone, x));
       const cls = h.class || (h.owed ? 'OWED' : 'PROVEN');
-      cases.push({ ...c, class: cls, finding: h.finding || null, owed_field: h.owed ? (r.disclosure_code ? `disclosures (P5.12 \`${r.disclosure_code}\`)` : 'disclosures (P5.12 code, step ①)') : null, reason: h.note || (cls === 'PROVEN' ? 'the evaluator answers the operator\'s corrected value on real lots' : ''), checks });
+      cases.push({ ...c, class: cls, finding: h.finding || null, owed_field: h.owed ? (h.owed !== 'disclosures' ? h.owed : r.disclosure_code ? `disclosures (P5.12 \`${r.disclosure_code}\`)` : 'disclosures (P5.12 code, step ①)') : null,
+        reason: h.note || (cls === 'PROVEN' ? 'the evaluator answers the operator\'s corrected value on real lots' : 'the value-bearing part is checked on real lots now (the listed checks); the lot-level disclosure belongs to compute_maxbld_scenarios (①, not built)'), checks });
       continue;
     }
     // default: the effect is a disclosure / a ① composition; prove the unit reaches an affected real lot
@@ -220,7 +228,8 @@ for (const r of rows) {
     const keyed = u.disclosure && u.disclosure !== 'none';
     cases.push({ ...c, class: 'OWED', owed_field: owedField, keyed_disclosure: keyed ? u.disclosure.slice(0, 300) : null,
       reason: `${acc ? 'accessory-structure unit (M-175): loaded on the lot, never a principal limit; ' : ''}the unit reaches the lot${keyed ? ' and carries its keyed disclosure' : ''}; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)`,
-      checks: ok.map((t) => ({ kind: acc ? 'loaded' : 'reach', unit: u.unit_id, lot: t.g.id, scenario: s, rationale: `${want.size ? (m(t) ? 'category-matched ' : `no ${[...want].join('/')} lot in ${zone} reaches it; `) : ''}affected lot (${t.g.cats.join('+')}): ${acc ? 'candidate' : `applies ${t.res.observed.applies === true ? 'true' : `undecided (${t.res.observed.why})`}`}` })) });
+      checks: [...ok.map((t) => ({ kind: acc ? 'loaded' : 'reach', unit: u.unit_id, lot: t.g.id, scenario: s, rationale: `${want.size ? (m(t) ? 'category-matched ' : `no ${[...want].join('/')} lot in ${zone} reaches it; `) : ''}affected lot (${t.g.cats.join('+')}): ${acc ? 'candidate' : `applies ${t.res.observed.applies === true ? 'true' : `undecided (${t.res.observed.why})`}`}` })),
+        ...(PARTIAL[r.disclosure_code] ? ok.slice(0, 1).map((t) => ({ kind: 'value', unit: u.unit_id, lot: t.g.id, scenario: s, ...PARTIAL[r.disclosure_code] })) : [])] });
   }
 }
 // the field-lineage entry each OWED case is owed to (docs/reference/maxbld-field-lineage.json)

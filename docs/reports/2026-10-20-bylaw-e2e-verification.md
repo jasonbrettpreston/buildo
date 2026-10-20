@@ -30,53 +30,33 @@ Lane e2e-verify-1 (independent verifier; did not write the fixes). Branch `wf1/b
 
 | | PROVEN | FAILS | OWED-TO-① | NOT-EXERCISABLE | total |
 |---|---:|---:|---:|---:|---:|
-| cases (answer × zone) | 158 | 19 | 932 | 16 | 1125 |
-| answers (worst case per answer) | 64 | 10 | 239 | 4 | 317 |
-| — answers, verdict `wrong` | 63 | 10 | 57 | 1 | 131 |
+| cases (answer × zone) | 158 | 16 | 935 | 16 | 1125 |
+| answers (worst case per answer) | 64 | 8 | 241 | 4 | 317 |
+| — answers, verdict `wrong` | 63 | 8 | 59 | 1 | 131 |
 | — answers, verdict `disclose` | 1 | 0 | 182 | 3 | 186 |
 
-Checks run on real lots: **2066**. OWED cases on a category-matched lot: 75. No OWED case is left without a reaching lot.
+Checks run on real lots: **2080**. OWED cases on a category-matched lot: 75. OWED cases with no check: `150.7.60.70(2)#row` (an answer with no keyed unit, so there is nothing to reach; its disclosure can come only from ①). OWED cases that also carry a value check on today's path (the provable half): 19.
 
 Lineage fields that the OWED cases are owed to:
-`disclosures` 852 · `suite_gfa_sqm` 25 · `building_class` 15 · `suite_interior_sqm` 10 · `main_front_setback_basis` 10 · `unit_breakdown` 5 · `suite_coverage_option` 5 · `attic_outside_gfa_sqm` 5 · `basement_livable_sqm` 5.
+`disclosures` 852 · `suite_gfa_sqm` 25 · `building_class` 15 · `suite_interior_sqm` 10 · `main_front_setback_basis` 10 · `unit_breakdown` 5 · `suite_coverage_option` 5 · `attic_outside_gfa_sqm` 5 · `basement_livable_sqm` 5 · `suite_side_setbacks_m` 2 · `suite_rear_setback_m` 1.
 
-## FAILS (19 cases, 10 answers, 6 findings)
+## FAILS (16 cases, 8 answers, 4 findings)
 
-Each FAIL below gives: the answer it contradicts, the real lot, the observed evaluator result, and the expected result. **Re-run at bylaw-fix-1 `52b155ea`** (suite keying M-177 / M-198 / M-199): the same fixtures were run against a `git archive` of that commit, and **none of the FAILs flip**, nor does any PROVEN or OWED case. The F-02 and F-03 rows cite M-198, which 52b155ea reports as incorporated, but on real lots it does not yet change the answer.
+Each FAIL below gives: the answer it contradicts, the real lot, the observed evaluator result, and the expected result. **Re-run at bylaw-fix-1 `52b155ea`** (suite keying M-177 / M-198 / M-199): the same fixtures were run against a `git archive` of that commit, and **none of the FAILs flip**, nor does any PROVEN or OWED case. The F-03 rows cite M-198, which 52b155ea reports as incorporated, but on real lots it does not yet change the answer.
 
-### E2E-F-01 — Garden suite on a corner lot: (6)(C) cannot evaluate
+**Reclassified after verification verify-13 (2026-10-20).** E2E-F-01 and E2E-F-02 are retired as FAILs and are now OWED-TO-①; their ids are not reused.
+- **E2E-F-02 → OWED** (`150.7.60.20(3)#(3)(A)`, through lots 5370045 27 Gibson Ave, 5397229 167 Ashdale Ave). The first expectation (1.5 m) contradicted ratified M-198(1) (69a:326): *"the neighbour's required front yard is approximated by the subject lot's Layer 2 `front_setback_m`, and the larger of (A) and (B) 1.5 m is taken"*. The value is therefore max(Layer 2 front_setback_m, 1.5 m), typically about 6 m. That proxy is a Layer 2 value that today's path does not supply: on both lots the evaluator answers `not_evaluated:missing_input:abutting_front_setback_m`. Owed to `suite_rear_setback_m` (P5.13). Checked now: (A) applies on both through lots and is set aside on an interior lot (36 Hallam St), where (B) 1.5 m answers.
+- **E2E-F-01 → OWED** (`150.7.60.20(6)#(6)(C)`, corner lots 5396831, 5144129). The disposition records `owed: M-198 → P5.13` ("M-198(2) is Layer 3 and needs the principal building's side yard"). M-198(2) takes the larger of (A) (the same proxy averaged with the principal's side yard, min 1.5 m) and (C). Today `not_evaluated:missing_input:side_setback_m` is the cross-structure input ① supplies, not a keying failure. Owed to `suite_side_setbacks_m`. Checked now: (C) applies on both corner lots and is set aside on interior lots (so 1.5 m is not every garden suite's default, the M-179(2) half of the answer).
 
-- **Answers contradicted:** `150.7.60.20(6)#(6)(C)` (wrong, tracker INCORPORATED), zones R, RD.
-- **Operator answer:** "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite."
-- **Ruling:** M-179(2) (69a l.288: "(C) is the corner-lot arm outside (A)/(B), keyed `condition [corner_lot]`").
-- **Cause:** (6)(C) is keyed `side_setback_m = max(side_setback_m; 1.5 m)`. The unit reads its own target, so a real corner lot returns `not_evaluated:missing_input:side_setback_m`. The by-law text says "the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres": the argument is the principal building's setback, not the suite's.
-- **Owner / bylaw-fix-1:** by-law keying lane (M-75 correction of 150.7.60.20(6)(C)). The tracker has this row INCORPORATED (fixed_by M-179) at both 208e8a82 and 52b155ea, and it still fails on real corner lots.
-
-| answer | zone | lot | scenario | target | expected | observed |
-|---|---|---|---|---|---|---|
-| `150.7.60.20(6)#(6)(C)` | R | 5396831 20 Athletic Ave — R (d0.6) | garden_suite | side_setback_m | value=1.5 | ✗ not_evaluated `missing_input:side_setback_m` |
-| `150.7.60.20(6)#(6)(C)` | RD | 5144129 68 Aviemore Dr — RD (f18.0; a690) | garden_suite | side_setback_m | value=1.8 | ✗ not_evaluated `missing_input:side_setback_m` |
-
-### E2E-F-02 — Garden suite on a through lot: rear setback not evaluated
-
-- **Answers contradicted:** `150.7.60.20(3)#(3)(A)` (wrong, tracker UNFIXED), zones R.
-- **Operator answer:** "On a through lot the rear setback equals the adjacent lot's required front setback; that neighbour fact is not held and is disclosed."
-- **Ruling:** M-198 (tracker: UNFIXED, "ruled; keyed correction not applied yet").
-- **Cause:** The unit applies on real through lots, and the result is `not_evaluated:missing_input:abutting_front_setback_m`. The answer says the neighbour fact is not held and is disclosed, so the 1.5 m default should answer.
-- **Owner / bylaw-fix-1:** by-law keying lane. **52b155ea marks this row INCORPORATED (verified_by_lock, M-198), but on real through lots the result is unchanged**: its lock does not evaluate a real through lot.
-
-| answer | zone | lot | scenario | target | expected | observed |
-|---|---|---|---|---|---|---|
-| `150.7.60.20(3)#(3)(A)` | R | 5370045 27 Gibson Ave — R (f5.0; d0.6) | garden_suite | rear_setback_m | value=1.5 | ✗ not_evaluated `missing_input:abutting_front_setback_m` |
-| `150.7.60.20(3)#(3)(A)` | R | 5397229 167 Ashdale Ave — R (d0.6) | garden_suite | rear_setback_m | value=1.5 | ✗ not_evaluated `missing_input:abutting_front_setback_m` |
-
-### E2E-F-03 — Laneway suite side setback: 1.5 m step-back wins at ground level
+### E2E-F-03 — Laneway suite side setback: the above-4.0 m step-back binds at ground level
 
 - **Answers contradicted:** `150.8.60.20(3)#(3)(A)`, `150.8.60.20(3)#(3)(D)` (wrong, tracker UNFIXED), zones R, RD, RS, RT, RM.
-- **Operator answer:** "A 0.0 m side setback needs no openings and a side lot line off street and lane; as keyed the 1.0 m default answers."
-- **Ruling:** M-177(3) ("the upper-storey side setback (150.8.60.20(3)(C)) [is] not applied to the maximum"); M-198(3) ("which line abuts the lane is not held, so 1.0 m").
-- **Cause:** 150.8.60.20(3)(C) ("beginning from a height of 4.0 metres … 1.5 metres") is keyed `side_setback_m = 1.5 m` with condition `abuts_lane` only. It wins the ground-level side setback on every lane lot, even for a 4.0 m suite, so 1.5 m answers instead of 1.0 m. This one cause fails both (3)(A) and (3)(D) in all five zones.
-- **Owner / bylaw-fix-1:** by-law keying lane: key (3)(C) as a height-banded step-back, or set it aside as a disclosed design choice (M-177(3)). **52b155ea marks (3)(A) and (3)(D) INCORPORATED (fixed_by M-197 / M-198), but on all five lane lots 1.5 m from (3)(C) still answers.**
+- **Operator's words** (`envelope-answers.json` note, `150.8.60.20(3)#(3)(A)`): "Laneway Suite Side Yard Setback is zero if this condition is met , the required minimum side yard setback for an ancillary building containing a laneway suite is: (A) if the side lot line does not abut a street or lane and there are no openings such as vehicle access, doors or windows in the side main wall of the ancillary building, 0.0 metres;"
+- **Operator's words** (`envelope-answers.json` note, `150.8.60.20(3)#(3)(D)`): " Laneway Suite Side Yard Setback is 1m espite regulations 10.5.60.20(3) and (6) and regulation 10.10.60.20(1), the required minimum side yard setback for an ancillary building containing a laneway suite is: (D) in all other cases, 1.0 metres."
+- **Disposition (corrected value):** "A 0.0 m side setback needs no openings and a side lot line off street and lane; as keyed the 1.0 m default answers."
+- **Ruling:** M-198(4) (69a:326: "150.8.60.20(3)(C) (the 1.5 m step-back above 4.0 m) is a mandatory upper-storey rule … amends M-177(3)"); M-198(3) for the 1.0 m default.
+- **Cause:** 150.8.60.20(3)(C) ("beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres") is keyed `side_setback_m = 1.5 m` with condition `abuts_lane` only, i.e. on the ground-level side setback. M-198(4) makes it mandatory *above 4.0 m*, so it binds the part of the suite above 4.0 m, never the ground-level setback. On a 4.0 m suite (no part above 4.0 m) 1.5 m still answers instead of the 1.0 m default. This one cause fails both (3)(A) and (3)(D) in all five zones.
+- **Owner / bylaw-fix-1:** by-law keying lane: key (3)(C) on an upper-storey target (or a height band above 4.0 m), so the ground-level side setback is (3)(D) 1.0 m. **52b155ea marks (3)(A) and (3)(D) INCORPORATED (fixed_by M-197 / M-198), but on all five lane lots 1.5 m from (3)(C) still answers.**
 
 | answer | zone | lot | scenario | target | expected | observed |
 |---|---|---|---|---|---|---|
@@ -94,7 +74,9 @@ Each FAIL below gives: the answer it contradicts, the real lot, the observed eva
 ### E2E-F-04 — R houseplex 0.45 m blank-wall side yard does not displace the 0.9 m
 
 - **Answers contradicted:** `10.10.40.70(4)#(4)(D)`, `10.10.40.70(4)#(4)(E)` (wrong, tracker INCORPORATED), zones R.
-- **Operator answer:** "0.45 m side yard for a detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall)."
+- **Operator's words** (`envelope-answers.json` note, `10.10.40.70(4)#(4)(D)`): "This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose this."
+- **Operator's words** (`envelope-answers.json` note, `10.10.40.70(4)#(4)(E)`): "This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose this. You say above this applies with no condition which is wrong"
+- **Disposition (corrected value):** "0.45 m side yard for a detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall)."
 - **Ruling:** M-205 (answer: "0.45 m side yard … taken without windows or doors … by default").
 - **Cause:** The 0.45 m arm is applied, but 10.10.40.70(3)(A) at 0.9 m wins as the larger minimum. (4) says the setback "required in regulation 10.10.40.70(3)(A) and (B), may be reduced to 0.45 metres", so it should displace (3)(A)/(B) when its condition holds, and M-205 takes that condition as met by default.
 - **Owner / bylaw-fix-1:** displacement link (xref) or a keyed `displaces` on 10.10.40.70(4). 52b155ea: not addressed.
@@ -108,7 +90,8 @@ Each FAIL below gives: the answer it contradicts, the real lot, the observed eva
 ### E2E-F-05 — RS townhouse length on a major street: 17.0 m wins over 19.0 m
 
 - **Answers contradicted:** `10.40.40.20(4)#(4)(A)` (wrong, tracker INCORPORATED), zones RS.
-- **Operator answer:** "No change: (A) is the townhouse 19.0 m and (B) the apartment 25.0 m, a separate unit, so the answer already matches."
+- **Operator's words** (`envelope-answers.json` note, `10.40.40.20(4)#(4)(A)`): "for both apartment building and townhouse"
+- **Disposition (corrected value):** "No change: (A) is the townhouse 19.0 m and (B) the apartment 25.0 m, a separate unit, so the answer already matches."
 - **Ruling:** M-187 (answer: "(A) is the townhouse 19.0 m … the answer already matches").
 - **Cause:** The 19.0 m unit is applied, but 10.40.40.20(1) at 17.0 m still wins as the smaller maximum. The RS text says "Despite regulation **10.20**.40.20(1), in the RS zone …", an RD cross-reference (a drafting slip in the by-law), so no displacement link to 10.40.40.20(1) is made.
 - **Owner / bylaw-fix-1:** a ruling on the mis-cited "Despite" (parallel chapters 10.20 / 10.40 mirror each other), then the displacement. 52b155ea: not addressed.
@@ -121,7 +104,10 @@ Each FAIL below gives: the answer it contradicts, the real lot, the observed eva
 ### E2E-F-06 — M-180 more-permissive comparison does not reach by_type exception tables
 
 - **Answers contradicted:** `10.10.40.1(7)#whole`, `10.80.30.1(2)#whole`, `10.80.40.1(5)#whole` (wrong, tracker INCORPORATED), zones R, RM.
-- **Operator answer:** "Where the Chapter 900 exception and the R houseplex rule (10.10.40.10 / .30 / .40) both apply, the more permissive prevails, with the losing value disclosed; already keyed (ranks_layers)."
+- **Operator's words** (`envelope-answers.json` note, `10.10.40.1(7)#whole`): "Procedural - etached Houseplex or Semi-Detached Houseplex Despite regulations 10.10.40.1(6), 900.1.10(3) and 900.1.10(4)(A), if a regulation in clauses 10.10.40.10, 10.10.40.30 or 10.10.40.40 for a detached houseplex or semi-detached houseplex is more permissive than the regulation that would apply to the detached houseplex or semi-detached houseplex under regulation 10.10.40.1(6), then the more p"
+- **Operator's words** (`envelope-answers.json` note, `10.80.30.1(2)#whole`): "This is important the addition of the secondary suite entitles the owner to more permissive maximum lot coverage and this is the key for maxbld option with suite being larger than maxbld without secondary suite"
+- **Operator's words** (`envelope-answers.json` note, `10.80.40.1(5)#whole`): "This is interesting ouseplex is more permissive than the regulation that would apply to the detached houseplex or semi-detached houseplex under regulation 10.80.40.1(4), then the more permissive regulation prevails. houseplec gets special treatment and potentially bigger building envelope"
+- **Disposition (corrected value):** "Where the Chapter 900 exception and the R houseplex rule (10.10.40.10 / .30 / .40) both apply, the more permissive prevails, with the losing value disclosed; already keyed (ranks_layers)."
 - **Ruling:** M-180 (answer: "the more permissive prevails, with the losing value disclosed").
 - **Cause:** It works on x22 lots. On x18 (RM) and x125 (R), where the exception is a `by_type` table naming `detached_house` but not `detached_houseplex`, the M-180(1) alias does not reach the by_type lookup, and the result is `not_evaluated:by_type_unlisted:detached_houseplex`.
 - **Owner / bylaw-fix-1:** evaluator (by_type lookup honours the M-180(1) houseplex → detached alias). 52b155ea: not addressed.
@@ -185,7 +171,7 @@ Cell = P/F/O/N case counts (PROVEN / FAILS / OWED-TO-① / NOT-EXERCISABLE). The
 | 150.7.1 General | 1O | 1O | 1O | 1O | 1O |  |
 | 150.7.20.1 General | 1P | 1P | 1P | 1P | 1P |  |
 | 150.7.50.10 Landscaping | 2O | 2O | 2O | 2O | 2O |  |
-| **150.7.60.20 Setbacks** | 6P 2F 5O | 6P 1F 5O | 6P 5O | 6P 5O | 6P 5O |  |
+| 150.7.60.20 Setbacks | 6P 7O | 6P 6O | 6P 5O | 6P 5O | 6P 5O |  |
 | 150.7.60.21 Setback Exemptions | 5O | 5O | 5O | 5O | 5O |  |
 | 150.7.60.30 Separation and Dimensions | 1P 2O | 2O | 2O | 2O | 2O |  |
 | 150.7.60.31 Separation Exemptions | 1O | 1O | 1O | 1O | 1O |  |
@@ -240,7 +226,7 @@ Cell = P/F/O/N case counts (PROVEN / FAILS / OWED-TO-① / NOT-EXERCISABLE). The
 | RD | 5159934 | 164 Old Yonge St | RD (f18.0; a690) | plain_12_18, deep | 2 |
 | RD | 5075945 | None None | RD (f12.0; a370) | plain_6_9 | 3 |
 | RD | 5263242 | 7 Field Ave | RD (f12.0; a370; d0.6) | plain_6_9 | 5 |
-| RD | 5118342 | 22 Leona Dr | RD (f12.0; a370) | plain_9_12 | 23 |
+| RD | 5118342 | 22 Leona Dr | RD (f12.0; a370) | plain_9_12 | 24 |
 | RD | 5261114 | 31 Glencrest Blvd | RD (f12.0; a370; d0.6) | plain_9_12, sixplex | 1 |
 | RD | 5262612 | 57 Donegall Dr | RD (f12.0; a370; d0.6) | plain_lt6 | 1 |
 | RD | 5344574 | 33 Waterford Dr | RD (f13.5; a510; d0.45) | through | 4 |
@@ -327,7 +313,7 @@ Cell = P/F/O/N case counts (PROVEN / FAILS / OWED-TO-① / NOT-EXERCISABLE). The
 | R | 5401089 | 1977 Dundas St E | R (f7.5; d0.6) | major | 3 |
 | R | 5377946 | 108 Balsam Ave | R (d0.6) | plain_12_18 | 1 |
 | R | 5334603 | 66 Norwood Rd | R (d0.6) | plain_18p | 2 |
-| R | 5403712 | 36 Hallam St | R (d0.6) | plain_9_12 | 29 |
+| R | 5403712 | 36 Hallam St | R (d0.6) | plain_9_12 | 31 |
 | R | 5306058 | 26 Maryland Blvd | R (d0.6) | r_lc | 2 |
 | R | 5195536 | 216 Roslin Ave | R (f7.5; d0.6) (x933) · 900.2.10(933) | ravine | 151 |
 | R | 5372668 | 340 Waverley Rd | R (d0.6) | sixplex | 25 |
@@ -352,8 +338,10 @@ Cell = P/F/O/N case counts (PROVEN / FAILS / OWED-TO-① / NOT-EXERCISABLE). The
 
 ## Verification
 
-- `npx vitest run src/tests/bylaw-golden-lots.logic.test.ts`: 2063 tests. 1130 pass, of which 19 are `it.fails` (the FAILS, red as expected); 933 are `it.todo` (932 OWED-TO-① plus 1 legacy-path todo).
-- Full suite (`npm test`, on base 208e8a82 plus this change): 805 files passed, 1 skipped; 19182 tests passed, 4 skipped, 933 todo.
+- `npx vitest run src/tests/bylaw-golden-lots.logic.test.ts`: 2068 tests: 1132 pass, of which 16 are `it.fails` (the 16 FAILS cases, red as expected); 936 are `it.todo` (935 OWED-TO-① plus 1 legacy-path todo). Includes a freshness test that runs `golden-lots-cases.mjs --check` in the suite, so a tracker, disposition, unit or evaluator change that moves a case turns it red.
+- Full suite (`npm test`, on this branch): 805 files passed, 1 skipped; 19184 tests passed, 4 skipped, 936 todo; `tsc --noEmit` clean; eslint clean on the test, helper, generator, assembly.mjs and eval-lots.mjs.
+- The real-lot assembly is shared: `scripts/analysis/bylaw-validation/assembly.mjs` is used by both `eval-lots.mjs` and the helper. eval-lots output is byte-identical before and after (25 golden lots, sha ca3905351ffe).
+- Lot existence check (verify-13 `e2e-dbcheck.cjs`): **not run**. The dblock was held by another lane throughout; it was never forced.
 - `tsc --noEmit` is clean. eslint is clean on the test, the helper and the generator.
 - `node scripts/analysis/bylaw-validation/golden-lots-cases.mjs --check` reports cases.json as fresh.
 - No by-law data, adjudication, evaluator or compute code was changed. Every DB pull was `BEGIN READ ONLY … ROLLBACK`.
