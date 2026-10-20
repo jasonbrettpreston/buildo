@@ -519,7 +519,7 @@ legacy full-shape reference for D2, though it is not a harness golden).
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=18 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 2 | 2 | table rows=17 vocab-hit rows=17 |
+| G3 | 2 | 2 | table rows=16 vocab-hit rows=16 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
@@ -533,7 +533,7 @@ legacy full-shape reference for D2, though it is not a harness golden).
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_centreline | PASS | min_migration=225 <= migrations count=272 |
+| 1 | enrich_centreline | PASS | min_migration=225 <= migrations count=273 |
 | 2 | enrich_centreline | PASS | 19 declared, missing from seeds: none |
 | 3 | enrich_centreline | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_centreline | PASS | SPEC LINK header present=true |
@@ -590,7 +590,7 @@ legacy full-shape reference for D2, though it is not a harness golden).
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | not-run | §5.5 describe not evaluated — vitest did not run (--fast); shape scan is NOT a substitute for the §5.5 suite |
 | 3 | Tunables externalized | enforced-green | G-4: 19 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not evaluated (vitest did not run) |
-| 4 | Compute rule declared | enforced-green | G-2: 15 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 4 | Compute rule declared | enforced-green | G-2: 14 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |

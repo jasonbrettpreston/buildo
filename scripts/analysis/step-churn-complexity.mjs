@@ -54,6 +54,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tableDataRows } from './gates/markdown-table.mjs';
 import { spawnSync } from 'node:child_process';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -313,10 +314,7 @@ export function parseChurnTable(text) {
   const windowMatch = /window_end:\s*`([0-9a-f]{40})`/.exec(text);
   const windowEnd = windowMatch ? windowMatch[1] : null;
   const bySlug = new Map();
-  for (const raw of text.split('\n')) {
-    const line = raw.trim();
-    if (!line.startsWith('|')) continue;
-    if (/^\|[-\s|:]+\|$/.test(line)) continue; // separator row
+  for (const { text: line } of tableDataRows(text)) { // R-FA: header + separator rows are never data rows
     const cells = line.split('|').map((c) => c.trim());
     // cells[0] and cells[last] are the empty boundary strings from a leading/
     // trailing '|'; the 7 declared columns live at cells[1..7].

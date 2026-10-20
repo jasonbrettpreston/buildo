@@ -129,9 +129,10 @@ describe('R-EB (b) — gate and tooling variables are pinned seeds, read by one 
     expect(golden).toContain("gateVariable('gate_why_min_chars')");
   });
 
-  it('standardFor is unchanged by the estate arm (R-DT reads the same inputs)', () => {
-    expect(standardFor('m', [], { hardStop: false })).toBe('V3');
-    expect(standardFor('m', [], { hardStop: true })).toBe('V2');
+  it('standardFor is unchanged by the estate arm (R-DT, amended by R-EY, reads the same inputs)', () => {
+    const clean = { crossStep: [], registry: [], stageGated: [], gates: [], fiveWord: [], programme: [], exceptions: [] };
+    expect(standardFor('m', [], { hardStop: false, ...clean })).toBe('V3');
+    expect(standardFor('m', [], { hardStop: true, ...clean })).toBe('V2');
   });
 });
 

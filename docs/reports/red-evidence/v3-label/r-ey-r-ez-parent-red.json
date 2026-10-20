@@ -1,0 +1,462 @@
+{
+  "numTotalTestSuites": 12,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 6,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 35,
+  "numPassedTests": 4,
+  "numFailedTests": 14,
+  "numPendingTests": 17,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1792502130748,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [],
+      "startTime": 1792502130748,
+      "endTime": 1792502130748,
+      "status": "failed",
+      "message": "Failed to load url ../../scripts/hooks/check-integrate-verification.mjs (resolved id: ../../scripts/hooks/check-integrate-verification.mjs) in <parent-tree>/src/tests/integrate-verification.logic.test.ts. Does the file exist?",
+      "name": "<parent-tree>/src/tests/integrate-verification.logic.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "N1 R-DT — a stage-gated red reads V2"
+          ],
+          "fullName": "N1 R-DT — a stage-gated red reads V2 stageGatedReds: excluded AND not passing, never merely excluded",
+          "status": "passed",
+          "title": "stageGatedReds: excluded AND not passing, never merely excluded",
+          "duration": 0.5801670000000172,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "N1 R-DT — a stage-gated red reads V2"
+          ],
+          "fullName": "N1 R-DT — a stage-gated red reads V2 call site: no hard stop + a stage-gated red prints V2 (old behaviour printed V3)",
+          "status": "failed",
+          "title": "call site: no hard stop + a stage-gated red prints V2 (old behaviour printed V3)",
+          "duration": 1.95474999999999,
+          "failureMessages": [
+            "AssertionError: expected 'V3' to be 'V2' // Object.is equality\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:76:94\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)\n    at execute (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/worker.js:127:5)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "N1 R-DT — a stage-gated red reads V2"
+          ],
+          "fullName": "N1 R-DT — a stage-gated red reads V2 standardFor: stageGated true reads V2 even with hardStop false",
+          "status": "passed",
+          "title": "standardFor: stageGated true reads V2 even with hardStop false",
+          "duration": 0.05912499999999454,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "N1 R-DT — a stage-gated red reads V2"
+          ],
+          "fullName": "N1 R-DT — a stage-gated red reads V2 the scorecard line routes through standardSignals",
+          "status": "failed",
+          "title": "the scorecard line routes through standardSignals",
+          "duration": 1.570333000000005,
+          "failureMessages": [
+            "AssertionError: expected '#!/usr/bin/env node\\n/**\\n * step:val…' to match /const labelArgs = \\[[^\\n]*\\.\\.\\.stand…/\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:93:17\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)\n    at execute (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/worker.js:127:5)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "N2 R-DI — #44 FAIL:INPUT is hard for pending OR converted"
+          ],
+          "fullName": "N2 R-DI — #44 FAIL:INPUT is hard for pending OR converted witnessInputFailHard",
+          "status": "passed",
+          "title": "witnessInputFailHard",
+          "duration": 0.06204199999996263,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "N2 R-DI — #44 FAIL:INPUT is hard for pending OR converted"
+          ],
+          "fullName": "N2 R-DI — #44 FAIL:INPUT is hard for pending OR converted both FAIL:INPUT early returns (fingerprint, derived-reads-steps) use it",
+          "status": "passed",
+          "title": "both FAIL:INPUT early returns (fingerprint, derived-reads-steps) use it",
+          "duration": 0.3096249999999827,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones a fully clean step reads V3",
+          "status": "failed",
+          "title": "a fully clean step reads V3",
+          "duration": 0.14400000000000546,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:152:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (6) a 14/17 step reads V2 and names each gate short of max",
+          "status": "failed",
+          "title": "(6) a 14/17 step reads V2 and names each gate short of max",
+          "duration": 0.09720799999996643,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:158:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (6) a scorecard hard-stop reason other than a fast invariant is a gates failure",
+          "status": "failed",
+          "title": "(6) a scorecard hard-stop reason other than a fast invariant is a gates failure",
+          "duration": 0.09704200000004448,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:162:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (7) a deferred five-word item reads V2; a FAIL word reads V2",
+          "status": "failed",
+          "title": "(7) a deferred five-word item reads V2; a FAIL word reads V2",
+          "duration": 0.099708000000021,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:166:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (8) an unmet cutover_prereq naming the step reads V2 — the ③ cutover predicate (checkCutoverPrereqs), applies_when honoured",
+          "status": "failed",
+          "title": "(8) an unmet cutover_prereq naming the step reads V2 — the ③ cutover predicate (checkCutoverPrereqs), applies_when honoured",
+          "duration": 0.10129200000000083,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:177:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (9) an exception citing no register rule id reads V2 and is named",
+          "status": "failed",
+          "title": "(9) an exception citing no register rule id reads V2 and is named",
+          "duration": 0.07429200000001401,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:186:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (3) cross-step: #44 must answer PASS with nothing attributed",
+          "status": "failed",
+          "title": "(3) cross-step: #44 must answer PASS with nothing attributed",
+          "duration": 0.07062500000000682,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:191:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (4) registry: a failing invariant blocking the step reads V2",
+          "status": "failed",
+          "title": "(4) registry: a failing invariant blocking the step reads V2",
+          "duration": 0.06904200000002447,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:197:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (5) a stage-gated red is listed",
+          "status": "failed",
+          "title": "(5) a stage-gated red is listed",
+          "duration": 0.07158300000003237,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at lbl (<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:149:8)\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:201:12\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones (1)/(2) purity and ledger rows are listed; several conditions are listed in order",
+          "status": "failed",
+          "title": "(1)/(2) purity and ledger rows are listed; several conditions are listed in order",
+          "duration": 0.09212500000001,
+          "failureMessages": [
+            "TypeError: ge.standardLabel is not a function\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:208:15\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)\n    at execute (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/worker.js:127:5)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones fail closed: a caller that answers only hardStop (the R-DT signature) reads V2",
+          "status": "failed",
+          "title": "fail closed: a caller that answers only hardStop (the R-DT signature) reads V2",
+          "duration": 0.134208000000001,
+          "failureMessages": [
+            "AssertionError: expected 'V3' to be 'V2' // Object.is equality\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:214:91\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)\n    at execute (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/worker.js:127:5)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY — V3 only when all nine conditions hold; the label names the failing ones"
+          ],
+          "fullName": "R-EY — V3 only when all nine conditions hold; the label names the failing ones the scorecard line prints standardLabel through standardSignals with the five words, programme items, descriptor and exceptions",
+          "status": "failed",
+          "title": "the scorecard line prints standardLabel through standardSignals with the five words, programme items, descriptor and exceptions",
+          "duration": 1.3744590000000017,
+          "failureMessages": [
+            "AssertionError: expected '#!/usr/bin/env node\\n/**\\n * step:val…' to match /const labelArgs = \\[[^\\n]*\\.\\.\\.stand…/\n    at <parent-tree>/src/tests/step-validate-standard-label.logic.test.ts:221:17\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///Users/brettpreston_macmini/Buildo/node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)\n    at runBaseTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:29:3)\n    at ForksBaseWorker.executeTests (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/workers/forks.js:27:7)\n    at execute (file:///Users/brettpreston_macmini/Buildo/node_modules/vitest/dist/worker.js:127:5)"
+          ],
+          "meta": {}
+        }
+      ],
+      "startTime": 1792502131333,
+      "endTime": 1792502131340.3745,
+      "status": "failed",
+      "message": "",
+      "name": "<parent-tree>/src/tests/step-validate-standard-label.logic.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "R-FA — header and separator rows are never data rows"
+          ],
+          "fullName": "R-FA — header and separator rows are never data rows the shared helper drops the header (the row before a separator) and every separator, aligned or not",
+          "status": "skipped",
+          "title": "the shared helper drops the header (the row before a separator) and every separator, aligned or not",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-FA — header and separator rows are never data rows"
+          ],
+          "fullName": "R-FA — header and separator rows are never data rows G3: a plain header with every data row in the vocabulary scores 2/2 (was 1/2)",
+          "status": "skipped",
+          "title": "G3: a plain header with every data row in the vocabulary scores 2/2 (was 1/2)",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-FA — header and separator rows are never data rows"
+          ],
+          "fullName": "R-FA — header and separator rows are never data rows G3: vocabulary stuffed into the header does not count as a vocab-hit row",
+          "status": "skipped",
+          "title": "G3: vocabulary stuffed into the header does not count as a vocab-hit row",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-FA — header and separator rows are never data rows"
+          ],
+          "fullName": "R-FA — header and separator rows are never data rows G-2: a header naming preserved-in-compute is not an ungrounded preserved-in-compute row",
+          "status": "skipped",
+          "title": "G-2: a header naming preserved-in-compute is not an ungrounded preserved-in-compute row",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-FA — header and separator rows are never data rows"
+          ],
+          "fullName": "R-FA — header and separator rows are never data rows the churn table and the #36 defect-definition reader use the same helper (a header shaped like data is skipped)",
+          "status": "skipped",
+          "title": "the churn table and the #36 defect-definition reader use the same helper (a header shaped like data is skipped)",
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1792502130748,
+      "endTime": 1792502130748,
+      "status": "failed",
+      "message": "Failed to load url <parent-tree>/scripts/analysis/gates/markdown-table.mjs (resolved id: <parent-tree>/scripts/analysis/gates/markdown-table.mjs). Does the file exist?",
+      "name": "<parent-tree>/src/tests/table-header-rows.logic.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "R-EY (9) — every exception naming the step cites a resolving register rule id"
+          ],
+          "fullName": "R-EY (9) — every exception naming the step cites a resolving register rule id resolvingRuleIds keeps only ids in the register (an amendment suffix falls back to its base id)",
+          "status": "skipped",
+          "title": "resolvingRuleIds keeps only ids in the register (an amendment suffix falls back to its base id)",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY (9) — every exception naming the step cites a resolving register rule id"
+          ],
+          "fullName": "R-EY (9) — every exception naming the step cites a resolving register rule id collects grandfathered, deviations[], declared-deviation ledger rows, spec_version and step_timeout entries",
+          "status": "skipped",
+          "title": "collects grandfathered, deviations[], declared-deviation ledger rows, spec_version and step_timeout entries",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY (9) — every exception naming the step cites a resolving register rule id"
+          ],
+          "fullName": "R-EY (9) — every exception naming the step cites a resolving register rule id parseDefectRows reads data rows only (R-FA) and splits on unescaped pipes",
+          "status": "skipped",
+          "title": "parseDefectRows reads data rows only (R-FA) and splits on unescaped pipes",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E1 — the V3 ratchet only grows, through its generator"
+          ],
+          "fullName": "R-EY E1 — the V3 ratchet only grows, through its generator a listed step that reads V2 is RED; an unlisted V2 step and an unevaluated listed step are not",
+          "status": "skipped",
+          "title": "a listed step that reads V2 is RED; an unlisted V2 step and an unevaluated listed step are not",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E1 — the V3 ratchet only grows, through its generator"
+          ],
+          "fullName": "R-EY E1 — the V3 ratchet only grows, through its generator mergeRatchet unions (never removes) and seeds converted_baseline once",
+          "status": "skipped",
+          "title": "mergeRatchet unions (never removes) and seeds converted_baseline once",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E1 — the V3 ratchet only grows, through its generator"
+          ],
+          "fullName": "R-EY E1 — the V3 ratchet only grows, through its generator the committed ratchet file is in its generator's shape (comment, sorted, baseline = converted[] at R-EY)",
+          "status": "skipped",
+          "title": "the committed ratchet file is in its generator's shape (comment, sorted, baseline = converted[] at R-EY)",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E2 — no ③ cutover unless the step reads V3"
+          ],
+          "fullName": "R-EY E2 — no ③ cutover unless the step reads V3 a converted step outside the R-EY baseline that reads V2 is RED; baseline and pending steps are not",
+          "status": "skipped",
+          "title": "a converted step outside the R-EY baseline that reads V2 is RED; baseline and pending steps are not",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception"
+          ],
+          "fullName": "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception the switch is the pinned seed variable gate_v3_hard_gate_enabled, default 0 (off)",
+          "status": "skipped",
+          "title": "the switch is the pinned seed variable gate_v3_hard_gate_enabled, default 0 (off)",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception"
+          ],
+          "fullName": "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception off: no finding, but the converted V2 steps are named; on: each fires, the exception does not",
+          "status": "skipped",
+          "title": "off: no finding, but the converted V2 steps are named; on: each fires, the exception does not",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception"
+          ],
+          "fullName": "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception the exception list is closed: exactly refresh_snapshot, citing D-P1, expiring at permits ③",
+          "status": "skipped",
+          "title": "the exception list is closed: exactly refresh_snapshot, citing D-P1, expiring at permits ③",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception"
+          ],
+          "fullName": "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception the exception auto-expires: permits converted with refresh_snapshot still listed is RED, on or off",
+          "status": "skipped",
+          "title": "the exception auto-expires: permits converted with refresh_snapshot still listed is RED, on or off",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception"
+          ],
+          "fullName": "R-EY E3 — the hard gate: built OFF behind one pinned switch, one closed exception step-validate wires E1/E2/E3 into the hard stop and the generator flag",
+          "status": "skipped",
+          "title": "step-validate wires E1/E2/E3 into the hard stop and the generator flag",
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1792502130748,
+      "endTime": 1792502130748,
+      "status": "failed",
+      "message": "Failed to load url <parent-tree>/scripts/analysis/gates/v3-label.mjs (resolved id: <parent-tree>/scripts/analysis/gates/v3-label.mjs). Does the file exist?",
+      "name": "<parent-tree>/src/tests/v3-label-enforcement.logic.test.ts"
+    }
+  ]
+}

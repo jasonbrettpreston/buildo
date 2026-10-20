@@ -976,7 +976,7 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=31 vocab-hit rows=2 |
+| G3 | 1 | 2 | table rows=29 vocab-hit rows=2 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 20 ledger row(s), 0 without CLOSED/PIN () |
@@ -990,7 +990,7 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=272 |
+| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=273 |
 | 2 | neighbourhoods | PASS | 4 declared, missing from seeds: none |
 | 3 | neighbourhoods | PASS | retired=0 overlap-with-declared=none |
 | 7 | neighbourhoods | PASS | SPEC LINK header present=true |

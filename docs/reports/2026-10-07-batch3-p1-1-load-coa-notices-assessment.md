@@ -121,7 +121,7 @@ pin and the samples (§12).
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=2 |
 | G2 | 1 | 1 | no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
-| G3 | 2 | 2 | table rows=6 vocab-hit rows=6 |
+| G3 | 2 | 2 | table rows=5 vocab-hit rows=5 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
@@ -135,7 +135,7 @@ pin and the samples (§12).
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=272 |
+| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=273 |
 | 2 | load_coa_notices | PASS | 39 declared, missing from seeds: none |
 | 3 | load_coa_notices | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_coa_notices | PASS | SPEC LINK header present=true |
@@ -192,7 +192,7 @@ pin and the samples (§12).
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | not-run | §5.5 describe not evaluated — vitest did not run (--fast); shape scan is NOT a substitute for the §5.5 suite |
 | 3 | Tunables externalized | enforced-green | G-4: 39 declared, 8 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not evaluated (vitest did not run) |
-| 4 | Compute rule declared | enforced-green | G-2: 2 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 4 | Compute rule declared | enforced-green | G-2: 1 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |

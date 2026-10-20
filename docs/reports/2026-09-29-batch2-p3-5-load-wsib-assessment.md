@@ -666,7 +666,7 @@ The harness uses a fake pool, so the run wrote nothing to any database.
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=22 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 2 | 2 | table rows=15 vocab-hit rows=15 |
+| G3 | 2 | 2 | table rows=14 vocab-hit rows=14 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 9 ledger row(s), 0 without CLOSED/PIN () |
@@ -680,7 +680,7 @@ The harness uses a fake pool, so the run wrote nothing to any database.
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_wsib | PASS | min_migration=66 <= migrations count=272 |
+| 1 | load_wsib | PASS | min_migration=66 <= migrations count=273 |
 | 2 | load_wsib | PASS | 2 declared, missing from seeds: none |
 | 3 | load_wsib | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_wsib | PASS | SPEC LINK header present=true |

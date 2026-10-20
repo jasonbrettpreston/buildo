@@ -617,6 +617,19 @@
       "content_sha256": "3697b9aa42bb16a8b1546e470516e2ebdb2d16a9af3d6918f40c34cecb2bbe36",
       "moved_at": "2026-10-20",
       "commit": "cd7a649e"
+    },
+    {
+      "id": "M33",
+      "from_spec": "124",
+      "anchor": "| R-DF | **McDonald's Airtight V3 is the final step standard (operator 2026-10-17).** V3 = V2 (registry and cross-step truth, R-BF) + compute purity (R-BZ, R-CA) + EXTERNALIZED (below; operator 2026-10-18: a V3 rule for every future step conversion) + the latent-compliance rulings R-CV…R-DT; there is no V4, and every future step and ruling is V3. A ruling is admitted only when its row answers the operator's seven questions: STANDARDIZED (one form: the majority form or a cited precedent), OBSERVABLE (a `step-validate` PASS/FAIL line or a lock names it), RECORDED (this register row, dated, with the operator's decision), SCALABLE (it applies by archetype to every step; any exception is a closed grandfather list), ACCURATE (measured, file:line evidence, red-first lock), SIMPLE (the smallest change; anything wider is a PIN), EXTERNALIZED (operator 2026-10-17: every threshold, window, timeout, limit, rate or count anything in the estate uses — step, gate, admin surface or tooling — is a registered logic variable (Rule 3, R-CV form, seeded by migration) or an exact zero-tolerance answer; a gate, badge or report that shows a step's bound reads that step's own variable, never a copied number; enforced for compute by gate E #32 and for admin badges by R-DL). Every row from R-CX on carries this label and names an existing lock file in backticks. | Amends R-BA, R-BF, R-BZ; the standard-versions table | `spec124-register-locks.logic` |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B18 — Register rows R-DF…R-DT (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20",
+      "line_count": 15,
+      "classification": "REGISTER",
+      "evidence": "v3-label lane (operator 2026-10-20: R-EY, R-EZ, R-FA, McDonald's Airtight V3): Spec 124 was at 379/380 lines and owes R-EY…R-FA. Rows R-DF…R-DT stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.",
+      "content_sha256": "6b5b409de89579baa57e1523e0a39bf14dd990f782f0f4ead02dab8f25b6df20",
+      "moved_at": "2026-10-20",
+      "commit": "6d63db74"
     }
   ]
 }

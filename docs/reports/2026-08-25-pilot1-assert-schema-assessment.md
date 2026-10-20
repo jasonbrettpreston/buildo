@@ -458,7 +458,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=51 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=31 vocab-hit rows=12 |
+| G3 | 1 | 2 | table rows=29 vocab-hit rows=12 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 14 ledger row(s), 0 without CLOSED/PIN () |
@@ -472,7 +472,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_schema | PASS | min_migration=41 <= migrations count=272 |
+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=273 |
 | 2 | assert_schema | PASS | 3 declared, missing from seeds: none |
 | 3 | assert_schema | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_schema | PASS | SPEC LINK header present=true |

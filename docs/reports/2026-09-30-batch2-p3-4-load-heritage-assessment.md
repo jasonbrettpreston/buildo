@@ -767,7 +767,7 @@ Every table and column the LEGACY step's SQL touches (reads and writes, includin
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=19 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 2 | 2 | table rows=18 vocab-hit rows=18 |
+| G3 | 2 | 2 | table rows=17 vocab-hit rows=17 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
@@ -781,7 +781,7 @@ Every table and column the LEGACY step's SQL touches (reads and writes, includin
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_heritage | PASS | min_migration=227 <= migrations count=272 |
+| 1 | load_heritage | PASS | min_migration=227 <= migrations count=273 |
 | 2 | load_heritage | PASS | 7 declared, missing from seeds: none |
 | 3 | load_heritage | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_heritage | PASS | SPEC LINK header present=true |
