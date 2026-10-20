@@ -198,7 +198,7 @@ Per Spec 123 §7.1 role split: **a human adjudicates; the agent discovers and ci
 | IL-2 | `f238b814` false-WARN threshold corrections | `f238b814` | `fix(28_data_quality): adjust false WARN thresholds in CQA checks` | `cost_outliers: == 0 → < 20` (`:135-140`'s own comment names this commit + "C4 panel A1, 2026-08-13" re-review) and `builder_null_rate_warn_pct: 20% → 95%` (the SEED default, not a code literal — this commit's other half landed as the E8 seed value IL-1 already carries). The `cost_outliers` `< 20` threshold itself remains a **hardcoded JS literal** (`:140`, `if (costOutliers >= 20)`), not a logic var — it survived IL-1's externalization pass untouched. | **RULED (§2.4, 2026-09-12) — CHANGE-TO logic var**: promote to a registered `cost_outlier_count_warn_max` (default **20**); `why` cites `f238b814` + the 2026-08-13 C4 panel re-review verbatim. Supersedes this row's original `preserved-in-compute, stays hardcoded` proposal. |
 | IL-3 | Phase G Pre-Permit retirement gate, duplicated across chains | `adec1f68` | `feat(42_chain_coa): WF1 Phase G — PRE-permit retirement shims + assert gate + lead-detail CoA branch` | `permits_pre_permit_count == 0` FAIL gate exists at `:250-258` (`runPermitChecks` block) AND `:399-410` (`runCoaChecks` block, same query text, same threshold) — the commit's own message states this is deliberate: "adds `permits_pre_permit_count==0` FAIL gate inside BOTH `runPermitChecks` AND `runCoaChecks` blocks (defense-in-depth per v2-Q2)". Spec 42 §6.11 (`:800`) confirms: "duplicated query — disjoint chain-scoped guards preclude shared variable; defense-in-depth per v2-Q2". | **RULED (§2.4, 2026-09-12) — ACCEPT: preserved-in-compute ×2** (one `checks[]` entry per chain, NOT collapsed into a single `chains:["permits","coa"]` row like the WSIB mechanism below) — the disjoint-guard reasoning is itself the `why`: `runPermitChecks`/`runCoaChecks` are independent booleans (both true only in a standalone run), so a single shared check risks silently not firing if one guard's branch is refactored away while the other survives. Preserving 2 independent checks is the intentional defense-in-depth the v2-Q2 decision named. |
 | IL-4 | WSIB metrics dual-injection (permits ∧ sources) | `326bb847` | `fix(35_wsib_registry): add WSIB metrics to assert-data-bounds audit_table` | `wsibAuditRows` (`:709-714`) is ONE array literal, `.push(...wsibAuditRows)`'d by reference into `permitsAuditTable.rows` (`:718`) AND `sourcesAuditTable.rows` (`:722`) — genuinely one mechanism, two destinations, unlike IL-3's two independent queries. Commit message: "Build WSIB audit rows and append to whichever audit_table is active (permits or sources). Re-evaluate verdict if WSIB rows have FAILs." | **RULED (§2.4, 2026-09-12) — ACCEPT: preserved-in-compute, ONE check group, `checks[].chains: ["permits","sources"]`** (the multi-chain array shape `assert_global_coverage`'s own descriptor already uses — not a new mechanism, `step.schema.json:685-691`) — the 4 WSIB metric definitions are authored once and reused, mirroring the source's own single-array-two-destinations shape rather than IL-3's deliberate duplication. |
-| IL-5 | `ghost_permits_30d` terminal-phase exclusion | `ea087109` | `fix(41_chain_permits): WF3 — exclude terminal permits from ghost_permits_30d assert` | `:938-940`: `AND lifecycle_phase IS NOT NULL AND lifecycle_phase NOT IN ('P19', 'P20')`. Commit message states the pre-fix behaviour ("already-vacuumed permits... accumulate unboundedly in the WARN count (8,683 today — all P19/P20)") and the corrected baseline ("True non-terminal ghost count in prod: 0"). This is the SAME exclusion class Fold A item 2 of the I1 plan names for `assert_global_coverage`'s own `enriched_status_status_scope_drift` pair — a sibling fence in a sibling file. | **RULED (§2.4, 2026-09-12) — CHANGE-TO guard**: a declared population-scope predicate, not a bare threshold — `why` cites `ea087109` + the "0 true ghosts, 8,683 false positives pre-fix" baseline verbatim; the `NOT IN ('P19','P20')` predicate must travel into the census (`scripts/lib/assert-data-bounds-fields.js`, commit 7) as literal SQL text, never re-derived from a lifecycle-phase enum lookup that could silently omit a future terminal phase. Its `== 0` comparison stays a **physical invariant** (a genuine non-terminal ghost is always a bug), not promoted to a numeric logic var. |
+| IL-5 | `ghost_permits_30d` terminal-phase exclusion | `ea087109` | `fix(41_chain_permits): WF3 — exclude terminal permits from ghost_permits_30d assert` | `:938-940`: `AND lifecycle_phase IS NOT NULL AND lifecycle_phase NOT IN ('P19', 'P20')`. Commit message states the pre-fix behaviour ("already-vacuumed permits... accumulate unboundedly in the WARN count (8,683 today — all P19/P20)") and the corrected baseline ("True non-terminal ghost count in prod: 0"). This is the SAME exclusion class Fold A item 2 of the I1 plan names for `assert_global_coverage`'s own `enriched_status_status_scope_drift` pair — a sibling fence in a sibling file. | **RULED (§2.4, 2026-09-12) — CHANGE-TO guard**: a declared population-scope predicate, not a bare threshold — `why` cites `ea087109` + the "0 true ghosts, 8,683 false positives pre-fix" baseline verbatim; the `NOT IN ('P19','P20')` predicate must travel into the census (`scripts/lib/assert-data-bounds-fields.js`, commit 7) as literal SQL text, never re-derived from a lifecycle-phase enum lookup that could silently omit a future terminal phase. Its `== 0` comparison stays a **physical invariant** (a genuine non-terminal ghost is always a bug), not promoted to a numeric logic var. **As shipped (read 2026-10-20): `preserved-in-compute`** — the predicate is SQL text in `scripts/lib/compute/assert-data-bounds.js:453`, check `ghost_permits_30d` (`viol == 0`) carries the rule in its `why` (descriptor `:539`). |
 | IL-6 | P13-1 cost/GFA magnitude ceilings + `COST_MAG_ACCEPT` allowlist | `e99ae61a` | `fix(83_lead_cost_model): P13-1/P13-2 legacy cost-tail magnitude gates + clamp + Liar's-Gate upper sentinel` | `cost_est_legacy_cost_ceiling_cad`/`cost_est_legacy_gfa_ceiling_sqm` (logic vars, §1.5) gate `cost_estimate_over_ceiling`/`modeled_gfa_over_ceiling` (`:886-921`). The 3-entry `COST_MAG_ACCEPT` allowlist (`:46`, `'04 202812 BLD'`/`'07 129713 BLD'`/`'06 196930 BLD'`) is a **hardcoded array**, not a logic var — the file's own comment (`:38-45`) names the investigation date (2026-07-09), the exact per-permit developments, and the durable-clamp relationship ("the legacy... tail is nulled by compute's clamp — after that runs, only accepted rows remain > ceiling"). | **RULED (§2.4, 2026-09-12) — ACCEPT: preserved-in-compute** for both the 2 logic-var ceilings (already Rule-3-compliant, unchanged) AND the 3-entry accept-list (an audited exception list, not a tunable threshold — mirrors `parcel-sanity-audit.js`'s own `<> ALL(ARRAY[...])` precedent this file explicitly ported, `:36-37`) — `why` cites `e99ae61a` + the 2026-07-09 investigation + the 3 named permit_nums verbatim. The accept-list is a **declared `accept_list`** (a descriptor-declared array, not a logic var — Rule 3 exempts audited constant exception lists the same way I1's IL-1/C6 exempted a physical invariant). |
 | IL-7 | LPA-D6 severity-separated counter precedent (`tasks/lessons.md:137`) | (no single commit — a standing structural property of this file, cited as precedent by the `link_parcel_addresses` lesson, filed 2026-09 during that step's own conversion) | — | `:981-982`: `checks_failed: errors.length`, `checks_warned: warnings.length` — TWO separate arrays feeding TWO separate counts, never one array double-counted. The lesson states verbatim: *"`scripts/quality/assert-data-bounds.js` (still hand-rolled, un-converted) already had the right shape... the fix brought the generic library to parity with that established precedent rather than inventing a new one."* This file is therefore the SOURCE precedent the shared library (`scripts/lib/step/verdict.js buildAuditTable`) was built to match — a reversed fence: not "preserve this file's odd shape," but "this file's shape is already the canonical target, confirm the conversion does not regress it to a single conflated counter." | **RULED (§2.4, 2026-09-12) — ACCEPT: preserved-in-runner** (the severity-separated shape moves INTO the shared library path this step now runs through, not re-implemented per-step) — `why` cites LPA-D6 + `tasks/lessons.md:137` verbatim; G4d (commit 6) must lock both directions: a FAIL-only run shows `checks_warned:0`, and a WARN-only run shows `checks_failed:0` (never derived from one shared `!== 'PASS'` count). |
 
@@ -208,7 +208,7 @@ Per Spec 123 §7.1 role split: **a human adjudicates; the agent discovers and ci
 |---|---|---|---|---|
 | IL-8 | GIS catastrophic-load floors: `ADDRESS_POINTS_FLOOR=500000`, `PARCELS_FLOOR=460000`, `BUILDING_FOOTPRINTS_FLOOR=400000` (`:434-436`) | `1f8ca38a` | `feat(43_chain_sources): sources-chain honesty gates — GIS floors, scoped max-build coverage, enrich --full, link-rate + order pins` | **RULED (§2.4, 2026-09-12) — CHANGE-TO 3 logic vars**: `sources_address_points_floor` (500000), `sources_parcels_floor` (460000), `sources_building_footprints_floor` (400000) — supersedes the original `preserved-in-compute, hardcoded` proposal (`why` cites `1f8ca38a`). |
 | IL-9 | `neighbourhoods` floor (158) | `e3dad53d` (earlier: `b4e3d56e` first introduced the CQA-sources extension) | `fix(37_pipeline_system): restore schema circuit breaker, add missing audit metrics` | **RULED (§2.4, 2026-09-12) — CHANGE-TO logic var**: `sources_neighbourhoods_floor` (default 158) — despite being a fixed real-world cardinality, Rule 3 draws no exemption for "unlikely to change," only for `==0`/small-integer referential-integrity invariants and audited exception lists (IL-6's distinction). Supersedes the original `preserved-in-compute, hardcoded` proposal (`why` cites `e3dad53d`). |
-| IL-10 | `ravines`(≥500) / `heritage_properties`(≥8000) / `heritage_districts`(≥20) / `toronto_centreline`(≥40000) floors, each `does not exist`-guarded for deploy ordering | `1ceebd17` (ravines, Spec 59 §8c), `169f22af` (heritage, Spec 61 §8c), `f6047e89` (centreline, Spec 62 §8c) | `feat(59/61/62_source_*): load-*.js + M-1 + sources chain wiring` | **RULED (§2.4, 2026-09-12) — SPLIT**: the numeric floors promote to `sources_ravines_floor` / `sources_heritage_properties_floor` / `sources_heritage_districts_floor` / `sources_centreline_floor`; the `does not exist` deploy-order try/catch (migrations 167/170/173) stays a **declared guard** on the check itself, never folded into the numeric bound — two independently-adjudicated halves of one fence. |
+| IL-10 | `ravines`(≥500) / `heritage_properties`(≥8000) / `heritage_districts`(≥20) / `toronto_centreline`(≥40000) floors, each `does not exist`-guarded for deploy ordering | `1ceebd17` (ravines, Spec 59 §8c), `169f22af` (heritage, Spec 61 §8c), `f6047e89` (centreline, Spec 62 §8c) | `feat(59/61/62_source_*): load-*.js + M-1 + sources chain wiring` | **RULED (§2.4, 2026-09-12) — SPLIT**: the numeric floors promote to `sources_ravines_floor` / `sources_heritage_properties_floor` / `sources_heritage_districts_floor` / `sources_centreline_floor`; the `does not exist` deploy-order try/catch (migrations 167/170/173) stays a **declared guard** on the check itself, never folded into the numeric bound — two independently-adjudicated halves of one fence. **As shipped (read 2026-10-20):** floors `encoded-as-descriptor-field` (checks `ravines_count` / `heritage_properties_count` / `heritage_districts_count` / `toronto_centreline_count`, `limit_from_config` the four `sources_*_floor` vars); the 42P01 guard `preserved-in-compute` (`scripts/lib/compute/assert-data-bounds.js:74-93`), its rule written in each check's `why` (e.g. descriptor `:1078`). |
 | IL-11 | CoA per-application magnitude watches: `estimated_cost > $10M` (WARN `<= 80`), `coa_fsi > 5` (WARN `== 0`), `max_buildable_gfa_sqm > 3× lot_size_sqm` (WARN `<= 45`) | `c53f60a8` | `fix(60_shared_steps): P12-B/C CoA link identity floor + coherence gates` | **RULED (§2.4, 2026-09-12) — CHANGE-TO 5 logic vars**: `coa_cost_gt_threshold_cad` (10000000), `coa_cost_gt_threshold_warn_max` (80), `coa_fsi_gt_threshold` (5), `coa_gfa_over_lot_multiple` (3), `coa_gfa_over_lot_warn_max` (45) — `why` cites `c53f60a8` + the archetype_parcel envelope-tail investigation baseline verbatim. Supersedes the original `preserved-in-compute, hardcoded` proposal. |
 
 ### 2.3 Row-builder census (all 49 distinct metrics), mechanically derived
@@ -233,59 +233,61 @@ Measured this session: 38 static call sites → 37 distinct names (one duplicate
 <details>
 <summary>49-row census (click to expand)</summary>
 
-| # | Metric | Chain(s) | Severity levels reachable | Threshold source | Fence (if any, §2.1/§2.2) |
-|---|---|---|---|---|---|
-| 1 | `cost_outliers` | permits | WARN/PASS | hardcoded (`< 20`) | IL-2 (`f238b814`) |
-| 2 | `null_descriptions_24h` | permits (conditional, `recentTotal>0`) | WARN/PASS | logic-var `desc_null_rate_warn_pct` | IL-1 (`4f6114ce`) |
-| 3 | `null_builders_24h` | permits (conditional) | WARN/PASS | logic-var `builder_null_rate_warn_pct` | IL-1/IL-2 |
-| 4 | `null_status_24h` | permits (conditional) | WARN/PASS | hardcoded (`== 0`) | — |
-| 5 | `orphaned_permit_trades` | permits | FAIL/PASS | hardcoded (`== 0`) | — |
-| 6 | `orphaned_permit_parcels` | permits | FAIL/PASS | hardcoded (`== 0`) | — |
-| 7 | `duplicate_pk_groups` | permits | FAIL/PASS | hardcoded (`== 0`) | — |
-| 8 | `permits_pre_permit_count` | permits AND coa (2 independent sites) | FAIL/PASS | hardcoded (`== 0`) | IL-3 (`adec1f68`) |
-| 9 | `cost_estimate_over_ceiling` | permits | WARN/PASS | logic-var `cost_est_legacy_cost_ceiling_cad` + hardcoded accept-list | IL-6 (`e99ae61a`) |
-| 10 | `modeled_gfa_over_ceiling` | permits | WARN/PASS | logic-var `cost_est_legacy_gfa_ceiling_sqm` + accept-list | IL-6 |
-| 11 | `ghost_permits_30d` | permits (conditional) | WARN/PASS | hardcoded (`== 0`) | IL-5 (`ea087109`) |
-| 12 | `orphan_link_count` | coa | FAIL/PASS | hardcoded (`== 0`) | — |
-| 13 | `coa_forward_link_sub085_pct` | coa | WARN/PASS | logic-var `coa_forward_link_sub085_warn_pct` | `c53f60a8` (B2, §2.1 not separately listed — same commit family as IL-11) |
-| 14 | `null_address` | coa | WARN/PASS | hardcoded (`< 10`) | — |
-| 15 | `null_app_num` | coa | FAIL/PASS | hardcoded (`== 0`) | — |
-| 16 | `future_hearing` | coa | FAIL/PASS | hardcoded (`== 0`, 2yr window) | — |
-| 17 | `ancient_hearing` | coa | WARN/PASS | hardcoded (`< 5`) | — |
-| 18 | `coa_estimated_cost_gt10m` | coa | WARN/PASS | hardcoded (`<= 80`) | IL-11 (`c53f60a8`) |
-| 19 | `coa_app_fsi_gt5` | coa | WARN/PASS | hardcoded (`== 0`) | IL-11 |
-| 20 | `coa_maxbuild_gfa_gt3lot` | coa | WARN/PASS | hardcoded (`<= 45`) | IL-11 |
-| 21 | `address_points_count` | sources | FAIL/PASS | hardcoded (`ADDRESS_POINTS_FLOOR`) | IL-8 (`1f8ca38a`) |
-| 22 | `address_point_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — |
-| 23 | `parcels_count` | sources | FAIL/PASS | hardcoded (`PARCELS_FLOOR`) | IL-8 |
-| 24 | `parcel_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — |
-| 25 | `parcel_lot_outliers` | sources | WARN/PASS | hardcoded (`== 0`) | — |
-| 26 | `building_footprints_count` | sources | FAIL/PASS | hardcoded (`BUILDING_FOOTPRINTS_FLOOR`) | IL-8 |
-| 27 | `building_height_outliers` | sources | WARN/PASS | hardcoded (`== 0`) | — |
-| 28 | `neighbourhoods_count` | sources | FAIL/PASS | hardcoded (`>= 158`) | IL-9 |
-| 29 | `neighbourhood_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — |
-| 30 | `ravines_count` | sources (conditional, table-exists) | FAIL/PASS | hardcoded (`>= 500`) | IL-10 (`1ceebd17`) |
-| 31 | `heritage_properties_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 8000`) | IL-10 (`169f22af`) |
-| 32 | `heritage_districts_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 20`) | IL-10 |
-| 33 | `toronto_centreline_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 40000`) | IL-10 (`f6047e89`) |
-| 34 | `wsib_no_legal_name` | permits AND sources (1 shared check) | FAIL/PASS | hardcoded (`== 0`) | IL-4 (`326bb847`) |
-| 35 | `wsib_no_g_class` | permits AND sources | FAIL/PASS | hardcoded (`== 0`) | IL-4 |
-| 36 | `wsib_invalid_naics` | permits AND sources | WARN/PASS | hardcoded (`== 0`) | IL-4 |
-| 37 | `wsib_orphaned_links` | permits AND sources | FAIL/PASS | hardcoded (`== 0`) | IL-4 |
-| 38 | `null_permit_num` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
-| 39 | `null_stage_name` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
-| 40 | `null_status` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
-| 41 | `null_scraped_at` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
-| 42 | `orphan_inspections` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
-| 43 | `invalid_status` | deep_scrapes | FAIL/PASS | hardcoded (4-member enum) | — |
-| 44 | `outstanding_with_date` | deep_scrapes | WARN/PASS | hardcoded (`== 0`) | — |
-| 45 | `completed_without_date` | deep_scrapes | WARN/PASS | hardcoded (`== 0`) | — |
-| 46 | `duplicate_stages` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
-| 47 | `future_dates` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
-| 48 | `ancient_dates` | deep_scrapes | WARN/PASS | hardcoded (`<= 5`, fixed `2020-01-01`) | — |
-| 49 | `date_before_permit_year` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`, permit_num-derived year) | — |
+| # | Metric | Chain(s) | Severity levels reachable | Threshold source | Fence (if any, §2.1/§2.2) | Shipped as (descriptor, read 2026-10-20) |
+|---|---|---|---|---|---|---|
+| 1 | `cost_outliers` | permits | WARN/PASS | hardcoded (`< 20`) | IL-2 (`f238b814`) | `encoded-as-descriptor-field` — check `cost_outliers` (`value_max 20`, `limit_from_config: cost_outlier_count_warn_max`) |
+| 2 | `null_descriptions_24h` | permits (conditional, `recentTotal>0`) | WARN/PASS | logic-var `desc_null_rate_warn_pct` | IL-1 (`4f6114ce`) | `encoded-as-descriptor-field` — check `null_descriptions_24h` (`pct <= 5`, `limit_from_config: desc_null_rate_warn_pct`) |
+| 3 | `null_builders_24h` | permits (conditional) | WARN/PASS | logic-var `builder_null_rate_warn_pct` | IL-1/IL-2 | `encoded-as-descriptor-field` — check `null_builders_24h` (`pct <= 95`, `limit_from_config: builder_null_rate_warn_pct`) |
+| 4 | `null_status_24h` | permits (conditional) | WARN/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `null_status_24h` (`viol == 0`) |
+| 5 | `orphaned_permit_trades` | permits | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `orphaned_permit_trades` (`viol == 0`) |
+| 6 | `orphaned_permit_parcels` | permits | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `orphaned_permit_parcels` (`viol == 0`) |
+| 7 | `duplicate_pk_groups` | permits | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `duplicate_pk_groups` (`viol == 0`) |
+| 8 | `permits_pre_permit_count` | permits AND coa (2 independent sites) | FAIL/PASS | hardcoded (`== 0`) | IL-3 (`adec1f68`) | `encoded-as-descriptor-field` — two checks, IL-3: check `permits_pre_permit_count` (`viol == 0`) (permits) + check `coa_permits_pre_permit_count` (`viol == 0`) (coa) |
+| 9 | `cost_estimate_over_ceiling` | permits | WARN/PASS | logic-var `cost_est_legacy_cost_ceiling_cad` + hardcoded accept-list | IL-6 (`e99ae61a`) | `encoded-as-descriptor-field` — check `cost_estimate_over_ceiling` (`viol == 0`) |
+| 10 | `modeled_gfa_over_ceiling` | permits | WARN/PASS | logic-var `cost_est_legacy_gfa_ceiling_sqm` + accept-list | IL-6 | `encoded-as-descriptor-field` — check `modeled_gfa_over_ceiling` (`viol == 0`) |
+| 11 | `ghost_permits_30d` | permits (conditional) | WARN/PASS | hardcoded (`== 0`) | IL-5 (`ea087109`) | `encoded-as-descriptor-field` — check `ghost_permits_30d` (`viol == 0`) |
+| 12 | `orphan_link_count` | coa | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `orphan_link_count` (`viol == 0`) |
+| 13 | `coa_forward_link_sub085_pct` | coa | WARN/PASS | logic-var `coa_forward_link_sub085_warn_pct` | `c53f60a8` (B2, §2.1 not separately listed — same commit family as IL-11) | `encoded-as-descriptor-field` — check `coa_forward_link_sub085_pct` (`pct <= 59`, `limit_from_config: coa_forward_link_sub085_warn_pct`) |
+| 14 | `null_address` | coa | WARN/PASS | hardcoded (`< 10`) | — | `encoded-as-descriptor-field` — check `null_address` (`value_max 10`, `limit_from_config: coa_null_address_count_warn_max`) |
+| 15 | `null_app_num` | coa | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `null_app_num` (`viol == 0`) |
+| 16 | `future_hearing` | coa | FAIL/PASS | hardcoded (`== 0`, 2yr window) | — | `encoded-as-descriptor-field` — check `future_hearing` (`viol == 0`) |
+| 17 | `ancient_hearing` | coa | WARN/PASS | hardcoded (`< 5`) | — | `encoded-as-descriptor-field` — check `ancient_hearing` (`value_max 5`, `limit_from_config: coa_ancient_hearing_count_warn_max`) |
+| 18 | `coa_estimated_cost_gt10m` | coa | WARN/PASS | hardcoded (`<= 80`) | IL-11 (`c53f60a8`) | `encoded-as-descriptor-field` — check `coa_estimated_cost_gt10m` (`value_max 80`, `limit_from_config: coa_cost_gt_threshold_warn_max`) |
+| 19 | `coa_app_fsi_gt5` | coa | WARN/PASS | hardcoded (`== 0`) | IL-11 | `encoded-as-descriptor-field` — check `coa_app_fsi_gt5` (`viol == 0`) |
+| 20 | `coa_maxbuild_gfa_gt3lot` | coa | WARN/PASS | hardcoded (`<= 45`) | IL-11 | `encoded-as-descriptor-field` — check `coa_maxbuild_gfa_gt3lot` (`value_max 45`, `limit_from_config: coa_gfa_over_lot_warn_max`) |
+| 21 | `address_points_count` | sources | FAIL/PASS | hardcoded (`ADDRESS_POINTS_FLOOR`) | IL-8 (`1f8ca38a`) | `encoded-as-descriptor-field` — check `address_points_count` (`value_min 500000`, `limit_from_config: sources_address_points_floor`) |
+| 22 | `address_point_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `address_point_dupes` (`viol == 0`) |
+| 23 | `parcels_count` | sources | FAIL/PASS | hardcoded (`PARCELS_FLOOR`) | IL-8 | `encoded-as-descriptor-field` — check `parcels_count` (`value_min 460000`, `limit_from_config: sources_parcels_floor`) |
+| 24 | `parcel_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `parcel_dupes` (`viol == 0`) |
+| 25 | `parcel_lot_outliers` | sources | WARN/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `parcel_lot_outliers` (`viol == 0`) |
+| 26 | `building_footprints_count` | sources | FAIL/PASS | hardcoded (`BUILDING_FOOTPRINTS_FLOOR`) | IL-8 | `encoded-as-descriptor-field` — check `building_footprints_count` (`value_min 400000`, `limit_from_config: sources_building_footprints_floor`) |
+| 27 | `building_height_outliers` | sources | WARN/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `building_height_outliers` (`viol == 0`) |
+| 28 | `neighbourhoods_count` | sources | FAIL/PASS | hardcoded (`>= 158`) | IL-9 | `encoded-as-descriptor-field` — check `neighbourhoods_count` (`value_min 158`, `limit_from_config: sources_neighbourhoods_floor`) |
+| 29 | `neighbourhood_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `neighbourhood_dupes` (`viol == 0`) |
+| 30 | `ravines_count` | sources (conditional, table-exists) | FAIL/PASS | hardcoded (`>= 500`) | IL-10 (`1ceebd17`) | `encoded-as-descriptor-field` — check `ravines_count` (`value_min 500`, `limit_from_config: sources_ravines_floor`) |
+| 31 | `heritage_properties_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 8000`) | IL-10 (`169f22af`) | `encoded-as-descriptor-field` — check `heritage_properties_count` (`value_min 8000`, `limit_from_config: sources_heritage_properties_floor`) |
+| 32 | `heritage_districts_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 20`) | IL-10 | `encoded-as-descriptor-field` — check `heritage_districts_count` (`value_min 20`, `limit_from_config: sources_heritage_districts_floor`) |
+| 33 | `toronto_centreline_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 40000`) | IL-10 (`f6047e89`) | `encoded-as-descriptor-field` — check `toronto_centreline_count` (`value_min 40000`, `limit_from_config: sources_centreline_floor`) |
+| 34 | `wsib_no_legal_name` | permits AND sources (1 shared check) | FAIL/PASS | hardcoded (`== 0`) | IL-4 (`326bb847`) | `encoded-as-descriptor-field` — check `wsib_no_legal_name` (`viol == 0`) |
+| 35 | `wsib_no_g_class` | permits AND sources | FAIL/PASS | hardcoded (`== 0`) | IL-4 | `encoded-as-descriptor-field` — check `wsib_no_g_class` (`viol == 0`) |
+| 36 | `wsib_invalid_naics` | permits AND sources | WARN/PASS | hardcoded (`== 0`) | IL-4 | `encoded-as-descriptor-field` — check `wsib_invalid_naics` (`viol == 0`) |
+| 37 | `wsib_orphaned_links` | permits AND sources | FAIL/PASS | hardcoded (`== 0`) | IL-4 | `encoded-as-descriptor-field` — check `wsib_orphaned_links` (`viol == 0`) |
+| 38 | `null_permit_num` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `null_permit_num` (`viol == 0`) |
+| 39 | `null_stage_name` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `null_stage_name` (`viol == 0`) |
+| 40 | `null_status` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `null_status` (`viol == 0`) |
+| 41 | `null_scraped_at` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `null_scraped_at` (`viol == 0`) |
+| 42 | `orphan_inspections` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `orphan_inspections` (`viol == 0`) |
+| 43 | `invalid_status` | deep_scrapes | FAIL/PASS | hardcoded (4-member enum) | — | `encoded-as-descriptor-field` — check `invalid_status` (`viol == 0`) |
+| 44 | `outstanding_with_date` | deep_scrapes | WARN/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `outstanding_with_date` (`viol == 0`) |
+| 45 | `completed_without_date` | deep_scrapes | WARN/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `completed_without_date` (`viol == 0`) |
+| 46 | `duplicate_stages` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `duplicate_stages` (`viol == 0`) |
+| 47 | `future_dates` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — | `encoded-as-descriptor-field` — check `future_dates` (`viol == 0`) |
+| 48 | `ancient_dates` | deep_scrapes | WARN/PASS | hardcoded (`<= 5`, fixed `2020-01-01`) | — | `encoded-as-descriptor-field` — check `ancient_dates` (`value_max 5`, `limit_from_config: inspection_ancient_dates_count_warn_max`) |
+| 49 | `date_before_permit_year` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`, permit_num-derived year) | — | `encoded-as-descriptor-field` — check `date_before_permit_year` (`viol == 0`) |
 
 </details>
+
+**Shipped-as column (added 2026-10-20, Spec 123 §6 G3):** each census metric read against the shipped `scripts/quality/assert-data-bounds.descriptor.json` — all 49 are declared `checks[]` entries (52 checks in all), so every row is `encoded-as-descriptor-field`; the bound shown is the check's own `limit` / `limit_from_config`.
 
 **Rule 3 observation (Spec 124 §2, not yet adjudicated):** of the 49 metrics, only **6 use a registered logic var** as their threshold source (#2, #3, #9, #10, #13, and indirectly #1 via IL-2's "stays hardcoded per the false-positive rule"); the remaining **43 use hardcoded JS/SQL literals**. This is a materially different shape from `assert_global_coverage` (I1), where the large majority of `coverageRow`/`calibratedRow` thresholds were already logic vars. Per the IL-8/IL-9/IL-10/IL-11 dispositions above (all `PROPOSED — preserved-in-compute, hardcoded`), the working theory is that most of these 43 are **physical/catastrophic-load/audited-investigation constants** (the same carve-out the I1 report's IL-1/C6 established: "constant vs config" is a real distinction Spec 124 draws, not every FAIL/WARN threshold is a Rule-3 tunable) rather than an undiscovered Rule-3 gap — but this is a PROPOSED reading, not yet ruled, and the human adjudicator should confirm it item-by-item rather than accept the blanket theory. Distinguishing feature vs `assert_global_coverage`'s IL-3/IL-8/IL-9/IL-10/IL-11/IL-12 (all `CHANGE-TO: registered logic var`): those were percentage-based COVERAGE floors calibrated against a moving population (naturally tunable as the population's characteristics drift); the 43 hardcoded values here are mostly either (a) fixed real-world cardinalities (neighbourhoods=158), (b) ~95%-of-known-live-count catastrophic-load floors (address_points/parcels/building_footprints/ravines/heritage/centreline), or (c) `== 0`/small-integer referential-integrity invariants (orphans, duplicates, nulls) where "tunable" has no sensible meaning — a 0-tolerance FK invariant is not a coverage percentage that drifts with data growth.
 
@@ -295,15 +297,15 @@ Per Spec 123 §7.1's discoverer ≠ adjudicator role split, the 11 `PROPOSED` di
 
 **Verification log (this session, before flipping any row):**
 
-| Ruling | Cited evidence | Re-verified |
-|---|---|---|
-| IL-2 | `f238b814` names the cost-outliers false-WARN fix | `git log -1 --format=%H\ %s f238b814 -- scripts/quality/assert-data-bounds.js` → present in this file's history (§2.1's own table, re-confirmed); `costOutliers >= 20` live at `:140`/`:233` | ✅ |
-| IL-3 | `adec1f68` names the disjoint Phase-G duplication | live source `:246-258` (`permitAuditRows`, var `prePermitCount`) and `:399-410` (`coaAuditRows`, var `coaPrePermitCount`) — 2 independent `SELECT COUNT(*) FROM permits WHERE permit_type='Pre-Permit'` sites, each its own `metric: 'permits_pre_permit_count'` row and its own `errors.push` guard — re-read this session, matches §2.1's `adec1f68` citation | ✅ |
-| IL-4 | `checks[].chains:["permits","sources"]` | live source `:707-724`: one `wsibAuditRows` array (`:709`), pushed by reference into `permitsAuditTable.rows` (`:718`) and `sourcesAuditTable.rows` (`:722`) — one mechanism, two destinations, re-confirmed | ✅ |
-| IL-5 | `ea087109` names the P19/P20 terminal-phase exclusion | live source `:938-940`: `AND lifecycle_phase IS NOT NULL AND lifecycle_phase NOT IN ('P19', 'P20')` — re-confirmed | ✅ |
-| IL-6 | `e99ae61a` names the `COST_MAG_ACCEPT` allowlist + investigation | live source `:38-46`: the 3-entry array with its 2026-07-09 investigation comment, re-confirmed byte-identical | ✅ |
-| Dead var | `calibration_freshness_warn_hours` has zero runtime consumption | `grep -n "calibFreshnessHours" scripts/quality/assert-data-bounds.js` → exactly ONE hit (`:73`, the assignment itself) — re-confirmed this session, matches report §1.5/ADB-D5 | ✅ |
-| 18 tunable defaults | every default below equals the live literal it externalizes | each cross-checked against its cited source line this session (table below) | ✅ |
+| Ruling | Cited evidence | Re-verified | Closed-set value as shipped (read 2026-10-20) |
+|---|---|---|---|
+| IL-2 | `f238b814` names the cost-outliers false-WARN fix | `git log -1 --format=%H\ %s f238b814 -- scripts/quality/assert-data-bounds.js` → present in this file's history (§2.1's own table, re-confirmed); `costOutliers >= 20` live at `:140`/`:233` | ✅ | `encoded-as-descriptor-field` — check `cost_outliers`, `limit_from_config: cost_outlier_count_warn_max` |
+| IL-3 | `adec1f68` names the disjoint Phase-G duplication | live source `:246-258` (`permitAuditRows`, var `prePermitCount`) and `:399-410` (`coaAuditRows`, var `coaPrePermitCount`) — 2 independent `SELECT COUNT(*) FROM permits WHERE permit_type='Pre-Permit'` sites, each its own `metric: 'permits_pre_permit_count'` row and its own `errors.push` guard — re-read this session, matches §2.1's `adec1f68` citation | ✅ | `encoded-as-descriptor-field` — two independent checks, `permits_pre_permit_count` (permits) and `coa_permits_pre_permit_count` (coa) |
+| IL-4 | `checks[].chains:["permits","sources"]` | live source `:707-724`: one `wsibAuditRows` array (`:709`), pushed by reference into `permitsAuditTable.rows` (`:718`) and `sourcesAuditTable.rows` (`:722`) — one mechanism, two destinations, re-confirmed | ✅ | `encoded-as-descriptor-field` — the four `wsib_*` checks, each `chains: ["permits","sources"]` |
+| IL-5 | `ea087109` names the P19/P20 terminal-phase exclusion | live source `:938-940`: `AND lifecycle_phase IS NOT NULL AND lifecycle_phase NOT IN ('P19', 'P20')` — re-confirmed | ✅ | `preserved-in-compute` — the `NOT IN ('P19','P20')` predicate is SQL text in `scripts/lib/compute/assert-data-bounds.js:453`; the rule is written in check `ghost_permits_30d`'s `why` (descriptor `:539`) |
+| IL-6 | `e99ae61a` names the `COST_MAG_ACCEPT` allowlist + investigation | live source `:38-46`: the 3-entry array with its 2026-07-09 investigation comment, re-confirmed byte-identical | ✅ | `preserved-in-compute` — the ceilings are registered vars, but `COST_MAG_ACCEPT` ships as a data constant in `scripts/lib/assert-data-bounds-fields.js:115` (not a descriptor `accept_list` as the ruling worded it); the three permit numbers and the 2026-07-09 investigation are written in the `cost_estimate_over_ceiling` check's `why` (descriptor `:491`) |
+| Dead var | `calibration_freshness_warn_hours` has zero runtime consumption | `grep -n "calibFreshnessHours" scripts/quality/assert-data-bounds.js` → exactly ONE hit (`:73`, the assignment itself) — re-confirmed this session, matches report §1.5/ADB-D5 | ✅ | `knowingly-retired` — `calibration_freshness_warn_hours` is absent from `config.logic_variables` (ADB-D5) |
+| 18 tunable defaults | every default below equals the live literal it externalizes | each cross-checked against its cited source line this session (table below) | ✅ | `encoded-as-descriptor-field` — all 18 present in `config.logic_variables` (table below) |
 
 **Rulings (verbatim, IL-1 through IL-11):**
 
@@ -325,26 +327,26 @@ Per Spec 123 §7.1's discoverer ≠ adjudicator role split, the 11 `PROPOSED` di
 
 **Tunables to declare at commit 7 (18 new, all `on_invalid:"fail"`, defaults = the current live literal, each verified against its source line this session):**
 
-| # | Name | Default | Verified against |
-|---|---|---|---|
-| 1 | `cost_outlier_count_warn_max` | 20 | `:140` `if (costOutliers >= 20)` |
-| 2 | `sources_address_points_floor` | 500000 | `ADDRESS_POINTS_FLOOR` constant, sources block |
-| 3 | `sources_parcels_floor` | 460000 | `PARCELS_FLOOR` constant |
-| 4 | `sources_building_footprints_floor` | 400000 | `BUILDING_FOOTPRINTS_FLOOR` constant |
-| 5 | `sources_neighbourhoods_floor` | 158 | `neighbourhoods_count` gate, `>= 158` |
-| 6 | `sources_ravines_floor` | 500 | `ravines_count` gate, `>= 500` |
-| 7 | `sources_heritage_properties_floor` | 8000 | `heritage_properties_count` gate, `>= 8000` |
-| 8 | `sources_heritage_districts_floor` | 20 | `:567-570` `heritageDistrictsCount`, `>= 20` |
-| 9 | `sources_centreline_floor` | 40000 | `toronto_centreline_count` gate, `>= 40000` |
-| 10 | `coa_null_address_count_warn_max` | 10 | `null_address` check, `< 10` |
-| 11 | `coa_ancient_hearing_count_warn_max` | 5 | `ancient_hearing` check, `< 5` |
-| 12 | `coa_future_hearing_window_years` | 2 | `:335` `CURRENT_DATE + INTERVAL '2 years'` |
-| 13 | `coa_cost_gt_threshold_cad` | 10000000 | `coa_estimated_cost_gt10m`, `> $10M` |
-| 14 | `coa_cost_gt_threshold_warn_max` | 80 | `coa_estimated_cost_gt10m` WARN, `<= 80` |
-| 15 | `coa_fsi_gt_threshold` | 5 | `coa_app_fsi_gt5`, `> 5` |
-| 16 | `coa_gfa_over_lot_multiple` | 3 | `coa_maxbuild_gfa_gt3lot`, `> 3×` |
-| 17 | `coa_gfa_over_lot_warn_max` | 45 | `coa_maxbuild_gfa_gt3lot` WARN, `<= 45` |
-| 18 | `inspection_ancient_dates_count_warn_max` | 5 | `:813-816` `ancientDates`, `<= 5` |
+| # | Name | Default | Verified against | Shipped as (read 2026-10-20) |
+|---|---|---|---|---|
+| 1 | `cost_outlier_count_warn_max` | 20 | `:140` `if (costOutliers >= 20)` | `encoded-as-descriptor-field` — `config.logic_variables` `cost_outlier_count_warn_max`; check `cost_outliers` reads it via `limit_from_config` |
+| 2 | `sources_address_points_floor` | 500000 | `ADDRESS_POINTS_FLOOR` constant, sources block | `encoded-as-descriptor-field` — `config.logic_variables` `sources_address_points_floor`; check `address_points_count` reads it via `limit_from_config` |
+| 3 | `sources_parcels_floor` | 460000 | `PARCELS_FLOOR` constant | `encoded-as-descriptor-field` — `config.logic_variables` `sources_parcels_floor`; check `parcels_count` reads it via `limit_from_config` |
+| 4 | `sources_building_footprints_floor` | 400000 | `BUILDING_FOOTPRINTS_FLOOR` constant | `encoded-as-descriptor-field` — `config.logic_variables` `sources_building_footprints_floor`; check `building_footprints_count` reads it via `limit_from_config` |
+| 5 | `sources_neighbourhoods_floor` | 158 | `neighbourhoods_count` gate, `>= 158` | `encoded-as-descriptor-field` — `config.logic_variables` `sources_neighbourhoods_floor`; check `neighbourhoods_count` reads it via `limit_from_config` |
+| 6 | `sources_ravines_floor` | 500 | `ravines_count` gate, `>= 500` | `encoded-as-descriptor-field` — `config.logic_variables` `sources_ravines_floor`; check `ravines_count` reads it via `limit_from_config` |
+| 7 | `sources_heritage_properties_floor` | 8000 | `heritage_properties_count` gate, `>= 8000` | `encoded-as-descriptor-field` — `config.logic_variables` `sources_heritage_properties_floor`; check `heritage_properties_count` reads it via `limit_from_config` |
+| 8 | `sources_heritage_districts_floor` | 20 | `:567-570` `heritageDistrictsCount`, `>= 20` | `encoded-as-descriptor-field` — `config.logic_variables` `sources_heritage_districts_floor`; check `heritage_districts_count` reads it via `limit_from_config` |
+| 9 | `sources_centreline_floor` | 40000 | `toronto_centreline_count` gate, `>= 40000` | `encoded-as-descriptor-field` — `config.logic_variables` `sources_centreline_floor`; check `toronto_centreline_count` reads it via `limit_from_config` |
+| 10 | `coa_null_address_count_warn_max` | 10 | `null_address` check, `< 10` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_null_address_count_warn_max`; check `null_address` reads it via `limit_from_config` |
+| 11 | `coa_ancient_hearing_count_warn_max` | 5 | `ancient_hearing` check, `< 5` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_ancient_hearing_count_warn_max`; check `ancient_hearing` reads it via `limit_from_config` |
+| 12 | `coa_future_hearing_window_years` | 2 | `:335` `CURRENT_DATE + INTERVAL '2 years'` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_future_hearing_window_years`; bound as a SQL parameter (named in its check's `why`), not a check limit |
+| 13 | `coa_cost_gt_threshold_cad` | 10000000 | `coa_estimated_cost_gt10m`, `> $10M` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_cost_gt_threshold_cad`; bound as a SQL parameter (named in its check's `why`), not a check limit |
+| 14 | `coa_cost_gt_threshold_warn_max` | 80 | `coa_estimated_cost_gt10m` WARN, `<= 80` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_cost_gt_threshold_warn_max`; check `coa_estimated_cost_gt10m` reads it via `limit_from_config` |
+| 15 | `coa_fsi_gt_threshold` | 5 | `coa_app_fsi_gt5`, `> 5` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_fsi_gt_threshold`; bound as a SQL parameter (named in its check's `why`), not a check limit |
+| 16 | `coa_gfa_over_lot_multiple` | 3 | `coa_maxbuild_gfa_gt3lot`, `> 3×` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_gfa_over_lot_multiple`; bound as a SQL parameter (named in its check's `why`), not a check limit |
+| 17 | `coa_gfa_over_lot_warn_max` | 45 | `coa_maxbuild_gfa_gt3lot` WARN, `<= 45` | `encoded-as-descriptor-field` — `config.logic_variables` `coa_gfa_over_lot_warn_max`; check `coa_maxbuild_gfa_gt3lot` reads it via `limit_from_config` |
+| 18 | `inspection_ancient_dates_count_warn_max` | 5 | `:813-816` `ancientDates`, `<= 5` | `encoded-as-descriptor-field` — `config.logic_variables` `inspection_ancient_dates_count_warn_max`; check `ancient_dates` reads it via `limit_from_config` |
 
 `+` the existing 8 (all of §1.5 except the retired `calibration_freshness_warn_hours`) `=` **26** `config.logic_variables` entries expected at commit 7.
 
@@ -742,7 +744,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=54 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=90 vocab-hit rows=9 |
+| G3 | 1 | 2 | table rows=90 vocab-hit rows=85 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |
@@ -813,7 +815,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | not-run | §5.5 describe not evaluated — vitest did not run (--fast); shape scan is NOT a substitute for the §5.5 suite |
 | 3 | Tunables externalized | enforced-green | G-4: 33 declared, 19 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not evaluated (vitest did not run) |
-| 4 | Compute rule declared | enforced-green | G-2: 7 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 4 | Compute rule declared | enforced-green | G-2: 11 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |

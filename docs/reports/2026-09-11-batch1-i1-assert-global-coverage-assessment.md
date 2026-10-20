@@ -128,11 +128,11 @@ Per Spec 123 §7.1 role split: **a human adjudicates; the agent discovers and ci
 | IL-5 | `profiling_coverage_pass_pct`/`warn_pct` — the global 90/70 gate (114 `coverageRow` calls, §1.4) | `2c6efadb` (creation), `90a49329` (later realignment) | `feat(49_data_completeness_profiling): WF1 — global field-level coverage profile for permits + CoA chains`; `fix(49_data_completeness_profiling): WF3 — CQA threshold alignment post zombie-gate` | **RULED — ACCEPT: encoded-as-descriptor-field** — already a registered logic var (§1.3); Rule 3 compliant as-is. IL-5 ACCEPT (already registered var). |
 | IL-6 | `vocab_coverage_pass_pct`/`warn_pct` + the `VOCAB_COVERAGE` static array (3 entries, `:71-79`) | `596d309b` | `feat(49_data_completeness_profiling): vocabulary-coverage profiling` | **RULED — ACCEPT: encoded-as-descriptor-field** — already a registered logic var; the array's entries (corrected to 4, not 3 — §3.0 correction 1) become named `checks[]` (or one parameterised check, `sharing.varies_by_chain` — Low-confidence item 3 in the plan, unresolved until this census exists). IL-6 ACCEPT (already registered var). |
 | IL-7 | `cost_coverage_pass_pct`/`warn_pct` — WF3 F4's scoped 55/50 floor for Step-14 `cost_estimates` rows (6 `calibratedRow` calls, corrected census §2.3) | `4442fb75` | `feat(83_lead_cost_model): archetype-based project cost for permits + CoA + WF3 hardening` | **RULED — ACCEPT: encoded-as-descriptor-field** — already a registered logic var (§1.3); the WF3 F4 rationale comment (`:1212-1217`, "these rows use the recalibrated cost floor via calibratedRow, NOT the global 90% gate") should become the check's `why`. IL-7 ACCEPT (already registered var). |
-| IL-8 | `externalRow`'s hardcoded 10/5 threshold (2 calls: `is_wsib_registered`, `wsib_registry.linked_entity_id`) | `6e1b7df4` | `fix(49_data_completeness_profiling): WF3 — exhaustive 8-denominator field profile rewrite` | **RULED — CHANGE-TO: registered logic var** — not currently a logic var (Rule 3 gap: two scraper-sourced-field thresholds live only as JS literals `10`/`5`, `:127-128`); was the clearest Rule-3 violation in the file, no `deviations[]` entry existed to excuse it. IL-8 CHANGE-TO: new logic-var pair `external_coverage_pass_pct`/`external_coverage_warn_pct` = 10/5 (call sites `:1073`,`:1075`), declared at commit 7 (§2.4). |
-| IL-9 | CoA `neighbourhood_id` calibrated 95/90 | `f319300a` | `feat(49_data_completeness): report coa_applications.neighbourhood_id coverage` | **RULED — CHANGE-TO: registered logic var** — per-field literal, same Rule-3 gap as IL-3, resolved the same way. IL-9 CHANGE-TO: new logic-var pair `coa_neighbourhood_coverage_pass_pct`/`coa_neighbourhood_coverage_warn_pct` = 95/90 (`:352`), declared at commit 7 (§2.4). |
-| IL-10 | CoA `structure_type` calibrated 45/35 (description-classifier ceiling ~52%, `:436-438`) | `b02e2366` | `feat(42_chain_coa): CoA structure_type dwelling-use classifier (description → Spec 83 §3.A vocab)` | **RULED — CHANGE-TO: registered logic var** — comment explicitly defends the recalibration off a would-be-permanent-false-FAIL 80% target; `why` text already exists verbatim in source. IL-10 CHANGE-TO: new logic-var pair `coa_structure_type_coverage_pass_pct`/`coa_structure_type_coverage_warn_pct` = 45/35 (`:439`), declared at commit 7 (§2.4). |
-| IL-11 | Sources-chain calibrated thresholds: `zoning_class` 90/85, `max_buildable_footprint_sqm`/`gfa_sqm`/`max_build_stories`/`opt_aor_gfa_sqm` 88/75 (residential-with-building scoped) | `d72ce2ff` (zoning_class), `1f8ca38a` (max-build block) | `feat(49_data_completeness_profiling): parcels-table coverage profile in the sources chain [WF3]`; `feat(43_chain_sources): sources-chain honesty gates — GIS floors, scoped max-build coverage, enrich --full, link-rate + order pins` | **RULED — CHANGE-TO: registered logic var for the thresholds; ACCEPT the `has_bldg EXISTS` scoping as a declared guard** — the guard pattern (§1.2 site 6) is load-bearing (excludes building-less lots from both numerator and denominator) and must travel with the check as a declared `guard`, not just the threshold. IL-11 CHANGE-TO: new logic-var pairs `sources_zoning_class_coverage_pass_pct`/`_warn_pct` = 90/85 (`:573`) and `sources_maxbuild_coverage_pass_pct`/`_warn_pct` = 88/75 (4 checks, `:575-578`, each keeping its own `has_bldg` guard), declared at commit 7 (§2.4). |
-| IL-12 | `parcel_cost_menu` calibrated 85/80 (residential-with-building scoped) | `8a3a3644` | `feat(88_parcel_cost_model): P1 — parcel renovation cost model (engine + Mutator + §4D propagation + Spec 49)` | **RULED — CHANGE-TO: registered logic var**, same `has_bldg` guard note as IL-11 (guard preserved). IL-12 CHANGE-TO: new logic-var pair `parcel_cost_menu_coverage_pass_pct`/`parcel_cost_menu_coverage_warn_pct` = 85/80 (`:617`), declared at commit 7 (§2.4). |
+| IL-8 | `externalRow`'s hardcoded 10/5 threshold (2 calls: `is_wsib_registered`, `wsib_registry.linked_entity_id`) | `6e1b7df4` | `fix(49_data_completeness_profiling): WF3 — exhaustive 8-denominator field profile rewrite` | **RULED — CHANGE-TO: registered logic var** — not currently a logic var (Rule 3 gap: two scraper-sourced-field thresholds live only as JS literals `10`/`5`, `:127-128`); was the clearest Rule-3 violation in the file, no `deviations[]` entry existed to excuse it. IL-8 CHANGE-TO: new logic-var pair `external_coverage_pass_pct`/`external_coverage_warn_pct` = 10/5 (call sites `:1073`,`:1075`), declared at commit 7 (§2.4). **As shipped (read 2026-10-20): `encoded-as-descriptor-field`** — checks `p_step7_is_wsib_registered`, `p_step7_wsib_linked_entity_id` read the pair via `limit_from_config` / `warn_limit_from_config`. |
+| IL-9 | CoA `neighbourhood_id` calibrated 95/90 | `f319300a` | `feat(49_data_completeness): report coa_applications.neighbourhood_id coverage` | **RULED — CHANGE-TO: registered logic var** — per-field literal, same Rule-3 gap as IL-3, resolved the same way. IL-9 CHANGE-TO: new logic-var pair `coa_neighbourhood_coverage_pass_pct`/`coa_neighbourhood_coverage_warn_pct` = 95/90 (`:352`), declared at commit 7 (§2.4). **As shipped (read 2026-10-20): `encoded-as-descriptor-field`** — check `coa_step4_neighbourhood_id`. |
+| IL-10 | CoA `structure_type` calibrated 45/35 (description-classifier ceiling ~52%, `:436-438`) | `b02e2366` | `feat(42_chain_coa): CoA structure_type dwelling-use classifier (description → Spec 83 §3.A vocab)` | **RULED — CHANGE-TO: registered logic var** — comment explicitly defends the recalibration off a would-be-permanent-false-FAIL 80% target; `why` text already exists verbatim in source. IL-10 CHANGE-TO: new logic-var pair `coa_structure_type_coverage_pass_pct`/`coa_structure_type_coverage_warn_pct` = 45/35 (`:439`), declared at commit 7 (§2.4). **As shipped (read 2026-10-20): `encoded-as-descriptor-field`** — check `coa_step5_structure_type`. |
+| IL-11 | Sources-chain calibrated thresholds: `zoning_class` 90/85, `max_buildable_footprint_sqm`/`gfa_sqm`/`max_build_stories`/`opt_aor_gfa_sqm` 88/75 (residential-with-building scoped) | `d72ce2ff` (zoning_class), `1f8ca38a` (max-build block) | `feat(49_data_completeness_profiling): parcels-table coverage profile in the sources chain [WF3]`; `feat(43_chain_sources): sources-chain honesty gates — GIS floors, scoped max-build coverage, enrich --full, link-rate + order pins` | **RULED — CHANGE-TO: registered logic var for the thresholds; ACCEPT the `has_bldg EXISTS` scoping as a declared guard** — the guard pattern (§1.2 site 6) is load-bearing (excludes building-less lots from both numerator and denominator) and must travel with the check as a declared `guard`, not just the threshold. IL-11 CHANGE-TO: new logic-var pairs `sources_zoning_class_coverage_pass_pct`/`_warn_pct` = 90/85 (`:573`) and `sources_maxbuild_coverage_pass_pct`/`_warn_pct` = 88/75 (4 checks, `:575-578`, each keeping its own `has_bldg` guard), declared at commit 7 (§2.4). **As shipped (read 2026-10-20):** thresholds `encoded-as-descriptor-field` — checks `src_zoning_class` and `src_max_buildable_footprint_sqm` / `src_max_buildable_gfa_sqm` / `src_max_build_stories` / `src_opt_aor_gfa_sqm`; the `has_bldg` scoping (`EXISTS (SELECT 1 FROM parcel_buildings …)`) is carried in compute SQL (`scripts/lib/compute/assert-global-coverage.js:258-265`, `:287`), not as the declared guard this ruling asked for, and its rule is written only as the `expect.field` label `(residential w/ building)` — a Rule 4 grounding gap, PINNED (closing it is a descriptor edit, which changes the capture fingerprint and needs a recapture). |
+| IL-12 | `parcel_cost_menu` calibrated 85/80 (residential-with-building scoped) | `8a3a3644` | `feat(88_parcel_cost_model): P1 — parcel renovation cost model (engine + Mutator + §4D propagation + Spec 49)` | **RULED — CHANGE-TO: registered logic var**, same `has_bldg` guard note as IL-11 (guard preserved). IL-12 CHANGE-TO: new logic-var pair `parcel_cost_menu_coverage_pass_pct`/`parcel_cost_menu_coverage_warn_pct` = 85/80 (`:617`), declared at commit 7 (§2.4). **As shipped (read 2026-10-20):** threshold `encoded-as-descriptor-field` — check `src_parcel_cost_menu_resid_bldg`; the same `has_bldg` gap as IL-11 (PINNED). |
 | IL-13 | `tfd` query (`:927-936`) **duplicates** `SOURCE_SQL` from `scripts/compute-trade-forecasts.js` — the file's own comment (`:929`) states this explicitly ("Mirrors SOURCE_SQL in compute-trade-forecasts.js exactly") | (comment is self-documenting; not independently blamed this session — low priority) | — | **RULED — ACCEPT: knowingly-retired is NOT appropriate here** (the duplication is live and load-bearing) — flagged instead as a **G6 DEFECT candidate** (§4): a cross-file SQL duplication with no shared source of truth is exactly the drift class the WF2 #4 `fetchLeadInspect` bug (commit `73f3ae68`, cited at `:823`) already burned this file once — `pb`/`bf` JOIN columns drifted from the lead-inspector's own copy until a sibling fix caught it. IL-13 ACCEPT: this is a G6 defect (recorded as AGC-D4, §4.3), not a disposition. |
 
 ### 2.3 Row-builder census (Ask A1) — all 273 `rows.push` sites, mechanically generated
@@ -156,283 +156,285 @@ JS
 <details>
 <summary>273-row builder census (click to expand)</summary>
 
-| # | Line | Builder | Step target | Field / metric | Threshold source | Severity |
-|---|---|---|---|---|---|---|
-| 1 | 332 | infoRow | CoA Step 1 — assert_schema | coa_applications.columns_present | none (INFO, no threshold) | INFO only |
-| 2 | 335 | coverageRow | CoA Step 2 — load_coa | coa_applications.address | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 3 | 336 | coverageRow | CoA Step 2 — load_coa | coa_applications.ward | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 4 | 337 | coverageRow | CoA Step 2 — load_coa | coa_applications.decision | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 5 | 338 | coverageRow | CoA Step 2 — load_coa | coa_applications.application_number | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 6 | 342 | infoRow | CoA Step 3 — assert_coa_freshness | coa_applications.days_since_latest | none (INFO, no threshold) | INFO only |
-| 7 | 345 | coverageRow | CoA Step 4 — link_coa_to_parcels | coa_applications.parcel_linked_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 8 | 346 | infoRow | CoA Step 4 — link_coa_to_parcels | lead_parcels.coa_rows | none (INFO, no threshold) | INFO only |
-| 9 | 352 | calibratedRow | CoA Step 4 — link_coa_to_parcels | coa_applications.neighbourhood_id | hardcoded literal args (95/90, not a logic var) | PASS/WARN/FAIL |
-| 10 | 360 | calibratedRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_class | hardcoded literal args (80/75, not a logic var) | PASS/WARN/FAIL |
-| 11 | 361 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_enriched_at | none (INFO, no threshold) | INFO only |
-| 12 | 362 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_coverage_pct | none (INFO, no threshold) | INFO only |
-| 13 | 363 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_fsi | none (INFO, no threshold) | INFO only |
-| 14 | 364 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_height_m | none (INFO, no threshold) | INFO only |
-| 15 | 365 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.exception_number | none (INFO, no threshold) | INFO only |
-| 16 | 366 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.variance_context | none (INFO, no threshold) | INFO only |
-| 17 | 367 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_parcel_count | none (INFO, no threshold) | INFO only |
-| 18 | 368 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_id | none (INFO, no threshold) | INFO only |
-| 19 | 369 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_method | none (INFO, no threshold) | INFO only |
-| 20 | 374 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_in_ravine_protection_area | none (INFO, no threshold) | INFO only |
-| 21 | 376 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.ravine_distance_m | none (INFO, no threshold) | INFO only |
-| 22 | 380 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_heritage_designated | none (INFO, no threshold) | INFO only |
-| 23 | 381 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_type | none (INFO, no threshold) | INFO only |
-| 24 | 382 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_date | none (INFO, no threshold) | INFO only |
-| 25 | 386 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_corner_lot | none (INFO, no threshold) | INFO only |
-| 26 | 387 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_through_lot | none (INFO, no threshold) | INFO only |
-| 27 | 388 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.abuts_laneway | none (INFO, no threshold) | INFO only |
-| 28 | 389 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.primary_frontage_street_name | none (INFO, no threshold) | INFO only |
-| 29 | 391 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.lot_size_confidence | none (INFO, no threshold) | INFO only |
-| 30 | 392 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_footprint_sqm | none (INFO, no threshold) | INFO only |
-| 31 | 393 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 32 | 394 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_basis_fsi | none (INFO, no threshold) | INFO only |
-| 33 | 395 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_basis_coverage_box | none (INFO, no threshold) | INFO only |
-| 34 | 397 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_basis_coverage_only | none (INFO, no threshold) | INFO only |
-| 35 | 398 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_build_confidence_high | none (INFO, no threshold) | INFO only |
-| 36 | 399 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_build_confidence_medium | none (INFO, no threshold) | INFO only |
-| 37 | 400 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_build_confidence_low | none (INFO, no threshold) | INFO only |
-| 38 | 401 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.garden_suite_fits | none (INFO, no threshold) | INFO only |
-| 39 | 402 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.envelope_constrained | none (INFO, no threshold) | INFO only |
-| 40 | 404 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.imagery_roof_footprint_sqm | none (INFO, no threshold) | INFO only |
-| 41 | 405 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.imagery_roof_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 42 | 406 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.existing_structure_confidence_high | none (INFO, no threshold) | INFO only |
-| 43 | 407 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.existing_structure_confidence_low | none (INFO, no threshold) | INFO only |
-| 44 | 408 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.existing_greenspace_sqm | none (INFO, no threshold) | INFO only |
-| 45 | 410 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_newbuild_coa_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 46 | 411 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_floor_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 47 | 412 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_pot_2story_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 48 | 413 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_pot_3story_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 49 | 414 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_gfa_range_basis | none (INFO, no threshold) | INFO only |
-| 50 | 415 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_est_kitchen_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 51 | 416 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_est_bath_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 52 | 418 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_garage_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 53 | 419 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.garage_permission_as_of_right | none (INFO, no threshold) | INFO only |
-| 54 | 420 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.garage_permission_coa_required | none (INFO, no threshold) | INFO only |
-| 55 | 421 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.rear_suite_type | none (INFO, no threshold) | INFO only |
-| 56 | 422 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.rear_suite_permission_as_of_right | none (INFO, no threshold) | INFO only |
-| 57 | 423 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.rear_suite_permission_coa_required | none (INFO, no threshold) | INFO only |
-| 58 | 425 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.opt_config_confidence | none (INFO, no threshold) | INFO only |
-| 59 | 426 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.comp_count | none (INFO, no threshold) | INFO only |
-| 60 | 429 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.`${c}` — `COST_PROP_COLS` loop, 15 dynamic rows/run (Spec 88 §2.10) | none (INFO, no threshold) | INFO only |
-| 61 | 433 | coverageRow | CoA Step 5 — classify_coa_scope | coa_applications.scope_tags | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 62 | 434 | coverageRow | CoA Step 5 — classify_coa_scope | coa_applications.scope_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 63 | 439 | calibratedRow | CoA Step 5 — classify_coa_scope | coa_applications.structure_type | hardcoded literal args (45/35, not a logic var) — IL-10 | PASS/WARN/FAIL |
-| 64 | 446 | profileVocabTriple | CoA Step 5 — classify_coa_scope (object-literal arg, see `:447-450`) | coa_applications.structure_type vocab | logic-var (vocab_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL, or WARN-on-unresolved |
-| 65 | 453 | coverageRow | CoA Step 6 — classify_coa_trades | coa_applications.trade_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 66 | 454 | infoRow | CoA Step 6 — classify_coa_trades | lead_trades.coa_rows | none (INFO, no threshold) | INFO only |
-| 67 | 455 | infoRow | CoA Step 6 — classify_coa_trades | lead_products.coa_rows | none (INFO, no threshold) | INFO only |
-| 68 | 458 | coverageRow | CoA Step 7 — compute_coa_cost_estimates | coa_applications.cost_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 69 | 483 | coverageRow | CoA Step 7 — compute_coa_cost_estimates | coa_applications.estimated_cost | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL (pushed via the named var `estCostRow`, `:471`) |
-| 70 | 484 | spread(acceptedBaselineRows) | CoA Step 7 — compute_coa_cost_estimates | coa_cost_coverage_gate_accepted (0-2 dynamic rows) | derived (producer-side accepted-baseline downgrade of `estCostRow`, Spec 48 §4.6/§4.9) | WARN (self-retires at ≥ passPct) or absent |
-| 71 | 485 | infoRow | CoA Step 7 — compute_coa_cost_estimates | cost_estimates.coa_rows | none (INFO, no threshold) | INFO only |
-| 72 | 488 | coverageRow | CoA Step 8 — link_coa | coa_applications.linked_permit_num | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 73 | 489 | coverageRow | CoA Step 8 — link_coa | coa_applications.linked_confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 74 | 499 | infoRow | CoA Step 9 — refresh_snapshot | data_quality_snapshots.today | none (INFO, no threshold) | INFO only |
-| 75 | 502 | infoRow | CoA Step 10 — assert_data_bounds | coa_applications.duplicate_pks | none (INFO, no threshold) | INFO only |
-| 76 | 505 | infoRow | CoA Step 11 — assert_engine_health | engine_health_snapshots.today | none (INFO, no threshold) | INFO only |
-| 77 | 509 | coverageRow | CoA Step 12 — classify_lifecycle_phase | coa_applications.lifecycle_phase | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 78 | 512 | infoRow | CoA Step 12 — classify_lifecycle_phase | coa_applications.lifecycle_stalled | none (INFO, no threshold) | INFO only |
-| 79 | 514 | coverageRow | CoA Step 12 — classify_lifecycle_phase | coa_applications.lifecycle_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 80 | 517 | infoRow | CoA Step 13 — assert_lifecycle_phase_distribution | coa_applications.unclassified_count | none (INFO, no threshold) | INFO only |
-| 81 | 521 | infoRow | CoA Step 14 — compute_phase_calibration | phase_stay_calibration.coa_rows | none (INFO, no threshold) | INFO only |
-| 82 | 573 | calibratedRow | Sources Step — enrich_parcels | parcels.zoning_class | hardcoded literal args (90/85, not a logic var) — IL-11 | PASS/WARN/FAIL |
-| 83 | 575 | calibratedRow | Sources Step — enrich_parcels | parcels.max_buildable_footprint_sqm (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL |
-| 84 | 576 | calibratedRow | Sources Step — enrich_parcels | parcels.max_buildable_gfa_sqm (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL |
-| 85 | 577 | calibratedRow | Sources Step — enrich_parcels | parcels.max_build_stories (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL |
-| 86 | 578 | calibratedRow | Sources Step — enrich_parcels | parcels.opt_aor_gfa_sqm (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL |
-| 87 | 580 | infoRow | Sources Step — enrich_parcels | parcels.bylaw_max_fsi | none (INFO, no threshold) | INFO only |
-| 88 | 581 | infoRow | Sources Step — enrich_parcels | parcels.opt_config_confidence | none (INFO, no threshold) | INFO only |
-| 89 | 582 | infoRow | Sources Step — enrich_parcels | parcels.opt_coa_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 90 | 583 | infoRow | Sources Step — enrich_parcels | parcels.comp_count | none (INFO, no threshold) | INFO only |
-| 91 | 584 | infoRow | Sources Step — enrich_parcels | parcels.neighbourhood_id | none (INFO, no threshold) | INFO only |
-| 92 | 585 | infoRow | Sources Step — enrich_parcels | parcels.cost_fb_total | none (INFO, no threshold) | INFO only |
-| 93 | 586 | infoRow | Sources Step — enrich_parcels | parcels.envelope_constrained (TRUE) | none (INFO, no threshold) | INFO only |
-| 94 | 598 | infoRow | Sources Step — enrich_parcels | parcels.envelope_constraint_reason='`${rr.reason}`' — `reasonDist` loop, N dynamic rows/run (Low-confidence item 1) | none (INFO, no threshold) | INFO only |
-| 95 | 617 | calibratedRow | Sources Step — compute_parcel_cost_estimates | parcels.parcel_cost_menu (residential w/ building) | hardcoded literal args (85/80, not a logic var) — IL-12 | PASS/WARN/FAIL |
-| 96 | 619 | infoRow | Sources Step — compute_parcel_cost_estimates | parcels.parcel_cost_menu (any residential) | none (INFO, no threshold) | INFO only |
-| 97 | 983 | infoRow | Step 1 — assert_schema | permits.columns_present | none (INFO, no threshold) | INFO only |
-| 98 | 986 | coverageRow | Step 2 — load_permits | permits.permit_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 99 | 987 | coverageRow | Step 2 — load_permits | permits.structure_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 100 | 988 | coverageRow | Step 2 — load_permits | permits.work | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 101 | 989 | coverageRow | Step 2 — load_permits | permits.street_num | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 102 | 990 | coverageRow | Step 2 — load_permits | permits.street_name | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 103 | 991 | coverageRow | Step 2 — load_permits | permits.street_name_normalized | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 104 | 992 | coverageRow | Step 2 — load_permits | permits.street_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 105 | 994 | infoRow | Step 2 — load_permits | permits.street_direction (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only |
-| 106 | 995 | coverageRow | Step 2 — load_permits | permits.city | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 107 | 996 | coverageRow | Step 2 — load_permits | permits.postal | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 108 | 997 | coverageRow | Step 2 — load_permits | permits.geo_id | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 109 | 999 | infoRow | Step 2 — load_permits | permits.building_type (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only |
-| 110 | 1000 | infoRow | Step 2 — load_permits | permits.category (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only |
-| 111 | 1001 | coverageRow | Step 2 — load_permits | permits.application_date | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 112 | 1002 | coverageRow | Step 2 — load_permits | permits.issued_date | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 113 | 1005 | infoRow | Step 2 — load_permits | permits.completed_date (Bug 1 — structural sparsity, active permits) | none (INFO, no threshold) | INFO only |
-| 114 | 1006 | coverageRow | Step 2 — load_permits | permits.status | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 115 | 1007 | coverageRow | Step 2 — load_permits | permits.description | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 116 | 1009 | infoRow | Step 2 — load_permits | permits.est_const_cost | none (INFO, no threshold) | INFO only |
-| 117 | 1011 | infoRow | Step 2 — load_permits | permits.builder_name (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only |
-| 118 | 1012 | infoRow | Step 2 — load_permits | permits.owner (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only |
-| 119 | 1013 | coverageRow | Step 2 — load_permits | permits.dwelling_units_created | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 120 | 1014 | coverageRow | Step 2 — load_permits | permits.dwelling_units_lost | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 121 | 1016 | infoRow | Step 2 — load_permits | permits.ward (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only |
-| 122 | 1017 | infoRow | Step 2 — load_permits | permits.council_district (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only |
-| 123 | 1018 | coverageRow | Step 2 — load_permits | permits.current_use | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 124 | 1019 | coverageRow | Step 2 — load_permits | permits.proposed_use | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 125 | 1020 | coverageRow | Step 2 — load_permits | permits.housing_units | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 126 | 1021 | coverageRow | Step 2 — load_permits | permits.storeys | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 127 | 1022 | coverageRow | Step 2 — load_permits | permits.data_hash | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 128 | 1023 | coverageRow | Step 2 — load_permits | permits.raw_json | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 129 | 1024 | coverageRow | Step 2 — load_permits | permits.last_seen_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 130 | 1027 | infoRow | Step 3 — close_stale_permits | permits.status (stale total) | none (INFO, no threshold) | INFO only |
-| 131 | 1035 | infoRow | Step 3 — close_stale_permits | permits.completed_date | none (INFO, no threshold) | INFO only |
-| 132 | 1041 | infoRow | Step 4 — classify_permit_phase | permits.enriched_status | none (INFO, no threshold) | INFO only |
-| 133 | 1044 | coverageRow | Step 5 — classify_scope | permits.project_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 134 | 1045 | coverageRow | Step 5 — classify_scope | permits.scope_tags | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 135 | 1046 | coverageRow | Step 5 — classify_scope | permits.scope_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 136 | 1047 | coverageRow | Step 5 — classify_scope | permits.scope_source | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 137 | 1051 | coverageRow | Step 6 — extract_builders | entities.name_normalized (permit builders) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 138 | 1053 | coverageRow | Step 6 — extract_builders | entities.legal_name | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 139 | 1054 | coverageRow | Step 6 — extract_builders | entities.permit_count | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 140 | 1055 | coverageRow | Step 6 — extract_builders | entities.entity_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 141 | 1056 | coverageRow | Step 6 — extract_builders | entities.last_seen_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 142 | 1066 | infoRow | Step 6 — extract_builders | entities.primary_phone (via entities chain — Spec 45) | none (INFO, no threshold) | INFO only |
-| 143 | 1067 | infoRow | Step 6 — extract_builders | entities.primary_email (via entities chain — Spec 45) | none (INFO, no threshold) | INFO only |
-| 144 | 1068 | infoRow | Step 6 — extract_builders | entities.website (via entities chain — Spec 45) | none (INFO, no threshold) | INFO only |
-| 145 | 1073 | externalRow | Step 7 — link_wsib | entities.is_wsib_registered | hardcoded literal (10/5, not a logic var) — IL-8 | PASS/WARN/FAIL |
-| 146 | 1075 | externalRow | Step 7 — link_wsib | wsib_registry.linked_entity_id | hardcoded literal (10/5, not a logic var) — IL-8 | PASS/WARN/FAIL |
-| 147 | 1076 | coverageRow | Step 7 — link_wsib | wsib_registry.match_confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 148 | 1079 | coverageRow | Step 8 — geocode_permits | permits.latitude | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 149 | 1080 | coverageRow | Step 8 — geocode_permits | permits.longitude | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 150 | 1081 | coverageRow | Step 8 — geocode_permits | permits.location | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 151 | 1082 | coverageRow | Step 8 — geocode_permits | permits.geocoded_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 152 | 1086 | coverageRow | Step 9 — link_parcels | permit_parcels.permits_linked | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 153 | 1088 | coverageRow | Step 9 — link_parcels | permit_parcels.match_type (geocoded) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 154 | 1089 | coverageRow | Step 9 — link_parcels | permit_parcels.confidence (geocoded) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 155 | 1090 | coverageRow | Step 9 — link_parcels | permit_parcels.linked_at (geocoded) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 156 | 1093 | coverageRow | Step 9 — link_parcels | parcels.lot_size_sqm (WF2 #4 Surgical Triangle input) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 157 | 1102 | calibratedRow | Step 9b — enrich_permits | permits.zoning_class | hardcoded literal args (80/75, not a logic var) — IL-3 (DEC-1) | PASS/WARN/FAIL |
-| 158 | 1103 | infoRow | Step 9b — enrich_permits | permits.zoning_enriched_at | none (INFO, no threshold) | INFO only |
-| 159 | 1104 | infoRow | Step 9b — enrich_permits | permits.bylaw_max_coverage_pct | none (INFO, no threshold) | INFO only |
-| 160 | 1105 | infoRow | Step 9b — enrich_permits | permits.bylaw_max_fsi | none (INFO, no threshold) | INFO only |
-| 161 | 1106 | infoRow | Step 9b — enrich_permits | permits.bylaw_max_height_m | none (INFO, no threshold) | INFO only |
-| 162 | 1107 | infoRow | Step 9b — enrich_permits | permits.exception_number | none (INFO, no threshold) | INFO only |
-| 163 | 1108 | infoRow | Step 9b — enrich_permits | permits.applicable_bylaws | none (INFO, no threshold) | INFO only |
-| 164 | 1109 | infoRow | Step 9b — enrich_permits | permits.overlay_summary | none (INFO, no threshold) | INFO only |
-| 165 | 1110 | infoRow | Step 9b — enrich_permits | permits.zoning_parcel_count | none (INFO, no threshold) | INFO only |
-| 166 | 1111 | infoRow | Step 9b — enrich_permits | permits.zoning_dominant_parcel_id | none (INFO, no threshold) | INFO only |
-| 167 | 1112 | infoRow | Step 9b — enrich_permits | permits.zoning_dominant_parcel_method | none (INFO, no threshold) | INFO only |
-| 168 | 1117 | infoRow | Step 9b — enrich_permits | permits.is_in_ravine_protection_area | none (INFO, no threshold) | INFO only |
-| 169 | 1122 | infoRow | Step 9b — enrich_permits | permits.ravine_distance_m | none (INFO, no threshold) | INFO only |
-| 170 | 1125 | infoRow | Step 9b — enrich_permits | permits.is_heritage_designated | none (INFO, no threshold) | INFO only |
-| 171 | 1126 | infoRow | Step 9b — enrich_permits | permits.heritage_designation_type | none (INFO, no threshold) | INFO only |
-| 172 | 1127 | infoRow | Step 9b — enrich_permits | permits.heritage_designation_date | none (INFO, no threshold) | INFO only |
-| 173 | 1130 | infoRow | Step 9b — enrich_permits | permits.is_corner_lot | none (INFO, no threshold) | INFO only |
-| 174 | 1131 | infoRow | Step 9b — enrich_permits | permits.is_through_lot | none (INFO, no threshold) | INFO only |
-| 175 | 1132 | infoRow | Step 9b — enrich_permits | permits.abuts_laneway | none (INFO, no threshold) | INFO only |
-| 176 | 1133 | infoRow | Step 9b — enrich_permits | permits.primary_frontage_street_name | none (INFO, no threshold) | INFO only |
-| 177 | 1135 | infoRow | Step 9b — enrich_permits | permits.lot_size_confidence | none (INFO, no threshold) | INFO only |
-| 178 | 1136 | infoRow | Step 9b — enrich_permits | permits.max_buildable_footprint_sqm | none (INFO, no threshold) | INFO only |
-| 179 | 1137 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 180 | 1138 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_basis_fsi | none (INFO, no threshold) | INFO only |
-| 181 | 1139 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_basis_coverage_box | none (INFO, no threshold) | INFO only |
-| 182 | 1141 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_basis_coverage_only | none (INFO, no threshold) | INFO only |
-| 183 | 1142 | infoRow | Step 9b — enrich_permits | permits.max_build_confidence_high | none (INFO, no threshold) | INFO only |
-| 184 | 1143 | infoRow | Step 9b — enrich_permits | permits.max_build_confidence_medium | none (INFO, no threshold) | INFO only |
-| 185 | 1144 | infoRow | Step 9b — enrich_permits | permits.max_build_confidence_low | none (INFO, no threshold) | INFO only |
-| 186 | 1145 | infoRow | Step 9b — enrich_permits | permits.garden_suite_fits | none (INFO, no threshold) | INFO only |
-| 187 | 1146 | infoRow | Step 9b — enrich_permits | permits.envelope_constrained | none (INFO, no threshold) | INFO only |
-| 188 | 1148 | infoRow | Step 9b — enrich_permits | permits.imagery_roof_footprint_sqm | none (INFO, no threshold) | INFO only |
-| 189 | 1149 | infoRow | Step 9b — enrich_permits | permits.imagery_roof_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 190 | 1150 | infoRow | Step 9b — enrich_permits | permits.existing_structure_confidence_high | none (INFO, no threshold) | INFO only |
-| 191 | 1151 | infoRow | Step 9b — enrich_permits | permits.existing_structure_confidence_low | none (INFO, no threshold) | INFO only |
-| 192 | 1152 | infoRow | Step 9b — enrich_permits | permits.existing_greenspace_sqm | none (INFO, no threshold) | INFO only |
-| 193 | 1154 | infoRow | Step 9b — enrich_permits | permits.max_newbuild_coa_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 194 | 1155 | infoRow | Step 9b — enrich_permits | permits.cur_floor_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 195 | 1156 | infoRow | Step 9b — enrich_permits | permits.cur_pot_2story_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 196 | 1157 | infoRow | Step 9b — enrich_permits | permits.cur_pot_3story_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 197 | 1158 | infoRow | Step 9b — enrich_permits | permits.cur_gfa_range_basis | none (INFO, no threshold) | INFO only |
-| 198 | 1159 | infoRow | Step 9b — enrich_permits | permits.cur_est_kitchen_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 199 | 1160 | infoRow | Step 9b — enrich_permits | permits.cur_est_bath_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 200 | 1162 | infoRow | Step 9b — enrich_permits | permits.max_garage_gfa_sqm | none (INFO, no threshold) | INFO only |
-| 201 | 1163 | infoRow | Step 9b — enrich_permits | permits.garage_permission_as_of_right | none (INFO, no threshold) | INFO only |
-| 202 | 1164 | infoRow | Step 9b — enrich_permits | permits.garage_permission_coa_required | none (INFO, no threshold) | INFO only |
-| 203 | 1166 | infoRow | Step 9b — enrich_permits | permits.opt_config_confidence | none (INFO, no threshold) | INFO only |
-| 204 | 1167 | infoRow | Step 9b — enrich_permits | permits.comp_count | none (INFO, no threshold) | INFO only |
-| 205 | 1168 | infoRow | Step 9b — enrich_permits | permits.rear_suite_type | none (INFO, no threshold) | INFO only |
-| 206 | 1169 | infoRow | Step 9b — enrich_permits | permits.rear_suite_permission_as_of_right | none (INFO, no threshold) | INFO only |
-| 207 | 1170 | infoRow | Step 9b — enrich_permits | permits.rear_suite_permission_coa_required | none (INFO, no threshold) | INFO only |
-| 208 | 1174 | infoRow | Step 9b — enrich_permits | permits.`${c}` — `COST_PROP_COLS` loop, 15 dynamic rows/run (Spec 88 §2.10, permits-branch twin of row 60) | none (INFO, no threshold) | INFO only |
-| 209 | 1181 | coverageRow | Step 10 — link_neighbourhoods | permits.neighbourhood_id | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 210 | 1185 | infoRow | Step 11 — link_massing | parcels.with_centroid | none (INFO, no threshold) | INFO only |
-| 211 | 1186 | infoRow | Step 11 — link_massing | parcel_buildings.linked_parcels | none (INFO, no threshold) | INFO only |
-| 212 | 1187 | coverageRow | Step 11 — link_massing | parcel_buildings.is_primary | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 213 | 1188 | coverageRow | Step 11 — link_massing | parcel_buildings.structure_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 214 | 1189 | coverageRow | Step 11 — link_massing | parcel_buildings.match_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 215 | 1190 | coverageRow | Step 11 — link_massing | parcel_buildings.confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 216 | 1191 | coverageRow | Step 11 — link_massing | parcel_buildings.linked_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 217 | 1195 | coverageRow | Step 11 — link_massing | building_footprints.footprint_area_sqm (WF2 #4 sibling of `73f3ae68`, IL-13) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 218 | 1196 | coverageRow | Step 11 — link_massing | building_footprints.max_height_m | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 219 | 1199 | coverageRow | Step 12 — link_similar | permits.scope_tags (non-BLD) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 220 | 1202 | coverageRow | Step 13 — classify_permits | permit_trades.permits_with_active_trade | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 221 | 1203 | coverageRow | Step 13 — classify_permits | permit_trades.tier | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 222 | 1204 | coverageRow | Step 13 — classify_permits | permit_trades.confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 223 | 1205 | coverageRow | Step 13 — classify_permits | permit_trades.is_active | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 224 | 1206 | coverageRow | Step 13 — classify_permits | permit_trades.phase | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 225 | 1207 | coverageRow | Step 13 — classify_permits | permit_trades.lead_score | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 226 | 1208 | coverageRow | Step 13 — classify_permits | permit_trades.classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 227 | 1211 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.permits_covered | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 228 | 1218 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.estimated_cost | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL |
-| 229 | 1219 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.cost_source | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 230 | 1220 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.cost_tier | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL |
-| 231 | 1221 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.cost_range_low | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL |
-| 232 | 1222 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.cost_range_high | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL |
-| 233 | 1223 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.premium_factor | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 234 | 1224 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.complexity_score | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 235 | 1225 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.model_version | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 236 | 1226 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.is_geometric_override | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 237 | 1227 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.modeled_gfa_sqm | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL |
-| 238 | 1228 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.effective_area_sqm | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL |
-| 239 | 1229 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.trade_contract_values | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 240 | 1230 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.computed_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 241 | 1233 | infoRow | Step 15 — compute_timing_calibration_v2 | phase_calibration.rows_with_median | none (INFO, no threshold) | INFO only |
-| 242 | 1237 | coverageRow | Step 16 — link_coa | coa_applications.linked_permit_num | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 243 | 1245 | infoRow | Step 18 — refresh_snapshot | data_quality_snapshots.today | none (INFO, no threshold) | INFO only |
-| 244 | 1248 | infoRow | Step 19 — assert_data_bounds | permits.duplicate_pks | none (INFO, no threshold) | INFO only |
-| 245 | 1251 | infoRow | Step 20 — assert_engine_health | engine_health_snapshots.today | none (INFO, no threshold) | INFO only |
-| 246 | 1254 | coverageRow | Step 21 — classify_lifecycle_phase | permits.lifecycle_phase (Bug 3 — unlinked-only denom) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 247 | 1255 | coverageRow | Step 21 — classify_lifecycle_phase | permits.phase_started_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 248 | 1257 | infoRow | Step 21 — classify_lifecycle_phase | permits.lifecycle_stalled | none (INFO, no threshold) | INFO only |
-| 249 | 1258 | coverageRow | Step 21 — classify_lifecycle_phase | permits.lifecycle_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 250 | 1260 | coverageRow | Step 21 — classify_lifecycle_phase | coa_applications.lifecycle_phase (Bug 3 — unlinked-only denom) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 251 | 1263 | infoRow | Step 22 — assert_lifecycle_phase_distribution | permits.unclassified_count | none (INFO, no threshold) | INFO only |
-| 252 | 1276 | infoRow | Step 23 — compute_trade_forecasts | trade_forecasts.permits_covered | none (INFO, no threshold) | INFO only |
-| 253 | 1277 | infoRow | Step 23 — compute_trade_forecasts | trade_forecasts.predicted_start | none (INFO, no threshold) | INFO only |
-| 254 | 1278 | infoRow | Step 23 — compute_trade_forecasts | trade_forecasts.urgency (classified) | none (INFO, no threshold) | INFO only |
-| 255 | 1280 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.trade_slug | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 256 | 1281 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.target_window | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 257 | 1282 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 258 | 1283 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.calibration_method | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 259 | 1284 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.sample_size | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 260 | 1285 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.median_days | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 261 | 1286 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.p25_days | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 262 | 1287 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.p75_days | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 263 | 1290 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.opportunity_score | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 264 | 1291 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.computed_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 265 | 1294 | coverageRow | Step 24 — compute_opportunity_scores | trade_forecasts.opportunity_score (>0) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL |
-| 266 | 1299 | infoRow | Step 25 — update_tracked_projects | tracked_projects.active | none (INFO, no threshold) | INFO only |
-| 267 | 1300 | infoRow | Step 25 — update_tracked_projects | lead_analytics.rows | none (INFO, no threshold) | INFO only |
-| 268 | 1309 | infoRow | Step 26 — assert_entity_tracing | entity_tracing.last_verdict | none (INFO, no threshold) | INFO only |
-| 269 | 1336 | literal-object | — (C6, IL-1) | lead_id_administrative_drift | hardcoded literal (0, mig 138_a+241 invariant) | FAIL/PASS (binary invariant) |
-| 270 | 1342 | literal-object | — (C6, IL-1) | lead_id_duplicate_groups | hardcoded literal (0, lead_id uniqueness invariant) | FAIL/PASS (binary invariant) |
-| 271 | 1380 | literal-object | — (C3/C7, IL-2) | enriched_status_status_scope_drift | accepted-WARN while > 0 (self-retires at 0) | WARN/INFO conditional pair |
-| 272 | 1393 | literal-object | — (C3/C7, IL-2) | enriched_status_status_scope_drift_retighten | machine-observable retighten condition (prose, not yet a structured field) | WARN/INFO conditional pair |
-| 273 | 1413 | profileVocabTriple | permits+coa, `VOCAB_COVERAGE` loop (3 entries/run — IL-6) | Step 13 trades / Step 13 products / CoA Step 7 trades vocab (permits+coa only; Step 10 neighbourhoods triple is the 4th array entry but is object-literal-parsed, see `:78`) | logic-var (vocab_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL, or WARN-on-unresolved |
+| # | Line | Builder | Step target | Field / metric | Threshold source | Severity | Shipped as (descriptor, read 2026-10-20) |
+|---|---|---|---|---|---|---|---|
+| 1 | 332 | infoRow | CoA Step 1 — assert_schema | coa_applications.columns_present | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step1_columns_present` |
+| 2 | 335 | coverageRow | CoA Step 2 — load_coa | coa_applications.address | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step2_address` |
+| 3 | 336 | coverageRow | CoA Step 2 — load_coa | coa_applications.ward | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step2_ward` |
+| 4 | 337 | coverageRow | CoA Step 2 — load_coa | coa_applications.decision | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step2_decision` |
+| 5 | 338 | coverageRow | CoA Step 2 — load_coa | coa_applications.application_number | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step2_application_number` |
+| 6 | 342 | infoRow | CoA Step 3 — assert_coa_freshness | coa_applications.days_since_latest | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step3_days_since_latest` |
+| 7 | 345 | coverageRow | CoA Step 4 — link_coa_to_parcels | coa_applications.parcel_linked_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step4_parcel_linked_at` |
+| 8 | 346 | infoRow | CoA Step 4 — link_coa_to_parcels | lead_parcels.coa_rows | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4_lead_parcels_rows` |
+| 9 | 352 | calibratedRow | CoA Step 4 — link_coa_to_parcels | coa_applications.neighbourhood_id | hardcoded literal args (95/90, not a logic var) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step4_neighbourhood_id` |
+| 10 | 360 | calibratedRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_class | hardcoded literal args (80/75, not a logic var) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step4b_zoning_class` |
+| 11 | 361 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_enriched_at | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_zoning_enriched_at` |
+| 12 | 362 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_coverage_pct | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_bylaw_max_coverage_pct` |
+| 13 | 363 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_fsi | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_bylaw_max_fsi` |
+| 14 | 364 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_height_m | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_bylaw_max_height_m` |
+| 15 | 365 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.exception_number | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_exception_number` |
+| 16 | 366 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.variance_context | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_variance_context` |
+| 17 | 367 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_parcel_count | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_zoning_parcel_count` |
+| 18 | 368 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_id | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_zoning_dominant_parcel_id` |
+| 19 | 369 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_method | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_zoning_dominant_parcel_method` |
+| 20 | 374 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_in_ravine_protection_area | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_is_in_ravine_protection_area` |
+| 21 | 376 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.ravine_distance_m | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_ravine_distance_m` |
+| 22 | 380 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_heritage_designated | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_is_heritage_designated` |
+| 23 | 381 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_type | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_heritage_designation_type` |
+| 24 | 382 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_date | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_heritage_designation_date` |
+| 25 | 386 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_corner_lot | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_is_corner_lot` |
+| 26 | 387 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.is_through_lot | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_is_through_lot` |
+| 27 | 388 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.abuts_laneway | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_abuts_laneway` |
+| 28 | 389 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.primary_frontage_street_name | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_primary_frontage_street_name` |
+| 29 | 391 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.lot_size_confidence | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_lot_size_confidence` |
+| 30 | 392 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_footprint_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_buildable_footprint_sqm` |
+| 31 | 393 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_buildable_gfa_sqm` |
+| 32 | 394 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_basis_fsi | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_buildable_gfa_basis_fsi` |
+| 33 | 395 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_basis_coverage_box | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_buildable_gfa_basis_coverage_box` |
+| 34 | 397 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_buildable_gfa_basis_coverage_only | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_buildable_gfa_basis_coverage_only` |
+| 35 | 398 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_build_confidence_high | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_build_confidence_high` |
+| 36 | 399 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_build_confidence_medium | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_build_confidence_medium` |
+| 37 | 400 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_build_confidence_low | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_build_confidence_low` |
+| 38 | 401 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.garden_suite_fits | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_garden_suite_fits` |
+| 39 | 402 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.envelope_constrained | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_envelope_constrained` |
+| 40 | 404 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.imagery_roof_footprint_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_imagery_roof_footprint_sqm` |
+| 41 | 405 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.imagery_roof_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_imagery_roof_gfa_sqm` |
+| 42 | 406 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.existing_structure_confidence_high | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_existing_structure_confidence_high` |
+| 43 | 407 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.existing_structure_confidence_low | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_existing_structure_confidence_low` |
+| 44 | 408 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.existing_greenspace_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_existing_greenspace_sqm` |
+| 45 | 410 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_newbuild_coa_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_newbuild_coa_gfa_sqm` |
+| 46 | 411 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_floor_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_cur_floor_gfa_sqm` |
+| 47 | 412 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_pot_2story_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_cur_pot_2story_gfa_sqm` |
+| 48 | 413 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_pot_3story_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_cur_pot_3story_gfa_sqm` |
+| 49 | 414 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_gfa_range_basis | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_cur_gfa_range_basis` |
+| 50 | 415 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_est_kitchen_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_cur_est_kitchen_gfa_sqm` |
+| 51 | 416 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.cur_est_bath_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_cur_est_bath_gfa_sqm` |
+| 52 | 418 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.max_garage_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_max_garage_gfa_sqm` |
+| 53 | 419 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.garage_permission_as_of_right | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_garage_permission_as_of_right` |
+| 54 | 420 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.garage_permission_coa_required | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_garage_permission_coa_required` |
+| 55 | 421 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.rear_suite_type | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_rear_suite_type` |
+| 56 | 422 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.rear_suite_permission_as_of_right | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_rear_suite_permission_as_of_right` |
+| 57 | 423 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.rear_suite_permission_coa_required | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_rear_suite_permission_coa_required` |
+| 58 | 425 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.opt_config_confidence | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_opt_config_confidence` |
+| 59 | 426 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.comp_count | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step4b_comp_count` |
+| 60 | 429 | infoRow | CoA Step 4b — enrich_coa_zoning | coa_applications.`${c}` — `COST_PROP_COLS` loop, 15 dynamic rows/run (Spec 88 §2.10) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` (15 checks, one per `COST_PROP_COLS` column: `coa_step4b_cost_prop_*`) |
+| 61 | 433 | coverageRow | CoA Step 5 — classify_coa_scope | coa_applications.scope_tags | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step5_scope_tags` |
+| 62 | 434 | coverageRow | CoA Step 5 — classify_coa_scope | coa_applications.scope_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step5_scope_classified_at` |
+| 63 | 439 | calibratedRow | CoA Step 5 — classify_coa_scope | coa_applications.structure_type | hardcoded literal args (45/35, not a logic var) — IL-10 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step5_structure_type` |
+| 64 | 446 | profileVocabTriple | CoA Step 5 — classify_coa_scope (object-literal arg, see `:447-450`) | coa_applications.structure_type vocab | logic-var (vocab_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL, or WARN-on-unresolved | `encoded-as-descriptor-field` — `vocab_coa_structure_type` |
+| 65 | 453 | coverageRow | CoA Step 6 — classify_coa_trades | coa_applications.trade_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step6_trade_classified_at` |
+| 66 | 454 | infoRow | CoA Step 6 — classify_coa_trades | lead_trades.coa_rows | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step6_lead_trades_rows` |
+| 67 | 455 | infoRow | CoA Step 6 — classify_coa_trades | lead_products.coa_rows | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step6_lead_products_rows` |
+| 68 | 458 | coverageRow | CoA Step 7 — compute_coa_cost_estimates | coa_applications.cost_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step7_cost_classified_at` |
+| 69 | 483 | coverageRow | CoA Step 7 — compute_coa_cost_estimates | coa_applications.estimated_cost | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL (pushed via the named var `estCostRow`, `:471`) | `encoded-as-descriptor-field` — `coa_step7_estimated_cost` |
+| 70 | 484 | spread(acceptedBaselineRows) | CoA Step 7 — compute_coa_cost_estimates | coa_cost_coverage_gate_accepted (0-2 dynamic rows) | derived (producer-side accepted-baseline downgrade of `estCostRow`, Spec 48 §4.6/§4.9) | WARN (self-retires at ≥ passPct) or absent | `encoded-as-descriptor-field` — `coa_cost_coverage_gate_accepted`, `coa_cost_coverage_gate_accepted_retighten` |
+| 71 | 485 | infoRow | CoA Step 7 — compute_coa_cost_estimates | cost_estimates.coa_rows | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step7_cost_estimates_rows` |
+| 72 | 488 | coverageRow | CoA Step 8 — link_coa | coa_applications.linked_permit_num | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step8_linked_permit_num` |
+| 73 | 489 | coverageRow | CoA Step 8 — link_coa | coa_applications.linked_confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step8_linked_confidence` |
+| 74 | 499 | infoRow | CoA Step 9 — refresh_snapshot | data_quality_snapshots.today | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step9_snapshot_today` |
+| 75 | 502 | infoRow | CoA Step 10 — assert_data_bounds | coa_applications.duplicate_pks | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step10_duplicate_pks` |
+| 76 | 505 | infoRow | CoA Step 11 — assert_engine_health | engine_health_snapshots.today | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step11_engine_health_today` |
+| 77 | 509 | coverageRow | CoA Step 12 — classify_lifecycle_phase | coa_applications.lifecycle_phase | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step12_lifecycle_phase` |
+| 78 | 512 | infoRow | CoA Step 12 — classify_lifecycle_phase | coa_applications.lifecycle_stalled | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step12_lifecycle_stalled` |
+| 79 | 514 | coverageRow | CoA Step 12 — classify_lifecycle_phase | coa_applications.lifecycle_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `coa_step12_lifecycle_classified_at` |
+| 80 | 517 | infoRow | CoA Step 13 — assert_lifecycle_phase_distribution | coa_applications.unclassified_count | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step13_unclassified_count` |
+| 81 | 521 | infoRow | CoA Step 14 — compute_phase_calibration | phase_stay_calibration.coa_rows | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `coa_step14_calibration_rows` |
+| 82 | 573 | calibratedRow | Sources Step — enrich_parcels | parcels.zoning_class | hardcoded literal args (90/85, not a logic var) — IL-11 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `src_zoning_class` |
+| 83 | 575 | calibratedRow | Sources Step — enrich_parcels | parcels.max_buildable_footprint_sqm (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `src_max_buildable_footprint_sqm` |
+| 84 | 576 | calibratedRow | Sources Step — enrich_parcels | parcels.max_buildable_gfa_sqm (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `src_max_buildable_gfa_sqm` |
+| 85 | 577 | calibratedRow | Sources Step — enrich_parcels | parcels.max_build_stories (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `src_max_build_stories` |
+| 86 | 578 | calibratedRow | Sources Step — enrich_parcels | parcels.opt_aor_gfa_sqm (residential w/ building) | hardcoded literal args (88/75, not a logic var) — IL-11 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `src_opt_aor_gfa_sqm` |
+| 87 | 580 | infoRow | Sources Step — enrich_parcels | parcels.bylaw_max_fsi | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_bylaw_max_fsi` |
+| 88 | 581 | infoRow | Sources Step — enrich_parcels | parcels.opt_config_confidence | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_opt_config_confidence` |
+| 89 | 582 | infoRow | Sources Step — enrich_parcels | parcels.opt_coa_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_opt_coa_gfa_sqm` |
+| 90 | 583 | infoRow | Sources Step — enrich_parcels | parcels.comp_count | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_comp_count` |
+| 91 | 584 | infoRow | Sources Step — enrich_parcels | parcels.neighbourhood_id | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_neighbourhood_id` |
+| 92 | 585 | infoRow | Sources Step — enrich_parcels | parcels.cost_fb_total | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_cost_fb_total` |
+| 93 | 586 | infoRow | Sources Step — enrich_parcels | parcels.envelope_constrained (TRUE) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_envelope_constrained_true` |
+| 94 | 598 | infoRow | Sources Step — enrich_parcels | parcels.envelope_constraint_reason='`${rr.reason}`' — `reasonDist` loop, N dynamic rows/run (Low-confidence item 1) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_envelope_constraint_reason_distribution` — the N dynamic rows ship as ONE distribution check |
+| 95 | 617 | calibratedRow | Sources Step — compute_parcel_cost_estimates | parcels.parcel_cost_menu (residential w/ building) | hardcoded literal args (85/80, not a logic var) — IL-12 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `src_parcel_cost_menu_resid_bldg` |
+| 96 | 619 | infoRow | Sources Step — compute_parcel_cost_estimates | parcels.parcel_cost_menu (any residential) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `src_parcel_cost_menu_any` |
+| 97 | 983 | infoRow | Step 1 — assert_schema | permits.columns_present | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step1_columns_present` |
+| 98 | 986 | coverageRow | Step 2 — load_permits | permits.permit_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_permit_type` |
+| 99 | 987 | coverageRow | Step 2 — load_permits | permits.structure_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_structure_type` |
+| 100 | 988 | coverageRow | Step 2 — load_permits | permits.work | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_work` |
+| 101 | 989 | coverageRow | Step 2 — load_permits | permits.street_num | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_street_num` |
+| 102 | 990 | coverageRow | Step 2 — load_permits | permits.street_name | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_street_name` |
+| 103 | 991 | coverageRow | Step 2 — load_permits | permits.street_name_normalized | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_street_name_normalized` |
+| 104 | 992 | coverageRow | Step 2 — load_permits | permits.street_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_street_type` |
+| 105 | 994 | infoRow | Step 2 — load_permits | permits.street_direction (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_street_direction` |
+| 106 | 995 | coverageRow | Step 2 — load_permits | permits.city | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_city` |
+| 107 | 996 | coverageRow | Step 2 — load_permits | permits.postal | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_postal` |
+| 108 | 997 | coverageRow | Step 2 — load_permits | permits.geo_id | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_geo_id` |
+| 109 | 999 | infoRow | Step 2 — load_permits | permits.building_type (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_building_type` |
+| 110 | 1000 | infoRow | Step 2 — load_permits | permits.category (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_category` |
+| 111 | 1001 | coverageRow | Step 2 — load_permits | permits.application_date | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_application_date` |
+| 112 | 1002 | coverageRow | Step 2 — load_permits | permits.issued_date | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_issued_date` |
+| 113 | 1005 | infoRow | Step 2 — load_permits | permits.completed_date (Bug 1 — structural sparsity, active permits) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_completed_date` |
+| 114 | 1006 | coverageRow | Step 2 — load_permits | permits.status | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_status` |
+| 115 | 1007 | coverageRow | Step 2 — load_permits | permits.description | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_description` |
+| 116 | 1009 | infoRow | Step 2 — load_permits | permits.est_const_cost | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_est_const_cost` |
+| 117 | 1011 | infoRow | Step 2 — load_permits | permits.builder_name (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_builder_name` |
+| 118 | 1012 | infoRow | Step 2 — load_permits | permits.owner (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_owner` |
+| 119 | 1013 | coverageRow | Step 2 — load_permits | permits.dwelling_units_created | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_dwelling_units_created` |
+| 120 | 1014 | coverageRow | Step 2 — load_permits | permits.dwelling_units_lost | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_dwelling_units_lost` |
+| 121 | 1016 | infoRow | Step 2 — load_permits | permits.ward (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_ward` |
+| 122 | 1017 | infoRow | Step 2 — load_permits | permits.council_district (Bug 2 — naturally sparse) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step2_council_district` |
+| 123 | 1018 | coverageRow | Step 2 — load_permits | permits.current_use | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_current_use` |
+| 124 | 1019 | coverageRow | Step 2 — load_permits | permits.proposed_use | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_proposed_use` |
+| 125 | 1020 | coverageRow | Step 2 — load_permits | permits.housing_units | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_housing_units` |
+| 126 | 1021 | coverageRow | Step 2 — load_permits | permits.storeys | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_storeys` |
+| 127 | 1022 | coverageRow | Step 2 — load_permits | permits.data_hash | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_data_hash` |
+| 128 | 1023 | coverageRow | Step 2 — load_permits | permits.raw_json | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_raw_json` |
+| 129 | 1024 | coverageRow | Step 2 — load_permits | permits.last_seen_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step2_last_seen_at` |
+| 130 | 1027 | infoRow | Step 3 — close_stale_permits | permits.status (stale total) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step3_status_stale_total` |
+| 131 | 1035 | infoRow | Step 3 — close_stale_permits | permits.completed_date | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step3_completed_date` |
+| 132 | 1041 | infoRow | Step 4 — classify_permit_phase | permits.enriched_status | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step4_enriched_status` |
+| 133 | 1044 | coverageRow | Step 5 — classify_scope | permits.project_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step5_project_type` |
+| 134 | 1045 | coverageRow | Step 5 — classify_scope | permits.scope_tags | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step5_scope_tags` |
+| 135 | 1046 | coverageRow | Step 5 — classify_scope | permits.scope_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step5_scope_classified_at` |
+| 136 | 1047 | coverageRow | Step 5 — classify_scope | permits.scope_source | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step5_scope_source` |
+| 137 | 1051 | coverageRow | Step 6 — extract_builders | entities.name_normalized (permit builders) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step6_builder_entity_match` |
+| 138 | 1053 | coverageRow | Step 6 — extract_builders | entities.legal_name | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step6_legal_name` |
+| 139 | 1054 | coverageRow | Step 6 — extract_builders | entities.permit_count | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step6_permit_count` |
+| 140 | 1055 | coverageRow | Step 6 — extract_builders | entities.entity_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step6_entity_type` |
+| 141 | 1056 | coverageRow | Step 6 — extract_builders | entities.last_seen_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step6_last_seen_at` |
+| 142 | 1066 | infoRow | Step 6 — extract_builders | entities.primary_phone (via entities chain — Spec 45) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step6_primary_phone` |
+| 143 | 1067 | infoRow | Step 6 — extract_builders | entities.primary_email (via entities chain — Spec 45) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step6_primary_email` |
+| 144 | 1068 | infoRow | Step 6 — extract_builders | entities.website (via entities chain — Spec 45) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step6_website` |
+| 145 | 1073 | externalRow | Step 7 — link_wsib | entities.is_wsib_registered | hardcoded literal (10/5, not a logic var) — IL-8 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step7_is_wsib_registered` |
+| 146 | 1075 | externalRow | Step 7 — link_wsib | wsib_registry.linked_entity_id | hardcoded literal (10/5, not a logic var) — IL-8 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step7_wsib_linked_entity_id` |
+| 147 | 1076 | coverageRow | Step 7 — link_wsib | wsib_registry.match_confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step7_wsib_match_confidence` |
+| 148 | 1079 | coverageRow | Step 8 — geocode_permits | permits.latitude | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step8_latitude` |
+| 149 | 1080 | coverageRow | Step 8 — geocode_permits | permits.longitude | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step8_longitude` |
+| 150 | 1081 | coverageRow | Step 8 — geocode_permits | permits.location | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step8_location` |
+| 151 | 1082 | coverageRow | Step 8 — geocode_permits | permits.geocoded_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step8_geocoded_at` |
+| 152 | 1086 | coverageRow | Step 9 — link_parcels | permit_parcels.permits_linked | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step9_permits_linked` |
+| 153 | 1088 | coverageRow | Step 9 — link_parcels | permit_parcels.match_type (geocoded) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step9_match_type_geocoded` |
+| 154 | 1089 | coverageRow | Step 9 — link_parcels | permit_parcels.confidence (geocoded) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step9_confidence_geocoded` |
+| 155 | 1090 | coverageRow | Step 9 — link_parcels | permit_parcels.linked_at (geocoded) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step9_linked_at_geocoded` |
+| 156 | 1093 | coverageRow | Step 9 — link_parcels | parcels.lot_size_sqm (WF2 #4 Surgical Triangle input) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step9_lot_size_sqm` |
+| 157 | 1102 | calibratedRow | Step 9b — enrich_permits | permits.zoning_class | hardcoded literal args (80/75, not a logic var) — IL-3 (DEC-1) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step9b_zoning_class` |
+| 158 | 1103 | infoRow | Step 9b — enrich_permits | permits.zoning_enriched_at | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_zoning_enriched_at` |
+| 159 | 1104 | infoRow | Step 9b — enrich_permits | permits.bylaw_max_coverage_pct | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_bylaw_max_coverage_pct` |
+| 160 | 1105 | infoRow | Step 9b — enrich_permits | permits.bylaw_max_fsi | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_bylaw_max_fsi` |
+| 161 | 1106 | infoRow | Step 9b — enrich_permits | permits.bylaw_max_height_m | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_bylaw_max_height_m` |
+| 162 | 1107 | infoRow | Step 9b — enrich_permits | permits.exception_number | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_exception_number` |
+| 163 | 1108 | infoRow | Step 9b — enrich_permits | permits.applicable_bylaws | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_applicable_bylaws` |
+| 164 | 1109 | infoRow | Step 9b — enrich_permits | permits.overlay_summary | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_overlay_summary` |
+| 165 | 1110 | infoRow | Step 9b — enrich_permits | permits.zoning_parcel_count | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_zoning_parcel_count` |
+| 166 | 1111 | infoRow | Step 9b — enrich_permits | permits.zoning_dominant_parcel_id | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_zoning_dominant_parcel_id` |
+| 167 | 1112 | infoRow | Step 9b — enrich_permits | permits.zoning_dominant_parcel_method | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_zoning_dominant_parcel_method` |
+| 168 | 1117 | infoRow | Step 9b — enrich_permits | permits.is_in_ravine_protection_area | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_is_in_ravine_protection_area` |
+| 169 | 1122 | infoRow | Step 9b — enrich_permits | permits.ravine_distance_m | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_ravine_distance_m` |
+| 170 | 1125 | infoRow | Step 9b — enrich_permits | permits.is_heritage_designated | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_is_heritage_designated` |
+| 171 | 1126 | infoRow | Step 9b — enrich_permits | permits.heritage_designation_type | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_heritage_designation_type` |
+| 172 | 1127 | infoRow | Step 9b — enrich_permits | permits.heritage_designation_date | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_heritage_designation_date` |
+| 173 | 1130 | infoRow | Step 9b — enrich_permits | permits.is_corner_lot | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_is_corner_lot` |
+| 174 | 1131 | infoRow | Step 9b — enrich_permits | permits.is_through_lot | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_is_through_lot` |
+| 175 | 1132 | infoRow | Step 9b — enrich_permits | permits.abuts_laneway | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_abuts_laneway` |
+| 176 | 1133 | infoRow | Step 9b — enrich_permits | permits.primary_frontage_street_name | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_primary_frontage_street_name` |
+| 177 | 1135 | infoRow | Step 9b — enrich_permits | permits.lot_size_confidence | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_lot_size_confidence` |
+| 178 | 1136 | infoRow | Step 9b — enrich_permits | permits.max_buildable_footprint_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_buildable_footprint_sqm` |
+| 179 | 1137 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_buildable_gfa_sqm` |
+| 180 | 1138 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_basis_fsi | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_buildable_gfa_basis_fsi` |
+| 181 | 1139 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_basis_coverage_box | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_buildable_gfa_basis_coverage_box` |
+| 182 | 1141 | infoRow | Step 9b — enrich_permits | permits.max_buildable_gfa_basis_coverage_only | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_buildable_gfa_basis_coverage_only` |
+| 183 | 1142 | infoRow | Step 9b — enrich_permits | permits.max_build_confidence_high | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_build_confidence_high` |
+| 184 | 1143 | infoRow | Step 9b — enrich_permits | permits.max_build_confidence_medium | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_build_confidence_medium` |
+| 185 | 1144 | infoRow | Step 9b — enrich_permits | permits.max_build_confidence_low | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_build_confidence_low` |
+| 186 | 1145 | infoRow | Step 9b — enrich_permits | permits.garden_suite_fits | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_garden_suite_fits` |
+| 187 | 1146 | infoRow | Step 9b — enrich_permits | permits.envelope_constrained | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_envelope_constrained` |
+| 188 | 1148 | infoRow | Step 9b — enrich_permits | permits.imagery_roof_footprint_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_imagery_roof_footprint_sqm` |
+| 189 | 1149 | infoRow | Step 9b — enrich_permits | permits.imagery_roof_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_imagery_roof_gfa_sqm` |
+| 190 | 1150 | infoRow | Step 9b — enrich_permits | permits.existing_structure_confidence_high | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_existing_structure_confidence_high` |
+| 191 | 1151 | infoRow | Step 9b — enrich_permits | permits.existing_structure_confidence_low | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_existing_structure_confidence_low` |
+| 192 | 1152 | infoRow | Step 9b — enrich_permits | permits.existing_greenspace_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_existing_greenspace_sqm` |
+| 193 | 1154 | infoRow | Step 9b — enrich_permits | permits.max_newbuild_coa_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_newbuild_coa_gfa_sqm` |
+| 194 | 1155 | infoRow | Step 9b — enrich_permits | permits.cur_floor_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_cur_floor_gfa_sqm` |
+| 195 | 1156 | infoRow | Step 9b — enrich_permits | permits.cur_pot_2story_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_cur_pot_2story_gfa_sqm` |
+| 196 | 1157 | infoRow | Step 9b — enrich_permits | permits.cur_pot_3story_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_cur_pot_3story_gfa_sqm` |
+| 197 | 1158 | infoRow | Step 9b — enrich_permits | permits.cur_gfa_range_basis | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_cur_gfa_range_basis` |
+| 198 | 1159 | infoRow | Step 9b — enrich_permits | permits.cur_est_kitchen_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_cur_est_kitchen_gfa_sqm` |
+| 199 | 1160 | infoRow | Step 9b — enrich_permits | permits.cur_est_bath_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_cur_est_bath_gfa_sqm` |
+| 200 | 1162 | infoRow | Step 9b — enrich_permits | permits.max_garage_gfa_sqm | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_max_garage_gfa_sqm` |
+| 201 | 1163 | infoRow | Step 9b — enrich_permits | permits.garage_permission_as_of_right | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_garage_permission_as_of_right` |
+| 202 | 1164 | infoRow | Step 9b — enrich_permits | permits.garage_permission_coa_required | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_garage_permission_coa_required` |
+| 203 | 1166 | infoRow | Step 9b — enrich_permits | permits.opt_config_confidence | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_opt_config_confidence` |
+| 204 | 1167 | infoRow | Step 9b — enrich_permits | permits.comp_count | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_comp_count` |
+| 205 | 1168 | infoRow | Step 9b — enrich_permits | permits.rear_suite_type | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_rear_suite_type` |
+| 206 | 1169 | infoRow | Step 9b — enrich_permits | permits.rear_suite_permission_as_of_right | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_rear_suite_permission_as_of_right` |
+| 207 | 1170 | infoRow | Step 9b — enrich_permits | permits.rear_suite_permission_coa_required | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step9b_rear_suite_permission_coa_required` |
+| 208 | 1174 | infoRow | Step 9b — enrich_permits | permits.`${c}` — `COST_PROP_COLS` loop, 15 dynamic rows/run (Spec 88 §2.10, permits-branch twin of row 60) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` (15 checks, one per `COST_PROP_COLS` column: `p_step9b_cost_prop_*`) |
+| 209 | 1181 | coverageRow | Step 10 — link_neighbourhoods | permits.neighbourhood_id | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step10_neighbourhood_id` |
+| 210 | 1185 | infoRow | Step 11 — link_massing | parcels.with_centroid | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step11_parcels_with_centroid` |
+| 211 | 1186 | infoRow | Step 11 — link_massing | parcel_buildings.linked_parcels | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step11_parcel_buildings_linked_parcels` |
+| 212 | 1187 | coverageRow | Step 11 — link_massing | parcel_buildings.is_primary | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step11_is_primary` |
+| 213 | 1188 | coverageRow | Step 11 — link_massing | parcel_buildings.structure_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step11_structure_type` |
+| 214 | 1189 | coverageRow | Step 11 — link_massing | parcel_buildings.match_type | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step11_match_type` |
+| 215 | 1190 | coverageRow | Step 11 — link_massing | parcel_buildings.confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step11_confidence` |
+| 216 | 1191 | coverageRow | Step 11 — link_massing | parcel_buildings.linked_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step11_linked_at` |
+| 217 | 1195 | coverageRow | Step 11 — link_massing | building_footprints.footprint_area_sqm (WF2 #4 sibling of `73f3ae68`, IL-13) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step11_footprint_area_sqm` |
+| 218 | 1196 | coverageRow | Step 11 — link_massing | building_footprints.max_height_m | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step11_max_height_m` |
+| 219 | 1199 | coverageRow | Step 12 — link_similar | permits.scope_tags (non-BLD) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step12_scope_tags_non_bld` |
+| 220 | 1202 | coverageRow | Step 13 — classify_permits | permit_trades.permits_with_active_trade | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step13_permits_with_active_trade` |
+| 221 | 1203 | coverageRow | Step 13 — classify_permits | permit_trades.tier | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step13_tier` |
+| 222 | 1204 | coverageRow | Step 13 — classify_permits | permit_trades.confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step13_confidence` |
+| 223 | 1205 | coverageRow | Step 13 — classify_permits | permit_trades.is_active | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step13_is_active` |
+| 224 | 1206 | coverageRow | Step 13 — classify_permits | permit_trades.phase | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step13_phase` |
+| 225 | 1207 | coverageRow | Step 13 — classify_permits | permit_trades.lead_score | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step13_lead_score` |
+| 226 | 1208 | coverageRow | Step 13 — classify_permits | permit_trades.classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step13_classified_at` |
+| 227 | 1211 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.permits_covered | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_permits_covered` |
+| 228 | 1218 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.estimated_cost | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_estimated_cost` |
+| 229 | 1219 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.cost_source | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_cost_source` |
+| 230 | 1220 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.cost_tier | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_cost_tier` |
+| 231 | 1221 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.cost_range_low | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_cost_range_low` |
+| 232 | 1222 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.cost_range_high | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_cost_range_high` |
+| 233 | 1223 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.premium_factor | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_premium_factor` |
+| 234 | 1224 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.complexity_score | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_complexity_score` |
+| 235 | 1225 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.model_version | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_model_version` |
+| 236 | 1226 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.is_geometric_override | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_is_geometric_override` |
+| 237 | 1227 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.modeled_gfa_sqm | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_modeled_gfa_sqm` |
+| 238 | 1228 | calibratedRow | Step 14 — compute_cost_estimates | cost_estimates.effective_area_sqm | logic-var (cost_coverage_pass_pct/warn_pct, WF3 F4) — IL-7 | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_effective_area_sqm` |
+| 239 | 1229 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.trade_contract_values | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_trade_contract_values` |
+| 240 | 1230 | coverageRow | Step 14 — compute_cost_estimates | cost_estimates.computed_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step14_computed_at` |
+| 241 | 1233 | infoRow | Step 15 — compute_timing_calibration_v2 | phase_calibration.rows_with_median | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step15_rows_with_median` |
+| 242 | 1237 | coverageRow | Step 16 — link_coa | coa_applications.linked_permit_num | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step16_linked_permit_num` |
+| 243 | 1245 | infoRow | Step 18 — refresh_snapshot | data_quality_snapshots.today | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step18_snapshot_today` |
+| 244 | 1248 | infoRow | Step 19 — assert_data_bounds | permits.duplicate_pks | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step19_duplicate_pks` |
+| 245 | 1251 | infoRow | Step 20 — assert_engine_health | engine_health_snapshots.today | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step20_engine_health_today` |
+| 246 | 1254 | coverageRow | Step 21 — classify_lifecycle_phase | permits.lifecycle_phase (Bug 3 — unlinked-only denom) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step21_lifecycle_phase` |
+| 247 | 1255 | coverageRow | Step 21 — classify_lifecycle_phase | permits.phase_started_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step21_phase_started_at` |
+| 248 | 1257 | infoRow | Step 21 — classify_lifecycle_phase | permits.lifecycle_stalled | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step21_lifecycle_stalled` |
+| 249 | 1258 | coverageRow | Step 21 — classify_lifecycle_phase | permits.lifecycle_classified_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step21_lifecycle_classified_at` |
+| 250 | 1260 | coverageRow | Step 21 — classify_lifecycle_phase | coa_applications.lifecycle_phase (Bug 3 — unlinked-only denom) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step21_coa_lifecycle_phase` |
+| 251 | 1263 | infoRow | Step 22 — assert_lifecycle_phase_distribution | permits.unclassified_count | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step22_unclassified_count` |
+| 252 | 1276 | infoRow | Step 23 — compute_trade_forecasts | trade_forecasts.permits_covered | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step23_permits_covered` |
+| 253 | 1277 | infoRow | Step 23 — compute_trade_forecasts | trade_forecasts.predicted_start | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step23_predicted_start` |
+| 254 | 1278 | infoRow | Step 23 — compute_trade_forecasts | trade_forecasts.urgency (classified) | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step23_urgency_classified` |
+| 255 | 1280 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.trade_slug | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_trade_slug` |
+| 256 | 1281 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.target_window | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_target_window` |
+| 257 | 1282 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.confidence | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_confidence` |
+| 258 | 1283 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.calibration_method | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_calibration_method` |
+| 259 | 1284 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.sample_size | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_sample_size` |
+| 260 | 1285 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.median_days | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_median_days` |
+| 261 | 1286 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.p25_days | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_p25_days` |
+| 262 | 1287 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.p75_days | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_p75_days` |
+| 263 | 1290 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.opportunity_score | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_opportunity_score` |
+| 264 | 1291 | coverageRow | Step 23 — compute_trade_forecasts | trade_forecasts.computed_at | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step23_computed_at` |
+| 265 | 1294 | coverageRow | Step 24 — compute_opportunity_scores | trade_forecasts.opportunity_score (>0) | logic-var (profiling_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL | `encoded-as-descriptor-field` — `p_step24_opportunity_score_gt0` |
+| 266 | 1299 | infoRow | Step 25 — update_tracked_projects | tracked_projects.active | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step25_tracked_active` |
+| 267 | 1300 | infoRow | Step 25 — update_tracked_projects | lead_analytics.rows | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step25_lead_analytics_rows` |
+| 268 | 1309 | infoRow | Step 26 — assert_entity_tracing | entity_tracing.last_verdict | none (INFO, no threshold) | INFO only | `encoded-as-descriptor-field` — `p_step26_entity_tracing_last_verdict` |
+| 269 | 1336 | literal-object | — (C6, IL-1) | lead_id_administrative_drift | hardcoded literal (0, mig 138_a+241 invariant) | FAIL/PASS (binary invariant) | `encoded-as-descriptor-field` — `lead_id_administrative_drift` |
+| 270 | 1342 | literal-object | — (C6, IL-1) | lead_id_duplicate_groups | hardcoded literal (0, lead_id uniqueness invariant) | FAIL/PASS (binary invariant) | `encoded-as-descriptor-field` — `lead_id_duplicate_groups` |
+| 271 | 1380 | literal-object | — (C3/C7, IL-2) | enriched_status_status_scope_drift | accepted-WARN while > 0 (self-retires at 0) | WARN/INFO conditional pair | `encoded-as-descriptor-field` — `enriched_status_status_scope_drift` |
+| 272 | 1393 | literal-object | — (C3/C7, IL-2) | enriched_status_status_scope_drift_retighten | machine-observable retighten condition (prose, not yet a structured field) | WARN/INFO conditional pair | `encoded-as-descriptor-field` — `enriched_status_status_scope_drift_retighten` |
+| 273 | 1413 | profileVocabTriple | permits+coa, `VOCAB_COVERAGE` loop (3 entries/run — IL-6) | Step 13 trades / Step 13 products / CoA Step 7 trades vocab (permits+coa only; Step 10 neighbourhoods triple is the 4th array entry but is object-literal-parsed, see `:78`) | logic-var (vocab_coverage_pass_pct/warn_pct) | PASS/WARN/FAIL, or WARN-on-unresolved | `encoded-as-descriptor-field` — `vocab_permit_trades_trade_id`, `vocab_permit_products_product_id`, `vocab_coa_lead_trades_trade_id`, `vocab_permits_neighbourhood_id` (the 4th, Step 10 neighbourhoods, is the array's object-literal entry) |
 
 </details>
+
+**Shipped-as column (added 2026-10-20, Spec 123 §6 G3):** each census row read against the shipped `scripts/quality/assert-global-coverage.descriptor.json` by (step target, field), falling back to the field or check id where the label was renumbered or annotated. All 273 rows land as declared `checks[]` entries (`encoded-as-descriptor-field`), and all 305 declared checks are claimed by some census row (the two `COST_PROP_COLS` loops expand to 15 checks each; the `VOCAB_COVERAGE` loop to 4; the `reasonDist` loop ships as one distribution check).
 
 ### G3 verdict
 
@@ -455,15 +457,15 @@ Per Spec 123 §7.1, the agent pass (commit 4, §2.1/§2.2 above) discovers and p
 
 **Tunables to declare at commit 7 (14 new `logic_variables`, 7 pairs)** — each cited line re-verified this session (`sed -n`, below) against `scripts/quality/assert-global-coverage.js` at the current HEAD, and each holds exactly as cited:
 
-| # | Pair | Value (pass/warn) | Call site(s) | Re-verified |
-|---|---|---|---|---|
-| 1 | `zoning_class_coverage_pass_pct`/`_warn_pct` | 80/75 | CoA `:360` + permits `:1102` (one pair, two call sites — DEC-1/IL-3) | `sed -n '360p;1102p'` → both confirmed, literal args `80, 75` at each site |
-| 2 | `coa_neighbourhood_coverage_pass_pct`/`_warn_pct` | 95/90 | CoA `:352` (IL-9) | `sed -n '352p'` → confirmed, literal args `95, 90` |
-| 3 | `coa_structure_type_coverage_pass_pct`/`_warn_pct` | 45/35 | CoA `:439` (IL-10) | `sed -n '439p'` → confirmed, literal args `45, 35` |
-| 4 | `sources_zoning_class_coverage_pass_pct`/`_warn_pct` | 90/85 | Sources `:573` (IL-11) | `sed -n '573p'` → confirmed, literal args `90, 85` |
-| 5 | `sources_maxbuild_coverage_pass_pct`/`_warn_pct` | 88/75 | Sources `:575-578`, 4 checks, each keeping its own `has_bldg` guard (IL-11) | `sed -n '575,578p'` → all 4 confirmed, literal args `88, 75` at each |
-| 6 | `parcel_cost_menu_coverage_pass_pct`/`_warn_pct` | 85/80 | Sources `:617`, guard preserved (IL-12) | `sed -n '617p'` → confirmed, literal args `85, 80` |
-| 7 | `external_coverage_pass_pct`/`_warn_pct` | 10/5 | Permits `:1073`,`:1075` (IL-8) | `sed -n '1073p;1075p'` → both confirmed `externalRow(...)` call sites; the `10`/`5` thresholds themselves are the shared `externalRow` function body's literals (`:127-128`), not per-call args — re-verified: `grep -n "function externalRow" -A6` → `pct >= 10 ? 'PASS' : pct >= 5 ? 'WARN'` |
+| # | Pair | Value (pass/warn) | Call site(s) | Re-verified | Shipped as (read 2026-10-20) |
+|---|---|---|---|---|---|
+| 1 | `zoning_class_coverage_pass_pct`/`_warn_pct` | 80/75 | CoA `:360` + permits `:1102` (one pair, two call sites — DEC-1/IL-3) | `sed -n '360p;1102p'` → both confirmed, literal args `80, 75` at each site | `encoded-as-descriptor-field` — `config.logic_variables` pair; check `coa_step4b_zoning_class`, `p_step9b_zoning_class` (`limit_from_config` / `warn_limit_from_config`) |
+| 2 | `coa_neighbourhood_coverage_pass_pct`/`_warn_pct` | 95/90 | CoA `:352` (IL-9) | `sed -n '352p'` → confirmed, literal args `95, 90` | `encoded-as-descriptor-field` — `config.logic_variables` pair; check `coa_step4_neighbourhood_id` (`limit_from_config` / `warn_limit_from_config`) |
+| 3 | `coa_structure_type_coverage_pass_pct`/`_warn_pct` | 45/35 | CoA `:439` (IL-10) | `sed -n '439p'` → confirmed, literal args `45, 35` | `encoded-as-descriptor-field` — `config.logic_variables` pair; check `coa_step5_structure_type` (`limit_from_config` / `warn_limit_from_config`) |
+| 4 | `sources_zoning_class_coverage_pass_pct`/`_warn_pct` | 90/85 | Sources `:573` (IL-11) | `sed -n '573p'` → confirmed, literal args `90, 85` | `encoded-as-descriptor-field` — `config.logic_variables` pair; check `src_zoning_class` (`limit_from_config` / `warn_limit_from_config`) |
+| 5 | `sources_maxbuild_coverage_pass_pct`/`_warn_pct` | 88/75 | Sources `:575-578`, 4 checks, each keeping its own `has_bldg` guard (IL-11) | `sed -n '575,578p'` → all 4 confirmed, literal args `88, 75` at each | `encoded-as-descriptor-field` — `config.logic_variables` pair; check `src_max_buildable_footprint_sqm`, `src_max_buildable_gfa_sqm`, `src_max_build_stories`, `src_opt_aor_gfa_sqm` (`limit_from_config` / `warn_limit_from_config`) |
+| 6 | `parcel_cost_menu_coverage_pass_pct`/`_warn_pct` | 85/80 | Sources `:617`, guard preserved (IL-12) | `sed -n '617p'` → confirmed, literal args `85, 80` | `encoded-as-descriptor-field` — `config.logic_variables` pair; check `src_parcel_cost_menu_resid_bldg` (`limit_from_config` / `warn_limit_from_config`) |
+| 7 | `external_coverage_pass_pct`/`_warn_pct` | 10/5 | Permits `:1073`,`:1075` (IL-8) | `sed -n '1073p;1075p'` → both confirmed `externalRow(...)` call sites; the `10`/`5` thresholds themselves are the shared `externalRow` function body's literals (`:127-128`), not per-call args — re-verified: `grep -n "function externalRow" -A6` → `pct >= 10 ? 'PASS' : pct >= 5 ? 'WARN'` | `encoded-as-descriptor-field` — `config.logic_variables` pair; check `p_step7_is_wsib_registered`, `p_step7_wsib_linked_entity_id` (`limit_from_config` / `warn_limit_from_config`) |
 
 **Ledger row status:** every IL-1…IL-13 row in §2.1/§2.2 above is changed from `PROPOSED` to `RULED (2026-09-11)` in place, with the outcome (ACCEPT or CHANGE-TO + new var names) recorded inline in that row's disposition cell. No row remains `PROPOSED`.
 
@@ -820,7 +822,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=23 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=297 vocab-hit rows=8 |
+| G3 | 1 | 2 | table rows=297 vocab-hit rows=293 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |
