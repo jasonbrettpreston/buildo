@@ -76,6 +76,38 @@ describe('R-EO derivation (pure)', () => {
     expect(entries.step_a_warn_max_days).toBeUndefined();
   });
 
+  // VAR-EFFECT-SHARED-TEMPLATE (verify-13 N1, integrate-14). A live module shared by two steps reads
+  // `${cfgFor(target).slug}_coverage_min`; the slug is the RUNNING step's. R-EO: "A declared logic variable the live
+  // step does not read carries an admin badge" — a copy-window step's own `<slug>_<name>` key is not read through that
+  // template while the step's legacy shell is the live step, so it keeps "Takes effect at cutover"; a live step's key
+  // is read.
+  it('a slug-leading template in a shared live module reads only live steps\' keys, never a copy-window step\'s own key', () => {
+    const input = base();
+    input.seedKeys.push('step_a_coverage_min', 'step_b_coverage_min', 'old_coverage_min');
+    input.pending[0]!.descriptor = desc('step_a', ['step_a_warn_max_days', 'step_a_new_literal_pct', 'shared_key', 'step_a_coverage_min']);
+    input.pending.push({ slug: 'step_b', file: 'scripts/step-b.js', stage: 'runner_wired', descriptor: desc('step_b', ['step_b_coverage_min']) });
+    input.copyPairs.step_a_coverage_min = 'old_coverage_min';
+    input.codeTexts.push(['scripts/lib/shared-zoning.js', 'const t = config[`${cfgFor(target).slug}_coverage_min`];']);
+    input.codeTexts[0]![1] += ' const c = logicVars.old_coverage_min;';
+    const { entries } = deriveVariableEffect(input);
+    expect(entries.step_a_coverage_min).toMatchObject({ badge: BADGE_CUTOVER, step: 'step_a', legacy_name: 'old_coverage_min' });
+    expect(entries.step_b_coverage_min).toBeUndefined();
+    expect(entries.old_coverage_min).toBeUndefined();
+  });
+
+  it('a copy-window key is still read by a slug-leading template in its own legacy shell, and by a whole-word read', () => {
+    const own = base();
+    own.seedKeys.push('step_a_coverage_min');
+    own.pending[0]!.descriptor = desc('step_a', ['step_a_coverage_min']);
+    own.codeTexts.push(['scripts/step-a.js', 'const t = logicVars[`${SLUG}_coverage_min`];']);
+    expect(deriveVariableEffect(own).entries.step_a_coverage_min).toBeUndefined();
+    const whole = base();
+    whole.seedKeys.push('step_a_coverage_min');
+    whole.pending[0]!.descriptor = desc('step_a', ['step_a_coverage_min']);
+    whole.codeTexts.push(['scripts/lib/shared-zoning.js', 'const t = config.step_a_coverage_min;']);
+    expect(deriveVariableEffect(whole).entries.step_a_coverage_min).toBeUndefined();
+  });
+
   it('copy pairs come from the copy migrations, both committed forms', () => {
     const pairs = copyPairsFromMigrations([
       ['migrations/270_x.sql', "INSERT INTO logic_variables (variable_key, variable_value, description)\nSELECT 'new_a',\n       COALESCE((SELECT variable_value FROM logic_variables WHERE variable_key = 'old_a'), 45),\n       'd'\nON CONFLICT (variable_key) DO NOTHING;"],

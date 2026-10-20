@@ -69,3 +69,16 @@ merge), so the merge notes land verbatim in the merge commit, where the id resol
   `2026-10-20-chat-night-p4c#FIT-WIDTH` / `#DERIVED-WITNESS`. `decision-log --check`: clean, 5 logs, 26 decisions,
   27 register rows, 52 citations, 0 owed. The real-tree lock in `decision-log.logic` counts 26 decisions and pins the
   new log's routing.
+- **VAR-EFFECT-SHARED-TEMPLATE closed (verify-13 N1).** R-EO (124a:817): "A declared logic variable the live step
+  does not read carries an admin badge with its reason: (a) **"Takes effect at cutover"**: a pending step in its copy
+  window … declares it, and the live legacy script reads `<legacy name>`". `enrich_permits_centreline_coverage_min` had
+  lost that badge because the now-live shared `scripts/lib/enrich-lead-zoning.js` reads
+  `${cfgFor(target).slug}_centreline_coverage_min`, whose slug is the running step's (enrich_coa_zoning), while
+  enrich_permits still runs `scripts/enrich-permits.js`, which reads `centreline_propagation_coverage_min`. The
+  derivation (`scripts/analysis/gates/variable-effect.mjs`) no longer counts a slug-leading template outside a
+  copy-window step's own legacy shell as a read of that step's own `<slug>_<name>` key; whole-word, live-descriptor
+  and other template reads still count. Red first: `docs/reports/red-evidence/var-effect-shared-template/red.json`
+  (2 of 20 failing: the shared-template fixture and the real-tree enrich_permits row), `green.json` (20/20).
+  `generate-logic-variable-effect.mjs` (it has no explicit write flag: a bare run writes, `--check` checks) adds
+  exactly one entry, the enrich_permits badge with legacy name `centreline_propagation_coverage_min`; `--check`
+  clean. The test comment's PIN is gone; nothing else changed in the badge file (25 cutover, 12 not read).

@@ -15,7 +15,8 @@
 // "Live code" is every non-test source under scripts/ and src/, minus: the generators that only LIST every key
 // (logic-variable groups / docs), the admin UI and admin step descriptions that only render keys, and modules reachable ONLY from a
 // copy-window step's new compute (not running yet). A read is a whole-word occurrence of the key, a template
-// literal whose static parts match it (`lifecycle_seq_band_${seq}_min`), or a string value in a live descriptor
+// literal whose static parts match it (`lifecycle_seq_band_${seq}_min`; a slug-leading one outside the step's own legacy
+// shell never reads a copy-window step's own key, VAR-EFFECT-SHARED-TEMPLATE), or a string value in a live descriptor
 // (converted, or pending past its copy window). Known limit: a key that is read but has no effect (a console-only
 // read) counts as read; such keys are badged at their step's ② when the converted descriptor drops them.
 //
@@ -95,14 +96,18 @@ export function copyPairsFromMigrations(migrations) {
   return pairs;
 }
 
-/** PURE. Template literals in source text whose static parts can spell a variable name, as anchored regexes. */
+/**
+ * PURE. Template literals in source text whose static parts can spell a variable name: `{re, slugLeading}`, the
+ * anchored regex plus whether the template opens with a placeholder (`${slug}_coverage_min`), i.e. its key prefix is
+ * chosen at run time.
+ */
 function templatePatterns(text) {
   const out = [];
   for (const m of text.matchAll(/`([^`\n]*\$\{[^`\n]*)`/g)) {
     const parts = m[1].split(/\$\{[^}]*\}/);
     if (!parts.every((p) => /^[a-z0-9_]*$/.test(p))) continue;
     if (!parts.some((p) => NAMED_PART.test(p))) continue;
-    out.push(new RegExp('^' + parts.map(escapeRe).join('[a-z0-9_]+') + '$'));
+    out.push({ re: new RegExp('^' + parts.map(escapeRe).join('[a-z0-9_]+') + '$'), slugLeading: parts[0] === '' });
   }
   return out;
 }
@@ -116,14 +121,23 @@ function templatePatterns(text) {
 export function deriveVariableEffect({ seedKeys, pending, liveDescriptors, codeTexts, copyPairs, windowOnlyFiles = new Set() }) {
   const live = codeTexts.filter(([f]) => !windowOnlyFiles.has(f) && !NON_READER_FILES.has(f) && !NON_READER_DIRS.some((d) => f.startsWith(d)));
   const liveText = live.map(([, t]) => t).join('\n');
-  const patterns = live.flatMap(([, t]) => templatePatterns(t));
+  const patterns = live.flatMap(([f, t]) => templatePatterns(t).map((p) => ({ ...p, file: f })));
   const liveDescriptorStrings = new Set(liveDescriptors.flatMap((d) => stringsOf(d)));
   const windowSteps = pending.filter((p) => p.descriptor && COPY_WINDOW_STAGES.has(p.stage));
   const declaredByAny = new Set([...liveDescriptors, ...pending.map((p) => p.descriptor).filter(Boolean)].flatMap((d) => [...declaredNames(d)]));
 
-  const isRead = (key) => liveDescriptorStrings.has(key)
-    || new RegExp(`(^|[^A-Za-z0-9_])${escapeRe(key)}($|[^A-Za-z0-9_])`).test(liveText)
-    || patterns.some((re) => re.test(key));
+  // VAR-EFFECT-SHARED-TEMPLATE (verify-13 N1, integrate-14; R-EO: "A declared logic variable the live step does not
+  // read carries an admin badge"). A slug-leading template (`${slug}_coverage_min`) in a module the live code shares
+  // composes the RUNNING step's key. A copy-window step is not running its new code, so such a template does not read
+  // that step's own `<slug>_<name>` key (core.8 / R-DE (v) step-owned names), unless the template sits in the step's
+  // own live legacy shell. Whole-word reads, live-descriptor reads and every other template still count.
+  const windowOwnerOf = (key) => windowSteps.find((p) => key.startsWith(`${p.slug}_`) && declaredNames(p.descriptor).has(key));
+  const isRead = (key) => {
+    const owner = windowOwnerOf(key);
+    return liveDescriptorStrings.has(key)
+      || new RegExp(`(^|[^A-Za-z0-9_])${escapeRe(key)}($|[^A-Za-z0-9_])`).test(liveText)
+      || patterns.some((p) => p.re.test(key) && !(owner && p.slugLeading && p.file !== owner.file));
+  };
 
   const entries = {};
   for (const key of [...seedKeys].sort()) {

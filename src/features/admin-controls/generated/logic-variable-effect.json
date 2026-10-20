@@ -194,6 +194,13 @@
       "legacy_name": "permits_bylaw_max_fsi_null_warn_pct",
       "reason": "enrich_permits still runs its legacy script, which reads permits_bylaw_max_fsi_null_warn_pct; this value is used from the step's cutover (stage compute_ported)."
     },
+    "enrich_permits_centreline_coverage_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "enrich_permits",
+      "legacy_name": "centreline_propagation_coverage_min",
+      "reason": "enrich_permits still runs its legacy script, which reads centreline_propagation_coverage_min; this value is used from the step's cutover (stage compute_ported)."
+    },
     "enrich_permits_zoning_coverage_fail_pct": {
       "badge": "takes_effect_at_cutover",
       "label": "Takes effect at cutover",
