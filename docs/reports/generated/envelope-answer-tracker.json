@@ -10,8 +10,8 @@
  "counts": {
   "answers": 788,
   "by_state": {
-   "INCORPORATED": 743,
-   "UNFIXED": 45
+   "INCORPORATED": 747,
+   "UNFIXED": 41
   },
   "by_verdict": {
    "disclose": 186,
@@ -32,8 +32,8 @@
   "by_chapter": {
    "10.10": {
     "total": 98,
-    "INCORPORATED": 94,
-    "UNFIXED": 4,
+    "INCORPORATED": 98,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "10.20": {
@@ -113,106 +113,6 @@
  },
  "rows": [
   {
-   "unit_id": "10.10.40.10(10)#(10)(A)",
-   "regulation_id": "10.10.40.10(10)",
-   "chapter": "10.10",
-   "verdict": "disclose",
-   "note": "",
-   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
-   "disposition": "disclosed_by",
-   "fix_ids": [
-    "M-169"
-   ],
-   "corrected_value": "The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
-   "disclosure_code": "rooftop_elements_exempt",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "P5.12 code rooftop_elements_exempt",
-    "unit carries no disclosure",
-    "pinned out of scope: PIN SCOPE-TOWER-1"
-   ],
-   "state": "UNFIXED",
-   "reason": "pinned out of scope (PIN SCOPE-TOWER-1): answer kept, no disclosure applied"
-  },
-  {
-   "unit_id": "10.10.40.10(10)#(10)(B)",
-   "regulation_id": "10.10.40.10(10)",
-   "chapter": "10.10",
-   "verdict": "disclose",
-   "note": "",
-   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
-   "disposition": "disclosed_by",
-   "fix_ids": [
-    "M-169"
-   ],
-   "corrected_value": "The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
-   "disclosure_code": "rooftop_elements_exempt",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "P5.12 code rooftop_elements_exempt",
-    "unit carries no disclosure",
-    "pinned out of scope: PIN SCOPE-TOWER-1"
-   ],
-   "state": "UNFIXED",
-   "reason": "pinned out of scope (PIN SCOPE-TOWER-1): answer kept, no disclosure applied"
-  },
-  {
-   "unit_id": "10.10.40.10(10)#(10)(C)",
-   "regulation_id": "10.10.40.10(10)",
-   "chapter": "10.10",
-   "verdict": "disclose",
-   "note": "",
-   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
-   "disposition": "disclosed_by",
-   "fix_ids": [
-    "M-169"
-   ],
-   "corrected_value": "The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
-   "disclosure_code": "rooftop_elements_exempt",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "P5.12 code rooftop_elements_exempt",
-    "unit carries no disclosure",
-    "pinned out of scope: PIN SCOPE-TOWER-1"
-   ],
-   "state": "UNFIXED",
-   "reason": "pinned out of scope (PIN SCOPE-TOWER-1): answer kept, no disclosure applied"
-  },
-  {
-   "unit_id": "10.10.40.71(1)#whole",
-   "regulation_id": "10.10.40.71(1)",
-   "chapter": "10.10",
-   "verdict": "disclose",
-   "note": "Setback exemptions  ",
-   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
-   "disposition": "disclosed_by",
-   "fix_ids": [
-    "M-169"
-   ],
-   "corrected_value": "The setback exemption for a transportation use along Eglinton Avenue is a non-residential use — PIN NONRES-4: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
-   "disclosure_code": "setback_encroachments",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "P5.12 code setback_encroachments",
-    "unit carries no disclosure",
-    "pinned out of scope: PIN NONRES-4"
-   ],
-   "state": "UNFIXED",
-   "reason": "pinned out of scope (PIN NONRES-4): answer kept, no disclosure applied"
-  },
-  {
    "unit_id": "10.5.40.60(4)#(4)(B)",
    "regulation_id": "10.5.40.60(4)",
    "chapter": "10.5",
@@ -223,7 +123,7 @@
    "fix_ids": [
     "M-169"
    ],
-   "corrected_value": "The cladding allowance on a lot with 100 or more dwelling units is residential but outside the MaxBLD building types — PIN SCOPE-100UNITS-1 (renamed from NONRES-3, verify-12f N1, 2026-10-20): out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "The cladding allowance on a lot with 100 or more dwelling units is residential but outside the MaxBLD building types — PIN SCOPE-100UNITS-1 (renamed from NONRES-3, verify-12f N1, 2026-10-20): out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 \"y pin them\", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)).",
    "disclosure_code": "setback_encroachments",
    "question": "",
    "fields": [],
@@ -1199,7 +1099,7 @@
     "M-169",
     "M-212"
    ],
-   "corrected_value": "The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 \"y pin them\", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)).",
    "disclosure_code": "shoreline_hazard",
    "question": "",
    "fields": [],
@@ -1225,7 +1125,7 @@
     "M-169",
     "M-212"
    ],
-   "corrected_value": "The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 \"y pin them\", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)).",
    "disclosure_code": "shoreline_hazard",
    "question": "",
    "fields": [],
@@ -2132,6 +2032,81 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(10)#(10)(A)",
+   "regulation_id": "10.10.40.10(10)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-214"
+   ],
+   "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.10.40.10(10)#(10)(B)",
+   "regulation_id": "10.10.40.10(10)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-214"
+   ],
+   "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.10.40.10(10)#(10)(C)",
+   "regulation_id": "10.10.40.10(10)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-214"
+   ],
+   "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
   },
   {
    "unit_id": "10.10.40.10(11)#(11)(A)",
@@ -3251,6 +3226,30 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.71(1)#whole",
+   "regulation_id": "10.10.40.71(1)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "Setback exemptions  ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback exemption for a transportation use along Eglinton Avenue (setbacks 0–10.5 m): disclosed with the keyed sentence (\"does not affect houses and is not evaluated\"); the abuts_named_street condition is taken as not holding (M-169(1)/(2)); setback_encroachments is the nearest setback-permission code.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
   },
   {
    "unit_id": "10.10.40.80(1)#(1)(A)",
@@ -13958,8 +13957,7 @@
    "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
    "disposition": "disclosed_by",
    "fix_ids": [
-    "M-158",
-    "M-178"
+    "M-158"
    ],
    "corrected_value": "Garden-suite definition of lawful (existing or authorized on or before 3 February 2022); feeds the lawfully-existing caveat, disclosed.",
    "disclosure_code": "lawfully_existing_relief",

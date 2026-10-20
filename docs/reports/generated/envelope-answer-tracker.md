@@ -6,14 +6,14 @@
 
 ## Counts
 
-- Answers: **788** — INCORPORATED **743**, UNFIXED **45**, OPEN **0**.
+- Answers: **788** — INCORPORATED **747**, UNFIXED **41**, OPEN **0**.
 - By verdict: disclose 186 · matches 187 · no_application 236 · null 13 · unsure 35 · wrong 131.
 - By disposition: disclosed_by 186 · excluded 236 · fixed_by 106 · matches 187 · resolved_by 52 · verified_by_lock 21.
 - Answers whose provision feeds a P5.10 lineage field: 262.
 
 | Chapter | Answers | Incorporated | Unfixed | Open |
 |---|---|---|---|---|
-| 10.10 | 98 | 94 | 4 | 0 |
+| 10.10 | 98 | 98 | 0 | 0 |
 | 10.20 | 101 | 101 | 0 | 0 |
 | 10.40 | 89 | 89 | 0 | 0 |
 | 10.5 | 115 | 114 | 1 | 0 |
@@ -32,15 +32,11 @@
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
 
-## UNFIXED (45)
+## UNFIXED (41)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
-| `10.10.40.10(10)#(10)(A)` | disclose | disclosed_by | M-169, `rooftop_elements_exempt` | The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: "this is beyond the scope at this point"; operator 2026-10-20: "y pin them"). | pinned out of scope (PIN SCOPE-TOWER-1): answer kept, no disclosure applied | — |  |
-| `10.10.40.10(10)#(10)(B)` | disclose | disclosed_by | M-169, `rooftop_elements_exempt` | The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: "this is beyond the scope at this point"; operator 2026-10-20: "y pin them"). | pinned out of scope (PIN SCOPE-TOWER-1): answer kept, no disclosure applied | — |  |
-| `10.10.40.10(10)#(10)(C)` | disclose | disclosed_by | M-169, `rooftop_elements_exempt` | The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: "this is beyond the scope at this point"; operator 2026-10-20: "y pin them"). | pinned out of scope (PIN SCOPE-TOWER-1): answer kept, no disclosure applied | — |  |
-| `10.10.40.71(1)#whole` | disclose | disclosed_by | M-169, `setback_encroachments` | The setback exemption for a transportation use along Eglinton Avenue is a non-residential use — PIN NONRES-4: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: "our focus is residential this is beyond the scope at this point"; operator 2026-10-20: "y pin them"). | pinned out of scope (PIN NONRES-4): answer kept, no disclosure applied | — | Setback exemptions   |
-| `10.5.40.60(4)#(4)(B)` | disclose | disclosed_by | M-169, `setback_encroachments` | The cladding allowance on a lot with 100 or more dwelling units is residential but outside the MaxBLD building types — PIN SCOPE-100UNITS-1 (renamed from NONRES-3, verify-12f N1, 2026-10-20): out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: "this is beyond the scope at this point"; operator 2026-10-20: "y pin them"). | pinned out of scope (PIN SCOPE-100UNITS-1): answer kept, no disclosure applied | — | Exterior main wall surfaces - ie pipe and cladding added to the main walls - not important |
+| `10.5.40.60(4)#(4)(B)` | disclose | disclosed_by | M-169, `setback_encroachments` | The cladding allowance on a lot with 100 or more dwelling units is residential but outside the MaxBLD building types — PIN SCOPE-100UNITS-1 (renamed from NONRES-3, verify-12f N1, 2026-10-20): out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 "y pin them", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)). | pinned out of scope (PIN SCOPE-100UNITS-1): answer kept, no disclosure applied | — | Exterior main wall surfaces - ie pipe and cladding added to the main walls - not important |
 | `150.10.1(1)#whole` | wrong | fixed_by | M-177 | A scope sentence ("Section 150.10 applies to secondary suites") with no measure: recorded as no application (findings class D); the suite rules themselves ride M-177 / M-182 / M-199. | ruled; keyed correction not applied yet | — | Stating this section applies to secondary suites |
 | `150.10.20.1(1)#(1)(A)` | wrong | fixed_by | M-177 | A detached house is a permitted secondary-suite host, so the detached + suite class is in MaxBLD scope. | ruled; keyed correction not applied yet | — | Secondary Suite permitted structures a) detached house |
 | `150.10.20.1(1)#(1)(B)` | wrong | fixed_by | M-177 | A semi-detached house is a permitted secondary-suite host, so the semi + suite class is in MaxBLD scope. | ruled; keyed correction not applied yet | — | Secondary Suite permitted structures b semi detached house. |
@@ -79,10 +75,10 @@
 | `150.8.60.50(2)#whole` | wrong | fixed_by | M-177 | The laneway-suite GFA must be less than the principal building's GFA. | ruled; keyed correction not applied yet | `suite_gfa_sqm` | Laneway Suite Gross Floor Area - Important the laneway suite can't be bigger than the residential building. condition. |
 | `150.8.60.50(3)#whole` | wrong | fixed_by | M-177 | The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead. | ruled; keyed correction not applied yet | — | This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway s |
 | `150.8.60.70(1)#(1)(A)` | wrong | fixed_by | M-177 | The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap. | ruled; keyed correction not applied yet | `suite_coverage_option` | This is critical the lot coverage calculation does not include the laneway suite |
-| `5.10.40.70(6)#(6)(B)` | disclose | disclosed_by | M-169, M-212, `shoreline_hazard` | The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: "our focus is residential this is beyond the scope at this point"; operator 2026-10-20: "y pin them"). | pinned out of scope (PIN NONRES-1): answer kept, no disclosure applied | — | Shoreline Hazards |
-| `5.10.40.80(1)#(1)(B)` | disclose | disclosed_by | M-169, M-212, `shoreline_hazard` | The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: "our focus is residential this is beyond the scope at this point"; operator 2026-10-20: "y pin them"). | pinned out of scope (PIN NONRES-2): answer kept, no disclosure applied | — | Shoreline Hazards - seperation distance - lots on shoreline |
+| `5.10.40.70(6)#(6)(B)` | disclose | disclosed_by | M-169, M-212, `shoreline_hazard` | The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 "y pin them", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)). | pinned out of scope (PIN NONRES-1): answer kept, no disclosure applied | — | Shoreline Hazards |
+| `5.10.40.80(1)#(1)(B)` | disclose | disclosed_by | M-169, M-212, `shoreline_hazard` | The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 "y pin them", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)). | pinned out of scope (PIN NONRES-2): answer kept, no disclosure applied | — | Shoreline Hazards - seperation distance - lots on shoreline |
 
-## INCORPORATED (743)
+## INCORPORATED (747)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
@@ -128,6 +124,9 @@
 | `10.10.40.10(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
 | `10.10.40.10(1)#(1)(C)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
 | `10.10.40.10(1)#(1)(D)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
+| `10.10.40.10(10)#(10)(A)` | disclose | disclosed_by | M-169, M-214, `rooftop_elements_exempt` | Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)). | keyed disclosure + P5.12 code | — |  |
+| `10.10.40.10(10)#(10)(B)` | disclose | disclosed_by | M-169, M-214, `rooftop_elements_exempt` | Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)). | keyed disclosure + P5.12 code | — |  |
+| `10.10.40.10(10)#(10)(C)` | disclose | disclosed_by | M-169, M-214, `rooftop_elements_exempt` | Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)). | keyed disclosure + P5.12 code | — |  |
 | `10.10.40.10(11)#(11)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | Maximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in  |
 | `10.10.40.10(12)#(12)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | aximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R |
 | `10.10.40.10(2)#(2)(A)` | matches | matches | — | — | keyed unit agreed | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` |  |
@@ -173,6 +172,7 @@
 | `10.10.40.70(5)#(5)(A)` | no_application | excluded | — | — | no application (excluded) | — | This is for an apartment building or a townhouse on a major street.  |
 | `10.10.40.70(5)#(5)(B)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.10.40.70(5)#(5)(C)` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.10.40.71(1)#whole` | disclose | disclosed_by | M-169, `setback_encroachments` | Setback exemption for a transportation use along Eglinton Avenue (setbacks 0–10.5 m): disclosed with the keyed sentence ("does not affect houses and is not evaluated"); the abuts_named_street condition is taken as not holding (M-169(1)/(2)); setback_encroachments is the nearest setback-permission code. | keyed disclosure + P5.12 code | — | Setback exemptions   |
 | `10.10.40.80(1)#(1)(A)` | no_application | excluded | — | — | no application (excluded) | — | Details for townhouses and apartment buildings |
 | `10.10.40.80(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.10.40.80(1)#(1)(C)` | no_application | excluded | — | — | no application (excluded) | — |  |
@@ -634,7 +634,7 @@
 | `150.10.20.1(1)#(1)(C)` | disclose | disclosed_by | M-214, M-177, `forms_deferred` | A secondary suite is permitted in a townhouse; the townhouse and the suite in it are deferred forms, disclosed. | keyed disclosure + P5.12 code | — |  |
 | `150.10.20.1(4)#whole` | disclose | disclosed_by | M-158, `lawfully_existing_relief` | A secondary suite is allowed in zones where houses are not permitted if a lawfully existing house is on the lot; disclosed. | keyed disclosure + P5.12 code | — | In zones RA, RAC, CL, CR, I, IH, IE, IS, and IPW zones where Detached House, Semi-Detached House, or Townhouse Are Not Permitted Building Types a secondary suit |
 | `150.7.1(1)#whole` | no_application | excluded | — | — | no application (excluded) | — |  |
-| `150.7.1(2)#whole` | disclose | disclosed_by | M-158, M-178, `lawfully_existing_relief` | Garden-suite definition of lawful (existing or authorized on or before 3 February 2022); feeds the lawfully-existing caveat, disclosed. | keyed disclosure + P5.12 code | — |  |
+| `150.7.1(2)#whole` | disclose | disclosed_by | M-158, `lawfully_existing_relief` | Garden-suite definition of lawful (existing or authorized on or before 3 February 2022); feeds the lawfully-existing caveat, disclosed. | keyed disclosure + P5.12 code | — |  |
 | `150.7.20.1(1)#(1)(A)` | no_application | excluded | — | — | no application (excluded) | — |  |
 | `150.7.20.1(1)#(1)(B)` | no_application | excluded | — | — | no application (excluded) | — |  |
 | `150.7.20.1(1)#(1)(C)` | no_application | excluded | — | — | no application (excluded) | — |  |

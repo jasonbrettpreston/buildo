@@ -1,6 +1,6 @@
 {
  "schema": "envelope-answer-dispositions-v1",
- "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings. Batch 3 (38 answers, dump envdb9, 2026-10-19) added by Claude under existing rulings; 4 OPEN on two questions. Batch 4 (26 answers, dump envdb10, 2026-10-19) added by Claude under existing rulings; 0 OPEN. Batch 5 (98 answers, dump envdb11, 2026-10-20) added by Claude under existing rulings; Rulings 2026-10-20: M-228 (through-lot front lot line) and M-229 (mechanical attic, amends M-171) applied, 0 OPEN; three non-residential arms pinned (PIN NONRES-1..3, UNFIXED, no disclosure applied). Batch 6 (59 answers + 3 null verdicts given \"disclose\", dump envdb12, 2026-10-20) added by Claude under existing rulings; 0 OPEN; PIN NONRES-4 (10.10.40.71(1)), SCOPE-TOWER-1 (R tower rooftop 10.10.40.10(10)(A)-(C)); NONRES-3 renamed SCOPE-100UNITS-1; pinned rows carry scope_pin (verify-12f N1, N8).",
+ "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings. Batch 3 (38 answers, dump envdb9, 2026-10-19) added by Claude under existing rulings; 4 OPEN on two questions. Batch 4 (26 answers, dump envdb10, 2026-10-19) added by Claude under existing rulings; 0 OPEN. Batch 5 (98 answers, dump envdb11, 2026-10-20) added by Claude under existing rulings; Rulings 2026-10-20: M-228 (through-lot front lot line) and M-229 (mechanical attic, amends M-171) applied, 0 OPEN; three non-residential arms pinned (PIN NONRES-1..3, UNFIXED, no disclosure applied). Batch 6 (59 answers + 3 null verdicts given \"disclose\", dump envdb12, 2026-10-20) added by Claude under existing rulings; 0 OPEN; NONRES-3 renamed SCOPE-100UNITS-1; pinned rows carry scope_pin from the closed scope_pins list (verify-12f N1, N8; batch 6 B1: no pin without an operator ruling).",
  "count": 788,
  "dispositions": [
   {
@@ -282,36 +282,36 @@
    "verdict": "disclose",
    "disposition": "disclosed_by",
    "fix_ids": [
-    "M-169"
+    "M-169",
+    "M-214"
    ],
-   "corrected_value": "The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); PIN SCOPE-TOWER-1 (towers, outside the MaxBLD building types, as SCOPE-100UNITS-1)",
-   "scope_pin": "SCOPE-TOWER-1"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1)"
   },
   {
    "unit_id": "10.10.40.10(10)#(10)(B)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
    "fix_ids": [
-    "M-169"
+    "M-169",
+    "M-214"
    ],
-   "corrected_value": "The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); PIN SCOPE-TOWER-1 (towers, outside the MaxBLD building types, as SCOPE-100UNITS-1)",
-   "scope_pin": "SCOPE-TOWER-1"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1)"
   },
   {
    "unit_id": "10.10.40.10(10)#(10)(C)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
    "fix_ids": [
-    "M-169"
+    "M-169",
+    "M-214"
    ],
-   "corrected_value": "The tower rooftop allowances (6.5 m within 450 m², +3.0 m chimneys; a tower is the part above 24.0 m) are residential but outside the MaxBLD building types — PIN SCOPE-TOWER-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); PIN SCOPE-TOWER-1 (towers, outside the MaxBLD building types, as SCOPE-100UNITS-1)",
-   "scope_pin": "SCOPE-TOWER-1"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1)"
   },
   {
    "unit_id": "10.10.40.10(11)#(11)(A)",
@@ -721,10 +721,9 @@
    "fix_ids": [
     "M-169"
    ],
-   "corrected_value": "The setback exemption for a transportation use along Eglinton Avenue is a non-residential use — PIN NONRES-4: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "Setback exemption for a transportation use along Eglinton Avenue (setbacks 0–10.5 m): disclosed with the keyed sentence (\"does not affect houses and is not evaluated\"); the abuts_named_street condition is taken as not holding (M-169(1)/(2)); setback_encroachments is the nearest setback-permission code.",
    "disclosure_code": "setback_encroachments",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); PIN NONRES-4 (non-residential use, as NONRES-1 / NONRES-2 batch 5); the keyed disclosure withdrawn by correction",
-   "scope_pin": "NONRES-4"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(1)/(2)/(4); the keyed disclosure stands as the operator answered; replaces the unauthorized PIN NONRES-4 (verify-12f batch 6 B1)"
   },
   {
    "unit_id": "10.10.40.80(1)#(1)(A)",
@@ -3101,9 +3100,9 @@
    "fix_ids": [
     "M-169"
    ],
-   "corrected_value": "The cladding allowance on a lot with 100 or more dwelling units is residential but outside the MaxBLD building types — PIN SCOPE-100UNITS-1 (renamed from NONRES-3, verify-12f N1, 2026-10-20): out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "The cladding allowance on a lot with 100 or more dwelling units is residential but outside the MaxBLD building types — PIN SCOPE-100UNITS-1 (renamed from NONRES-3, verify-12f N1, 2026-10-20): out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 \"y pin them\", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)).",
    "disclosure_code": "setback_encroachments",
-   "basis": "review answers batch 5 (live page DB 2026-10-20); PIN SCOPE-100UNITS-1 (large residential sites outside the MaxBLD building types; operator 2026-10-19 and 2026-10-20; renamed from NONRES-3, verify-12f N1)",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); PIN SCOPE-100UNITS-1 (large residential sites outside the MaxBLD building types; operator 2026-10-20 \"y pin them\"; renamed from NONRES-3, verify-12f N1)",
    "scope_pin": "SCOPE-100UNITS-1"
   },
   {
@@ -4592,12 +4591,11 @@
    "verdict": "disclose",
    "disposition": "disclosed_by",
    "fix_ids": [
-    "M-158",
-    "M-178"
+    "M-158"
    ],
    "corrected_value": "Garden-suite definition of lawful (existing or authorized on or before 3 February 2022); feeds the lawfully-existing caveat, disclosed.",
    "disclosure_code": "lawfully_existing_relief",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-158, M-178 (as 10.40.40.1(9)(A))"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-158 (the 3 February 2022 date is the clause's own; re-cited from M-158 + M-178, verify-12f batch 6 N3)"
   },
   {
    "unit_id": "150.7.20.1(1)#(1)(A)",
@@ -6321,9 +6319,9 @@
     "M-169",
     "M-212"
    ],
-   "corrected_value": "The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 \"y pin them\", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)).",
    "disclosure_code": "shoreline_hazard",
-   "basis": "review answers batch 5 (live page DB 2026-10-20); PIN NONRES-1 (residential focus; operator 2026-10-19 and 2026-10-20)",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); PIN NONRES-1 (operator 2026-10-20 \"y pin them\")",
    "scope_pin": "NONRES-1"
   },
   {
@@ -6358,9 +6356,9 @@
     "M-169",
     "M-212"
    ],
-   "corrected_value": "The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "corrected_value": "The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 \"y pin them\", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)).",
    "disclosure_code": "shoreline_hazard",
-   "basis": "review answers batch 5 (live page DB 2026-10-20); PIN NONRES-2 (residential focus; operator 2026-10-19 and 2026-10-20)",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); PIN NONRES-2 (operator 2026-10-20 \"y pin them\")",
    "scope_pin": "NONRES-2"
   },
   {
@@ -6561,5 +6559,34 @@
    "disclosure_code": "gfa_deductions_not_applied",
    "basis": "findings C5; M-171"
   }
- ]
+ ],
+ "scope_pins": {
+  "description": "The closed list of operator-authorized scope pins (Spec 78 P5.15(B)). A disposition may carry scope_pin only for a pin listed here, on a listed unit; generate-answer-tracker --check also requires the pin id and the verbatim ruling to appear in the recorded spec. Unlisted pins fail.",
+  "pins": {
+   "NONRES-1": {
+    "units": [
+     "5.10.40.70(6)#(6)(B)"
+    ],
+    "ruling": "y pin them",
+    "ruled_on": "2026-10-20",
+    "recorded_in": "docs/specs/01-pipeline/69a_mcbylaw_register.md"
+   },
+   "NONRES-2": {
+    "units": [
+     "5.10.40.80(1)#(1)(B)"
+    ],
+    "ruling": "y pin them",
+    "ruled_on": "2026-10-20",
+    "recorded_in": "docs/specs/01-pipeline/69a_mcbylaw_register.md"
+   },
+   "SCOPE-100UNITS-1": {
+    "units": [
+     "10.5.40.60(4)#(4)(B)"
+    ],
+    "ruling": "y pin them",
+    "ruled_on": "2026-10-20",
+    "recorded_in": "docs/specs/01-pipeline/69a_mcbylaw_register.md"
+   }
+  }
+ }
 }

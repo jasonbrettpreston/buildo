@@ -77258,8 +77258,8 @@
       "field": "disclosure",
       "id": "COR-150.7.1(2)#whole/disclosure",
       "kind": "correction",
-      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 150.7.1(2) (disclose): the garden-suite definition of lawful (existing or authorized on or before 3 February 2022). A transition definition of lawfully existing that only feeds the lawfully-existing caveat (M-158, M-178; as 10.40.40.1(9)(A)).",
-      "rule": "Spec 69a M-158, M-178; Spec 78 P5.12 lawfully_existing_relief; M-75",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 150.7.1(2) (disclose): the garden-suite definition of lawful (existing or authorized on or before 3 February 2022). A transition definition of lawfully existing that only feeds the lawfully-existing caveat (M-158; the 3 February 2022 date is the clause's own, keyed on the unit). Re-cited 2026-10-20 from M-158 + M-178: M-178's cut-off is the 24 July 2025 suite transition, not this date (verify-12f batch 6 N3).",
+      "rule": "Spec 69a M-158; Spec 78 P5.12 lawfully_existing_relief; M-75",
       "unit": "150.7.1(2)#whole",
       "value": "For garden suites, a building or use that existed or was authorized on or before February 3, 2022 counts as lawfully existing."
     },
@@ -77267,12 +77267,34 @@
       "adjudicated_on": "2026-10-20",
       "adjudicator": "operator",
       "field": "disclosure",
-      "id": "COR-10.10.40.71(1)#whole/disclosure",
+      "id": "COR-10.10.40.10(10)#(10)(A)/disclosure",
       "kind": "correction",
-      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.71(1) (disclose) \"Setback exemptions\": the setback exemption for a transportation use along Eglinton Avenue is a non-residential use. PIN NONRES-4, as NONRES-1 / NONRES-2 (batch 5): the answer is kept, no disclosure is applied (operator 2026-10-19 \"our focus is residential this is beyond the scope at this point\"; 2026-10-20 \"y pin them\").",
-      "rule": "Spec 69a M-169; PIN NONRES-4 (residential focus, operator 2026-10-19; \"y pin them\" 2026-10-20); M-75",
-      "unit": "10.10.40.71(1)#whole",
-      "value": "none"
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.10(10) (disclose). The R tower rooftop allowance is a permission the user would verify: M-169(4) discloses it, never evaluated (as 10.5.40.10(3)–(5) and R 10.10.40.10(8)); a tower is an apartment-building form, deferred and disclosed (M-214(3)). Replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1).",
+      "rule": "Spec 69a M-169(4), M-214(3); Spec 78 P5.12 rooftop_elements_exempt; M-75",
+      "unit": "10.10.40.10(10)#(10)(A)",
+      "value": "On the tower part of a building (storeys more than 24.0 m above the ground), rooftop equipment may rise up to 6.5 m above the height limit if it covers no more than 450 m²; towers are apartment forms and are not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(10)#(10)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.10(10) (disclose). The R tower rooftop allowance is a permission the user would verify: M-169(4) discloses it, never evaluated (as 10.5.40.10(3)–(5) and R 10.10.40.10(8)); a tower is an apartment-building form, deferred and disclosed (M-214(3)). Replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1).",
+      "rule": "Spec 69a M-169(4), M-214(3); Spec 78 P5.12 rooftop_elements_exempt; M-75",
+      "unit": "10.10.40.10(10)#(10)(B)",
+      "value": "On the tower part of a building, chimneys, pipes and vents may rise a further 3.0 m above the 6.5 m rooftop allowance; towers are apartment forms and are not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(10)#(10)(C)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.10(10) (disclose). The R tower rooftop allowance is a permission the user would verify: M-169(4) discloses it, never evaluated (as 10.5.40.10(3)–(5) and R 10.10.40.10(8)); a tower is an apartment-building form, deferred and disclosed (M-214(3)). Replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1).",
+      "rule": "Spec 69a M-169(4), M-214(3); Spec 78 P5.12 rooftop_elements_exempt; M-75",
+      "unit": "10.10.40.10(10)#(10)(C)",
+      "value": "A tower is the part of a building enclosing storeys more than 24.0 m above the ground, where no storey above 24.0 m averages more than 750 m² of floor area; towers are apartment forms and are not modelled."
     }
   ]
 }
