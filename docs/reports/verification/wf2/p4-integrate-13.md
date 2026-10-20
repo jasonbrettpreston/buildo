@@ -57,3 +57,17 @@ first integrate commit with this index; none had to wait for the merge that intr
   (16 chain-era arms; `hooks-composition` `toHaveLength(16)`). The golden-lots `--check` arm is not wired (operator's
   call; it already runs in the suite). `precommit-budget.json` re-measured: docs-only 21.95 s ≤ 25.3 s, registry-input
   22.11 s ≤ 27.5 s; report-schema 0.11 s, decision-log 0.10 s.
+- **Plan v2 §3.7 (system map).** `generate-system-map.mjs` (no mode flag; it always writes) run on a `git archive` of the
+  tip in a scratch directory: the output is byte-identical to the committed `00_system_map.md` (115 specs, 6 sections).
+  A `--check` mode is still owed.
+
+### Open after integrate-13 (for the operator)
+
+- verify-13b N1 / bylaw-fix-1 N1: is "REVIEW §6 / gap 4" the decision of record for the 11 lineage fields with no
+  Q-file?
+- CHAT-11 (Q-7 scope, 10 report fields) is not in a committed decision log. Importing
+  `chat-decisions/2026-10-20-batch-b.json` through `decision-log --import --chat` also brings CHAT-6…CHAT-10 (by-law
+  rulings with no register row on this tree) and CHAT-12 / CHAT-13 (values `settled` / `bug_fix`, which have no
+  `decision_vocab` meaning), so it needs routing for those rows and a vocabulary ruling first. The 10 rows stay
+  `pending:operator_confirm:Q-7-scope` (RS-5 WARN).
+- Golden-lots `--check` as a pre-commit arm (about 6-7 s): operator's call.
