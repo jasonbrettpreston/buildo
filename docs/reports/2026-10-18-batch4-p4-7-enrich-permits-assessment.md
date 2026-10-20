@@ -245,7 +245,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because `docs/reports/generate
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=26 |
 | G2 | 1 | 1 | no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
-| G3 | 2 | 2 | table rows=10 vocab-hit rows=10 |
+| G3 | 2 | 2 | ledger rows=10 vocab-hit rows=10; evidence rows=0 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 9 ledger row(s), 0 without CLOSED/PIN () |

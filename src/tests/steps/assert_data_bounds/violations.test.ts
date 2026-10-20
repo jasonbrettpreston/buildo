@@ -692,7 +692,7 @@ describe('assert_data_bounds — CP-PLANA G6: the run clock is BOUND, never NOW(
     const issued: Array<{ sql: string; params: unknown[] }> = [];
     const ctx = {
       checks: descriptor.checks.map((c) => c.id),
-      descriptor: { identity: { name: 'assert_data_bounds' } },
+      descriptor: { ...descriptor, identity: { name: 'assert_data_bounds' } }, // the real descriptor: the costmag loader binds its expect.accept_list (IL-6)
       log: { info: () => {}, warn: () => {}, error: () => {} },
       clock: () => CLOCK,
       config: new Proxy({ pipeline_timezone: 'America/Toronto' } as Record<string, unknown>, { get: (o, k) => (k in o ? o[k as string] : 1) }),

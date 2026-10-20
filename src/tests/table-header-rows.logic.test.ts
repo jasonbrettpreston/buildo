@@ -45,13 +45,13 @@ describe('R-FA — header and separator rows are never data rows', () => {
   it('G3: a plain header with every data row in the vocabulary scores 2/2 (was 1/2)', () => {
     const g3 = sv.scoreG3(ph3('| commit | disposition |', vocabRows));
     expect(g3.score).toBe(2);
-    expect(g3.detail).toBe('table rows=2 vocab-hit rows=2');
+    expect(g3.detail).toBe('ledger rows=2 vocab-hit rows=2; evidence rows=0 (not scored)'); // detail form: R-FB
   });
 
   it('G3: vocabulary stuffed into the header does not count as a vocab-hit row', () => {
     const stuffed = '| commit | disposition (preserved-in-runner / preserved-in-compute / knowingly-retired) |';
     const g3 = sv.scoreG3(ph3(stuffed, ['| `abc1234` | preserved-in-runner |', '| `1234abc` | nothing named |']));
-    expect(g3.detail).toBe('table rows=2 vocab-hit rows=1');
+    expect(g3.detail).toBe('ledger rows=2 vocab-hit rows=1; evidence rows=0 (not scored)'); // detail form: R-FB
     expect(g3.score).toBe(1);
   });
 

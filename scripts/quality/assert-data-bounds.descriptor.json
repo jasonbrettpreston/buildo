@@ -477,7 +477,12 @@
       "expect": {
         "metric": "cost_estimate_over_ceiling",
         "loader": "costmag",
-        "field": "costMagCount"
+        "field": "costMagCount",
+        "accept_list": [
+          "04 202812 BLD",
+          "07 129713 BLD",
+          "06 196930 BLD"
+        ]
       },
       "limit": "viol == 0",
       "severity": "WARN",
@@ -501,7 +506,12 @@
       "expect": {
         "metric": "modeled_gfa_over_ceiling",
         "loader": "costmag",
-        "field": "gfaMagCount"
+        "field": "gfaMagCount",
+        "accept_list": [
+          "04 202812 BLD",
+          "07 129713 BLD",
+          "06 196930 BLD"
+        ]
       },
       "limit": "viol == 0",
       "severity": "WARN",

@@ -55,7 +55,19 @@
  */
 'use strict';
 
-const { CHECK_DEFS, COST_MAG_ACCEPT } = require('../assert-data-bounds-fields');
+const { CHECK_DEFS } = require('../assert-data-bounds-fields');
+
+/**
+ * IL-6 (`e99ae61a`; assessment §2.4: "a **declared `accept_list`** … descriptor-declared, not a logic var";
+ * operator y 2026-10-20): the audited permit_num exception list a magnitude check binds is the one its
+ * descriptor entry declares (`checks[].expect.accept_list`), never a module constant. Fails closed. PURE.
+ */
+function declaredAcceptList(descriptor, id) {
+  const check = ((descriptor && descriptor.checks) || []).find((c) => c.id === id);
+  const list = check && check.expect && check.expect.accept_list;
+  if (!Array.isArray(list)) throw new Error(`assert_data_bounds: check "${id}" declares no expect.accept_list (IL-6)`);
+  return list;
+}
 
 // ---------------------------------------------------------------------------
 // Memoized per-ctx branch loaders (one round trip per branch per run, regardless
@@ -414,12 +426,12 @@ async function loadCostMagBranch(ctx) {
     const acceptClause = `permit_num <> ALL($2::text[])`;
     const costMagRes = await pool.query(
       `SELECT COUNT(*)::int AS n FROM cost_estimates WHERE estimated_cost > $1 AND ${acceptClause}`,
-      [ctx.config.cost_est_legacy_cost_ceiling_cad, COST_MAG_ACCEPT],
+      [ctx.config.cost_est_legacy_cost_ceiling_cad, declaredAcceptList(ctx.descriptor, 'cost_estimate_over_ceiling')],
     );
     const gfaMagRes = await pool.query(
       `SELECT COUNT(*)::int AS n FROM cost_estimates
         WHERE modeled_gfa_sqm > $1 AND estimated_cost IS NOT NULL AND ${acceptClause}`,
-      [ctx.config.cost_est_legacy_gfa_ceiling_sqm, COST_MAG_ACCEPT],
+      [ctx.config.cost_est_legacy_gfa_ceiling_sqm, declaredAcceptList(ctx.descriptor, 'modeled_gfa_over_ceiling')],
     );
     return { costMagCount: costMagRes.rows[0].n, gfaMagCount: gfaMagRes.rows[0].n };
   });
@@ -597,3 +609,4 @@ module.exports.checks = CHECKS;
 module.exports.loadPermitsBranch = loadPermitsBranch;
 module.exports.loadWsibBranch = loadWsibBranch;
 module.exports.loadInspectionBranch = loadInspectionBranch;
+module.exports.declaredAcceptList = declaredAcceptList;

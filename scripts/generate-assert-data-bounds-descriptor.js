@@ -102,7 +102,10 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
     const check = {
       id: def.id,
       kind: 'bound',
-      expect: { metric: def.id, loader: def.loader, field: def.field },
+      // IL-6 (operator y 2026-10-20): an audited exception list is descriptor data, not a compute constant.
+      expect: def.acceptList
+        ? { metric: def.id, loader: def.loader, field: def.field, accept_list: [...def.acceptList] }
+        : { metric: def.id, loader: def.loader, field: def.field },
       limit: bound.limit,
       severity: def.severity,
       blocking: false,

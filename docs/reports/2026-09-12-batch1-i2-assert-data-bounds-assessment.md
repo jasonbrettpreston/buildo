@@ -312,7 +312,7 @@ Per Spec 123 §7.1's discoverer ≠ adjudicator role split, the 11 `PROPOSED` di
 - **IL-3 ACCEPT** — `==0` retirement invariant; the ×2 disjoint-guard duplication (`adec1f68`) is deliberate defense-in-depth (v2-Q2) and stays 2 independent `checks[]` entries, never collapsed to one `chains:["permits","coa"]` row.
 - **IL-4 ACCEPT** — `checks[].chains:["permits","sources"]`, one WSIB check group of 4, authored once and reused (mirrors `assert_global_coverage`'s own multi-chain array shape, `step.schema.json:685-691`).
 - **IL-5 CHANGE-TO guard** — the `NOT IN ('P19','P20')` exclusion (`ea087109`) is a **declared population-scope predicate**, not a bare threshold: the check's `why` must name `ea087109` and the terminal-phase exclusion verbatim, and the exclusion predicate itself travels as literal SQL text (never re-derived from a lifecycle-phase enum lookup). Its `== 0` comparison **stays a physical invariant** (a genuine non-terminal ghost is always a bug, never a tunable tolerance) — not promoted to a numeric logic var.
-- **IL-6 ACCEPT** — the 2 ceiling vars (`cost_est_legacy_cost_ceiling_cad`/`cost_est_legacy_gfa_ceiling_sqm`) are already registered vars, unchanged. `COST_MAG_ACCEPT` (`e99ae61a`) is a **declared `accept_list`** (an audited exception list, not a threshold) — descriptor-declared, not a logic var; `why` cites `e99ae61a` + the 2026-07-09 investigation + the 3 named `permit_num`s verbatim.
+- **IL-6 ACCEPT** — the 2 ceiling vars (`cost_est_legacy_cost_ceiling_cad`/`cost_est_legacy_gfa_ceiling_sqm`) are already registered vars, unchanged. `COST_MAG_ACCEPT` (`e99ae61a`) is a **declared `accept_list`** (an audited exception list, not a threshold) — descriptor-declared, not a logic var; `why` cites `e99ae61a` + the 2026-07-09 investigation + the 3 named `permit_num`s verbatim. *(operator y 2026-10-20, rulings-8: implemented as ruled. The list had shipped as a compute-imported constant (`scripts/lib/assert-data-bounds-fields.js`); it is now each magnitude check's `checks[].expect.accept_list`, which `declaredAcceptList` reads from the descriptor. Spec 124 §2 Rule 1; 124a §B19.)*
 - **IL-7 ACCEPT** — the severity-separated `checks_failed`/`checks_warned` shape (LPA-D6 precedent) is `preserved-in-runner`; commit 7's G2′ must show `checks_failed`/`checks_warned` in POST `records_meta` at parity with the PRE file's own per-chain counts (verify, never assume).
 - **IL-8 CHANGE-TO 3 logic vars** — the 3 GIS catastrophic-load floors (`1f8ca38a`: `address_points`/`parcels`/`building_footprints`) promote to `sources_address_points_floor` (500000), `sources_parcels_floor` (460000), `sources_building_footprints_floor` (400000).
 - **IL-9 CHANGE-TO logic var** — the `neighbourhoods` floor (`e3dad53d`/`b4e3d56e`, 158) promotes to `sources_neighbourhoods_floor` (158), despite being a fixed real-world cardinality — Rule 3 draws no exemption for "unlikely to change," only for `== 0`/small-integer referential-integrity invariants and audited exception lists (IL-6's distinction).
@@ -742,7 +742,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=54 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=85 vocab-hit rows=9 |
+| G3 | 1 | 2 | ledger rows=11 vocab-hit rows=9; evidence rows=74 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |
@@ -823,7 +823,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=68155B notes=0B checks=52 rows records_meta=8379B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=68387B notes=0B checks=52 rows records_meta=8380B (newest post/ capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 
