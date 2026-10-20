@@ -58,6 +58,7 @@ function fakeSeamPool(rowsForPrimary: Array<Record<string, unknown>>, rowsForFal
   };
 }
 
+// rule-map: R-V — seam pairs derived from declared edges (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('deriveSeamPairs — derived from converted.json + manifest.json, never hand-maintained', () => {
   it('a downstream descriptor reading an upstream step NOT in the registry yields no pair for that read', () => {
     const byName = {

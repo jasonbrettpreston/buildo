@@ -75,6 +75,7 @@ describe('WF3 D-C max_build_min_dimension_m — four-surface literal parity', ()
 // the seed JSON default and the max-build.js JS-fallback default must never drift, and
 // enrich-parcels.js's SQL builder must read the config value, not the bare literal
 // (proven directly in src/tests/steps/enrich_parcels/violations.test.ts's S0.1 describe block).
+// rule-map: R-AW (partial) — seed/code literal parity for the founding instance only; no fleet check (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('WF3 S0.1 max_build_lot_min_sqm / max_build_lot_max_sqm — seed/code literal parity (Rule 3 / R-G)', () => {
   const seed2 = JSON.parse(read('scripts/seeds/logic_variables.json'));
 

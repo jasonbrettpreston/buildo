@@ -221,6 +221,7 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
   // run, so a timed-out spawn (measured: status null, SIGTERM, ETIMEDOUT,
   // 0 rows) leaves nothing to assert against. Both directions, fixtures only.
   // -------------------------------------------------------------------------
+  // rule-map: R-CP (partial) — notLookedReasons locked both ways; not that every live test calls it (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   describe('T6c: notLookedReasons — a run that did not complete is never green', () => {
     const rows = (n: number) => Array.from({ length: n }, (_, i) => `  s${i}: 16/17 hard-stop=false #44-attributed=0 | X`).join('\n');
     const done = (stdout: string, status: number | null = 0) => ({ status, signal: null, stdout });

@@ -103,6 +103,7 @@ const INVALID_FIXTURES: Array<{
     path: '/outputs/invalidates',
     keyword: 'minItems',
   },
+  // rule-map: Rule-5 (partial) — checks may never be "none" (checks:[] minItems not fixture-tested) (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   {
     file: 'checks-none.json',
     rule: 'claim #7 — `checks` is the ONE category that may never be "none"',
@@ -204,6 +205,7 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     expect(typeof validate).toBe('function');
   });
 
+  // rule-map: Rule-6 — all 20 categories are required (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('declares 20 categories, every one of them required (R-T addendum, resolved at commit 4 — invariants/plausibility flipped from staged to required)', () => {
     const cats = schema['x-categories'] as string[];
     const required = schema.required as string[];
@@ -292,6 +294,7 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     }
   });
 
+  // rule-map: Rule-8 (partial) — per-target guard_why if/then fires; step-level discipline refusal untested (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('V7 — a grandfathered unguarded write validates WITH its why, and only with it', () => {
     // GAP-2's real shape. Before V7 this had no legal declaration at all;
     // after V7 it is declarable, and the why is what makes it grandfathered
@@ -318,6 +321,7 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
   // validateDescriptor, which `pipeline.step()` runs at construction.
   //
   // Both directions, on descriptors that differ by IDENTITY ALONE.
+  // rule-map: Rule-9 — x-banned-for-new enforced: green only with a grandfathered.json entry (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   describe('x-banned-for-new is ENFORCED, not merely annotated', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
     const { validateDescriptor, loadGrandfathered } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js')) as {
@@ -577,6 +581,7 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(e).toEqual(['INGESTOR', 'MATERIALIZER', 'LINK', 'MATCHER', 'ENRICHER', 'BACKFILL', 'ASSERT', 'RECORDER']);
   });
 
+  // rule-map: SPEC122A-V3 — SPEC122A-V3: guards.schema_drift enum is exactly none/propagate/pause (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('V3 — schema_drift dropped `warn` and kept a conditional per-layer form', () => {
     const node = at('properties.guards.properties.schema_drift');
     const branches = node.anyOf as Array<Record<string, unknown>>;
@@ -588,6 +593,7 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(conditional?.contains).toBeDefined();
   });
 
+  // rule-map: V4 — outputs.writes[].replay deleted at the RE-FREEZE (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('V4 — SUPERSEDED (Phase 3 RE-FREEZE): outputs.writes[].replay is deleted with its x-banned-for-new key', () => {
     const writeProps = at('definitions.write.properties');
     expect(writeProps.replay).toBeUndefined();

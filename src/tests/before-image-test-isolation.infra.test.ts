@@ -35,6 +35,7 @@ afterEach(() => {
   for (const rel of written.splice(0)) fs.rmSync(path.join(REPO_ROOT, rel), { force: true });
 });
 
+// rule-map: R-CO — tests never write into the golden before-image tree (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('WF3 before-image test leak — tests never write into docs/reports/golden/*/before-image', () => {
   it('persistBeforeImageRows on a real slug: nothing on the real disk; the returned path reads back the rows', () => {
     const rows = [{ id: 1, cost_fb_total: 12.5 }, { id: 2, cost_fb_total: null }];

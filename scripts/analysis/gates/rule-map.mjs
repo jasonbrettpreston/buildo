@@ -44,14 +44,48 @@ export function readCheckCorpus(repoRoot = REPO_ROOT) {
   return [fs.readFileSync(path.join(repoRoot, STEP_VALIDATE_REL), 'utf8'), ...gates].join('\n');
 }
 
-/** Defect ids the ledger defines (`| <ID> | ...` rows). */
-export function readDefectIds(repoRoot = REPO_ROOT) {
-  const ids = new Set();
-  for (const line of fs.readFileSync(path.join(repoRoot, DEFECT_LEDGER_REL), 'utf8').split('\n')) {
+/** Defect ids the ledger defines (`| <ID> | ...` rows), each with its 1-based line number in the ledger. */
+export function readDefectLines(repoRoot = REPO_ROOT) {
+  const ids = new Map();
+  fs.readFileSync(path.join(repoRoot, DEFECT_LEDGER_REL), 'utf8').split('\n').forEach((line, i) => {
     const m = /^\|\s*([A-Z0-9]+-D[0-9]+[a-z]?)\s*\|/.exec(line);
-    if (m) ids.add(m[1]);
-  }
+    if (m && !ids.has(m[1])) ids.set(m[1], i + 1);
+  });
   return ids;
+}
+
+/** Defect ids the ledger defines. */
+export function readDefectIds(repoRoot = REPO_ROOT) {
+  return new Set(readDefectLines(repoRoot).keys());
+}
+
+/**
+ * Tests that only check that ids resolve or that register rows name a lock. They mention almost every id, so they
+ * never count as a rule's behavioural lock, except for a `process` (governance) rule whose subject is the register.
+ */
+export const META_TESTS = Object.freeze(['src/tests/spec124-register-locks.logic.test.ts', 'src/tests/handbook-rule-map.logic.test.ts']);
+/** The rules a meta test IS the behavioural lock for (its subject is the register itself). */
+export const META_TEST_SUBJECTS = Object.freeze({ 'src/tests/spec124-register-locks.logic.test.ts': Object.freeze(['R-DF']) });
+
+const escapeId = (s) => s.replace(/[.\-]/g, (c) => `\\${c}`);
+/** Does `text` name the rule: its id as a whole token (R-K does not match R-K.1 or R-KX), or one of its aliases. */
+export function mentionsRule(text, rule) {
+  const names = [...(rule.mention_by_alias_only ? [] : [rule.id]), ...(rule.aliases || [])];
+  return names.some((n) => new RegExp(`(?<![A-Za-z0-9-])${escapeId(n)}(?![A-Za-z0-9]|\\.[0-9])`).test(text));
+}
+
+/** Why a lock / lock-db ref is not an honest lock for this rule, or null when it is. */
+export function lockRefProblem(rule, io) {
+  const enf = rule.enforcement || {};
+  const ref = enf.ref || '';
+  if (!/^src\/tests\/.+\.test\.ts$/.test(ref)) return `${enf.kind} ref is not a test under src/tests/: ${ref}`;
+  const isDb = /\.db\.test\.ts$/.test(ref);
+  if (enf.kind === 'lock' && isDb) return `lock ref ${ref} is a DB test that npm test never runs — declare kind "lock-db"`;
+  if (enf.kind === 'lock-db' && !isDb) return `lock-db ref ${ref} is not a *.db.test.ts`;
+  if (META_TESTS.includes(ref) && rule.status !== 'process' && !(META_TEST_SUBJECTS[ref] || []).includes(rule.id)) return `lock ref ${ref} is an id-resolution meta test, not a behavioural lock`;
+  if (!io.exists(ref)) return `${enf.kind} ref does not resolve: ${ref}`;
+  if (!mentionsRule(io.read(ref), rule)) return `${enf.kind} ref ${ref} never names ${rule.id}${(rule.aliases || []).length ? ` or ${rule.aliases.join('/')}` : ''} — add the id where the test asserts it, or downgrade`;
+  return null;
 }
 
 /** A `check` ref is `step-validate <token>`; the token (e.g. `#44`, `G7`, `measureP3Footprint`) must appear in the corpus. */
@@ -72,7 +106,9 @@ function checkRefResolves(ref, corpus) {
  *   (d) an id that does not resolve: register ids through extractRegisterRulingIds (a pending-integration id must
  *       NOT yet resolve), other ids through source.file + a literal anchor; `by` / merge / pending ids name map ids
  *   (e) an in-force rule with no enforcement that is not on `unenforced`; an `unenforced` entry that is stale (its
- *       rule is now enforced) or names no rule; an enforcement ref that does not resolve
+ *       rule is now enforced), names no rule, or is `partial` with no enforcement; a check/hook ref that does not
+ *       resolve; a lock ref that is not a `npm test` test file naming the rule id or an alias (`lockRefProblem`:
+ *       a DB test must be kind lock-db; an id-resolution meta test counts only for a process rule)
  */
 export function checkRuleMap(map, io) {
   const out = [];
@@ -82,6 +118,10 @@ export function checkRuleMap(map, io) {
   for (const r of rules) {
     if (byId.has(r.id)) add('b', r.id, 'listed more than once');
     byId.set(r.id, r);
+  }
+  for (const r of rules) {
+    for (const a of r.aliases || []) if (byId.has(a) || rules.some((o) => o !== r && (o.aliases || []).includes(a))) add('b', r.id, `alias ${a} is not unique`);
+    if (r.mention_by_alias_only && !(r.aliases || []).length) add('b', r.id, 'mention_by_alias_only with no alias');
   }
   const lines = new Map((map.lines || []).map((l) => [l.id, l]));
   const sections = new Set((map.sections || []).map((s) => s.id));
@@ -114,10 +154,14 @@ export function checkRuleMap(map, io) {
     const enf = r.enforcement || { kind: 'none' };
     if (IN_FORCE.includes(r.status) && enf.kind === 'none' && !unenforced.has(r.id)) add('e', r.id, 'in force with no enforcement and not on the unenforced list');
     if (enf.kind !== 'none') {
-      let ok;
-      if (enf.kind === 'check') ok = checkRefResolves(enf.ref, io.checkCorpus);
-      else ok = !!enf.ref && io.exists(enf.ref);
-      if (!ok && !(src.pending_integration && enf.kind === 'lock')) add('e', r.id, `${enf.kind} ref does not resolve: ${enf.ref}`);
+      if (enf.kind === 'check') {
+        if (!checkRefResolves(enf.ref, io.checkCorpus)) add('e', r.id, `check ref does not resolve: ${enf.ref}`);
+      } else if (enf.kind === 'hook') {
+        if (!enf.ref || !io.exists(enf.ref)) add('e', r.id, `hook ref does not resolve: ${enf.ref}`);
+      } else if (!src.pending_integration) {
+        const problem = lockRefProblem(r, io);
+        if (problem) add('e', r.id, problem);
+      }
     }
   }
   for (const id of pending) if (!byId.has(id)) add('d', id, 'meta.pending_integration rule is not a rule-map id');
@@ -134,6 +178,22 @@ export function checkRuleMap(map, io) {
     const r = byId.get(u.id);
     if (!r) { add('e', u.id, 'unenforced entry names no rule'); continue; }
     if (u.class === 'none' && (r.enforcement || {}).kind !== 'none') add('e', u.id, 'listed unenforced (none) but now has enforcement — remove it (the list only shrinks)');
+    if (u.class === 'partial' && (r.enforcement || {}).kind === 'none') add('e', u.id, 'listed partial but its enforcement is none — name the partial lock or check, or list it as none');
+  }
+  return out;
+}
+
+/**
+ * Enforcement across the map. A rule listed `partial` on `unenforced` counts under `partial` whatever its kind; every
+ * other rule counts under its kind, so `lock` is the number of rules a named test fully locks.
+ */
+export function enforcementCounts(map) {
+  const partial = new Set((map.unenforced || []).filter((u) => u.class === 'partial').map((u) => u.id));
+  const out = { lock: 0, 'lock-db': 0, check: 0, hook: 0, partial: 0, none: 0 };
+  for (const r of map.rules || []) {
+    const k = (r.enforcement || { kind: 'none' }).kind;
+    if (k !== 'none' && partial.has(r.id)) out.partial += 1;
+    else out[k] = (out[k] || 0) + 1;
   }
   return out;
 }

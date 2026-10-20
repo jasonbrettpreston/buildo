@@ -598,6 +598,7 @@ describe("makeProducer — onError: 'throw' (a fail-closed HOOK read; the rethro
 // j. not_failed — the run-status op (CP-S1 #12c, operator 2026-10-14; proposed row amends R-CB)
 // ---------------------------------------------------------------------------
 
+// rule-map: R-CW — not_failed pin evaluates producer run status (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('evaluatePins — j. not_failed (the producer run status, never a records_meta stamp)', () => {
   const TERMINAL = ['completed', 'completed_with_warnings', 'completed_with_errors', 'failed', 'crashed', 'cancelled'];
   const PIN: Pin = { step: 'load_zoning', stamp: 'pipeline_runs.status', op: 'not_failed', statuses: TERMINAL };

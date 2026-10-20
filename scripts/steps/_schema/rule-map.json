@@ -816,7 +816,7 @@
       "handbook_line": "core.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/fleet2-soft-retire-schema.logic.test.ts"
+        "ref": "src/tests/step-conformance.infra.test.ts"
       },
       "statement": "A new schema field must carry x-ruling {rungs_tried, why}.",
       "source": {
@@ -845,7 +845,7 @@
       "handbook_line": "core.2",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/step-conformance.infra.test.ts"
+        "ref": "src/tests/step-schema.logic.test.ts"
       },
       "statement": "Every step declares at least one check.",
       "source": {
@@ -860,7 +860,7 @@
       "handbook_line": "core.2",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/template-freeze.infra.test.ts"
+        "ref": "src/tests/step-schema.logic.test.ts"
       },
       "statement": "All 20 categories are present and every field answered; \"none\" must be written.",
       "source": {
@@ -916,7 +916,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V1** | `identity.archetype` | **full wor"
-      }
+      },
+      "aliases": [
+        "SPEC122A-V1"
+      ]
     },
     {
       "id": "V2",
@@ -925,13 +928,16 @@
       "handbook_line": "core.3",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/step-conformance.infra.test.ts"
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
       },
       "statement": "identity.lock is unique across manifest, one-time and backfill scripts.",
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V2** | `identity.lock` | **unique across"
-      }
+      },
+      "aliases": [
+        "SPEC122A-V2"
+      ]
     },
     {
       "id": "V3",
@@ -940,13 +946,17 @@
       "handbook_line": "core.3",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/gate-emits-equiv.infra.test.ts"
+        "ref": "src/tests/step-schema.logic.test.ts"
       },
       "statement": "guards.schema_drift is none/propagate/pause; warn dropped. (Name collides with \"V3\" the standard.)",
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V3** | `guards.schema_drift` | **`none \\"
-      }
+      },
+      "aliases": [
+        "SPEC122A-V3"
+      ],
+      "mention_by_alias_only": true
     },
     {
       "id": "V4",
@@ -955,13 +965,16 @@
       "handbook_line": "core.3",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/gate-registries.infra.test.ts"
+        "ref": "src/tests/step-schema.logic.test.ts"
       },
       "statement": "outputs.replay append_unsafe stays in the enum but is banned for new steps.",
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V4** | `outputs.replay` | **`append_unsa"
-      }
+      },
+      "aliases": [
+        "SPEC122A-V4"
+      ]
     },
     {
       "id": "V5",
@@ -976,7 +989,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V5** | `staleness.pending` | **dissolved"
-      }
+      },
+      "aliases": [
+        "SPEC122A-V5"
+      ]
     },
     {
       "id": "V6",
@@ -994,7 +1010,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V6** | `guards.empty_source` | **typed f"
-      }
+      },
+      "aliases": [
+        "SPEC122A-V6"
+      ]
     },
     {
       "id": "R-AE",
@@ -1212,8 +1231,8 @@
       ],
       "handbook_line": "core.7",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/g3-ledger-tables.logic.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "Moved to Spec 124 Rule 4.",
       "source": {
@@ -1276,7 +1295,7 @@
       "handbook_line": "core.8",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/parcels.logic.test.ts"
+        "ref": "src/tests/spec124-register-rulings.logic.test.ts"
       },
       "statement": "Pricing data is not a scalar tunable (interim); closed 2026-09-23 when the admin editor landed.",
       "source": {
@@ -1548,7 +1567,7 @@
       "handbook_line": "core.9",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/step-schema.logic.test.ts"
+        "ref": "src/tests/refresh-snapshot-query-consolidation.logic.test.ts"
       },
       "statement": "A session GUC a read depends on is declared in execution.read_gucs; the runner sets it.",
       "source": {
@@ -1660,7 +1679,7 @@
       "handbook_line": "core.9",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/check-step-shape-purity.infra.test.ts"
+        "ref": "src/tests/step-conformance.infra.test.ts"
       },
       "statement": "The escape-hatch ban is enforced by a mandatory ast-grep shape rule, not review.",
       "source": {
@@ -1678,8 +1697,8 @@
       ],
       "handbook_line": "core.9",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/step-conformance.infra.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "Moved to Spec 124 Rule 2.",
       "source": {
@@ -1791,8 +1810,8 @@
       ],
       "handbook_line": "core.11",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/steps/classify_coa_trades/r-ep-detail.logic.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "Answered by R-EP.",
       "source": {
@@ -1808,7 +1827,7 @@
       "handbook_line": "core.12",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/materialize-rows.logic.test.ts"
+        "ref": "src/tests/steps/coa/violations.test.ts"
       },
       "statement": "Every write target on an RLS-enabled table declares guards.requires rls_bypass_or_policy.",
       "source": {
@@ -1851,7 +1870,7 @@
       "handbook_line": "core.12",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/wf3-class-c-antibypass.infra.test.ts"
+        "ref": "src/tests/step-schema.logic.test.ts"
       },
       "statement": "A banned write shape ships only with a dated, SHA-anchored grandfathered.json entry naming the approver.",
       "source": {
@@ -1866,13 +1885,16 @@
       "handbook_line": "core.12",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/wf3-class-c-antibypass.infra.test.ts"
+        "ref": "src/tests/step-schema.logic.test.ts"
       },
       "statement": "Write discipline is mechanic ⊥ guard ⊥ scope ⊥ retract; guard none requires why and is grandfathered-only for new steps.",
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V7** | `outputs.writes[].write_disciplin"
-      }
+      },
+      "aliases": [
+        "SPEC122A-V7"
+      ]
     },
     {
       "id": "R-B",
@@ -2021,7 +2043,7 @@
       "handbook_line": "core.14",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/cloud-pre-dispatch.logic.test.ts"
+        "ref": "src/tests/witness-h.logic.test.ts"
       },
       "statement": "Version pins and invalidators are declared (staleness.pins, invalidates[].by closed) and witnessed.",
       "source": {
@@ -2208,8 +2230,8 @@
       "status": "active",
       "handbook_line": "core.14",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/witness-i.logic.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "The producer declares its by:\"pin\" invalidates row at its ②.",
       "source": {
@@ -2291,7 +2313,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M4** | **Deprecation lifecycle** `active"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M4"
+      ]
     },
     {
       "id": "R-DL",
@@ -2416,7 +2441,7 @@
       "handbook_line": "ingestor.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/step-library.logic.test.ts"
+        "ref": "src/tests/step-conformance.infra.test.ts"
       },
       "statement": "A ruling that reorders phases re-derives every \"before X\" guarantee in the step's governing spec.",
       "source": {
@@ -2552,7 +2577,7 @@
       "status": "one-off",
       "handbook_line": "ingestor.6",
       "enforcement": {
-        "kind": "lock",
+        "kind": "lock-db",
         "ref": "src/tests/db/migration-251-geom-tolerance.db.test.ts"
       },
       "statement": "A parcel geometry change invalidates only beyond a logic-variable tolerance.",
@@ -2609,7 +2634,7 @@
       "handbook_line": "link.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/permits.logic.test.ts"
+        "ref": "src/tests/step-library.logic.test.ts"
       },
       "statement": "An autonomous full (destructive) run is allowed only on chains whose manifest chain_args declare --full.",
       "source": {
@@ -2977,7 +3002,7 @@
       "handbook_line": "runner.2",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/run-chain-budget.logic.test.ts"
+        "ref": "src/tests/run-chain-status.logic.test.ts"
       },
       "statement": "A chain step row's status is derived from its verdict; literal 'completed' is retired.",
       "source": {
@@ -2991,7 +3016,7 @@
       "handbook_line": "runner.2",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/run-chain-status.logic.test.ts"
+        "ref": "src/tests/ledger-reader.logic.test.ts"
       },
       "statement": "Downstream of a completed_with_warnings/errors upstream RUNs (keep).",
       "source": {
@@ -3062,7 +3087,7 @@
       "handbook_line": "x-stages.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/step-validate-stage-captures.logic.test.ts"
+        "ref": "src/tests/gate-score-floor.infra.test.ts"
       },
       "statement": "stageAwaitsCaptures is the one predicate; gate F does not score a step below floor for captures it cannot have.",
       "source": {
@@ -3079,8 +3104,8 @@
       ],
       "handbook_line": "x-stages.1",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/step-conformance.infra.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "One temporary entry per unconverted step, deleted on conversion.",
       "source": {
@@ -3088,7 +3113,10 @@
         "anchor": "| **M5** | **`amnesty.json` as the conversio"
       },
       "retired_as_set": "spec121-M1-M14",
-      "merge": "MERGE-6"
+      "merge": "MERGE-6",
+      "aliases": [
+        "SPEC121-M5"
+      ]
     },
     {
       "id": "R-K.2",
@@ -3242,7 +3270,7 @@
       "handbook_line": "x-stages.4",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/step-registry.logic.test.ts"
+        "ref": "src/tests/generate-target-files.infra.test.ts"
       },
       "statement": "A step's Target Files are generated into its owner spec, never hand-listed.",
       "source": {
@@ -3271,7 +3299,7 @@
       "handbook_line": "x-captures.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/steps/load_coa_notices/checks.logic.test.ts"
+        "ref": "src/tests/step-conformance.infra.test.ts"
       },
       "statement": "Capture pairs follow declared chain variance; all-\"none\" collapses to one chain plus standalone.",
       "source": {
@@ -3286,7 +3314,7 @@
       "handbook_line": "x-captures.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/capture-ledger-coverage.infra.test.ts"
+        "ref": "src/tests/capture-ledger.logic.test.ts"
       },
       "statement": "Every harness-spawned run is ledgered as captured, never a baseline.",
       "source": {
@@ -3307,7 +3335,7 @@
       "handbook_line": "x-captures.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/chain.logic.test.ts"
+        "ref": "src/tests/capture-replay.logic.test.ts"
       },
       "statement": "A capture is reproducible from committed data alone; retakes are generated by --replay-all.",
       "source": {
@@ -3500,7 +3528,10 @@
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G8** | Differential | **zero unexplained"
       },
-      "merge": "MERGE-4"
+      "merge": "MERGE-4",
+      "aliases": [
+        "SCORECARD-G8"
+      ]
     },
     {
       "id": "R-EL",
@@ -3575,7 +3606,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G7** | Test adequacy | every class-A beh"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G7"
+      ]
     },
     {
       "id": "M7",
@@ -3594,7 +3628,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M7** | **Mutation run**, scoped to valid"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M7"
+      ]
     },
     {
       "id": "R-BN",
@@ -3635,7 +3672,7 @@
       "handbook_line": "x-crossstep.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/gate-consumer-registry.infra.test.ts"
+        "ref": "src/tests/ldg10-gate.logic.test.ts"
       },
       "statement": "An unproduced read is counted, not hard, while its table's inserter is unconverted.",
       "source": {
@@ -3698,7 +3735,7 @@
       "handbook_line": "x-validate.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/step-conformance.infra.test.ts"
+        "ref": "src/tests/step-library.logic.test.ts"
       },
       "statement": "The validator validates DATA; the scorecard validates PROCESS; rows carry source check/invariant/plausibility.",
       "source": {
@@ -3747,7 +3784,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G0** | Boundary freeze | every table/col"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G0"
+      ]
     },
     {
       "id": "G1",
@@ -3762,7 +3802,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G1** | Archaeology | churn + fix density"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G1"
+      ]
     },
     {
       "id": "G2",
@@ -3777,7 +3820,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G2** | Structure | churn×complexity plot"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G2"
+      ]
     },
     {
       "id": "G3",
@@ -3795,7 +3841,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G3** | Intent Ledger | 100% of top-right"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G3"
+      ]
     },
     {
       "id": "G4",
@@ -3810,7 +3859,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G4** | Risk class | A/B/C **with chance"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G4"
+      ]
     },
     {
       "id": "G5",
@@ -3825,7 +3877,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G5** | Seam map | DB, clock, network, ar"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G5"
+      ]
     },
     {
       "id": "G6",
@@ -3840,7 +3895,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G6** | Classification | every behaviour"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G6"
+      ]
     },
     {
       "id": "G9",
@@ -3855,7 +3913,10 @@
       "source": {
         "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
         "anchor": "| **G9** | Reflection | `§R Reflection` sect"
-      }
+      },
+      "aliases": [
+        "SCORECARD-G9"
+      ]
     },
     {
       "id": "SHIP-BAR",
@@ -3902,7 +3963,7 @@
       "handbook_line": "x-v3.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/massing.logic.test.ts"
+        "ref": "src/tests/gate-five-words.infra.test.ts"
       },
       "statement": "\"McDonald's Airtight\": every standard item is a machine-checked PASS/FAIL line in five words (gates A-K), hard from commit ①.",
       "source": {
@@ -4188,8 +4249,8 @@
       "status": "process",
       "handbook_line": "x-rulings.2",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/fleet2-soft-retire-schema.logic.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "Resolve at the first fitting rung: descriptor, declared check, logic variable, library change, compute change.",
       "source": {
@@ -4256,7 +4317,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M9** | **Escape rate** — reviewer findin"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M9"
+      ]
     },
     {
       "id": "M10",
@@ -4272,7 +4336,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M10** | **Routing ladder** — every learn"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M10"
+      ]
     },
     {
       "id": "R-EZ",
@@ -4302,7 +4369,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M14** | **Unseen-agent audit** — a fresh"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M14"
+      ]
     },
     {
       "id": "R-AB",
@@ -4314,8 +4384,8 @@
       ],
       "handbook_line": "x-verify.2",
       "enforcement": {
-        "kind": "none",
-        "ref": null
+        "kind": "lock",
+        "ref": "src/tests/chain-sources-workflow.infra.test.ts"
       },
       "statement": "One chain-sources cloud run per archetype batch proves that batch's slugs.",
       "source": {
@@ -4347,7 +4417,7 @@
       "handbook_line": "x-verify.2",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/parcels.logic.test.ts"
+        "ref": "src/tests/run-chain-selection.logic.test.ts"
       },
       "statement": "Batch acceptance is a partial chain run; the full chain is proven once; ceilings are not raised (resize instead).",
       "source": {
@@ -4364,7 +4434,7 @@
       "handbook_line": "x-verify.2",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/massing.logic.test.ts"
+        "ref": "src/tests/programme-backlog.infra.test.ts"
       },
       "statement": "No cloud dispatch until every sources step converts; one end-of-sources acceptance set.",
       "source": {
@@ -4383,7 +4453,7 @@
       "handbook_line": "x-verify.2",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/staleness.logic.test.ts"
+        "ref": "src/tests/gate-chain-status.infra.test.ts"
       },
       "statement": "A chain is complete only when converted, no ledger rows, LDG-10 complete, cloud accepted, tooling integrated.",
       "source": {
@@ -4417,7 +4487,7 @@
       "handbook_line": "x-tooling.1",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/steps/link_massing/metamorphic.db.test.ts"
+        "ref": "src/tests/hooks-composition.infra.test.ts"
       },
       "statement": "Full Vitest at pre-push; pre-commit runs only cheap staged gates; DB tests only under test:db.",
       "source": {
@@ -4640,7 +4710,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M2** | **Onboarding: a stranger adds a w"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M2"
+      ]
     },
     {
       "id": "R1",
@@ -4731,7 +4804,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M1** | **Runner core ≤ ~1,500 lines** |"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M1"
+      ]
     },
     {
       "id": "M3",
@@ -4747,7 +4823,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M3** | **Codemod-first** — any runner co"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M3"
+      ]
     },
     {
       "id": "M6",
@@ -4763,7 +4842,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M6** | **Golden synthetic run, all steps"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M6"
+      ]
     },
     {
       "id": "M8",
@@ -4779,7 +4861,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M8** | **TMMi level per chain**, publish"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M8"
+      ]
     },
     {
       "id": "M11",
@@ -4795,7 +4880,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M11** | **Register WIP limit (40 open)**"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M11"
+      ]
     },
     {
       "id": "M12",
@@ -4811,7 +4899,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M12** | **Fence harvest** — `Severity:`/"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M12"
+      ]
     },
     {
       "id": "M13",
@@ -4827,7 +4918,10 @@
         "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
         "anchor": "| **M13** | **Re-audit queue** on a MAJOR me"
       },
-      "retired_as_set": "spec121-M1-M14"
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M13"
+      ]
     },
     {
       "id": "R-S",
@@ -4881,8 +4975,8 @@
       "status": "historical",
       "handbook_line": "history.4",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/wf3-class-c-antibypass.infra.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "Guard none with grandfathered entry for classify_coa_trades.",
       "source": {
@@ -4896,8 +4990,8 @@
       "status": "historical",
       "handbook_line": "history.4",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/wf3-class-c-antibypass.infra.test.ts"
+        "kind": "none",
+        "ref": null
       },
       "statement": "Guard none with grandfathered entry for compute_coa_cost_estimates.",
       "source": {
@@ -4929,8 +5023,8 @@
     },
     {
       "id": "R-AB",
-      "class": "none",
-      "reason": "no machine check: cloud acceptance procedure"
+      "class": "partial",
+      "reason": "partial: chain-sources-workflow.infra warns that an unpinned run is \"NOT valid as an R-AB acceptance run\"; acceptance-set completeness unchecked"
     },
     {
       "id": "R-BT",
@@ -4950,7 +5044,7 @@
     {
       "id": "R-CT",
       "class": "partial",
-      "reason": "partial: write.js assertWritePrivileges (runtime, declared tables only); fleet gate owed (V3 lane C1)"
+      "reason": "partial: per-step locks only (steps/coa/violations D3 and the classify_coa_* violations assert their targets declare rls_bypass_or_policy); write.js assertWritePrivileges checks declared tables at runtime; fleet gate owed (V3 lane C1)"
     },
     {
       "id": "R-CU",
@@ -5069,8 +5163,8 @@
     },
     {
       "id": "M5",
-      "class": "partial",
-      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (converted.json (UNCERTAIN equivalence))"
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (converted.json (UNCERTAIN equivalence); its successor R-K is a step-validate check)"
     },
     {
       "id": "M6",
@@ -5141,6 +5235,106 @@
       "id": "Q-B1",
       "class": "none",
       "reason": "no machine check found (consolidate-1 inventory)"
+    },
+    {
+      "id": "Rule-1",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only)"
+    },
+    {
+      "id": "Rule-5",
+      "class": "partial",
+      "reason": "partial: step-schema.logic — checks may never be \"none\" (checks:[] minItems not fixture-tested)"
+    },
+    {
+      "id": "V6",
+      "class": "partial",
+      "reason": "partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested)"
+    },
+    {
+      "id": "R-AW",
+      "class": "partial",
+      "reason": "partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check"
+    },
+    {
+      "id": "W4A-R1",
+      "class": "partial",
+      "reason": "partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted"
+    },
+    {
+      "id": "R-CF",
+      "class": "partial",
+      "reason": "partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted"
+    },
+    {
+      "id": "Rule-8",
+      "class": "partial",
+      "reason": "partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested"
+    },
+    {
+      "id": "W4A-R4",
+      "class": "none",
+      "reason": "no machine check: no test asserts that a producer declares its by:\"pin\" row (only the reader side, R-DO/R-ER) (verify-12 N1 re-audit)"
+    },
+    {
+      "id": "R-AY",
+      "class": "partial",
+      "reason": "partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide"
+    },
+    {
+      "id": "R-EV",
+      "class": "partial",
+      "reason": "partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted"
+    },
+    {
+      "id": "R-CR",
+      "class": "partial",
+      "reason": "partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted"
+    },
+    {
+      "id": "R-CI",
+      "class": "partial",
+      "reason": "partial: purity-s3-exec-seam.logic — undeclared writesRef refused; library-owned hygiene DELETEs not asserted"
+    },
+    {
+      "id": "R-AI",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — indirect: step-validate self-test (expectedCaptureChains fixtures) passes"
+    },
+    {
+      "id": "R-CP",
+      "class": "partial",
+      "reason": "partial: gate-score-floor.infra — notLookedReasons locked both ways; not that every live test calls it"
+    },
+    {
+      "id": "Rule-13",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — scorecard block staleness only"
+    },
+    {
+      "id": "Rule-13-addendum-R-T",
+      "class": "partial",
+      "reason": "partial: step-library.logic — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted"
+    },
+    {
+      "id": "P4-3",
+      "class": "partial",
+      "reason": "partial: spec124-register-locks.logic — register rows parse with unique ids; statement/amends columns unchecked"
+    },
+    {
+      "id": "L7-2",
+      "class": "none",
+      "reason": "no machine check: rung ordering is a judgement call; no test (verify-12 N1 re-audit)"
+    },
+    {
+      "id": "R-AQ",
+      "class": "partial",
+      "reason": "partial: run-chain-selection.logic — --only/--from partial-run mechanism; \"one acceptance set\" not asserted"
+    },
+    {
+      "id": "R-AH",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes"
     }
   ]
 }

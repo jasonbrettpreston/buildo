@@ -390,9 +390,9 @@ Validator messages that name their rule directly:
 | `bind message has N parameter formats` | Batch × bound columns exceeds 65,535. | R-CU |
 | Before-image files appear under `docs/reports/golden/*/before-image/` after tests | The test sandbox in `src/tests/setup.ts`. | R-CO |
 
-## 6. Rules with no or partial machine check (27 in force)
+## 6. Rules with no or partial machine check (47 in force)
 
-"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 16 have no check and 11 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
@@ -400,11 +400,11 @@ Validator messages that name their rule directly:
 | R-J | none | x-rulings.1 | no machine check: document governance |
 | R-N | none | link.3 | no lock named (commit e01cad11) |
 | R-O | none | matcher.1 | no machine check: assessment-report narrative only |
-| R-AB | none | x-verify.2 | no machine check: cloud acceptance procedure |
+| R-AB | partial | x-verify.2 | partial: chain-sources-workflow.infra warns that an unpinned run is "NOT valid as an R-AB acceptance run"; acceptance-set completeness unchecked |
 | R-BT | none | core.17 | no lock: "no lock yet — PLANNED with the step" (124a:237) |
 | R-BY | partial | ingestor.3 | partial: ingest-prereq-pdf-acquire.logic (not named in row) |
 | R-CJ | partial | enricher.2 | partial: purity-s3-exec-seam.logic (scope_retire_lock_held; not named in row) |
-| R-CT | partial | core.12 | partial: write.js assertWritePrivileges (runtime, declared tables only); fleet gate owed (V3 lane C1) |
+| R-CT | partial | core.12 | partial: per-step locks only (steps/coa/violations D3 and the classify_coa_* violations assert their targets declare rls_bypass_or_policy); write.js assertWritePrivileges checks declared tables at runtime; fleet gate owed (V3 lane C1) |
 | R-CU | partial | core.12 | partial: generator-locked execution.batch (INGESTOR); library split owed (V3 lane C2) |
 | R-DF | partial | x-rulings.1 | partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists |
 | R-EL | partial | x-captures.4 | partial: c6-rulings.infra; live-call FAIL owed (PIN C6-6-RECORDED) |
@@ -423,6 +423,26 @@ Validator messages that name their rule directly:
 | GAP-G-5 | none | core.6 | no machine check: author judgment |
 | W4A-R2 | none | core.6 | no machine check beyond step deviation |
 | Q-B1 | none | core.14 | no machine check found (consolidate-1 inventory) |
+| Rule-1 | partial | core.1 | partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only) |
+| Rule-5 | partial | core.2 | partial: step-schema.logic — checks may never be "none" (checks:[] minItems not fixture-tested) |
+| V6 | partial | core.3 | partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) |
+| R-AW | partial | core.8 | partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check |
+| W4A-R1 | partial | core.8 | partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted |
+| R-CF | partial | core.9 | partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted |
+| Rule-8 | partial | core.12 | partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested |
+| W4A-R4 | none | core.14 | no machine check: no test asserts that a producer declares its by:"pin" row (only the reader side, R-DO/R-ER) (verify-12 N1 re-audit) |
+| R-AY | partial | core.17 | partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide |
+| R-EV | partial | ingestor.6 | partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted |
+| R-CR | partial | link.3 | partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted |
+| R-CI | partial | enricher.2 | partial: purity-s3-exec-seam.logic — undeclared writesRef refused; library-owned hygiene DELETEs not asserted |
+| R-AI | partial | x-captures.1 | partial: step-conformance.infra — indirect: step-validate self-test (expectedCaptureChains fixtures) passes |
+| R-CP | partial | x-captures.5 | partial: gate-score-floor.infra — notLookedReasons locked both ways; not that every live test calls it |
+| Rule-13 | partial | x-validate.1 | partial: step-conformance.infra — scorecard block staleness only |
+| Rule-13-addendum-R-T | partial | x-validate.1 | partial: step-library.logic — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted |
+| P4-3 | partial | x-rulings.1 | partial: spec124-register-locks.logic — register rows parse with unique ids; statement/amends columns unchecked |
+| L7-2 | none | x-rulings.2 | no machine check: rung ordering is a judgement call; no test (verify-12 N1 re-audit) |
+| R-AQ | partial | x-verify.2 | partial: run-chain-selection.logic — --only/--from partial-run mechanism; "one acceptance set" not asserted |
+| R-AH | partial | x-tooling.2 | partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes |
 
 ## 7. History
 

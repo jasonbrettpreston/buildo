@@ -115,6 +115,7 @@ const realCatalog = (): Record<string, string[]> =>
 
 const BT = String.fromCharCode(96); // the backtick, built without one in source
 
+// rule-map: R-BW — DML CTE resolved as a write; MERGE refused (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('WF3 sql-witness DML CTE (RED)', () => {
   it('D1 a DELETE CTE with RETURNING makes the statement a write', () => {
     expectRes('WITH del AS (DELETE FROM b WHERE x = 1 RETURNING *) SELECT * FROM del', CAT, {

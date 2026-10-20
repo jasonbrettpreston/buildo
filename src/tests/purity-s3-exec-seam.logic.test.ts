@@ -124,6 +124,7 @@ describe('ctx.exec seam (Spec 124 R-CA(ii), CP-S3)', () => {
     }
   });
 
+  // rule-map: R-CI (partial) — undeclared writesRef refused; library-owned hygiene DELETEs not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('refuses an undeclared writesRef and issues NO query', async () => {
     const { client, calls } = makeFakeClient();
     const exec = makeExecSeam({

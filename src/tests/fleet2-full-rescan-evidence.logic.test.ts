@@ -262,6 +262,7 @@ function requireGate(): GateModule {
   return (globalThis as { __fleet2Gate?: GateModule }).__fleet2Gate as GateModule;
 }
 
+// rule-map: R-BM — full_rescan evidence, declared half (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('full_rescan evidence — the DECLARED half (gate #44, O4 fold 14)', () => {
   // F1 (RED) — a clean declaration plus a fresh write witness is ARMED: nothing to report.
   it('F1 (RED) — full rescan declared and witnessed → no row', async () => {

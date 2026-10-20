@@ -122,6 +122,7 @@ function durationToMinutes(raw: unknown): number | null {
   }
 }
 
+// rule-map: R-AJ — every execution.* duration declaration executed or dispositioned (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('execution-budget-disposition (Spec 124 R-X) — every execution.* duration declaration is executed or dispositioned', () => {
   it('(0) every row declares one of EXACTLY the registry\'s own closed menu values', () => {
     expect(registry.menu.slice().sort()).toEqual(['descriptive', 'executed']);

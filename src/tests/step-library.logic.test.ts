@@ -525,6 +525,7 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
 
   // LPA-D6 (WF3-C) — the FAIL side of the split, proving errors[] is genuinely
   // FAIL-only (not merely "warnings[] moved, errors[] still conflated").
+  // rule-map: R-Q — FAIL rows render into errors[], WARN rows into warnings[] (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('LPA-D6 — a FAIL row renders into errors[], never warnings[]; a WARN row renders into warnings[], never errors[] (both directions, mixed severities in one build)', () => {
     const d = withChecks([{ severity: 'FAIL' }, { severity: 'WARN' }]);
     const built = build(d, {
@@ -1179,6 +1180,7 @@ function withInvariants(invariants: Array<Record<string, unknown>>) {
   return d;
 }
 
+// rule-map: Rule-13-addendum-R-T (partial) — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('R-T addendum, commit 3 — invariants[]/plausibility[] EVERY_RUN executor (fake pool, no DB)', () => {
   it('GREEN — a satisfied every_run invariant PASSes and carries source:"invariant" (Fold B-3)', async () => {
     const d = withInvariants([testInvariant({ id: 'rows_ok', bound: 'value_min 0' })]);
@@ -4576,6 +4578,7 @@ describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
   // AND returning `updated` in its own result got counted TWICE.
   // ---------------------------------------------------------------------------
 
+  // rule-map: R-AT — M1e-M1h: counters belong to the mechanism that wrote the rows (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('M1e — a seam pass (ctx.joinUpdate) returning `updated` in its pass result counts the write ONCE, not twice', async () => {
     // RED at 39b246c0: the seam's own `written.e1.updated += 30` (inside ctx.joinUpdate)
     // composes with the unconditional PASS_SCANNED_FIELDS fallback's `written.e1.updated

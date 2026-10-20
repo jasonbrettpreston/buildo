@@ -49,10 +49,12 @@ function idOrder(a: string, b: string): number {
   return x.length - y.length || (x < y ? -1 : x > y ? 1 : 0);
 }
 
-// A V3-final row is a two-letter id at or after R-CX. Amendment ids (R-K.1, R-AQ.1, R-AR.1) and
-// R-PACE-1 were all written before R-CX.
+// A V3-final row is a two-letter id at or after R-CX, or an amendment of one (R-DF.1). Amendments are ordered by
+// their base id, so R-K.1, R-AQ.1 and R-AR.1 (bases before R-CX) are not V3-final; R-PACE-1 is not a two-letter id.
+// (verify-12 N5, operator y 2026-10-20 consolidation 1-4.)
 function isV3Final(id: string): boolean {
-  return /^R-[A-Z]{2}$/.test(id) && idOrder(id, FIRST_V3_FINAL_ROW) >= 0;
+  const m = /^(R-[A-Z]{2})(?:\.[0-9]+)?$/.exec(id);
+  return !!m && idOrder(m[1]!, FIRST_V3_FINAL_ROW) >= 0;
 }
 
 function listFiles(dir: string, out: string[]): string[] {
@@ -114,6 +116,7 @@ describe('Spec 124 §5 R-DF — every register row is labelled and names a lock 
   const files = LOCK_DIRS.flatMap((d) => listFiles(path.join(REPO_ROOT, d), []));
   const rows = registerRows();
 
+  // rule-map: P4-3 (partial) — register rows parse with unique ids; statement/amends columns unchecked (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('reads every register row, the pre-V3 ones included', () => {
     const ids = rows.map((r) => r.id);
     for (const id of ['R-A', 'R-K.1', 'R-PACE-1', FIRST_V3_FINAL_ROW, 'R-DF', 'R-EY']) expect(ids).toContain(id);
@@ -129,6 +132,7 @@ describe('Spec 124 §5 R-DF — every register row is labelled and names a lock 
     expect(unlabelledIds(rows)).toEqual(UNLABELLED_GRANDFATHERED);
   });
 
+  // rule-map: P4-4 (partial) — each row names an existing lock file; not both-directions or same-commit (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('each row names at least one existing lock file in backticks, or is a grandfathered pre-R-CX row', () => {
     expect(locklessIds(rows, files)).toEqual(LOCKLESS_GRANDFATHERED);
   });
@@ -150,6 +154,15 @@ describe('Spec 124 §5 R-DF — every register row is labelled and names a lock 
     expect(locklessIds([...rows, bad], files)).not.toEqual(LOCKLESS_GRANDFATHERED);
     expect(isV3Final('R-ZQ')).toBe(true);
     expect(isV3Final('R-PACE-1')).toBe(false);
+  });
+
+  it('isV3Final reads amendment ids by their base: R-DF.1 is V3-final, R-AQ.1 / R-K.1 / R-AR.1 are not (verify-12 N5)', () => {
+    expect(isV3Final('R-DF.1')).toBe(true);
+    expect(isV3Final('R-CX.2')).toBe(true);
+    expect(isV3Final('R-AQ.1')).toBe(false);
+    expect(isV3Final('R-K.1')).toBe(false);
+    expect(isV3Final('R-AR.1')).toBe(false);
+    expect(isV3Final('R-DF.x')).toBe(false);
   });
 
   it('RED direction — a pre-R-CX row that drops its lock is caught (the list is closed, not a pattern)', () => {

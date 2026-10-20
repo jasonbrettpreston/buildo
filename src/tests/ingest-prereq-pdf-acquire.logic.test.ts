@@ -247,6 +247,7 @@ function streamOf(buf: Buffer): ReadableStream<Uint8Array> {
 // ════════════════════════════════════════════════════════════════════════════════════════════
 // 1 — the happy path
 // ════════════════════════════════════════════════════════════════════════════════════════════
+// rule-map: R-BY — pdf_document_set acquisition arm (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('T-ACQ-1 happy path: two pinned documents', () => {
   it('parses both, counts them, and reports every byte fetched', async () => {
     const d1 = makeDoc(1, NOTICE_PDF);

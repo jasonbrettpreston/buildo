@@ -60,6 +60,7 @@ describe('S4 — declared guards.empty_source halts the run for the REAL step de
     });
 
     for (const table of tables) {
+      // rule-map: V6 (partial) — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
       it(`${name} — ${table} empty (all others populated) → halt === true, FAIL row names ${table}`, async () => {
         const descriptor = loadDescriptor(rel);
         const pool = countPool({ [table]: 0 });

@@ -117,7 +117,7 @@
             "additionalProperties": false,
             "required": ["kind", "ref"],
             "properties": {
-              "kind": { "enum": ["check", "lock", "hook", "none"] },
+              "kind": { "enum": ["check", "lock", "lock-db", "hook", "none"] },
               "ref": { "type": ["string", "null"] }
             }
           },
@@ -135,6 +135,9 @@
           "retired_as_set": { "const": "spec121-M1-M14" },
           "register_row_owed": { "type": "string" },
           "note": { "type": "string" },
+          "status_reason": { "type": "string", "minLength": 20 },
+          "aliases": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9-]*$" }, "minItems": 1 },
+          "mention_by_alias_only": { "const": true },
           "merge": { "type": "string", "pattern": "^MERGE-[0-9]+$" }
         },
         "allOf": [

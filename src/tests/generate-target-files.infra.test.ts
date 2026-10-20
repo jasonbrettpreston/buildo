@@ -233,6 +233,7 @@ describe('generate-target-files — the CLI and the generator (gtf-02)', () => {
     },
   );
 
+  // rule-map: R-BE — one home: generated Target Files, hand-listed path is a violation (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it(
     'one home: a generated path hand-listed in the section is a violation, the same path inside the block is not',
     { timeout: 60_000 },

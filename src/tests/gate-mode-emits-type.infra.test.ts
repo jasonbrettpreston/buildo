@@ -33,6 +33,7 @@ const fullRescanRow = { table: 't', column: 'c', by: 'full_rescan' };
 
 const emitsFixture = (emits: unknown): any => d({ emits });
 
+// rule-map: R-BH — mode_select per archetype and emits.type, mutants both ways (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('mode-emits-type (P2-C5) — mode_select per archetype + emits.type', () => {
   // -------------------------------------------------------------------------
   // M1/M2 — the LINK/MATCHER arm's two GREEN directions.

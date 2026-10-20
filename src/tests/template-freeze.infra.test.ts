@@ -162,6 +162,7 @@ describe('template-freeze.json — regeneration reproduces it byte-identically (
 // ---------------------------------------------------------------------------
 
 describe('template-freeze.json — the frozen categories/runners match the live tree', () => {
+  // rule-map: R-Y — frozen categories equal step.schema.json required (20) (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('categories is exactly step.schema.json.required (measured 20, not the stale "18" some older prose claims)', () => {
     const stepSchema = JSON.parse(fs.readFileSync(STEP_SCHEMA_PATH, 'utf8'));
     expect(ARTIFACT.categories).toEqual(stepSchema.required);
@@ -405,6 +406,7 @@ describe('template-freeze.json — batching_prereq_snapshot is the live, honest 
 // is armed).
 // ---------------------------------------------------------------------------
 
+// rule-map: R-Z — checkFreezeDeclarationHonesty both ways (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('checkFreezeDeclarationHonesty — the FREEZE-1 lock', () => {
   const PROVEN_PROFILES: ArchetypeProfile[] = [{ archetype: 'ENRICHER', shapes: ['enrich'], runners: ['runEnrichPhase'], first_step: 'enrich_parcels', proven: true }];
   const UNPROVEN_PROFILES: ArchetypeProfile[] = [{ archetype: 'ENRICHER', shapes: [], runners: [], first_step: null, proven: false }];

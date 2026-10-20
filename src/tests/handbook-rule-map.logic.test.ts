@@ -18,12 +18,15 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const MAP_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/rule-map.json');
 const SCHEMA_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/rule-map.schema.json');
 
-// Seeded 2026-10-20 from the consolidate-1 inventory: 35 ids with no machine check + 12 partial. Shrink-only:
-// lowering this number is how an enforced rule leaves the list; raising it needs a register ruling.
-const UNENFORCED_CEILING = 47;
+// Seeded 2026-10-20 from the consolidate-1 inventory: 35 ids with no machine check + 12 partial (47). Re-seeded the
+// same day at 67 by the verify-12 N1 enforcement-honesty re-audit (operator y 2026-10-20 consolidation 1-4): a lock must
+// now name a test that mentions the rule, and 20 in-force rules whose named test did not assert them moved here as none
+// or partial, each with its reason. Shrink-only from here: lowering this number is how an enforced rule leaves the
+// list; raising it needs a register ruling.
+const UNENFORCED_CEILING = 67;
 
 type Finding = { arm: string; id: string; detail: string };
-type Rule = { id: string; status: string; handbook_line: string; enforcement: { kind: string; ref: string | null }; source: Record<string, unknown>; by?: string[] };
+type Rule = { id: string; status: string; handbook_line: string; enforcement: { kind: string; ref: string | null }; source: Record<string, unknown>; by?: string[]; aliases?: string[]; mention_by_alias_only?: boolean };
 type RuleMap = { rules: Rule[]; lines: Array<{ id: string; section: string }>; unenforced: Array<{ id: string; class: string; reason: string }>; meta: Record<string, unknown> };
 type Io = { registerIds: Set<string>; exists: (rel: string) => boolean; read: (rel: string) => string; checkCorpus: string; defectIds: Set<string> };
 type Mod = {
@@ -32,6 +35,8 @@ type Mod = {
   unenforcedSummary: (map: RuleMap) => { total: number; inForce: string[]; none: string[]; partial: string[]; notInForce: number };
   IN_FORCE: readonly string[];
   unenforcedReportLine: (map: RuleMap) => string;
+  mentionsRule: (text: string, rule: Rule) => boolean;
+  enforcementCounts: (map: RuleMap) => Record<string, number>;
 };
 
 let mod: Mod;
@@ -150,5 +155,60 @@ describe('handbook rule map — every rule maps to exactly one handbook line (op
     const allBlock = sv.indexOf('  if (opts.all) {\n    // Operator y 2026-10-20 consolidation 1-4 (observe-1)');
     expect(allBlock).toBeGreaterThan(-1);
     expect(sv.indexOf('console.log(unenforcedReportLine(loadRuleMap(REPO_ROOT)));', allBlock)).toBeGreaterThan(allBlock);
+  });
+});
+
+// verify-12 N1 (operator y 2026-10-20 consolidation 1-4): a lock names a test that mentions the rule.
+describe('handbook rule map — enforcement honesty (verify-12 N1)', () => {
+  it('RED (e) — a lock whose test file never names the rule', () => {
+    const m = clone(load());
+    const r = m.rules.find((x) => x.id === 'R-EY')!;
+    r.enforcement = { kind: 'lock', ref: 'src/tests/permits.logic.test.ts' };
+    expect(mod.checkRuleMap(m, io).some((f) => f.arm === 'e' && f.id === 'R-EY' && /never names/.test(f.detail))).toBe(true);
+  });
+
+  it('RED (e) — a DB-only test declared as kind lock; GREEN as kind lock-db', () => {
+    const m = clone(load());
+    const r = m.rules.find((x) => x.id === 'R-BS')!;
+    expect(r.enforcement.kind).toBe('lock-db');
+    expect(mod.checkRuleMap(m, io).filter((f) => f.id === 'R-BS')).toEqual([]);
+    r.enforcement = { kind: 'lock', ref: r.enforcement.ref };
+    expect(mod.checkRuleMap(m, io).some((f) => f.arm === 'e' && f.id === 'R-BS' && /lock-db/.test(f.detail))).toBe(true);
+  });
+
+  it('RED (e) — an id-resolution meta test is not a behavioural lock for a step rule', () => {
+    const m = clone(load());
+    const r = m.rules.find((x) => x.id === 'R-EY')!;
+    r.enforcement = { kind: 'lock', ref: 'src/tests/handbook-rule-map.logic.test.ts' };
+    expect(mod.checkRuleMap(m, io).some((f) => f.arm === 'e' && f.id === 'R-EY' && /meta test/.test(f.detail))).toBe(true);
+  });
+
+  it('RED (e) — a partial entry whose rule has no enforcement', () => {
+    const m = clone(load());
+    const listed = m.unenforced.find((u) => u.class === 'partial' && m.rules.find((x) => x.id === u.id)!.enforcement.kind === 'lock')!;
+    m.rules.find((x) => x.id === listed.id)!.enforcement = { kind: 'none', ref: null };
+    expect(mod.checkRuleMap(m, io).some((f) => f.arm === 'e' && f.id === listed.id && /partial/.test(f.detail))).toBe(true);
+  });
+
+  it('aliases: a colliding id (V3) counts only by its alias; R-K is not R-K.1; an alias must be unique (arm b)', () => {
+    const v3 = load().rules.find((x) => x.id === 'V3')!;
+    expect(v3.aliases).toEqual(['SPEC122A-V3']);
+    expect(mod.mentionsRule('the V3 standard', v3)).toBe(false);
+    expect(mod.mentionsRule('// rule-map: SPEC122A-V3', v3)).toBe(true);
+    const rk = load().rules.find((x) => x.id === 'R-K')!;
+    expect(mod.mentionsRule('R-K.1 only', rk)).toBe(false);
+    const m = clone(load());
+    m.rules.find((x) => x.id === 'G7')!.aliases = ['SPEC122A-V3'];
+    expect(mod.checkRuleMap(m, io).some((f) => f.arm === 'b' && /alias SPEC122A-V3 is not unique/.test(f.detail))).toBe(true);
+  });
+
+  it('every lock in the committed map names its rule (or alias) in a test that npm test runs', () => {
+    const m = load();
+    const bad = m.rules
+      .filter((r) => r.enforcement.kind === 'lock' && !(r.source as { pending_integration?: string }).pending_integration)
+      .filter((r) => /\.db\.test\.ts$/.test(r.enforcement.ref!) || !mod.mentionsRule(fs.readFileSync(path.join(REPO_ROOT, r.enforcement.ref!), 'utf8'), r));
+    expect(bad.map((r) => r.id)).toEqual([]);
+    const c = mod.enforcementCounts(m);
+    expect(Object.values(c).reduce((a, b) => a + b, 0)).toBe(m.rules.length);
   });
 });

@@ -52,6 +52,7 @@ function fakePool({ own = [] as unknown[], failOn = null as RegExp | null } = {}
   return { pool, client, calls };
 }
 
+// rule-map: R-BQ — harness runs ledgered as captured (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('L1: harnessRunRow writes status `captured`, the bare slug, verbatim counters and a closed child_status', () => {
   it('always writes status captured and the bare slug, never <chain>:<slug>', () => {
     const row = L().harnessRunRow(entry(), CTX);

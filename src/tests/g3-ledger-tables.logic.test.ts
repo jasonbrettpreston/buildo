@@ -71,6 +71,7 @@ describe('R-FB — G3 scores intent-ledger tables only; evidence tables in PH-3 
     expect(g3.detail).toBe('ledger rows=0 vocab-hit rows=0; evidence rows=3 (not scored)');
   });
 
+  // rule-map: Rule-4, GAP-G-2 — checkPreservedInComputeHasWhy fails an ungrounded preserved-in-compute row; same G-2 assertion as Rule-4 (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('G-2 uses the same split but reads ledger AND evidence rows: Rule 4 has no table-header escape', () => {
     const ev = ['| Lines | Ruling |', '|---|---|', '| 1-10 | preserved-in-compute |'];
     const r = sv.checkPreservedInComputeHasWhy(report(LEDGER, ev));

@@ -83,6 +83,7 @@ describe('R-DE cross-step vocabulary locks (McDonald\'s Airtight V3)', () => {
     expect(e('LINK', [{ key: 'detail', type: 'object' }])).toBe(1);
   });
 
+  // rule-map: W4A-R1 (partial) — <slug>_<name> end-state naming; migration with values carried not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('(v) logic variables are <slug>_<name> or sources_*', () => {
     expect(items({ config: { logic_variables: [{ name: 'sources_parcels_floor' }] } })).toEqual([]);
     expect(items({ config: { logic_variables: [{ name: 'floor_pct' }] } })).toContain('vocab.config.logic_variables.floor_pct');

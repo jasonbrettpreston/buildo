@@ -72,6 +72,7 @@ function caught(d: any): any {
   return undefined;
 }
 
+// rule-map: R-BX — loader upsert replaces geometry only on material change (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('render (parcels shape)', () => {
   const sql = upsert(withMateriality());
 

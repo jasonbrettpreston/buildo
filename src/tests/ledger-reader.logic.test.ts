@@ -446,6 +446,7 @@ describe('S1-R consumers', () => {
   });
 
   // R-CC keeps O-6 (provisional 2026-10-12, operator to confirm)
+  // rule-map: Q-S1-a — completed_with_warnings upstream counts as non-completed (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('O-6 fail-safe kept (Spec 124 R-CC): the upstream predicate stays bare `<> \'completed\'`', async () => {
     // R-CC keeps O-6 (provisional 2026-10-12, operator to confirm)
     //
