@@ -294,6 +294,14 @@
     "src/features/leads/lib/cost-model-shared.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-19 (phase-4 wave 4 lane C, full-form row 7, compute_coa_cost_estimates): a real import of compute_coa_cost_estimates (the shared Brain, also the closure of the wave-3 twin compute_cost_estimates) — reached from the legacy scripts/compute-coa-cost-estimates.js today and from the step's scripts/lib/compute/ entry after the ③ shell swap — so the import half of ruling 1's fingerprint_inputs E rule holds at every stage. It has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
+    },
+    "scripts/lib/coa-link-sql.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-19 (phase-4 wave 4, link_coa_to_parcels commit ②, wf2/p4-w4-link-scope): a real import of link_coa_to_parcels — reached from the legacy scripts/link-coa-to-parcels.js today and from the step's scripts/lib/compute/link-coa-to-parcels.js after the ③ shell swap — so the import half of ruling 1's fingerprint_inputs E rule holds at every stage. It has 0 runtime readers: nothing hashes these files, and the step runs on every invocation (staleness.trigger always, mode_select none), so no fingerprint decides whether it runs."
+    },
+    "scripts/lib/address-normalizers.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-19 (phase-4 wave 4, link_coa_to_parcels commit ②, wf2/p4-w4-link-scope): a real import of link_coa_to_parcels — reached from the legacy scripts/link-coa-to-parcels.js today and from the step's scripts/lib/compute/link-coa-to-parcels.js after the ③ shell swap — so the import half of ruling 1's fingerprint_inputs E rule holds at every stage. It has 0 runtime readers: nothing hashes these files, and the step runs on every invocation (staleness.trigger always, mode_select none), so no fingerprint decides whether it runs."
     }
   }
 }

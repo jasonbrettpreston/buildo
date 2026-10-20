@@ -1079,6 +1079,36 @@
       "group": "CoA Gates & Staleness"
     }
   },
+  "link_coa_to_parcels_unmatched_threshold_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "link_coa_to_parcels unmatched-CoA ceiling (percent): the corpus linked-pct WARN floor is 100 minus this, and the slice unmatched share WARNs above it (Spec 42 §6.5 step 9; WARN, never FAIL). Copied from coa_unmatched_threshold_pct by migration 272 (phase-4 wave 4 lane B, link_coa_to_parcels commit ②, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (legacy key kept until ③). CONSUMED by link_coa_to_parcels via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "link_coa_to_parcels_neighbourhood_coverage_min_pct": {
+    "default": 95,
+    "type": "number",
+    "description": "link_coa_to_parcels neighbourhood-coverage WARN floor: of the CoAs matched to a parcel, the percent whose parcel centroid falls inside a neighbourhood polygon. Formerly the literal \">= 95%\" / 0.95 (link-coa-to-parcels.js:637). CONSUMED by link_coa_to_parcels via checks[].limit_from_config (coa_neighbourhood_coverage_pct). Seeded by migration 272 (phase-4 wave 4 lane B, link_coa_to_parcels commit ②, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), byte-identical to the former literal.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "CoA Matching"
+    }
+  },
+  "link_coa_to_parcels_centroid_outside_max_pct": {
+    "default": 1,
+    "type": "number",
+    "description": "link_coa_to_parcels centroid-outside-polygon WARN ceiling: the percent of matched CoAs whose parcel centroid (ST_Centroid, mig 016) lands outside its own parcel polygon (L-shaped lots). Formerly the literal \"<= 1% of matches\" (link-coa-to-parcels.js:639). CONSUMED by link_coa_to_parcels via checks[].limit_from_config (centroid_outside_polygon_count). Seeded by migration 272 (phase-4 wave 4 lane B, link_coa_to_parcels commit ②, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), byte-identical to the former literal.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "CoA Matching"
+    }
+  },
   "coa_parcel_conf_tier1a": {
     "default": 0.95,
     "type": "number",
@@ -1089,10 +1119,30 @@
       "group": "CoA Matching"
     }
   },
+  "link_coa_to_parcels_conf_tier1a": {
+    "default": 0.95,
+    "type": "number",
+    "description": "Confidence stamped on a link_coa_to_parcels tier-1a parcel match (the address-points bridge or the parcels-table exact address; addr_num + street_name_normalized). Copied from coa_parcel_conf_tier1a by migration 272 (phase-4 wave 4 lane B, link_coa_to_parcels commit ②, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it); the compute reads it with no literal fallback (LCTP-D1). CONSUMED by link_coa_to_parcels via config.",
+    "min": 0.01,
+    "max": 1,
+    "admin": {
+      "group": "CoA Matching"
+    }
+  },
   "coa_parcel_conf_tier1b": {
     "default": 0.8,
     "type": "number",
     "description": "Confidence score for CoA Tier 1b name-only parcel match in link-coa-to-parcels (street_num absent, only street_name_normalized matches). DISTINCT from coa_match_conf_medium which is consumed by link-coa.js.",
+    "min": 0.01,
+    "max": 1,
+    "admin": {
+      "group": "CoA Matching"
+    }
+  },
+  "link_coa_to_parcels_conf_tier1b": {
+    "default": 0.8,
+    "type": "number",
+    "description": "Confidence stamped on a link_coa_to_parcels tier-1b name-only parcel match (street_num absent). Copied from coa_parcel_conf_tier1b by migration 272 (phase-4 wave 4 lane B, link_coa_to_parcels commit ②, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (legacy key kept until ③); no literal fallback (LCTP-D1). CONSUMED by link_coa_to_parcels via config.",
     "min": 0.01,
     "max": 1,
     "admin": {

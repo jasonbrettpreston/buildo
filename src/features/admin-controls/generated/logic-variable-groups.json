@@ -163,7 +163,11 @@
       "coa_freshness_fail_days",
       "assert_coa_freshness_fail_max_days",
       "coa_parcel_conf_tier1a",
+      "link_coa_to_parcels_conf_tier1a",
       "coa_parcel_conf_tier1b",
+      "link_coa_to_parcels_conf_tier1b",
+      "link_coa_to_parcels_neighbourhood_coverage_min_pct",
+      "link_coa_to_parcels_centroid_outside_max_pct",
       "coa_inherit_from_permit_min_confidence",
       "coa_stall_threshold_postponed_days"
     ]
@@ -192,6 +196,7 @@
       "coa_lifecycle_transition_stale_days",
       "coa_forward_link_sub085_warn_pct",
       "coa_unmatched_threshold_pct",
+      "link_coa_to_parcels_unmatched_threshold_pct",
       "coa_null_address_count_warn_max",
       "coa_ancient_hearing_count_warn_max",
       "coa_future_hearing_window_years",

@@ -478,6 +478,14 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'archetype_cost_enabled',
   'model_range_pct',
   'fallback_range_pct',
+  // phase-4 wave 4 commit ② (migration 272): link_coa_to_parcels. The copies
+  // (link_coa_to_parcels_conf_tier1a/1b, …_unmatched_threshold_pct) sit beside
+  // legacy keys that stay until the cutover retires the legacy shell.
+  'link_coa_to_parcels_conf_tier1a',
+  'link_coa_to_parcels_conf_tier1b',
+  'link_coa_to_parcels_unmatched_threshold_pct',
+  'link_coa_to_parcels_neighbourhood_coverage_min_pct',
+  'link_coa_to_parcels_centroid_outside_max_pct',
   // P16 §5.C [BUG-6] — hard gate for the lean scope-mapped inference layer (seeded OFF).
   'p16_inference_layer_enabled',
   // P16 16E — provenance weight for inference-basis forecast inputs (0.5× default).

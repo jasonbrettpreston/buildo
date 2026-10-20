@@ -1,0 +1,54 @@
+{
+  "$comment": [
+    "Spec 120 §3.4 — the INTERPRETATION file for link_coa_to_parcels, capped at 12 prose entries (notes-cap.mjs).",
+    "Phase-4 wave 4, compressed form (R-PACE-1) commit ②, landed at stage compute_ported (W4A-R6, Spec 124 R-EF): the legacy shell scripts/link-coa-to-parcels.js stays the live step until ③. The second runLinkPhase family (Spec 124 R-EG, RE-FREEZE #37)."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "Every run re-matches every eligible CoA (a lead id and a normalized street name) to a parcel through the legacy cascade — the address-points bridge (scripts/lib/coa-link-sql.js, unchanged), then the parcels-table exact, then name-only when the street number is blank — now ONE set statement per batch instead of three queries per row. The first tier that finds a parcel wins, with the legacy tie-breaks.",
+      "measured": {
+        "value": "0 mismatches between the set cascade and the legacy per-row cascade (bridge -> exact -> name-only, the same SQL and parser) on 4,839 eligible CoAs sampled every 7th across all 33,840; the whole eligible set matches in 3.2 s (31,746 matched).",
+        "date": "2026-10-19",
+        "query": "read-only dev DB, BEGIN READ ONLY: compute.primary_match_sql per keyset batch vs tier1aBridgeSql / parcels exact / name-only per sampled row"
+      }
+    },
+    {
+      "what": "lead_parcels' coa: rows follow the cascade (ruling 1, the link_parcels O4 row 7 copy): a guarded upsert (match_type / confidence; matched_at is the run clock and moves only on an inserted or changed link), a per-batch keyed retraction of pairs no longer derived, and one sweep after the loop of rows whose CoA vanished (R-EG (5)). Every statement is scoped lead_id LIKE 'coa:%': the permit mirror trigger co-writes the same table with permit: rows (migrations/144_*.sql:66, LCTP-D9).",
+      "measured": {
+        "value": "First keyset batch of 1,000 eligible CoAs against the live table: 901 links unchanged, 5 with a changed match_type, 48 new pairs, 8 departed pairs.",
+        "date": "2026-10-19",
+        "query": "read-only dev DB: classifyMatches(primary_match_sql rows) vs SELECT lead_id, parcel_id, match_type FROM lead_parcels WHERE lead_id = ANY(batch)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The coa_applications back-fill (coordinates, neighbourhood, parcel_linked_at) fires only for a CoA whose link changed this run (ruling 1, LCTP-D7): it lost a pair, or its lead_parcels row was written at this run's clock. link_coa writes the same coordinates from the linked permit (scripts/link-coa.js:660-680), so an unconditional back-fill would rewrite those 26,723 rows every run; a CoA whose link did not change is never touched."
+    },
+    {
+      "what": "A CoA that lost its link and gained none keeps its coordinates and neighbourhood (there is no parcel to take them from; the legacy step never cleared them) and only parcel_linked_at moves, so enrich_parcels' 'link moved at' reading of the marker stays true."
+    },
+    {
+      "what": "Set-based fail_fast replaces the per-row SAVEPOINT (ruling 2, LCTP-D4), and PostGIS is required, the Turf path retired (ruling 3, LCTP-D5, R-W)."
+    }
+  ],
+  "fences": [
+    {
+      "const": "lead_id LIKE 'coa:%' on every lead_parcels statement",
+      "value": "outputs.writes[0..1].write_discipline.scope; compute COA_SCOPE",
+      "incident": "lead_parcels holds 245,270 permit: rows written by the mirror trigger; the legacy ghost cleanup's LIKE 'coa:%' is the one filter that kept them out of this step's DELETE (R2.v5 fix #6, a07f4af3).",
+      "commit": "a07f4af3",
+      "lock_test": "src/tests/steps/link_coa_to_parcels/violations.test.ts"
+    }
+  ],
+  "constants": [
+    {
+      "what": "4326 is the WGS84 SRID of parcels.geom and neighbourhoods.geom (a protocol constant, R-EB (D)); 'address_points_exact', 'tier_1a_exact' and 'tier_1b_name_only' are the lead_parcels.match_type vocabulary (VARCHAR(20)), not tunables."
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 0,
+    "unpromoted_suspicious_if": 0
+  }
+}

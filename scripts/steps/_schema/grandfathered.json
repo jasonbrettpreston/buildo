@@ -165,6 +165,16 @@
       "adjudicated_by": "operator Q-CE2 y 2026-10-18",
       "date": "2026-10-19",
       "lock_test": "src/tests/steps/compute_coa_cost_estimates/violations.test.ts"
+    },
+    "link_coa_to_parcels": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[1] (class link_full_retraction) is the per-batch keyed DELETE of coa: (lead_id, parcel_id) pairs the cascade no longer derives — the LG-24 shape link_parcels writes[1] and link_massing writes[2] already carry under this file. No IS DISTINCT FROM guard applies to a row REMOVAL (a DELETE has no value to compare); the batch-scoped keyed predicate (this batch's leads, coa: only, pairs not derived this batch) IS the bounded mechanic. The target itself is the operator's: wave-4 plan question 10 ruling 1 ('link_full_retraction of departed (lead, parcel) pairs', LCTP-D6). The step's other two writes are change-guarded (writes[0] on match_type/confidence, writes[2] on the four back-fill columns).",
+      "commit": "wf2/p4-w4-link-scope commit ② (2026-10-19)",
+      "adjudicated_by": "operator y 2026-10-18, wave-4 plan question 10 (ruling 1: link_full_retraction of departed pairs); the LG-24 precedent shape (link_parcels, link_massing)",
+      "date": "2026-10-19",
+      "lock_test": "src/tests/steps/link_coa_to_parcels/violations.test.ts"
     }
   }
 }

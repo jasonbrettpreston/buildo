@@ -40,7 +40,7 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 | INGESTOR | `scripts/load-coa-notices.js` | load_coa_notices [pending: shape_clean_pending_recapture] | coa_notices (1) | — | — | — |
 | INGESTOR | `scripts/load-coa.js` | coa [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (coa); CHAIN-TOOLING (coa); EP-PIN-D17 (coa) |
 | INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); CHAIN-TOOLING (permits); EP-PIN-D17 (permits) |
-| LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (link_coa_to_parcels); CHAIN-TOOLING (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
+| LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: compute_ported] | coa (1) | — | — | LDG-10 (link_coa_to_parcels); CHAIN-TOOLING (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
 | MATERIALIZER | `scripts/classify-coa-trades.js` | classify_coa_trades [pending: compute_ported] | coa (1) | — | supports_full | LDG-10 (classify_coa_trades); CHAIN-TOOLING (classify_coa_trades); EP-PIN-D17 (classify_coa_trades) |
 | MATERIALIZER | `scripts/compute-coa-cost-estimates.js` | compute_coa_cost_estimates [pending: compute_ported] | coa (1) | — | supports_full, supports_dry_run | LDG-10 (compute_coa_cost_estimates); CHAIN-TOOLING (compute_coa_cost_estimates); EP-PIN-D17 (compute_coa_cost_estimates) |
 
