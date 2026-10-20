@@ -12,7 +12,9 @@
   "RA": "renovation_addition",
   "RI": "renovation_interior",
   "RB": "renovation_basement",
-  "suite": "the rear-suite add-on columns (every row)"
+  "suite": "the rear-suite add-on columns (every row)",
+  "RE": "renovation_envelope_expansion",
+  "RF": "renovation_basement_finish"
  },
  "trust_tiers": {
   "bylaw_derived": "high: by-law (through Layer 2) + lot geometry + declared logic variables only",
@@ -380,6 +382,33 @@
    ],
    "persisted": true,
    "change": "gates added 2026-10-18 (M-207, M-213)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": true,
+   "field": "same_as_scenario",
+   "type": "text (scenario code)",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "the scenario this row collapses into when its status is `collapsed_into` (`vocab.layer3.scenario_status`; §6.6 rule 1 \"same as <scenario>\")",
+   "trust_tier": "metadata",
+   "null_when": "status ≠ collapsed_into",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; §6.6 rule 1)"
   },
   {
    "field": "building_class",
@@ -1803,6 +1832,31 @@
    "change": null
   },
   {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": true,
+   "field": "avg_unit_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "H",
+    "S",
+    "2",
+    "RI",
+    "RB"
+   ],
+   "computation": "mean interior area per dwelling unit from `unit_breakdown` (§6.1 totals; §6.6 rule 3)",
+   "trust_tier": "bylaw_derived",
+   "null_when": "D or units = 1",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; report §6.1)"
+  },
+  {
    "field": "basement_livable_sqm",
    "type": "numeric m²",
    "scenarios": [
@@ -2765,6 +2819,105 @@
    "change": null
   },
   {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "P5.12 codes in vocab.json",
+      "owner": "step commit ①"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": true,
+   "field": "disclosure_params",
+   "type": "jsonb `{code: {slot: value}}`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "the slot values of each P5.12 template on this row ({X}, {A}, {Hw}, {street} …), keyed by code; every value is a field of this row or a keyed clause literal",
+   "trust_tier": "bylaw_derived",
+   "null_when": "never (may be empty)",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; P5.12 template slots)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "Layer 3 lineage (Spec 68 §5a part 6)",
+      "owner": "step commit ①"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [
+    "INV-16",
+    "INV-17"
+   ],
+   "persisted": true,
+   "field": "field_citations",
+   "type": "jsonb `{field: [{unit_id, amendment_status}]}`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "per field, the Layer 1 units that decided it with their amendment status (§6.6 rule 4: \"every number carries its citation and amendment status\"); the per-field split of `cited_clauses`",
+   "trust_tier": "bylaw_derived",
+   "null_when": "never (may be empty only when not_evaluated)",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; §6.6 rule 4)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "`layer2-map.json` (the R-5 total map, both directions locked)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": true,
+   "field": "field_status",
+   "type": "jsonb `{field: status}`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "per field, its closed status (§6.6 rule 1 shows a value only by its status): the Layer 3 set (Spec 68 §11.1 `vocab.layer3.field_status`), reached from the Layer 2 set (§5a part 3) through the declared total map in `layer2-map.json` (scenario plan R-5, operator APPROVED 2026-10-20)",
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; §6.6 rule 1; R-5)"
+  },
+  {
    "field": "existing_width_m",
    "type": "numeric m",
    "scenarios": [
@@ -2948,13 +3101,13 @@
   },
   {
    "field": "existing_source",
-   "type": "text `estimated`",
+   "type": "text `estimated` / `user_entered`",
    "scenarios": [
     "RA",
     "RI",
     "RB"
    ],
-   "computation": "provenance; the app overlays `user_entered` (P5.7)",
+   "computation": "provenance: `estimated` from the pipeline; `user_entered` once the owner enters the existing house (P5.7; Q-2 owner entry)",
    "regulation_ids": [],
    "keyed": {
     "units": [],
@@ -2967,7 +3120,66 @@
    "null_when": "never on renovation rows",
    "invariants": [],
    "persisted": true,
-   "change": null
+   "change": "`user_entered` allowed 2026-10-20 (Q-2)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "the O-4 detection on the step's lot vector and the owner correction path",
+      "owner": "step commit ① (Spec 78 §Phase-5)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": true,
+   "field": "lot_form_detected",
+   "type": "text `semi_half` / `detached`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`semi_half` where Spec 78 O-4 holds (the primary footprint primary-linked to exactly two parcels that abut; derived on read, fidelity `differs`, ML-4), else `detached`. A `semi_half` lot shows only the renovation cards and no estimated existing-house figures until the owner enters them; the owner's \"this is not a semi\" correction switches the lot to the full report (Q-1 / Q-2, operator 2026-10-20)",
+   "trust_tier": "estimate",
+   "null_when": "never",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; Q-1 / Q-2)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": true,
+   "field": "lot_form_basis",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "how `lot_form_detected` was decided: the O-4 basis (primary footprint linked to exactly two abutting parcels) or `owner_corrected`; shown with the correction link (Q-2)",
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; Q-2)"
   },
   {
    "field": "existing_low_confidence",
@@ -3000,7 +3212,8 @@
    "scenarios": [
     "RA",
     "RI",
-    "RB"
+    "RB",
+    "RE"
    ],
    "computation": "P5.2 for the renovation class",
    "regulation_ids": [],
@@ -3015,7 +3228,7 @@
    "null_when": "status ≠ permitted",
    "invariants": [],
    "persisted": true,
-   "change": null
+   "change": "RE added 2026-10-20 (Q-6: keep the house and build out to the full renovation envelope)"
   },
   {
    "field": "renovation_envelope_footprint_sqm",
@@ -3023,7 +3236,8 @@
    "scenarios": [
     "RA",
     "RI",
-    "RB"
+    "RB",
+    "RE"
    ],
    "computation": "P5.2 plate for the renovation class",
    "regulation_ids": [],
@@ -3038,7 +3252,37 @@
    "null_when": "status ≠ permitted",
    "invariants": [],
    "persisted": true,
-   "change": null
+   "change": "RE added 2026-10-20 (Q-6: keep the house and build out to the full renovation envelope)"
+  },
+  {
+   "regulation_ids": [
+    "10.5.40.40(3)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "the owner input `basement_height_m` (P5.7 / APP-RENO)",
+      "owner": "step commit ① (Spec 78 §Phase-5)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "basement_livable_share"
+   ],
+   "invariants": [],
+   "persisted": true,
+   "field": "basement_finish_livable_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RF"
+   ],
+   "computation": "basement renovation without underpinning: existing footprint × `basement_livable_share` where the owner says a basement exists (`existing_basement` = true, O-14) and enters its height (`basement_height_m`); outside GFA (10.5.40.40(3)(A)); gap 4 (operator-approved 2026-10-20)",
+   "trust_tier": "user_input",
+   "null_when": "existing_basement not true or no owner basement height",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; gap 4)"
   },
   {
    "field": "addition_up_gfa_sqm",
@@ -3383,7 +3627,7 @@
     "RI",
     "RB"
    ],
-   "computation": "`applies` · `not_evaluated:coa_factor_unfitted:<form>` · `not_applicable:no_coa_form` (renovation rows; LC-49). The suite add-on has no CoA figure; `coa_gfa_sqm` covers the main building only",
+   "computation": "`applies` · `not_evaluated:coa_factor_unfitted:<form>` · `not_applicable:no_coa_form` (renovation rows; LC-49). `coa_gfa_sqm` covers the main building only; the rear suite has its own `suite_coa_status` (Q-4, 2026-10-20, amends LC-49)",
    "regulation_ids": [],
    "keyed": {
     "units": [],
@@ -3399,6 +3643,80 @@
    ],
    "persisted": true,
    "change": "new 2026-10-18 (O-18)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "a suite CoA cohort and its u fit (the §6.4 re-fit audit)",
+      "owner": "step commit ① (Spec 78 §Phase-5)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "field": "suite_coa_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "rear-suite CoA floor area: the suite's AOR × the suite form's u (§6.4); `not_evaluated:coa_factor_unfitted:suite` until a suite cohort is calibrated (§6.4 rule 2: never borrowed). Q-4 (operator 2026-10-20: keep the rear-suite CoA; 1,129 suite CoA applications since 2018-11-21, 865 approved) amends Spec 131 LC-49",
+   "trust_tier": "precedent_estimate",
+   "null_when": "`suite_type = none`; unfitted",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; Q-4, amends LC-49)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "field": "suite_coa_increment_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "`suite_coa_gfa_sqm − suite_gfa_sqm`, labelled calibrated from realized CoA builds, not law (Q-4)",
+   "trust_tier": "precedent_estimate",
+   "null_when": "as `suite_coa_gfa_sqm`",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; Q-4)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "field": "suite_coa_status",
+   "type": "text",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "`applies` · `not_evaluated:coa_factor_unfitted:suite` (until calibrated) · `not_applicable:no_suite` (Q-4, amends LC-49)",
+   "trust_tier": "precedent_estimate",
+   "null_when": "never",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; Q-4)"
   },
   {
    "field": "nearby_coa_builds_gfa_sqm",
@@ -3478,6 +3796,102 @@
    "change": "reference 2026-10-18"
   },
   {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "neighbourhood_build_norms.coa_approved",
+     "migration": "migrations/199_neighbourhood_build_norms.sql"
+    }
+   ],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": false,
+   "field": "nbhd_coa_approved",
+   "type": "integer (reference)",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "by reference: `neighbourhood_build_norms.coa_approved` (§Phase-1 P1.2) via `parcels.neighbourhood_id` (P5.10a); approved CoA applications in the neighbourhood; no new computation",
+   "trust_tier": "observed",
+   "null_when": "no neighbourhood",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; P5.10a by reference)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "neighbourhood_build_norms.coa_refused",
+     "migration": "migrations/199_neighbourhood_build_norms.sql"
+    }
+   ],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": false,
+   "field": "nbhd_coa_refused",
+   "type": "integer (reference)",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "by reference: `neighbourhood_build_norms.coa_refused` (§Phase-1 P1.2) via `parcels.neighbourhood_id` (P5.10a); refused; no new computation",
+   "trust_tier": "observed",
+   "null_when": "no neighbourhood",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; P5.10a by reference)"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "neighbourhood_build_norms.coa_total",
+     "migration": "migrations/199_neighbourhood_build_norms.sql"
+    }
+   ],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": false,
+   "field": "nbhd_coa_total",
+   "type": "integer (reference)",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "by reference: `neighbourhood_build_norms.coa_total` (§Phase-1 P1.2) via `parcels.neighbourhood_id` (P5.10a); all decided; no new computation",
+   "trust_tier": "observed",
+   "null_when": "no neighbourhood",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; P5.10a by reference)"
+  },
+  {
    "field": "comparable_builds_ref",
    "type": "jsonb (reference)",
    "scenarios": [
@@ -3512,6 +3926,38 @@
    "invariants": [],
    "persisted": false,
    "change": "reference 2026-10-18"
+  },
+  {
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.comparable_builds",
+     "migration": "migrations/202_parcels_comparable_builds.sql"
+    }
+   ],
+   "logic_variables": [],
+   "invariants": [],
+   "persisted": true,
+   "field": "nearby_coa_builds_count",
+   "type": "integer",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "the number of nearby CoA builds behind `nearby_coa_builds_gfa_sqm` (§6.4 / LC-51 \"with its comp count\"): the entries of `parcels.comparable_builds` with a `coa_decision`",
+   "trust_tier": "observed",
+   "null_when": "no comparable builds",
+   "change": "new 2026-10-20 (report schema v2 lineage queue; LC-51)"
   },
   {
    "field": "layer2_table_version",

@@ -8362,6 +8362,7 @@
    "disclosure_code": "basement_excluded",
    "question": "",
    "fields": [
+    "basement_finish_livable_sqm",
     "basement_livable_gain_sqm",
     "basement_livable_sqm",
     "main_gfa_sqm"
@@ -8389,6 +8390,7 @@
    "disclosure_code": "gfa_deductions_not_applied",
    "question": "",
    "fields": [
+    "basement_finish_livable_sqm",
     "basement_livable_gain_sqm",
     "basement_livable_sqm",
     "main_gfa_sqm"
@@ -8417,6 +8419,7 @@
    "disclosure_code": "gfa_deductions_not_applied",
    "question": "",
    "fields": [
+    "basement_finish_livable_sqm",
     "basement_livable_gain_sqm",
     "basement_livable_sqm",
     "main_gfa_sqm"
@@ -8445,6 +8448,7 @@
    "disclosure_code": "gfa_deductions_not_applied",
    "question": "",
    "fields": [
+    "basement_finish_livable_sqm",
     "basement_livable_gain_sqm",
     "basement_livable_sqm",
     "main_gfa_sqm"
@@ -8471,6 +8475,7 @@
    "disclosure_code": "",
    "question": "",
    "fields": [
+    "basement_finish_livable_sqm",
     "basement_livable_gain_sqm",
     "basement_livable_sqm",
     "main_gfa_sqm"
@@ -8494,6 +8499,7 @@
    "disclosure_code": "",
    "question": "",
    "fields": [
+    "basement_finish_livable_sqm",
     "basement_livable_gain_sqm",
     "basement_livable_sqm",
     "main_gfa_sqm"
