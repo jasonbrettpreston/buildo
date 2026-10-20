@@ -1,0 +1,78 @@
+{
+ "suite": "src/tests/renovation-shared.logic.test.ts",
+ "base": "52b155ea",
+ "run_on": "2026-10-20",
+ "note": "Spec 78 P5.7 shared pure module, M-228 / M-229 functions (bylaw fix lane item 3). Run at the base in a detached worktree with this file copied in: the whole file is red (the module does not exist). Green at the commit that adds src/features/leads/lib/renovation-shared.js.",
+ "counts": {
+  "red": 11,
+  "pass": 0
+ },
+ "cases": [
+  {
+   "name": "renovation-shared — purity (Spec 78 P5.7; Spec 124 R-BZ / R-CA) imports nothing and touches no clock, randomness, process, locale or I/O",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "renovation-shared — purity (Spec 78 P5.7; Spec 124 R-BZ / R-CA) the 10.5.40.40(2) literals are registered and quoted verbatim",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-228 — a through lot takes its front lot line on its address street (10.5.30.20(1)(B)) through lot: front on the address street, rear on the other, disclosed through_lot_front_line",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-228 — a through lot takes its front lot line on its address street (10.5.30.20(1)(B)) not a through lot: not_applicable, no disclosure",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-228 — a through lot takes its front lot line on its address street (10.5.30.20(1)(B)) the address street on no street line, on both, or missing: undecided with the candidates, never a guess",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-229 — mechanical attic area is left out of GFA (10.5.40.40(2); amends M-171) pitched roof, counted attic, FSI binds: GFA stays at the cap and the build gains min(5 % × max GFA, 20 m²)",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-229 — mechanical attic area is left out of GFA (10.5.40.40(2); amends M-171) the 20 m² cap binds on a large permitted GFA",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-229 — mechanical attic area is left out of GFA (10.5.40.40(2); amends M-171) never more than the attic built",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-229 — mechanical attic area is left out of GFA (10.5.40.40(2); amends M-171) a flat-roof design or a failing attic (outside GFA already, M-203) is unchanged",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-229 — mechanical attic area is left out of GFA (10.5.40.40(2); amends M-171) FSI not binding: the area is still outside GFA, the build does not grow",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  },
+  {
+   "name": "M-229 — mechanical attic area is left out of GFA (10.5.40.40(2); amends M-171) no permitted maximum GFA (FSI not_applicable / unlimited): no base for the share, no exclusion, the build unchanged",
+   "at_base": "red",
+   "reason": "Error: Cannot find module ../../src/features/leads/lib/renovation-shared (the module does not exist at the base)",
+   "green": "pass"
+  }
+ ]
+}
