@@ -1,0 +1,46 @@
+{
+ "suite": "src/tests/bylaw-fix-3.logic.test.ts",
+ "base": "462c7474",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-3, D-3 / M-243 (per-element encroachment targets; M-106 amended; the M-106 card re-keyed as LIMIT lists), run on the working tree at 462c7474 with the D-3 describe added, before the vocab and keying changes.",
+ "counts": {
+  "red": 7
+ },
+ "cases": [
+  {
+   "name": "D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance vocab: each element has an encroachment (max) and a clearance (min) target; encroachment_m / encroachment_clearance_m declare max / min",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'eaves', undefined, undefined ] to deeply equal [ 'eaves', 'm', 'max' ]"
+  },
+  {
+   "name": "D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance 10.5.40.60(7)(B) is one LIMIT: eaves_encroachment_m 0.9 m and eaves_clearance_m 0.3 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'UNUSUAL', 'none', 'none' ] to deeply equal [ 'LIMIT', …(2) ]"
+  },
+  {
+   "name": "D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance a house answers eaves 0.9 m (max) and 0.3 m from a lot line (min), from (7)(B), in every zone",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', null, undefined, …(4) ] to deeply equal [ 'R', 0.9, 'max', …(4) ]"
+  },
+  {
+   "name": "D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance window answers no longer mix with the eaves: window projections answer from (6) only; no 10.5.40.60 unit answers encroachment_m",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, true ] to deeply equal [ 0.6, true ]"
+  },
+  {
+   "name": "D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance every M-106 card unit is a LIMIT whose targets are element targets",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '10.5.40.60(1)#(1)(A)', …(2) ] to deeply equal [ '10.5.40.60(1)#(1)(A)', …(2) ]"
+  },
+  {
+   "name": "D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance an ancillary building answers eaves 0.3 m / 0.15 m from 10.5.60.60(1) (474 Beresford Ave's examiner figures)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, undefined, null, undefined ] to deeply equal [ 0.3, '10.5.60.60(1)#whole', …(2) ]"
+  },
+  {
+   "name": "D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance the parallel suite chapters key the same elements (150.7 / 150.8.60.60 platforms, canopies, architectural features, equipment)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '150.7.60.60(4)#whole', …(1) ] to deeply equal [ '150.7.60.60(4)#whole', …(1) ]"
+  }
+ ]
+}
