@@ -1,0 +1,32 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-e/2026-10-21-batch-e.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-e",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y to this . Re-freeze night: split it? (I recommend A, split.) One item is tied to the permits cutover, which is still far off. Splitting lets everything else run now, and V3 goes from 4 to about 28.. let's keep rolling on the V3",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-e/2026-10-21-batch-e.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-27": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-II"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-27",
+      "question": "REFREEZE-BUNDLE-1 split (REFREEZE-SPLIT-Q option A)",
+      "recommendation": "Split the bundle. Night 1 runs items (1) and (3)-(8) with one fleet recapture; item (2), the refresh_snapshot recorder producer-read (D-P1), becomes its own library RE-FREEZE in the permits ③ landing with a second fleet recapture then. D-P1 stays exactly as ruled; 124a:457's 'neither lands alone' is amended by this ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

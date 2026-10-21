@@ -910,6 +910,9 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       'every step descriptor on disk is registered in converted.json (and vice versa) — a descriptor that lands unregistered, or a registration with no descriptor, is a structural defect',
     ).toEqual(converted.map((f) => f.replace(/\\/g, '/').replace(/\.js$/, '.descriptor.json')).sort());
     const KNOWN_CHANGED_THIS_COMMIT = new Set([
+      // REFREEZE-BUNDLE-1 night 1 (124a:457, split by R-II, 2026-10-21): item (6) appends two condition-9 citations
+      // to deviations[].adjudicated_by and item (7) resyncs last_measured; text only, recaptured the same night.
+      'scripts/load-bylaw-map-areas.descriptor.json',
       'scripts/quality/assert-schema.descriptor.json', // Rule 3/claim #175 probe_presence fleet fix (R-D three-way lock regen at every cutover)
       // WF3 I3a (2026-09-14, `.cursor/wf3_i3a_infra_step_exemption_active_task.md`) — the §0
       // measured mismatch correction: identity.gate_exempt flipped false -> true on both,

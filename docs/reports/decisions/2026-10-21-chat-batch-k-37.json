@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-k-37/2026-10-21-batch-k.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-k-37",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1. y 2. y. 3.y we are at 93% usage for a max 20X plan - so we should use spec 08 and deepseek as well to maximize token use - please update all the new build information from toronto for the calculator - and other verifciation accuracy is loking good",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-k-37/2026-10-21-batch-k.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-37",
+      "question": "V3 label count — which view the E1 ratchet uses",
+      "recommendation": "(c)+(a): the V3 label counts only steps that are converted, or pass when judged as converted (strict --staged view). load_coa_notices comes off the list (V3 = 27). The ratchet floor's generator uses the stricter view from now on (closes PIN RATCHET-PENDING-ASCONVERTED).",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

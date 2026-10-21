@@ -19739,19 +19739,19 @@
   "inputs": [
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json",
-      "sha256": "1844a47e9b8a7862"
+      "sha256": "fc6b11a478fc285d"
     },
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json",
-      "sha256": "823da11eb9ba7e00"
+      "sha256": "410bd8beb9b742ac"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/none_incremental.trace.json",
-      "sha256": "bb7337a6aaa9a488"
+      "sha256": "42991087e45081a1"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/sources_run1.trace.json",
-      "sha256": "ab446058c4d0743a"
+      "sha256": "9f5cfe3429bb91da"
     },
     {
       "path": "migrations/205_archetype_cost_rates.sql",

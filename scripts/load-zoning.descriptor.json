@@ -3254,7 +3254,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GC; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3266,7 +3266,7 @@
           "ref": "scripts/lib/step/staleness.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3278,7 +3278,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3290,7 +3290,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3302,7 +3302,7 @@
           "ref": "scripts/lib/step/staleness.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3314,7 +3314,7 @@
           "ref": "scripts/lib/step/staleness.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3326,7 +3326,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GC; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3338,7 +3338,7 @@
           "ref": "scripts/lib/compute/load-zoning.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3350,7 +3350,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3362,7 +3362,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GC; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3374,7 +3374,7 @@
           "ref": "scripts/lib/step/conservation.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-GC; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3386,7 +3386,7 @@
           "ref": "scripts/lib/compute/load-zoning.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3398,7 +3398,7 @@
           "ref": "scripts/lib/compute/load-zoning.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-03"
     },
     {
@@ -3410,7 +3410,7 @@
           "ref": "scripts/lib/compute/load-zoning.js"
         }
       },
-      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C) [register: Spec 124 R-HW; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-03"
     }
   ],

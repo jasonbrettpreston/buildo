@@ -3246,7 +3246,7 @@
           "ref": "scripts/lib/resolve-db.js"
         }
       },
-      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration)",
+      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration) [register: Spec 124 R-IB; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     },
     {
@@ -3258,7 +3258,7 @@
           "ref": "scripts/lib/enrich-lead-zoning.js"
         }
       },
-      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration)",
+      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration) [register: Spec 124 R-IC; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     }
   ],

@@ -103,6 +103,10 @@
       "address_point_id",
       "latitude"
     ],
+    "address_points_cohort_bak_20261021t1314z": [
+      "address_point_id",
+      "latitude"
+    ],
     "address_points_retired_bak_20261003": [
       "addr_num_normalized",
       "address_class_desc",
@@ -373,6 +377,19 @@
       "bylaw_max_fsi",
       "id"
     ],
+    "coa_applications_cohort_bak_20261021t1332z": [
+      "application_number",
+      "data_hash"
+    ],
+    "coa_applications_cohort_bak_20261021t1333z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261021t1335z": [
+      "bylaw_max_fsi",
+      "id"
+    ],
     "coa_notice_variances": [
       "application_number",
       "bound",
@@ -564,6 +581,10 @@
       "id",
       "is_wsib_registered"
     ],
+    "entities_cohort_bak_20261021t1329z": [
+      "id",
+      "is_wsib_registered"
+    ],
     "entitlements": [
       "created_at",
       "current_period_end",
@@ -684,6 +705,13 @@
       "matched_at",
       "parcel_id"
     ],
+    "lead_parcels_cohort_bak_20261021t1334z": [
+      "confidence",
+      "lead_id",
+      "match_type",
+      "matched_at",
+      "parcel_id"
+    ],
     "lead_products": [
       "classified_at",
       "confidence",
@@ -754,6 +782,10 @@
       "nk"
     ],
     "lifecycle_status_history_cohort_bak_20261020t2100z": [
+      "dk",
+      "nk"
+    ],
+    "lifecycle_status_history_cohort_bak_20261021t1333z": [
       "dk",
       "nk"
     ],
@@ -894,6 +926,11 @@
       "parcel_id"
     ],
     "parcel_address_points_cohort_bak_20261019t1206z": [
+      "address_point_id",
+      "computed_at",
+      "parcel_id"
+    ],
+    "parcel_address_points_cohort_bak_20261021t1318z": [
       "address_point_id",
       "computed_at",
       "parcel_id"
@@ -1232,6 +1269,34 @@
       "id",
       "max_buildable_footprint_sqm"
     ],
+    "parcels_cohort_bak_20261021t1316z": [
+      "id",
+      "lot_size_sqm"
+    ],
+    "parcels_cohort_bak_20261021t1319z": [
+      "centroid_lat",
+      "id"
+    ],
+    "parcels_cohort_bak_20261021t1321z": [
+      "id",
+      "ravine_dataset_version_when_enriched"
+    ],
+    "parcels_cohort_bak_20261021t1322z": [
+      "heritage_dataset_version_when_enriched",
+      "id"
+    ],
+    "parcels_cohort_bak_20261021t1323z": [
+      "id",
+      "is_corner_lot"
+    ],
+    "parcels_cohort_bak_20261021t1330z": [
+      "id",
+      "max_buildable_footprint_sqm"
+    ],
+    "parcels_cohort_bak_20261021t1331z": [
+      "cost_fb_total",
+      "id"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1269,6 +1334,10 @@
       "id"
     ],
     "permit_parcels_cohort_bak_20261019t1208z": [
+      "confidence",
+      "id"
+    ],
+    "permit_parcels_cohort_bak_20261021t1320z": [
       "confidence",
       "id"
     ],
@@ -1529,6 +1598,14 @@
       "latitude",
       "permit_num"
     ],
+    "permits_cohort_bak_20261021t1315z": [
+      "latitude",
+      "permit_num"
+    ],
+    "permits_cohort_bak_20261021t1325z": [
+      "neighbourhood_id",
+      "permit_num"
+    ],
     "pg_stat_user_tables": [
       "analyze_count",
       "autoanalyze_count",
@@ -1633,6 +1710,10 @@
       "source_id"
     ],
     "ravines_cohort_bak_20261019t1202z": [
+      "source_dataset_version",
+      "source_id"
+    ],
+    "ravines_cohort_bak_20261021t1317z": [
       "source_dataset_version",
       "source_id"
     ],
@@ -2004,6 +2085,18 @@
     "wsib_registry_cohort_bak_20261019t1218z": [
       "id",
       "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261021t1326z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261021t1327z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261021t1328z": [
+      "id",
+      "match_confidence"
     ],
     "zoning_building_setback_overlay": [
       "bylaw_section_link",

@@ -253,7 +253,7 @@ export function hardGateEnabled() {
   return v === 1;
 }
 
-export const RATCHET_COMMENT = 'Spec 124 R-EY (McDonald\'s Airtight V3, operator y 2026-10-20). E1: v3[] lists every step that has read standard=V3; a listed step that reads V2 is RED in step-validate. It only grows, and only through its generator: node scripts/analysis/step-validate.mjs --all --fast --v3-json=<f> then node scripts/analysis/gates/v3-label.mjs --write <f>. E2: converted_baseline[] freezes converted[] at R-EY; a converted step outside it must read V3. It is seeded once and never grows.';
+export const RATCHET_COMMENT = 'Spec 124 R-EY (McDonald\'s Airtight V3, operator y 2026-10-20). E1: v3[] lists every step that has read standard=V3; a listed step that reads V2 is RED in step-validate. It only grows (a step leaves only by the generator --retire, when the strict as-converted run reads it V2; R-IK), and only through its generator: node scripts/analysis/step-validate.mjs --all --fast --v3-json=<f> then node scripts/analysis/gates/v3-label.mjs --write <f>. E2: converted_baseline[] freezes converted[] at R-EY; a converted step outside it must read V3. It is seeded once and never grows.';
 
 /**
  * The E1 generator's merge: the existing v3[] UNION the steps reading V3 now (never removes — a V2 regression is
@@ -261,9 +261,15 @@ export const RATCHET_COMMENT = 'Spec 124 R-EY (McDonald\'s Airtight V3, operator
  * yet (the R-EY seed) is it set from the converted steps of this run. PURE.
  * @param {Map<string,{standard:string, stage:string}>} labels
  */
-export function mergeRatchet(existing, labels, today) {
+export function mergeRatchet(existing, labels, today, retire = []) {
   const v3 = new Set(Array.isArray(existing?.v3) ? existing.v3 : []);
   for (const [slug, l] of labels) if (l.standard === 'V3') v3.add(slug);
+  // Spec 124 R-IK (CHAT-37): a named slug leaves the list only when this strict run read it and it does not read V3.
+  for (const slug of retire) {
+    if (!labels.has(slug)) throw new Error(`--retire ${slug}: this run did not read it`);
+    if (labels.get(slug).standard === 'V3') throw new Error(`--retire ${slug}: it reads V3 in this run`);
+    v3.delete(slug);
+  }
   const baseline = Array.isArray(existing?.converted_baseline)
     ? existing.converted_baseline
     : [...labels].filter(([, l]) => l.stage === 'converted').map(([slug]) => slug).sort();
@@ -272,11 +278,12 @@ export function mergeRatchet(existing, labels, today) {
 
 function main(argv) {
   const i = argv.indexOf('--write');
-  if (i === -1) throw new Error('usage: --write <labels.json>  (labels.json from `step-validate --all --fast --v3-json=<path>`)');
+  if (i === -1) throw new Error('usage: --write <labels.json> [--retire <slug>]  (labels.json from `step-validate --all --fast --v3-json=<path>`)');
   const labelsPath = argv[i + 1];
   const labels = new Map(Object.entries(JSON.parse(fs.readFileSync(labelsPath, 'utf8'))));
   const existing = loadRatchet();
-  const next = mergeRatchet(existing, labels, new Date().toISOString().slice(0, 10));
+  const retire = argv.flatMap((a, k) => (a === '--retire' ? [argv[k + 1]] : []));
+  const next = mergeRatchet(existing, labels, new Date().toISOString().slice(0, 10), retire);
   fs.writeFileSync(path.join(REPO_ROOT, V3_RATCHET_REL), `${JSON.stringify(next, null, 2)}\n`);
   console.log(`[v3-label] ${V3_RATCHET_REL}: v3[] = ${next.v3.length} (${next.v3.join(', ')})`);
 }

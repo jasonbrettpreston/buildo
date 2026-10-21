@@ -217,7 +217,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
           'WD-1 ruled verdict_only RETIRED and structurally undeclarable under the ASSERT x-profile — outputs/recovery/counters forced "none". Matches assert_schema/assert_global_coverage precedent.',
           { kind: 'file', ref: '.cursor/wf5_wd1_write_class_audit_active_task.md' },
         ),
-        adjudicated_by: 'WD-1 / Spec 122 §1.10 required-field profile',
+        adjudicated_by: 'WD-1 / Spec 122 §1.10 required-field profile [register: Spec 124 R-X (existing rule); V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-12',
       },
       {
@@ -226,7 +226,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
           'scripts/lib/step/verdict.js buildAuditTable() renders audit_table.name from the single identity.display_name (step.schema.json: "the human-readable name emitted in records_meta.audit_table.name") — no per-chain name map exists in the ASSERT profile or sharing.varies_by_chain (audit_table is a bare enum ["one","per_chain"], not name data). No scripts/lib/step/**/step.schema.json edit is authorized this commit. Resolved: one shared display_name, "Data Quality Checks" (matches the permits chain, unchanged, and src/lib/quality/types.ts:634\'s own label). The coa/sources/deep_scrapes chains\' audit_table.name text changes — cosmetic only, no consumer branches on the retired literal strings (FreshnessTimeline.tsx renders at.name verbatim).',
           { kind: 'file', ref: 'scripts/lib/step/verdict.js' },
         ),
-        adjudicated_by: 'commit 7 scope constraint (no step.schema.json/scripts/lib/step edit authorized)',
+        adjudicated_by: 'commit 7 scope constraint (no step.schema.json/scripts/lib/step edit authorized) [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]',
         date: '2026-09-12',
       },
       {
@@ -235,7 +235,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
           'Re-reading the pre-conversion checkInsp() helper this session found its displayed threshold parameter (\'<= 5\' for ancient_dates) is NEVER itself compared — every checkInsp() call site evaluates purely value > 0. Wiring the new var into a real >5-tolerant bound would be an undeclared behaviour change mid-conversion (forbidden, Spec 123 §1.1/KFM3). The var is declared (satisfies Rule 3 registration + the test suite\'s 26-name list) but not bound via limit_from_config — filed ADB-D7, defect-ledger.md, OPEN · PIN, fix-after.',
           { kind: 'file', ref: 'docs/reports/defect-ledger.md' },
         ),
-        adjudicated_by: 'commit 7 (ADB-D7, Spec 123 §3.1 — no silent behaviour fix during conversion)',
+        adjudicated_by: 'commit 7 (ADB-D7, Spec 123 §3.1 — no silent behaviour fix during conversion) [register: Spec 124 R-HZ; V3 condition-9 rulings 2026-10-20]',
         date: '2026-09-12',
       },
       {
@@ -244,7 +244,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
           'All 27 logic_variables here carry a safe seed default (the exact pre-conversion literal, or — for inspection_ancient_dates_count_warn_max — a declared-not-yet-wired placeholder), so "fail" is the correct posture per Rule 3. Recorded here only because the config object forbids a per-variable why field (additionalProperties:false), mirroring assert_schema/assert_global_coverage\'s own precedent deviation entry.',
           { kind: 'file', ref: 'scripts/seeds/logic_variables.json' },
         ),
-        adjudicated_by: 'Spec 124 §2 Rule 3',
+        adjudicated_by: 'Spec 124 §2 Rule 3 [register: Spec 124 R-G (existing rule); V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-12',
       },
     ],

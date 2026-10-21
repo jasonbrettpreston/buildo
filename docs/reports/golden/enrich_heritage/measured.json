@@ -2,66 +2,66 @@
   "entries": {
     "heritage_flag_type_agree_flagged_side": {
       "value": 0,
-      "cost_ms": 621,
-      "at": "2026-10-19T13:15:57.723Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 692,
+      "at": "2026-10-21T13:26:59.776Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 15
+      "sample_n": 17
     },
     "heritage_flag_type_agree_unflagged_side": {
       "value": 0,
-      "cost_ms": 622,
-      "at": "2026-10-19T13:15:57.723Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 654,
+      "at": "2026-10-21T13:26:59.776Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 15
+      "sample_n": 17
     },
     "heritage_date_without_type_count": {
       "value": 0,
-      "cost_ms": 624,
-      "at": "2026-10-19T13:15:57.723Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 700,
+      "at": "2026-10-21T13:26:59.776Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 15
+      "sample_n": 17
     },
     "heritage_part_iv_null_date_count": {
       "value": 0,
-      "cost_ms": 625,
-      "at": "2026-10-19T13:15:57.723Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 662,
+      "at": "2026-10-21T13:26:59.776Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 15
+      "sample_n": 17
     },
     "heritage_designated_share_max_pct": {
       "value": 2.13801214816247,
-      "cost_ms": 593,
-      "at": "2026-10-19T13:15:57.723Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 617,
+      "at": "2026-10-21T13:26:59.776Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 15
+      "sample_n": 17
     },
     "heritage_designated_count_collapse_floor": {
       "value": 10616,
-      "cost_ms": 594,
-      "at": "2026-10-19T13:15:57.723Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 606,
+      "at": "2026-10-21T13:26:59.776Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 15
+      "sample_n": 17
     },
     "heritage_part_iv_matched_le_source": {
       "value": 0,
-      "cost_ms": 593,
-      "at": "2026-10-19T13:15:57.723Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 616,
+      "at": "2026-10-21T13:26:59.776Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 15
+      "sample_n": 17
     }
   }
 }

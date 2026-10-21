@@ -537,7 +537,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "orchestrator ruling, plan D1 [READ .cursor/batch2_p3_7_parcels_active_task.md]",
+      "adjudicated_by": "orchestrator ruling, plan D1 [READ .cursor/batch2_p3_7_parcels_active_task.md] [register: Spec 124 R-HO; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -561,7 +561,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "orchestrator ruling, plan D3 (address_points commit-9 P4 precedent)",
+      "adjudicated_by": "orchestrator ruling, plan D3 (address_points commit-9 P4 precedent) [register: Spec 124 R-HN; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -573,7 +573,7 @@
           "ref": "scripts/run-chain.js"
         }
       },
-      "adjudicated_by": "orchestrator ruling, plan D4 / address_points plan D-8",
+      "adjudicated_by": "orchestrator ruling, plan D4 / address_points plan D-8 [register: Spec 124 R-HP; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -585,7 +585,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "operator authorization 2026-10-01 + plan panel (Integration C1, Regression Guardian D1) [READ .cursor/wf3_parcels_lot_size_wipe_active_task.md]",
+      "adjudicated_by": "operator authorization 2026-10-01 + plan panel (Integration C1, Regression Guardian D1) [READ .cursor/wf3_parcels_lot_size_wipe_active_task.md] [register: Spec 124 R-GH; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-01"
     },
     {
@@ -597,7 +597,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "Operator ruling MQ-B5 (a) + compliance amendment (ASSEMBLY morning batch 2)",
+      "adjudicated_by": "Operator ruling MQ-B5 (a) + compliance amendment (ASSEMBLY morning batch 2) [register: Spec 124 R-GJ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-05"
     }
   ],

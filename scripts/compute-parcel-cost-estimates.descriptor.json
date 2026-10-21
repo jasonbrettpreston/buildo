@@ -251,7 +251,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-08T14:24:20.571Z", "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e", "cost_ms": 4457, "sample_n": 4, "source_run": { "run_id": "2373", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-21T14:50:39.705Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 742, "sample_n": 19, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "§7 invariant 3 — a cost line can only be priced from a non-null lot-derived area. MEASURED 0, 2026-09-21.", "liveness": { "kind": "column", "ref": "parcels.cost_fb_total" } }
     },
     {
@@ -263,7 +263,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-08T14:24:20.571Z", "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e", "cost_ms": 4518, "sample_n": 4, "source_run": { "run_id": "2373", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-21T14:50:39.705Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 760, "sample_n": 19, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "§7 invariant 2 — a new build can never legitimately cost more than the CoA build (CoA can only add). MEASURED 0, 2026-09-21. NOTE: coa_fsi > max_build_fsi is a SEPARATE, documented divergent reference (Spec 88 §2.6/2.6) and is NOT a violation of this invariant.", "liveness": { "kind": "column", "ref": "parcels.cost_coa_total" } }
     },
     {
@@ -275,7 +275,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-08T14:24:20.571Z", "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e", "cost_ms": 4812, "sample_n": 4, "source_run": { "run_id": "2373", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-21T14:50:39.705Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 792, "sample_n": 19, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "CPCE-D2 CLOSED, WIDENED S0.2 — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate. CPCE peel (DeepSeek/grounded O4, 2026-09-21) widened the COLUMN coverage to all 16 `write_discipline.guard_columns`. S0.2 (WF3 existing-structure-area-artifacts, 2026-09-21/22) widens the POPULATION half in the SAME statement, matching `writes[1]`'s own widened `scope`: `max_buildable_gfa_sqm IS NULL` (S0.1's lot-band bound) or `cur_floor_gfa_sqm > 750` (`product_scope_max_existing_gfa_sqm`, FOLD-RC2) now ALSO count as 'outside the population', not only a non-R% zoning. The two widenings (columns, O4; population, S0.2) are orthogonal and composed here, never duplicated as separate invariants.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
     }
   ],
@@ -310,7 +310,7 @@
         "text": "O1 RULED — the fleet standard (McDonald's rule), not a CPCE-specific choice: every converted ENRICHER/LINK sibling renumbers `audit_table.phase` from the legacy's arbitrary spec/lock-derived number to the CHAIN PHASE INDEX declared in `sharing.varies_by_chain.phase` (grounded against 3 siblings' own PRE/POST goldens: enrich_heritage 62->13, enrich_ravines 60->12, both matching their own `varies_by_chain.phase.sources`; 10 further converted descriptors all carry a small chain-index integer in the same field, none carry a spec/lock number). CPCE's PRE golden showed 88 (legacy), POST shows 1 (`varies_by_chain.phase.sources`) — conforming to the fleet standard, not a new departure. Previously UNDECLARED (missing from this deviations[] array and from the assessment's PRE/POST diff list) and misdescribed by identity.why_lock's now-corrected trailing sentence; declared here per O1.",
         "liveness": { "kind": "file", "ref": "src/components/FreshnessTimeline.tsx" }
       },
-      "adjudicated_by": "O1 ruling (operator/coordinator, 2026-09-21) — fleet-standard grounding vs enrich_heritage/enrich_ravines/10 further sibling descriptors",
+      "adjudicated_by": "O1 ruling (operator/coordinator, 2026-09-21) — fleet-standard grounding vs enrich_heritage/enrich_ravines/10 further sibling descriptors [register: Spec 124 R-HT; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-21"
     },
     {
@@ -337,7 +337,7 @@
         "text": "RULED — both retired as a declared deviation. F15's only purpose (bypassing the F8 gate) no longer exists once A1 retires the gate; `override.dry_run:\"none\"` / `force_full:\"none\"` match all four converted ENRICHER siblings. `manifest.json` still declares `supports_dry_run: true` for this slug — reconciled/declared-mismatched at cutover (③), not this commit.",
         "liveness": { "kind": "file", "ref": "scripts/compute-parcel-cost-estimates.js" }
       },
-      "adjudicated_by": "Operator ruling DRY-RUN, 2026-09-21; FOLD-V3 (force_full does not survive)",
+      "adjudicated_by": "Operator ruling DRY-RUN, 2026-09-21; FOLD-V3 (force_full does not survive) [register: Spec 124 R-AZ (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-21"
     }
   ],

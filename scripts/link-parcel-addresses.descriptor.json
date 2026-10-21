@@ -645,13 +645,13 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 526570,
-        "at": "2026-10-06T16:38:41.639Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 42,
-        "sample_n": 6,
+        "value": 526603,
+        "at": "2026-10-21T13:21:02.721Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 12,
+        "sample_n": 21,
         "source_run": {
-          "run_id": "2342",
+          "run_id": "3724",
           "chain": null,
           "event": "golden_capture"
         }
@@ -674,13 +674,13 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 1163,
-        "at": "2026-10-06T16:38:41.639Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 182,
-        "sample_n": 6,
+        "value": 1166,
+        "at": "2026-10-21T13:21:02.721Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 43,
+        "sample_n": 21,
         "source_run": {
-          "run_id": "2342",
+          "run_id": "3724",
           "chain": null,
           "event": "golden_capture"
         }
@@ -704,12 +704,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T16:38:41.639Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 201,
-        "sample_n": 6,
+        "at": "2026-10-21T13:21:02.721Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 48,
+        "sample_n": 21,
         "source_run": {
-          "run_id": "2342",
+          "run_id": "3724",
           "chain": null,
           "event": "golden_capture"
         }
@@ -733,12 +733,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 155,
-        "at": "2026-10-06T16:38:41.639Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1520,
-        "sample_n": 6,
+        "at": "2026-10-21T13:21:02.721Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 610,
+        "sample_n": 21,
         "source_run": {
-          "run_id": "2342",
+          "run_id": "3724",
           "chain": null,
           "event": "golden_capture"
         }
@@ -761,13 +761,13 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 741,
-        "at": "2026-10-06T16:38:41.639Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 43,
-        "sample_n": 6,
+        "value": 747,
+        "at": "2026-10-21T13:21:02.721Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 12,
+        "sample_n": 21,
         "source_run": {
-          "run_id": "2342",
+          "run_id": "3724",
           "chain": null,
           "event": "golden_capture"
         }
@@ -796,10 +796,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-08T16:04:36.527Z",
-        "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e",
-        "cost_ms": 48453,
-        "sample_n": 2,
+        "at": "2026-10-20T02:04:17.814Z",
+        "commit": "8ee66568f2eef73334b7a0ff5245cabeff369788",
+        "cost_ms": 10314,
+        "sample_n": 35,
         "source_run": {
           "run_id": null,
           "chain": null,
@@ -848,7 +848,7 @@
           "ref": "scripts/lib/compute/link-parcel-addresses.js"
         }
       },
-      "adjudicated_by": "measured this pilot (§1 PH-0 boundary freeze / §2 PH-3 intent ledger, finding 2), 2026-08-29",
+      "adjudicated_by": "measured this pilot (§1 PH-0 boundary freeze / §2 PH-3 intent ledger, finding 2), 2026-08-29 [register: Spec 124 R-FN; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-29"
     }
   ],

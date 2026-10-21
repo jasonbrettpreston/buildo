@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "coa",
   "source_fingerprint": "dff27c5f2967fc0b4564ca7994275f3980842a2408a224e10778006e2b343365",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
-    "calls": 221,
-    "distinct": 32,
-    "utility": 27,
-    "tracer_self_ms": 3.55,
-    "wall_ms": 603
+    "calls": 264,
+    "distinct": 29,
+    "utility": 21,
+    "tracer_self_ms": 5.617,
+    "wall_ms": 1624
   },
   "statements": [
     {
@@ -27,16 +27,6 @@
           "seq_scan"
         ]
       },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "1635c08c8de0a9ba",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
       "writes": {},
       "excluded": [],
       "error": null
@@ -74,16 +64,6 @@
       "error": null
     },
     {
-      "fingerprint": "33b5f5419cddba83",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "34958cc103bfee4f",
       "kind": "read",
       "count": 1,
@@ -99,7 +79,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 175,
+      "rowCount": 224,
       "reads": {
         "pg_stat_user_tables": [
           "relname",
@@ -114,7 +94,7 @@
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 159,
+      "rowCount": 208,
       "reads": {
         "pg_stat_user_tables": [
           "n_tup_ins",
@@ -157,10 +137,20 @@
       "error": null
     },
     {
+      "fingerprint": "504ef25008758990",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 788,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -178,16 +168,6 @@
       "excluded": [
         "schema_migrations"
       ],
-      "error": null
-    },
-    {
-      "fingerprint": "703712bc9f269baf",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
       "error": null
     },
     {
@@ -265,8 +245,8 @@
     {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 178,
-      "rowCount": 178,
+      "count": 227,
+      "rowCount": 227,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -336,7 +316,7 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 175,
+      "rowCount": 224,
       "reads": {
         "pg_stat_user_tables": [
           "n_dead_tup",
@@ -367,7 +347,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 13,
+      "count": 10,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -385,30 +365,10 @@
       "error": null
     },
     {
-      "fingerprint": "e5f9a77903ed9193",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "e830c2906bfb2412",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 178,
+      "rowCount": 227,
       "reads": {
         "pg_stat_user_tables": [
           "idx_scan",
@@ -420,6 +380,16 @@
           "seq_scan"
         ]
       },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fa138b34753c9e4f",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
       "writes": {},
       "excluded": [],
       "error": null

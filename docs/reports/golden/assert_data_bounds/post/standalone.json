@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-data-bounds.js",
   "chain": "none",
-  "git_head": "db239ef52b7526a3093a16d6e00fb1c9a3946636",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -49,7 +49,7 @@
       "terminal": "checks_passed_with_warnings",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "db239ef52b7526a3093a16d6e00fb1c9a3946636",
+      "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 2,
@@ -233,7 +233,7 @@
           },
           {
             "metric": "coa_maxbuild_gfa_gt3lot",
-            "value": 31,
+            "value": 32,
             "threshold": "value_max 45",
             "status": "PASS",
             "source": "check",
@@ -345,7 +345,7 @@
           },
           {
             "metric": "toronto_centreline_count",
-            "value": 47330,
+            "value": 47331,
             "threshold": "value_min 40000",
             "status": "PASS",
             "source": "check",
@@ -487,7 +487,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 13826,
+            "value": 1515,
             "threshold": null,
             "status": "INFO"
           }
@@ -579,16 +579,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_data_bounds]\",\"msg\":\"[assert_data_bounds] target: assert_data_bounds (descriptor.database) → database=postgres user=postgres migrations=268 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_data_bounds]\",\"msg\":\"=== CQA Tier 2: Data Bounds Validation ===\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"cost_outlier_ceiling_cad\":2000000000,\"desc_null_rate_warn_pct\":5,\"builder_null_rate_warn_pct\":95,\"cost_est_null_rate_warn_pct\":80,\"cost_est_min_tiers\":2,\"coa_forward_link_sub085_warn_pct\":59,\"cost_est_legacy_cost_ceiling_cad\":50000000,\"cost_est_legacy_gfa_ceiling_sqm\":50000,\"cost_outlier_count_warn_max\":20,\"sources_address_points_floor\":500000,\"sources_parcels_floor\":460000,\"sources_building_footprints_floor\":400000,\"sources_neighbourhoods_floor\":158,\"sources_ravines_floor\":500,\"sources_heritage_properties_floor\":8000,\"sources_heritage_districts_floor\":20,\"sources_centreline_floor\":40000,\"coa_null_address_count_warn_max\":10,\"coa_ancient_hearing_count_warn_max\":5,\"coa_future_hearing_window_years\":2,\"coa_cost_gt_threshold_cad\":10000000,\"coa_cost_gt_threshold_warn_max\":80,\"coa_fsi_gt_threshold\":5,\"coa_gfa_over_lot_multiple\":3,\"coa_gfa_over_lot_warn_max\":45,\"inspection_ancient_dates_count_warn_max\":5,\"assert_data_bounds_recent_window_hours\":24,\"assert_data_bounds_ghost_last_seen_days\":30,\"assert_data_bounds_ancient_hearing_before_year\":2010,\"assert_data_bounds_ancient_inspection_before_year\":2020,\"assert_data_bounds_lot_size_max_sqm\":1000000,\"assert_data_bounds_max_height_max_m\":500,\"pipeline_timezone\":\"UTC\"},\"terminal\":\"checks_passed_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"db239ef52b7526a3093a16d6e00fb1c9a3946636\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"ghost_permits_30d: 207632\",\"parcel_lot_outliers: 8\"],\"audit_table\":{\"phase\":0,\"name\":\"Data Quality Checks\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"cost_outliers\",\"value\":0,\"threshold\":\"value_max 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_descriptions_24h\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_builders_24h\",\"value\":0,\"threshold\":\"pct <= 95\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_status_24h\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphaned_permit_trades\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphaned_permit_parcels\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"duplicate_pk_groups\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"permits_pre_permit_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimate_over_ceiling\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"modeled_gfa_over_ceiling\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ghost_permits_30d\",\"value\":207632,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimates_null_rate\",\"value\":39.7,\"threshold\":\"pct <= 80\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimates_min_tiers\",\"value\":5,\"threshold\":\"value_min 2\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphan_link_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_forward_link_sub085_pct\",\"value\":53.9,\"threshold\":\"pct <= 59\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_address\",\"value\":3,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_app_num\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"future_hearing\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ancient_hearing\",\"value\":1,\"threshold\":\"value_max 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_estimated_cost_gt10m\",\"value\":78,\"threshold\":\"value_max 80\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_app_fsi_gt5\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_maxbuild_gfa_gt3lot\",\"value\":31,\"threshold\":\"value_max 45\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_permits_pre_permit_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"address_points_count\",\"value\":525371,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"address_point_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcels_count\",\"value\":496536,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_lot_outliers\",\"value\":8,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\"value_min 400000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"building_height_outliers\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"neighbourhoods_count\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"neighbourhood_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ravines_count\",\"value\":854,\"threshold\":\"value_min 500\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"heritage_properties_count\",\"value\":8848,\"threshold\":\"value_min 8000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"heritage_districts_count\",\"value\":29,\"threshold\":\"value_min 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"toronto_centreline_count\",\"value\":47330,\"threshold\":\"value_min 40000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_no_legal_name\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_no_g_class\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_invalid_naics\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_orphaned_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_permit_num\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_stage_name\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_status\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_scraped_at\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphan_inspections\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"invalid_status\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"outstanding_with_date\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"completed_without_date\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"duplicate_stages\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"future_dates\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ancient_dates\",\"value\":0,\"threshold\":\"value_max 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"date_before_permit_year\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":13826,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"address_points\":[\"address_point_id\",\"retired_at\"],\"building_footprints\":[\"max_height_m\"],\"coa_applications\":[\"address\",\"application_number\",\"coa_fsi\",\"estimated_cost\",\"hearing_date\",\"linked_confidence\",\"linked_permit_num\",\"lot_size_sqm\",\"max_buildable_gfa_sqm\"],\"cost_estimates\":[\"cost_tier\",\"estimated_cost\",\"modeled_gfa_sqm\",\"permit_num\"],\"entities\":[\"id\"],\"heritage_districts\":[],\"heritage_properties\":[],\"neighbourhoods\":[\"neighbourhood_id\"],\"parcels\":[\"lot_size_sqm\",\"parcel_id\"],\"permit_inspections\":[\"inspection_date\",\"permit_num\",\"scraped_at\",\"stage_name\",\"status\"],\"permit_parcels\":[\"permit_num\",\"revision_num\"],\"permit_trades\":[\"permit_num\",\"revision_num\"],\"permits\":[\"builder_name\",\"description\",\"est_const_cost\",\"last_seen_at\",\"lifecycle_phase\",\"permit_num\",\"permit_type\",\"revision_num\",\"status\"],\"ravines\":[],\"toronto_centreline\":[],\"wsib_registry\":[\"legal_name\",\"linked_entity_id\",\"naics_code\",\"predominant_class\",\"subclass\"]},\"writes\":{}}\n\n[assert_data_bounds] completed in 13.8s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_data_bounds]\",\"msg\":\"[assert_data_bounds] target: assert_data_bounds (descriptor.database) → database=postgres user=postgres migrations=268 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_data_bounds]\",\"msg\":\"=== CQA Tier 2: Data Bounds Validation ===\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"cost_outlier_ceiling_cad\":2000000000,\"desc_null_rate_warn_pct\":5,\"builder_null_rate_warn_pct\":95,\"cost_est_null_rate_warn_pct\":80,\"cost_est_min_tiers\":2,\"coa_forward_link_sub085_warn_pct\":59,\"cost_est_legacy_cost_ceiling_cad\":50000000,\"cost_est_legacy_gfa_ceiling_sqm\":50000,\"cost_outlier_count_warn_max\":20,\"sources_address_points_floor\":500000,\"sources_parcels_floor\":460000,\"sources_building_footprints_floor\":400000,\"sources_neighbourhoods_floor\":158,\"sources_ravines_floor\":500,\"sources_heritage_properties_floor\":8000,\"sources_heritage_districts_floor\":20,\"sources_centreline_floor\":40000,\"coa_null_address_count_warn_max\":10,\"coa_ancient_hearing_count_warn_max\":5,\"coa_future_hearing_window_years\":2,\"coa_cost_gt_threshold_cad\":10000000,\"coa_cost_gt_threshold_warn_max\":80,\"coa_fsi_gt_threshold\":5,\"coa_gfa_over_lot_multiple\":3,\"coa_gfa_over_lot_warn_max\":45,\"inspection_ancient_dates_count_warn_max\":5,\"assert_data_bounds_recent_window_hours\":24,\"assert_data_bounds_ghost_last_seen_days\":30,\"assert_data_bounds_ancient_hearing_before_year\":2010,\"assert_data_bounds_ancient_inspection_before_year\":2020,\"assert_data_bounds_lot_size_max_sqm\":1000000,\"assert_data_bounds_max_height_max_m\":500,\"pipeline_timezone\":\"UTC\"},\"terminal\":\"checks_passed_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"ghost_permits_30d: 207632\",\"parcel_lot_outliers: 8\"],\"audit_table\":{\"phase\":0,\"name\":\"Data Quality Checks\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"cost_outliers\",\"value\":0,\"threshold\":\"value_max 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_descriptions_24h\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_builders_24h\",\"value\":0,\"threshold\":\"pct <= 95\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_status_24h\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphaned_permit_trades\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphaned_permit_parcels\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"duplicate_pk_groups\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"permits_pre_permit_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimate_over_ceiling\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"modeled_gfa_over_ceiling\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ghost_permits_30d\",\"value\":207632,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimates_null_rate\",\"value\":39.7,\"threshold\":\"pct <= 80\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimates_min_tiers\",\"value\":5,\"threshold\":\"value_min 2\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphan_link_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_forward_link_sub085_pct\",\"value\":53.9,\"threshold\":\"pct <= 59\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_address\",\"value\":3,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_app_num\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"future_hearing\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ancient_hearing\",\"value\":1,\"threshold\":\"value_max 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_estimated_cost_gt10m\",\"value\":78,\"threshold\":\"value_max 80\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_app_fsi_gt5\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_maxbuild_gfa_gt3lot\",\"value\":32,\"threshold\":\"value_max 45\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_permits_pre_permit_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"address_points_count\",\"value\":525371,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"address_point_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcels_count\",\"value\":496536,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_lot_outliers\",\"value\":8,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\"value_min 400000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"building_height_outliers\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"neighbourhoods_count\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"neighbourhood_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ravines_count\",\"value\":854,\"threshold\":\"value_min 500\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"heritage_properties_count\",\"value\":8848,\"threshold\":\"value_min 8000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"heritage_districts_count\",\"value\":29,\"threshold\":\"value_min 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"toronto_centreline_count\",\"value\":47331,\"threshold\":\"value_min 40000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_no_legal_name\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_no_g_class\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_invalid_naics\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_orphaned_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_permit_num\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_stage_name\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_status\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_scraped_at\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphan_inspections\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"invalid_status\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"outstanding_with_date\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"completed_without_date\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"duplicate_stages\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"future_dates\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ancient_dates\",\"value\":0,\"threshold\":\"value_max 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"date_before_permit_year\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1515,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"address_points\":[\"address_point_id\",\"retired_at\"],\"building_footprints\":[\"max_height_m\"],\"coa_applications\":[\"address\",\"application_number\",\"coa_fsi\",\"estimated_cost\",\"hearing_date\",\"linked_confidence\",\"linked_permit_num\",\"lot_size_sqm\",\"max_buildable_gfa_sqm\"],\"cost_estimates\":[\"cost_tier\",\"estimated_cost\",\"modeled_gfa_sqm\",\"permit_num\"],\"entities\":[\"id\"],\"heritage_districts\":[],\"heritage_properties\":[],\"neighbourhoods\":[\"neighbourhood_id\"],\"parcels\":[\"lot_size_sqm\",\"parcel_id\"],\"permit_inspections\":[\"inspection_date\",\"permit_num\",\"scraped_at\",\"stage_name\",\"status\"],\"permit_parcels\":[\"permit_num\",\"revision_num\"],\"permit_trades\":[\"permit_num\",\"revision_num\"],\"permits\":[\"builder_name\",\"description\",\"est_const_cost\",\"last_seen_at\",\"lifecycle_phase\",\"permit_num\",\"permit_type\",\"revision_num\",\"status\"],\"ravines\":[],\"toronto_centreline\":[],\"wsib_registry\":[\"legal_name\",\"linked_entity_id\",\"naics_code\",\"predominant_class\",\"subclass\"]},\"writes\":{}}\n\n[assert_data_bounds] completed in 1.5s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 3605,
+      "id": 3858,
       "pipeline": "assert_data_bounds",
       "status": "completed_with_warnings",
-      "started_at": "2026-10-20T13:43:36.499Z",
-      "completed_at": "2026-10-20T13:43:50.312Z",
-      "duration_ms": 13827,
+      "started_at": "2026-10-21T15:30:43.719Z",
+      "completed_at": "2026-10-21T15:30:45.220Z",
+      "duration_ms": 1515,
       "records_total": null,
       "records_new": null,
       "records_updated": null,
@@ -629,7 +629,7 @@
           "assert_data_bounds_ancient_inspection_before_year": 2020
         },
         "errors": [],
-        "code_sha": "db239ef52b7526a3093a16d6e00fb1c9a3946636",
+        "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
         "terminal": "checks_passed_with_warnings",
         "warnings": [
           "ghost_permits_30d: 207632",
@@ -808,7 +808,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 31,
+              "value": 32,
               "metric": "coa_maxbuild_gfa_gt3lot",
               "source": "check",
               "status": "PASS",
@@ -920,7 +920,7 @@
               "threshold": "value_min 20"
             },
             {
-              "value": 47330,
+              "value": 47331,
               "metric": "toronto_centreline_count",
               "source": "check",
               "status": "PASS",
@@ -1062,7 +1062,7 @@
               "threshold": null
             },
             {
-              "value": 13826,
+              "value": 1515,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -1079,7 +1079,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 3604,
+  "pipeline_runs_max_id_before": 3857,
   "table_state": [],
   "tables_source": "trace",
   "table_row_ceiling": 100000,
@@ -1287,7 +1287,7 @@
               "source": "check",
               "status": "PASS",
               "threshold": "value_max 45",
-              "value": 31
+              "value": 32
             },
             {
               "metric": "coa_permits_pre_permit_count",
@@ -1399,7 +1399,7 @@
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 40000",
-              "value": 47330
+              "value": 47331
             },
             {
               "metric": "wsib_no_legal_name",
@@ -1845,7 +1845,7 @@
                 "source": "check",
                 "status": "PASS",
                 "threshold": "value_max 45",
-                "value": 31
+                "value": 32
               },
               {
                 "metric": "coa_permits_pre_permit_count",
@@ -1957,7 +1957,7 @@
                 "source": "check",
                 "status": "PASS",
                 "threshold": "value_min 40000",
-                "value": 47330
+                "value": 47331
               },
               {
                 "metric": "wsib_no_legal_name",
@@ -2157,15 +2157,15 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3605,
+      "id": 3858,
       "recorded_by": "step"
     }
   ],
-  "source_fingerprint": "6fbe6426c2e81b2fd34c6e35e103188f52212e2fb9bdc1bd94d0bfad31013d93",
+  "source_fingerprint": "cd5f7b23fc438550fd64fba6572aef26ba19383a4e4ac65b0d92ba2f194bac11",
   "fingerprint_files": [
     "scripts/lib/compute/assert-data-bounds.js",
     "scripts/quality/assert-data-bounds.descriptor.json",
     "scripts/quality/assert-data-bounds.js"
   ],
-  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
+  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
 }

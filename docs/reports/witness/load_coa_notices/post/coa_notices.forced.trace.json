@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-coa-notices.js",
   "chain": "coa_notices",
-  "source_fingerprint": "a078f18ce559c10d387af9e5dbc8da05600c9dc6eb91ad813d5a9f6d37147d45",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "ef11487b727566d08300153d76a8522b7915d8ac50284fac7b395349525ff542",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
     "calls": 33,
     "distinct": 21,
     "utility": 11,
-    "tracer_self_ms": 23.608,
-    "wall_ms": 284279
+    "tracer_self_ms": 59.423,
+    "wall_ms": 296561
   },
   "statements": [
     {
@@ -133,7 +133,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 788,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -372,7 +372,7 @@
   ],
   "transactions": [
     {
-      "client": "66642:3",
+      "client": "93619:3",
       "write_fingerprints": [
         "21fa2e43cda219b6",
         "6ef1895c202f8b18",

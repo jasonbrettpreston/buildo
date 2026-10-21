@@ -48,7 +48,7 @@
   ],
   "read_this_way": [
     {
-      "what": "The publisher's vocabulary is DOMAIN DATA in compute, named here rather than made configurable: the characteristic labels (INCOME_CHARACTERISTICS, PCT_CHARACTERISTIC and every family / tenure / education / immigrant / minority / language row the pivot matches), `CONSTRUCTION_PERIODS`, `PERIOD_MAP` (the stored `period_of_construction` vocabulary), the format-2 id-row markers `'Neighbourhood Number'` / `'Neighbourhood ID'`, the suppression tokens `'...'` / `'x'` / `'F'` in `parseNumeric`, and the `Name (ID)` header regex in `parseColumnHeader`. The XLSX shape is hard-wired in the runner's `acquire.js parseXlsx`: sheet[0], header row 1, `includeEmpty`, the `''` fill and `_${n}` for null headers (the csv hard-wired-options precedent). A City relabel — renaming a characteristic row, the neighbourhood id column, or the id-row marker — makes this pivot match nothing and ZEROES a column silently, with no error and no check row: the only alarm is F2's planned `census_rows_matched` floor (N-D10). Read any surprising all-null census column as a publisher relabel first.",
+      "what": "The publisher's vocabulary is DOMAIN DATA in compute, named here rather than made configurable: the characteristic labels (INCOME_CHARACTERISTICS, PCT_CHARACTERISTIC and every family / tenure / education / immigrant / minority / language row the pivot matches), `CONSTRUCTION_PERIODS`, `PERIOD_MAP` (the stored `period_of_construction` vocabulary), the format-2 id-row markers `'Neighbourhood Number'` / `'Neighbourhood ID'`, the suppression tokens `'...'` / `'x'` / `'F'` in `parseNumeric`, and the `Name (ID)` header regex in `parseColumnHeader`. The XLSX shape is hard-wired in the runner's `acquire.js parseXlsx`: sheet[0], header row 1, `includeEmpty`, the `''` fill and `_${n}` for null headers (the csv hard-wired-options precedent). A City relabel — renaming a characteristic row, the neighbourhood id column, or the id-row marker — makes this pivot match nothing and ZEROES a column silently, with no error and no check row: the only alarm is F2's planned `census_rows_matched` floor (N-D10). Read any surprising all-null census column as a publisher relabel first. The section anchors are five label prefixes the pivot matches with `startsWith` (N-D22): 'Total - Marital status for the total population aged 15 years and over', 'Total - Highest certificate, diploma or degree for the population aged', 'Total - Immigrant status and period of immigration for the population in private households', 'Total - Visible minority for the population in private households', 'Total - Knowledge of official languages for the'; a City rewording of a section's \"Total - …\" header zeroes that section's columns the same silent way. Before the education match the pivot normalises the label's typographic apostrophe U+2019 (’) to U+0027 (') so the 2021 label \"Bachelor’s degree or higher\" matches the 2016 spelling (N-D21); no other label is normalised.",
       "measured": {
         "value": {
           "characteristic_labels": "every row in buildLookup",
@@ -57,10 +57,12 @@
           "suppression_tokens": ["...", "x", "F"],
           "id_row_markers": ["Neighbourhood Number", "Neighbourhood ID"],
           "sheet_index": 0,
-          "header_row": 1
+          "header_row": 1,
+          "section_anchor_prefixes": ["Total - Marital status for the total population aged 15 years and over", "Total - Highest certificate, diploma or degree for the population aged", "Total - Immigrant status and period of immigration for the population in private households", "Total - Visible minority for the population in private households", "Total - Knowledge of official languages for the"],
+          "apostrophe_normalisation": { "from": "’", "to": "'", "label": "Bachelor's degree or higher" }
         },
-        "date": "2026-09-28",
-        "query": "grep -n \"CONSTRUCTION_PERIODS\\|PERIOD_MAP\\|Neighbourhood Number\\|Neighbourhood ID\" scripts/lib/compute/load-neighbourhoods.js scripts/lib/step/acquire.js"
+        "date": "2026-10-21",
+        "query": "grep -n \"CONSTRUCTION_PERIODS\\|PERIOD_MAP\\|Neighbourhood Number\\|Neighbourhood ID\" scripts/lib/compute/load-neighbourhoods.js scripts/lib/step/acquire.js ; grep -n \"startsWith('Total - \\|replace(/’/g\" scripts/lib/compute/load-neighbourhoods.js"
       }
     }
   ],

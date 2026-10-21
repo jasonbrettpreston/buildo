@@ -469,6 +469,16 @@ function libStagedSelectsAll(stagedPaths) {
  * @param {string[]} stagedPaths repo-relative, forward slashes
  * @param {{ exists: (relPath: string) => boolean }} io
  */
+/**
+ * Which targets are judged as-converted (setAsConverted). `--step` and `--staged` (own code staged) as before; `--all`
+ * none, EXCEPT the E1 generator run (`--all --v3-json`), which uses the strict view so the V3 ratchet counts only steps
+ * converted or passing as-converted (Spec 124 R-IK, operator CHAT-37 2026-10-21). PURE.
+ */
+export function overlayRowsFor(targets, opts) {
+  if (opts.all) return opts.v3Json ? targets : [];
+  return targets.filter((r) => opts.step || r.ownCodeStaged);
+}
+
 export function stagedRowsFor(registry, stagedPaths, { exists }) {
   const staged = new Set(Array.isArray(stagedPaths) ? stagedPaths : []);
   if (staged.size === 0) return [];
@@ -6306,7 +6316,7 @@ async function main() {
   // Scope (panel fold M2): `--step=<slug>`, and a `--staged` row whose OWN code is staged —
   // never `--all` (pre-push, the cutover's scorecard regen) and never a row selected only
   // because scripts/lib/step/** is staged, so one in-flight step cannot block another's commit.
-  const overlayRows = opts.all ? [] : targets.filter((r) => opts.step || r.ownCodeStaged);
+  const overlayRows = overlayRowsFor(targets, opts);
   setAsConverted(overlayRows.filter((r) => r.stage === 'pending' && existsSync(path.join(REPO_ROOT, harness.descriptorPathFor(r.relFile)))).map((r) => r.relFile), REPO_ROOT);
   const puritySites = await scanPurity({ repoRoot: REPO_ROOT });
   const invariantResults = fastInvariants(targets, converted, pending, puritySites);

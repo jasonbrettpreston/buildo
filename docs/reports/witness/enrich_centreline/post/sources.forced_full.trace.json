@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "c390361b8ef41cd8fbc4226421798f176d684ba69024c237f49fa80ab05fde12",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "062337f9eeceb433ab70900f7dee8b139783002877fef53d6351f6c0d5571e42",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
     "calls": 53,
     "distinct": 35,
     "utility": 14,
-    "tracer_self_ms": 1.791,
-    "wall_ms": 105491
+    "tracer_self_ms": 2.125,
+    "wall_ms": 115837
   },
   "statements": [
     {
@@ -188,7 +188,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 788,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -372,7 +372,7 @@
       "fingerprint": "ad05138ec9a364ad",
       "kind": "read",
       "count": 1,
-      "rowCount": 480480,
+      "rowCount": 480482,
       "reads": {
         "parcels": [
           "address_number",
@@ -527,7 +527,7 @@
   ],
   "transactions": [
     {
-      "client": "59096:3",
+      "client": "30764:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

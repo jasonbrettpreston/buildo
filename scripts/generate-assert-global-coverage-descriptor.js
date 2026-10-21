@@ -274,6 +274,12 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
         { kind: 'spec', ref: 'docs/specs/01-pipeline/49_data_completeness_profiling.md' },
       ),
     };
+    // AGC-D8 (REFREEZE-BUNDLE-1 item (4); Spec 124 §2 Rule 4): a def's declared scoping guard travels with its check
+    // (`expect` is an OPEN object), and its rule is written in the check's why.
+    if (def.guard) {
+      check.expect.guard = { ...def.guard };
+      check.why.text += ` Scoped by the declared guard \`${def.guard.name}\` (IL-11/IL-12 ruling, AGC-D8): ${def.guard.scope}; the guard is \`${def.guard.sql}\`.`;
+    }
     if (bound.limit_from_config) check.limit_from_config = bound.limit_from_config;
     if (bound.warn_limit) check.warn_limit = bound.warn_limit;
     if (bound.warn_limit_from_config) check.warn_limit_from_config = bound.warn_limit_from_config;
@@ -371,7 +377,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
           'WD-1 (this batch\'s own write-class audit) ruled verdict_only RETIRED and structurally undeclarable under the ASSERT x-profile — outputs/recovery/counters forced "none". Matches assert_schema\'s own precedent deviation.',
           { kind: 'file', ref: '.cursor/wf5_wd1_write_class_audit_active_task.md' },
         ),
-        adjudicated_by: 'WD-1 / Spec 122 §1.10 required-field profile',
+        adjudicated_by: 'WD-1 / Spec 122 §1.10 required-field profile [register: Spec 124 R-X (existing rule); V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-11',
       },
       {
@@ -380,7 +386,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
           'All 20 logic_variables here ARE verdict-affecting and DO carry a safe seed default (the exact pre-conversion literal), so "fail" is the correct posture per Rule 3 — recorded here only because the config object forbids a per-variable why field (additionalProperties:false), mirroring assert_schema\'s own precedent deviation entry for the same reason.',
           { kind: 'file', ref: 'scripts/seeds/logic_variables.json' },
         ),
-        adjudicated_by: 'Spec 124 §2 Rule 3',
+        adjudicated_by: 'Spec 124 §2 Rule 3 [register: Spec 124 R-G (existing rule); V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-11',
       },
       {
@@ -389,7 +395,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
           'The checks[] config.logic_variables[] shape validates per-variable min/max only, not cross-field ordering. Reproducing the exact startup-halt behaviour needs a runner-level cross-field config validator this WF does not build (out of scope: no step.schema.json edit authorized). Accepted, documented gap: an operator who sets warn >= pass for one of these 3 pairs no longer halts the step at startup; the resulting checks would render nonsensically (a WARN unreachable or reached before PASS) but would NOT silently mis-score — visible as a plausibility anomaly on inspection, not a corrupted verdict.',
           { kind: 'spec', ref: 'docs/specs/01-pipeline/124_step_standard_policy.md' },
         ),
-        adjudicated_by: 'commit 7 scope constraint (no step.schema.json edit authorized)',
+        adjudicated_by: 'commit 7 scope constraint (no step.schema.json edit authorized) [register: Spec 124 R-HV; V3 condition-9 rulings 2026-10-20]',
         date: '2026-09-11',
       },
     ],

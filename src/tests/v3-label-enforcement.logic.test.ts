@@ -21,7 +21,7 @@ type L = {
   cutoverFindings: (rows: Row[], labels: Map<string, string>, r: unknown) => string[];
   hardGateFindings: (a: { enabled: boolean; rows: Row[]; labels: Map<string, string>; registry: Row[]; exceptions?: unknown[] }) => { findings: string[]; wouldFail: string[] };
   hardGateEnabled: () => boolean;
-  mergeRatchet: (existing: unknown, labels: Map<string, { standard: string; stage: string }>, today: string) => { v3: string[]; converted_baseline: string[]; $comment: string };
+  mergeRatchet: (existing: unknown, labels: Map<string, { standard: string; stage: string }>, today: string, retire?: string[]) => { v3: string[]; converted_baseline: string[]; $comment: string };
   loadRatchet: () => { v3: string[]; converted_baseline: string[]; $comment: string } | null;
   HARD_GATE_EXCEPTIONS: Array<{ slug: string; expires_when_converted: string; cites: string }>;
   HARD_GATE_VARIABLE: string;
@@ -84,6 +84,31 @@ describe('R-EY E1 — the V3 ratchet only grows, through its generator', () => {
     const next = m.mergeRatchet({ v3: ['z'], converted_baseline: ['a'] }, new Map([['z', { standard: 'V2', stage: 'converted' }], ['q', { standard: 'V3', stage: 'converted' }]]), '2026-10-21');
     expect(next.v3).toEqual(['q', 'z']);
     expect(next.converted_baseline).toEqual(['a']);
+  });
+
+  // Spec 124 R-IK (operator CHAT-37, 2026-10-21): the V3 label counts only steps converted or passing as-converted.
+  it('R-IK: mergeRatchet retires a slug only when the run read it and it does not read V3 (strict view)', () => {
+    const existing = { v3: ['a', 'x'], converted_baseline: ['a'] };
+    const labels = new Map([['a', { standard: 'V3', stage: 'converted' }], ['x', { standard: 'V2', stage: 'pending' }]]);
+    expect(m.mergeRatchet(existing, labels, '2026-10-21', ['x']).v3).toEqual(['a']);
+    expect(() => m.mergeRatchet(existing, labels, '2026-10-21', ['a'])).toThrow(/reads V3/);
+    expect(() => m.mergeRatchet(existing, labels, '2026-10-21', ['ghost'])).toThrow(/not read/);
+    expect(m.mergeRatchet(existing, labels, '2026-10-21').v3).toEqual(['a', 'x']);
+  });
+
+  it('R-IK: the E1 generator run (--all --v3-json) judges pending steps as-converted; plain --all does not', async () => {
+    const sv = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs')).href)) as unknown as {
+      overlayRowsFor: (targets: Array<{ slug: string; stage: string }>, o: { all: boolean; step: string | null; v3Json: string | null }) => unknown[];
+    };
+    const targets = [{ slug: 'p', stage: 'pending' }, { slug: 'c', stage: 'converted' }];
+    expect(sv.overlayRowsFor(targets, { all: true, step: null, v3Json: null })).toEqual([]);
+    expect(sv.overlayRowsFor(targets, { all: true, step: null, v3Json: '/f.json' })).toEqual(targets);
+  });
+
+  it('R-IK: the committed ratchet lists no step that reads V2 as-converted (load_coa_notices retired, V3 = 27)', () => {
+    const r = m.loadRatchet();
+    expect(r!.v3).not.toContain('load_coa_notices');
+    expect(r!.v3).toHaveLength(27);
   });
 
   it('the committed ratchet file is in its generator\'s shape (comment, sorted, baseline = converted[] at R-EY)', () => {
@@ -256,5 +281,30 @@ describe('V3 condition-9 rulings — rows R-HN…R-IF govern the entries the ope
     expect(s123.slice(at, s123.indexOf('### 3.2', at))).toContain('AMENDED 2026-10-20 (Spec 124 R-HR');
     const cct = read('docs/reports/defect-ledger.md').split('\n').find((l) => l.startsWith('| CCT-D10 |'))!;
     expect(cct).toContain('| CLOSED · declared deviation (R-HY) |');
+  });
+});
+
+// rule-map: R-II — REFREEZE-BUNDLE-1 item (6) (124a:457), applied on night 1 (R-II, 124a §B26): every `apply:
+// "bundled-night"` citation in docs/reports/2026-10-20-v3-condition9-backfill-citations.json is appended, exactly once,
+// to its deviation's `adjudicated_by`, and the deviation is still the one the record names (index and `from`). s1-4
+// was applied by the R-ID patch itself (its `from` drops the counters clause), so its `key` is the new `from`.
+describe('REFREEZE-BUNDLE-1 item (6), night 1 — the 143 bundled-night citations are applied', () => {
+  type Cite = { ref: string; file: string; key: string; deviation_index: number; apply: string; append_text: string };
+  const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+  const record = JSON.parse(read('docs/reports/2026-10-20-v3-condition9-backfill-citations.json')) as { entries: Cite[] };
+  const night = record.entries.filter((e) => e.apply === 'bundled-night');
+
+  it('143 entries, each naming its deviation by index and from, and each carrying its append_text exactly once', () => {
+    expect(night).toHaveLength(143);
+    for (const e of night) {
+      const dev = (JSON.parse(read(e.file)) as { deviations: Array<{ from: string; adjudicated_by: string }> }).deviations[e.deviation_index]!;
+      expect(dev.from, e.ref).toBe(e.key);
+      expect(dev.adjudicated_by.split(e.append_text).length - 1, `${e.ref} ${e.file} deviations[${e.deviation_index}]`).toBe(1);
+    }
+  });
+
+  it('s1-4 names the new from (the R-ID patch dropped the type-counter clause)', () => {
+    const s14 = night.find((e) => e.ref === 's1-4')!;
+    expect(s14.key).not.toMatch(/tier_1a_type_confirmed|tier_1a_type_tolerant/);
   });
 });

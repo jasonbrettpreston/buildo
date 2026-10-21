@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "1. y 3. ready",
+  "context": "Item 1 answers REFREEZE-WITNESS-Q (refreeze-night-1c stop): the orphan link_wsib witness trace docs/reports/witness/link_wsib/post/cohort-entities.trace.json (no golden capture, no recapture.json recipe) goes stale when item (6) appends link_wsib's citations; recommended option (A), approve drafted rule R-IJ. Item 3 says the Etobicoke York files are uploaded.",
+  "decisions": [
+    {"id": "CHAT-35", "subject": "R-IJ: an orphan witness trace is retired when superseded (REFREEZE-WITNESS-Q option A)", "decision": "approve", "recommendation": "A post witness trace with no golden capture and no recapture.json entry is an orphan; it is deleted by literal path when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints (proved by the printed subset check), otherwise it gets a recipe and is retaken. First application: link_wsib cohort-entities, whose 39 statement fingerprints equal sources-full-forced-5's."}
+  ]
+}
