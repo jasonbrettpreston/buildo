@@ -319,10 +319,24 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     expect(rows.find((l) => l.startsWith('| R-HA |'))).toContain('`2026-10-20-chat-night-p4c#DERIVED-WITNESS`');
   });
 
+  it('the steps-rulings-1 logs: 5 V3 page answers (legacy-row-or-query-retired amended by its note) and the chat CHAT-15…CHAT-20, CHAT-22 (CHAT-14 and CHAT-21 belong to another lane)', () => {
+    const A = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
+    const page = byStem.get('2026-10-20-v3-exception-rulings') as { source: { url: string }; decisions: Array<{ id: string; decision: string }>; amendments: Record<string, { operator_quote: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(page.source.url).toBe('https://claude.ai/artifact/KBCVRNvhQWd1powYowmZek');
+    expect(page.decisions.map((d) => d.decision).sort()).toEqual(['approve', 'approve', 'approve', 'approve', 'change']);
+    expect(page.amendments['legacy-row-or-query-retired']!.operator_quote).toBe('Approve with the evidence condition: the entry must cite a consumer grep (zero readers) or show the counted mechanism is gone.');
+    expect(Object.values(page.routing).map((v) => [v.register, v.row])).toEqual([[A, 'R-HN'], [A, 'R-HO'], [A, 'R-HP'], [A, 'R-HQ'], [A, 'R-HR']]);
+    const chat = byStem.get('2026-10-20-chat-batch-c-steps') as { decisions: Array<{ id: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(chat.decisions.map((d) => d.id)).toEqual(['CHAT-15', 'CHAT-16', 'CHAT-17', 'CHAT-18', 'CHAT-19', 'CHAT-20', 'CHAT-22']);
+    expect(Object.fromEntries(Object.entries(chat.routing).map(([k, v]) => [k, v.row ?? v.register]))).toEqual({ 'CHAT-15': 'R-IA', 'CHAT-16': 'R-IB', 'CHAT-17': 'R-IC', 'CHAT-18': 'R-ID', 'CHAT-19': 'R-IE', 'CHAT-20': 'R-IF', 'CHAT-22': A });
+    const rows = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n').filter((l) => l.includes('`2026-10-20-chat-batch-c-steps#CHAT-22`') && /^\| R-H[S-Z] \|/.test(l));
+    expect(rows).toHaveLength(8);
+  });
+
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(26);
+    expect(r.decisions).toBe(38);
     expect(r.owed).toBe(0);
   });
 });

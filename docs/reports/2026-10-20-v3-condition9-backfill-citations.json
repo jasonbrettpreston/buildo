@@ -1,5 +1,5 @@
 {
-  "$comment": "V3 condition-9 backfill (lane backfill-9, operator y 2026-10-20; Spec 124 R-EY (9)). One object per exception entry that cited no register rule id at 1d16f155. class a = an existing register row governs it; b = a historical operator decision, recorded as the register row rule_id (124a §B21/§B22; §B20/§B21 on wf2/v3-backfill-9, renumbered at wf2/p4-integrate-12); c = no decision found (not cited; listed for the operator). apply: now = cited in this lane (grandfathered.json, defect-ledger.md, pending-step descriptors); bundled-night = a converted step descriptor deviations[] entry: editing it changes source_fingerprint (golden-fingerprint.infra), so it is applied on the bundled RE-FREEZE night (PIN REFREEZE-BUNDLE-1 item (6); (5) on wf2/v3-backfill-9, PIN FP-RECAPTURE) by appending append_text to deviations[deviation_index].adjudicated_by (assert_global_coverage, assert_data_bounds and assert_parcel_sanity descriptors through their generators). staleness-disposition.json spec_version.not_executed (19 entries, R-BH) is cited in this lane and not listed here. stale (when present): stale text the same night fixes: retire (a deviation whose defect is closed), correct (a ruling the entry still calls owed) or note (a cited source that does not exist). Evidence paths under docs/reports/ marked verbatim copy of untracked are tracked copies of .cursor files (operator y 2026-10-20); line numbers are unchanged.",
+  "$comment": "V3 condition-9 backfill (lane backfill-9, operator y 2026-10-20; Spec 124 R-EY (9)). One object per exception entry that cited no register rule id at 1d16f155. class a = an existing register row governs it; b = a historical operator decision, recorded as the register row rule_id (124a §B21/§B22; §B20/§B21 on wf2/v3-backfill-9, renumbered at wf2/p4-integrate-12); c = no decision found (not cited; listed for the operator). apply: now = cited in this lane (grandfathered.json, defect-ledger.md, pending-step descriptors); bundled-night = a converted step descriptor deviations[] entry: editing it changes source_fingerprint (golden-fingerprint.infra), so it is applied on the bundled RE-FREEZE night (PIN REFREEZE-BUNDLE-1 item (6); (5) on wf2/v3-backfill-9, PIN FP-RECAPTURE) by appending append_text to deviations[deviation_index].adjudicated_by (assert_global_coverage, assert_data_bounds and assert_parcel_sanity descriptors through their generators). staleness-disposition.json spec_version.not_executed (19 entries, R-BH) is cited in this lane and not listed here. stale (when present): stale text the same night fixes: retire (a deviation whose defect is closed), correct (a ruling the entry still calls owed) or note (a cited source that does not exist). Evidence paths under docs/reports/ marked verbatim copy of untracked are tracked copies of .cursor files (operator y 2026-10-20); line numbers are unchanged. class d (added 2026-10-20, lane steps-rulings-1) = a class-c entry the operator then ruled (V3 Exception Rulings page and chat CHAT-15…CHAT-22; `decision_log` names the decision, `rule_id` the 124a row R-HN…R-IF); refs s1-* are the CoA cutover rulings' own entries (bundled night). N-D1 (g3-45) stays class c: RULING-OWED. A pending step with no POST capture (assert_coa_freshness, compute_coa_cost_estimates) is cited now; coa and load_coa_notices have POST captures and wait for the night.",
   "generated_at": "2026-10-20",
   "base": "1d16f155",
   "entries": [
@@ -81,10 +81,10 @@
       "file": "scripts/quality/assert-schema.descriptor.json",
       "key": "the draft descriptor's database.min_migration: 241",
       "deviation_index": 2,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HU",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -92,9 +92,10 @@
           "quote": "5. `database.min_migration`: 241 has no basis (it is `fix_lead_id_trigger_column_scope`; the only table touched is `pipeline_runs`, mig 033). Set to `33` with a `why`. (Dissolves the DB seat's cloud a"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot1 plan (tracked + archive) Fold A/B/D; 2026-08-23 + 2026-08-25 pilot1 assessments; defect-ledger AS-D*; git log --all 2026-08-22..26 bodies (f284d52b Fold D \"grounder-adjudicated\"); register grep min_migration/database. (0 hits); ~/Buildo/.cursor grep.",
-      "note": "Fold A correction 5 / Fold B / Fold D OUTPUT-panel grounder are agent rulings; pilot 1 plan has no operator authorization line (status \"awaiting operator emits ruling\")."
+      "note": "Fold A correction 5 / Fold B / Fold D OUTPUT-panel grounder are agent rulings; pilot 1 plan has no operator authorization line (status \"awaiting operator emits ruling\").",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-4",
@@ -104,10 +105,10 @@
       "file": "scripts/quality/assert-schema.descriptor.json",
       "key": "the draft descriptor's two distinct failed terminals, fail_check (schema_drift_detected) and fail_error (fetch_error)",
       "deviation_index": 3,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HU",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -115,9 +116,10 @@
           "quote": "7. `terminals`: `fail_check` and `fail_error` are indistinguishable in code (one throw at `:585` serves both). **Fold B ruling: merge at commit 7** (drop `fetch_error`, carry its `why.liveness externa"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot1 plan Fold B item 7; pilot1 assessment (no fetch_error/terminal ruling; §2.3 operator adjudication covers fences only); defect-ledger; git log; register grep terminals (R-P, R-BU, R-DE(iii): none rules on merging indistinguishable failed terminals).",
-      "note": "Fold B ruling 7 is a plan-panel ruling; no operator ratification of the terminal merge found."
+      "note": "Fold B ruling 7 is a plan-panel ruling; no operator ratification of the terminal merge found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-5",
@@ -464,10 +466,10 @@
       "file": "scripts/link-wsib.descriptor.json",
       "key": "Spec 122 §1.2 checks[].limit's closed form set (pct <= only)",
       "deviation_index": 3,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HV",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HV; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -475,9 +477,10 @@
           "quote": "| **T2** | ⛔ **`5`** — `linkRate >= 5 ? 'PASS' : 'WARN'` (row) and `linkRate < 5 ? 'WARN' : 'PASS'` (table verdict) | ⛔ **TUNABLE + VERDICT-BOUND — 0 registered. THE P4 violation of this step**, parallel to `link_massing`'s T4 | `link_wsib_link_rate_warn_pct` "
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot4 plan (untracked) + assessment (only :280 \"verdict.js's new form, this pilot\"); Spec 122/122a/124/124a grep \"pct >=\"/PCT_RE (0 hits); register rows R-N/R-AD (denominator / warn_limit, not the form); git log.",
-      "note": "Plan T2 makes the floor a config-bound check but never states the pct >= grammar extension; \"this pilot, commit 7\" is self-adjudication."
+      "note": "Plan T2 makes the floor a config-bound check but never states the pct >= grammar extension; \"this pilot, commit 7\" is self-adjudication.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-17",
@@ -487,10 +490,10 @@
       "file": "scripts/link-wsib.descriptor.json",
       "key": "the pre-conversion script's dry-run simulation (5de41cc1: read-only COUNT queries mirroring tier1/tier2/tier3's wsib_registry match predicate only)",
       "deviation_index": 4,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -498,9 +501,10 @@
           "quote": "- **WF3-D (LW-D15, CRITICAL):** `--dry-run` no longer suppressed writes for any converted step. Threaded `dryRun` through both phase runners to gate every retraction/write statement, plus new read-onl"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot4 plan (untracked) \"WF3|directive|operator\"; pilot4 assessment §10 + \"directive\" (only A-4 at :173); defect-ledger LW-D15 (:65); commit bc49a0f5 body; register R-AV/R-AZ (ENRICHER dry-run only).",
-      "note": "\"operator WF3-D directive\" not found anywhere; commit bc49a0f5 cites Spec 124 §7 rung (d) only."
+      "note": "\"operator WF3-D directive\" not found anywhere; commit bc49a0f5 cites Spec 124 §7 rung (d) only.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g1-18",
@@ -603,10 +607,10 @@
       "file": "scripts/steps/_schema/grandfathered.json",
       "key": "link_parcels",
       "deviation_index": null,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HX",
+      "apply": "now",
+      "append_text": " [register: Spec 124 R-HX; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -622,9 +626,10 @@
           "quote": "* **A-3 — `guard_columns` vs the RUN_AT column.** **Ruling: option (2) — explicit `guard_columns: [is_primary, structure_type, match_type, confidence]` on E2 + the LG-9 validator rule (a run-clock-bound column may not be a guard column without a `why`); no `clock_columns` schema field.** **Reason:**"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "verify-12c: the entry is adjudicated \"Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch); LP-D10 widening self-adjudicated\" (pilot 7, plan status Planning, no operator authorization); pilot 3 (R-FL) decided only link_massing E1. Searched: grandfathered.json entry, pilot7 plan (~/Buildo/.cursor/pilot7_link_parcels_active_task.md:3 Planning), 2026-08-30 pilot7 assessment, git log --grep link_parcels, registry-truth plan O4 rows (row 7 is link_parcels re-check, not this DELETE)",
-      "note": "demoted from (b) at consolidation: verify-12c: the entry is adjudicated \"Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch); LP-D10 widening self-adjudicated\" (pilot 7, plan status Planning, no operator authorization); pilot 3 (R-FL) decided only link_massing E1. Searched: grandfathered.json entry, pilot7 plan (~/Buildo/.cursor/pilot7_link_parcels_active_task.md:3 Planning), 2026-08-30 pilot7 assessment, git log --grep link_parcels, registry-truth plan O4 rows (row 7 is link_parcels re-check, not this DELETE)"
+      "note": "demoted from (b) at consolidation: verify-12c: the entry is adjudicated \"Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch); LP-D10 widening self-adjudicated\" (pilot 7, plan status Planning, no operator authorization); pilot 3 (R-FL) decided only link_massing E1. Searched: grandfathered.json entry, pilot7 plan (~/Buildo/.cursor/pilot7_link_parcels_active_task.md:3 Planning), 2026-08-30 pilot7 assessment, git log --grep link_parcels, registry-truth plan O4 rows (row 7 is link_parcels re-check, not this DELETE)",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-22",
@@ -634,10 +639,10 @@
       "file": "scripts/link-parcels.descriptor.json",
       "key": "Spec 123 §3.1 / Known Failure Mode #3 — a DEFECT is PINNED at conversion and fixed after",
       "deviation_index": 0,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -653,9 +658,10 @@
           "quote": "§11 note: this pilot's central compliance judgment is that THE FIX is a genuine, scoped compute-rung (e)"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot 7 plan: no operator words survive; the plan file still reads Planning (\"Do you authorize ...? (y/n)\"), only the assessment calls a lost .cursor/active_task.md copy \"authorized\"",
-      "note": "demoted from (b) at consolidation: pilot 7 plan: no operator words survive; the plan file still reads Planning (\"Do you authorize ...? (y/n)\"), only the assessment calls a lost .cursor/active_task.md copy \"authorized\""
+      "note": "demoted from (b) at consolidation: pilot 7 plan: no operator words survive; the plan file still reads Planning (\"Do you authorize ...? (y/n)\"), only the assessment calls a lost .cursor/active_task.md copy \"authorized\"",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g1-23",
@@ -665,10 +671,10 @@
       "file": "scripts/link-parcels.descriptor.json",
       "key": "the pre-conversion two disagreeing phase ternaries — :186 chainId==='sources'?6:9 vs :660 PIPELINE_CHAIN==='sources'?6:7",
       "deviation_index": 2,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HT",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HT; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -680,9 +686,10 @@
           "quote": "to unconditional), A-5 (`phase=7` for `permits`) all RULED within pre-authorization (orchestrator ruling, per"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot 7 plan: as g1-22",
-      "note": "demoted from (b) at consolidation: pilot 7 plan: as g1-22"
+      "note": "demoted from (b) at consolidation: pilot 7 plan: as g1-22",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-24",
@@ -692,10 +699,10 @@
       "file": "scripts/link-parcels.descriptor.json",
       "key": "inputs.reads.steps[] — whether to declare a compute_centroids seam",
       "deviation_index": 3,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HU",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -703,9 +710,10 @@
           "quote": "| G11 | `emitMeta` reads (`permits`, `parcels`, `address_points`, `parcel_address_points`) → writes (`permit_parcels` ONLY) | `:196-204`, `:675-683` | Unchanged — Finding 2 corrects the SPEC's prose, not this step's own accurate `emitMeta` declaration. **NEW s"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot7 plan (untracked; G11 at :181 says the opposite), pilot7 assessment, defect-ledger LP-D*, register grep centroid/seam/reads.steps; git log pilot 7.",
-      "note": "Fold C item 9 (Ground-truth grounder) is an agent correction made after the plan; no operator ratification found."
+      "note": "Fold C item 9 (Ground-truth grounder) is an agent correction made after the plan; no operator ratification found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-25",
@@ -715,15 +723,16 @@
       "file": "scripts/link-parcels.descriptor.json",
       "key": "the tiebreak tie-count cited by the tiebreak-determinism lock",
       "deviation_index": 4,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HW",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HW; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot7 plan (untracked) tiebreak counts (19/72/91), pilot7 assessment, defect-ledger, git log b37087f3 body, register grep tiebreak (0 hits).",
-      "note": "\"orchestrator ruling (commit 7 dispatch)\" is not an operator decision; the declared tiebreak (A-3) is in the plan but the tie-count discrepancy is not."
+      "note": "\"orchestrator ruling (commit 7 dispatch)\" is not an operator decision; the declared tiebreak (A-3) is in the plan but the tie-count discrepancy is not.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-26",
@@ -733,10 +742,10 @@
       "file": "scripts/steps/_schema/grandfathered.json",
       "key": "refresh_snapshot",
       "deviation_index": null,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HX",
+      "apply": "now",
+      "append_text": " [register: Spec 124 R-HX; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -748,9 +757,10 @@
           "quote": "1. **Write class M (`snapshot_append`) is wrong at the source** — the real shape is `guarded_upsert` (mechanic) + `guard:\"none\"` (+`guard_why`) + `scope:\"snapshot_date = CURRENT_DATE\"`, already prescribed by the schema's own `gaps.GAP-2` entry. A real `refresh_snapshot` entry must be added to `grand"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "pilot 8 plan: no operator authorization words survive (assessment calls a lost copy \"authorized\"); Ask 1 FIX ruling RS-D2 covers a different point",
-      "note": "demoted from (b) at consolidation: pilot 8 plan: no operator authorization words survive (assessment calls a lost copy \"authorized\"); Ask 1 FIX ruling RS-D2 covers a different point"
+      "note": "demoted from (b) at consolidation: pilot 8 plan: no operator authorization words survive (assessment calls a lost copy \"authorized\"); Ask 1 FIX ruling RS-D2 covers a different point",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g1-27",
@@ -880,10 +890,10 @@
       "file": "scripts/quality/assert-global-coverage.descriptor.json",
       "key": "the pre-conversion LOGIC_VARS_SCHEMA's 3 cross-field .refine() ordering invariants (warn < pass for profiling/vocab, warn <= pass for cost) — a startup THROW on violation",
       "deviation_index": 2,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HV",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HV; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -895,9 +905,10 @@
           "quote": "any `step.schema.json` edit"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "AGC assessment docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md (:72,:443-466 adjudication,:554,:711 — gap recorded, no ruling); plan .cursor/batch1_i1_assert_global_coverage_active_task.md (+ untracked copy, identical; Fold B = R-AD only); defect-ledger.md; ~/Buildo/.cursor/QUEUE.md (starts 2026-10-10; grep refine/cross-field); git log --all --grep cross-field/assert_global_coverage; register grep cross-field/refine.",
-      "note": "Operator-authorized plan only puts step.schema.json edits out of scope (:122); it never states the dropped startup-throw ordering invariants. Gap accepted at commit 7 by the implementer."
+      "note": "Operator-authorized plan only puts step.schema.json edits out of scope (:122); it never states the dropped startup-throw ordering invariants. Gap accepted at commit 7 by the implementer.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-4",
@@ -938,10 +949,10 @@
       "file": "scripts/quality/assert-data-bounds.descriptor.json",
       "key": "Pre-conversion per-chain audit_table.name (4 distinct strings: permits \"Data Quality Checks\", coa \"CoA Data Quality\", sources \"Sources Data Quality\", deep_scrapes \"Data Quality\")",
       "deviation_index": 1,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HS",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -953,9 +964,10 @@
           "quote": "the declared, cosmetic-only consequence (§ fields-module header consequence 1): one shared `\"Data Quality Checks\"` for all 4 chains"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "ADB plan .cursor/batch1_i2_assert_data_bounds_active_task.md (+ untracked copy; grep audit_table.name/display_name/Data Quality — :126 says the 4 JSON contracts render unchanged); ADB assessment (:142-145,:416-420,:574); defect-ledger ADB rows; git log f39cd9b4/096f30c9; QUEUE.md; register grep display_name/audit_table.name/per_chain.",
-      "note": "Name collapse is declared by the implementer at commit 7 as a scope consequence; no operator ruling, and the authorized plan claimed the contracts render unchanged."
+      "note": "Name collapse is declared by the implementer at commit 7 as a scope consequence; no operator ruling, and the authorized plan claimed the contracts render unchanged.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-6",
@@ -965,10 +977,10 @@
       "file": "scripts/quality/assert-data-bounds.descriptor.json",
       "key": "inspection_ancient_dates_count_warn_max (report §2.4 item 18) declared as a Rule-3 registered logic variable",
       "deviation_index": 2,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HZ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HZ; V3 condition-9 rulings 2026-10-20]",
       "stale": {
         "action": "retire",
         "text": "stale deviation: ADB-D7 is CLOSED at commit 8b (f39cd9b4, 2026-09-13; defect-ledger.md ADB-D7 row) and inspection_ancient_dates_count_warn_max is now bound by checks[].limit_from_config (the ancient-dates check); retire this deviations[] entry through generate-assert-data-bounds-descriptor.js on the bundled night"
@@ -983,9 +995,10 @@
           "quote": "**CLOSED · commit 8b**"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "ADB assessment (:546,:617,:625-651); defect-ledger.md:141; ADB plan; commit f39cd9b4 message ('operator-delegated ruling (2026-09-13)'); QUEUE.md; register grep ADB-D7 / Spec 123 §3.1.",
-      "note": "Only an 'operator-delegated' ruling (2026-09-13, after the 09-12 entry; delegate, not operator words). ADB-D7 is CLOSED (fixed 8b, f39cd9b4), so this deviation entry looks stale."
+      "note": "Only an 'operator-delegated' ruling (2026-09-13, after the 09-12 entry; delegate, not operator words). ADB-D7 is CLOSED (fixed 8b, f39cd9b4), so this deviation entry looks stale.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-7",
@@ -1103,10 +1116,10 @@
       "file": "scripts/link-neighbourhoods.descriptor.json",
       "key": "Spec 123 §3.1 — every pre-conversion audit ROW is carried across the conversion",
       "deviation_index": 4,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HR",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HR; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1122,9 +1135,10 @@
           "quote": "2=RETIRE BOTH"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "the dropped audit row was added by a plan-panel fold after the 2026-09-16 authorization; no operator ratification of that fold found",
-      "note": "demoted from (b) at consolidation: the dropped audit row was added by a plan-panel fold after the 2026-09-16 authorization; no operator ratification of that fold found"
+      "note": "demoted from (b) at consolidation: the dropped audit row was added by a plan-panel fold after the 2026-09-16 authorization; no operator ratification of that fold found",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-row-or-query-retired"
     },
     {
       "ref": "g2-12",
@@ -1134,10 +1148,10 @@
       "file": "scripts/link-neighbourhoods.descriptor.json",
       "key": "Spec 124 §2 Rule 3 — an externalized tunable carries the literal it replaced, and the check it bounds is expected to pass",
       "deviation_index": 5,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HV",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HV; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1145,9 +1159,10 @@
           "quote": "§3.1: a widening is a FIX, and a fix belongs in its own peel after the conversion is green, not inside the commit whose whole claim is that nothing changed."
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "LN plan ~/Buildo/.cursor/i4_link_neighbourhoods_active_task.md (no LN-D7; Asks :369-374; status :3); LN assessment docs/reports/2026-09-16-batch2-i4-link-neighbourhoods-assessment.md (grep operator); defect-ledger.md:154; commits 2f704d8f/2ba8e705/1a48520b; QUEUE.md; register grep denominator/R-N.",
-      "note": "Plan-panel fold (post-authorization) that applies Ask 3's operator-authorized principle (ruled for LN-D6) to LN-D7 by analogy. No operator ruling on LN-D7 itself."
+      "note": "Plan-panel fold (post-authorization) that applies Ask 3's operator-authorized principle (ruled for LN-D6) to LN-D7 by analogy. No operator ruling on LN-D7 itself.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-13",
@@ -1157,10 +1172,10 @@
       "file": "scripts/link-neighbourhoods.descriptor.json",
       "key": "the PH-0 draft descriptor's own `override.force_full: \"LINK_NEIGHBOURHOODS_FORCE_FULL\"`, `recovery.force`, `staleness.mode_select: \"tri_state\"` and `terminals[linked_full_relink]`",
       "deviation_index": 6,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HU",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1168,9 +1183,10 @@
           "quote": "`force_full: LINK_NEIGHBOURHOODS_FORCE_FULL`"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "LN plan (no LN-D9; authorized draft :271/:276 DECLARED force_full); LN assessment (:442); defect-ledger.md:156; commit 2f704d8f ('Substantive folds, each flagged as a deviation from the authorized plan's own draft'); QUEUE.md; register grep force_full/net-new.",
-      "note": "Plan-panel fold reversing the operator-authorized draft (which declared force_full). Entry says it 'needs no new operator ruling'. No ratification found."
+      "note": "Plan-panel fold reversing the operator-authorized draft (which declared force_full). Entry says it 'needs no new operator ruling'. No ratification found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-14",
@@ -1273,10 +1289,10 @@
       "file": "scripts/quality/assert-parcel-sanity.descriptor.json",
       "key": "the \"residential_parcels_scanned\" INFO population-context row was not a declared checks[]/plausibility[] entry",
       "deviation_index": 3,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HS",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1284,9 +1300,10 @@
           "quote": "Rows emitted: 1 `residential_parcels_scanned` INFO context row (unshifted)"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "APS plan (§1 :26 only describes the legacy row; §3 gaps :160-166 list distribution/inert/records_total, not a context-row seam); APS assessment (grep contextRow/context row/residential_parcels_scanned: :78-79 list only inert + distribution library changes); commits 03f6fa65/a51da817; QUEUE.md; register grep contextRow.",
-      "note": "The stepCtx.contextRow seam is an implementation-time library addition that the authorized plan does not state. No ruling found."
+      "note": "The stepCtx.contextRow seam is an implementation-time library addition that the authorized plan does not state. No ruling found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-18",
@@ -1404,10 +1421,10 @@
       "file": "scripts/compute-parcel-cost-estimates.descriptor.json",
       "key": "the legacy's `audit_table.phase` value (88, the owning spec number)",
       "deviation_index": 0,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HT",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HT; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1415,9 +1432,10 @@
           "quote": "Coordinator-directed peel on the commit-② output panel"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "CPCE assessment (:124-128,:232-246); CPCE plan ~/Buildo/.cursor/batch2_p2_4_compute_parcel_cost_estimates_active_task.md (status :3; no O1/audit_table.phase); git log --grep audit_table.phase + CPCE commits 2026-09-21..22 (01a07218, 06dcd330); QUEUE.md; register grep phase index/varies_by_chain.",
-      "note": "The O1 ruling is coordinator-directed (the entry says 'operator/coordinator'). No operator ratification and no register row for the chain-phase-index fleet standard."
+      "note": "The O1 ruling is coordinator-directed (the entry says 'operator/coordinator'). No operator ratification and no register row for the chain-phase-index fleet standard.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-23",
@@ -1667,10 +1685,10 @@
       "file": "scripts/load-bylaw-map-areas.descriptor.json",
       "key": "the plan's 'seed missing -> fail_error' posture",
       "deviation_index": 0,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HU",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1682,9 +1700,10 @@
           "quote": "| The plan's \"seed missing → fail_error\" posture | plan A3 | encoded-as-deviation"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "LBMA assessment (:31-43); McBylaw P2 inputs plan ~/Buildo/.cursor/wf1_mcbylaw_phase2_inputs_active_task.md (status 'Planning'; :65 specifies fail_error); h6-qa-ruling-2026-10-16.md; QUEUE.md (:850 H6 conformance answers, :926); morning-questions-2026-10-08/09; NEXT_SESSION_PROMPT.prev-2026-10-09; commit b87f62db; register grep no_source_file/filesystem.",
-      "note": "This deviates from the plan's own posture in favour of the library's no_source_file skip (Rule 1 one-home). No operator ruling on the change was found."
+      "note": "This deviates from the plan's own posture in favour of the library's no_source_file skip (Rule 1 one-home). No operator ruling on the change was found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g2-32",
@@ -1721,10 +1740,10 @@
       "file": "scripts/load-address-points.descriptor.json",
       "key": "three config.logic_variables[] declared for the download-progress/parse-progress console cadence (`address_points_progress_bytes_window` :66, `address_points_progress_row_modulo` :380, `address_points_expected_total_rows` :381)",
       "deviation_index": 0,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HN",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HN; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1732,9 +1751,10 @@
           "quote": "**Also retired at commit 9 (P4 dead-declaration, §1.2a):** three config variables the folded commit"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "Entry text (adjudicated_by: orchestrator ruling, commit 9); address_points plan (untracked) — line 14 planned to EXTERNALIZE these literals, not retire; address_points assessment :543-549 (retirement recorded, orchestrator); git log -S address_points_progress_row_modulo (f1afd608 commit 9, a8c1a42f, no operator trailer); QUEUE.md (no Sept entries); register grep (R-A rules tunable retirement is config.retired[], not seed deletion — does not govern; R-DR is a later P4 scoping row).",
-      "note": "Orchestrator-only at commit 9. Later operator-authorized plans adopt it as precedent (massing plan :107, neighbourhoods :58) but none ratifies this entry itself."
+      "note": "Orchestrator-only at commit 9. Later operator-authorized plans adopt it as precedent (massing plan :107, neighbourhoods :58) but none ratifies this entry itself.",
+      "decision_log": "2026-10-20-v3-exception-rulings#progress-cadence-retirement"
     },
     {
       "ref": "g3-2",
@@ -1801,10 +1821,10 @@
       "file": "scripts/load-address-points.descriptor.json",
       "key": "declaring `guards.requires` only for what the write needs, and pinning every FAIL check as blocking:false",
       "deviation_index": 4,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HP",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HP; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1816,9 +1836,10 @@
           "quote": "**PIN, DO NOT FIX** (§3.1). Declare every check `blocking: false` at commit 7 so commit 7 stays a genuine no-op; promoting the halt is a peel with its own lock."
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "verify-12c: two-part entry; R-FJ (pilot 2 D-8) decides only the blocking:false half; the guards.requires scope half has no operator decision found (address_points plan, pilot 2 plan, assessment, git log searched)",
-      "note": "demoted from (b) at consolidation: verify-12c: two-part entry; R-FJ (pilot 2 D-8) decides only the blocking:false half; the guards.requires scope half has no operator decision found (address_points plan, pilot 2 plan, assessment, git log searched)"
+      "note": "demoted from (b) at consolidation: verify-12c: two-part entry; R-FJ (pilot 2 D-8) decides only the blocking:false half; the guards.requires scope half has no operator decision found (address_points plan, pilot 2 plan, assessment, git log searched)",
+      "decision_log": "2026-10-20-v3-exception-rulings#guards-requires-scope-and-blocking-pin"
     },
     {
       "ref": "g3-5",
@@ -1855,10 +1876,10 @@
       "file": "scripts/load-address-points.descriptor.json",
       "key": "the legacy loader's non-idempotent guarded upsert (8,199 rows re-updated every run, values never settling; stale class_family_desc / geometry on sampled rows 9085880, 553334, 349849)",
       "deviation_index": 6,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1866,9 +1887,10 @@
           "quote": "### Differential RULING (2026-09-23 17:05Z, orchestrator) — AP-D4: legacy churn + stale values = DEFECT; convergence delivered INLINE as a declared change (Spec 122 rung (e))"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "Entry (orchestrator ruling 2026-09-23 \"operator budget session\"); address_points assessment :457-465 \"Differential RULING (orchestrator)\"; defect-ledger.md:188; git log --grep=AP-D4 (a8c1a42f, f1afd608: no operator words); untracked .cursor/*.md grep AP-D4 (only massing/neighbourhoods plans cite it as orchestrator precedent); \"budget ruling\" grep (it is about commit folding/panel size, not AP-D4); QUEUE.md (no Sept entries).",
-      "note": "Orchestrator ruling only. The operator-authorized massing plan (:157) cites AP-D4 as orchestrator precedent, which is an indirect touchpoint, not a ratification."
+      "note": "Orchestrator ruling only. The operator-authorized massing plan (:157) cites AP-D4 as orchestrator precedent, which is an indirect touchpoint, not a ratification.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g3-7",
@@ -1905,10 +1927,10 @@
       "file": "scripts/load-parcels.descriptor.json",
       "key": "the pre-conversion per-batch transaction shape (`pipeline.withTransaction` once per 1,000-row BATCH_SIZE batch, :252-253, :275)",
       "deviation_index": 0,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HO",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HO; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1924,9 +1946,10 @@
           "quote": "**Status:** Implementation (authorized under the 2026-09-24 \"proceed\" on the runner-completion plan D7 reorder)"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "verify-12c: parcels D1 txn_scope widening is orchestrator-ruled (batch2_p3_7_parcels plan, \"authorized under the 2026-09-24 proceed on the runner-completion plan D7 reorder\", which authorized ordering, not this plan); address_points Fold B3 (R-FT) is that step's own decision",
-      "note": "demoted from (b) at consolidation: verify-12c: parcels D1 txn_scope widening is orchestrator-ruled (batch2_p3_7_parcels plan, \"authorized under the 2026-09-24 proceed on the runner-completion plan D7 reorder\", which authorized ordering, not this plan); address_points Fold B3 (R-FT) is that step's own decision"
+      "note": "demoted from (b) at consolidation: verify-12c: parcels D1 txn_scope widening is orchestrator-ruled (batch2_p3_7_parcels plan, \"authorized under the 2026-09-24 proceed on the runner-completion plan D7 reorder\", which authorized ordering, not this plan); address_points Fold B3 (R-FT) is that step's own decision",
+      "decision_log": "2026-10-20-v3-exception-rulings#txn-scope-step-widening"
     },
     {
       "ref": "g3-9",
@@ -1936,10 +1959,10 @@
       "file": "scripts/load-parcels.descriptor.json",
       "key": "the legacy download/parse progress-cadence literals (`10 * 1024 * 1024` download window :181, `processed % 50000 === 0` progress modulo :556, `484000` progress denominator :557)",
       "deviation_index": 2,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HN",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HN; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1947,9 +1970,10 @@
           "quote": "Progress cadence/expected-total literals retire with the streaming loop (dead under the whole-array model — address_points precedent, declared)."
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "Entry (orchestrator, plan D3, precedent address_points commit-9 P4); parcels plan (untracked) :2 status (\"authorized under\" the runner-completion \"proceed\", which authorized the reorder, not D3); parcels assessment :354-356, :472 (orchestrator ruling plan D3); precedent g3-1 (orchestrator-only); QUEUE.md; register grep.",
-      "note": "Plan D3 is orchestrator. The runner-completion \"proceed\" (2026-09-24) authorized writing the parcels plan, not its contents. The precedent (g3-1) has no operator decision either."
+      "note": "Plan D3 is orchestrator. The runner-completion \"proceed\" (2026-09-24) authorized writing the parcels plan, not its contents. The precedent (g3-1) has no operator decision either.",
+      "decision_log": "2026-10-20-v3-exception-rulings#progress-cadence-retirement"
     },
     {
       "ref": "g3-10",
@@ -1959,10 +1983,10 @@
       "file": "scripts/load-parcels.descriptor.json",
       "key": "declaring `guards.requires` only for what the write/consumers need, and pinning every FAIL check as blocking:false",
       "deviation_index": 3,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HP",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HP; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -1974,9 +1998,10 @@
           "quote": "**PIN, DO NOT FIX** (§3.1). Declare every check `blocking: false` at commit 7 so commit 7 stays a genuine no-op; promoting the halt is a peel with its own lock."
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "verify-12c: as g3-4 (parcels D4 is an orchestrator ruling; the guards.requires half has no operator decision)",
-      "note": "demoted from (b) at consolidation: verify-12c: as g3-4 (parcels D4 is an orchestrator ruling; the guards.requires half has no operator decision)"
+      "note": "demoted from (b) at consolidation: verify-12c: as g3-4 (parcels D4 is an orchestrator ruling; the guards.requires half has no operator decision)",
+      "decision_log": "2026-10-20-v3-exception-rulings#guards-requires-scope-and-blocking-pin"
     },
     {
       "ref": "g3-11",
@@ -3845,15 +3870,16 @@
       "file": "scripts/load-wsib.descriptor.json",
       "key": "the legacy first-row CSV header check (legacy :274-284), expected as a descriptor required_columns check (plan §2 row 2)",
       "deviation_index": 1,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HU",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md (:254-262, :629); ~/Buildo/.cursor/batch2_load_wsib_active_task.md (row 2 :85 plans a required_columns check, not a compute throw); git log b0f9d6db/bd01e07a messages; QUEUE.md (no Sept entries); grep \"header check|required_columns|header-drift\" across .cursor",
-      "note": "Only an orchestrator ruling (assessment :259 \"the seat is an orchestrator ruling at ②\"); the authorized plan row 2 specified a descriptor check. No operator ratification found."
+      "note": "Only an orchestrator ruling (assessment :259 \"the seat is an orchestrator ruling at ②\"); the authorized plan row 2 specified a descriptor check. No operator ratification found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g4-15",
@@ -4056,15 +4082,16 @@
       "file": "scripts/load-wsib.descriptor.json",
       "key": "the post-load DB stats query COUNT(*)/linked/with_trade/class_count (legacy :363-372)",
       "deviation_index": 9,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HR",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HR; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "~/Buildo/.cursor/batch2_load_wsib_active_task.md (no row for the :363-372 stats query; row 12 covers emitMeta only); docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md :443 (maps it to \"runner + executeWrite\" only); git log for load_wsib commits; register search (R-BZ is generic compute purity)",
-      "note": "Retirement of the log-only stats query appears only in the deviation text; no plan row or operator decision found."
+      "note": "Retirement of the log-only stats query appears only in the deviation text; no plan row or operator decision found.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-row-or-query-retired"
     },
     {
       "ref": "g4-23",
@@ -4213,10 +4240,10 @@
       "file": "scripts/load-heritage.descriptor.json",
       "key": "LH-D8 (a) — a per-dataset failure returned `{ failed: true }`, which `pipeline.run` ignored, so a STANDALONE run exited 0 and its ledger row read `completed` with verdict FAIL (legacy :768; pipeline.js:589-600)",
       "deviation_index": 0,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -4232,9 +4259,10 @@
           "quote": "0x adds no status override. Heritage ① declares the standalone deviation, and ④b fixes the compute-owned skeleton re-emit."
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "verify-12c: LH-D8 standalone status (\"orchestrator ① decision 4\"); the operator y of 2026-09-29 (R-GF) is the O-1 scope cut only, and the load_heritage plan (R-GB) states parity for row 24 (docs/reports/2026-09-27-plan-batch2-load-heritage.md:104 \"terminal/status parity VERIFY-INT-3 — HR-D8\"), not this deviation. Searched: 0x plan :2/:173-174/:364/:403, heritage plan :104/:117, heritage assessment, QUEUE snapshot",
-      "note": "demoted from (b) at consolidation: verify-12c: LH-D8 standalone status (\"orchestrator ① decision 4\"); the operator y of 2026-09-29 (R-GF) is the O-1 scope cut only, and the load_heritage plan (R-GB) states parity for row 24 (docs/reports/2026-09-27-plan-batch2-load-heritage.md:104 \"terminal/status parity VERIFY-INT-3 — HR-D8\"), not this deviation. Searched: 0x plan :2/:173-174/:364/:403, heritage plan :104/:117, heritage assessment, QUEUE snapshot"
+      "note": "demoted from (b) at consolidation: verify-12c: LH-D8 standalone status (\"orchestrator ① decision 4\"); the operator y of 2026-09-29 (R-GF) is the O-1 scope cut only, and the load_heritage plan (R-GB) states parity for row 24 (docs/reports/2026-09-27-plan-batch2-load-heritage.md:104 \"terminal/status parity VERIFY-INT-3 — HR-D8\"), not this deviation. Searched: 0x plan :2/:173-174/:364/:403, heritage plan :104/:117, heritage assessment, QUEUE snapshot",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g4-29",
@@ -4244,15 +4272,16 @@
       "file": "scripts/load-heritage.descriptor.json",
       "key": "LH-D11 — tally order: the legacy classified STATUS / HCD_TYPE (L25) BEFORE coercing the key and checking the geometry (`const cls = classifyRegisterStatus(p.STATUS)` :328 before `coerceSourceId(p.Folder_Row)` :334)",
       "deviation_index": 1,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md (:471 LH-D11 \"NEW\", orchestrator finding); ~/Buildo/.cursor/batch2_load_heritage_active_task.md (no tally-order row; re-grounding §A silent); wf2_ingest_prereq_0x_active_task.md; git log 5bbf5a90 message",
-      "note": "LH-D11 is an orchestrator ① finding with no operator decision. Analogues LC-D9 (centreline plan :98) and WS-D7 (wsib plan :109) are other steps' decisions, not cited by this entry."
+      "note": "LH-D11 is an orchestrator ① finding with no operator decision. Analogues LC-D9 (centreline plan :98) and WS-D7 (wsib plan :109) are other steps' decisions, not cited by this entry.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g4-30",
@@ -4328,15 +4357,16 @@
       "file": "scripts/load-heritage.descriptor.json",
       "key": "heritage_<id>_load_failed on a post-commit mass delete — legacy set the dataset outcome `failed` when L7c breached without HERITAGE_ACCEPT_MASS_DELETE (:613), which pushed the load_failed row",
       "deviation_index": 4,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "~/Buildo/.cursor/batch2_load_heritage_active_task.md (HR-D1 :110 pins post-commit mass delete; no load_failed redefinition); docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md (:229, :461, :626); 0x plan; git log 5bbf5a90/ad6a727f messages",
-      "note": "Adjudicated only as \"orchestrator ② ruling\"; no operator decision on redefining heritage_<id>_load_failed found."
+      "note": "Adjudicated only as \"orchestrator ② ruling\"; no operator decision on redefining heritage_<id>_load_failed found.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g4-33",
@@ -4732,18 +4762,19 @@
       "file": "scripts/load-zoning.descriptor.json",
       "key": "LZ-D12 (thrown-overlay path) — legacy recorded EVERY layer's new version in zoning_layer_versions, including an overlay whose fetch or load threw [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:698]",
       "deviation_index": 7,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": {
         "action": "note",
         "text": "stale reference: the cited .cursor/zoning-plan-regrounding-2026-10-02.md exists in no checkout, worktree or git history (measured 2026-10-20); the authority is the register row named here (or none, class c)"
       },
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "~/Buildo/.cursor/wf2_ingest_prereq_0y_active_task.md (:89 HAZARD orchestrator ruling and :515 say pin wrong-form, fix after ③ in its own WF3 — not an early fix); batch2_load_zoning_active_task.md; zoning assessment (:209, :219, :409); git log 1d1f86d0 message; cited .cursor/zoning-plan-regrounding-2026-10-02.md not found on disk or in git",
-      "note": "Fixing the thrown-overlay path early has no operator decision; the 0y plan (operator-authorized) ruled pin-and-fix-later, and the 0y HAZARD ruling itself is labelled orchestrator."
+      "note": "Fixing the thrown-overlay path early has no operator decision; the 0y plan (operator-authorized) ruled pin-and-fix-later, and the 0y HAZARD ruling itself is labelled orchestrator.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g4-47",
@@ -4843,18 +4874,19 @@
       "file": "scripts/load-zoning.descriptor.json",
       "key": "the audit row set — legacy pushed conditional rows only when they fired, scored passing non-INFO rows INFO, and attached _no_baseline / _truncated_class_count / _other_count keys to rows [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:401-575]",
       "deviation_index": 11,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HS",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "stale": {
         "action": "note",
         "text": "stale reference: the cited .cursor/zoning-plan-regrounding-2026-10-02.md exists in no checkout, worktree or git history (measured 2026-10-20); the authority is the register row named here (or none, class c)"
       },
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "~/Buildo/.cursor/batch2_load_zoning_active_task.md (rows 7-17 declare checks, gate A :143 — no aggregation of per-layer rows or run-level duration); 0y/0x plans; zoning assessment; git log 1d1f86d0; ravines Fold D (OUTPUT panel, not operator); cited re-grounding §C file not found on disk or in git",
-      "note": "Plan declares the checks, but the per-layer aggregation, zoning_duration_ms roll-up and INFO→PASS rescoring rest only on the missing re-grounding §C. Overlay primary_failed is 0x."
+      "note": "Plan declares the checks, but the per-layer aggregation, zoning_duration_ms roll-up and INFO→PASS rescoring rest only on the missing re-grounding §C. Overlay primary_failed is 0x.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g4-51",
@@ -4864,18 +4896,19 @@
       "file": "scripts/load-zoning.descriptor.json",
       "key": "the base empty / all-discarded path — legacy threw on an empty base before any overlay but, when every base geometry was discarded, wrote nothing to the base, FAILed the row and still loaded the overlays [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:406-410, :551, :681-682]",
       "deviation_index": 12,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HQ",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "stale": {
         "action": "note",
         "text": "stale reference: the cited .cursor/zoning-plan-regrounding-2026-10-02.md exists in no checkout, worktree or git history (measured 2026-10-20); the authority is the register row named here (or none, class c)"
       },
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "~/Buildo/.cursor/batch2_load_zoning_active_task.md (row 7 :82 keeps legacy base FAIL / overlay behaviour; no stricter all-discarded path); 0y/0x plans; zoning assessment; git log 1d1f86d0; cited re-grounding §C not found",
-      "note": "The stricter pre_write stop on the all-discarded base path has no operator decision found."
+      "note": "The stricter pre_write stop on the all-discarded base path has no operator decision found.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-defect-corrected-inline"
     },
     {
       "ref": "g4-52",
@@ -4885,18 +4918,19 @@
       "file": "scripts/load-zoning.descriptor.json",
       "key": "the zn_zone distribution — legacy counted the INSERTABLE base rows (after dedupe and geometry validation) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:563]",
       "deviation_index": 13,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HW",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HW; V3 condition-9 rulings 2026-10-20]",
       "stale": {
         "action": "note",
         "text": "stale reference: the cited .cursor/zoning-plan-regrounding-2026-10-02.md exists in no checkout, worktree or git history (measured 2026-10-20); the authority is the register row named here (or none, class c)"
       },
       "evidence": [],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "~/Buildo/.cursor/batch2_load_zoning_active_task.md (distribution row :136 only renames top_n); 0y/0x plans; zoning assessment; git log 1d1f86d0; cited re-grounding §C not found",
-      "note": "Counting shaped rather than insertable base rows has no operator decision found."
+      "note": "Counting shaped rather than insertable base rows has no operator decision found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g4-53",
@@ -5111,10 +5145,10 @@
       "file": "scripts/load-coa-notices.descriptor.json",
       "key": "plan D10 listing the emits as 17 separate typed keys",
       "deviation_index": 0,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HS",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -5126,9 +5160,10 @@
           "quote": "* **`emits[]`** (typed; object maps carry skeletons; `consumers: []` until Spec 72's harness exists): `docs_total` (int, documents ∪ excluded), `docs_by_status` (object),"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "Operator authorized the WF1 plan (2026-10-07), but plan D10 states the OPPOSITE (separate typed keys); the single-object deviation was the orchestrator's implementation call. Searched: plan file (D10, AUTHORIZED, 'one object', '17'), coa-notices-H-LANE.md, load-coa-notices assessment, QUEUE.md, git log --grep 'coa_notices_load'/'17 separate'/'one object emit', -S 'plan D10 listing' (first appears fed94bd1 N6 V3 migration), commit 661731b5 body, Spec 124/124a for emits[0]/ravine_load/centreline_load/skipped_reason. No register row or operator ruling on the single-object form.",
-      "note": "Orchestrator adjudication of a library constraint; the precedent (ravine_load/centreline_load) is cited only in Spec 122:924 field table, not a ruling."
+      "note": "Orchestrator adjudication of a library constraint; the precedent (ravine_load/centreline_load) is cited only in Spec 122:924 field table, not a ruling.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g5-2",
@@ -5200,10 +5235,10 @@
       "file": "scripts/load-coa.descriptor.json",
       "key": "$9/$10::timestamptz[] bound into DATE columns [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:307-308]",
       "deviation_index": 4,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-IE",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-IE; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -5215,9 +5250,10 @@
           "quote": "coa assessment also: C-D3 date binding correct only under a UTC session (cloud TZ unknown);"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "COA-D3 is NOT among the five operator-ruled coa decisions (assessment §12 :216-221); QUEUE:1050 mentions it only as an assessment note, not a ruling. Searched: coa assessment (COA-D3, operator), defect-ledger, QUEUE.md (C-D3/COA-D3/::date/date binding/TimeZone), v3-phase4-key-steps-plan (operator 'phase-4 plan go' QUEUE:1027 does not mention it), Spec 124/124a ('behaviour change', CLOSES ②, R-EV which covers the COA-D11 hash only), git log --grep.",
-      "note": "Agent-proposed ② fix of a ledgered defect (assessment §6 'CLOSES ②'); no operator words or register row found."
+      "note": "Agent-proposed ② fix of a ledgered defect (assessment §6 'CLOSES ②'); no operator words or register row found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-19"
     },
     {
       "ref": "g5-5",
@@ -5227,10 +5263,10 @@
       "file": "scripts/load-coa.descriptor.json",
       "key": "avg_latency_ms / api_errors audit rows and records_meta.api_health [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:623-624, :665-669]",
       "deviation_index": 5,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-IF",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-IF, R-HR; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -5238,9 +5274,10 @@
           "quote": "| clock seam | `Date.now()` latencies / start / staleness | `:109, :112, :131, :439, :521, :588, :604` | `ctx.clock` (G6); latency is runner telemetry |"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "Spec 124/124a for latency/api_health/api_errors/telemetry/retries/runner acquisition (only R-DE's failed_acquisition terminal id vocabulary, which does not rule on retiring telemetry rows); R-DX/R-CY/R-DD texts; load-zoning descriptor/notes/assessment (no api_health deviation to trace as precedent); coa assessment operator decisions 1-5; QUEUE.md; phase-4 and wave-4 plans.",
-      "note": "'load_zoning precedent' is an agent analogy; no operator decision or register row on dropping network telemetry rows found."
+      "note": "'load_zoning precedent' is an agent analogy; no operator decision or register row on dropping network telemetry rows found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-20"
     },
     {
       "ref": "g5-6",
@@ -5250,10 +5287,10 @@
       "file": "scripts/quality/assert-coa-freshness.descriptor.json",
       "key": "Pre-conversion audit row order (total_records, last_ingestion, ingestion_days_ago, max_decision_date, max_hearing_date) and the empty-table lane's single row",
       "deviation_index": 1,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HS",
+      "apply": "now",
+      "append_text": " [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -5269,9 +5306,10 @@
           "quote": "// W4A-R5 (wave 4, operator y 2026-10-18): batch2 P1.1's stepCtx.contextRow() was assigned but never listed;"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "W4A-R5 approves the contextRow seam, not where its rows land; the batch2 P1.1 precedent has no operator authorization found",
-      "note": "demoted from (b) at consolidation: W4A-R5 approves the contextRow seam, not where its rows land; the batch2 P1.1 precedent has no operator authorization found"
+      "note": "demoted from (b) at consolidation: W4A-R5 approves the contextRow seam, not where its rows land; the batch2 P1.1 precedent has no operator authorization found",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g5-7",
@@ -5533,10 +5571,10 @@
       "file": "docs/reports/defect-ledger.md",
       "key": "CCT-D10",
       "deviation_index": null,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HY",
+      "apply": "now",
+      "append_text": " [register: Spec 124 R-HY; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -5544,9 +5582,10 @@
           "quote": "- Declared deviation: CCT-D10. Data over an empty vocabulary reads FAIL; the legacy cov_ row read WARN (Spec 122a:639)."
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "Lane report only, not an operator question; the next operator answer (QUEUE:1540 'y to the rest') lists R-EP and by-law items, not CCT-D10. Searched: trades assessment (§6, §12 Q-C2..C4), defect-ledger:384, QUEUE.md 2026-10-19 sections, runner-standardization trace, Spec 124/124a (unevaluable/unmeasurable: only the 122a pct-evaluator note, not a register row), git log.",
-      "note": "Agent-declared deviation at full-form row 7 (materializers lane a3bee88b); no operator ruling or register row found."
+      "note": "Agent-declared deviation at full-form row 7 (materializers lane a3bee88b); no operator ruling or register row found.",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-22"
     },
     {
       "ref": "g5-16",
@@ -5583,10 +5622,10 @@
       "file": "scripts/compute-coa-cost-estimates.descriptor.json",
       "key": "legacy phase_h_gap_active: true constant row (:802)",
       "deviation_index": 2,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "d",
+      "rule_id": "R-HR",
+      "apply": "now",
+      "append_text": " [register: Spec 124 R-HR; V3 condition-9 rulings 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -5598,9 +5637,10 @@
           "quote": "- **CCCE-D10**: constant `phase_h_gap_active: true` asserts a stale state (ACCURATE) — retired at ②"
         }
       ],
-      "decision_date": null,
+      "decision_date": "2026-10-20",
       "searched": "CCCE-D10 is not one of Q-C2..C4 / Q-CE1..CE3 (cost assessment §12 :192-203 lists Q8/Q12/Q13 ruled and Q-MZ/Q-C3/Q-C4/Q-CE1/Q-CE2 drafted; trace :41 Q-CE3 = coverage floor). The descriptor's blanket 'operator y Q-C2..Q-CE3' does not reach it. Searched: QUEUE.md, wave-4 plan, defect-ledger, git log --grep CCCE-D10/phase_h_gap, Spec 124/124a ('not a measurement', constant row).",
-      "note": "Only R-DF's generic ACCURATE admission question is cited, which is not a ruling on this row. Agent-proposed retirement."
+      "note": "Only R-DF's generic ACCURATE admission question is cited, which is not a ruling on this row. Agent-proposed retirement.",
+      "decision_log": "2026-10-20-v3-exception-rulings#legacy-row-or-query-retired"
     },
     {
       "ref": "g5-18",
@@ -5632,6 +5672,105 @@
       "decision_date": "2026-10-18",
       "searched": null,
       "note": "Plan Q12 names this defect exactly."
+    },
+    {
+      "ref": "s1-1",
+      "step": "enrich_coa_zoning",
+      "stage": "pending",
+      "source": "deviation",
+      "file": "scripts/enrich-coa-zoning.descriptor.json",
+      "key": "the legacy zero-denominator branch, which emitted coa_row_count_zero only when the coverage denominator was 0 (enrich-permits.js:629-634)",
+      "deviation_index": 0,
+      "class": "d",
+      "rule_id": "R-IA",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-15",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-IA; V3 condition-9 rulings 2026-10-20]",
+      "stale": null,
+      "evidence": [
+        {
+          "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-c-steps/2026-10-20-batch-c-steps.json (CHAT-15)",
+          "quote": "Approve. A count that's always shown is easier to watch, and nothing reads its absence."
+        }
+      ],
+      "decision_date": "2026-10-20",
+      "searched": null,
+      "note": "CoA cutover ruling 1; the descriptor has POST captures (source_fingerprint locked), so the citation rides the bundled night."
+    },
+    {
+      "ref": "s1-2",
+      "step": "enrich_coa_zoning",
+      "stage": "pending",
+      "source": "deviation",
+      "file": "scripts/enrich-coa-zoning.descriptor.json",
+      "key": "the 16 information_schema column / link-table probes (enrich-permits.js:163-356)",
+      "deviation_index": 1,
+      "class": "d",
+      "rule_id": "R-IB",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-16",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-IB; V3 condition-9 rulings 2026-10-20]",
+      "stale": null,
+      "evidence": [
+        {
+          "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-c-steps/2026-10-20-batch-c-steps.json (CHAT-16)",
+          "quote": "Approve. It's the standard form every converted step uses, and it catches the same thing."
+        }
+      ],
+      "decision_date": "2026-10-20",
+      "searched": null,
+      "note": "CoA cutover ruling 2; the descriptor has POST captures (source_fingerprint locked), so the citation rides the bundled night."
+    },
+    {
+      "ref": "s1-3",
+      "step": "enrich_coa_zoning",
+      "stage": "pending",
+      "source": "deviation",
+      "file": "scripts/enrich-coa-zoning.descriptor.json",
+      "key": "the pipeline_runs recency read inside assertCentrelineEnriched (enrich-permits.js:308-317)",
+      "deviation_index": 2,
+      "class": "d",
+      "rule_id": "R-IC",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-17",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-IC; V3 condition-9 rulings 2026-10-20]",
+      "stale": null,
+      "evidence": [
+        {
+          "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-c-steps/2026-10-20-batch-c-steps.json (CHAT-17)",
+          "quote": "Approve. It's one shared reader instead of a copy, and the answer is identical."
+        }
+      ],
+      "decision_date": "2026-10-20",
+      "searched": null,
+      "note": "CoA cutover ruling 3; the descriptor has POST captures (source_fingerprint locked), so the citation rides the bundled night."
+    },
+    {
+      "ref": "s1-4",
+      "step": "link_coa_to_parcels",
+      "stage": "pending",
+      "source": "deviation",
+      "file": "scripts/link-coa-to-parcels.descriptor.json",
+      "key": "the legacy audit rows coa_corpus_linked_pct (>= 100 − t), coa_parcels_linked_pct + unmatched_coa_count (one decision rendered twice), the NO_NEW_WORK lane (phase 11), and the tier_1a_type_confirmed / tier_1a_type_tolerant per-run counters",
+      "deviation_index": 3,
+      "class": "d",
+      "rule_id": "R-ID",
+      "decision_log": "2026-10-20-chat-batch-c-steps#CHAT-18",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-ID; V3 condition-9 rulings 2026-10-20]",
+      "stale": {
+        "action": "correct",
+        "text": "the why says the legacy shell still emits both type counters and that a new-rule draft is with the operator; the shell is swapped and the operator withdrew that draft text (CHAT-18). On the bundled night the counters are restored (patch set docs/reports/2026-10-20-steps-rulings-1-coa-cutover-patch-set.md), the tier_1a_type_confirmed / tier_1a_type_tolerant clause leaves this deviation, and LCTP-D11 closes."
+      },
+      "evidence": [
+        {
+          "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-c-steps/2026-10-20-batch-c-steps.json (CHAT-18)",
+          "quote": "Restore both counters in the new step. They measure how the CoA-to-parcel match is doing. (The R-EG amendment draft that said the legacy shell still emits them is stale and is withdrawn.)"
+        }
+      ],
+      "decision_date": "2026-10-20",
+      "searched": null,
+      "note": "CoA cutover ruling 4; the descriptor has POST captures (source_fingerprint locked), so the citation rides the bundled night."
     }
   ]
 }

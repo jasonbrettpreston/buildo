@@ -676,6 +676,12 @@
       "why": "Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate."
     },
     {
+      "id": "x-v3.3",
+      "section": "x-v3",
+      "text": "An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF. A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.",
+      "why": "Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry."
+    },
+    {
       "id": "x-rulings.1",
       "section": "x-rulings",
       "text": "When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.",
@@ -4892,6 +4898,272 @@
         "ref": "src/tests/report-schema.logic.test.ts"
       },
       "statement": "R-RS: a product report surface has one field declaration; every field names one source; a generator --check gates it (report-schema.mjs --check).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HN",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "An INGESTOR conversion retires the legacy console progress-cadence literals (bytes window, row modulo, expected-total denominator) as dead under whole-array acquisition (operator 2026-10-20, V3 Exception Rulings).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HO",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "parcels declares execution.txn_scope \"step\" in place of the legacy per-1,000-row batch commits (the R-FT form).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HP",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "address_points and parcels: guards.requires declares only what the write and its consumers need, and every FAIL check is pinned blocking:false at conversion; rls_bypass_or_policy is never omitted (R-CT).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HQ",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Legacy defects corrected inline at conversion are ratified per listed entry, never as a general rule; Spec 123 §3.1 stays the rule for every other defect.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HR",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Named exception to Spec 123 §3.1: a legacy audit row, records_meta key, constant row or log-only query is retired only when its entry cites a consumer grep with zero readers or shows the counted mechanism is gone.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HS",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "The library audit-table/emit form governs row position, table name, always-render rows and the one-object INGESTOR emit; a legacy shape difference it forces is a declared deviation, not a parity failure.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HT",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "audit_table.phase is the chain phase index declared in sharing.varies_by_chain.phase; legacy spec-number and ternary phase values are retired.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HU",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Measured corrections of a step draft descriptor or plan made during conversion are ratified per listed entry (assert_schema, link_neighbourhoods, link_parcels, load_bylaw_map_areas, load_wsib).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HV",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Accepted form gaps: assert_global_coverage drops 3 cross-field startup throws; link_neighbourhoods carries the literal 95 with its check red; the inclusive pct >= floor is in the closed limit form set.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HW",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "Two declared count differences (link_parcels near-tie bucket, load_zoning shaped base rows) are accepted as measured limitations.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HX",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "link_parcels and refresh_snapshot keep guard \"none\" under their grandfathered.json Rule 9 entries (the E1-precedent shape).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HY",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "CCT-D10: classify_coa_trades reports data over an empty vocabulary as unmeasurable (FAIL) where legacy showed WARN; CLOSED as a declared deviation.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HZ",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "No ruling owed for assert_data_bounds' stale ADB-D7 deviation; it is retired through its generator on the bundled RE-FREEZE night.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IA",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "enrich_coa_zoning renders coa_row_count_zero on every run (CoA cutover ruling 1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IB",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "enrich_coa_zoning replaces its 16 information_schema probes with the database.min_migration floor (CoA cutover ruling 2).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IC",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "enrich_coa_zoning reads pipeline_runs recency through the runner producer reader (CoA cutover ruling 3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-ID",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "link_coa_to_parcels restores tier_1a_type_confirmed and tier_1a_type_tolerant (CoA cutover ruling 4); the stale R-EG amendment text is withdrawn; applied on the bundled night.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IE",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "coa binds the CKAN calendar date text into the DATE columns (COA-D3, CoA cutover ruling 5).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IF",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "coa drops the avg_latency_ms / api_errors audit rows and records_meta.api_health: the consumer search found zero readers (CoA cutover ruling 6, under R-HR).",
       "source": {
         "register": true
       }

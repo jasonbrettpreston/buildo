@@ -1,0 +1,6 @@
+{
+  "decision": "change",
+  "ref": "legacy-row-or-query-retired",
+  "updated_at": "2026-10-20T23:59:50.457Z",
+  "note": "Approve with the evidence condition: the entry must cite a consumer grep (zero readers) or show the counted mechanism is gone. Precedent: R-GM already dropped coa's log-only stats query (CoA decision 5). Covers link_neighbourhoods polygon_tests_skipped, load_wsib's post-load stats query and compute_coa_cost_estimates' phase_h_gap_active constant. coa deviation 6 (api telemetry rows) is an owed operator ruling, listed only; no recommendation."
+}

@@ -98,6 +98,8 @@ Spec 121 §4.2's four questions, in order, for **every** observable behaviour:
 
 > **Pin it anyway, in its current wrong form, annotated `KNOWN-DEFECT` with a Defect Ledger ID, and keep the differential gate at zero-diff. Fix it in a separate commit *after* the conversion is green, whose diff shows exactly one thing: the pinned expectation flipping.**
 
+> **AMENDED 2026-10-20 (Spec 124 R-HR, operator approved with the evidence condition, `2026-10-20-v3-exception-rulings#legacy-row-or-query-retired`): one named exception.** A conversion may retire a legacy audit row, `records_meta` key, constant row or log-only query only when its entry cites a consumer grep with zero readers or shows the counted mechanism is gone; every other row is carried. Legacy defects corrected inline are ratified per entry (R-HQ), never as a general rule. This note appends; the rule above is unchanged.
+
 ### 3.2 ⚠️ The worked example is live, and it changes the plan
 
 Spec 121 §4.3 uses `compute_centroids` as its worked example of a DEFECT: *"`compute_centroids` never invalidates its derived value on upstream geometry change. That is DEFECT. Pin the non-invalidation → convert → prove bit-identical output → then land `fix(compute_centroids): invalidate centroid on geometry change`."*

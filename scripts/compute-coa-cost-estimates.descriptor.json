@@ -769,7 +769,7 @@
           "ref": "scripts/compute-trade-forecasts.js"
         }
       },
-      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
+      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md) [register: Spec 124 R-HR; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     }
   ],

@@ -401,6 +401,10 @@ What `standard=V3` means and how it is enforced.
   *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
   Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` · history: `R-GF`
 
+- **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF. A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
+  *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
+  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF`
+
 ### Rulings protocol and the resolution ladder
 
 What to do when the standard does not answer your question.
@@ -496,7 +500,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 326 mapped ids: 211 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 345 mapped ids: 230 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
