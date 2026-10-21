@@ -86040,6 +86040,171 @@
       "value": [
         "any"
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "orchestrator-p1-mechanical",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(100)#(100)[PBS](A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a; re-recorded under the lane mechanical label per 2026-10-21-batch-p#CHAT-50, which ruled these seven are gate fixes, not operator rulings; supersedes the operator-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(100)#(100)[PBS](A)/literals_not_expressed",
+      "unit": "900.3.10(100)#(100)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "orchestrator-p1-mechanical",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1428)#(1428)[PBS](B)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a; re-recorded under the lane mechanical label per 2026-10-21-batch-p#CHAT-50, which ruled these seven are gate fixes, not operator rulings; supersedes the operator-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(1428)#(1428)[PBS](B)/literals_not_expressed",
+      "unit": "900.3.10(1428)#(1428)[PBS](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "orchestrator-p1-mechanical",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(199)#(199)[PBS](A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a; re-recorded under the lane mechanical label per 2026-10-21-batch-p#CHAT-50, which ruled these seven are gate fixes, not operator rulings; supersedes the operator-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(199)#(199)[PBS](A)/literals_not_expressed",
+      "unit": "900.3.10(199)#(199)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "orchestrator-p1-mechanical",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a; re-recorded under the lane mechanical label per 2026-10-21-batch-p#CHAT-50, which ruled these seven are gate fixes, not operator rulings; supersedes the operator-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(1434)#(1434)[SSP](A)/literals_not_expressed",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "orchestrator-p1-mechanical",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a; re-recorded under the lane mechanical label per 2026-10-21-batch-p#CHAT-50, which ruled these seven are gate fixes, not operator rulings; supersedes the operator-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(1434)#(1434)[SSP](C)/literals_not_expressed",
+      "unit": "900.3.10(1434)#(1434)[SSP](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "orchestrator-p1-mechanical",
+      "field": "not_an_override",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](F)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "The trigger \"Despite regulation 10.5.40.60(1)\" names a target, so the generator already accounts for it as a displacement; G-XREF refuses a not_an_override entry for it, and \"narrows_permission\" is not in vocab.displacement_triggers.not_an_override.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a; re-recorded under the lane mechanical label per 2026-10-21-batch-p#CHAT-50, which ruled these seven are gate fixes, not operator rulings; supersedes the operator-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(1437)#(1437)[SSP](F)/not_an_override",
+      "unit": "900.3.10(1437)#(1437)[SSP](F)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "orchestrator-p1-mechanical",
+      "field": "not_an_override",
+      "id": "COR-900.3.10(100)#(100)[SSP](D)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "\"where (c) does not apply\" states the condition of the 7.5 m setback, not a displacement of another regulation (vocab not_an_override: condition_not_displacement).",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a; re-recorded under the lane mechanical label per 2026-10-21-batch-p#CHAT-50, which ruled these seven are gate fixes, not operator rulings; supersedes the operator-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(100)#(100)[SSP](D)/not_an_override",
+      "unit": "900.3.10(100)#(100)[SSP](D)",
+      "value": [
+        {
+          "phrase": "does not apply",
+          "reason": "condition_not_displacement"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(528)#(528)[SSP](A)/condition~s1",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (family correction on exception 528 ratified by the operator, 2026-10-21-batch-p#CHAT-50, \"1y\"; matches 144 of 145 existed-on-enactment family units; supersedes the lane-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(528)#(528)[SSP](A)/condition",
+      "unit": "900.3.10(528)#(528)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(528)#(528)[SSP](A)/application.lot_conditions~s1",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (family correction on exception 528 ratified by the operator, 2026-10-21-batch-p#CHAT-50, \"1y\"; matches 144 of 145 existed-on-enactment family units; supersedes the lane-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(528)#(528)[SSP](A)/application.lot_conditions",
+      "unit": "900.3.10(528)#(528)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(528)#(528)[SSP](A)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (family correction on exception 528 ratified by the operator, 2026-10-21-batch-p#CHAT-50, \"1y\"; matches 144 of 145 existed-on-enactment family units; supersedes the lane-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(528)#(528)[SSP](A)/application.evidence",
+      "unit": "900.3.10(528)#(528)[SSP](A)",
+      "value": {
+        "RD": "Exception RD 528"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(528)#(528)[SSP](B)/condition~s1",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (family correction on exception 528 ratified by the operator, 2026-10-21-batch-p#CHAT-50, \"1y\"; matches 144 of 145 existed-on-enactment family units; supersedes the lane-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(528)#(528)[SSP](B)/condition",
+      "unit": "900.3.10(528)#(528)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(528)#(528)[SSP](B)/application.lot_conditions~s1",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (family correction on exception 528 ratified by the operator, 2026-10-21-batch-p#CHAT-50, \"1y\"; matches 144 of 145 existed-on-enactment family units; supersedes the lane-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(528)#(528)[SSP](B)/application.lot_conditions",
+      "unit": "900.3.10(528)#(528)[SSP](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(528)#(528)[SSP](B)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (family correction on exception 528 ratified by the operator, 2026-10-21-batch-p#CHAT-50, \"1y\"; matches 144 of 145 existed-on-enactment family units; supersedes the lane-stamped record, bf448a2c form)",
+      "supersedes": "COR-900.3.10(528)#(528)[SSP](B)/application.evidence",
+      "unit": "900.3.10(528)#(528)[SSP](B)",
+      "value": {
+        "RD": "Exception RD 528"
+      }
     }
   ]
 }
