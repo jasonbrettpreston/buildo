@@ -1,0 +1,275 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/resolution.logic.test.ts run on the working tree at ee5ed572, before scripts/lib/compute/resolve-bylaws.js existed (lane layer2-build-1, 2026-10-21; Spec 134 slice (a)). Paths made repo-relative; nothing else edited.",
+ "numTotalTestSuites": 6,
+ "numPassedTestSuites": 0,
+ "numFailedTestSuites": 6,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 18,
+ "numPassedTests": 0,
+ "numFailedTests": 18,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792597955093,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a lot with no exception (an empty closure) is not gated",
+     "status": "failed",
+     "title": "a lot with no exception (an empty closure) is not gated",
+     "duration": 2.482125000000025,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:45:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a fully authored closure is not gated, in either authored form",
+     "status": "failed",
+     "title": "a fully authored closure is not gated, in either authored form",
+     "duration": 0.18004099999998857,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:49:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) the lot own exception missing from the authored map gates the lot with its id",
+     "status": "failed",
+     "title": "the lot own exception missing from the authored map gates the lot with its id",
+     "duration": 0.14254099999999426,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:53:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a partial exception is not fully authored, even for the targets it lists",
+     "status": "failed",
+     "title": "a partial exception is not fully authored, even for the targets it lists",
+     "duration": 0.12162499999999454,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:57:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) an authored exception that INCLUDEs an unauthored one gates with the included id",
+     "status": "failed",
+     "title": "an authored exception that INCLUDEs an unauthored one gates with the included id",
+     "duration": 0.1333750000000009,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:61:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) the first unauthored id in closure order is reported",
+     "status": "failed",
+     "title": "the first unauthored id in closure order is reported",
+     "duration": 0.12129200000001106,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:65:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a missing closure or authored map throws, never defaulted (I10)",
+     "status": "failed",
+     "title": "a missing closure or authored map throws, never defaulted (I10)",
+     "duration": 0.7135829999999999,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /closure/ but got 'scripts/lib/compute/resolve-bylaws.js…'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:70:59\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) the gate status is not_evaluated:exception_not_authored:<id>, an evaluator closed code",
+     "status": "failed",
+     "title": "the gate status is not_evaluated:exception_not_authored:<id>, an evaluator closed code",
+     "duration": 0.19779099999999517,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:77:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) one row per declared target and structure, each with the gate status and no winner",
+     "status": "failed",
+     "title": "one row per declared target and structure, each with the gate status and no winner",
+     "duration": 0.11704199999999787,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:86:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) a duplicate scope entry throws (I1 counts exactly)",
+     "status": "failed",
+     "title": "a duplicate scope entry throws (I1 counts exactly)",
+     "duration": 0.12800000000001432,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /duplicate/ but got 'scripts/lib/compute/resolve-bylaws.js…'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:90:113\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) a scope entry without a target or a structure throws",
+     "status": "failed",
+     "title": "a scope entry without a target or a structure throws",
+     "duration": 0.11104199999999764,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /structure/ but got 'scripts/lib/compute/resolve-bylaws.js…'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:94:79\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) a gate status outside the not_evaluated form is refused (I3: a gated row has a closed reason)",
+     "status": "failed",
+     "title": "a gate status outside the not_evaluated form is refused (I3: a gated row has a closed reason)",
+     "duration": 0.11341699999999832,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /status/ but got 'scripts/lib/compute/resolve-bylaws.js…'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:99:47\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the gate fires before effective() (resolveLot)"
+     ],
+     "fullName": "M-231: the gate fires before effective() (resolveLot) a gated lot never calls the resolver",
+     "status": "failed",
+     "title": "a gated lot never calls the resolver",
+     "duration": 0.10062499999997954,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:107:18\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the gate fires before effective() (resolveLot)"
+     ],
+     "fullName": "M-231: the gate fires before effective() (resolveLot) an ungated lot resolves every scope entry once, in scope order",
+     "status": "failed",
+     "title": "an ungated lot resolves every scope entry once, in scope order",
+     "duration": 0.09991700000000492,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:114:18\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the gate fires before effective() (resolveLot)"
+     ],
+     "fullName": "M-231: the gate fires before effective() (resolveLot) the A14 case with the real evaluator: a partial exception resolves its listed target in effective(), Layer 2 still gates every target",
+     "status": "failed",
+     "title": "the A14 case with the real evaluator: a partial exception resolves its listed target in effective(), Layer 2 still gates every target",
+     "duration": 1.9491669999999885,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:127:24\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3: value_kind"
+     ],
+     "fullName": "Spec 134 §3: value_kind a finite number is number; the two terminal strings map to themselves",
+     "status": "failed",
+     "title": "a finite number is number; the two terminal strings map to themselves",
+     "duration": 0.09087500000001114,
+     "failureMessages": [
+      "AssertionError: scripts/lib/compute/resolve-bylaws.js should exist: expected false to be true // Object.is equality\n    at rb (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:19:78)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:137:13\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3: value_kind"
+     ],
+     "fullName": "Spec 134 §3: value_kind anything else throws, never guessed",
+     "status": "failed",
+     "title": "anything else throws, never guessed",
+     "duration": 0.12649999999999295,
+     "failureMessages": [
+      "AssertionError: null: expected [Function] to throw error matching /value_kind/ but got 'scripts/lib/compute/resolve-bylaws.js…'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:141:142\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "purity (Spec 132 §1 compute purity; gate E at ①)"
+     ],
+     "fullName": "purity (Spec 132 §1 compute purity; gate E at ①) the compute module requires nothing and reads no environment, clock or randomness",
+     "status": "failed",
+     "title": "the compute module requires nothing and reads no environment, clock or randomness",
+     "duration": 0.30716599999999517,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/lib/compute/resolve-bylaws.js'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:147:20\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792597955366,
+   "endTime": 1792597955373.3071,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
+  }
+ ]
+}

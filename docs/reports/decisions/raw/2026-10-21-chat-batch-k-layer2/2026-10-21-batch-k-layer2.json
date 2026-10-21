@@ -1,0 +1,31 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "1. y 2. y. 3.y we are at 93% usage for a max 20X plan - so we should use spec 08 and deepseek as well to maximize token use - please update all the new build information from toronto for the calculator - and other verifciation accuracy is loking good",
+  "context": "Answers to the three asks after the 2026-10-21 crash resume. (1) 'c+a' ratchet question for integrate-18. (2) Rulings page for the next by-law fix round (F-4D-1..9, unkeyed Scarborough exceptions 155/199/245/252/256/340/1462, Layer 2 prerequisites: tie-break losers, exception closure, scenario classes, exception chapters). (3) 'y to all' on Layer 2 questions Q-L2-1..4. Plus a directive: use Spec 08 / DeepSeek for bulk work, and ingest the new Toronto Drive upload (COA_PLANS_MAXBLD) into the calculator evidence.",
+  "decisions": [
+    {
+      "id": "CHAT-39.Q-L2-1",
+      "subject": "Drop the inputs-hash column",
+      "decision": "approve",
+      "recommendation": "Yes — with the simplification it always equals the cell id."
+    },
+    {
+      "id": "CHAT-39.Q-L2-2",
+      "subject": "Recompute every lot each run (no skipping in v1)",
+      "decision": "approve",
+      "recommendation": "Yes — unchanged results write 0 rows."
+    },
+    {
+      "id": "CHAT-39.Q-L2-3",
+      "subject": "Keep the spec order for Layer 2 database slices",
+      "decision": "approve",
+      "recommendation": "Yes — read-only DB measurement next, then build slices b-d in one go after the by-law fixes land."
+    },
+    {
+      "id": "CHAT-39.Q-L2-4",
+      "subject": "Where the in-scope zone list lives",
+      "decision": "approve",
+      "recommendation": "A logic variable (R-AY preference), changeable without code."
+    }
+  ]
+}
