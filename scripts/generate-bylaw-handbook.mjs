@@ -42,7 +42,7 @@ const FAMILY_PREFIX = 'fam-';
 function familyRank(f) {
   if (f === GENERAL_FAMILY) return [3, []];
   const nums = f.split('.').map(Number);
-  if (f.startsWith('10.5.')) return [1, nums];
+  if (f.startsWith('10.5.') || f.startsWith('5.10.')) return [1, nums];
   if (nums.length === 1) return [2, nums];
   return [0, nums];
 }

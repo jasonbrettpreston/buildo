@@ -32,7 +32,7 @@ type Checker = {
   checkHandbookCitations: (citations: Citation[], maps: unknown) => string[];
   checkGeneratedSizeCaps: (texts: Record<string, string>, manifest: unknown) => string[];
 };
-type Reg = { readBylawRegisterRows: (root?: string) => Row[]; familyOf: (text: string) => { clause: string | null; family: string } };
+type Reg = { headlineOf: (cell: string) => string; readBylawRegisterRows: (root?: string) => Row[]; familyOf: (text: string) => { clause: string | null; family: string } };
 type Gen = { buildRuleMap: (rows: Row[]) => RuleMap; render: (map: RuleMap, rows: Row[]) => string };
 type RuleMapMod = { HANDBOOKS: Record<string, { ruleMapRel: string; handbookRel: string }> };
 
@@ -244,6 +244,11 @@ describe('M-260 — the handbook is grouped by provision family, derived from th
     expect(reg.familyOf('definition 800.50').family).toBe('800');
     expect(reg.familyOf('exception 900.3.10(42)').family).toBe('900');
     expect(reg.familyOf('no clause here, Spec 78 6.7').family).toBe('general');
+    // verify-26 note 3: the old short form 5.10.x is its own family, like 10.5; zone shorthand x.40.10 joins 40.10
+    expect(reg.familyOf('subject of 5.10.175.1(1) is a fence').family).toBe('5.10.175.1');
+    expect(reg.familyOf('main-wall LIMITs x.40.10(2) displaced').family).toBe('40.10');
+    expect(reg.familyOf('x.30.40(1)(D) frontage').family).toBe('30.40');
+    expect(reg.familyOf('chapter 220.5.10.1 only').family).toBe('general');
     // several clauses: the first one in the text wins
     expect(reg.familyOf('10.80.40.10 then 10.20.30.1').clause).toBe('10.80.40.10');
     expect(reg.familyOf('10.80.40.10 then 10.20.30.1').family).toBe('40.10');
@@ -270,5 +275,19 @@ describe('M-260 — the handbook is grouped by provision family, derived from th
     const text = read(SPEC_133_REL);
     expect(text).toMatch(/^### 40\.10( — .+)?$/m);
     expect(text).toMatch(/^### General \/ cross-cutting$/m);
+  });
+});
+
+describe('M-260 — a headline sentence does not end at an abbreviation (verify-26 note A)', () => {
+  it('e.g. and i.e. do not end the sentence', () => {
+    const h = reg.headlineOf('**Sweep.** A mechanical sweep over every agreed unit, e.g. the M-75 units, is run; the rest is manual.');
+    expect(h).toContain('e.g. the M-75 units');
+    expect(h.endsWith('e.g.')).toBe(false);
+    const h2 = reg.headlineOf('**Ok.** The rule applies i.e. everywhere in the zone. Second sentence.');
+    expect(h2).toContain('i.e. everywhere in the zone.');
+    expect(h2).not.toContain('Second sentence');
+  });
+  it('no rendered headline ends at an abbreviation', () => {
+    for (const r of reg.readBylawRegisterRows()) expect(r.headline, r.id).not.toMatch(/\b(e\.g|i\.e|etc|vs|cf)\.?$/);
   });
 });
