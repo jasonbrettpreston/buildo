@@ -21,7 +21,7 @@ const MAP_REL = 'scripts/analysis/bylaw/_schema/bylaw-rule-map.json';
 const GENERATOR = path.join(REPO_ROOT, 'scripts/generate-bylaw-handbook.mjs');
 const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
 
-type Row = { id: string; kind: string; file: string; section: string; headline: string; status: string; keyword: string; struck: boolean; owed: boolean; notes: number; enforcedBy: string };
+type Row = { family: string; clause: string | null; id: string; kind: string; file: string; section: string; headline: string; status: string; keyword: string; struck: boolean; owed: boolean; notes: number; enforcedBy: string };
 type MapRule = { id: string; kind: string; handbook_line: string; status: string; source: { file: string; anchor: string } };
 type RuleMap = { meta: Record<string, unknown>; sections: Array<{ id: string }>; lines: Array<{ id: string; section: string }>; rules: MapRule[] };
 type Citation = { citation: string; kind: string; specId: string; lineId: string; rules: string[]; file: string; line: number };
@@ -32,7 +32,7 @@ type Checker = {
   checkHandbookCitations: (citations: Citation[], maps: unknown) => string[];
   checkGeneratedSizeCaps: (texts: Record<string, string>, manifest: unknown) => string[];
 };
-type Reg = { readBylawRegisterRows: (root?: string) => Row[] };
+type Reg = { readBylawRegisterRows: (root?: string) => Row[]; familyOf: (text: string) => { clause: string | null; family: string } };
 type Gen = { buildRuleMap: (rows: Row[]) => RuleMap; render: (map: RuleMap, rows: Row[]) => string };
 type RuleMapMod = { HANDBOOKS: Record<string, { ruleMapRel: string; handbookRel: string }> };
 
@@ -231,5 +231,44 @@ describe('M-260 / R-IY — the rows, the decision log and the pre-commit wiring'
     const cmd = 'node scripts/generate-bylaw-handbook.mjs --check';
     expect(hook.split(cmd).length).toBe(2);
     expect(hook.indexOf(cmd)).toBeGreaterThan(hook.indexOf('node scripts/generate-step-handbook.mjs --check'));
+  });
+});
+
+describe('M-260 — the handbook is grouped by provision family, derived from the first clause a row cites', () => {
+  it('RED/GREEN — 10.20.40.10 and 10.80.40.10 share the family 40.10; 10.5 keeps its chapter; 150/800/900 are chapter families; no clause is general', () => {
+    expect(reg.familyOf('Height 10.20.40.10(5) applies').family).toBe('40.10');
+    expect(reg.familyOf('Height 10.80.40.10(1) applies').family).toBe('40.10');
+    expect(reg.familyOf('R 10.10.40.10, RS 10.40.40.10').family).toBe('40.10');
+    expect(reg.familyOf('platforms 10.5.40.60(3)').family).toBe('10.5.40.60');
+    expect(reg.familyOf('garden suite 150.7.60.70(1)').family).toBe('150');
+    expect(reg.familyOf('definition 800.50').family).toBe('800');
+    expect(reg.familyOf('exception 900.3.10(42)').family).toBe('900');
+    expect(reg.familyOf('no clause here, Spec 78 6.7').family).toBe('general');
+    // several clauses: the first one in the text wins
+    expect(reg.familyOf('10.80.40.10 then 10.20.30.1').clause).toBe('10.80.40.10');
+    expect(reg.familyOf('10.80.40.10 then 10.20.30.1').family).toBe('40.10');
+  });
+
+  it('the rows really group across zones, and unmatched rows are general', () => {
+    const rows = reg.readBylawRegisterRows();
+    const zonesOf = (fam: string) => new Set(rows.filter((r) => r.family === fam && r.clause).map((r) => /^10\.(10|20|40|60|80)\./.exec(r.clause!)?.[1]).filter(Boolean));
+    const fams = new Set(rows.map((r) => r.family));
+    expect([...fams].some((f) => zonesOf(f).size >= 2)).toBe(true);
+    for (const r of rows) if (!r.clause) expect(r.family, r.id).toBe('general');
+    expect(rows.some((r) => r.family === 'general')).toBe(true);
+  });
+
+  it('every in-force line sits in exactly one family section; history stays apart; line ids are still m.<n> / lc.<n>', () => {
+    const map = JSON.parse(read(MAP_REL)) as RuleMap;
+    const rows = reg.readBylawRegisterRows();
+    for (const l of map.lines) {
+      const rule = map.rules.find((r) => r.handbook_line === l.id)!;
+      const row = rows.find((r) => r.id === rule.id)!;
+      expect(l.section, l.id).toBe(rule.status === 'history' ? 'history' : `fam-${row.family}`);
+      expect(l.id).toBe(rule.id.toLowerCase().replace('-', '.'));
+    }
+    const text = read(SPEC_133_REL);
+    expect(text).toMatch(/^### 40\.10( — .+)?$/m);
+    expect(text).toMatch(/^### General \/ cross-cutting$/m);
   });
 });

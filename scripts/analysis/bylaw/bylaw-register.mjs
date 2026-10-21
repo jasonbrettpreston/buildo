@@ -24,6 +24,23 @@ const ID_CELL_RE = /^(~~)?\*{0,2}(M|LC)-([0-9]+)\*{0,2}(~~)?$/;
 const HEADLINE_MAX = 300;
 const ENFORCED_MAX = 110;
 
+// Provision family (Spec 69a M-260): derived from the FIRST clause a row cites, never a register field. The same
+// provision is ruled alike in every zone chapter (10.10 / 10.20 / 10.40 / 10.60 / 10.80), so a zone-chapter clause
+// 10.<zone>.<g1>.<g2> is the family "<g1>.<g2>" (10.20.40.10 and 10.80.40.10 are both "40.10"); a 10.5 clause keeps its
+// chapter (family "10.5.<g1>.<g2>"); 150.x, 800.x and 900.x take their chapter ("150", "800", "900"); a row that cites no
+// clause is "general". A row citing several clauses uses the first one in its rule text.
+export const GENERAL_FAMILY = 'general';
+const CLAUSE_RE = /(?<![0-9.])(10\.(?:10|20|40|60|80)\.[0-9]+\.[0-9]+|10\.5\.[0-9]+\.[0-9]+|(?:150|800|900)\.[0-9]+)/;
+export function familyOf(text) {
+  const m = CLAUSE_RE.exec(text);
+  if (!m) return { clause: null, family: GENERAL_FAMILY };
+  const clause = m[1];
+  const zone = /^10\.(?:10|20|40|60|80)\.([0-9]+\.[0-9]+)$/.exec(clause);
+  if (zone) return { clause, family: zone[1] };
+  if (clause.startsWith('10.5.')) return { clause, family: clause };
+  return { clause, family: clause.split('.')[0] };
+}
+
 /** Split one markdown table row into trimmed cells. `\|` is a literal bar; a bar inside backticks does not split. */
 export function splitRow(line) {
   const out = [];
@@ -126,6 +143,7 @@ export function readBylawRegisterRows(root = REPO_ROOT) {
         spec: reg.spec,
         section: reg.sections[sec],
         headline: headlineOf(ruleCell),
+        ...familyOf(ruleCell),
         keyword: st.keyword,
         date: st.date,
         status: `${st.keyword}${st.date ? ` ${st.date}` : ''}${st.partial ? ' (in part)' : ''}${st.owed ? ' · OWED' : ''}`,
