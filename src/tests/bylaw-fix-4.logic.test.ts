@@ -92,3 +92,25 @@ describe('F-SC-4 / M-249 — RM apartment side yard on a major street keyed like
     }
   });
 });
+
+// F-SC-6 / M-250 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-6`): RD 42's GFA takes its own
+// FSI cap — gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2).
+describe('F-SC-6 / M-250 — exception RD 42 gross floor area is capped at FSI 0.5', () => {
+  const U = '900.3.10(42)#(42)[SSP](A)(i)';
+  const bethnal = (area: number): Json => lot('RD', 'detached_house', { exception: '900.3.10(42)', label: { f: 12 }, vars: { lot_area_m2: area, lot_frontage_m: 12, lot_depth_m: area / 12 } });
+
+  it('the text carries the cap (ch900_3.txt)', () => {
+    expect(page('ch900_3')).toContain('is 118 square metres, plus 25% of the lot area, up to a maximum floor space index of 0.5');
+  });
+
+  it('the unit keys min() of the two limbs; fsi stays 0.5', () => {
+    expect([].concat(unitOf(U).numeric_expression).sort()).toEqual(['fsi = 0.5 ratio @(42)[SSP](A)(i)', 'gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(42)[SSP](A)(i)']);
+  });
+
+  it('41 Bethnal Ave (City 195.72 m² on 391.44 m²): gfa_m2 = 0.5 × lot area; a large lot keeps 118 + 25 %', () => {
+    const r = eff(bethnal(391.44), 'gfa_m2');
+    expect([r.status, r.value, r.winner]).toEqual(['value', 195.72, U]);
+    const big = eff(bethnal(1000), 'gfa_m2');
+    expect(big.value).toBe(368);
+  });
+});

@@ -82638,6 +82638,20 @@
           "building_type"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(42)#(42)[SSP](A)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 (CoA scorecard, 2026-10-21). 900.3.10(42)(A)(i): \"the maximum gross floor area on a lot, plus the floor area of an attached or detached garage, is 118 square metres, plus 25% of the lot area, up to a maximum floor space index of 0.5\". The cap was keyed on fsi only and dropped from gfa_m2, which overstates the GFA (41 Bethnal Ave A0238/26EYK: City 195.72 m² = 0.5 × 391.44 m²).",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2); fsi = 0.5 ratio unchanged\"); M-75",
+      "unit": "900.3.10(42)#(42)[SSP](A)(i)",
+      "value": [
+        "fsi = 0.5 ratio @(42)[SSP](A)(i)",
+        "gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(42)[SSP](A)(i)"
+      ]
     }
   ]
 }
