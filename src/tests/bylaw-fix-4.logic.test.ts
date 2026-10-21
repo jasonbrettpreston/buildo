@@ -16,6 +16,7 @@ const mod = async (rel: string): Promise<Json> => import(pathToFileURL(path.join
 const AS = await mod('scripts/analysis/bylaw-validation/assembly.mjs');
 const AU = await mod('scripts/analysis/bylaw/authored.mjs');
 const XR = await mod('scripts/analysis/bylaw/xref.mjs');
+const FA = await mod('scripts/analysis/bylaw/front-averaging.mjs');
 const { I, E, units, C } = await AS.loadRealLotAssembly(process.cwd());
 const index = AU.buildIndex(I.slice);
 const external = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'scripts/seeds/bylaw/external.json'), 'utf8'));
@@ -194,5 +195,43 @@ describe('F-SC-9 / M-253 — garden-suite lots: the 20 % all-ancillary cap, the 
 
   it('(A) 45 % is disclosed as the alternative path', () => {
     expect(String(unitOf('150.7.60.70(1)#(1)(A)').disclosure)).toMatch(/\(A\) 45 % for all buildings/);
+  });
+});
+
+// Front yard / M-256 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.FRONT-YARD`,
+// `2026-10-21-chat-batch-g#CHAT-29.Front-yard-accuracy`): keep M-245 (no floor); where averaging may apply but a neighbour's
+// estimate is missing or excluded, front_setback_m answers needs_survey — never the zone default.
+describe('front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default', () => {
+  const nb = (o: Json): Json => ({ neighbour_residential: true, same_frontage_street: true, neighbour_building_id: 1, bldg_to_subject_m: 3, front_setback_est_m: 5, est_status: 'estimated', ...o });
+  const res = (rows: Json[]): Json => FA.resolveFrontAveraging(rows, { fya_porch_allowance_m: 1.0 }, { zone_default_m: 6.0 });
+  const NS = (r: Json): unknown[] => [r.basis, r.front_setback_m, r.needs_survey, r.disclosures, r.flags.front_averaging_not_applicable];
+
+  it('the text: x.40.70(1) applies only "If regulation 10.5.40.70(1) does not apply" (ch10_20.txt)', () => {
+    expect(page('ch10_20')).toContain('If regulation 10.5.40.70(1) does not apply, the required minimum front yard setback in the RD zone is 6.0 metres');
+  });
+
+  it('two qualifying neighbours, an estimate excluded (30 Sunvale Dr, 50 Melville Ave): needs survey, no value', () => {
+    expect(NS(res([nb({}), nb({ front_setback_est_m: null, est_status: 'estimate_out_of_bounds' })]))).toEqual(['needs_survey', null, true, ['front_yard_survey_required'], null]);
+  });
+
+  it('no qualifying neighbour, but an abutting residential lot whose street or building is not known (24 Balding Crt): needs survey', () => {
+    expect(NS(res([nb({ same_frontage_street: null, front_setback_est_m: null, est_status: 'no_frontage_street', bldg_to_subject_m: 4.46 })]))).toEqual(['needs_survey', null, true, ['front_yard_survey_required'], null]);
+    expect(NS(res([nb({ neighbour_building_id: null, bldg_to_subject_m: null, front_setback_est_m: null, est_status: 'no_building' })]))[0]).toBe('needs_survey');
+  });
+
+  it('averaging provably does not apply (no abutting residential lot on the street, or its building beyond 15.0 m): the zone default', () => {
+    expect([res([]).basis, res([]).front_setback_m]).toEqual(['zone_default', 6]);
+    expect([res([nb({ bldg_to_subject_m: 20 })]).basis, res([nb({ same_frontage_street: false })]).basis, res([nb({ neighbour_residential: false })]).basis]).toEqual(['zone_default', 'zone_default', 'zone_default']);
+  });
+
+  it('M-245 kept: estimated neighbours average + allowance with no floor; three or more neighbours keep the zone default (Q-B2)', () => {
+    expect([res([nb({ front_setback_est_m: 2 }), nb({ front_setback_est_m: 3 })]).front_setback_m]).toEqual([3.5]);
+    expect(res([nb({}), nb({}), nb({})]).basis).toBe('zone_default_needs_survey');
+  });
+
+  it('the evaluator owes the front setback while the averaging flag is undecided (no zone-default answer)', () => {
+    const l = lot('RD', 'detached_house', { flags: { front_averaging_not_applicable: null } });
+    const r = eff(l, 'front_setback_m');
+    expect([r.status, r.reason]).toEqual(['not_evaluated', 'condition_unknown:front_averaging_not_applicable']);
   });
 });

@@ -207,10 +207,12 @@ describe('M-205(1)-floor / M-245 — no zone-default floor under the averaged fr
     const e = viaEvaluator('RD', r);
     expect([e.value, e.winner]).toEqual([4.86, '10.5.40.70(1)#(1)(A)']);
   });
-  it('the zone default applies only where averaging does not: no qualifying neighbour, an excluded estimate, three or more neighbours', () => {
+  // amended 2026-10-21 by 69a M-256 (`2026-10-21-chat-batch-g#CHAT-29.FRONT-YARD`): an excluded estimate answers needs survey
+  // (no value), never the zone default
+  it('the zone default applies only where averaging does not: no qualifying neighbour, three or more neighbours; an excluded estimate needs a survey (M-256)', () => {
     const cfg = { fya_porch_allowance_m: 1.0 }; const z = { zone_default_m: 6.0 };
     expect(FA.resolveFrontAveraging([], cfg, z).front_setback_m).toBe(6.0);
-    expect(FA.resolveFrontAveraging([nb(2.0), { ...nb(2.0), est_status: 'estimate_negative', front_setback_est_m: null }], cfg, z).front_setback_m).toBe(6.0);
+    expect(FA.resolveFrontAveraging([nb(2.0), { ...nb(2.0), est_status: 'estimate_negative', front_setback_est_m: null }], cfg, z).front_setback_m).toBe(null);
     expect(FA.resolveFrontAveraging([nb(2.0), nb(2.0), nb(2.0)], cfg, z).front_setback_m).toBe(6.0);
   });
 });
