@@ -85,6 +85,10 @@ describe('3. a candidates array changed between calls gives a fresh answer', () 
   });
 });
 
+// L2-LOSERS (M-295, 2026-10-21): effective() gained a losers[] field, purely additive. The golden below is hashed with that one
+// field left out, so it proves no existing byte moved (the pin is unchanged: 3815ff0a…); losers[] itself is locked by
+// bylaw-losers.logic.test.ts, one fixture per dropped_by member.
+const noLosers = (x: unknown): unknown => JSON.parse(JSON.stringify(x, (k, v) => (k === 'losers' ? undefined : v)));
 describe('4. equivalence: the fixture corpus is byte-identical to the pre-refactor evaluator', () => {
   it('35 eval-vector lots × 4 variants × every target + permitted() hash to the bd332ec8 golden', () => {
     const lots = [...new Set(VECTORS.map((v) => stable(v.lot)))].sort(cmp).map((s) => JSON.parse(s));
@@ -93,8 +97,8 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     for (const L of lots) {
       for (const lot of [L, { ...L, building_type: null }, { ...L, flags: {} }, { ...L, building_type: null, flags: {} }]) {
         const cands = E.loadCandidates(lot, UNITS).candidates;
-        for (const t of targets) h.update(stable(E.effective(lot, t, cands, C)));
-        for (const bt of EV.building_type_residential) h.update(stable(E.permitted(lot, bt, cands, C)));
+        for (const t of targets) h.update(stable(noLosers(E.effective(lot, t, cands, C))));
+        for (const bt of EV.building_type_residential) h.update(stable(noLosers(E.permitted(lot, bt, cands, C))));
       }
     }
     expect(lots.length).toBe(35);

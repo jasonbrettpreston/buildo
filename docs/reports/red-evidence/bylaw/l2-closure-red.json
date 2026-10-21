@@ -1,0 +1,40 @@
+{
+ "suite": "src/tests/bylaw-exception-closure.logic.test.ts",
+ "base": "1ff66361",
+ "run_on": "2026-10-21",
+ "note": "L2-CLOSURE (M-296): exceptionClosure is not exported yet; all 7 cases fail. The test file lands with the fix (pre-commit runs related tests).",
+ "counts": {
+  "red": 7,
+  "pass": 0
+ },
+ "cases": [
+  {
+   "name": "L2-CLOSURE: exceptionClosure(lot, candidates) is an exported pure function",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLOSURE: exceptionClosure(lot, candidates) a lot with no exception has an empty closure",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLOSURE: exceptionClosure(lot, candidates) lists the lot exception first, then each INCLUDE link in breadth-first order, once",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLOSURE: exceptionClosure(lot, candidates) a cycle is walked once, never looped",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLOSURE: exceptionClosure(lot, candidates) an exception with no units still appears (the gate reports it as not authored)",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLOSURE: exceptionClosure(lot, candidates) does not mutate its inputs and gives the same list on a second call",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLOSURE: exceptionClosure(lot, candidates) agrees with the lot gate: the first closure id that is not authored is the one effective() reports",
+   "status": "failed"
+  }
+ ]
+}

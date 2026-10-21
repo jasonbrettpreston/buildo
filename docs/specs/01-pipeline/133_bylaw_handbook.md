@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 307** (245 M-rows, 62 LC-rows): 304 in force (34 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 311** (249 M-rows, 62 LC-rows): 308 in force (34 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -663,6 +663,10 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6.
   Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-7 / M-251 — …" (red first: docs/repo…
   Rules: `M-251` (Spec 69a)
 
+- **m.297** vocab.exception_chapter maps a zone to its Chapter 900 article.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-layer2-vocab.logic.test.ts › "L2-CHAPTERS" (red first: docs/repo…
+  Rules: `M-297` (Spec 69a)
+
 ### General / cross-cutting
 
 Rows that cite no by-law clause: process, method and cross-cutting rulings.
@@ -1182,6 +1186,18 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **m.246** A dated note may be appended inside a row's status cell.
   Status: RULED 2026-10-20 · Enforced by: decision-log.logic (the record)
   Rules: `M-246` (Spec 69a)
+
+- **m.295** effective() returns a structured losers[] beside the free-text trace.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-losers.logic.test.ts (red first: docs/reports/red-evidence/bylaw/l2-losers-red.json, 11 red)
+  Rules: `M-295` (Spec 69a)
+
+- **m.296** exceptionClosure(lot, candidates) is the one pure export that lists a lot's exception closure.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-exception-closure.logic.test.ts (red first: docs/reports/red-evidence/bylaw/l2-closure-red.json, 7 red)
+  Rules: `M-296` (Spec 69a)
+
+- **m.298** The scenario class vectors: five Spec 78 P5.1 classes, one new.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-layer2-vocab.logic.test.ts › "L2-CLASSES", "PIN L2-KEY-READPATHS"
+  Rules: `M-298` (Spec 69a)
 
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts

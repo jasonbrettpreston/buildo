@@ -1,0 +1,56 @@
+{
+ "suite": "src/tests/bylaw-losers.logic.test.ts",
+ "base": "edd18529",
+ "run_on": "2026-10-21",
+ "note": "L2-LOSERS (M-295): the structured losers[] does not exist yet; every fixture fails (no losers on the result, no DROPPED_BY export). Pre-commit runs the related tests, so the red run is kept as this evidence file and the test lands with the fix.",
+ "counts": {
+  "red": 11,
+  "pass": 0
+ },
+ "cases": [
+  {
+   "name": "L2-LOSERS: the dropped_by vocabulary DROPPED_BY is the eight members of the Phase 2 plan (P2:192), in that order",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: the dropped_by vocabulary a value result carries losers[] (empty when nothing lost), purely additive beside trace[]",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member rule2_displaced: a same-layer \"Despite\" drops the displaced unit",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member rule2_arg_displaced: an argument of a unit is replaced by the displacing unit",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member rule3_outranked: a unit that displaces the precedence rule outranks a higher layer",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member rule4_higher_layer: the highest layer replaces the lower one for the same bound",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member rule4_provincial_restraint: a provincial unit restrains a more restrictive by-law value",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member rule4a_less_restrictive: at one layer and bound the most restrictive value governs",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member condition_false: a value unit whose condition does not hold for the lot",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: one fixture per dropped_by member order_tiebreak: two units give the same value; the first in declared order stands",
+   "status": "failed"
+  },
+  {
+   "name": "L2-LOSERS: every loser is well-formed each loser names a unit and a dropped_by member, and never the winner",
+   "status": "failed"
+  }
+ ]
+}

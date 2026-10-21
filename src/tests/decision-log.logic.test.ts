@@ -437,7 +437,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(98);
+    expect(r.decisions).toBe(102); // 98 (integrate-20) + 4 (lane C); the number decision-log --check prints
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(3);
   });

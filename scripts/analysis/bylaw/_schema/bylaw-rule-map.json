@@ -1156,6 +1156,22 @@
       "section": "fam-40.10"
     },
     {
+      "id": "m.295",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.296",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.297",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.298",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -4098,6 +4114,50 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-260**"
+      }
+    },
+    {
+      "id": "M-295",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.295",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-295**"
+      }
+    },
+    {
+      "id": "M-296",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.296",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-296**"
+      }
+    },
+    {
+      "id": "M-297",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.297",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-297**"
+      }
+    },
+    {
+      "id": "M-298",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.298",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-298**"
       }
     },
     {
