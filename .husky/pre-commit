@@ -36,6 +36,7 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
   node scripts/generate-step-handbook.mjs --check && \
   node scripts/analysis/decision-log.mjs --check && \
   node scripts/analysis/report-schema.mjs --check && \
+  node scripts/generate-bylaw-layer2-input.mjs --check && \
   node scripts/analysis/spec-split-check.mjs --check && \
   node scripts/violations/schema-to-vocab.mjs --check docs/reports/generated/122-vocabulary.md && \
   npx vitest src/tests/system-map.infra.test.ts --run && \
