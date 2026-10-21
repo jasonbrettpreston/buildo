@@ -121,7 +121,7 @@ Pre-commit runs vitest related on the staged tests, so a red test is committed a
 
 ## 6. Open questions Spec 134 left unsettled (ruled 2026-10-21)
 
-**Ruled.** The operator approved all twelve on 2026-10-21 on a condition: "keeping this simple, understandable, accruate, standardized, easy to fix or altar" (decision log `2026-10-21-chat-batch-j`). Each is now a Spec 124 register row in its simplest compliant form; where that form is simpler than the recommendation below, the row says how and why (124a §B26, conflict checks and V3 tables 124a §B33). The drafts below are kept as written.
+**Ruled.** The operator approved all twelve on 2026-10-21 on a condition: "keeping this simple, understandable, accruate, standardized, easy to fix or altar" (decision log `2026-10-21-chat-batch-j`). Each is now a Spec 124 register row in its simplest compliant form; where that form is simpler than the recommendation below, the row says how and why (124a §B26, conflict checks and V3 tables 124a §B36). The drafts below are kept as written.
 
 | OQ | Row | Built in lane layer2-build-2 | Simplified |
 |---|---|---|---|
@@ -373,7 +373,7 @@ The closure's source (OQ-2), the scope's source (OQ-8), the gate order (OQ-6) an
 ## 8. PINs (out of scope here)
 
 - **PIN-L2-1:** `pull-oracle.cjs:9` hard-codes the zone → Chapter 900 map. It is a read-only analysis script, but Layer 2 must not copy it (OQ-11).
-- **PIN-L2-2:** compute modules are CommonJS and `evaluate.mjs` is ESM. **Bridge chosen (layer2-build-2):** a synchronous `require()` of the ES module (Node ≥ 22.12; the repo runs Node 26; neither `evaluate.mjs` nor `cell-cache.mjs` has top-level await), the simplest form, used by `scripts/lib/bylaw-resolution.js` and locked by a case that runs plain node. Still open (PIN L2-CLOSURE-ESM, 124a §B33): gate E's `compute-closure.mjs` follows `require()` edges only, so `evaluate.mjs`'s ESM `import` of `dsl.mjs` is not scanned; the gates lane closes it before ②.
+- **PIN-L2-2:** compute modules are CommonJS and `evaluate.mjs` is ESM. **Bridge chosen (layer2-build-2):** a synchronous `require()` of the ES module (Node ≥ 22.12; the repo runs Node 26; neither `evaluate.mjs` nor `cell-cache.mjs` has top-level await), the simplest form, used by `scripts/lib/bylaw-resolution.js` and locked by a case that runs plain node. Still open (PIN L2-CLOSURE-ESM, 124a §B36): gate E's `compute-closure.mjs` follows `require()` edges only, so `evaluate.mjs`'s ESM `import` of `dsl.mjs` is not scanned; the gates lane closes it before ②.
 - **PIN-L2-3:** `mobile/node_modules`, a symlink, shows as untracked in a fresh worktree (the ignore rule matches the directory, not the link). It is never staged.
 - **PIN-L2-4:** `scripts/generate-system-map.mjs` has no mode flag (it always writes), so this lane did not run it. Spec 134's Target Files name the slice (a) files without their root, the convention its PLANNED line already uses, so the system map is unchanged. Registering the step at ① regenerates it.
 - **PIN-L2-5 (layer2-build-2):** slices (b) census/descriptor, (c) migration and (d) shell/runner wiring are not landed: Spec 134 §9 puts commit ① (census, `converted.json` pending at `red_suite`, admin entries, the migration, the logic-variable seed) after node N4, the evaluator prerequisites and P2-0 (134:145), and P2-0 fixes the physical table split (134:159) on the local DB; R-K.1 keeps the descriptor out of `red_suite`; a compute file must pair with a manifest step (step-conformance §5.5). Drafted Q-L2-3.
