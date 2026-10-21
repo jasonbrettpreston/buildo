@@ -91,7 +91,7 @@ describe('L2-CLASSES: vocab.scenario_class_units (M-298)', () => {
     expect(classes.detached_houseplex.house_units).toEqual({ min: 2, max: 4, evaluated_at: 4 });
   });
   it('the catalogue is pinned by sha (an edit to any vector changes it, so it is a reviewed change)', () => {
-    expect(crypto.createHash('sha256').update(stable(classes)).digest('hex')).toBe('55ff424c6621a633ea50fb1b8949a3e7e41558afd2ee6c950865e9ccbfae2132');
+    expect(crypto.createHash('sha256').update(stable(classes)).digest('hex')).toBe('bcb00d6a971ae571c27f9e084b5d1b27b1cad231650cd267b5d542450b0dc510');
   });
 });
 
