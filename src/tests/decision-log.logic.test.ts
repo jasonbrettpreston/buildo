@@ -420,9 +420,22 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(58);
+    expect(r.decisions).toBe(59);
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(3);
+  });
+
+  it('chat batch E (refreeze-night-1): CHAT-27 → R-II, the REFREEZE-BUNDLE-1 split; the dated note sits on the bundled-night line', () => {
+    const A = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
+    const e = byStem.get('2026-10-21-chat-batch-e') as { source: { operator_quote: string }; decisions: Array<{ id: string; decision: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(e.source.operator_quote).toContain('Re-freeze night: split it?');
+    expect(e.decisions.map((x) => [x.id, x.decision])).toEqual([['CHAT-27', 'approve']]);
+    expect(e.routing).toEqual({ 'CHAT-27': { register: A, row: 'R-II' } });
+    const rows = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n');
+    expect(rows.find((l) => l.startsWith('| R-II |'))).toContain('`2026-10-21-chat-batch-e#CHAT-27`');
+    const night = rows.find((l) => l.startsWith('**Bundled RE-FREEZE night')) as string;
+    expect(night).toContain('neither lands alone');
+    expect(night).toContain('(Amended 2026-10-21, operator approved, R-II');
   });
 
   it('chat batch D (integrate-16): CHAT-23 → R-IG, CHAT-24 → notes on R-IB and R-IC, CHAT-25 → R-IH; CHAT-26 is no_ruling on R-EY', () => {

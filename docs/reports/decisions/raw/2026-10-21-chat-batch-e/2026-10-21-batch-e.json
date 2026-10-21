@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "y to this . Re-freeze night: split it? (I recommend A, split.) One item is tied to the permits cutover, which is still far off. Splitting lets everything else run now, and V3 goes from 4 to about 28.. let's keep rolling on the V3",
+  "context": "Answer to REFREEZE-SPLIT-Q (refreeze-night-1 Phase 0 stop): REFREEZE-BUNDLE-1 (124a:457) item (2), the refresh_snapshot recorder producer-read, is 'timed with permits ③' (D-P1) while the bundle says 'neither lands alone'. Options: (A) split, (B) wait for permits ③, (C) land item (2) early.",
+  "decisions": [
+    {"id": "CHAT-27", "subject": "REFREEZE-BUNDLE-1 split (REFREEZE-SPLIT-Q option A)", "decision": "approve", "recommendation": "Split the bundle. Night 1 runs items (1) and (3)-(8) with one fleet recapture; item (2), the refresh_snapshot recorder producer-read (D-P1), becomes its own library RE-FREEZE in the permits ③ landing with a second fleet recapture then. D-P1 stays exactly as ruled; 124a:457's 'neither lands alone' is amended by this ruling."}
+  ]
+}

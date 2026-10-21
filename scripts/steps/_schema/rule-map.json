@@ -672,7 +672,7 @@
     {
       "id": "x-v3.2",
       "section": "x-v3",
-      "text": "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint.",
+      "text": "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.",
       "why": "Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate."
     },
     {
@@ -5192,6 +5192,20 @@
         "ref": "src/tests/v3-why-only-advisory.logic.test.ts"
       },
       "statement": "R-EY (9) reads a deviation's authorizing citation from adjudicated_by only, in three stages (operator CHAT-25): stage 1 (in force) step-validate prints an advisory why-only line per step with the verdict unchanged; stages 2 and 3 are owed.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-II",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "REFREEZE-BUNDLE-1 is split (operator CHAT-27): night 1 applies items (1) and (3)-(8) inside one fleet recapture; item (2), the refresh_snapshot recorder producer-read (D-P1), is its own library RE-FREEZE in the permits ③ landing with a second fleet recapture.",
       "source": {
         "register": true
       }
