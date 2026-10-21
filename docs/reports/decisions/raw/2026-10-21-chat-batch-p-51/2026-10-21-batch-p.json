@@ -1,0 +1,13 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "pushing - 1y 3. yV3",
+  "context": "(3) restart the V3 conversion lane: draft the N-D1 ruling (neighbourhoods reads V2), plan the CoA pipeline cutover capture night (bundling the parked ward fix, CHAT-47), and convert the four assert_* health-check steps using the Spec 08 engine. Only this item is imported; the by-law item of the same message is imported by its own lane.",
+  "decisions": [
+    {
+      "id": "CHAT-51",
+      "subject": "Restart the V3 conversion lane",
+      "decision": "approve",
+      "recommendation": "Draft the N-D1 ruling for neighbourhoods; plan the CoA pipeline cutover night with the ward fix bundled; convert assert_entity_tracing, assert_network_health, assert_staleness, assert_lifecycle_phase_distribution to V3 with the Spec 08 engine."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-p-51/2026-10-21-batch-p.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-p-51",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "pushing - 1y 3. yV3",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-p-51/2026-10-21-batch-p.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "no_ruling"
+  },
+  "routing": {
+    "CHAT-51": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-EY"
+      ]
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-51",
+      "question": "Restart the V3 conversion lane",
+      "recommendation": "Draft the N-D1 ruling for neighbourhoods; plan the CoA pipeline cutover night with the ward fix bundled; convert assert_entity_tracing, assert_network_health, assert_staleness, assert_lifecycle_phase_distribution to V3 with the Spec 08 engine.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}
