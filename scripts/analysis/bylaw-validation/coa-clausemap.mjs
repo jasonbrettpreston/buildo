@@ -1,11 +1,14 @@
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §7.5 (the clause -> unit keying the evaluator uses); DRAFT RULING pending (see coa-parse.cjs)
 // Clause (as printed on a CoA notice) → our keyed units → targets. Derived from the agreed unit set (adjudications applied).
+// A printed clause that is a typo of an existing article (F-4D-SC-245, lane A): "10.50.60.70" is the article 10.5.60.70, whose one regulation is (1) (ancillary building coverage; there is no Article 10.50).
+export const CLAUSE_ALIASES = Object.freeze({ '10.50.60.70': '10.5.60.70(1)' });
 export function normClause(raw) {
   let s = String(raw || '').replace(/,?\s*-?\s*Exception\s+R[A-Z]*\s*\d+.*$/i, '').replace(/\s+and\s+\(.*$/i, '').trim();
   s = s.replace(/^(900\.\d+\.10)\(([A-Z])\)\s*\((\d+)\)/, '$1($3)($2)'); // "900.3.10(A) (559)" → 900.3.10(559)(A)
   s = s.replace(/\)([A-Za-z0-9]+)\)/g, ')($1)'); // "(1)A)" → "(1)(A)"
   s = s.replace(/^(\d+(?:\.\d+)+\(\d+\))\(\1\)/, '$1').replace(/^(\d+(?:\.\d+)+)\((\d+)\)\(\2\)/, '$1($2)'); // "10.20.40.10(6)(6)"
   s = s.replace(/\s+/g, '');
+  for (const [from, to] of Object.entries(CLAUSE_ALIASES)) if (s === from || s.startsWith(from + '(')) s = to + s.slice(from.length);
   const m = /^(\d+(?:\.\d+)+)((?:\([^)]+\))*)$/.exec(s);
   if (!m) return { raw, norm: s, section: null, reg: null, path: null };
   const groups = m[2].match(/\([^)]+\)/g) || [];

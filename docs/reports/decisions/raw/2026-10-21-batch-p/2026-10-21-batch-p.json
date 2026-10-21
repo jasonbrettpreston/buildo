@@ -1,0 +1,13 @@
+{
+ "source": "operator chat 2026-10-21",
+ "operator_quote": "pushing - 1y 3. yV3",
+ "context": "(1) '528: ratify' — ratify lane A's 6 M-75 corrections on exception 528 that drop the lawfully_existing ('existed on enactment') token, matching 144 of 145 family units; the other 7 lane-A corrections are mechanical gate fixes and are re-labelled under the lane mechanical label, not operator. [The batch P record limited to CHAT-50; its V3 conversion item (CHAT-51) belongs to another lane.]",
+ "decisions": [
+  {
+   "id": "CHAT-50",
+   "subject": "Ratify exception 528 lawfully_existing corrections",
+   "decision": "approve",
+   "recommendation": "Ratify the 6 M-75 corrections on 900.x.10(528) (A)/(B) that drop the lawfully_existing token, matching the family; re-label the other 7 lane-A gate-fix corrections as lane mechanical (not operator)."
+  }
+ ]
+}

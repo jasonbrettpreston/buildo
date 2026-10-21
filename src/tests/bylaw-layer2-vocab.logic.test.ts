@@ -35,8 +35,10 @@ describe('L2-CHAPTERS: vocab.exception_chapter (M-297)', () => {
     expect(Object.keys(chapters).sort()).toEqual([...PVOCAB.zone].sort());
   });
   it('covers every zone of the Layer 2 population list (resolve_bylaws_population_zone_classes)', () => {
-    const dir = 'docs/reports/layer2-measure/pending-migrations';
-    const sql = fs.readFileSync(path.join(ROOT, dir, '280_resolve_bylaws_logic_variables.sql'), 'utf8');
+    // migration 280 sits in pending-migrations/ until commit (1) moves it to migrations/; the lock follows the file (integrate-21)
+    const rel = ['docs/reports/layer2-measure/pending-migrations', 'migrations'].map((d) => path.join(d, '280_resolve_bylaws_logic_variables.sql')).find((p) => fs.existsSync(path.join(ROOT, p)));
+    expect(rel, 'migration 280 is in pending-migrations/ or migrations/').toBeTruthy();
+    const sql = fs.readFileSync(path.join(ROOT, rel as string), 'utf8');
     const m = /'resolve_bylaws_population_zone_classes',\s*0,\s*'(\[[^\]]*\])'::jsonb/.exec(sql);
     expect(m, 'the population list is declared in migration 280').not.toBeNull();
     const population: string[] = JSON.parse((m as RegExpExecArray)[1] as string);

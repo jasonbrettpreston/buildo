@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 335** (273 M-rows, 62 LC-rows): 332 in force (36 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 339** (277 M-rows, 62 LC-rows): 336 in force (39 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -651,6 +651,10 @@ First clause cited: 800.50.
   Status: RATIFIED 2026-10-18 · Enforced by: INV-11; P5.13 vectors (OWED, ①)
   Rules: `M-202` (Spec 69a)
 
+- **m.313** A survey frontage measured along a CURVED front lot line is not preferred by the CoA scorer; the calculated frontage stays.
+  Status: RULED 2026-10-21 · Enforced by: coa-scorecard.logic.test.ts › "CHAT-46", "A0385", "F-4D-SC-245", "the regression lock is live",…
+  Rules: `M-313` (Spec 69a)
+
 ### Chapter 900
 
 First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6.
@@ -738,6 +742,18 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6.
 - **m.306** The scorer does not read a definition distance as the City limit: "within 0.3 m of the (rear) main wall" is dropped like "within 0.3 m of a building".
   Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-13 …" (red first: docs/r…
   Rules: `M-306` (Spec 69a)
+
+- **m.314** The type-less side-yard units of the newly keyed exceptions bind the principal building, not a garden or laneway suite.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-chat49-suite-side-yard.logic.test.ts (red first: docs/reports/re…
+  Rules: `M-314` (Spec 69a)
+
+- **m.315** The lane-A M-75 corrections: the six on exception 528 are ratified, the seven gate fixes are re-recorded as lane mechanical work.
+  Status: RULED 2026-10-21 · OWED · Enforced by: agree.mjs correction_supersedes_unknown / correction_supersede_duplicate
+  Rules: `M-315` (Spec 69a)
+
+- **m.316** OWED: exception 1397's 0.69 pre-1953 arm waits for an existing-building input.
+  Status: OWED · Enforced by: none yet (OWED)
+  Rules: `M-316` (Spec 69a)
 
 ### General / cross-cutting
 
@@ -1272,7 +1288,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Rules: `M-298` (Spec 69a)
 
 - **m.265** An INCLUDE to a Ch.900 exception links that exception to the lot, so a site-specific numeric limit reaches the evaluator and outranks the base-zone "no limit".
-  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-2 / F-4D-18 / F-4D-SC-1462 …" (red first:…
+  Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-2 / F-4D-18 / F-4D-SC-1462 …" (red first:…
   Rules: `M-265` (Spec 69a)
 
 - **m.268** Exceptions authored through the double-keying harness: 1389, 528, 245, 256 complete; 1437, 1436, 1434, 117, 258, 287, 199 keyed with units pending adjudication; 317 held.
@@ -1511,7 +1527,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); app tests at N12 (OWED)
   Rules: `LC-62` (Spec 131)
 
-## 3. Rows with an OWED marker (36 in force)
+## 3. Rows with an OWED marker (39 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -1522,8 +1538,11 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-251 | m.251 | RULED 2026-10-21 · OWED |
 | M-256 | m.256 | RULED 2026-10-21 · OWED |
 | M-259 | m.259 | RULED 2026-10-21 · OWED |
+| M-265 | m.265 | RULED 2026-10-21 · OWED |
 | M-307 | m.307 | RULED 2026-10-21 · OWED |
 | M-312 | m.312 | OWED 2026-10-21 |
+| M-315 | m.315 | RULED 2026-10-21 · OWED |
+| M-316 | m.316 | OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |

@@ -36,7 +36,8 @@
     "superseded": "replaced by the rows in by; kept so citations resolve",
     "one-off": "in force for one step; a worked example under its archetype",
     "process": "governs the work, not a step's runtime",
-    "historical": "not in force; kept so citations resolve"
+    "historical": "not in force; kept so citations resolve",
+    "parked": "decided and staged but NOT landed: owed to a named night; not in force and not counted as enforced (rule-map status `parked`, 2026-10-21 integrate-21, CHAT-47)"
   },
   "merges": [
     {
@@ -5437,16 +5438,17 @@
     {
       "id": "R-JB",
       "kind": "register-ruling",
-      "status": "active",
+      "status": "parked",
       "handbook_line": "ingestor.6",
       "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/decision-log.logic.test.ts"
+        "kind": "none",
+        "ref": null
       },
-      "statement": "coa_applications.ward is two digits ('03'): the load pads a one-digit ward and a staged migration backfills the rows; landing is parked until a capture night re-takes the coa captures (operator, 4D page CHAT-38.D-WARD).",
+      "statement": "coa_applications.ward is two digits (03): the load pads a one-digit ward and a staged migration (281_coa_ward_two_digits.sql, in the parked patch) backfills the rows. PARKED / OWED: not landed; bundled into the next CoA capture night (operator, 4D page CHAT-38.D-WARD and 2026-10-21-batch-o#CHAT-47). Flips to active/lock when the patch lands.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "parked, not enforced: the compute change makes the four coa captures stale, so it lands with the next CoA capture night (CHAT-47); until then no lock enforces it (the decision-log test only locks that the register row exists)"
     },
     {
       "id": "R-BA",

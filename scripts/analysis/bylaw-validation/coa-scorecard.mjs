@@ -7,17 +7,22 @@
 // Survey dimensions in --plan-facts are preferred; a parcel row >5% off the survey is flagged (F-4D-8/9/14). Calculator survey override is drafted, not built (owed).
 // Scorer fixes marked "4D-S<n>" (S1-S7) came from the four-district run at ac78d5dd.
 // Usage: node scripts/analysis/bylaw-validation/coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]
+//   --pin FILE: write the expected file for this run at this tree ({commit, totals, inputs}).
 //   --check: after scoring, compare the class totals with EXPECTED.json {commit, totals}; exit 1 on a mismatch when --root is at that commit,
 //            otherwise print the diff as information only (the evaluator moved on; a changed total is a finding, not a failure).
-import fs from 'node:fs'; import path from 'node:path'; import { pathToFileURL, fileURLToPath } from 'node:url';
+import crypto from 'node:crypto'; import fs from 'node:fs'; import path from 'node:path'; import { pathToFileURL, fileURLToPath } from 'node:url';
 import { normClause, unitsForClause } from './coa-clausemap.mjs';
 import { execFileSync } from 'node:child_process';
+import { checkExplainedDifferences, explainRow } from './coa-explained.mjs';
 
 const arg = (k, d = null) => { const i = process.argv.indexOf('--' + k); return i >= 0 ? process.argv[i + 1] : d; };
 const ROOT = path.resolve(arg('root', path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')));
 const NOT = arg('notices'); const PAR = arg('parcels'); const OUT = arg('out'); const CHECK = arg('check');
-if (!NOT || !PAR || !OUT) { console.error('usage: coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]'); process.exit(2); }
+if (!NOT || !PAR || !OUT) { console.error('usage: coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json] [--pin EXPECTED.json]'); process.exit(2); }
 const { I, E, units, C } = await (await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw-validation/assembly.mjs')).href)).loadRealLotAssembly(ROOT);
+const REGISTER_IDS = new Set((fs.readFileSync(path.join(ROOT, 'docs/specs/01-pipeline/69a_mcbylaw_register.md'), 'utf8').match(/^\| \*\*M-\d+\*\*/gm) || []).map((x) => x.replace(/[|* ]/g, '')));
+const EXPLAINED_BAD = checkExplainedDifferences(I.vocab, REGISTER_IDS);
+if (EXPLAINED_BAD.length) { console.error('vocab.explained_differences is invalid:\n  ' + EXPLAINED_BAD.join('\n  ')); process.exit(2); }
 const FA = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/front-averaging.mjs')).href);
 const defaults = {}; for (const [k, v] of Object.entries((I.vocab.design_choice_disclosure || {}).default_overrides || {})) if (k !== '$comment' && v && typeof v.taken_as === 'boolean') defaults[k] = v.taken_as;
 const SCU = I.vocab.scenario_class_units || {};
@@ -62,6 +67,7 @@ function lotFromParcel(p) {
     zone: p.zoning_class, zone_label: p.zoning_zn_string, label, overlays,
     vars: { lot_frontage_m: p.frontage_m, lot_depth_m: p.depth_m, lot_area_m2: p.lot_size_sqm },
     flags: { corner_lot: !!p.is_corner_lot, through_lot: !!p.is_through_lot, major_street: !!p.on_policy_road, abuts_lane: !!p.abuts_laneway, lawfully_existing: false },
+    primary_frontage_street_name: p.primary_frontage_street_name ?? p.linear_name_full ?? undefined, // M-285 (F-4D-7)
     building_type: 'detached_house', exception: exc != null ? `900.${EXC_CH[p.zoning_class]}.10(${exc})` : null, parcel_id: p.parcel_id,
     address: [p.address_number, p.linear_name_full].filter(Boolean).join(' '),
   };
@@ -224,12 +230,17 @@ function evalTarget(lot, target, onlyUnits) {
 // ---------- main ----------
 // F-4D-8/9/14 (data-quality flag): survey dimensions (plan facts) are preferred when held; a parcel row that disagrees with the survey by more than 5% is flagged.
 const SURVEY_TOL = 0.05;
+const CURVED_FRONT_RE = /\bfrontage\b[^.;]*\barc\b|\bfront arc\b|\bcurved frontage\b|\bstreet line\b[^.;]*\barc\b/i;
 function surveyFacts(n) {
   if (!PF_DIR) return null;
   try { const pf = JSON.parse(fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8'));
     const g = (k) => (typeof pf[k] === 'number' && pf[k] > 0 ? pf[k] : null);
-    const sv = { frontage_m: g('lot_frontage_m'), depth_m: g('lot_depth_m'), area_m2: g('lot_area_m2'), corner: typeof pf.corner_lot === 'boolean' ? pf.corner_lot : null };
-    return Object.values(sv).some((x) => x != null) ? sv : null; } catch { return null; }
+    // CHAT-46 (2026-10-21-batch-o): a frontage measured along a CURVED front lot line is not the by-law measure, so the survey value is not preferred and the calculated frontage stays.
+    // By-law 800.50(445): Lot Frontage is "measured along a straight line drawn perpendicular to the lot centreline at the required minimum front yard setback" (a straight-line width, not the arc length).
+    // The curved front is read from the plan facts where the lane recorded it (lot_shape_note: "frontage ... is an arc A=14.60 (C=14.22 ...)", "curved frontage", "front arc").
+    const curvedFront = CURVED_FRONT_RE.test(String(pf.lot_shape_note || ''));
+    const sv = { frontage_m: curvedFront ? null : g('lot_frontage_m'), curved_front: curvedFront, depth_m: g('lot_depth_m'), area_m2: g('lot_area_m2'), corner: typeof pf.corner_lot === 'boolean' ? pf.corner_lot : null };
+    return [sv.frontage_m, sv.depth_m, sv.area_m2, sv.corner].some((x) => x != null) ? sv : null; } catch { return null; }
 }
 function surveyCheck(sv, p) {
   if (!sv || !p) return { held: sv, flag: false, disagree: [] };
@@ -292,8 +303,9 @@ function runNotice(n, surveyOn, rows, lots) {
     if (/^10\.5\.40\.50\(2\)/.test(c.norm) && cityUnit === 'm' && targets.includes('platform_side_setback_m')) {
       const pt = `${v.requirement || ''} ${v.proposal || ''}`;
       const after = s5 ? (String(v.requirement).split(/within 0\.3 ?m of a building|less than 0\.3 ?m from a building/i)[1] || '') : ''; const fig = after.search(new RegExp(String(cityVal).replace('.', '\\.') + '\\s*m'));
-      const near = fig >= 0 ? after.slice(fig, fig + 40) : '';
-      if (near) target = /\brear\b/i.test(near) ? 'platform_rear_setback_m' : /\bfront\b/i.test(near) ? 'platform_front_setback_m' : 'platform_side_setback_m'; else
+      const near = fig >= 0 ? after.slice(Math.max(0, after.lastIndexOf('.', fig - 1) + 1, fig - 70), fig) : ''; // the clause of the figure: the words before it name the line (M-290)
+      const lineWord = (near.match(/\b(front|rear|side)\b/gi) || []).pop();
+      if (lineWord) target = /^rear$/i.test(lineWord) ? 'platform_rear_setback_m' : /^front$/i.test(lineWord) ? 'platform_front_setback_m' : 'platform_side_setback_m'; else
       target = /rear (yard|lot line)/i.test(pt) ? 'platform_rear_setback_m' : /front (yard|lot line)/i.test(pt) ? 'platform_front_setback_m' : 'platform_side_setback_m'; scorerFix = '4D-S1';
     }
     // 4D-S6: the target is a % or × lot area limit but the parser picked the m² companion: take the matching figure
@@ -337,7 +349,9 @@ function runNotice(n, surveyOn, rows, lots) {
       row.roof_arm = hit ? (hit === flat ? 'flat' : 'pitched') : 'pitched'; r = hit || pitched;
     }
     // [blfix5 probe, read-only: M-259 arms] the design with openings, and the platform target for 10.5.40.50(2)
-    if (target === 'side_setback_m') { row.bsw_arm = evalTarget({ ...lot, flags: { ...lot.flags, blank_side_wall: false } }, target, only); if (openings && row.bsw_arm.status === 'value') { row.bsw_taken = openings; row.scorer_fix = '4D-S4'; r = row.bsw_arm; } } if (/^10\.5\.40\.50\(2\)/.test(c.norm)) row.platform_probe = evalTarget(lot, 'platform_side_setback_m');
+    if (target === 'side_setback_m') { row.bsw_arm = evalTarget({ ...lot, flags: { ...lot.flags, blank_side_wall: false } }, target, only); const citedOpenArm = /^10\.10\.40\.70\(3\)\(A\)/.test(c.norm) ? 'notice cites 10.10.40.70(3)(A)' : null; if ((openings || citedOpenArm) && row.bsw_arm.status === 'value') { row.bsw_taken = openings || citedOpenArm; row.scorer_fix = openings ? '4D-S4' : '4D-S4b'; r = row.bsw_arm; } } if (/^10\.5\.40\.50\(2\)/.test(c.norm)) row.platform_probe = evalTarget(lot, 'platform_side_setback_m');
+    // 4D-S4c (A0385): a notice that cites the 11 m townhouse arm 10.10.40.80(1)(C) is itself evidence that each facing main wall has an opening (design tokens main_wall_openings / main_wall_openings_each, M-282)
+    if (target === 'separation_m' && /^10\.10\.40\.80\(1\)\(C\)/.test(c.norm)) { const arm = evalTarget({ ...lot, flags: { ...lot.flags, main_wall_openings: true, main_wall_openings_each: true } }, target, only); if (arm.status === 'value') { row.openings_taken = 'notice cites 10.10.40.80(1)(C)'; row.scorer_fix = '4D-S4c'; r = arm; } }
     if (['garden_suite', 'laneway_suite'].includes(bt) && /setback/.test(target)) row.ours_arm = { flags: { suite_wall_openings: true }, ...evalTarget({ ...lot, flags: { ...lot.flags, suite_wall_openings: true } }, target, only) };
     if (target === 'gfa_m2') { const fr = evalTarget(lot, 'fsi'); row.ours_fsi = fr; if (typeof fr.value === 'number') row.ours_fsi_cap_m2 = Math.round(fr.value * base.vars.lot_area_m2 * 100) / 100; }
     row.ours = r; row.ours_flat = flat; row.ours_pitched = pitched; row.only_clause_units = !!only;
@@ -370,6 +384,7 @@ function runNotice(n, surveyOn, rows, lots) {
     } else if (r.status === 'not_evaluated') {
       row.class = owedOrNoAnswer(r.reason); row.why = r.reason;
     } else { row.class = 'NO ANSWER'; row.why = `${r.status}: ${r.reason || ''}`; }
+    { const ex = row.class === 'DIFFER' ? explainRow(I.vocab, c.norm, target, r.value, cityVal) : null; if (ex) { row.explained_by = ex.ruling; row.explained_note = ex.reading; } } // M-287: the table is validated at load (coa-explained.mjs)
     rows.push(row);
   }
 }
@@ -401,12 +416,24 @@ for (const r of rows) {
 fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allowance_m: FYA_ALLOWANCE, defaults, lots, rows }, null, 1));
 const by = {}; for (const r of rows) by[r.class] = (by[r.class] || 0) + 1;
 console.log('rows', rows.length, JSON.stringify(by));
+// The regression lock. An expected file is {commit, notices, variances, totals, inputs?}. It is PINNED (a changed total fails, exit 1) when --root is at its commit,
+// or when its inputs key equals the tree's: the Layer 2 input table_version (every Layer 1 input hash), its evaluator_version and the sha of this scorer's three files. Otherwise the diff is information only.
+// --pin FILE writes the expected file for this run at this tree (the integrate step re-pins; a moved input is a finding to re-pin, not a silent pass).
+const here = path.dirname(fileURLToPath(import.meta.url));
+const shaOf = (fl) => { const h = crypto.createHash('sha256'); for (const x of fl) h.update(fs.readFileSync(path.join(here, x))); return h.digest('hex').slice(0, 16); };
+const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs']) }; };
+if (arg('pin')) {
+  const head = execFileSync('git', ['-C', ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim().slice(0, 8);
+  fs.writeFileSync(arg('pin'), JSON.stringify({ commit: head, notices: notices.length, variances: rows.length, totals: by, inputs: treeInputs(), note: 'pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree' }, null, 1) + '\n');
+  console.log('PINNED ' + arg('pin') + ' ' + JSON.stringify(by));
+}
 if (CHECK) {
   const exp = JSON.parse(fs.readFileSync(CHECK, 'utf8'));
   const head = execFileSync('git', ['-C', ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const keys = [...new Set([...Object.keys(exp.totals), ...Object.keys(by)])];
   const diffs = keys.filter((k) => (exp.totals[k] || 0) !== (by[k] || 0)).map((k) => k + ' expected ' + (exp.totals[k] || 0) + ' got ' + (by[k] || 0));
-  const pinned = head.startsWith(exp.commit);
-  if (diffs.length) { console.log((pinned ? 'CHECK FAIL' : 'CHECK INFO (tree moved on from ' + exp.commit + ')') + ': ' + diffs.join('; ')); process.exit(pinned ? 1 : 0); }
-  console.log('CHECK OK: totals equal ' + JSON.stringify(exp.totals) + ' at ' + exp.commit);
+  const ti = treeInputs();
+  const pinned = head.startsWith(exp.commit) || (!!exp.inputs && exp.inputs.table_version === ti.table_version && exp.inputs.evaluator_version === ti.evaluator_version && exp.inputs.scorer_sha === ti.scorer_sha);
+  if (diffs.length) { console.log((pinned ? 'CHECK FAIL' : 'CHECK INFO (tree moved on from ' + exp.commit + '; inputs differ)') + ': ' + diffs.join('; ')); process.exit(pinned ? 1 : 0); }
+  console.log((pinned ? 'CHECK OK (pinned)' : 'CHECK OK (not pinned: inputs differ from the pin)') + ': totals equal ' + JSON.stringify(exp.totals) + ' at ' + exp.commit);
 }

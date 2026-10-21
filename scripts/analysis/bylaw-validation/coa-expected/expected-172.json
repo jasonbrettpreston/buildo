@@ -1,0 +1,20 @@
+{
+ "commit": "2fa52f3e",
+ "notices": 172,
+ "variances": 698,
+ "totals": {
+  "NOT MODELLED": 96,
+  "MATCH": 366,
+  "DIFFER": 31,
+  "NO ANSWER": 76,
+  "OWED": 83,
+  "DATA": 21,
+  "NOT SCORABLE": 25
+ },
+ "inputs": {
+  "table_version": "e70902725f62834336fd8d74b50f0d5cab94f69823db4abe333e82cb125476b2",
+  "evaluator_version": "7abd8fa5b73651fc4baa44df5cfc05fff68fa1af1e9f38a7cdfc76326f1ad9da",
+  "scorer_sha": "12658e8c44cca4ce"
+ },
+ "note": "pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree"
+}
