@@ -2370,13 +2370,11 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 11,
+       "value": 2,
        "reason": null,
-       "winner": "10.10.40.80(1)#(1)(C)",
+       "winner": "10.10.40.80(1)#(1)(A)",
        "applied": [
-        "10.10.40.80(1)#(1)(A)",
-        "10.10.40.80(1)#(1)(B)",
-        "10.10.40.80(1)#(1)(C)"
+        "10.10.40.80(1)#(1)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -2464,13 +2462,11 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 11,
+       "value": 2,
        "reason": null,
-       "winner": "10.10.40.80(1)#(1)(C)",
+       "winner": "10.10.40.80(1)#(1)(A)",
        "applied": [
-        "10.10.40.80(1)#(1)(A)",
-        "10.10.40.80(1)#(1)(B)",
-        "10.10.40.80(1)#(1)(C)"
+        "10.10.40.80(1)#(1)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -3757,13 +3753,11 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 11,
+       "value": 2,
        "reason": null,
-       "winner": "10.20.40.80(1)#(1)(C)",
+       "winner": "10.20.40.80(1)#(1)(A)",
        "applied": [
-        "10.20.40.80(1)#(1)(A)",
-        "10.20.40.80(1)#(1)(B)",
-        "10.20.40.80(1)#(1)(C)"
+        "10.20.40.80(1)#(1)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -3851,13 +3845,11 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 11,
+       "value": 2,
        "reason": null,
-       "winner": "10.20.40.80(1)#(1)(C)",
+       "winner": "10.20.40.80(1)#(1)(A)",
        "applied": [
-        "10.20.40.80(1)#(1)(A)",
-        "10.20.40.80(1)#(1)(B)",
-        "10.20.40.80(1)#(1)(C)"
+        "10.20.40.80(1)#(1)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -5223,13 +5215,11 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 11,
+       "value": 2,
        "reason": null,
-       "winner": "10.40.40.80(1)#(1)(C)",
+       "winner": "10.40.40.80(1)#(1)(A)",
        "applied": [
-        "10.40.40.80(1)#(1)(A)",
-        "10.40.40.80(1)#(1)(B)",
-        "10.40.40.80(1)#(1)(C)"
+        "10.40.40.80(1)#(1)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -5317,13 +5307,11 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 11,
+       "value": 2,
        "reason": null,
-       "winner": "10.40.40.80(1)#(1)(C)",
+       "winner": "10.40.40.80(1)#(1)(A)",
        "applied": [
-        "10.40.40.80(1)#(1)(A)",
-        "10.40.40.80(1)#(1)(B)",
-        "10.40.40.80(1)#(1)(C)"
+        "10.40.40.80(1)#(1)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -44579,13 +44567,16 @@
      "unit": "150.7.60.50(4)#(4)(A)",
      "lot": "5403712",
      "scenario": {
-      "building_type": "garden_suite"
+      "building_type": "garden_suite",
+      "flags": {
+       "suite_one_storey": false
+      }
      },
      "target": "gfa_m2",
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m²",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
      "initial": {
       "pass": true,
       "observed": {
@@ -44628,13 +44619,16 @@
      "unit": "150.7.60.50(4)#(4)(A)",
      "lot": "5118342",
      "scenario": {
-      "building_type": "garden_suite"
+      "building_type": "garden_suite",
+      "flags": {
+       "suite_one_storey": false
+      }
      },
      "target": "gfa_m2",
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m²",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
      "initial": {
       "pass": true,
       "observed": {
@@ -44677,13 +44671,16 @@
      "unit": "150.7.60.50(4)#(4)(A)",
      "lot": "5124393",
      "scenario": {
-      "building_type": "garden_suite"
+      "building_type": "garden_suite",
+      "flags": {
+       "suite_one_storey": false
+      }
      },
      "target": "gfa_m2",
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m²",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
      "initial": {
       "pass": true,
       "observed": {
@@ -44726,13 +44723,16 @@
      "unit": "150.7.60.50(4)#(4)(A)",
      "lot": "5071329",
      "scenario": {
-      "building_type": "garden_suite"
+      "building_type": "garden_suite",
+      "flags": {
+       "suite_one_storey": false
+      }
      },
      "target": "gfa_m2",
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m²",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
      "initial": {
       "pass": true,
       "observed": {
@@ -44775,13 +44775,16 @@
      "unit": "150.7.60.50(4)#(4)(A)",
      "lot": "5059565",
      "scenario": {
-      "building_type": "garden_suite"
+      "building_type": "garden_suite",
+      "flags": {
+       "suite_one_storey": false
+      }
      },
      "target": "gfa_m2",
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m²",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
      "initial": {
       "pass": true,
       "observed": {
@@ -44825,8 +44828,8 @@
      "lot": "5403712",
      "scenario": {
       "building_type": "garden_suite",
-      "vars": {
-       "height_storeys": 1
+      "flags": {
+       "suite_one_storey": true
       }
      },
      "target": "gfa_m2",
@@ -44877,8 +44880,8 @@
      "lot": "5118342",
      "scenario": {
       "building_type": "garden_suite",
-      "vars": {
-       "height_storeys": 1
+      "flags": {
+       "suite_one_storey": true
       }
      },
      "target": "gfa_m2",
@@ -44929,8 +44932,8 @@
      "lot": "5124393",
      "scenario": {
       "building_type": "garden_suite",
-      "vars": {
-       "height_storeys": 1
+      "flags": {
+       "suite_one_storey": true
       }
      },
      "target": "gfa_m2",
@@ -44981,8 +44984,8 @@
      "lot": "5071329",
      "scenario": {
       "building_type": "garden_suite",
-      "vars": {
-       "height_storeys": 1
+      "flags": {
+       "suite_one_storey": true
       }
      },
      "target": "gfa_m2",
@@ -45033,8 +45036,8 @@
      "lot": "5059565",
      "scenario": {
       "building_type": "garden_suite",
-      "vars": {
-       "height_storeys": 1
+      "flags": {
+       "suite_one_storey": true
       }
      },
      "target": "gfa_m2",
@@ -47926,7 +47929,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from. We do not model garden-suite decks.",
+   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -47988,7 +47991,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from. We do not model garden-suite decks.",
+   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -48050,7 +48053,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from. We do not model garden-suite decks.",
+   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -48112,7 +48115,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from. We do not model garden-suite decks.",
+   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -48174,7 +48177,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from. We do not model garden-suite decks.",
+   "keyed_disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -64079,14 +64082,16 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from. We do not check deck levels.",
+   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5195536",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (ravine): candidate",
      "initial": {
       "pass": true,
@@ -64102,7 +64107,9 @@
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5265152",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (exc_m180): candidate",
      "initial": {
       "pass": true,
@@ -64137,14 +64144,16 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from. We do not check deck levels.",
+   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5002998",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (exc_cov): candidate",
      "initial": {
       "pass": true,
@@ -64160,7 +64169,9 @@
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5011379",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (exc_cov): candidate",
      "initial": {
       "pass": true,
@@ -64195,14 +64206,16 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from. We do not check deck levels.",
+   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5019870",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (exc_m180): candidate",
      "initial": {
       "pass": true,
@@ -64218,7 +64231,9 @@
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5024691",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (exc_m180): candidate",
      "initial": {
       "pass": true,
@@ -64253,14 +64268,16 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from. We do not check deck levels.",
+   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "10594343",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (ravine): candidate",
      "initial": {
       "pass": true,
@@ -64276,7 +64293,9 @@
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5009069",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (label_u_rt): candidate",
      "initial": {
       "pass": true,
@@ -64311,14 +64330,16 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from. We do not check deck levels.",
+   "keyed_disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5019578",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (plain_12_18): candidate",
      "initial": {
       "pass": true,
@@ -64334,7 +64355,9 @@
      "kind": "loaded",
      "unit": "150.8.60.60(3)#(3)(A)",
      "lot": "5035013",
-     "scenario": {},
+     "scenario": {
+      "building_type": "detached_house"
+     },
      "rationale": "affected lot (plain_18p): candidate",
      "initial": {
       "pass": true,

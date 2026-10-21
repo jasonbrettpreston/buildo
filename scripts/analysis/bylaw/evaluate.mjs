@@ -107,8 +107,13 @@ export function makeContext(vocab, extra = {}) {
     // M-259 (operator approved 2026-10-21, CHAT-33): the lot conditions under which an accessory structure's own element
     // target reads the principal-building targets it references (a platform has no side wall: blank_side_wall false)
     accessoryReferenceFlags: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.reference_flags && typeof v.reference_flags === 'object').map(([k, v]) => [k, v.reference_flags])),
+    // M-281 (operator approved 2026-10-21, CHAT-38.F-4D-1): an accessory structure whose rules sit in an Article that scopes by the
+    // principal building type (10.5.60 binds ancillary buildings) answers on its own element target whatever the lot's building type
+    accessoryArticleScopeIgnored: new Set(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.article_scope_ignored === true).map(([k]) => k)),
     accessoryAncillaryCondition: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.ancillary_condition).map(([k, v]) => [k, v.ancillary_condition])),
     typeStructure: vocab.building_type_structure || {},
+    // M-285 (operator approved 2026-10-21, CHAT-38.F-4D-7): per-unit named streets, joined to the lot's primary frontage street name
+    namedStreet: vocab.named_street || null,
     // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
     specificUses: new Set(Object.keys(vocab.specific_use || {}).filter((k) => k !== '$comment')),
     // M-159(1) / M-217: chapter → {category, zones}; a base unit of a mapped chapter with no zones of its own loads only
@@ -496,6 +501,22 @@ function parsedCond(src) {
   if (e.err) throw e.err;
   return e.c;
 }
+// M-285: a street name compared whole-word without case or punctuation, the suffix and direction words spelled short (vocab named_street.suffixes)
+const streetKey = (name, suffixes) => String(name).toLowerCase().replace(/[.,]/g, ' ').split(/\s+/).filter(Boolean).map((w) => (suffixes && Object.hasOwn(suffixes, w) ? suffixes[w] : w)).join(' ');
+/** true | false | undefined (undecided: no table row, no street name on the lot, or a clause that does not say which line abuts) */
+function namedStreetJoin(lot, u, C, reads, trace) {
+  const t = C.namedStreet;
+  const row = t && t.units && t.units[u.unit_id];
+  if (!row) return undefined;
+  reads.add(t.lot_field);
+  const name = lot[t.lot_field];
+  if (typeof name !== 'string' || !name.trim()) return undefined;
+  const key = streetKey(name, t.suffixes);
+  const hit = row.streets.some((s) => streetKey(s, t.suffixes) === key);
+  const out = hit ? true : row.line === 'front' ? false : undefined;
+  trace.push(`abuts_named_street: ${t.lot_field} "${name}" ${hit ? 'is' : 'is not'} ${row.streets.join(' / ')} (${row.line} lot line) → ${out === undefined ? 'undecided' : out}`);
+  return out;
+}
 // {ok:true} | {ok:false, why} | {ok:null, reason}
 export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = [], target = null) {
   const C = ctxOf(ctx);
@@ -512,7 +533,8 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   const bt = lot.building_type;
   const scope = C.articleScope && C.articleScope[String(reg).split('.').slice(0, 3).join('.')];
   if (scope) reads.add('building_type'); // read whether or not the type is known: an unknown type is a value too
-  if (scope && bt) { // M-219: the Article's own application regulation
+  const deviceUse = target ? (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryArticleScopeIgnored && C.accessoryArticleScopeIgnored.has(x) && C.accessoryElementTargets[x] && C.accessoryElementTargets[x].has(target)) : undefined;
+  if (scope && bt && !deviceUse) { // M-219: the Article's own application regulation (M-281: not for a device's own element target)
     const out = scope.excluded_building_types ? scope.excluded_building_types.includes(bt) : !scope.included_building_types.includes(bt);
     if (out) return { ok: false, why: `building_type ${bt} (outside ${scope.citation})` };
   }
@@ -590,6 +612,10 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     // error-paths lens, adjudicated by execution 2026-10-07)
     if (C.thresholdTokens.has(t) && !hasIf) { trace.push(`${t}=unknown (threshold token without condition.if)`); unknown = unknown || `condition_unknown:${t}`; continue; }
     if (C.thresholdTokens.has(t) || t === 'exception_area') continue; // truth from condition.if / the loader
+    // M-285: abuts_named_street is joined from the lot's primary frontage street name to the street(s) this unit names
+    const joined = t === 'abuts_named_street' ? namedStreetJoin(lot, u, C, reads, trace) : undefined;
+    if (joined === true) continue;
+    if (joined === false) return { ok: false, why: `condition ${t}` };
     reads.add(`flags.${t}`);
     const v = lot.flags ? lot.flags[t] : undefined;
     trace.push(`${t}=${v === true || v === false ? v : 'unknown'}`);

@@ -97,7 +97,7 @@ describe('M-177(1)/(2) — the garden-suite caps answer on every lot from class 
   it('M-177: 150.7.60.50(4)(A) 120 m2 and (4)(B) 60 m2 for one storey are the garden-suite GFA caps', () => {
     expect(unitOf('150.7.60.50(4)#(4)(A)').numeric_expression).toEqual(['gfa_m2 = 120 m2 @(4)(A)']);
     expect(unitOf('150.7.60.50(4)#(4)(B)').numeric_expression).toEqual(['gfa_m2 = 60 m2 @(4)(B)']);
-    for (const zone of ZONES) expect([eff(lot(zone, 'garden_suite'), 'gfa_m2').value, eff(lot(zone, 'garden_suite'), 'gfa_m2').winner]).toEqual([120, '150.7.60.50(4)#(4)(A)']);
+    for (const zone of ZONES) expect([eff(lot(zone, 'garden_suite', { flags: { suite_one_storey: false } }), 'gfa_m2').value, eff(lot(zone, 'garden_suite', { flags: { suite_one_storey: false } }), 'gfa_m2').winner]).toEqual([120, '150.7.60.50(4)#(4)(A)']); // M-284: two storeys by default
   });
   it('M-177: 150.7.60.50(1) the garden-suite GFA is left out of the lot FSI (a DEFINE on gfa_m2, applied in the suite scenario)', () => {
     const u = unitOf('150.7.60.50(1)#whole');
@@ -196,8 +196,8 @@ describe('M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation a
     for (const zone of ZONES) expect([eff(lot(zone, 'laneway_suite'), 'side_setback_m').value, eff(lot(zone, 'laneway_suite'), 'side_setback_m').winner]).toEqual([1, '150.8.60.20(3)#(3)(D)']);
   });
   it('M-177(2) / M-198: 150.8.60.30(1)(A) and (B) the separation is 4.0 m, or 7.5 m for a suite over 4.0 m, with the trade-off disclosed', () => {
-    expect(unitOf('150.8.60.30(1)#(1)(A)').disclosure).toBe('A laneway suite no taller than 4.0 m must be at least 4.0 m from the house; a 6.3 m suite needs 7.5 m, taken where the lot depth fits.');
-    expect(unitOf('150.8.60.30(1)#(1)(B)').disclosure).toBe('A laneway suite taller than 4.0 m must be at least 7.5 m from the house; at 4.0 m from the house the suite is limited to 4.0 m.');
+    expect(unitOf('150.8.60.30(1)#(1)(A)').disclosure).toContain('A laneway suite no taller than 4.0 m must be at least 4.0 m from the house; a 6.3 m suite needs 7.5 m, taken where the lot depth fits.'); // M-286 appends the existing-house sentence
+    expect(unitOf('150.8.60.30(1)#(1)(B)').disclosure).toContain('A laneway suite taller than 4.0 m must be at least 7.5 m from the house; at 4.0 m from the house the suite is limited to 4.0 m.');
     expect(eff(lot('RD', 'laneway_suite'), 'separation_m').value).toBe(4);
     expect(eff(lot('RD', 'laneway_suite', { vars: { proposed_height_m: 6.3, distance_to_residential_m: 7.5 } }), 'separation_m').value).toBe(7.5);
   });
@@ -208,7 +208,7 @@ describe('M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation a
     }
   });
   it('M-177(2) / M-198: 150.8.60.40(1)(B) the laneway suite is 6.3 m at 7.5 m or more from the house, modelled', () => {
-    expect([unitOf('150.8.60.40(1)#(1)(B)').calculation_handling.status, unitOf('150.8.60.40(1)#(1)(B)').disclosure]).toEqual(['modelled', 'none']);
+    expect([unitOf('150.8.60.40(1)#(1)(B)').calculation_handling.status, unitOf('150.8.60.40(1)#(1)(B)').disclosure]).toEqual(['modelled', I.vocab.suite_scenario.laneway_suite_with_existing_house]); // M-286
     const r = eff(lot('RD', 'laneway_suite', { vars: { proposed_height_m: 6.3, distance_to_residential_m: 7.5 } }), 'height_m');
     expect([r.value, r.winner]).toEqual([6.3, '150.8.60.40(1)#(1)(B)']);
   });
