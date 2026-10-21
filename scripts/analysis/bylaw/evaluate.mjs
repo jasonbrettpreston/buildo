@@ -131,6 +131,19 @@ export function makeContext(vocab, extra = {}) {
   };
 }
 function vocabMap(o) { return Object.fromEntries(Object.entries(o || {}).filter(([k]) => k !== '$comment')); }
+/**
+ * M-252 (operator approved 2026-10-21, F-SC-8): an exception written before By-law 648-2025 names a duplex or triplex; on
+ * the lot that is a detached houseplex of 2 or 3 dwelling units (vocab.exception_type_alias.by_unit_count). The name the
+ * lot's own type takes in such a clause, or null (unit count unknown, or no entry). Reads vars.dwelling_units.
+ */
+function unitCountType(lot, C, reads) {
+  const m = C.exceptionTypeAlias && C.exceptionTypeAlias.by_unit_count;
+  if (!m || !lot.building_type) return null;
+  reads.add('vars.dwelling_units');
+  const n = lot.vars ? lot.vars.dwelling_units : undefined;
+  for (const [k, v] of Object.entries(m).sort(([a], [b]) => cmpStr(a, b))) if (k !== '$comment' && v && v.type === lot.building_type && v.dwelling_units === n) return k;
+  return null;
+}
 const ctxOf = (c) => (c && c.units ? c : makeContext(c || {}));
 
 const MONTHS = { January: 1, February: 2, March: 3, April: 4, May: 5, June: 6, July: 7, August: 8, September: 9, October: 10, November: 11, December: 12 };
@@ -165,7 +178,7 @@ export function evaluate(expr, lot, ctx) {
   }
   const trace = [];
   const reads = new Set();
-  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {}, byTypeAlias: (ctx && ctx.byTypeAlias) || null };
+  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {}, byTypeAlias: (ctx && ctx.byTypeAlias) || null, byTypeCount: (ctx && ctx.byTypeCount) || null };
   const r = ev(ast, env);
   const inputs = [...reads].sort(cmpStr);
   if (r.ne) return { value: null, unit: r.unit ?? null, not_evaluated: r.ne, trace, inputs };
@@ -232,9 +245,11 @@ function ev(e, env) {
       // M-180(1) (E2E-F-06): an exception-layer by_type table's detached (semi-detached) house entry also binds the houseplex
       // class the zone's "Applicable" clause names (vocab.exception_type_alias) — the same alias applies() reads
       const viaAlias = env.byTypeAlias ? e.entries.find((x) => env.byTypeAlias[x.key] === bt) : null;
-      const hit = e.entries.find((x) => x.key === bt) || e.entries.find((x) => x.key === C.typeParent[bt]) || viaAlias || e.entries.find((x) => x.key === 'other');
+      // M-252: an exception table's duplex / triplex entry binds the 2- / 3-unit houseplex (vocab.exception_type_alias.by_unit_count)
+      const viaCount = env.byTypeCount ? e.entries.find((x) => x.key === env.byTypeCount) : null;
+      const hit = e.entries.find((x) => x.key === bt) || viaCount || e.entries.find((x) => x.key === C.typeParent[bt]) || viaAlias || e.entries.find((x) => x.key === 'other');
       if (!hit) return ne('by_type_unlisted', bt);
-      trace.push(hit === viaAlias ? `by_type ${hit.key} (M-180(1): binds ${bt})` : `by_type ${hit.key}`);
+      trace.push(hit === viaCount && hit.key !== bt ? `by_type ${hit.key} (M-252: binds ${bt} of ${lot.vars.dwelling_units} units)` : hit === viaAlias ? `by_type ${hit.key} (M-180(1): binds ${bt})` : `by_type ${hit.key}`);
       return ev(hit.expr, env);
     }
     case 'bin': {
@@ -504,7 +519,10 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     // (semi-detached) houseplex, where the zone's own "Applicable … Requirements" clause says so
     const alias = u.layer === 'exception' && bt && C.exceptionTypeAlias && C.exceptionTypeAlias[lot.zone];
     const aliased = Boolean(alias && types.some((t) => alias[t] === bt));
-    if (!suite && !aliased) {
+    // M-252: an exception clause naming a duplex / triplex binds the 2- / 3-unit houseplex as its own type
+    const counted = u.layer === 'exception' && bt ? unitCountType(lot, C, reads) : null;
+    if (counted && types.includes(counted)) trace.push(`M-252: ${u.unit_id} binds ${bt} of ${lot.vars.dwelling_units} units as its ${counted} rule`);
+    else if (!suite && !aliased) {
       if (!bt) unknown = 'needs_user_input:building_type';
       else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
     }
@@ -1072,7 +1090,18 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
     if (lost.length) trace.push(`rule 4: ${lost.join(', ')} replaced by a higher layer (bound ${b})`);
     // M-180(2): the exception layer won, but the zone's houseplex rule says the more permissive prevails — keep the
     // base units of the named articles as the alternative, compared after evaluation
-    if (b !== 'exact' && kept[b].some((u) => layerOf(u) === 'exception')) {
+    // M-252 (narrows M-180(2)): 10.x0.30.1(2) / x.40.1 "more permissive" compares with the detached-house rule that the
+    // substitution (M-180(1)) carries over to a houseplex; an exception unit that names the houseplex's own type (or its
+    // parent, or its duplex / triplex unit-count name) is not that substitution and is not compared
+    const namesOwnType = (u) => {
+      const ts = ((u.application || {}).building_types || []).map((x) => (x && typeof x === 'object' ? x.token : x));
+      const bt = lot.building_type; const cnt = unitCountType(lot, C, reads);
+      // only for the houseplex classes the zone's substitution targets (a house with a secondary suite still compares, M-180(2))
+      const subst = Object.values((C.exceptionTypeAlias && C.exceptionTypeAlias[lot.zone]) || {});
+      if (!bt || !(subst.includes(bt) || subst.includes(C.typeParent[bt]))) return false;
+      return ts.includes(bt) || ts.includes(C.typeParent[bt]) || Boolean(cnt && ts.includes(cnt));
+    };
+    if (b !== 'exact' && kept[b].some((u) => layerOf(u) === 'exception' && !namesOwnType(u))) {
       for (const p of morePermissive) {
         const arts = new Set((p.application && p.application.articles) || []);
         // E2E-F-06: the zone rule the exception's own "Despite" dropped is still the regulation M-180(2) compares against
@@ -1086,7 +1115,8 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   // evaluate + rule 4a
   const ev1 = (s, args, u) => {
     const alias = u && u.layer === 'exception' && C.exceptionTypeAlias ? C.exceptionTypeAlias[lot.zone] || null : null;
-    const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: args, byTypeAlias: alias });
+    const count = u && u.layer === 'exception' ? unitCountType(lot, C, reads) : null;
+    const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: args, byTypeAlias: alias, byTypeCount: count });
     addAll(reads, r.inputs);
     return r;
   };

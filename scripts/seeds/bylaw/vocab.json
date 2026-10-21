@@ -585,7 +585,8 @@
     "RD": { "citation": "10.20.30.1(1), 10.20.40.1(6)", "detached_house": "detached_houseplex" },
     "RS": { "citation": "10.40.30.1(1), 10.40.40.1(5)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
     "RT": { "citation": "10.60.30.1(1), 10.60.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
-    "RM": { "citation": "10.80.30.1(1), 10.80.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" }
+    "RM": { "citation": "10.80.30.1(1), 10.80.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
+    "by_unit_count": { "$comment": "Spec 69a M-252 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-8): an exception clause written before By-law 648-2025 names a duplex or triplex; on the lot that is a detached houseplex of 2 or 3 dwelling units (vars.dwelling_units), and the clause binds it as its own type (not the M-180(1) substitution, so M-180(2) does not compare it).", "duplex": { "type": "detached_houseplex", "dwelling_units": 2 }, "triplex": { "type": "detached_houseplex", "dwelling_units": 3 } }
   },
   "label_absence_unregulated": {
     "$comment": "Spec 69a M-220 / M-202(3): when no unit applies to the target and the lot's zone label carries no such letter, the answer is unregulated (no label cap), not no_candidate.",

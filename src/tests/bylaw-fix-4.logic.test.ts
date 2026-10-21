@@ -145,3 +145,32 @@ describe('F-SC-7 / M-251 — exception RD 70 side yard: the residential building
     expect(String(r.winner)).toMatch(/^10\.5\.60\.20\(3\)/);
   });
 });
+
+// F-SC-8 / M-252 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-8`, "Follow the City"): an exception
+// arm that names the lot's own building type is not displaced by 10.80.30.1(2) "the more permissive regulation prevails";
+// duplex / triplex read as a detached houseplex of 2 / 3 units (vocab.exception_type_alias.by_unit_count).
+describe('F-SC-8 / M-252 — exception RM 18 "35% for a duplex or triplex" binds a 2- or 3-unit houseplex', () => {
+  // 61 Redgrave Dr: RM (u4) (x18), no Lot Coverage Overlay
+  const red = (units: number | null): Json => lot('RM', 'detached_houseplex', { exception: '900.6.10(18)', label: { u: 4 }, vars: { lot_frontage_m: 9.14, lot_depth_m: 36.57, lot_area_m2: 334.4, ...(units === null ? {} : { dwelling_units: units }) } });
+
+  it('the texts (ch900_6.txt x18 (C); ch10_80.txt 10.80.30.1(2))', () => {
+    expect(page('ch900_6')).toContain('(C) The maximum lot coverage is: (i) 33% for a detached house or semi-detached house; and (ii) 35% for a duplex or triplex');
+    expect(page('ch10_80')).toContain('is more permissive than the maximum lot coverage that would apply to the lot under regulation 10.80.30.1(1), then the more permissive regulation prevails');
+  });
+
+  it('vocab.exception_type_alias.by_unit_count maps duplex / triplex to a detached houseplex of 2 / 3 units', () => {
+    expect(I.vocab.exception_type_alias.by_unit_count).toMatchObject({ duplex: { type: 'detached_houseplex', dwelling_units: 2 }, triplex: { type: 'detached_houseplex', dwelling_units: 3 } });
+  });
+
+  it('61 Redgrave Dr, a 2-unit houseplex: lot_coverage_pct 35 % from x18 (C) (the City figure); 3 units the same', () => {
+    for (const n of [2, 3]) {
+      const r = eff(red(n), 'lot_coverage_pct');
+      expect([n, r.status, r.value, r.winner]).toEqual([n, 'value', 35, '900.6.10(18)#(18)[SSP](C)']);
+    }
+  });
+
+  it('a 4-unit houseplex is no duplex or triplex: the detached-house substitution (33 %) and the more-permissive rule still apply (M-180(1)/(2) unchanged)', () => {
+    const r = eff(red(4), 'lot_coverage_pct');
+    expect([r.status, r.value]).toEqual(['value', 'unregulated']);
+  });
+});

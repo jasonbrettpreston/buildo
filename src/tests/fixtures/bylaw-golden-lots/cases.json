@@ -784,14 +784,17 @@
      "unit": "10.10.40.1(7)#whole",
      "lot": "5265152",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "height_storeys",
      "expect": {
       "uncapped": true,
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "R (x125): exception by_type detached 3 storeys vs R houseplex not capped: not capped, the exception value disclosed",
+     "rationale": "R (x125), 4-unit houseplex: exception by_type detached 3 storeys vs R houseplex not capped: not capped, the exception value disclosed",
      "initial": {
       "pass": true,
       "observed": {
@@ -817,7 +820,10 @@
      "unit": "10.10.40.1(7)#whole",
      "lot": "5265842",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "height_storeys",
      "expect": {
@@ -841,6 +847,39 @@
        "disclosures": [
         "On this exception lot the height_storeys is unlimited from 10.10.40.10(3)#(3)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (3)."
        ],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.1(7)#whole",
+     "lot": "5265842",
+     "scenario": {
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 3
+      }
+     },
+     "target": "height_storeys",
+     "expect": {
+      "value": 4
+     },
+     "rationale": "R (x125), 3-unit houseplex = a triplex (M-252): (D)(ii) 4 storeys stands",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 4,
+       "reason": null,
+       "winner": "900.2.10(125)#(125)[SSP](D)",
+       "applied": [
+        "900.2.10(125)#(125)[SSP](D)"
+       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }
@@ -30175,14 +30214,17 @@
      "unit": "10.80.30.1(2)#whole",
      "lot": "5511363",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "lot_coverage_pct",
      "expect": {
       "value": "unregulated",
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "RM (x18), houseplex: as above",
+     "rationale": "RM (x18), 4-unit houseplex: as above",
      "initial": {
       "pass": true,
       "observed": {
@@ -30199,6 +30241,39 @@
        "disclosures": [
         "On this exception lot the lot_coverage_pct is unregulated from 10.80.30.40(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (33)."
        ],
+       "alternate_paths": 32
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.80.30.1(2)#whole",
+     "lot": "5511363",
+     "scenario": {
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 2
+      }
+     },
+     "target": "lot_coverage_pct",
+     "expect": {
+      "value": 35
+     },
+     "rationale": "RM (x18), 2-unit houseplex = a duplex (M-252, 61 Redgrave Dr A0228/26EYK): 35 %, not displaced by 10.80.30.1(2)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 35,
+       "reason": null,
+       "winner": "900.6.10(18)#(18)[SSP](C)",
+       "applied": [
+        "900.6.10(18)#(18)[SSP](C)"
+       ],
+       "disclosures": [],
        "alternate_paths": 32
       }
      }
@@ -30589,14 +30664,17 @@
      "unit": "10.80.40.1(5)#whole",
      "lot": "5511363",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "height_m",
      "expect": {
       "value": 10,
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "RM (x18): exception by_type detached 9.5 m vs houseplex HT 10.0 (no HT overlay: zone default)",
+     "rationale": "RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex HT 10.0 (no HT overlay: zone default)",
      "initial": {
       "pass": true,
       "observed": {
@@ -30614,6 +30692,39 @@
        "disclosures": [
         "On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
        ],
+       "alternate_paths": 32
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.80.40.1(5)#whole",
+     "lot": "5511363",
+     "scenario": {
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 3
+      }
+     },
+     "target": "height_m",
+     "expect": {
+      "value": 11
+     },
+     "rationale": "RM (x18), 3-unit houseplex = a triplex (M-252): its own 11.0 m arm stands",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "900.6.10(18)#(18)[SSP](D)",
+       "applied": [
+        "900.6.10(18)#(18)[SSP](D)"
+       ],
+       "disclosures": [],
        "alternate_paths": 32
       }
      }
