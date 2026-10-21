@@ -174,3 +174,25 @@ describe('F-SC-8 / M-252 — exception RM 18 "35% for a duplex or triplex" binds
     expect([r.status, r.value]).toEqual(['value', 'unregulated']);
   });
 });
+
+// F-SC-9 / M-253 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-9`): on a garden-suite lot the house's
+// coverage answer is kept, ancillary_coverage_pct carries the (B) 20 % cap, and (A) 45 % is disclosed. Already in force at
+// ee5ed572 (N-1, 02ccf852): this describe locks it (no code change).
+describe('F-SC-9 / M-253 — garden-suite lots: the 20 % all-ancillary cap, the 45 % path disclosed', () => {
+  // 59 Yarrow Rd: RM (f12.0; u4; d0.8) (x252), HT 11 ST 3, no Lot Coverage Overlay
+  const yar = (bt: string): Json => lot('RM', bt, { exception: '900.6.10(252)', label: { f: 12, u: 4, d: 0.8 }, overlays: { HT: 11, ST: 3 }, vars: { lot_frontage_m: 7.62, lot_depth_m: 33.53, lot_area_m2: 255.58 } });
+
+  it('the text (ch150_7.txt 150.7.60.70(1))', () => {
+    expect(page('ch150_7')).toContain('(A) the area of the lot covered by all buildings and structures must not exceed 45 percent; or (B) the ancillary building containing a garden suite is not included in the overall calculation of lot coverage, and the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a garden suite, may not exceed 20 percent of the lot area');
+  });
+
+  it('the suite lot: ancillary_coverage_pct 20 % from (1)(B) on a lot with no Lot Coverage Overlay; the coverage answer stays the (B) path', () => {
+    const a = eff(yar('garden_suite'), 'ancillary_coverage_pct');
+    expect([a.status, a.value, a.winner]).toEqual(['value', 20, '150.7.60.70(1)#(1)(B)']);
+    expect(eff(yar('garden_suite'), 'lot_coverage_pct').value).toBe('unregulated');
+  });
+
+  it('(A) 45 % is disclosed as the alternative path', () => {
+    expect(String(unitOf('150.7.60.70(1)#(1)(A)').disclosure)).toMatch(/\(A\) 45 % for all buildings/);
+  });
+});
