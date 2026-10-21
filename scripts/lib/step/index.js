@@ -2338,6 +2338,10 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     [match.primary_counter]: 0,
     [match.fallback_counter]: 0,
   };
+  // R-ID / R-EG (1) additive amendment: the per-batch counters the match plan declares in `extra_counters`, summed
+  // from classifyMatches' `counters`; closed (linkExtraCounters). Absent: no key, every existing LINK step unchanged.
+  const extraCounters = linkExtraCounters(match, matched, tag);
+  for (const n of extraCounters) matched[n] = 0;
   for (const s of gate.signals) {
     if (s.current === null) continue;
     matched[s.key] = Number.isNaN(Number(s.current)) ? s.current : Number(s.current);
@@ -2430,6 +2434,7 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     matched[match.primary_counter] += classified.matches;
     matched[match.fallback_counter] += fallback.rows.length;
     matched[names.no_match] += ids.filter((id) => !linkedIds.has(id)).length;
+    for (const [n, v] of Object.entries(batchExtraCounts(classified, extraCounters, tag))) matched[n] += v;
     if (departedAt >= 0) for (const r of rows) derivedLeading.add(r[plans[departedAt].keys[0]]);
   }
 
@@ -2496,6 +2501,28 @@ function linkCounterNames(match, tag) {
     || keys.some((k) => typeof c[k] !== 'string' || !/^[a-z][a-z0-9_]*$/.test(c[k]));
   if (bad) throw new Error(`${tag} match.counters must name exactly ${keys.join(', ')} as snake_case strings (Spec 124 R-EG (1)).`);
   return c;
+}
+
+/**
+ * R-ID (an additive amendment of R-EG (1)): the extra per-batch counters a LINK match plan declares. Each is a
+ * snake_case name that is not already a counter of the phase; absent -> none.
+ */
+function linkExtraCounters(match, matched, tag) {
+  const x = match.extra_counters;
+  if (x === undefined) return [];
+  if (!Array.isArray(x) || new Set(x).size !== x.length || x.some((n) => typeof n !== 'string' || !/^[a-z][a-z0-9_]*$/.test(n) || n in matched)) {
+    throw new Error(`${tag} match.extra_counters must be distinct snake_case names that are not LINK or pass counters (Spec 124 R-EG (1), R-ID); got ${JSON.stringify(x)}.`);
+  }
+  return x;
+}
+/** R-ID: one batch's declared extra counts from classifyMatches' `counters` — only declared keys, non-negative integers. */
+function batchExtraCounts(classified, extraCounters, tag) {
+  const c = classified.counters;
+  if (extraCounters.length === 0 && c === undefined) return {};
+  const keys = c && typeof c === 'object' ? Object.keys(c) : [];
+  const bad = !c || typeof c !== 'object' || keys.some((k) => !extraCounters.includes(k)) || keys.some((k) => !Number.isInteger(c[k]) || c[k] < 0);
+  if (bad) throw new Error(`${tag} classifyMatches counters must be non-negative integers keyed only by the declared extra_counters ${JSON.stringify(extraCounters)} (Spec 124 R-ID); got ${JSON.stringify(c)}.`);
+  return Object.fromEntries(extraCounters.map((k) => [k, c[k] || 0]));
 }
 
 /** R-EG (2): the primary-match binds — the compute's pure export over the batch rows, else `[ids]` (byte-identical). */

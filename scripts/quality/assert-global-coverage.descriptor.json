@@ -2905,7 +2905,12 @@
       "kind": "field_coverage",
       "expect": {
         "step_target": "Sources Step — enrich_parcels",
-        "field": "parcels.max_buildable_footprint_sqm (residential w/ building)"
+        "field": "parcels.max_buildable_footprint_sqm (residential w/ building)",
+        "guard": {
+          "name": "has_bldg",
+          "sql": "EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)",
+          "scope": "residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator"
+        }
       },
       "limit": "pct >= 80",
       "severity": "FAIL",
@@ -2916,7 +2921,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.max_buildable_footprint_sqm (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.max_buildable_footprint_sqm (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census). Scoped by the declared guard `has_bldg` (IL-11/IL-12 ruling, AGC-D8): residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator; the guard is `EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)`.",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2931,7 +2936,12 @@
       "kind": "field_coverage",
       "expect": {
         "step_target": "Sources Step — enrich_parcels",
-        "field": "parcels.max_buildable_gfa_sqm (residential w/ building)"
+        "field": "parcels.max_buildable_gfa_sqm (residential w/ building)",
+        "guard": {
+          "name": "has_bldg",
+          "sql": "EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)",
+          "scope": "residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator"
+        }
       },
       "limit": "pct >= 80",
       "severity": "FAIL",
@@ -2942,7 +2952,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.max_buildable_gfa_sqm (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.max_buildable_gfa_sqm (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census). Scoped by the declared guard `has_bldg` (IL-11/IL-12 ruling, AGC-D8): residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator; the guard is `EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)`.",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2957,7 +2967,12 @@
       "kind": "field_coverage",
       "expect": {
         "step_target": "Sources Step — enrich_parcels",
-        "field": "parcels.max_build_stories (residential w/ building)"
+        "field": "parcels.max_build_stories (residential w/ building)",
+        "guard": {
+          "name": "has_bldg",
+          "sql": "EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)",
+          "scope": "residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator"
+        }
       },
       "limit": "pct >= 80",
       "severity": "FAIL",
@@ -2968,7 +2983,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.max_build_stories (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.max_build_stories (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census). Scoped by the declared guard `has_bldg` (IL-11/IL-12 ruling, AGC-D8): residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator; the guard is `EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)`.",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2983,7 +2998,12 @@
       "kind": "field_coverage",
       "expect": {
         "step_target": "Sources Step — enrich_parcels",
-        "field": "parcels.opt_aor_gfa_sqm (residential w/ building)"
+        "field": "parcels.opt_aor_gfa_sqm (residential w/ building)",
+        "guard": {
+          "name": "has_bldg",
+          "sql": "EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)",
+          "scope": "residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator"
+        }
       },
       "limit": "pct >= 80",
       "severity": "FAIL",
@@ -2994,7 +3014,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.opt_aor_gfa_sqm (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — enrich_parcels / parcels.opt_aor_gfa_sqm (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census). Scoped by the declared guard `has_bldg` (IL-11/IL-12 ruling, AGC-D8): residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator; the guard is `EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)`.",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -3193,7 +3213,12 @@
       "kind": "field_coverage",
       "expect": {
         "step_target": "Sources Step — compute_parcel_cost_estimates",
-        "field": "parcels.parcel_cost_menu (residential w/ building)"
+        "field": "parcels.parcel_cost_menu (residential w/ building)",
+        "guard": {
+          "name": "has_bldg",
+          "sql": "EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)",
+          "scope": "residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator"
+        }
       },
       "limit": "pct >= 80",
       "severity": "FAIL",
@@ -3204,7 +3229,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — compute_parcel_cost_estimates / parcels.parcel_cost_menu (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — Sources Step — compute_parcel_cost_estimates / parcels.parcel_cost_menu (residential w/ building). Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census). Scoped by the declared guard `has_bldg` (IL-11/IL-12 ruling, AGC-D8): residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator; the guard is `EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)`.",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -8049,7 +8074,7 @@
           "ref": ".cursor/wf5_wd1_write_class_audit_active_task.md"
         }
       },
-      "adjudicated_by": "WD-1 / Spec 122 §1.10 required-field profile",
+      "adjudicated_by": "WD-1 / Spec 122 §1.10 required-field profile [register: Spec 124 R-X (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-11"
     },
     {
@@ -8061,7 +8086,7 @@
           "ref": "scripts/seeds/logic_variables.json"
         }
       },
-      "adjudicated_by": "Spec 124 §2 Rule 3",
+      "adjudicated_by": "Spec 124 §2 Rule 3 [register: Spec 124 R-G (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-11"
     },
     {
@@ -8073,7 +8098,7 @@
           "ref": "docs/specs/01-pipeline/124_step_standard_policy.md"
         }
       },
-      "adjudicated_by": "commit 7 scope constraint (no step.schema.json edit authorized)",
+      "adjudicated_by": "commit 7 scope constraint (no step.schema.json edit authorized) [register: Spec 124 R-HV; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-11"
     }
   ],

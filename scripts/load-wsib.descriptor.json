@@ -459,7 +459,7 @@
           "ref": "scripts/lib/compute/load-wsib.js"
         }
       },
-      "adjudicated_by": "orchestrator ruling 2026-09-29 (row 3.5 ② rulings: header check stays in compute as a declared deviation)",
+      "adjudicated_by": "orchestrator ruling 2026-09-29 (row 3.5 ② rulings: header check stays in compute as a declared deviation) [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -471,7 +471,7 @@
           "ref": "scripts/lib/compute/load-wsib.js"
         }
       },
-      "adjudicated_by": "plan §3 WS-D2 (.cursor/batch2_load_wsib_active_task.md), operator-authorized 2026-09-27",
+      "adjudicated_by": "plan §3 WS-D2 (.cursor/batch2_load_wsib_active_task.md), operator-authorized 2026-09-27 [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -483,7 +483,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "plan §2 row 7 (.cursor/batch2_load_wsib_active_task.md); address_points Fold B3 precedent",
+      "adjudicated_by": "plan §2 row 7 (.cursor/batch2_load_wsib_active_task.md); address_points Fold B3 precedent [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -495,7 +495,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "plan §5 (.cursor/batch2_load_wsib_active_task.md)",
+      "adjudicated_by": "plan §5 (.cursor/batch2_load_wsib_active_task.md) [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -507,7 +507,7 @@
           "ref": "scripts/analysis/probe-csv-acquire.mjs"
         }
       },
-      "adjudicated_by": "plan §11 note + 0fs G4 (.cursor/batch2_load_wsib_active_task.md)",
+      "adjudicated_by": "plan §11 note + 0fs G4 (.cursor/batch2_load_wsib_active_task.md) [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -519,7 +519,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "plan §2 row 14 (.cursor/batch2_load_wsib_active_task.md)",
+      "adjudicated_by": "plan §2 row 14 (.cursor/batch2_load_wsib_active_task.md) [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -531,7 +531,7 @@
           "ref": "scripts/lib/compute/load-wsib.js"
         }
       },
-      "adjudicated_by": "plan §2 row 11 (.cursor/batch2_load_wsib_active_task.md)",
+      "adjudicated_by": "plan §2 row 11 (.cursor/batch2_load_wsib_active_task.md) [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -543,7 +543,7 @@
           "ref": "scripts/lib/step/verdict.js"
         }
       },
-      "adjudicated_by": "address_points WF3 2026-09-28 pct-boundary precedent",
+      "adjudicated_by": "address_points WF3 2026-09-28 pct-boundary precedent [register: Spec 124 R-GA; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -555,7 +555,7 @@
           "ref": "scripts/lib/compute/load-wsib.js"
         }
       },
-      "adjudicated_by": "plan §2 row 12 (.cursor/batch2_load_wsib_active_task.md)",
+      "adjudicated_by": "plan §2 row 12 (.cursor/batch2_load_wsib_active_task.md) [register: Spec 124 R-HR; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -567,7 +567,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "plan §2 row 12 (.cursor/batch2_load_wsib_active_task.md)",
+      "adjudicated_by": "plan §2 row 12 (.cursor/batch2_load_wsib_active_task.md) [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {
@@ -579,7 +579,7 @@
           "ref": "wsib_null_address_count"
         }
       },
-      "adjudicated_by": "plan §3 WS-D6 (.cursor/batch2_load_wsib_active_task.md)",
+      "adjudicated_by": "plan §3 WS-D6 (.cursor/batch2_load_wsib_active_task.md) [register: Spec 124 R-FZ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-29"
     },
     {

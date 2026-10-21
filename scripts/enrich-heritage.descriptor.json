@@ -719,18 +719,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-10-05T18:46:39.345Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 3669,
-        "sample_n": 2,
-        "source_run": {
-          "run_id": "2288",
-          "chain": null,
-          "event": "golden_capture"
-        }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:26:59.776Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 692, "sample_n": 17, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Half of the whole semantic of new_designated = (hcd_id IS NOT NULL OR hp_id IS NOT NULL): a flagged parcel must carry a non-null type. A port error in the CASE breaks this silently while every count-row stays green. MEASURED 0 across all 486,530 parcels, 2026-09-20.",
         "liveness": {
@@ -748,18 +737,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-10-05T18:46:39.345Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 3450,
-        "sample_n": 2,
-        "source_run": {
-          "run_id": "2288",
-          "chain": null,
-          "event": "golden_capture"
-        }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:26:59.776Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 654, "sample_n": 17, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "The inverse direction of the same semantic: an unflagged parcel must never carry a type. MEASURED 0 across all 486,530 parcels, 2026-09-20.",
         "liveness": {
@@ -777,18 +755,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-10-05T18:46:39.345Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 3448,
-        "sample_n": 2,
-        "source_run": {
-          "run_id": "2288",
-          "chain": null,
-          "event": "golden_capture"
-        }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:26:59.776Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 700, "sample_n": 17, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "A date can only be set alongside a type — both come from the same winning side of the CASE. MEASURED 0, 2026-09-20.",
         "liveness": {
@@ -806,18 +773,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-10-05T18:46:39.345Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 3678,
-        "sample_n": 2,
-        "source_run": {
-          "run_id": "2288",
-          "chain": null,
-          "event": "golden_capture"
-        }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:26:59.776Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 662, "sample_n": 17, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Scoped to Part IV only — the Part V arm legitimately carries 1,820 null dates (4 of 29 heritage_districts rows have a NULL designated_date, §7). Every heritage_properties Part IV row has a non-null designated_date, so a Part IV parcel with a null date is a port error, not a source-data fact. MEASURED 0, 2026-09-20.",
         "liveness": {
@@ -839,18 +795,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — a city-wide ceiling on how much of the parcel fabric can plausibly be heritage-designated, not a convergence target. Measured live 2.047%.",
-      "last_measured": {
-        "value": 2.13792270044913,
-        "at": "2026-10-05T18:46:39.345Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1630,
-        "sample_n": 2,
-        "source_run": {
-          "run_id": "2288",
-          "chain": null,
-          "event": "golden_capture"
-        }
-      },
+      "last_measured": { "value": 2.13801214816247, "at": "2026-10-21T13:26:59.776Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 617, "sample_n": 17, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "A join that started over-matching (SRID drift, unbound GIST returning a Cartesian product) would spike this share; a ceiling well above the measured value catches the regression class without ever nearing the legitimate value.",
         "liveness": {
@@ -870,18 +815,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — the mirror-image floor of heritage_designated_share_max_pct. A ceiling-only set is blind to a collapse: a join that silently matched 3% of what it should would satisfy every existing row (parcels_heritage_designated_count only FAILs at exactly 0). Measured live 9,958.",
-      "last_measured": {
-        "value": 10615,
-        "at": "2026-10-05T18:46:39.345Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1631,
-        "sample_n": 2,
-        "source_run": {
-          "run_id": "2288",
-          "chain": null,
-          "event": "golden_capture"
-        }
-      },
+      "last_measured": { "value": 10616, "at": "2026-10-21T13:26:59.776Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 606, "sample_n": 17, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Reality-Check plan-altitude demand (§7, the enrich_ravines output-panel O4 precedent applied at plan altitude here rather than discovered at output): a floor far below the measured count but far above zero, catching a partial-collapse regression neither the FAIL-at-0 gate nor the share ceiling can see.",
         "liveness": {
@@ -900,18 +834,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — a structural containment-arithmetic bound: containment assigns at most one parcel per source point, so parcels-with-Part-IV can never exceed source Part IV points. Measured 1,217 <= 1,557 => 0.",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-10-05T18:46:39.345Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1334,
-        "sample_n": 2,
-        "source_run": {
-          "run_id": "2288",
-          "chain": null,
-          "event": "golden_capture"
-        }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:26:59.776Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 616, "sample_n": 17, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "A LATERAL join bug that fanned out (returned more than one match per point) would break this identity while every per-metric count still looks locally plausible.",
         "liveness": {
@@ -956,7 +879,7 @@
           "ref": "scripts/lib/compute/enrich-heritage.js"
         }
       },
-      "adjudicated_by": "Operator ruling H-A1 = (a), 2026-09-20 (.cursor/batch2_p2_2_enrich_heritage_active_task.md §12)",
+      "adjudicated_by": "Operator ruling H-A1 = (a), 2026-09-20 (.cursor/batch2_p2_2_enrich_heritage_active_task.md §12) [register: Spec 124 R-AR (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-20"
     },
     {
@@ -968,7 +891,7 @@
           "ref": "scripts/lib/compute/enrich-heritage.js"
         }
       },
-      "adjudicated_by": "Spec 124 §7 rung (b)",
+      "adjudicated_by": "Spec 124 §7 rung (b) [register: Spec 124 R-FS; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-20"
     }
   ],

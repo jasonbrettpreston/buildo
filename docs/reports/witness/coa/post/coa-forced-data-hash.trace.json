@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-coa.js",
   "chain": "coa",
-  "source_fingerprint": "695367ed3f8677a11da993dd578dafd6dc787ca28b05e8ccaf93c4ed577bce1f",
-  "git_head": "017538a25d5af64c3e7eed208e7e5011a212ab9e",
+  "source_fingerprint": "4b333229d492711acfd07342d7d9fde003a04107fc18de6a47d34611a50e292f",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
     "calls": 28,
     "distinct": 20,
     "utility": 9,
-    "tracer_self_ms": 8.505,
-    "wall_ms": 2006
+    "tracer_self_ms": 8.198,
+    "wall_ms": 2047
   },
   "statements": [
     {
@@ -129,7 +129,7 @@
       "fingerprint": "54dbd8fadfdf89e0",
       "kind": "write",
       "count": 1,
-      "rowCount": 2639,
+      "rowCount": 2645,
       "reads": {
         "coa_applications": [
           "application_number",
@@ -285,7 +285,7 @@
       "fingerprint": "f36afc5158390bc1",
       "kind": "read",
       "count": 1,
-      "rowCount": 2689,
+      "rowCount": 2695,
       "reads": {
         "coa_applications": [
           "application_number",
@@ -299,7 +299,7 @@
   ],
   "transactions": [
     {
-      "client": "12718:2",
+      "client": "83145:2",
       "write_fingerprints": [
         "4b8516e33bbd1e35",
         "54dbd8fadfdf89e0"

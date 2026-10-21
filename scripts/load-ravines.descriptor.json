@@ -467,13 +467,13 @@
     {
       "id": "ravines_distinct_source_dataset_version", "sql": "SELECT count(DISTINCT source_dataset_version)::int FROM ravines",
       "bound": "value_max 1", "severity": "WARN", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 1, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 6, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 1, "at": "2026-10-21T13:17:04.924Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 6, "sample_n": 26, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new). More than one distinct source_dataset_version live on the table at once means a load partially failed mid-batch (this step's own write is single-version per run, `ravine_override_feature_count_drift_present`'s own sibling concern). Currently 1 (healthy). WARN, not FAIL — a transient multi-version state during a load-in-progress read is possible, not necessarily a hard bug. 7ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "ravines" } }
     },
     {
       "id": "ravines_area_km2", "sql": "SELECT round((sum(ST_Area(geom::geography)) / 1e6)::numeric, 3) FROM ravines",
       "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 110.995, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 480, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 110.995, "at": "2026-10-21T13:17:04.924Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 253, "sample_n": 26, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new). Pure telemetry (total ravine-protected area trend) — a large jump/drop between runs is a coarse but real geometry-corruption signal, no existing check watches total area. value_min 0 sanity floor. 357ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "ravines" } }
     }
   ],
@@ -483,7 +483,7 @@
       "sql": "SELECT count(*)::int FROM parcels WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows",
-      "last_measured": { "value": 0, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 12245, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:17:04.924Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 4336, "sample_n": 26, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility — spans `parcels`, a table load_ravines does not itself write, populated downstream by enrich-ravines.js). Checks the sign-law consistency between a parcel's boolean flag and its distance sign, cross-referencing this step's own ravine geometry. PHYSICAL-BOUND (Fold A-5): the flag/distance relationship is a logical consequence of the geometry, not a soft telemetry trend. Currently 0 (healthy). WARN + retighten_when, never FAIL — a downstream enrich step's own write timing, not this step's write, so this step cannot self-correct it. 323ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
     },
     {
@@ -491,7 +491,7 @@
       "sql": "SELECT count(*)::int FROM permits WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows",
-      "last_measured": { "value": 0, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 2990, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:17:04.924Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 289, "sample_n": 26, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility) — same sign-law check as parcels_sign_law_violations above, scoped to `permits` (a different table load_ravines does not write). Currently 0. WARN + retighten_when, never FAIL, same reasoning. 123ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "permits" } }
     },
     {
@@ -499,7 +499,7 @@
       "sql": "SELECT count(*)::int FROM coa_applications WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows",
-      "last_measured": { "value": 0, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 364, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-21T13:17:04.924Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 140, "sample_n": 26, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility) — same sign-law check, scoped to `coa_applications`. Currently 0. WARN + retighten_when, never FAIL, same reasoning. 121ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "coa_applications" } }
     },
     {
@@ -507,7 +507,7 @@
       "sql": "SELECT count(*)::int FROM parcels p WHERE p.ravine_dataset_version_when_enriched IS DISTINCT FROM (SELECT max(source_dataset_version) FROM ravines)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows (self-retires once enrich-ravines.js next runs against the current ravines version)",
-      "last_measured": { "value": 1, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 12246, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 1, "at": "2026-10-21T13:17:04.924Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 4336, "sample_n": 26, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility) — the SEAM-shaped candidate: checks whether `parcels.ravine_dataset_version_when_enriched` (written by the DOWNSTREAM enrich-ravines.js) still matches THIS step's own latest source_dataset_version. A non-zero count means enrich-ravines has not yet caught up to this run's own load — expected to be transiently non-zero right after a load_ravines run, self-clearing once enrich-ravines next runs. PHYSICAL-BOUND. Currently 0 (both caught up). 963ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
     }
   ],
@@ -571,7 +571,7 @@
         "text": "PIN, DO NOT FIX (Spec 123 §3.1, plan D-8, LR-D3). Today every terminal of this step exits 0: pipeline.run discards the return value, run-chain records the FAIL verdict and folds it into chain status completed_with_errors, and the chain CONTINUES. blocking: true would make the library throw after the emit and halt the sources chain — a real behaviour change smuggled into a commit whose whole claim is that it changes nothing. Promoting a check is its own peel with its own lock.",
         "liveness": { "kind": "file", "ref": "scripts/run-chain.js" }
       },
-      "adjudicated_by": "operator ruling, plan D-8",
+      "adjudicated_by": "operator ruling, plan D-8 [register: Spec 124 R-FJ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-25"
     },
     {
@@ -580,7 +580,7 @@
         "text": "Two documented divergences kept deliberately. (1) identity.spec_version stays \"1.2\" because enrich-ravines.js:42 pins it EXACTLY and any other value HALTs the sources chain; the Spec 59 header number is documentation, the pin is the contract. (2) The per-feature ravine_geometry_skipped_source_id WARN rows are NOT declared as a check: they were pushed once per dropped feature, so the audit table's row count was bounded only by the feature count (LR-D1). The ids now travel in the geometry-skipped check's observation detail — one row instead of hundreds.",
         "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
       },
-      "adjudicated_by": "plan C-9 / LR-D1",
+      "adjudicated_by": "plan C-9 / LR-D1 [register: Spec 124 R-EP (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-25"
     },
     {
@@ -589,7 +589,7 @@
         "text": "FOLD C, OPERATOR RULING 2026-08-26 (Spec 08 §7.1) — LR-D9. Spec 59 L7 and L8 are not merely FAIL checks: L8's normative text is \"do not enter pipeline.withTransaction ... zero rows touched\" and the pre-conversion loader honoured both by returning `{ failed: true }` BEFORE `pool.query(VALIDATION_SQL)` / `withTransaction` (33786d1a:scripts/load-ravines.js:402-417 and :443-454). Converting to the archetype reordered the phases so the write was already committed when the checks scored, which silently retired a guarantee the spec states in imperative form — the FAIL row and the `failed` status say the data is wrong, but the wrong data is in `ravines`. The ruling restores it IN THE LIBRARY rather than in the compute: `checks[].when` gains `pre_write`, the runner scores those checks between the read-only geometry validation and the first write statement, and an unaccepted FAIL skips the write entirely (no transaction opened, `ravines` untouched, remaining checks scored over a zeroed `written`). Acceptance is applied to the DECISION only — RAVINE_ACCEPT_FEATURE_COUNT_DRIFT lets the write proceed and NEVER suppresses the FAIL row (ruling A-5). Exit semantics are unchanged: every check stays blocking:false (D-8), so the run is `failed` and the chain continues. The lesson: an archetype ruling that reorders phases must re-derive every \"before X\" guarantee in the step's spec.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
       },
-      "adjudicated_by": "operator ruling §7.1 2026-08-26 / Fold C / LR-D9",
+      "adjudicated_by": "operator ruling §7.1 2026-08-26 / Fold C / LR-D9 [register: Spec 124 R-I (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-26"
     }
   ],

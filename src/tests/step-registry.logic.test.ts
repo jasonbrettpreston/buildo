@@ -33,7 +33,8 @@ const require = createRequire(import.meta.url);
  * link_wsib's committed POST trace count, DERIVED from git's index of the witness directory
  * (never a literal; Spec 08 output panel round 1, 2026-10-18). It was pinned at 4 (FLEET-2 §5);
  * the real count is 6 since cdae212d (sources ledger nonzero) and b61efc2b (R-DN cohort-entities)
- * added witnessed captures under R-CZ/R-DN. loadObserved reads the directory; this reads git.
+ * added witnessed captures under R-CZ/R-DN; 5 since refreeze-night-1 retired the orphan cohort-entities trace under
+ * R-IJ (its 39 statement fingerprints equal sources-full-forced-5's). loadObserved reads the directory; this reads git.
  */
 const LINK_WSIB_POST_TRACES = execFileSync('git', ['ls-files', '--', 'docs/reports/witness/link_wsib/post/*.trace.json'], { cwd: path.resolve(__dirname, '../..'), encoding: 'utf8' })
   .split('\n').filter(Boolean).length;

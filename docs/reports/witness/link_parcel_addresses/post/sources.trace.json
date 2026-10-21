@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/link-parcel-addresses.js",
   "chain": "sources",
-  "source_fingerprint": "fd18bac2db4c575faa87c492adb3478d40f4b02056d913641a90e85e6a131566",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "0cec17f4555a66807a6c30e26ca19a46bbd11ad6fc54e0b47f1110895bb740b5",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
-    "calls": 16,
-    "distinct": 14,
-    "utility": 5,
-    "tracer_self_ms": 0.983,
-    "wall_ms": 418
+    "calls": 1522,
+    "distinct": 24,
+    "utility": 1004,
+    "tracer_self_ms": 40.41,
+    "wall_ms": 33409
   },
   "statements": [
     {
@@ -43,10 +43,90 @@
       ]
     },
     {
+      "fingerprint": "1ba5ce390f442ea9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_class_desc",
+          "address_point_id"
+        ],
+        "parcel_address_points": [
+          "address_point_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "234fa9884e04f4ac",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "feature_type",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "36b93635ce8767b3",
+      "kind": "write",
+      "count": 498,
+      "rowCount": 498,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "geom",
+          "retired_at"
+        ],
+        "parcel_address_points": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {
+        "parcel_address_points": [
+          "address_point_id",
+          "computed_at",
+          "parcel_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4b184f7c2cf370d6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 788,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -64,6 +144,45 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5ebf9defbcf196db",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_class_desc",
+          "address_point_id",
+          "geom",
+          "retired_at"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
       "error": null
     },
     {
@@ -103,7 +222,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 1,
+      "count": 499,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -133,6 +252,39 @@
       "error": null
     },
     {
+      "fingerprint": "9e2372a707475eeb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": [
+          "address_point_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "abbf367668f10b42",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "geom",
+          "retired_at"
+        ],
+        "parcel_address_points": [],
+        "parcels": [
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "afd4d45d41748e8c",
       "kind": "read",
       "count": 1,
@@ -147,7 +299,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 1,
+      "count": 499,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -169,7 +321,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 2,
+      "count": 5,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -185,16 +337,3064 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "ef70996c61cb0fb3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fa81ad30f23daf1b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "geom",
+          "retired_at"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "feature_type",
+          "geom",
+          "id",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    },
+    {
+      "client": "38564:2",
+      "write_fingerprints": [
+        "36b93635ce8767b3"
+      ]
+    }
+  ],
   "autocommit_writes": [],
   "touched": {
     "reads": {
-      "address_points": [],
-      "parcels": []
+      "address_points": [
+        "address_class_desc",
+        "address_point_id",
+        "geom",
+        "retired_at"
+      ],
+      "parcel_address_points": [
+        "address_point_id",
+        "computed_at",
+        "parcel_id"
+      ],
+      "parcels": [
+        "feature_type",
+        "geom",
+        "id",
+        "zoning_class"
+      ]
     },
-    "writes": {}
+    "writes": {
+      "parcel_address_points": [
+        "address_point_id",
+        "computed_at",
+        "parcel_id"
+      ]
+    }
   },
   "errors": []
 }

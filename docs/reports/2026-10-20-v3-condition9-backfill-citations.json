@@ -5751,7 +5751,7 @@
       "stage": "pending",
       "source": "deviation",
       "file": "scripts/link-coa-to-parcels.descriptor.json",
-      "key": "the legacy audit rows coa_corpus_linked_pct (>= 100 − t), coa_parcels_linked_pct + unmatched_coa_count (one decision rendered twice), the NO_NEW_WORK lane (phase 11), and the tier_1a_type_confirmed / tier_1a_type_tolerant per-run counters",
+      "key": "the legacy audit rows coa_corpus_linked_pct (>= 100 − t), coa_parcels_linked_pct + unmatched_coa_count (one decision rendered twice) and the NO_NEW_WORK lane (phase 11)",
       "deviation_index": 3,
       "class": "d",
       "rule_id": "R-ID",

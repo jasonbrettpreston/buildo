@@ -851,7 +851,7 @@
           "ref": "scripts/lib/compute/load-coa.js"
         }
       },
-      "adjudicated_by": "COA-D3 (assessment §6; red D6)",
+      "adjudicated_by": "COA-D3 (assessment §6; red D6) [register: Spec 124 R-IE; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     },
     {
@@ -863,7 +863,7 @@
           "ref": "scripts/lib/compute/load-coa.js"
         }
       },
-      "adjudicated_by": "load_zoning precedent (runner acquisition owns network telemetry)",
+      "adjudicated_by": "load_zoning precedent (runner acquisition owns network telemetry) [register: Spec 124 R-IF, R-HR; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     },
     {

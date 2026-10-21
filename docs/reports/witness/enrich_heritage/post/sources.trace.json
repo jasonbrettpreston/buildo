@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-heritage.js",
   "chain": "sources",
-  "source_fingerprint": "832dc53a446bd70df5b578e09bbd571206e5c1deda793f60144ec834cddc3382",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "11ac7d3c4030950ec6677f10a38b253748823b9110e701a901b34ba12d5be1dd",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
     "calls": 54,
     "distinct": 38,
     "utility": 13,
-    "tracer_self_ms": 1.639,
-    "wall_ms": 2859
+    "tracer_self_ms": 1.765,
+    "wall_ms": 3084
   },
   "statements": [
     {
@@ -186,7 +186,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 788,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -566,7 +566,7 @@
   ],
   "transactions": [
     {
-      "client": "42287:3",
+      "client": "87910:3",
       "write_fingerprints": [
         "98df2d71dc306fc7"
       ]

@@ -271,7 +271,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
           'Rule 3\'s own 1:1 rule ("a name bound to more than one check is a validator-side finding") forbids limit_from_config here: several magnitudes are consumed by MULTIPLE checks (mislink_footprint_lot_tol by 4 invariants, parcel_sanity_gfa_coherence_tolerance_sqm by 2). Every checks[].limit is the structural constant "viol == 0" (the legacy step has no per-check numeric ceiling of its own — thresholds are magnitudes INSIDE the SQL predicate); the resolved config value is consumed directly by scripts/lib/compute/assert-parcel-sanity.js when it builds the one folded scan, and re-stamped into records_meta.config on every run (Nothing Hidden) exactly like a limit_from_config substitution would be — only the substitution SITE moves from the threshold string to the predicate text.',
           { kind: 'file', ref: 'scripts/lib/assert-parcel-sanity-fields.js' },
         ),
-        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §2 (Scoping decision)',
+        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §2 (Scoping decision) [register: Spec 124 R-FR; V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-18',
       },
       {
@@ -280,7 +280,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
           'step.schema.json already carried the kind:"distribution" enum value and its docblock named parcel-sanity-audit.js\'s DIST_FIELDS scan as the reuse target — no consumer existed. scripts/lib/step/plausibility.js gains runDistributionEntries() (Fold B-7 wiring) at commit 2b; the actual zone-BUCKET CASE expression (RD/RS/RT/RM/RA/R) is domain knowledge, not derivable from the descriptor\'s zone_by column name, so it is supplied by the compute module\'s own DISTRIBUTION_SCOPE export, read generically by scripts/lib/step/index.js for any future kind:"distribution" consumer.',
           { kind: 'file', ref: 'scripts/lib/step/plausibility.js' },
         ),
-        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §3 (Schema-trap gap 1)',
+        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §3 (Schema-trap gap 1) [register: Spec 124 R-FR; V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-18',
       },
       {
@@ -289,7 +289,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
           'scripts/lib/step/verdict.js checkRow() gained an opt-in observation.inert flag: when the compute reports {violations:0, inert:true} for a check whose applicable population is 0, the row renders INFO regardless of declared severity (closing the exact "green because it never looked" class Spec 121 12b.6 names). Every existing converted step never sets this flag, so the change is behaviour-neutral for the rest of the fleet — regression-locked by src/tests/steps/assert_parcel_sanity/violations.test.ts and the existing verdict.logic suite.',
           { kind: 'file', ref: 'scripts/lib/step/verdict.js' },
         ),
-        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §3 (Schema-trap gap 2)',
+        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §3 (Schema-trap gap 2) [register: Spec 124 R-FR; V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-18',
       },
       {
@@ -298,7 +298,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
           'scripts/lib/step/index.js gains a generic stepCtx.contextRow(row) seam (a compute-supplied literal audit row, bypassing checkRow\'s limit evaluation) so a population/context row can be preserved without inflating checks.length past the locked 42. Every existing converted step never calls it, so the addition is behaviour-neutral for the rest of the fleet.',
           { kind: 'file', ref: 'scripts/lib/step/index.js' },
         ),
-        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1 (audit-row shape)',
+        adjudicated_by: '.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1 (audit-row shape) [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]',
         date: '2026-09-18',
       },
       {
@@ -307,7 +307,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
           'All 37 logic_variables here carry a safe seed default (the exact pre-conversion literal). Recorded here only because the config object forbids a per-variable why field, mirroring assert_data_bounds/assert_schema/assert_global_coverage\'s own precedent deviation entry.',
           { kind: 'file', ref: 'scripts/seeds/logic_variables.json' },
         ),
-        adjudicated_by: 'Spec 124 §2 Rule 3',
+        adjudicated_by: 'Spec 124 §2 Rule 3 [register: Spec 124 R-G (existing rule); V3 condition-9 backfill 2026-10-20]',
         date: '2026-09-18',
       },
     ],

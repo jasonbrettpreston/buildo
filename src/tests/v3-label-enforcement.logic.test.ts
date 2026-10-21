@@ -258,3 +258,28 @@ describe('V3 condition-9 rulings — rows R-HN…R-IF govern the entries the ope
     expect(cct).toContain('| CLOSED · declared deviation (R-HY) |');
   });
 });
+
+// rule-map: R-II — REFREEZE-BUNDLE-1 item (6) (124a:457), applied on night 1 (R-II, 124a §B26): every `apply:
+// "bundled-night"` citation in docs/reports/2026-10-20-v3-condition9-backfill-citations.json is appended, exactly once,
+// to its deviation's `adjudicated_by`, and the deviation is still the one the record names (index and `from`). s1-4
+// was applied by the R-ID patch itself (its `from` drops the counters clause), so its `key` is the new `from`.
+describe('REFREEZE-BUNDLE-1 item (6), night 1 — the 143 bundled-night citations are applied', () => {
+  type Cite = { ref: string; file: string; key: string; deviation_index: number; apply: string; append_text: string };
+  const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+  const record = JSON.parse(read('docs/reports/2026-10-20-v3-condition9-backfill-citations.json')) as { entries: Cite[] };
+  const night = record.entries.filter((e) => e.apply === 'bundled-night');
+
+  it('143 entries, each naming its deviation by index and from, and each carrying its append_text exactly once', () => {
+    expect(night).toHaveLength(143);
+    for (const e of night) {
+      const dev = (JSON.parse(read(e.file)) as { deviations: Array<{ from: string; adjudicated_by: string }> }).deviations[e.deviation_index]!;
+      expect(dev.from, e.ref).toBe(e.key);
+      expect(dev.adjudicated_by.split(e.append_text).length - 1, `${e.ref} ${e.file} deviations[${e.deviation_index}]`).toBe(1);
+    }
+  });
+
+  it('s1-4 names the new from (the R-ID patch dropped the type-counter clause)', () => {
+    const s14 = night.find((e) => e.ref === 's1-4')!;
+    expect(s14.key).not.toMatch(/tier_1a_type_confirmed|tier_1a_type_tolerant/);
+  });
+});

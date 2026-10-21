@@ -107,6 +107,15 @@ const LOGIC_VAR_DEFS = [
 //   passVar / warnVar - for 'calibrated'/'external' only: the logic_variables names
 //   stepTarget / field - the ORIGINAL (stepTarget, field) pair, for `why`/metric-label parity
 // ---------------------------------------------------------------------------
+// AGC-D8 (REFREEZE-BUNDLE-1 item (4), 124a §B19; Spec 124 §2 Rule 4): the IL-11/IL-12 residential-with-building
+// scoping is a DECLARED check guard (batch1 I1 assessment §2 IL-11: "ACCEPT the `has_bldg EXISTS` scoping as a declared
+// guard"). `sql` is byte-equal to the expression scripts/lib/compute/assert-global-coverage.js runs at its two has_bldg
+// sites (lock: src/tests/steps/assert_global_coverage/has-bldg-guard.logic.test.ts).
+const HAS_BLDG_GUARD = Object.freeze({
+  name: 'has_bldg',
+  sql: 'EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)',
+  scope: "residential parcels (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') with at least one linked building; a building-less lot is outside both numerator and denominator",
+});
 const CHECK_DEFS = [];
 
 function push(def) {
@@ -217,10 +226,10 @@ push({ id: 'coa_step14_calibration_rows', chain: 'coa', builder: 'info', loader:
 
 // ============================= Sources chain =============================
 push({ id: 'src_zoning_class', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'pp.zoning_class_pop', denom: 'enriched', passVar: 'sources_zoning_class_coverage_pass_pct', warnVar: 'sources_zoning_class_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.zoning_class' });
-push({ id: 'src_max_buildable_footprint_sqm', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.mb_footprint_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.max_buildable_footprint_sqm (residential w/ building)' });
-push({ id: 'src_max_buildable_gfa_sqm', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.mb_gfa_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.max_buildable_gfa_sqm (residential w/ building)' });
-push({ id: 'src_max_build_stories', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.mb_stories_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.max_build_stories (residential w/ building)' });
-push({ id: 'src_opt_aor_gfa_sqm', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.opt_aor_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.opt_aor_gfa_sqm (residential w/ building)' });
+push({ id: 'src_max_buildable_footprint_sqm', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.mb_footprint_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.max_buildable_footprint_sqm (residential w/ building)', guard: HAS_BLDG_GUARD });
+push({ id: 'src_max_buildable_gfa_sqm', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.mb_gfa_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.max_buildable_gfa_sqm (residential w/ building)', guard: HAS_BLDG_GUARD });
+push({ id: 'src_max_build_stories', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.mb_stories_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.max_build_stories (residential w/ building)', guard: HAS_BLDG_GUARD });
+push({ id: 'src_opt_aor_gfa_sqm', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'mbc.opt_aor_pop', denom: 'residWithBldgEnv', passVar: 'sources_maxbuild_coverage_pass_pct', warnVar: 'sources_maxbuild_coverage_warn_pct', stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.opt_aor_gfa_sqm (residential w/ building)', guard: HAS_BLDG_GUARD });
 push({ id: 'src_bylaw_max_fsi', chain: 'sources', builder: 'info', loader: 'sources', pop: 'pp.bylaw_max_fsi_pop', denom: null, stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.bylaw_max_fsi' });
 push({ id: 'src_opt_config_confidence', chain: 'sources', builder: 'info', loader: 'sources', pop: 'pp.opt_conf_pop', denom: null, stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.opt_config_confidence' });
 push({ id: 'src_opt_coa_gfa_sqm', chain: 'sources', builder: 'info', loader: 'sources', pop: 'pp.opt_coa_pop', denom: null, stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.opt_coa_gfa_sqm' });
@@ -229,7 +238,7 @@ push({ id: 'src_neighbourhood_id', chain: 'sources', builder: 'info', loader: 's
 push({ id: 'src_cost_fb_total', chain: 'sources', builder: 'info', loader: 'sources', pop: 'pp.cost_fb_pop', denom: null, stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.cost_fb_total' });
 push({ id: 'src_envelope_constrained_true', chain: 'sources', builder: 'info', loader: 'sources', pop: 'pp.env_constrained_pop', denom: null, stepTarget: 'Sources Step — enrich_parcels', field: 'parcels.envelope_constrained (TRUE)' });
 push({ id: 'src_envelope_constraint_reason_distribution', chain: 'sources', builder: 'distribution', loader: 'sources', pop: 'reasonDist', denom: null, stepTarget: 'Sources Step — enrich_parcels', field: "parcels.envelope_constraint_reason distribution" });
-push({ id: 'src_parcel_cost_menu_resid_bldg', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'pcm.resid_with_bldg_menu', denom: 'residWithBldg', passVar: 'parcel_cost_menu_coverage_pass_pct', warnVar: 'parcel_cost_menu_coverage_warn_pct', stepTarget: 'Sources Step — compute_parcel_cost_estimates', field: 'parcels.parcel_cost_menu (residential w/ building)' });
+push({ id: 'src_parcel_cost_menu_resid_bldg', chain: 'sources', builder: 'calibrated', loader: 'sources', pop: 'pcm.resid_with_bldg_menu', denom: 'residWithBldg', passVar: 'parcel_cost_menu_coverage_pass_pct', warnVar: 'parcel_cost_menu_coverage_warn_pct', stepTarget: 'Sources Step — compute_parcel_cost_estimates', field: 'parcels.parcel_cost_menu (residential w/ building)', guard: HAS_BLDG_GUARD });
 push({ id: 'src_parcel_cost_menu_any', chain: 'sources', builder: 'info', loader: 'sources', pop: 'pcm.any_menu', denom: null, stepTarget: 'Sources Step — compute_parcel_cost_estimates', field: 'parcels.parcel_cost_menu (any residential)' });
 
 // ============================= Permits chain =============================
@@ -419,4 +428,4 @@ for (const t of VOCAB_COVERAGE) {
   push({ id: t.id, chain: ['permits', 'coa'], builder: 'vocab', loader: 'none', vocabTriple: t, stepTarget: t.stepTarget, field: `${t.dataColumn} vocab (${t.stepTarget})` });
 }
 
-module.exports = { CHECK_DEFS, LOGIC_VAR_DEFS, VOCAB_COVERAGE, COA_STRUCTURE_TYPE_VOCAB, slugify };
+module.exports = { CHECK_DEFS, LOGIC_VAR_DEFS, VOCAB_COVERAGE, COA_STRUCTURE_TYPE_VOCAB, HAS_BLDG_GUARD, slugify };

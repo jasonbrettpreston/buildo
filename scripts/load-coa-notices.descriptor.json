@@ -740,14 +740,14 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-07T22:02:40.960Z",
-        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
-        "cost_ms": 69.1,
-        "sample_n": 6,
+        "at": "2026-10-21T15:26:51.703Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 61,
+        "sample_n": 9,
         "source_run": {
           "run_id": null,
-          "chain": null,
-          "event": "declaration_measurement"
+          "chain": "coa_notices",
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -769,15 +769,15 @@
       "frequency": "every_run",
       "retighten_when": "zero rows",
       "last_measured": {
-        "value": 0,
-        "at": "2026-10-07T22:02:40.960Z",
-        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
-        "cost_ms": 68.2,
-        "sample_n": 6,
+        "value": 8,
+        "at": "2026-10-21T15:26:51.703Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 137,
+        "sample_n": 9,
         "source_run": {
           "run_id": null,
-          "chain": null,
-          "event": "declaration_measurement"
+          "chain": "coa_notices",
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -800,14 +800,14 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-07T22:02:40.960Z",
-        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
-        "cost_ms": 53.4,
-        "sample_n": 6,
+        "at": "2026-10-21T15:26:51.703Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 132,
+        "sample_n": 9,
         "source_run": {
           "run_id": null,
-          "chain": null,
-          "event": "declaration_measurement"
+          "chain": "coa_notices",
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -830,14 +830,14 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-07T22:02:40.960Z",
-        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
-        "cost_ms": 50.9,
-        "sample_n": 6,
+        "at": "2026-10-21T15:26:51.703Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 19,
+        "sample_n": 9,
         "source_run": {
           "run_id": null,
-          "chain": null,
-          "event": "declaration_measurement"
+          "chain": "coa_notices",
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -894,7 +894,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "orchestrator, implementation of the authorized WF1 plan (library constraint, measured)",
+      "adjudicated_by": "orchestrator, implementation of the authorized WF1 plan (library constraint, measured) [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-07"
     }
   ],

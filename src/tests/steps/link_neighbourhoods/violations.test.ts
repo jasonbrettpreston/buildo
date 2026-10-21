@@ -424,7 +424,11 @@ describe('LN-D6 — the retired parcel-centroid capability is COUNTED, not merel
     // 2026-10-03, fold 14) cleared the ~9,017 parcel-centroid neighbourhood stamps on permits with no
     // coordinates (stamped_permits_with_null_coordinates 9,017 → 0), moving them into this population.
     // No coordinates were lost: the null-coordinate total is 22,152 throughout (since at least 2026-09-16).
-    expect(p?.last_measured.value).toBe(10486);
+    // RE-MEASURED again, resynced on REFREEZE-BUNDLE-1 night 1 (item (7), Spec 124 R-GQ, 2026-10-21): 10,486 → 13,499.
+    // The golden sidecar already read 13,499 at the 2026-10-19 capture (commit 15d79445) and reads it again at the
+    // night-1 retake; the descriptor value was on the R-GQ stale baseline until this resync. PIN LN-D6-REMEASURE: the
+    // 10,486 → 13,499 rise (between 2026-10-06 and 2026-10-19) is not re-derived here.
+    expect(p?.last_measured.value).toBe(13499);
     expect(p?.last_measured.sample_n).toBeGreaterThanOrEqual(1);
   });
 

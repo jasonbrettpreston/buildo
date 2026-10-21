@@ -324,7 +324,7 @@
         "text": "A kind:\"filesystem\" external that resolves to no file is the library's declared tier-1 skip no_source_file (acquire.js 0fs), landing a COMPLETED skipped_no_source_file row, not a failure. The seed is committed in the repository, so a missing file is a repo defect caught first by src/tests/steps/load_bylaw_map_areas/bylaw-maps.infra.test.ts; the step does not add a second, bespoke posture.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
       },
-      "adjudicated_by": "Spec 124 Rule 1 (one home: the library's filesystem posture); WF1 phase2-inputs A3",
+      "adjudicated_by": "Spec 124 Rule 1 (one home: the library's filesystem posture); WF1 phase2-inputs A3 [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-08"
     },
     {
@@ -333,7 +333,7 @@
         "text": "ONE seed file carries both sources (one pin, one staleness stamp) and the INGESTOR key is the text area_key = source:source_feature_id, which the migration's CHECK ties to the pair it replaces (UNIQUE (source, source_feature_id) is kept). Accepted by the operator 2026-10-08.",
         "liveness": { "kind": "file", "ref": "migrations/254_bylaw_map_areas_sixplex.sql" }
       },
-      "adjudicated_by": "operator 2026-10-08 (deviations accepted)",
+      "adjudicated_by": "operator 2026-10-08 (deviations accepted) [register: Spec 124 R-GL; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-08"
     }
   ],

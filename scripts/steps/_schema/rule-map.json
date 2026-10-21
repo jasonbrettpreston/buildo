@@ -618,7 +618,7 @@
     {
       "id": "x-captures.1",
       "section": "x-captures",
-      "text": "Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs.",
+      "text": "Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).",
       "why": "A capture nobody can retake proves nothing."
     },
     {
@@ -5206,6 +5206,20 @@
         "ref": "src/tests/decision-log.logic.test.ts"
       },
       "statement": "REFREEZE-BUNDLE-1 is split (operator CHAT-27): night 1 applies items (1) and (3)-(8) inside one fleet recapture; item (2), the refresh_snapshot recorder producer-read (D-P1), is its own library RE-FREEZE in the permits ③ landing with a second fleet recapture.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IJ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "An orphan post witness trace (no golden capture, no recapture.json entry) is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints; otherwise it gets a recipe and is retaken (operator CHAT-35).",
       "source": {
         "register": true
       }

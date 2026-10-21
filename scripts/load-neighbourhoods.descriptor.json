@@ -547,7 +547,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "orchestrator, AP-D4/M-D3 precedent",
+      "adjudicated_by": "orchestrator, AP-D4/M-D3 precedent [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -559,7 +559,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "orchestrator, AP-D4 precedent",
+      "adjudicated_by": "orchestrator, AP-D4 precedent [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -583,7 +583,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "Spec 124 R-AZ, M-D10 precedent",
+      "adjudicated_by": "Spec 124 R-GT, M-D10 precedent",
       "date": "2026-09-28"
     },
     {
@@ -595,7 +595,7 @@
           "ref": "bad_key_count"
         }
       },
-      "adjudicated_by": "orchestrator, plan §2 B2",
+      "adjudicated_by": "orchestrator, plan §2 B2 [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -607,7 +607,7 @@
           "ref": "duplicate_key_count"
         }
       },
-      "adjudicated_by": "plan §2 B11, Fold CF-8",
+      "adjudicated_by": "plan §2 B11, Fold CF-8 [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -619,7 +619,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "address_points Fold B3 / massing M-D11 precedent",
+      "adjudicated_by": "address_points Fold B3 / massing M-D11 precedent [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -631,7 +631,7 @@
           "ref": "scripts/lib/step/plausibility.js"
         }
       },
-      "adjudicated_by": "massing M-D12 precedent (EP-D17)",
+      "adjudicated_by": "massing M-D12 precedent (EP-D17) [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -643,7 +643,7 @@
           "ref": "scripts/lib/step/verdict.js"
         }
       },
-      "adjudicated_by": "Spec 124 Rule 10, parcels/address_points precedent",
+      "adjudicated_by": "Spec 124 Rule 10, parcels/address_points precedent [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -655,7 +655,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "orchestrator, M-D6 precedent",
+      "adjudicated_by": "orchestrator, M-D6 precedent [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -667,7 +667,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "plan §2 B4",
+      "adjudicated_by": "plan §2 B4 [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -679,7 +679,7 @@
           "ref": "scripts/lib/compute/load-neighbourhoods.js"
         }
       },
-      "adjudicated_by": "Fold CF-5",
+      "adjudicated_by": "Fold CF-5 [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -691,7 +691,7 @@
           "ref": "docs/specs/01-pipeline/57_source_neighbourhoods.md"
         }
       },
-      "adjudicated_by": "plan §2 B17",
+      "adjudicated_by": "plan §2 B17 [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -703,7 +703,7 @@
           "ref": "null_geometry_count"
         }
       },
-      "adjudicated_by": "Fold CF-8",
+      "adjudicated_by": "Fold CF-8 [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -715,7 +715,7 @@
           "ref": "neighbourhoods"
         }
       },
-      "adjudicated_by": "Fold CF-5",
+      "adjudicated_by": "Fold CF-5 [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -727,7 +727,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "Fold H-5 (Op-Model seat)",
+      "adjudicated_by": "Fold H-5 (Op-Model seat) [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -739,7 +739,7 @@
           "ref": "src/tests/steps/geometry-guard-coverage.logic.test.ts"
         }
       },
-      "adjudicated_by": "orchestrator ruling 2026-09-28 (parcels D2 + address_points/load_ravines guard precedent)",
+      "adjudicated_by": "orchestrator ruling 2026-09-28 (parcels D2 + address_points/load_ravines guard precedent) [register: Spec 124 R-GD; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     },
     {
@@ -751,7 +751,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "address_points commit-9 P4 precedent",
+      "adjudicated_by": "address_points commit-9 P4 precedent [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-28"
     }
   ],

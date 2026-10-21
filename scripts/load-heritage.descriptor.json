@@ -1009,7 +1009,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "plan re-grounding row 24 / §3 HR-D8 split (0x RE-FREEZE #29), orchestrator ① decision 4",
+      "adjudicated_by": "plan re-grounding row 24 / §3 HR-D8 split (0x RE-FREEZE #29), orchestrator ① decision 4 [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1021,7 +1021,7 @@
           "ref": "scripts/lib/step/acquire.js"
         }
       },
-      "adjudicated_by": "orchestrator ① finding (LH-D11), declared deviation",
+      "adjudicated_by": "orchestrator ① finding (LH-D11), declared deviation [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1033,7 +1033,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "plan re-grounding rows 12/14, ① decision 2",
+      "adjudicated_by": "plan re-grounding rows 12/14, ① decision 2 [register: Spec 124 R-GB; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1045,7 +1045,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "orchestrator ② ruling (0x DS4 re-emit, ravines precedent)",
+      "adjudicated_by": "orchestrator ② ruling (0x DS4 re-emit, ravines precedent) [register: Spec 124 R-GB; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1057,7 +1057,7 @@
           "ref": "heritage_mass_delete_pct"
         }
       },
-      "adjudicated_by": "orchestrator ② ruling",
+      "adjudicated_by": "orchestrator ② ruling [register: Spec 124 R-HQ; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1069,7 +1069,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "LR-D9 pre_write gate precedent (load_ravines)",
+      "adjudicated_by": "LR-D9 pre_write gate precedent (load_ravines) [register: Spec 124 R-FK; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1081,7 +1081,7 @@
           "ref": "scripts/lib/step/config.js"
         }
       },
-      "adjudicated_by": "plan §5 / Rule 3",
+      "adjudicated_by": "plan §5 / Rule 3 [register: Spec 124 R-GB; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1093,7 +1093,7 @@
           "ref": "scripts/lib/step/staleness.js"
         }
       },
-      "adjudicated_by": "operator new-conversion rule 2026-09-30 (reads evidence table), explicit omission",
+      "adjudicated_by": "operator new-conversion rule 2026-09-30 (reads evidence table), explicit omission [register: Spec 124 R-GG; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1105,7 +1105,7 @@
           "ref": "scripts/lib/step/write.js"
         }
       },
-      "adjudicated_by": "plan §2 rows 1/13",
+      "adjudicated_by": "plan §2 rows 1/13 [register: Spec 124 R-GB; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1117,7 +1117,7 @@
           "ref": "scripts/lib/step/index.js"
         }
       },
-      "adjudicated_by": "N-D12 / M-D6 precedent",
+      "adjudicated_by": "N-D12 / M-D6 precedent [register: Spec 124 R-FX; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-30"
     },
     {
@@ -1129,7 +1129,7 @@
           "ref": "scripts/lib/step/staleness.js"
         }
       },
-      "adjudicated_by": "plan §8 ② (ravines / centreline precedent) + operator ruling 2026-10-01 (legacy seam)",
+      "adjudicated_by": "plan §8 ② (ravines / centreline precedent) + operator ruling 2026-10-01 (legacy seam) [register: Spec 124 R-GB; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-01"
     }
   ],
