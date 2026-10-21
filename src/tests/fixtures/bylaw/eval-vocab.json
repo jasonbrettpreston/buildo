@@ -69,6 +69,7 @@
     "ST": { "unit": "storeys" }
   },
   "user_input": [
+    "ancillary_contains_parking_space",
     "ancillary_units",
     "bedroom_count",
     "building_type",

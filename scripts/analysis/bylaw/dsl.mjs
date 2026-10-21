@@ -36,7 +36,7 @@ export const DSL_ERROR_CODES = Object.freeze([
 /** Nesting bound for the recursive parser and canonicalizer (real by-law expressions nest < 10 deep). */
 export const MAX_NEST = 200;
 
-const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'enacted', 'label', 'overlay', 'unlimited', 'unregulated', 'mapped', 'labelled', 'not', 'and', 'or']);
+const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'enacted', 'label', 'overlay', 'unlimited', 'unregulated', 'mapped', 'labelled', 'holds', 'not', 'and', 'or']);
 const OPS = { '+': '+', '-': '−', '−': '−', '*': '×', '×': '×', '/': '÷', '÷': '÷' };
 const CMPS = { '<': '<', '<=': '≤', '≤': '≤', '>': '>', '>=': '≥', '≥': '≥', '=': '=' };
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*/;
@@ -233,6 +233,9 @@ class Parser {
     if (this.isId('not')) { this.next(); return { type: 'not', x: this.atom() }; }
     if (this.isId('mapped') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'mapped', code: c }; }
     if (this.isId('labelled') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'labelled', letter: c }; }
+    // M-241 (N-2, operator approved 2026-10-20): holds(<lot condition token>) — one statement's own condition when a clause
+    // gives each of its statements a different one (10.10.60.20(1)(A): rear / side-street / lane), three-valued from lot.flags
+    if (this.isId('holds') && this.isTok('(', 1)) { this.next(); this.next(); const t = this.expect('id').v; this.expect(')'); return { type: 'holds', token: t }; }
     if (this.isTok('(')) { this.next(); const c = this.cond(); this.expect(')'); return c; }
     const lhs = this.expr();
     const cmp = this.expect('cmp').v;
@@ -340,6 +343,7 @@ function canonCond0(c) {
     case 'complement': return `complement(${c.of.join(';')})`;
     case 'mapped': return `mapped(${c.code})`;
     case 'labelled': return `labelled(${c.letter})`;
+    case 'holds': return `holds(${c.token})`;
     case 'cmp': return canonExpr(c.lhs) + c.cmp + canonExpr(c.lit);
     default: throw new DslError('syntax', `canonical: unknown condition ${c.type}`);
   }
@@ -495,6 +499,7 @@ function same(us, msg, errs) {
 }
 function condUnits(c, U, errs) {
   if (c.type === 'complement') return; // M-242: its sibling's units are checked on the sibling
+  if (c.type === 'holds') return; // M-241: a lot condition token carries no unit
   if (c.type === 'and' || c.type === 'or') { for (const x of c.xs) condUnits(x, U, errs); return; }
   if (c.type === 'not') { condUnits(c.x, U, errs); return; }
   if (c.type === 'mapped') { if (!U.overlay[c.code]) errs.push(`unknown_overlay_code: ${c.code}`); return; }

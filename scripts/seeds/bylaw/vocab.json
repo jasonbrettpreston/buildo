@@ -176,7 +176,7 @@
       "patterns": ["side yard abutting a street", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line", "lot that flanks on a street", "if the lot line abuts a street"]
     },
     "street_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from any lot line abutting a street", "patterns": ["lot line abutting a street", "lot line that abuts a street"] },
-    "lane_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from a lot line abutting a lane", "patterns": ["abutting a lane", "abuts a lane"] },
+    "lane_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from a lot line abutting a lane", "patterns": ["abutting a lane", "abuts a lane", "abutting a street or lane"] },
     "lane_centreline_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum setback from the original centreline of a lane (Spec 69a M-82 V5b)", "patterns": ["centreline of a lane"] },
     "lot_line_setback_m": {
       "unit": "m",
@@ -314,7 +314,7 @@
     "aspect_without_target": { "PERMIT": "use_permission", "PROHIBIT": "use_permission" }
   },
   "lot_condition": {
-    "corner_lot": { "patterns": ["corner lot"] },
+    "corner_lot": { "patterns": ["corner lot", "side lot line abutting a street"] },
     "through_lot": { "patterns": ["through lot", "rear lot line also abuts a street"] },
     "flanking_lot": { "patterns": ["flanking"] },
     "side_yard_abuts_street": { "patterns": ["side yard abuts a street"] },
@@ -346,6 +346,7 @@
     "one_abutting_building_within_15_m": {},
     "two_abutting_buildings_within_15_m": {},
     "has_secondary_suite": { "user_input": "has_secondary_suite" },
+    "ancillary_contains_parking_space": { "user_input": "ancillary_contains_parking_space", "patterns": ["containing a parking space"] },
     "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units"] },
     "suite_wall_openings": { "user_input": "suite_wall_openings", "patterns": ["openings such as"] },
     "individual_private_driveway": {},
@@ -417,7 +418,7 @@
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
   "heuristic_reason": ["modelling_assumption", "data_cleaning_bound", "tolerance", "statistical_default", "proxy_for_unmodelled_rule"],
   "adjudication_kind": ["disagreement", "consolidation_mismatch", "eval_mismatch", "eval_vector", "source_repeat_letter", "correction", "ref_target_absent", "instrument_not_published_online", "coa_mismatch"],
-  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm"],
+  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm", "ancillary_contains_parking_space"],
   "code_roots": ["scripts/lib/build-norms.js", "scripts/lib/compute/enrich-parcels.js", "scripts/lib/max-build.js", "scripts/lib/optimal-config.js", "scripts/lib/parcel-cost.js", "scripts/lib/zoning-precedence.js"],
   "banned_code_refs": [
     {
@@ -587,7 +588,7 @@
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
     "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },
     "deck_or_platform": { "disclosure": "rules for a deck or platform on this lot are not part of this answer" },
-    "private_garage": { "disclosure": "rules for a private garage on this lot are not part of this answer" },
+    "private_garage": { "disclosure": "rules for a private garage on this lot are not part of this answer", "ancillary_condition": "ancillary_contains_parking_space" },
     "energy_device": { "disclosure": "rules for an energy device (solar or heating, ventilation and air conditioning equipment) on this lot are not part of this answer" },
     "portable_classroom": { "disclosure": "rules for a portable classroom building on this lot are not part of this answer" }
   },
@@ -649,6 +650,7 @@
     },
     "lot_condition": {
       "flanking_lot": "the lot flanks a street",
+      "ancillary_contains_parking_space": "the ancillary building contains a parking space",
       "side_yard_abuts_street": "a side yard of the lot abuts a street",
       "abuts_named_street": "the lot abuts the street the rule names",
       "shoreline_or_top_of_bank": "the lot is on a shoreline or top of bank",
@@ -677,7 +679,8 @@
       "existing_driveway_type": "the lot has an existing driveway of the type the rule names",
       "existing_driveway_width_m": "the existing driveway's width meets the rule's test",
       "existing_front_parking_pad": "the lot has an existing front yard parking pad",
-      "pool": "the lot has a swimming pool"
+      "pool": "the lot has a swimming pool",
+      "ancillary_contains_parking_space": "the ancillary building contains a parking space"
     },
     "data_filled": [
       "corner_lot",

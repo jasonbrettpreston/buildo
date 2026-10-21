@@ -212,6 +212,7 @@ export function evaluatorVocab(vocab) {
     specific_use: vocab.specific_use, // M-159(3) / M-244: a specific-use unit applies only on a lot that has the use
     zone_category_chapter: vocab.zone_category_chapter, // M-159(1) / M-217: a chapter's base units load only in its zone category
     building_type_parent: Object.fromEntries(names.filter((n) => types[n].parent).map((n) => [n, types[n].parent])),
+    building_type_structure: Object.fromEntries(names.filter((n) => types[n].structure).map((n) => [n, types[n].structure])), // M-241
     building_type_residential: names.filter((n) => types[n].residential === true),
     dsl_input: vocab.dsl_input,
     dsl_target: vocab.dsl_target,

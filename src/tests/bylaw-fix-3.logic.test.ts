@@ -213,3 +213,54 @@ describe('M-205(1)-floor / M-245 — no zone-default floor under the averaged fr
     expect(FA.resolveFrontAveraging([nb(2.0), nb(2.0), nb(2.0)], cfg, z).front_setback_m).toBe(6.0);
   });
 });
+
+// N-2 / M-241 (operator approved 2026-10-20, `2026-10-20-bylaw-fix-rulings#N-2`; CoA 20 Norwood Rd A0625/26TEY: the City
+// applied 10.10.60.20(1)(A) as a 1.0 m garage side yard). (1) The M-175 guard applies only when the building answered is a
+// principal or suite class; for the ancillary class a private-garage unit applies when the ancillary building contains a
+// parking space (user input ancillary_contains_parking_space; unknown → needs_user_input, never the shed rule). (2)
+// 10.10.60.20(1)(A) "1.0 metres from a rear lot line or side lot line abutting a street or lane" keys rear_setback_m,
+// side_setback_street_m and lane_setback_m at 1.0 m, each on its own abutment condition (rear: abuts_lane until ML-1).
+describe('N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage', () => {
+  const garage = (zone: string, parking: boolean | undefined, flags: Json = {}): Json => lot(zone, 'ancillary_building', { label: { d: 1.0 }, flags: { ...flags, ...(parking === undefined ? {} : { ancillary_contains_parking_space: parking }) }, vars: { lot_frontage_m: 7.63, lot_depth_m: 34.09, lot_area_m2: 260.07, proposed_height_m: 3.5 } });
+  it('vocab: ancillary_contains_parking_space is a user-input lot condition, and private_garage names it as its ancillary condition', () => {
+    expect(I.vocab.user_input).toContain('ancillary_contains_parking_space');
+    expect(I.vocab.lot_condition.ancillary_contains_parking_space).toMatchObject({ user_input: 'ancillary_contains_parking_space' });
+    expect(I.vocab.accessory_structure_use.private_garage.ancillary_condition).toBe('ancillary_contains_parking_space');
+  });
+  it('10.10.60.20(1)(A) keys rear, side-street and lane setbacks of 1.0 m, each on its own abutment condition', () => {
+    expect(unitOf('10.10.60.20(1)#(1)(A)').numeric_expression).toEqual([
+      'rear_setback_m = if(holds(abuts_lane); 1.0 m; unregulated) @(1)(A)',
+      'side_setback_street_m = if(holds(corner_lot); 1.0 m; unregulated) @(1)(A)',
+      'lane_setback_m = if(holds(abuts_lane); 1.0 m; unregulated) @(1)(A)',
+    ]);
+  });
+  it('20 Norwood Rd facts (R, abuts a lane, a garage with parking): 1.0 m from the lane line and the rear line, from 10.10.60.20(1)(A)', () => {
+    const l = garage('R', true, { abuts_lane: true });
+    const lane = eff(l, 'lane_setback_m'); const rear = eff(l, 'rear_setback_m');
+    expect([lane.value, lane.winner, rear.value, rear.winner]).toEqual([1, '10.10.60.20(1)#(1)(A)', 1, '10.10.60.20(1)#(1)(A)']);
+  });
+  it('while the parking space is unknown the answer is needs_user_input, never the shed rule', () => {
+    const r = eff(garage('R', undefined, { abuts_lane: true }), 'rear_setback_m');
+    expect([r.status, r.reason]).toEqual(['not_evaluated', 'needs_user_input:ancillary_contains_parking_space']);
+  });
+  it('a shed (no parking space) keeps the ancillary rules: rear 0.3 m from 10.5.60.20(2)(C)', () => {
+    const r = eff(garage('R', false, { abuts_lane: true }), 'rear_setback_m');
+    expect([r.value, r.winner]).toEqual([0.3, '10.5.60.20(2)#(2)(C)']);
+  });
+  it('(1)(B): a garage whose rear line abuts no street or lane has no rear minimum; a side line abutting a street takes 1.0 m', () => {
+    const r = eff(garage('R', true, { abuts_lane: false }), 'rear_setback_m');
+    expect(r.value).toBe('unregulated');
+    const s = eff(garage('R', true, { corner_lot: true }), 'side_setback_street_m');
+    expect([s.value, s.winner]).toEqual([1, '10.10.60.20(1)#(1)(A)']);
+  });
+  it('RD: a garage with parking on a lane lot takes 10.5.60.20(6)(A) 1.0 m from the lane', () => {
+    const r = eff(garage('RD', true, { abuts_lane: true }), 'lane_setback_m');
+    expect([r.value, r.winner]).toEqual([1, '10.5.60.20(6)#(6)(A)']);
+  });
+  it('M-175 kept: no private-garage unit decides a house\'s setbacks', () => {
+    for (const zone of ZONES) for (const t of ['rear_setback_m', 'side_setback_street_m', 'lane_setback_m']) {
+      const r = eff(lot(zone, 'detached_house', { flags: { abuts_lane: true, corner_lot: true, ancillary_contains_parking_space: true } }), t);
+      expect([zone, t, touched(r).filter((id) => /^10\.10\.60\.20\(1\)|^10\.5\.60\.20\((5|6)\)/.test(id))]).toEqual([zone, t, []]);
+    }
+  });
+});

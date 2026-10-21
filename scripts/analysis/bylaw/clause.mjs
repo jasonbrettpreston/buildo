@@ -320,9 +320,21 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
       for (const { lit } of boundLiterals(cond, null)) if (bind(lit.value, lit.unit, view.clause_path, 'condition literal')) counts.literals_bound++;
     }
 
+    // M-241: a holds(<token>) condition (in a statement's if or in condition.if) is licensed by the token's vocab patterns
+    const holdsTokens = new Set();
+    const walkHolds = (n) => { if (!n || typeof n !== 'object') return; if (n.type === 'holds') holdsTokens.add(n.token); for (const k of Object.keys(n)) { const x = n[k]; if (Array.isArray(x)) x.forEach(walkHolds); else if (x && typeof x === 'object') walkHolds(x); } };
+    for (const s of statements) walkHolds(s.expr);
+    if (cond) walkHolds(cond);
     // licensing
     const lowText = norm(unitText);
     const licText = norm([unitText, ...headerTexts(row, view.clause_path)].join(' ')); // Spec 68 section 6: a table cell carries its row and column headers (licensing only)
+    for (const tok of [...holdsTokens].sort(cmpStr)) {
+      const lc = vocab && vocab.lot_condition && vocab.lot_condition[tok];
+      const ps = (lc && lc.patterns) || [];
+      if (!lc) v.push(violation('unit_binding', id, `holds(${tok}): not a vocab lot_condition token`));
+      else if (!ps.length) v.push(violation('variable_unlicensed', id, `holds(${tok}): vocab declares no licensing phrase`));
+      else if (!ps.some((p) => licText.includes(norm(p)))) v.push(violation('variable_unlicensed', id, `holds(${tok}): none of ${JSON.stringify(ps)} occurs in the clause`));
+    }
     for (const name of [...vars].sort(cmpStr)) {
       const phrases = licensePhrases(vocab, name);
       if (phrases === null) continue; // unknown variable → unit_binding

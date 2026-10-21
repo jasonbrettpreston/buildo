@@ -80330,6 +80330,58 @@
         ],
         "zones": []
       }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.60.20(1)#(1)(A)/target~s1",
+      "kind": "correction",
+      "reason": "N-2 (bylaw fix lanes 2 and 3, 2026-10-20). 10.10.60.20(1): \"the required minimum rear yard setback and side yard setback for an ancillary building or structure containing a parking space is: (A) 1.0 metres from a rear lot line or side lot line abutting a street or lane\". Keyed to the street only (rear_setback_m and side_setback_street_m, unconditional), the lane arm was missing and the rear arm bound a rear line that abuts neither; the City applies (1)(A) 1.0 m on 20 Norwood Rd A0625/26TEY (a lane lot). Each statement now carries its own abutment test (holds(<token>), M-241): rear and lane on abuts_lane, the side line on corner_lot (a side lot line abutting a street; the token gains that licensing phrase); otherwise unregulated, as (1)(B) reads.",
+      "rule": "Operator approved N-2 on the By-law Fix Rulings page, 2026-10-20 (2026-10-20-bylaw-fix-rulings#N-2; Spec 69a M-241 (2): \"Key 10.10.60.20(1)(A) as its text reads: '1.0 metres from a rear lot line or side lot line abutting a street or lane'. That is rear_setback_m 1.0 m, side_setback_street_m 1.0 m and lane_setback_m 1.0 m, each on its own abutment condition. The rear arm takes the rear-lot-line-abuts-street-or-lane condition (abuts_lane until the ML-1 lot-line classification lands); (1)(B) keeps 'no minimum' for a line that abuts neither.\"); M-75",
+      "supersedes": "COR-10.10.60.20(1)#(1)(A)/target",
+      "unit": "10.10.60.20(1)#(1)(A)",
+      "value": [
+        "rear_setback_m",
+        "side_setback_street_m",
+        "lane_setback_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.60.20(1)#(1)(A)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "N-2 (bylaw fix lanes 2 and 3, 2026-10-20). 10.10.60.20(1): \"the required minimum rear yard setback and side yard setback for an ancillary building or structure containing a parking space is: (A) 1.0 metres from a rear lot line or side lot line abutting a street or lane\". Keyed to the street only (rear_setback_m and side_setback_street_m, unconditional), the lane arm was missing and the rear arm bound a rear line that abuts neither; the City applies (1)(A) 1.0 m on 20 Norwood Rd A0625/26TEY (a lane lot). Each statement now carries its own abutment test (holds(<token>), M-241): rear and lane on abuts_lane, the side line on corner_lot (a side lot line abutting a street; the token gains that licensing phrase); otherwise unregulated, as (1)(B) reads.",
+      "rule": "Operator approved N-2 on the By-law Fix Rulings page, 2026-10-20 (2026-10-20-bylaw-fix-rulings#N-2; Spec 69a M-241 (2): \"Key 10.10.60.20(1)(A) as its text reads: '1.0 metres from a rear lot line or side lot line abutting a street or lane'. That is rear_setback_m 1.0 m, side_setback_street_m 1.0 m and lane_setback_m 1.0 m, each on its own abutment condition. The rear arm takes the rear-lot-line-abuts-street-or-lane condition (abuts_lane until the ML-1 lot-line classification lands); (1)(B) keeps 'no minimum' for a line that abuts neither.\"); M-75",
+      "supersedes": "COR-10.10.60.20(1)#(1)(A)/numeric_expression",
+      "unit": "10.10.60.20(1)#(1)(A)",
+      "value": [
+        "rear_setback_m = if(holds(abuts_lane); 1.0 m; unregulated) @(1)(A)",
+        "side_setback_street_m = if(holds(corner_lot); 1.0 m; unregulated) @(1)(A)",
+        "lane_setback_m = if(holds(abuts_lane); 1.0 m; unregulated) @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.60.20(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "N-2 (bylaw fix lanes 2 and 3, 2026-10-20). 10.10.60.20(1): \"the required minimum rear yard setback and side yard setback for an ancillary building or structure containing a parking space is: (A) 1.0 metres from a rear lot line or side lot line abutting a street or lane\". Keyed to the street only (rear_setback_m and side_setback_street_m, unconditional), the lane arm was missing and the rear arm bound a rear line that abuts neither; the City applies (1)(A) 1.0 m on 20 Norwood Rd A0625/26TEY (a lane lot). Each statement now carries its own abutment test (holds(<token>), M-241): rear and lane on abuts_lane, the side line on corner_lot (a side lot line abutting a street; the token gains that licensing phrase); otherwise unregulated, as (1)(B) reads.",
+      "rule": "Operator approved N-2 on the By-law Fix Rulings page, 2026-10-20 (2026-10-20-bylaw-fix-rulings#N-2; Spec 69a M-241 (2): \"Key 10.10.60.20(1)(A) as its text reads: '1.0 metres from a rear lot line or side lot line abutting a street or lane'. That is rear_setback_m 1.0 m, side_setback_street_m 1.0 m and lane_setback_m 1.0 m, each on its own abutment condition. The rear arm takes the rear-lot-line-abuts-street-or-lane condition (abuts_lane until the ML-1 lot-line classification lands); (1)(B) keeps 'no minimum' for a line that abuts neither.\"); M-75",
+      "unit": "10.10.60.20(1)#(1)(A)",
+      "value": {
+        "description": "In the R zone, an ancillary building containing a parking space (detached garage) must be at least 1.0 m from a rear or side lot line that abuts a street or lane, subject to 10.5.60.20(4).",
+        "gaps": "Each arm carries its own abutment test (holds(), M-241): the rear line abutting a street or lane is read as abuts_lane until the ML-1 lot-line classification lands (a rear line abutting a street, a through lot, is not yet told apart); a side line abutting a lane is the lane setback. Subject to 10.5.60.20(4) (not expressed). Whether the ancillary building contains a parking space is a user input (ancillary_contains_parking_space, M-241 (1)).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "ancillary_contains_parking_space"
+        ]
+      }
     }
   ]
 }

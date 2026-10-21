@@ -94,6 +94,10 @@ export function makeContext(vocab, extra = {}) {
     thresholdTokens: new Set(vocab.lot_condition_threshold || []),
     // M-175: uses that name an accessory structure (pool, garage, deck, …); a unit scoped to one limits that structure.
     accessoryUses: new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment')),
+    // M-241 (N-2): the condition under which an accessory-structure unit binds the ancillary building itself (private
+    // garage → ancillary_contains_parking_space), and each building type's declared structure class
+    accessoryAncillaryCondition: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.ancillary_condition).map(([k, v]) => [k, v.ancillary_condition])),
+    typeStructure: vocab.building_type_structure || {},
     // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
     specificUses: new Set(Object.keys(vocab.specific_use || {}).filter((k) => k !== '$comment')),
     // M-159(1) / M-217: chapter → {category, zones}; a base unit of a mapped chapter with no zones of its own loads only
@@ -325,6 +329,14 @@ function evCond(c, env) {
       env.trace.push(`mapped(${c.code})=${r === true || r === false ? r : 'unknown'}`);
       return r;
     }
+    case 'holds': {
+      // M-241: a lot condition token, three-valued (a user input that is unknown asks the user)
+      env.reads.add(`flags.${c.token}`);
+      const v = lot.flags ? lot.flags[c.token] : undefined;
+      env.trace.push(`holds(${c.token})=${v === true || v === false ? v : 'unknown'}`);
+      if (v === true || v === false) return v;
+      return ne(env.C && env.C.userInputs && env.C.userInputs.has(c.token) ? 'needs_user_input' : 'condition_unknown', c.token);
+    }
     case 'labelled': {
       env.reads.add(`label.${c.letter}`);
       const r = lot.label ? lot.label[c.letter] !== undefined && lot.label[c.letter] !== null : ne('missing_input', 'zone_label');
@@ -496,7 +508,20 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   // accessory_structure_use) limits that structure, never the principal building this evaluator answers for. Before
   // this check the 10.5.60.20(8)(A) swimming-pool rear setback (25.0 m) decided houses' rear setbacks.
   const accUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryUses && C.accessoryUses.has(x));
-  if (accUse) { reads.add('uses'); return { ok: false, why: `use ${accUse} (an accessory structure, not the principal building)` }; }
+  if (accUse) {
+    reads.add('uses');
+    // M-241 (N-2, operator approved 2026-10-20): the M-175 guard holds for a principal or suite building; when the building
+    // answered is the ancillary class the unit names, a unit whose accessory use declares an ancillary condition (a
+    // private garage: the ancillary building contains a parking space) binds it when that condition holds
+    const anc = C.accessoryAncillaryCondition && C.accessoryAncillaryCondition[accUse];
+    reads.add('building_type');
+    if (!(anc && bt && C.typeStructure[bt] === 'ancillary' && types.includes(bt))) return { ok: false, why: `use ${accUse} (an accessory structure, not the principal building)` };
+    reads.add(`flags.${anc}`);
+    const v = lot.flags ? lot.flags[anc] : undefined;
+    trace.push(`${anc}=${v === true || v === false ? v : 'unknown'}`);
+    if (v === false) return { ok: false, why: `condition ${anc} (use ${accUse})` };
+    if (v !== true) unknown = unknown || (C.userInputs.has(anc) ? `needs_user_input:${anc}` : `condition_unknown:${anc}`);
+  }
   // M-159(3) (specific-use scope) / M-244 (D-1, operator approved 2026-10-20): a unit scoped to a specific use (vocab
   // specific_use) applies only on a lot that has that use (lot.uses); a house lot has none, so e.g. the Eglinton
   // transportation-use exemption 10.10.40.71(1) is set aside before its map gate is read.
