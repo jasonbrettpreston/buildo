@@ -1,0 +1,279 @@
+diff --git a/scripts/lib/compute/link-coa-to-parcels.js b/scripts/lib/compute/link-coa-to-parcels.js
+index a9c6f120..f3a0976a 100644
+--- a/scripts/lib/compute/link-coa-to-parcels.js
++++ b/scripts/lib/compute/link-coa-to-parcels.js
+@@ -134,6 +134,9 @@ function buildMatchSql(_descriptor, config) {
+     // No spatial fallback: a CoA has no coordinates before its parcel match, so a tier-2 spatial pass is
+     // unreachable by construction (Spec 42 §6.5 step 9; R2.v5 fix #14; the legacy file's own header).
+     fallback_match_sql: null,
++    // R-ID (CoA cutover ruling 4): the two per-run bridge type counters, counted per batch by classifyMatches and
++    // summed by the runner (R-EG (1) additive amendment). Legacy :305-306, :407.
++    extra_counters: ['tier_1a_type_confirmed', 'tier_1a_type_tolerant'],
+     primary_counter: 'cascade_matches',
+     fallback_counter: 'spatial_fallback_matches',
+     fallback_bbox_degrees: null,
+@@ -262,7 +265,10 @@ function classifyMatches(matchRows, config) {
+   const tier1a = Number(config[CONFIG_KEYS.tier1aConfidence]);
+   const tier1b = Number(config[CONFIG_KEYS.tier1bConfidence]);
+   const rows = [];
++  const counters = { tier_1a_type_confirmed: 0, tier_1a_type_tolerant: 0 };
+   for (const r of matchRows) {
++    // Legacy :407: a bridge match whose candidate type equals the application's is confirmed; otherwise tolerant.
++    if (r.match_type === 'address_points_exact') counters[r.type_confirmed === true ? 'tier_1a_type_confirmed' : 'tier_1a_type_tolerant'] += 1;
+     rows.push({
+       lead_id: r.lead_id,
+       parcel_id: Number(r.parcel_id),
+@@ -270,7 +276,7 @@ function classifyMatches(matchRows, config) {
+       confidence: r.match_type === 'tier_1b_name_only' ? tier1b : tier1a,
+     });
+   }
+-  return { rows, parcels: rows.length, matches: rows.length };
++  return { rows, parcels: rows.length, matches: rows.length, counters };
+ }
+ 
+ /** Unreachable (fallback_match_sql is null); declared because the runner contract names it. */
+@@ -326,6 +332,12 @@ function tier_1a_exact(ctx) {
+ function tier_1a_via_bridge(ctx) {
+   ctx.report('tier_1a_via_bridge', { violations: 0, detail: m(ctx, 'tier_1a_via_bridge') });
+ }
++function tier_1a_type_confirmed(ctx) {
++  ctx.report('tier_1a_type_confirmed', { violations: 0, detail: m(ctx, 'tier_1a_type_confirmed') });
++}
++function tier_1a_type_tolerant(ctx) {
++  ctx.report('tier_1a_type_tolerant', { violations: 0, detail: m(ctx, 'tier_1a_type_tolerant') });
++}
+ function tier_1b_name_only(ctx) {
+   ctx.report('tier_1b_name_only', { violations: 0, detail: m(ctx, 'tier_1b_name_only') });
+ }
+@@ -373,6 +385,8 @@ const CHECKS = {
+   coa_processed,
+   tier_1a_exact,
+   tier_1a_via_bridge,
++  tier_1a_type_confirmed,
++  tier_1a_type_tolerant,
+   tier_1b_name_only,
+   no_address_data,
+   no_parcel_match,
+@@ -396,6 +410,8 @@ function buildMeta(ctx) {
+     coa_processed: m(ctx, 'coa_processed'),
+     tier_1a_exact: m(ctx, 'tier_1a_via_bridge') + m(ctx, 'tier_1a_parcels_exact'),
+     tier_1a_via_bridge: m(ctx, 'tier_1a_via_bridge'),
++    tier_1a_type_confirmed: m(ctx, 'tier_1a_type_confirmed'),
++    tier_1a_type_tolerant: m(ctx, 'tier_1a_type_tolerant'),
+     tier_1b_name_only: m(ctx, 'tier_1b_name_only'),
+     no_address_data: m(ctx, 'no_address_data'),
+     no_parcel_match: m(ctx, 'no_parcel_match'),
+diff --git a/scripts/lib/step/index.js b/scripts/lib/step/index.js
+index 3c3f3478..b0a95d52 100644
+--- a/scripts/lib/step/index.js
++++ b/scripts/lib/step/index.js
+@@ -2338,6 +2338,10 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
+     [match.primary_counter]: 0,
+     [match.fallback_counter]: 0,
+   };
++  // R-ID / R-EG (1) additive amendment: the per-batch counters the match plan declares in `extra_counters`, summed
++  // from classifyMatches' `counters`; closed (linkExtraCounters). Absent: no key, every existing LINK step unchanged.
++  const extraCounters = linkExtraCounters(match, matched, tag);
++  for (const n of extraCounters) matched[n] = 0;
+   for (const s of gate.signals) {
+     if (s.current === null) continue;
+     matched[s.key] = Number.isNaN(Number(s.current)) ? s.current : Number(s.current);
+@@ -2430,6 +2434,7 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
+     matched[match.primary_counter] += classified.matches;
+     matched[match.fallback_counter] += fallback.rows.length;
+     matched[names.no_match] += ids.filter((id) => !linkedIds.has(id)).length;
++    for (const [n, v] of Object.entries(batchExtraCounts(classified, extraCounters, tag))) matched[n] += v;
+     if (departedAt >= 0) for (const r of rows) derivedLeading.add(r[plans[departedAt].keys[0]]);
+   }
+ 
+@@ -2498,6 +2503,28 @@ function linkCounterNames(match, tag) {
+   return c;
+ }
+ 
++/**
++ * R-ID (an additive amendment of R-EG (1)): the extra per-batch counters a LINK match plan declares. Each is a
++ * snake_case name that is not already a counter of the phase; absent -> none.
++ */
++function linkExtraCounters(match, matched, tag) {
++  const x = match.extra_counters;
++  if (x === undefined) return [];
++  if (!Array.isArray(x) || new Set(x).size !== x.length || x.some((n) => typeof n !== 'string' || !/^[a-z][a-z0-9_]*$/.test(n) || n in matched)) {
++    throw new Error(`${tag} match.extra_counters must be distinct snake_case names that are not LINK or pass counters (Spec 124 R-EG (1), R-ID); got ${JSON.stringify(x)}.`);
++  }
++  return x;
++}
++/** R-ID: one batch's declared extra counts from classifyMatches' `counters` — only declared keys, non-negative integers. */
++function batchExtraCounts(classified, extraCounters, tag) {
++  const c = classified.counters;
++  if (extraCounters.length === 0 && c === undefined) return {};
++  const keys = c && typeof c === 'object' ? Object.keys(c) : [];
++  const bad = !c || typeof c !== 'object' || keys.some((k) => !extraCounters.includes(k)) || keys.some((k) => !Number.isInteger(c[k]) || c[k] < 0);
++  if (bad) throw new Error(`${tag} classifyMatches counters must be non-negative integers keyed only by the declared extra_counters ${JSON.stringify(extraCounters)} (Spec 124 R-ID); got ${JSON.stringify(c)}.`);
++  return Object.fromEntries(extraCounters.map((k) => [k, c[k] || 0]));
++}
++
+ /** R-EG (2): the primary-match binds — the compute's pure export over the batch rows, else `[ids]` (byte-identical). */
+ function primaryMatchBinds(compute, batchRows, ids, seam, tag) {
+   if (typeof compute.primaryMatchBinds !== 'function') return [ids];
+diff --git a/scripts/link-coa-to-parcels.descriptor.json b/scripts/link-coa-to-parcels.descriptor.json
+index c4823ea3..ced170ac 100644
+--- a/scripts/link-coa-to-parcels.descriptor.json
++++ b/scripts/link-coa-to-parcels.descriptor.json
+@@ -214,6 +214,8 @@
+     { "id": "coa_processed", "kind": "field_coverage", "expect": { "reports": "COUNT of eligible CoAs re-matched this run (every eligible CoA, every run)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name. Its meaning moves with ruling 1: the legacy counted the never-stamped CoAs only; re-check every run walks every eligible CoA (declared diff).", "liveness": { "kind": "table", "ref": "coa_applications" } } },
+     { "id": "tier_1a_exact", "kind": "field_coverage", "expect": { "reports": "eligible CoAs linked by tier 1a (the bridge plus the parcels-table exact)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (plan v4 fold F17: rolls up the bridge and the parcels-table exact).", "liveness": { "kind": "column", "ref": "lead_parcels.match_type" } } },
+     { "id": "tier_1a_via_bridge", "kind": "field_coverage", "expect": { "reports": "eligible CoAs linked by the address-points bridge (match_type address_points_exact)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (fold F17 bridge subset).", "liveness": { "kind": "column", "ref": "lead_parcels.match_type" } } },
++    { "id": "tier_1a_type_confirmed", "kind": "field_coverage", "expect": { "reports": "bridge matches whose candidate street type equals the application's (Spec 54 level 0)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Restored by name (CoA cutover ruling 4, Spec 124 R-ID): the legacy per-run bridge type counter (legacy :305-306, :407, :630-631), counted per batch by classifyMatches and summed by the runner (extra_counters).", "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" } } },
++    { "id": "tier_1a_type_tolerant", "kind": "field_coverage", "expect": { "reports": "bridge matches accepted with the street type unknown on either side (tolerant, not confirmed)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Restored by name (CoA cutover ruling 4, Spec 124 R-ID): the legacy per-run bridge type counter (legacy :305-306, :407, :630-631), counted per batch by classifyMatches and summed by the runner (extra_counters).", "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" } } },
+     { "id": "tier_1b_name_only", "kind": "field_coverage", "expect": { "reports": "eligible CoAs linked by name only (no street number)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "lead_parcels.match_type" } } },
+     { "id": "no_address_data", "kind": "field_coverage", "expect": { "reports": "CoAs with a lead id and no street_name_normalized (outside the eligible set)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name; the legacy pre-pass counted (and stamped) the never-stamped ones, re-check every run counts them all and stamps none (ruling 1: a never-linked CoA keeps parcel_linked_at unset).", "liveness": { "kind": "column", "ref": "coa_applications.street_name_normalized" } } },
+     { "id": "no_parcel_match", "kind": "field_coverage", "expect": { "reports": "eligible CoAs the cascade matched to no parcel this run" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (the runner's no-match counter, R-EG (1)).", "liveness": { "kind": "table", "ref": "coa_applications" } } },
+@@ -237,6 +239,8 @@
+     { "key": "coa_processed", "type": "int", "consumers": [] },
+     { "key": "tier_1a_exact", "type": "int", "consumers": [] },
+     { "key": "tier_1a_via_bridge", "type": "int", "consumers": [] },
++    { "key": "tier_1a_type_confirmed", "type": "int", "consumers": [] },
++    { "key": "tier_1a_type_tolerant", "type": "int", "consumers": [] },
+     { "key": "tier_1b_name_only", "type": "int", "consumers": [] },
+     { "key": "no_address_data", "type": "int", "consumers": [] },
+     { "key": "no_parcel_match", "type": "int", "consumers": [] },
+@@ -277,12 +281,12 @@
+       "date": "2026-10-18"
+     },
+     {
+-      "from": "the legacy audit rows coa_corpus_linked_pct (>= 100 − t), coa_parcels_linked_pct + unmatched_coa_count (one decision rendered twice), the NO_NEW_WORK lane (phase 11), and the tier_1a_type_confirmed / tier_1a_type_tolerant per-run counters",
++      "from": "the legacy audit rows coa_corpus_linked_pct (>= 100 − t), coa_parcels_linked_pct + unmatched_coa_count (one decision rendered twice) and the NO_NEW_WORK lane (phase 11)",
+       "why": {
+-        "text": "The corpus floor is stated on its complement (coa_corpus_unlinked_pct <= t; a bound cannot be 100 − x); the slice decision is declared once (unmatched_coa_pct). There is no no-work lane: every eligible CoA is walked every run, and audit_table.phase follows sharing.varies_by_chain.phase (4, the chain index; LCTP-D8, the O1 fleet standard). The two bridge type counters are NOT carried at ②: the runLinkPhase contract (Spec 124 R-EG (1)) accumulates exactly the six LINK counters and the two pass counters per batch, and the type-confirmation bit is not persisted anywhere a post-write read could count it. While the step sits at compute_ported the legacy shell is live and still emits both; a new-rule draft (an additive per-batch counter export on the match plan, R-EG amendment) is with the operator, and ③ waits on it.",
++        "text": "The corpus floor is stated on its complement (coa_corpus_unlinked_pct <= t; a bound cannot be 100 − x); the slice decision is declared once (unmatched_coa_pct). There is no no-work lane: every eligible CoA is walked every run, and audit_table.phase follows sharing.varies_by_chain.phase (4, the chain index; LCTP-D8, the O1 fleet standard). The two bridge type counters (tier_1a_type_confirmed / tier_1a_type_tolerant) are carried, restored on the bundled RE-FREEZE night (Spec 124 R-ID): classifyMatches counts them per batch and the runner sums them (extra_counters).",
+         "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+       },
+-      "adjudicated_by": "Spec 124 R-EG (1) (the counter contract); O1 ruling (2026-09-21) phase index; the type counters await the operator (new-rule draft, link_coa_to_parcels ②)",
++      "adjudicated_by": "Spec 124 R-EG (1) (the counter contract); O1 ruling (2026-09-21) phase index [register: Spec 124 R-ID; V3 condition-9 rulings 2026-10-20]",
+       "date": "2026-10-19"
+     }
+   ],
+diff --git a/src/tests/steps/link_coa_to_parcels/type-counters.logic.test.ts b/src/tests/steps/link_coa_to_parcels/type-counters.logic.test.ts
+new file mode 100644
+index 00000000..edf0a0b5
+--- /dev/null
++++ b/src/tests/steps/link_coa_to_parcels/type-counters.logic.test.ts
+@@ -0,0 +1,118 @@
++// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-ID (CoA cutover ruling 4, operator 2026-10-20,
++//            `2026-10-20-chat-batch-c-steps#CHAT-18`), R-EG (1) (the LINK counter contract), Rule 2 (R-BZ)
++//
++// RED until the bundled RE-FREEZE night (REFREEZE-BUNDLE-1 item (1), Draft B restated): link_coa_to_parcels restores
++// the two per-run bridge type counters the legacy step emitted (legacy-link-coa-to-parcels.js.txt :305-306, :407,
++// :630-631, :663-664). The type-confirmation bit exists only in the per-batch cascade rows (`m.type_confirmed`), so
++// the compute's pure `classifyMatches` counts it per batch and the runner sums the counters the match plan declares
++// in `extra_counters` — closed: an undeclared key, or a declared name that collides with a LINK counter, throws.
++import { describe, expect, it } from 'vitest';
++import path from 'path';
++
++const REPO_ROOT = path.resolve(__dirname, '../../../../');
++/* eslint-disable @typescript-eslint/no-require-imports -- the real CJS library and compute */
++const stepLib = require(path.join(REPO_ROOT, 'scripts/lib/step'));
++const compute = require(path.join(REPO_ROOT, 'scripts/lib/compute/link-coa-to-parcels.js')) as ((ctx: unknown) => Promise<{ records_meta: Record<string, unknown> }>) & {
++  buildMatchSql(d: unknown, config: Record<string, number> | null): { extra_counters?: string[] };
++  classifyMatches(rows: unknown[], config: Record<string, number>): { rows: unknown[]; parcels: number; matches: number; counters?: Record<string, number> };
++  buildMeta(ctx: unknown): Record<string, unknown>;
++};
++const DESCRIPTOR = require(path.join(REPO_ROOT, 'scripts/link-coa-to-parcels.descriptor.json')) as {
++  checks: Array<{ id: string; severity: string }>; emits: Array<{ key: string }>; deviations: Array<{ from: string; adjudicated_by: string }>; guards: { requires: unknown[] };
++};
++/* eslint-enable @typescript-eslint/no-require-imports */
++
++const CONFIG = {
++  link_coa_to_parcels_conf_tier1a: 0.95,
++  link_coa_to_parcels_conf_tier1b: 0.8,
++  link_coa_to_parcels_unmatched_threshold_pct: 10,
++  link_coa_to_parcels_neighbourhood_coverage_min_pct: 95,
++  link_coa_to_parcels_centroid_outside_max_pct: 1,
++};
++const NAMES = ['tier_1a_type_confirmed', 'tier_1a_type_tolerant'];
++const B = (lead: string, tc: boolean | null) => ({ lead_id: lead, parcel_id: 1, match_type: 'address_points_exact', type_confirmed: tc });
++
++describe('R-ID — link_coa_to_parcels restores tier_1a_type_confirmed / tier_1a_type_tolerant', () => {
++  it('T1 — classifyMatches counts bridge matches by type_confirmed (true -> confirmed; false or unknown -> tolerant, legacy :407); other tiers count neither', () => {
++    const c = compute.classifyMatches([B('coa:1', true), B('coa:2', false), B('coa:3', null), { lead_id: 'coa:4', parcel_id: 2, match_type: 'tier_1a_exact', type_confirmed: null }, { lead_id: 'coa:5', parcel_id: 3, match_type: 'tier_1b_name_only', type_confirmed: null }], CONFIG);
++    expect(c.counters).toEqual({ tier_1a_type_confirmed: 1, tier_1a_type_tolerant: 2 });
++    expect(c.parcels).toBe(5);
++  });
++
++  it('T2 — the match plan declares both as extra_counters; the descriptor declares both checks (INFO) and both emits; the deviation no longer lists them', () => {
++    expect(compute.buildMatchSql(DESCRIPTOR, CONFIG).extra_counters).toEqual(NAMES);
++    for (const n of NAMES) {
++      expect(DESCRIPTOR.checks.find((k) => k.id === n)?.severity, n).toBe('INFO');
++      expect(DESCRIPTOR.emits.some((e) => e.key === n), n).toBe(true);
++    }
++    const dev = DESCRIPTOR.deviations[3]!;
++    expect(dev.from).not.toMatch(/tier_1a_type_confirmed|tier_1a_type_tolerant/);
++    expect(dev.adjudicated_by).toContain('Spec 124 R-ID');
++  });
++
++  it('T3 — the real runner sums the declared extra counters across batches into ctx.matched', async () => {
++    const batches = [[{ id: 'coa:A1', street_num: '1', street_name_normalized: 'QUEEN', street_name: 'QUEEN ST' }], [{ id: 'coa:A2', street_num: '2', street_name_normalized: 'KING', street_name: 'KING ST' }]];
++    const query = async (text: string, values?: unknown[]) => {
++      if (/^SELECT COUNT\(\*\) AS total FROM coa_applications/.test(text)) return { rows: [{ total: '2' }] };
++      if (/AS id, ca\.street_num/.test(text)) return { rows: values?.[1] === 0 ? batches[0] : values?.[1] === 'coa:A1' ? batches[1] : [] };
++      if (/^WITH i \(lead_id/.test(text)) return { rows: [B((values?.[0] as string[])[0]!, (values?.[0] as string[])[0] === 'coa:A1')] };
++      if (/^SELECT\n {2}\(SELECT COUNT\(DISTINCT lp\.lead_id\)/.test(text)) return { rows: [{ linked: '2', total: '2' }] };
++      if (/relrowsecurity/i.test(text)) return { rows: [{ rls_enabled: false, policies: 0, bypassrls: true }] };
++      if (/^\s*INSERT INTO lead_parcels/.test(text)) return { rows: [{ inserted: true }], rowCount: 1 };
++      return { rows: [], rowCount: 0 };
++    };
++    const d = JSON.parse(JSON.stringify(DESCRIPTOR));
++    d.guards.requires = [];
++    const out = await stepLib.runLinkPhase({
++      descriptor: d, pool: { query, connect: async () => ({ query, release: () => {} }) }, compute, config: CONFIG, chainId: 'coa',
++      log: { info: () => {}, warn: () => {}, error: () => {} }, tag: '[lctp]', clockNow: new Date('2026-10-20T12:00:00Z'),
++    });
++    expect(out.matched).toMatchObject({ coa_processed: 2, tier_1a_type_confirmed: 1, tier_1a_type_tolerant: 1 });
++  });
++
++  it('T4 — records_meta carries both keys (legacy :663-664) and compute reports both checks', async () => {
++    const reported: string[] = [];
++    const ctx = {
++      descriptor: DESCRIPTOR, checks: NAMES, config: CONFIG, elapsed_ms: 1, cumulative: {}, written: {},
++      matched: { tier_1a_type_confirmed: 3, tier_1a_type_tolerant: 2 },
++      report: (id: string) => { reported.push(id); }, log: { error: () => {} },
++    };
++    const r = await compute(ctx);
++    expect(reported).toEqual(NAMES);
++    expect(r.records_meta).toMatchObject({ tier_1a_type_confirmed: 3, tier_1a_type_tolerant: 2 });
++  });
++});
++
++describe('R-ID mechanism — runLinkPhase extra_counters is closed (an R-EG (1) additive amendment)', () => {
++  const linkMatch = (extra: unknown, counters: unknown) => ({
++    compute: Object.assign(async () => ({ records_meta: {} }), {
++      buildMatchSql: () => ({ ...compute.buildMatchSql(DESCRIPTOR, CONFIG), extra_counters: extra }),
++      primaryMatchBinds: () => [['coa:A1'], ['1'], ['QUEEN'], ['ST']],
++      classifyMatches: () => ({ rows: [], parcels: 0, matches: 0, counters }),
++      classifyFallback: () => ({ rows: [], parcels: 0 }),
++    }),
++  });
++  const run = async (extra: unknown, counters: unknown) => {
++    const query = async (text: string, values?: unknown[]) => {
++      if (/^SELECT COUNT\(\*\) AS total/.test(text)) return { rows: [{ total: '1' }] };
++      if (/AS id, ca\.street_num/.test(text)) return { rows: values?.[1] === 0 ? [{ id: 'coa:A1' }] : [] };
++      if (/^SELECT\n {2}\(SELECT COUNT\(DISTINCT lp\.lead_id\)/.test(text)) return { rows: [{ linked: '0', total: '1' }] };
++      if (/relrowsecurity/i.test(text)) return { rows: [{ rls_enabled: false, policies: 0, bypassrls: true }] };
++      return { rows: [], rowCount: 0 };
++    };
++    const d = JSON.parse(JSON.stringify(DESCRIPTOR));
++    d.guards.requires = [];
++    return stepLib.runLinkPhase({ descriptor: d, pool: { query, connect: async () => ({ query, release: () => {} }) }, compute: linkMatch(extra, counters).compute, config: CONFIG, chainId: 'coa', log: { info: () => {}, warn: () => {}, error: () => {} }, tag: '[t]', clockNow: new Date() });
++  };
++
++  it('T5 — a counter the plan does not declare throws; a declared name colliding with a LINK counter throws; a non-integer count throws', async () => {
++    await expect(run(['tier_1a_type_confirmed'], { tier_1a_type_confirmed: 1, surprise: 1 })).rejects.toThrow(/extra_counters/);
++    await expect(run(['coa_processed'], { coa_processed: 1 })).rejects.toThrow(/extra_counters/);
++    await expect(run(['tier_1a_type_confirmed'], { tier_1a_type_confirmed: 1.5 })).rejects.toThrow(/extra_counters/);
++  });
++
++  it('T6 — no extra_counters declared: matched carries no extra key (every existing LINK step byte-identical)', async () => {
++    const out = await run(undefined, undefined);
++    for (const n of NAMES) expect(n in out.matched).toBe(false);
++  });
++});
