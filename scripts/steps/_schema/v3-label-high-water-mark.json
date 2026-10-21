@@ -28,6 +28,7 @@
     "load_wsib",
     "load_zoning",
     "massing",
+    "neighbourhoods",
     "parcels"
   ],
   "converted_baseline": [

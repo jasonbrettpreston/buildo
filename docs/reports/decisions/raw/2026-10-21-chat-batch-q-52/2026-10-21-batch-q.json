@@ -1,0 +1,19 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "pushing 2 y 3. y",
+  "context": "(2) N-D1: record the old neighbourhoods loader's insert-without-geometry arm (never run: 158 of 158 rows dated 2026-02-20, none with a blank shape; the converted step flags a new row with the warn check boundary_rows_inserted) as a deliberate retirement under a new register row, following R-AR.1 (124a:183) and R-FY (124a:613); descriptor already declares it at scripts/load-neighbourhoods.descriptor.json:530; evidence defect-ledger.md:226. (3) 'y V3 gates': measure, read-only, what remains for EP-PIN-D17 (end-of-sources cloud acceptance), LDG-10 (run-ledger witness reconciliation) and CHAIN-TOOLING (R-DJ) to be BUILT, since R-ED / R-EY condition 8 blocks 14 of the 15 non-V3 steps until they are.",
+  "decisions": [
+    {
+      "id": "CHAT-52",
+      "subject": "N-D1: retire the neighbourhoods insert-without-geometry arm",
+      "decision": "approve",
+      "recommendation": "Record the never-run insert arm as a deliberate retirement under a new register row; neighbourhoods then reads V3."
+    },
+    {
+      "id": "CHAT-53",
+      "subject": "Measure the three V3 chain gates",
+      "decision": "approve",
+      "recommendation": "Read-only measurement of what remains to make EP-PIN-D17, LDG-10 and CHAIN-TOOLING BUILT, with an effort estimate and order."
+    }
+  ]
+}

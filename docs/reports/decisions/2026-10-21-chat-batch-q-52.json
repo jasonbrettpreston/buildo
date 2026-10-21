@@ -1,0 +1,43 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-q-52/2026-10-21-batch-q.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-q-52",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "pushing 2 y 3. y",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-q-52/2026-10-21-batch-q.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-52": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-JK"
+    },
+    "CHAT-53": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-JL"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-52",
+      "question": "N-D1: retire the neighbourhoods insert-without-geometry arm",
+      "recommendation": "Record the never-run insert arm as a deliberate retirement under a new register row; neighbourhoods then reads V3.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-53",
+      "question": "Measure the three V3 chain gates",
+      "recommendation": "Read-only measurement of what remains to make EP-PIN-D17, LDG-10 and CHAIN-TOOLING BUILT, with an effort estimate and order.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

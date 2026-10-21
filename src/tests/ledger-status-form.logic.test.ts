@@ -62,15 +62,27 @@ describe('R-GR — one ledger status form for a declared deviation', () => {
   // R-GS / R-GT (operator y 2026-10-20: "y to your recommendations to 1 and 2 ... y to liftinh A-5"): each
   // row closes only on the rule whose text covers it; R-AZ and R-AR.1 are not stretched.
   // integrate-12: LC-D12 closes on R-FV (its operator-authorized plan declares the single-call validation, plan :59/:101);
-  // N-D1 stays RULING-OWED (its plan resolved NB-D1 without the operator, plan §11; operator 2026-10-20).
-  it('L5 LIVE — LC-D7 closes on R-GS (A-5); LC-D6, LC-D11, M-D10, N-D5 on R-GT; LC-D12 on R-FV; N-D1 stays RULING-OWED', async () => {
+  // N-D1 was RULING-OWED until the operator ruled it (CHAT-52, 2026-10-21): it closes on R-JK.
+  it('L5 LIVE — LC-D7 closes on R-GS (A-5); LC-D6, LC-D11, M-D10, N-D5 on R-GT; LC-D12 on R-FV; N-D1 on R-JK', async () => {
     const m = await load();
     const rows = m.parseDefectRows(readFileSync(join(process.cwd(), 'docs/reports/defect-ledger.md'), 'utf8'));
     const status = (id: string) => rows.find((r) => r.id === id)?.status;
     expect(status('LC-D7')).toBe('CLOSED · declared deviation (R-GS)');
     for (const id of ['LC-D6', 'LC-D11', 'M-D10', 'N-D5']) expect(status(id), id).toBe('CLOSED · declared deviation (R-GT)');
     expect(status('LC-D12')).toBe('CLOSED · declared deviation (R-FV)');
-    expect(status('N-D1')).toMatch(/^OPEN · \*\*PIN\*\* RULING-OWED /);
+    expect(status('N-D1')).toBe('CLOSED · declared deviation (R-JK)');
+  });
+  // R-JK (CHAT-52, operator y 2026-10-21): the never-run insert-without-geom arm is a deliberate retirement, recorded
+  // under R-AR.1 / R-FY form with its evidence; neighbourhoods then holds R-EY condition 9 and reads V3.
+  it('R-JK is a register row carrying the N-D1 evidence, and neighbourhoods holds R-EY condition 9', async () => {
+    const m = (await load()) as Mod & { exceptionsSignal: (slug: string, d: unknown, root?: string) => { fails: string[]; uncited: unknown[] } };
+    const a = readFileSync(join(process.cwd(), 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md'), 'utf8');
+    const rowText = a.split('\n').find((l) => l.startsWith('| R-JK |'))!;
+    expect(rowText).toBeTruthy();
+    for (const s of ['N-D1', 'R-AR.1', 'R-FY', 'boundary_rows_inserted', '158/158', '2026-02-20', '2026-10-21-chat-batch-q-52#CHAT-52']) expect(rowText, s).toContain(s);
+    expect(m.loadExceptionSources().registerIds.has('R-JK')).toBe(true);
+    const d = JSON.parse(readFileSync(join(process.cwd(), 'scripts/load-neighbourhoods.descriptor.json'), 'utf8'));
+    expect(m.exceptionsSignal('neighbourhoods', d).fails).toEqual([]);
   });
 });
 
