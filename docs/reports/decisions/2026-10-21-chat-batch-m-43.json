@@ -1,0 +1,32 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-m-43/2026-10-21-batch-m.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-m-43",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "2 and 3 y",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-m-43/2026-10-21-batch-m.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-43": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-260"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-43",
+      "question": "Build Spec 133 By-law Handbook",
+      "recommendation": "Generate Spec 133 (By-law Handbook) the same way as Spec 132: generated from the by-law registers (68 + 69/69a + 78 + 131), with a --check at pre-commit, a size cap, and a citation resolver.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

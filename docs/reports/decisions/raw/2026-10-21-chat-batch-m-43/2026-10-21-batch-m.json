@@ -1,0 +1,13 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "2 and 3 y",
+  "context": "Answers to: (2) build Spec 133, the By-law Handbook (ruled 2026-10-20 in 2026-10-20-spec132-rulings, never built): a generated reading spec from 68 + 69/69a + 78 + 131 so 'comply with Spec 133' works like Spec 132; (3) remove leftover throwaway verifier/lane worktrees (~/Buildo-scratch/verify-23/wt-pre and the older verify/blfix/stepsrul worktrees).",
+  "decisions": [
+    {
+      "id": "CHAT-43",
+      "subject": "Build Spec 133 By-law Handbook",
+      "decision": "approve",
+      "recommendation": "Generate Spec 133 (By-law Handbook) the same way as Spec 132: generated from the by-law registers (68 + 69/69a + 78 + 131), with a --check at pre-commit, a size cap, and a citation resolver."
+    }
+  ]
+}

@@ -5421,6 +5421,20 @@
       }
     },
     {
+      "id": "R-IY",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec133-bylaw-handbook.logic.test.ts"
+      },
+      "statement": "The handbook tooling is keyed by spec id, so the by-law handbook is Spec 133, generated from the Spec 69a M-rows and Spec 131 LC-rows, with its own --check at pre-commit, arm (iii-b) citations and arm (iv-b) size cap (the by-law policy is Spec 69a M-260).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",

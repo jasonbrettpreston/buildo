@@ -1,150 +1,154 @@
 {
   "$comment": "R-EC (Spec 124): per-stage timings of .husky/pre-commit file-only stages, one command at a time (never a whole-hook run). registry_s replaces the staged step-validate stage with the whole-registry selection. Checked file-only by fast invariant #52 against tooling_precommit_budget_*_s.",
-  "measured_at": "2026-10-21T16:54:48.646Z",
+  "measured_at": "2026-10-21T21:10:54.484Z",
   "host": "Bretts-Mac-Mini.local (darwin arm64, 12 cpu)",
-  "hook_sha256": "53e7a6caed5a4313a579ac685a76d0707a5fe6004031e9f3f396427d418970ab",
+  "hook_sha256": "852e0b4e0fd129fc905679a293467c0bf8daad1e5c10e90644e6e6ba72808e19",
   "stages": [
     {
       "command": "bash scripts/hooks/check-partial-staging.sh",
-      "s": 0.01
-    },
-    {
-      "command": "node scripts/analysis/step-churn-complexity.mjs --check",
-      "s": 0.84
-    },
-    {
-      "command": "node scripts/steps/_schema/generate-template-freeze.mjs --check",
-      "s": 0.08
-    },
-    {
-      "command": "node scripts/analysis/generate-target-files.mjs --check",
-      "s": 0.24
-    },
-    {
-      "command": "node scripts/analysis/src-sql-ledger.mjs --check",
-      "s": 0.36
-    },
-    {
-      "command": "node scripts/analysis/generate-chain-args.mjs --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/generate-bylaw-provisions.mjs --check",
-      "s": 5.96
-    },
-    {
-      "command": "node scripts/generate-ingest-batch.js --check",
-      "s": 0.14
-    },
-    {
-      "command": "node scripts/generate-sharing-phase.js --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/generate-logic-variable-groups.mjs --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/generate-logic-vars-docs.mjs --check",
-      "s": 0.08
-    },
-    {
-      "command": "node scripts/generate-assert-schema-probe-lists.js --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/generate-assert-parcel-sanity-descriptor.js --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/generate-assert-global-coverage-descriptor.js --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/generate-assert-data-bounds-descriptor.js --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/analysis/generate-last-measured.mjs --check",
-      "s": 0.08
-    },
-    {
-      "command": "node scripts/analysis/report-fields.mjs --check",
-      "s": 0.38
-    },
-    {
-      "command": "node scripts/violations/generate-conversion-roadmap.mjs --check",
-      "s": 0.07
-    },
-    {
-      "command": "node scripts/violations/generate-programme-backlog.mjs --check",
-      "s": 0.06
-    },
-    {
-      "command": "node scripts/violations/generate-surface-registry.mjs --check",
-      "s": 0.19
-    },
-    {
-      "command": "node scripts/generate-step-handbook.mjs --check",
-      "s": 0.17
-    },
-    {
-      "command": "node scripts/analysis/decision-log.mjs --check",
-      "s": 0.11
-    },
-    {
-      "command": "node scripts/analysis/report-schema.mjs --check",
-      "s": 0.12
-    },
-    {
-      "command": "node scripts/generate-bylaw-layer2-input.mjs --check",
-      "s": 0.13
-    },
-    {
-      "command": "node scripts/analysis/spec-split-check.mjs --check",
-      "s": 1.25
-    },
-    {
-      "command": "node scripts/violations/schema-to-vocab.mjs --check docs/reports/generated/122-vocabulary.md",
-      "s": 0.07
-    },
-    {
-      "command": "npx vitest src/tests/system-map.infra.test.ts --run",
-      "s": 0.71
-    },
-    {
-      "command": "node scripts/analysis/gates/generated-docs.mjs",
-      "s": 0.06
-    },
-    {
-      "command": "node scripts/analysis/step-validate.mjs --staged --fast",
-      "s": 5.26
-    },
-    {
-      "command": "bash scripts/hooks/validate-migrations.sh",
       "s": 0.02
     },
     {
+      "command": "node scripts/analysis/step-churn-complexity.mjs --check",
+      "s": 0.93
+    },
+    {
+      "command": "node scripts/steps/_schema/generate-template-freeze.mjs --check",
+      "s": 0.05
+    },
+    {
+      "command": "node scripts/analysis/generate-target-files.mjs --check",
+      "s": 0.22
+    },
+    {
+      "command": "node scripts/analysis/src-sql-ledger.mjs --check",
+      "s": 0.34
+    },
+    {
+      "command": "node scripts/analysis/generate-chain-args.mjs --check",
+      "s": 0.03
+    },
+    {
+      "command": "node scripts/generate-bylaw-provisions.mjs --check",
+      "s": 6.53
+    },
+    {
+      "command": "node scripts/generate-ingest-batch.js --check",
+      "s": 0.13
+    },
+    {
+      "command": "node scripts/generate-sharing-phase.js --check",
+      "s": 0.05
+    },
+    {
+      "command": "node scripts/generate-logic-variable-groups.mjs --check",
+      "s": 0.03
+    },
+    {
+      "command": "node scripts/generate-logic-vars-docs.mjs --check",
+      "s": 0.05
+    },
+    {
+      "command": "node scripts/generate-assert-schema-probe-lists.js --check",
+      "s": 0.03
+    },
+    {
+      "command": "node scripts/generate-assert-parcel-sanity-descriptor.js --check",
+      "s": 0.03
+    },
+    {
+      "command": "node scripts/generate-assert-global-coverage-descriptor.js --check",
+      "s": 0.04
+    },
+    {
+      "command": "node scripts/generate-assert-data-bounds-descriptor.js --check",
+      "s": 0.03
+    },
+    {
+      "command": "node scripts/analysis/generate-last-measured.mjs --check",
+      "s": 0.05
+    },
+    {
+      "command": "node scripts/analysis/report-fields.mjs --check",
+      "s": 0.46
+    },
+    {
+      "command": "node scripts/violations/generate-conversion-roadmap.mjs --check",
+      "s": 0.05
+    },
+    {
+      "command": "node scripts/violations/generate-programme-backlog.mjs --check",
+      "s": 0.03
+    },
+    {
+      "command": "node scripts/violations/generate-surface-registry.mjs --check",
+      "s": 0.21
+    },
+    {
+      "command": "node scripts/generate-step-handbook.mjs --check",
+      "s": 0.19
+    },
+    {
+      "command": "node scripts/generate-bylaw-handbook.mjs --check",
+      "s": 0.2
+    },
+    {
+      "command": "node scripts/analysis/decision-log.mjs --check",
+      "s": 0.08
+    },
+    {
+      "command": "node scripts/analysis/report-schema.mjs --check",
+      "s": 0.11
+    },
+    {
+      "command": "node scripts/generate-bylaw-layer2-input.mjs --check",
+      "s": 0.12
+    },
+    {
+      "command": "node scripts/analysis/spec-split-check.mjs --check",
+      "s": 1.68
+    },
+    {
+      "command": "node scripts/violations/schema-to-vocab.mjs --check docs/reports/generated/122-vocabulary.md",
+      "s": 0.04
+    },
+    {
+      "command": "npx vitest src/tests/system-map.infra.test.ts --run",
+      "s": 0.94
+    },
+    {
+      "command": "node scripts/analysis/gates/generated-docs.mjs",
+      "s": 0.03
+    },
+    {
+      "command": "node scripts/analysis/step-validate.mjs --staged --fast",
+      "s": 0.41
+    },
+    {
+      "command": "bash scripts/hooks/validate-migrations.sh",
+      "s": 0.03
+    },
+    {
       "command": "bash scripts/hooks/check-migration-down-comments.sh",
-      "s": 0.01
+      "s": 0.03
     },
     {
       "command": "bash scripts/hooks/ast-grep-leads.sh",
-      "s": 3.3
+      "s": 3.79
     },
     {
       "command": "npm run typecheck",
-      "s": 1.92
+      "s": 2.09
     },
     {
       "command": "npm run lint",
-      "s": 1.33
+      "s": 1.36
     }
   ],
   "registry_stage": {
     "command": "node scripts/analysis/step-validate.mjs --all --fast",
-    "s": 5.19
+    "s": 5.91
   },
-  "docs_only_s": 23.44,
-  "registry_s": 23.37
+  "docs_only_s": 20.41,
+  "registry_s": 25.91
 }

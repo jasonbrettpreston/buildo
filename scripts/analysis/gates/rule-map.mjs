@@ -19,6 +19,24 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 export const RULE_MAP_REL = 'scripts/steps/_schema/rule-map.json';
 export const HANDBOOK_REL = 'docs/specs/01-pipeline/132_step_standard_handbook.md';
+export const BYLAW_RULE_MAP_REL = 'scripts/analysis/bylaw/_schema/bylaw-rule-map.json';
+export const BYLAW_HANDBOOK_REL = 'docs/specs/01-pipeline/133_bylaw_handbook.md';
+/**
+ * The generated handbooks, keyed by spec id (Spec 124 R-IY; 124a §B25: "generated_size_caps and arm (iii-b)'s resolver
+ * are keyed by spec id"). 132 is the step handbook (rule map hand-curated from the Spec 124 register); 133 is the by-law
+ * handbook (rule map GENERATED from the Spec 69a M-rows and Spec 131 LC-rows, Spec 69a M-260).
+ */
+export const HANDBOOKS = Object.freeze({
+  '132': Object.freeze({ spec: '132', ruleMapRel: RULE_MAP_REL, handbookRel: HANDBOOK_REL, generator: 'scripts/generate-step-handbook.mjs' }),
+  '133': Object.freeze({ spec: '133', ruleMapRel: BYLAW_RULE_MAP_REL, handbookRel: BYLAW_HANDBOOK_REL, generator: 'scripts/generate-bylaw-handbook.mjs' }),
+});
+
+export function loadHandbookRuleMap(specId, repoRoot = REPO_ROOT) {
+  const h = HANDBOOKS[specId];
+  if (!h) throw new Error(`no handbook registered for Spec ${specId}`);
+  return JSON.parse(fs.readFileSync(path.join(repoRoot, h.ruleMapRel), 'utf8'));
+}
+
 export const SPEC_124_REL = 'docs/specs/01-pipeline/124_step_standard_policy.md';
 export const SPEC_124A_REL = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
 export const DEFECT_LEDGER_REL = 'docs/reports/defect-ledger.md';

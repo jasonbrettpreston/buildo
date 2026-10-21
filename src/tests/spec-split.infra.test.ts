@@ -44,6 +44,8 @@ const SPEC_FILES: Record<string, string> = {
   '131': '131_lot_configuration_policy.md',
   // Spec 132 — Step Standard Handbook (Spec 124 R-GU, 2026-10-20): generated; arm (iv-b) size cap and arm (v) shape check.
   '132': '132_step_standard_handbook.md',
+  // Spec 133 — By-law Handbook (Spec 69a M-260, 2026-10-21): generated; arm (iv-b) size cap and arm (v) shape check.
+  '133': '133_bylaw_handbook.md',
   // Spec 134 — resolve_bylaws (Spec 124 R-GY, 2026-10-20): the Layer 2 step's owner spec; arm (iv) budget and arm (v) shape check.
   '134': '134_resolve_bylaws.md',
 };

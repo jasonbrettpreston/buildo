@@ -59,6 +59,11 @@
     }
   },
   "generated_size_caps": {
+    "133": {
+      "max_lines": 2000,
+      "max_bytes": 117000,
+      "why": "Spec 69a M-260 / Spec 124 R-IY (operator y 2026-10-21, 2026-10-21-chat-batch-m-43#CHAT-43: a generated spec keeps a size check, not the hand-written line budget; the R-GU form). Seeded at 1.5x the first Spec 133 (1438 lines, 79,708 B, 307 rules: 245 M-rows + 62 LC-rows, 4 lines and about 250 B per rule), measured: a rule costs one line block, so growth is the register's growth (the by-law fix lanes added 12 M-rows, M-248 to M-259, on 2026-10-21 alone: about 50 lines and 3 KB). The cap absorbs roughly 100 more rows, and stays far below the registers it summarises (Spec 69a plus Spec 131 are 468,318 B), so the reading surface never outgrows them. Hitting it means the generator copies register text instead of summarising it (the headline clip is 300 characters), or the handbook needs splitting by family; raise it only by a reviewed hand-edit with a new why."
+    },
     "132": {
       "max_lines": 925,
       "max_bytes": 112000,
