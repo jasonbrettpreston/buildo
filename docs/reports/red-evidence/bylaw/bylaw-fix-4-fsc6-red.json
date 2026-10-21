@@ -1,0 +1,26 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "b2335671",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-6 / M-250 (RD 42 GFA capped at FSI 0.5), run on the working tree at b2335671 with the F-SC-6 describe added, before the M-75 correction.",
+ "counts": {
+  "pass": 1,
+  "red": 2
+ },
+ "cases": [
+  {
+   "name": "F-SC-6 / M-250 — exception RD 42 gross floor area is capped at FSI 0.5 the text carries the cap (ch900_3.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-6 / M-250 — exception RD 42 gross floor area is capped at FSI 0.5 the unit keys min() of the two limbs; fsi stays 0.5",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]"
+  },
+  {
+   "name": "F-SC-6 / M-250 — exception RD 42 gross floor area is capped at FSI 0.5 41 Bethnal Ave (City 195.72 m² on 391.44 m²): gfa_m2 = 0.5 × lot area; a large lot keeps 118 + 25 %",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 215.86, …(1) ] to deeply equal [ 'value', 195.72, …(1) ]"
+  }
+ ]
+}

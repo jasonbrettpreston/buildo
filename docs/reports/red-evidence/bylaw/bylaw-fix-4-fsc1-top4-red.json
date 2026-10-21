@@ -1,0 +1,21 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "b86246ec",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-1 / M-247 (2) (RD 18 / 21 / 37 blocked by a measurement-only DEFINE with a target), run on the working tree at b86246ec with the describe added, before the M-75 corrections.",
+ "counts": {
+  "red": 2
+ },
+ "cases": [
+  {
+   "name": "F-SC-1 / M-247 (2) — a measurement-only DEFINE no longer blocks RD 18 / 21 / 37 the eight DEFINE units are measurement rules with no target",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '900.3.10(18)#(18)[SSP](D)', …(2) ] to deeply equal [ '900.3.10(18)#(18)[SSP](D)', …(2) ]"
+  },
+  {
+   "name": "F-SC-1 / M-247 (2) — a measurement-only DEFINE no longer blocks RD 18 / 21 / 37 RD 18 / 21 / 37 lots answer: the exception side yard (0.9 m under 15.3 m / 15.0 m of frontage) and the zone FSI, not exception_not_authored",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 18, 'not_evaluated', null, false ] to deeply equal [ 18, 'value', 0.9, true ]"
+  }
+ ]
+}

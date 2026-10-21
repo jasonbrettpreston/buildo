@@ -269,6 +269,23 @@ describe('R-HK (verify-13 N5) — amendment quote, extra citations, owed rows, a
     expect(dl.validateLog(STEM, log)).toEqual([]);
   });
 
+  // Batch G (2026-10-21): the chat record's ids are "CHAT-29/F-SC-1" and "CHAT-29/Front yard accuracy", which are not
+  // citable; the import derives the citation id mechanically and keeps the record's id as raw_id (Spec 124 R-HK).
+  it('--import --chat derives a citable id from a record id that is not one, keeping the record id as raw_id', () => {
+    expect(dl.citationId('CHAT-29/F-SC-1')).toBe('CHAT-29.F-SC-1');
+    expect(dl.citationId('CHAT-29/F-SC-11/12')).toBe('CHAT-29.F-SC-11.12');
+    expect(dl.citationId('CHAT-29/Front yard accuracy')).toBe('CHAT-29.Front-yard-accuracy');
+    expect(dl.citationId('CHAT-21')).toBe('CHAT-21');
+    const raw = { source: 'operator chat 2026-01-05', operator_quote: 'y', decisions: [
+      { id: 'CHAT-9/F-SC-1', subject: 'One', decision: 'approve', recommendation: 'Do one.' },
+      { id: 'CHAT-10', subject: 'Two', decision: 'approve', recommendation: 'Do two.' },
+    ] };
+    const log = dl.importChat({ stem: STEM, raw, rawRel: 'raw/c.json', previous: null });
+    expect(log.decisions[0]).toMatchObject({ id: 'CHAT-9.F-SC-1', raw_id: 'CHAT-9/F-SC-1' });
+    expect(log.decisions[1].raw_id).toBeUndefined();
+    expect(dl.validateLog(STEM, log)).toEqual([]);
+  });
+
   it('--import --rulings-md takes each "## Spec N:" section\'s **Recommendation.** block verbatim', () => {
     const md = ['# Rulings', '', '## Spec 7: Seven (10 lines)', '', 'Body.', '', '**Recommendation.** Make it historical.', '', '---', '', '## Spec 9: Nine', '', '**Recommendation.** Keep it.', '- (a) one', '', '## Summary of asks', '', '| Spec | Today | Recommendation | Must go with |', '|---|---|---|---|', '| 7 | old | historical | none |', '| 9 | new | keep | 7 |', ''].join('\n');
     const log = dl.importRulingsMd({ stem: STEM, text: md, rawRel: 'raw/r.md', quote: 'y', decidedAt: '2026-01-06', previous: null });
@@ -420,9 +437,32 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(58);
+    expect(r.decisions).toBe(76);
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(3);
+  });
+
+  it('chat batch G (lane wf1/bylaw-fix-4): the record ids are imported as citable ids, each routed to its 69a row M-247..M-258; F-SC-5 is not in the record', () => {
+    const g = byStem.get('2026-10-21-chat-batch-g') as { decisions: Array<{ id: string; raw_id?: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(g.decisions.map((x) => x.raw_id)).toContain('CHAT-29/F-SC-11/12');
+    expect(g.decisions.some((x) => /F-SC-5$/.test(x.id))).toBe(false);
+    expect(Object.fromEntries(Object.entries(g.routing).map(([k, v]) => [k, v.row]))).toEqual({
+      'CHAT-29.F-SC-1': 'M-247', 'CHAT-29.F-SC-3': 'M-248', 'CHAT-29.F-SC-4': 'M-249', 'CHAT-29.F-SC-6': 'M-250', 'CHAT-29.F-SC-7': 'M-251',
+      'CHAT-29.F-SC-8': 'M-252', 'CHAT-29.F-SC-9': 'M-253', 'CHAT-29.F-SC-11.12': 'M-254', 'CHAT-29.F-SC-13.14': 'M-255',
+      'CHAT-29.FRONT-YARD': 'M-256', 'CHAT-29.Front-yard-accuracy': 'M-256', 'CHAT-29.F-SH-12': 'M-257', 'CHAT-29.F-SH-13': 'M-258',
+    });
+  });
+
+  it('chat batch H (lane wf1/bylaw-fix-5): CHAT-30 / CHAT-31 → M-250, CHAT-32 → M-247, CHAT-33 → M-259, CHAT-34 → M-257 (and M-258)', () => {
+    const h = byStem.get('2026-10-21-chat-batch-h') as { source: { operator_quote: string }; decisions: Array<{ id: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(h.source.operator_quote).toBe('1-5 y ensure.');
+    expect(h.decisions.map((x) => x.id)).toEqual(['CHAT-30', 'CHAT-31', 'CHAT-32', 'CHAT-33', 'CHAT-34']);
+    expect(Object.fromEntries(Object.entries(h.routing).map(([k, v]) => [k, v.row]))).toEqual({ 'CHAT-30': 'M-250', 'CHAT-31': 'M-250', 'CHAT-32': 'M-247', 'CHAT-33': 'M-259', 'CHAT-34': 'M-257' });
+    const reg = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/01-pipeline/69a_mcbylaw_register.md'), 'utf8').split('\n');
+    for (const [id, row] of [['CHAT-30', 'M-250'], ['CHAT-31', 'M-250'], ['CHAT-32', 'M-247'], ['CHAT-33', 'M-259'], ['CHAT-34', 'M-257'], ['CHAT-34', 'M-258']]) {
+      expect(reg.find((l) => l.startsWith(`| **${row}** |`)), `${id} ${row}`).toContain(`\`2026-10-21-chat-batch-h#${id}\``);
+    }
+    expect(reg.find((l) => l.startsWith('| **M-250** |'))).toContain('PIN `RD27-CAP-KEYING`');
   });
 
   it('chat batch D (integrate-16): CHAT-23 → R-IG, CHAT-24 → notes on R-IB and R-IC, CHAT-25 → R-IH; CHAT-26 is no_ruling on R-EY', () => {

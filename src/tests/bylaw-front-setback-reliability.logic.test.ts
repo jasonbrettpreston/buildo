@@ -97,12 +97,14 @@ describe('averaging applies: averaged estimate + porch allowance, no zone-defaul
   });
 });
 
-describe('excluded estimates and the ambiguous case keep the zone default, flagged needs survey', () => {
+// 69a M-256 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.FRONT-YARD`): an excluded estimate answers needs
+// survey with no value (amends M-245's zone-default list); three or more neighbours (Q-B2) keep the zone default.
+describe('excluded estimates answer needs survey (M-256); the ambiguous case keeps the zone default, flagged needs survey', () => {
   for (const status of FA.EXCLUDED_STATUSES as string[]) {
     it(`a qualifying neighbour with est_status ${status} never feeds an average`, () => {
       const r = FA.resolveFrontAveraging([nb({ front_setback_est_m: 9.0 }), nb({ est_status: status, front_setback_est_m: null })], CFG, LOT);
-      expect([r.basis, r.front_setback_m, r.needs_survey, r.disclosures]).toEqual(['zone_default_needs_survey', 6.0, true, ['front_yard_not_measured']]);
-      expect(r.flags.front_averaging_not_applicable).toBe(true);
+      expect([r.basis, r.front_setback_m, r.needs_survey, r.disclosures]).toEqual(['needs_survey', null, true, ['front_yard_survey_required']]);
+      expect(r.flags.front_averaging_not_applicable).toBe(null);
     });
   }
   it('the closed exclusion list is the step\'s whole non-estimated vocabulary', () => {
@@ -115,10 +117,11 @@ describe('excluded estimates and the ambiguous case keep the zone default, flagg
 });
 
 describe('averaging does not apply: zone default, no survey flag, no disclosure', () => {
-  it('no qualifying neighbour (farther than 15.0 m, other street, not residential, no building)', () => {
+  // M-256: an abutting residential lot on the street whose building is not found is undecided (needs survey), so it is
+  // not in this list any more (bylaw-fix-4.logic.test.ts covers it)
+  it('no qualifying neighbour (farther than 15.0 m, other street, not residential)', () => {
     const r = FA.resolveFrontAveraging([
       nb({ bldg_to_subject_m: 15.01 }), nb({ same_frontage_street: false }), nb({ neighbour_residential: false }),
-      nb({ neighbour_building_id: null, bldg_to_subject_m: null, est_status: 'no_building', front_setback_est_m: null }),
     ], CFG, LOT);
     expect([r.fya, r.basis, r.front_setback_m, r.needs_survey, r.disclosures]).toEqual(['fya_none', 'zone_default', 6.0, false, []]);
   });
@@ -130,11 +133,12 @@ describe('averaging does not apply: zone default, no survey flag, no disclosure'
 describe('evaluator, production units: the resolved lot gives the same front setback', () => {
   const zones: Array<[string, string]> = [['R', '10.10.40.70(1)'], ['RD', '10.20.40.70(1)'], ['RS', '10.40.40.70(1)'], ['RT', '10.60.40.70(1)'], ['RM', '10.80.40.70(1)']];
   for (const [zone, unit] of zones) {
-    it(`${zone}: the zone default the resolver is given is ${unit}'s 6.0 m; excluded estimates take it`, () => {
-      const r = FA.resolveFrontAveraging([nb(), nb({ est_status: 'estimate_negative', front_setback_est_m: null })], CFG, LOT);
-      const e = front(zone, r);
-      expect([e.status, e.value]).toEqual(['value', 6.0]);
-      expect(String(e.winner).startsWith(unit)).toBe(true);
+    it(`${zone}: the zone default the resolver is given is ${unit}'s 6.0 m where averaging does not apply; an excluded estimate is owed (M-256)`, () => {
+      const z = front(zone, FA.resolveFrontAveraging([nb({ same_frontage_street: false })], CFG, LOT));
+      expect([z.status, z.value]).toEqual(['value', 6.0]);
+      expect(String(z.winner).startsWith(unit)).toBe(true);
+      const e = front(zone, FA.resolveFrontAveraging([nb(), nb({ est_status: 'estimate_negative', front_setback_est_m: null })], CFG, LOT));
+      expect([e.status, e.reason]).toEqual(['not_evaluated', 'condition_unknown:front_averaging_not_applicable']);
     });
   }
   it('averaging applies: the averaged value wins through 10.5.40.70(1)(B), above and below the zone default (M-245)', () => {
@@ -153,5 +157,13 @@ describe('P5.12 wording (LC-52: plain, at most 45 words)', () => {
   it('front_yard_not_measured: the operator-approved excluded-case sentence (actual may be larger or smaller)', () => {
     expect(template('front_yard_not_measured')).toBe('The by-law sets this lot\'s front setback as the average of the neighbouring houses\' setbacks (10.5.40.70(1)). We could not measure those reliably, so the zone\'s standard {X} m is shown; the actual setback may be larger or smaller. A survey is needed.');
     expect(words(template('front_yard_not_measured'))).toBeLessThanOrEqual(45);
+  });
+});
+
+// 69a M-256 (operator approved 2026-10-21): the no-value case has its own sentence.
+describe('P5.12 wording, M-256 (LC-52: plain, at most 45 words)', () => {
+  it('front_yard_survey_required: no front setback is shown; a survey is needed', () => {
+    expect(template('front_yard_survey_required')).toBe('The by-law sets this lot\'s front setback from the neighbouring houses\' setbacks (10.5.40.70(1)). We could not measure them, so no front setback is shown. A survey is needed.');
+    expect(words(template('front_yard_survey_required'))).toBeLessThanOrEqual(45);
   });
 });

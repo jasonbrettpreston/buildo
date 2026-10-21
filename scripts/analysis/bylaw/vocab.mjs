@@ -119,7 +119,12 @@ export function checkVocab(vocab) {
     if (!isStr(t.concept)) v.push(`vocab_missing_field: dsl_target.${name}.concept`);
     // M-239 (CHAT-9): a target may declare its own bound (the share tiers are minimums; the attic thresholds exact)
     if (t.bound !== undefined && !(vocab.bound || []).includes(t.bound)) v.push(`vocab_reference_invalid: dsl_target.${name}.bound ${t.bound}`);
-    if (!Array.isArray(t.patterns) || t.patterns.length === 0 || t.patterns.some((p) => !isStr(p))) v.push(`vocab_missing_field: dsl_target.${name}.patterns`);
+    // M-254: a target may be licensed only by a group reference phrase (reference_patterns: a phrase that names a set of
+    // targets, e.g. "the required minimum building setbacks for the zone"); reference phrases are licensing only, so they
+    // are outside the synonym check
+    const refs = t.reference_patterns === undefined ? [] : t.reference_patterns;
+    if (!Array.isArray(refs) || refs.some((p) => !isStr(p))) v.push(`vocab_missing_field: dsl_target.${name}.reference_patterns`);
+    if (!Array.isArray(t.patterns) || (t.patterns.length === 0 && !(Array.isArray(refs) && refs.length)) || t.patterns.some((p) => !isStr(p))) v.push(`vocab_missing_field: dsl_target.${name}.patterns`);
     for (const p of t.patterns || []) {
       const k = String(p).toLowerCase();
       if (patternOwner.has(k)) v.push(`vocab_synonym: dsl_target ${patternOwner.get(k)} and ${name} share the pattern "${p}"`);
@@ -157,6 +162,12 @@ export function checkVocab(vocab) {
   for (const [tok, x] of Object.entries(vocab.lot_condition)) {
     if (!isMap(x)) v.push(`vocab_missing_field: lot_condition.${tok}`);
     else if (x.user_input !== undefined && !userInputs.has(x.user_input)) v.push(`vocab_reference_invalid: lot_condition.${tok}.user_input ${x.user_input}`);
+  }
+  // M-259 (CHAT-33): an accessory structure's reference_flags name lot_condition tokens, each fixed to a boolean
+  for (const [use, x] of Object.entries(vocab.accessory_structure_use || {})) {
+    if (use === '$comment' || !isMap(x) || x.reference_flags === undefined) continue;
+    if (!isMap(x.reference_flags)) { v.push(`vocab_reference_invalid: accessory_structure_use.${use}.reference_flags`); continue; }
+    for (const [tok, b] of Object.entries(x.reference_flags)) if (!Object.hasOwn(vocab.lot_condition, tok) || typeof b !== 'boolean') v.push(`vocab_reference_invalid: accessory_structure_use.${use}.reference_flags.${tok}`);
   }
 
   // scope reasons
@@ -210,6 +221,7 @@ export function evaluatorVocab(vocab) {
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     map_area_unheld_reading: vocab.map_area_unheld_reading, // M-222 / M-224: literal reading while a map is not held
     specific_use: vocab.specific_use, // M-159(3) / M-244: a specific-use unit applies only on a lot that has the use
+    unit_application: vocab.unit_application, // M-251: a unit the operator scoped to the residential building (by unit id)
     zone_category_chapter: vocab.zone_category_chapter, // M-159(1) / M-217: a chapter's base units load only in its zone category
     building_type_parent: Object.fromEntries(names.filter((n) => types[n].parent).map((n) => [n, types[n].parent])),
     building_type_structure: Object.fromEntries(names.filter((n) => types[n].structure).map((n) => [n, types[n].structure])), // M-241

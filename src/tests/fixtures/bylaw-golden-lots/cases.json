@@ -784,14 +784,17 @@
      "unit": "10.10.40.1(7)#whole",
      "lot": "5265152",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "height_storeys",
      "expect": {
       "uncapped": true,
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "R (x125): exception by_type detached 3 storeys vs R houseplex not capped: not capped, the exception value disclosed",
+     "rationale": "R (x125), 4-unit houseplex: exception by_type detached 3 storeys vs R houseplex not capped: not capped, the exception value disclosed",
      "initial": {
       "pass": true,
       "observed": {
@@ -817,7 +820,10 @@
      "unit": "10.10.40.1(7)#whole",
      "lot": "5265842",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "height_storeys",
      "expect": {
@@ -841,6 +847,39 @@
        "disclosures": [
         "On this exception lot the height_storeys is unlimited from 10.10.40.10(3)#(3)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (3)."
        ],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.1(7)#whole",
+     "lot": "5265842",
+     "scenario": {
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 3
+      }
+     },
+     "target": "height_storeys",
+     "expect": {
+      "value": 4
+     },
+     "rationale": "R (x125), 3-unit houseplex = a triplex (M-252): (D)(ii) 4 storeys stands",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 4,
+       "reason": null,
+       "winner": "900.2.10(125)#(125)[SSP](D)",
+       "applied": [
+        "900.2.10(125)#(125)[SSP](D)"
+       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }
@@ -4778,7 +4817,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "Rules for upper-storey decks and balconies are not checked; confirm them with your designer.",
+   "keyed_disclosure": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -14991,8 +15030,7 @@
        ],
        "disclosures": [
         "On RS lots needing more than 12.0 m of frontage, a house may extend up to 2.0 m beyond the maximum building length if the extension is no higher than 5.0 m and one storey. We do not model this extension.",
-        "On RS lots in the frontage band, the optional one-storey extension may be no wider than 50% of the building's width. We do not model this extension.",
-        "On RS lots needing more than 12.0 m of frontage, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line. We do not model this extension."
+        "On RS lots in the frontage band, the optional one-storey extension may be no wider than 50% of the building's width. We do not model this extension."
        ],
        "alternate_paths": 30
       }
@@ -18701,7 +18739,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18763,7 +18801,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18825,7 +18863,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18887,7 +18925,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18949,7 +18987,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20581,7 +20619,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20643,7 +20681,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20705,7 +20743,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20767,7 +20805,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20829,7 +20867,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20891,7 +20929,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20953,7 +20991,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21015,7 +21053,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21077,7 +21115,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21139,7 +21177,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21201,7 +21239,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21263,7 +21301,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21325,7 +21363,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21387,7 +21425,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21449,7 +21487,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -30175,14 +30213,17 @@
      "unit": "10.80.30.1(2)#whole",
      "lot": "5511363",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "lot_coverage_pct",
      "expect": {
       "value": "unregulated",
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "RM (x18), houseplex: as above",
+     "rationale": "RM (x18), 4-unit houseplex: as above",
      "initial": {
       "pass": true,
       "observed": {
@@ -30199,6 +30240,39 @@
        "disclosures": [
         "On this exception lot the lot_coverage_pct is unregulated from 10.80.30.40(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (33)."
        ],
+       "alternate_paths": 32
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.80.30.1(2)#whole",
+     "lot": "5511363",
+     "scenario": {
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 2
+      }
+     },
+     "target": "lot_coverage_pct",
+     "expect": {
+      "value": 35
+     },
+     "rationale": "RM (x18), 2-unit houseplex = a duplex (M-252, 61 Redgrave Dr A0228/26EYK): 35 %, not displaced by 10.80.30.1(2)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 35,
+       "reason": null,
+       "winner": "900.6.10(18)#(18)[SSP](C)",
+       "applied": [
+        "900.6.10(18)#(18)[SSP](C)"
+       ],
+       "disclosures": [],
        "alternate_paths": 32
       }
      }
@@ -30589,14 +30663,17 @@
      "unit": "10.80.40.1(5)#whole",
      "lot": "5511363",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 4
+      }
      },
      "target": "height_m",
      "expect": {
       "value": 10,
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "RM (x18): exception by_type detached 9.5 m vs houseplex HT 10.0 (no HT overlay: zone default)",
+     "rationale": "RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex HT 10.0 (no HT overlay: zone default)",
      "initial": {
       "pass": true,
       "observed": {
@@ -30614,6 +30691,39 @@
        "disclosures": [
         "On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
        ],
+       "alternate_paths": 32
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.80.40.1(5)#whole",
+     "lot": "5511363",
+     "scenario": {
+      "building_type": "detached_houseplex",
+      "vars": {
+       "dwelling_units": 3
+      }
+     },
+     "target": "height_m",
+     "expect": {
+      "value": 11
+     },
+     "rationale": "RM (x18), 3-unit houseplex = a triplex (M-252): its own 11.0 m arm stands",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "900.6.10(18)#(18)[SSP](D)",
+       "applied": [
+        "900.6.10(18)#(18)[SSP](D)"
+       ],
+       "disclosures": [],
        "alternate_paths": 32
       }
      }
@@ -31157,7 +31267,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `one_storey_extension`)",
-   "keyed_disclosure": "On RM lots needing more than 12.0 m of frontage, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line. We do not model this extension.",
+   "keyed_disclosure": "On RM lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -70169,37 +70279,41 @@
    "disclosure_code": null,
    "corrected_value": "",
    "zone": "R",
-   "class": "FAILS",
-   "finding": "COA-F-02",
+   "class": "PROVEN",
+   "finding": null,
    "owed_field": null,
    "coa": "A0594/26TEY",
    "address": "453 Durie St",
-   "reason": "side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings — 453 Durie St (A0594/26TEY)",
+   "reason": "the evaluator answers the City examiner's figures on 453 Durie St (A0594/26TEY)",
    "checks": [
     {
      "kind": "value",
      "unit": "10.10.40.70(3)#(3)(A)",
      "lot": "5447457",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "blank_side_wall": false
+      }
      },
      "target": "side_setback_m",
      "expect": {
-      "value": 0.9
+      "value": 0.9,
+      "winner": "10.10.40.70(3)#(3)(A)"
      },
-     "rationale": "City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))",
+     "rationale": "City: required side yard 0.9 m — a side wall with windows or doors (blank_side_wall false): the 0.45 m reduction 10.10.40.70(4)(A) does not apply (M-259, was COA-F-02)",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 0.45,
+       "value": 0.9,
        "reason": null,
-       "winner": "10.10.40.70(4)#(4)(A)",
+       "winner": "10.10.40.70(3)#(3)(A)",
        "applied": [
-        "10.10.40.70(4)#(4)(A)"
+        "10.10.40.70(3)#(3)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -71083,37 +71197,41 @@
    "disclosure_code": null,
    "corrected_value": "",
    "zone": "R",
-   "class": "FAILS",
-   "finding": "COA-F-02",
+   "class": "PROVEN",
+   "finding": null,
    "owed_field": null,
    "coa": "A0510/26TEY",
    "address": "474 Beresford Ave",
-   "reason": "side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings — 474 Beresford Ave (A0510/26TEY)",
+   "reason": "the evaluator answers the City examiner's figures on 474 Beresford Ave (A0510/26TEY)",
    "checks": [
     {
      "kind": "value",
      "unit": "10.10.40.70(3)#(3)(A)",
      "lot": "5443676",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "blank_side_wall": false
+      }
      },
      "target": "side_setback_m",
      "expect": {
-      "value": 0.9
+      "value": 0.9,
+      "winner": "10.10.40.70(3)#(3)(A)"
      },
-     "rationale": "City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))",
+     "rationale": "City: required side yard 0.9 m — a side wall with windows or doors (blank_side_wall false): the 0.45 m reduction 10.10.40.70(4)(A) does not apply (M-259, was COA-F-02)",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 0.45,
+       "value": 0.9,
        "reason": null,
-       "winner": "10.10.40.70(4)#(4)(A)",
+       "winner": "10.10.40.70(3)#(3)(A)",
        "applied": [
-        "10.10.40.70(4)#(4)(A)"
+        "10.10.40.70(3)#(3)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30

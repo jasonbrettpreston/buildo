@@ -33,6 +33,7 @@ export type DisclosureCode =
   | "front_yard_averaging"
   | "front_yard_needs_survey"
   | "front_yard_not_measured"
+  | "front_yard_survey_required"
   | "gfa_deductions_not_applied"
   | "heritage_designated"
   | "holding_zone"
@@ -179,7 +180,7 @@ export type ReportV2Scenarios = {
     /** Footprint — lineage:main_footprint_sqm (m²) */
     main_footprint_sqm: number | null;
     /** Front setback basis — lineage:main_front_setback_basis */
-    main_front_setback_basis: "averaged_two" | "averaged_one" | "zone_default" | "zone_default_needs_survey" | null;
+    main_front_setback_basis: "averaged_two" | "averaged_one" | "zone_default" | "zone_default_needs_survey" | "needs_survey" | null;
     /** Front setback — lineage:main_front_setback_m (m) */
     main_front_setback_m: number | null;
     /** Main building floor area — lineage:main_gfa_sqm (m²) */

@@ -1,0 +1,85 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "y [to: 1. Make the calls now (no new data needed). These are the biggest wins, and they're all on your scorecard rulings page (https://claude.ai/artifact/6yC7kewZ1a3kJuVXq9FdMT): F-SC-1, key the exceptions that have no units: the largest \"no answer\" cause, 302 historical rows. F-SC-3/4/6/7: four keying bugs with clear by-law text. The front-yard floor: keep it removed with a \"needs survey\" guard, or restore it. Two new readings from the historical run: the RD side-yard band from actual frontage (F-SH-12); 50% rear landscaping on narrow lots (F-SH-13).]",
+  "context": "Operator answered \"y\" to item 1 of the path-to-accuracy recommendation, approving the scorecard rulings page (no answers had been saved on the page) and the historical-run readings. Orchestrator interpretation, stated to the operator: every page item as recommended; F-SH-12/F-SH-13 follow the City reading only where the by-law text supports it; front yard keeps M-245 with the needs-survey guard.",
+  "decisions": [
+    {
+      "id": "CHAT-29/F-SC-1",
+      "subject": "Key the five exceptions that have no units yet (x40, x225, x478, x863, x559). Two of them say \"Site Specific Provisions: (None Apply)\", so they only need their prevailing units.",
+      "decision": "approve",
+      "recommendation": "Approve — Measured effect: 13 NO ANSWER rows become answerable. Keyed through the normal keyer-A/B + agree path; x40/x225 need PREVAILING units only. Source: ch900_3.txt, ch900_5.txt, ch900_6.txt."
+    },
+    {
+      "id": "CHAT-29/F-SC-3",
+      "subject": "Fix a reference bug: \"Despite regulations 10.80.40.70(1) to (3)\" must displace (1), (2) and (3), not just the two endpoints.",
+      "decision": "approve",
+      "recommendation": "Approve — xref.mjs GROUP_TAIL (line 83) accepts \"to\" as SEP (line 68) does, expanded with expandRange (line 97). R/RS/RT already expand their relative \"(1) to (n) above\"."
+    },
+    {
+      "id": "CHAT-29/F-SC-4",
+      "subject": "Key the RM apartment side yard like its R/RD/RS/RT twins: 2.4 m. The 5.5 m (walls with main windows) becomes a disclosed design choice, and the 7.5 m (walls past 25 m length) goes to the deep-side target.",
+      "decision": "approve",
+      "recommendation": "Approve — Re-key 10.80.40.70(4)(D): side_setback_m = 2.4 m @(D)(i); (ii) disclosed design-choice arm like M-197; (iii) deep_side_setback_m like RD 10.20.40.70(5) under M-205(2)."
+    },
+    {
+      "id": "CHAT-29/F-SC-6",
+      "subject": "Floor-area formula for exception RD 42: 118 m² + 25% of lot area, capped at FSI 0.5, using the smaller of the two.",
+      "decision": "approve",
+      "recommendation": "Approve — 900.3.10(42)(A)(i): gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)."
+    },
+    {
+      "id": "CHAT-29/F-SC-7",
+      "subject": "The RD 70 side yard (1.8 m, plus 0.6 m per extra storey) applies to the house only, with the storey increment keyed. Garages and pavilions fall back to the general rule: half their height.",
+      "decision": "approve",
+      "recommendation": "Approve — Scope 900.3.10(70)(B) to the residential building; side_setback_m = 1.8 m + 0.6 m × (height_storeys − 1), OWED on height_storeys. Ancillary falls to 10.5.60.20(3)(C)(ii), OWED on proposed_height_m."
+    },
+    {
+      "id": "CHAT-29/F-SC-8",
+      "subject": "Reading question. Does the 2025 \"more permissive regulation prevails\" rule (10.80.30.1(2)) override an exception's own \"35% for a duplex or triplex\"?",
+      "decision": "approve",
+      "recommendation": "Follow the City (exception 35% applies) — If ruled the City's way: M-180(2) reading narrowed for exception clauses naming the building type; vocab.exception_type_alias gains duplex/triplex → houseplex-by-unit-count."
+    },
+    {
+      "id": "CHAT-29/F-SC-9",
+      "subject": "Garden-suite lots: keep the house's coverage answer, and also put the 20% \"all ancillary buildings combined\" cap on ancillary coverage. Show the 45% \"all buildings\" route as the alternative.",
+      "decision": "approve",
+      "recommendation": "Approve — 150.7.60.70(1)(B): ancillary_coverage_pct ≤ 20 (all ancillary buildings incl. the garden suite); (A) 45% disclosed as the alternative path."
+    },
+    {
+      "id": "CHAT-29/F-SC-11/12",
+      "subject": "Interim, before full deck modelling: a deck or porch must meet the zone's setbacks (10.5.40.50(2)), keyed as a pointer to the house setbacks. Apply the approved D-3 max-plus-clearance form to the whole 10.5.40.60 family, so porch and stair clearances (0.3 m, 0.6 m) get answers.",
+      "decision": "approve",
+      "recommendation": "Approve — Key 10.5.40.50(2) as an element-scoped reference to side/rear/front_setback_m; extend the M-239 declared-bound form (D-3) to 10.5.40.60(1)–(8)."
+    },
+    {
+      "id": "CHAT-29/F-SC-13/14",
+      "subject": "Key the rules the City enforces but we do not: the RD 19 m length extension (3.0 m from each side), the RD parapet +0.3 m, the platform count, the suite stair rule, and the missing 1.5 m soft-landscaping strip (10.5.50.10(5)).",
+      "decision": "approve",
+      "recommendation": "Approve — Triage each UNUSUAL/PERMIT unit against its text; 10.20.40.20(2)(C) is a plain minimum on the extension; add the 10.5.50.10(5) unit."
+    },
+    {
+      "id": "CHAT-29/Front yard accuracy",
+      "subject": "After the floor removal, measure averaging accuracy properly. Treat front yards as \"needs survey\" wherever our neighbour estimate is missing or excluded, rather than falling back to 6.0 m.",
+      "decision": "approve",
+      "recommendation": "Approve — Where averaging applies but no qualifying neighbour estimate exists, answer front_setback_m as needs_survey (never the zone default), and re-measure after M-205(1)-floor lands."
+    },
+    {
+      "id": "CHAT-29/F-SH-12",
+      "subject": "RD side-yard band chosen from the lot's actual frontage (City examiner reading) rather than the label minimum frontage",
+      "decision": "approve",
+      "recommendation": "Follow the City examiner's reading where the by-law text supports it (10.20.40.70(3) bands keyed on actual lot frontage); if the text does not support it, draft a ruling instead of changing code."
+    },
+    {
+      "id": "CHAT-29/F-SH-13",
+      "subject": "Rear-yard soft landscaping on lots 6.0 m wide or less: City 50 %, ours 25 % (branch (B))",
+      "decision": "approve",
+      "recommendation": "Follow the City examiner's reading where the by-law text of 10.5.50.10(3) supports it; if the text does not support it, draft a ruling instead of changing code."
+    },
+    {
+      "id": "CHAT-29/FRONT-YARD",
+      "subject": "Front-yard floor: keep M-245 (no floor) with a needs-survey guard",
+      "decision": "approve",
+      "recommendation": "Keep the floor removed (M-245) and add the needs-survey guard: where averaging applies but no qualifying neighbour estimate exists or estimates are excluded, front_setback_m answers needs_survey, never the zone default; report the too-generous rate before/after."
+    }
+  ]
+}

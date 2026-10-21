@@ -805,6 +805,7 @@
                   "averaged_one",
                   "zone_default",
                   "zone_default_needs_survey",
+                  "needs_survey",
                   null
                 ]
               },
@@ -2168,6 +2169,7 @@
         "front_yard_averaging",
         "front_yard_needs_survey",
         "front_yard_not_measured",
+        "front_yard_survey_required",
         "gfa_deductions_not_applied",
         "heritage_designated",
         "holding_zone",
@@ -2409,6 +2411,12 @@
       "slots": [
         "X"
       ],
+      "importance": "high",
+      "mandatory": true
+    },
+    "front_yard_survey_required": {
+      "template": "The by-law sets this lot's front setback from the neighbouring houses' setbacks (10.5.40.70(1)). We could not measure them, so no front setback is shown. A survey is needed.",
+      "slots": [],
       "importance": "high",
       "mandatory": true
     },
