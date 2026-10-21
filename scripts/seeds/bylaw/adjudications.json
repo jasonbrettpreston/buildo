@@ -83131,6 +83131,688 @@
       "supersedes": "COR-10.5.40.60(3)#(3)(C)/disclosure~s1",
       "unit": "10.5.40.60(3)#(3)(C)",
       "value": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.40.20(2)#(2)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/archetype",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.20(2)#(2)(C)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/target",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "extension_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.40.20(2)#(2)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/bound",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.20(2)#(2)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/numeric_expression",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": [
+        "extension_side_setback_m = 3.0 m @(2)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.20(2)#(2)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/literals_not_expressed~s1",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(2)",
+          "literal": "One Storey",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.20(2)#(2)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/calculation_handling",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": {
+        "description": "The one-storey extension (up to 2.0 m beyond the maximum building length) must be at least 3.0 m from each side lot line (RD).",
+        "gaps": "Keyed on extension_side_setback_m (bound min; Spec 69a M-255): it binds only the extended part, never the whole building. The 2.0 m extension itself and its height, storey and width conditions describe the proposed extension and are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.20(2)#(2)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/disclosure",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "On RD lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.40.20(2)#(2)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/archetype",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.20(2)#(2)(C)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/target",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "extension_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.40.40.20(2)#(2)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/bound",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.20(2)#(2)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/numeric_expression",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": [
+        "extension_side_setback_m = 3.0 m @(2)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.20(2)#(2)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/literals_not_expressed~s1",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(2)(C)",
+          "literal": "two dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.20(2)#(2)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/calculation_handling",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": {
+        "description": "The one-storey extension (up to 2.0 m beyond the maximum building length) must be at least 3.0 m from each side lot line (RS).",
+        "gaps": "Keyed on extension_side_setback_m (bound min; Spec 69a M-255): it binds only the extended part, never the whole building. The 2.0 m extension itself and its height, storey and width conditions describe the proposed extension and are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.20(2)#(2)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/disclosure",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "On RS lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.40.10(5)#whole/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.10(5)#whole/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "parapet_projection_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.40.10(5)#whole/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.10(5)#whole/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": [
+        "parapet_projection_m = 0.3 m @(5)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.10(5)#whole/literals_not_expressed",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.10(5)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": {
+        "description": "A parapet on a flat or shallow roof residential building may exceed the main wall height limit in 10.20.40.10(4) by up to 0.3 m.",
+        "gaps": "Keyed on parapet_projection_m (bound max; Spec 69a M-255): the allowance above the 10.20.40.10(4) main wall height, which answers for a flat or shallow roof.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.10(5)#whole/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "On an RD flat or shallow roof, a parapet may rise up to 0.3 m above the main wall height limit."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.40.50(1)#(1)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.50(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "platform_count"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.40.50(1)#(1)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.50(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": [
+        "platform_count = 4 units @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.50(1)#(1)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.50(1)#(1)(A)/literals_not_expressed",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "one",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.50(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": {
+        "description": "A detached house in the RD zone may have at most four platforms (decks or balconies) reached from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "The total (four) is keyed on platform_count (bound max), a platform element target (Spec 69a M-254 / M-255); the one-per-side arm is listed. The platform design itself is a scenario detail.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.50(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.40.50(1)#(1)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.50(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "platform_count"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.40.40.50(1)#(1)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.50(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": [
+        "platform_count = 4 units @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.50(1)#(1)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.50(1)#(1)(A)/literals_not_expressed",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "one",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.50(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": {
+        "description": "A detached house in the RS zone may have at most four platforms (decks or balconies) reached from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "The total (four) is keyed on platform_count (bound max), a platform element target (Spec 69a M-254 / M-255); the one-per-side arm is listed. The platform design itself is a scenario detail.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.50(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.40.50(1)#(1)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.50(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "platform_count"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.80.40.50(1)#(1)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.50(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": [
+        "platform_count = 4 units @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.50(1)#(1)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.50(1)#(1)(A)/literals_not_expressed",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "one",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.50(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": {
+        "description": "A detached house in the RM zone may have at most four platforms (decks or balconies) reached from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "The total (four) is keyed on platform_count (bound max), a platform element target (Spec 69a M-254 / M-255); the one-per-side arm is listed. The platform design itself is a scenario detail.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.50(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.40.20(2)#(2)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/archetype",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.20(2)#(2)(C)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/target",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "extension_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.80.40.20(2)#(2)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/bound",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.20(2)#(2)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/numeric_expression",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": [
+        "extension_side_setback_m = 3.0 m @(2)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.20(2)#(2)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/literals_not_expressed~s1",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(2)(C)",
+          "literal": "two dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.20(2)#(2)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/calculation_handling",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": {
+        "description": "The one-storey extension (up to 2.0 m beyond the maximum building length) must be at least 3.0 m from each side lot line (RM).",
+        "gaps": "Keyed on extension_side_setback_m (bound min; Spec 69a M-255): it binds only the extended part, never the whole building. The 2.0 m extension itself and its height, storey and width conditions describe the proposed extension and are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.20(2)#(2)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/disclosure",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "On RM lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line."
     }
   ]
 }

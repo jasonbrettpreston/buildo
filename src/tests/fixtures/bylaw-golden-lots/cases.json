@@ -4817,7 +4817,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "Rules for upper-storey decks and balconies are not checked; confirm them with your designer.",
+   "keyed_disclosure": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -15030,8 +15030,7 @@
        ],
        "disclosures": [
         "On RS lots needing more than 12.0 m of frontage, a house may extend up to 2.0 m beyond the maximum building length if the extension is no higher than 5.0 m and one storey. We do not model this extension.",
-        "On RS lots in the frontage band, the optional one-storey extension may be no wider than 50% of the building's width. We do not model this extension.",
-        "On RS lots needing more than 12.0 m of frontage, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line. We do not model this extension."
+        "On RS lots in the frontage band, the optional one-storey extension may be no wider than 50% of the building's width. We do not model this extension."
        ],
        "alternate_paths": 30
       }
@@ -31268,7 +31267,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `one_storey_extension`)",
-   "keyed_disclosure": "On RM lots needing more than 12.0 m of frontage, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line. We do not model this extension.",
+   "keyed_disclosure": "On RM lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {

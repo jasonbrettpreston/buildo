@@ -277,3 +277,34 @@ describe('F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp a
     expect(eff(west, 'side_setback_m')).toMatchObject({ value: 1.2, winner: '10.20.40.70(3)#(3)(C)' });
   });
 });
+
+// F-SC-13/14 / M-255 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14`): the UNUSUAL / PERMIT units
+// the City enforces are keyed where the text gives a value (rule by provision family: the RS and RM twins with them).
+describe('F-SC-13/14 / M-255 — the extension side clearance, the RD parapet allowance and the platform count are keyed', () => {
+  // 21 Kelso Ave: RD (f12.0; a370) (x1463) — a zone-level lot here (the exception is not part of this check); f15 puts
+  // the lot in the (2) band ("more than 12.0 metres to 18.0 metres")
+  const rd = lot('RD', 'detached_house', { label: { f: 15 }, vars: { lot_frontage_m: 15, lot_depth_m: 40 } });
+
+  it('the texts (ch10_20.txt)', () => {
+    expect(page('ch10_20')).toContain('(C) is at least 3.0 metres from each side lot line');
+    expect(page('ch10_20')).toContain('A parapet on a residential building in the RD zone may exceed the permitted maximum main wall height in regulation 10.20.40.10(4) by a maximum of 0.3 metres');
+    expect(page('ch10_20')).toContain('(A) there may be no more than a total of four platforms, and no more than one on each of the front, rear and each side of the detached house');
+  });
+
+  it('RD / RS / RM 10.x.40.20(2)(C): the one-storey extension keeps 3.0 m from each side lot line (extension_side_setback_m, min)', () => {
+    expect(eff(rd, 'extension_side_setback_m')).toMatchObject({ status: 'value', value: 3, winner: '10.20.40.20(2)#(2)(C)' });
+    expect(eff(lot('RS', 'detached_house', { label: { f: 15 } }), 'extension_side_setback_m')).toMatchObject({ status: 'value', value: 3, winner: '10.40.40.20(2)#(2)(C)' });
+    expect(eff(lot('RM', 'detached_house', { label: { f: 15 } }), 'extension_side_setback_m')).toMatchObject({ status: 'value', value: 3, winner: '10.80.40.20(2)#(2)(C)' });
+  });
+
+  it('RD 10.20.40.10(5): a parapet may exceed the flat-roof main wall height by 0.3 m (parapet_projection_m, max)', () => {
+    expect(eff(rd, 'parapet_projection_m')).toMatchObject({ status: 'value', value: 0.3, winner: '10.20.40.10(5)#whole' });
+  });
+
+  it('RD / RS / RM 10.x.40.50(1)(A): at most four upper platforms on a detached house (platform_count, max) — a platform element target', () => {
+    for (const [z, id] of [['RD', '10.20.40.50(1)#(1)(A)'], ['RS', '10.40.40.50(1)#(1)(A)'], ['RM', '10.80.40.50(1)#(1)(A)']] as Array<[string, string]>) {
+      expect([z, eff(lot(z, 'detached_house'), 'platform_count')]).toMatchObject([z, { status: 'value', value: 4, winner: id }]);
+    }
+    expect(I.vocab.accessory_structure_use.deck_or_platform.element_targets).toContain('platform_count');
+  });
+});
