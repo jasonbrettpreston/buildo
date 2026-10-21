@@ -1,0 +1,38 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "e0c00f70",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, front yard / M-256 (missing or excluded neighbour estimate answers needs survey, never the zone default; M-245 kept), run on the working tree at e0c00f70 with the front-yard describe added, before the front-averaging.mjs change.",
+ "counts": {
+  "pass": 4,
+  "red": 2
+ },
+ "cases": [
+  {
+   "name": "front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default the text: x.40.70(1) applies only \"If regulation 10.5.40.70(1) does not apply\" (ch10_20.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default two qualifying neighbours, an estimate excluded (30 Sunvale Dr, 50 Melville Ave): needs survey, no value",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ Array(5) ] to deeply equal [ 'needs_survey', null, true, …(2) ]"
+  },
+  {
+   "name": "front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default no qualifying neighbour, but an abutting residential lot whose street or building is not known (24 Balding Crt): needs survey",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'zone_default', 6, false, [], true ] to deeply equal [ 'needs_survey', null, true, …(2) ]"
+  },
+  {
+   "name": "front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default averaging provably does not apply (no abutting residential lot on the street, or its building beyond 15.0 m): the zone default",
+   "at_base": "pass"
+  },
+  {
+   "name": "front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default M-245 kept: estimated neighbours average + allowance with no floor; three or more neighbours keep the zone default (Q-B2)",
+   "at_base": "pass"
+  },
+  {
+   "name": "front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default the evaluator owes the front setback while the averaging flag is undecided (no zone-default answer)",
+   "at_base": "pass"
+  }
+ ]
+}
