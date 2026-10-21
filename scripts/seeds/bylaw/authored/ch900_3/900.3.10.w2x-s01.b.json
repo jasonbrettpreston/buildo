@@ -1,0 +1,140 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2x-s01",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(258)#(258)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(258)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.3.10(258)#(258)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 3.6 m @(258)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.3.10(258)#(258)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "numeric_expression": ["height_storeys = 2 storeys @(258)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.3.10(258)#(258)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = min(required_lot_area_m2; existing(lot_area_m2; enacted(569-2013))) @(258)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.3.10(258)#(258)[SSP](E)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(258)#(258)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(117)#(117)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 9.0 m @(117)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.3.10(117)#(117)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(117)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.3.10(117)#(117)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 3.6 m @(117)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.3.10(117)#(117)[SSP](D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(117)#(117)[SSP](E)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(117)#(117)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(528)#(528)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(528)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.3.10(528)#(528)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(528)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.3.10(528)#(528)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 3.0 m @(528)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.3.10(528)#(528)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.0 m @(528)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.3.10(528)#(528)[SSP](E)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(528)#(528)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "garage_entrance_setback_m",
+      "bound": "min",
+      "numeric_expression": ["garage_entrance_setback_m = 6.0 m @(528)[SSP](F)"]
+    },
+    {
+      "unit_id": "900.3.10(528)#(528)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

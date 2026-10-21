@@ -1,0 +1,153 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-page-4d-a/2026-10-21-page-4d-a.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-page-4d-a",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "completed teh rulings - proceed",
+    "record": "operator rulings page 2026-10-21 https://claude.ai/artifact/LMgW4aaequHWXWZyAeqGCA (db collection decisions)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-page-4d-a/2026-10-21-page-4d-a.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-38.F-4D-2": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-265"
+    },
+    "CHAT-38.F-4D-18": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-265"
+    },
+    "CHAT-38.F-4D-SC-1462": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-265"
+    },
+    "CHAT-38.F-4D-6": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-266"
+    },
+    "CHAT-38.F-4D-SC-155": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-267"
+    },
+    "CHAT-38.F-4D-SC-340": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-267"
+    },
+    "CHAT-38.F-4D-10": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-268"
+    },
+    "CHAT-38.F-4D-16": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-268"
+    },
+    "CHAT-38.F-4D-SC-199": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-268"
+    },
+    "CHAT-38.F-4D-SC-245": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-268"
+    },
+    "CHAT-38.F-4D-SC-252": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-268"
+    },
+    "CHAT-38.F-4D-SC-256": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-268"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-38.F-4D-2",
+      "question": "Scarborough exception 1462 floor-space tiers lose to the base-zone \"no limit\"",
+      "recommendation": "Approve; one precedence ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:35:38.273Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-6",
+      "question": "Exception RD 21 (B) drops the 19 m depth rule without stating a value",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:36:36.389Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-10",
+      "question": "More Toronto exceptions are not authored (1437, 1389, 1434)",
+      "recommendation": "Approve; queue behind F-SC-1.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:38:04.097Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-155",
+      "question": "Exception 155 side-yard setback leaks onto the garden suite",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:37.130Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-199",
+      "question": "Exception 199 is not authored",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:44.037Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-245",
+      "question": "Exception 245 is not authored",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:46.699Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-252",
+      "question": "Exception 252 only partly applied",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:50.172Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-256",
+      "question": "Exception 256 is not authored",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:52.849Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-340",
+      "question": "Exception 340 side-yard setback leaks onto the garden suite",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:56.117Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-1462",
+      "question": "Exception 1462 floor-space tiers are not keyed",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:59.170Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-16",
+      "question": "Six more exceptions are not authored (Scarborough 117, 317, 258, 287, 528; Toronto 1436)",
+      "recommendation": "Approve; batch with F-4D-10 and F-SC-1.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:41:49.007Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-18",
+      "question": "Exception tiers lose to a \"no limit\" statement again (exceptions 336 and 1397)",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:42:11.735Z"
+    }
+  ]
+}

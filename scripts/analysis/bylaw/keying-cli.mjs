@@ -35,7 +35,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { loadAuthored, shardGeneration } from './authored.mjs';
 import { nowIso } from './clock.mjs';
-import { KEYER_IDS, KeyingError, OVERLAY_BATCHES, batchAgree, checkHolds, W1_SHARDS_REL, W2_HELD, WAVE1_BATCH, WAVES, WAVE_SHARDS_REL, applyAnswers, buildBriefs, buildProv, buildQueue, draftSha, parseAnswers, planBatch, planWave, rekeyShard, renderQueueMd, sealDraft, shardPaths, shardSlug, wave1Groups, waveSeed } from './keying.mjs';
+import { KEYER_IDS, KeyingError, OVERLAY_BATCHES, batchAgree, checkHolds, W1_SHARDS_REL, W2_HELD, W2X_MEMBERS, WAVE1_BATCH, WAVES, WAVE_SHARDS_REL, applyAnswers, buildBriefs, buildProv, buildQueue, draftSha, parseAnswers, planBatch, planWave, rekeyShard, renderQueueMd, sealDraft, shardPaths, shardSlug, wave1Groups, waveSeed } from './keying.mjs';
 import { WAVE1_SIZE, rankExceptions } from './k7.mjs';
 import { blindCommit, engineEnv, ensureKeyerBWorktree, readEnvKey, runKeyerB, spawnEngine } from './keyer-b.mjs';
 import { CLAUSE_GROUPS, SLICED_ENACTING, loadSnapshotPages, sliceSnapshot } from './slice.mjs';
@@ -154,6 +154,14 @@ async function main() {
       e5Ids = k7 && Array.isArray(k7.exceptions) ? k7.exceptions.map((e) => e.regulation_id) : [];
       if (!e5Ids.length || e5Ids.some((id) => !id)) throw new KeyingError('batch_members_missing', 'k7-exceptions.json has no complete exceptions[] (run k7.mjs --write)');
       wave = ranked.slice(0, WAVE1_SIZE);
+    } else if (batch === 'W2X') {
+      // fix round 4D lane A: the named supplement (W2X_MEMBERS); INCLUDE targets satisfied by the W1 members, no holds
+      const w1 = readJson(path.join(root, W1_SHARDS_REL), null);
+      if (!w1 || !Array.isArray(w1.members)) throw new KeyingError('w2x_w1_missing', `${W1_SHARDS_REL} is absent (plan --batch W1 first)`);
+      satisfiedBy = w1.members.map((m) => m.regulation_id);
+      wave = ranked.filter((c) => c.e && W2X_MEMBERS.includes(c.e.regulation_id));
+      const missing = W2X_MEMBERS.filter((id) => !wave.some((c) => c.e.regulation_id === id));
+      if (missing.length) throw new KeyingError('w2x_member_unknown', `not ranked on the pinned pages: ${missing.join(', ')}`);
     } else {
       if (!(minDirectLots > 0)) throw new KeyingError('w2_threshold_missing', 'census.json has no positive min_direct_lots (Spec 69 M-15)');
       const w1 = readJson(path.join(root, W1_SHARDS_REL), null);
@@ -172,7 +180,7 @@ async function main() {
     const unsliced = wave.filter((c) => !c.e).map((c) => `${c.zone} ${c.exception}`);
     if (unsliced.length) throw new KeyingError(`${p}_member_unknown`, `wave exceptions not on the pinned pages: ${unsliced.join(', ')}`);
     const rank0 = batch === WAVE1_BATCH ? 0 : WAVE1_SIZE;
-    const all = wave.map((c, i) => ({ closed_lots: c.closed, direct_lots: c.direct, includes: [...c.e.includes].sort(), rank: rank0 + i + 1, regulation_id: c.e.regulation_id }));
+    const all = wave.map((c, i) => ({ closed_lots: c.closed, direct_lots: c.direct, includes: [...c.e.includes].sort(), rank: batch === 'W2X' ? ranked.indexOf(c) + 1 : rank0 + i + 1, regulation_id: c.e.regulation_id }));
     const heldIds = new Set(held.map((h) => h.regulation_id));
     const ranking = all.filter((e) => !heldIds.has(e.regulation_id));
     // lead-in groups (orchestrator 2026-10-14 Q-A = a): declared mechanically per member, grain-checked in leafUnits.

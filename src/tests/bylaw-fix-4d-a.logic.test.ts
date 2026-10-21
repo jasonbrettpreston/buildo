@@ -120,3 +120,47 @@ describe('F-4D-SC-155 / F-4D-SC-340 — the exception side yard 0.9 m binds the 
     expect([suite.status, suite.value, suite.winner]).toEqual(['value', 1.68, '150.7.60.20(5)#(5)(B)']);
   });
 });
+
+// F-4D-10 / F-4D-16 / F-4D-SC-245 / F-4D-SC-256: exceptions keyed through the double-keying harness (keyer A a fresh Claude seat,
+// keyer B the DeepSeek engine, blind): batch W2 shards s04 s14 s15 s28 s37 s53 and the new W2X supplement (the named
+// exceptions below the census floor). An exception is authored when every unit is agreed or adjudicated (ruling (d)); the units
+// the two keyers disagree on stay pending for the operator (queue drafted in ~/Buildo-scratch/fix-round-4d/a/notes).
+describe('F-4D-10 / F-4D-16 / F-4D-SC-245 / F-4D-SC-256 — exceptions 1389, 528, 245 and 256 are authored; the lots answer from them', () => {
+  const lone = (reg: string): Json[] => units.filter((u: Json) => String(u.unit_id).startsWith(`${reg}#`));
+  it('each carries its numeric units as keyed from the clause text', () => {
+    const val = (id: string): unknown => (byId.get(id) as Json | undefined)?.numeric_expression;
+    expect(val('900.3.10(245)#(245)[SSP](C)')).toEqual(['lot_coverage_pct = 40 pct @(245)[SSP](C)']);
+    expect(val('900.3.10(245)#(245)[SSP](D)')).toEqual(['side_setback_m = 1.2 m @(245)[SSP](D)']);
+    expect(val('900.3.10(245)#(245)[SSP](F)')).toEqual(['side_setback_m = 0.3 m @(245)[SSP](F)']);
+    expect(val('900.3.10(256)#(256)[SSP](A)')).toEqual(['side_setback_m = 1.2 m @(256)[SSP](A)']);
+    expect(val('900.3.10(528)#(528)[SSP](C)')).toEqual(['front_setback_m = 3.0 m @(528)[SSP](C)']);
+    expect(val('900.3.10(528)#(528)[SSP](D)')).toEqual(['side_setback_m = 1.0 m @(528)[SSP](D)']);
+    expect(lone('900.3.10(1389)').map((u) => u.unit_id)).toEqual(['900.3.10(1389)#(1389)[PBS](A)', '900.3.10(1389)#(1389)[SSP](A)']);
+  });
+
+  it('199 and 256 chain to 1462 through their INCLUDE unit (M-265)', () => {
+    for (const reg of ['900.3.10(256)#(256)[SSP](C)', '900.3.10(199)#(199)[SSP](D)']) expect([reg, byId.get(reg)?.include_ref]).toEqual([reg, '900.3.10(1462)']);
+  });
+
+  it('528 (A) and (B) carry no lawfully_existing condition, as the 137 other "existed on the day of the enactment" units (M-75 correction)', () => {
+    for (const k of ['A', 'B']) expect((byId.get(`900.3.10(528)#(528)[SSP](${k})`) as Json).condition).toBe('none');
+  });
+
+  it('the lots answer: A0484/26TEY (x1389) length 17 m and floor space 0.35; A0138/26SC (x528) is no longer blocked by the exception gate; A0103/26SC (x256) eaves 0.9 m', () => {
+    const l1389 = lotOf({ label: 'RD (f12.0; d0.35) (x1389)', zone: 'RD', fr: 18.3, d: 43.36, a: 793.55 });
+    expect(eff(l1389, 'building_length_m')).toMatchObject({ status: 'value', value: 17 });
+    expect(eff(l1389, 'fsi')).toMatchObject({ status: 'value', value: 0.35 });
+    const l528 = lotOf({ label: 'RD (x528)', zone: 'RD', fr: 10.12, d: 37.35, a: 377.78 });
+    for (const t of ['building_length_m', 'building_depth_m', 'rear_setback_m', 'lot_coverage_pct']) expect([t, String(eff(l528, t).reason)]).not.toEqual([t, 'exception_not_authored:900.3.10(528)']);
+    expect(eff(lotOf({ label: 'RD (f15.0) (x256)', zone: 'RD', fr: 9.15, d: 39.57, a: 362.09, lane: true }), 'eaves_encroachment_m')).toMatchObject({ status: 'value', value: 0.9 });
+  });
+
+  it('the W2X supplement is planned and seeded: 1434, 117, 258, 528 (below the W2 floor), keys .w2x-sNN so a later W2 never collides', async () => {
+    const K = await mod('scripts/analysis/bylaw/keying.mjs');
+    expect(K.W2X_MEMBERS).toEqual(['900.3.10(1434)', '900.3.10(117)', '900.3.10(258)', '900.3.10(528)']);
+    const seed = JSON.parse((await import('node:fs')).readFileSync(path.join(process.cwd(), 'scripts/seeds/bylaw/w2x-shards.json'), 'utf8'));
+    expect(seed.batch).toBe('W2X');
+    expect(seed.shards.every((s: Json) => /\.w2x-s\d\d$/.test(s.key))).toBe(true);
+    expect(seed.members.map((m: Json) => m.regulation_id).sort()).toEqual([...K.W2X_MEMBERS].sort());
+  });
+});
