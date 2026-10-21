@@ -8,6 +8,7 @@
 //   report-v2-seed/entries.json                       the Report Schema Rulings page questions (Q-1..Q-11)
 //   report-v2-seed/answers/report_decisions/*.json    the page's decision export
 //   report-v2-seed/decisions-chat.json                decisions given in chat after the export (flagged overlay)
+//   docs/reports/decisions/2026-10-20-chat-batch-b.json   CHAT-11, the Q-7 scope confirmation (decision log, R-HK)
 // into report-v2.decl.json, report-presentation.json and report-v2.rulings.json (beside this file). The review is
 // encoded below as rules, so nothing is hand-copied into the JSON; edit the rules or the inputs, then --write.
 //
@@ -294,15 +295,28 @@ const AMEND = 'pending:spec100_amendment:Q-7';
 // rides on an operator confirmation of the scope (coordinator, verify-13 N2).
 const Q7_IN = new Set(['parcel.lot.zone_label', 'parcel.lot.frontage_m', 'parcel.lot.depth_m', 'parcel.lot.outline_geojson']);
 const CONFIRM = 'pending:operator_confirm:Q-7-scope';
+// The scope confirmation (operator chat 2026-10-20, CHAT-11, "y to all") is read from its committed decision log, never
+// copied: an approved CHAT-11 confirms every field its recommendation lists after its last colon ("parcel.lot.zone_class_label,
+// exception_number, …"; a bare name is a parcel.lot field), and every listed name must be a declared row (Spec 124 R-HK).
+const Q7_LOG_REL = 'docs/reports/decisions/2026-10-20-chat-batch-b.json';
+const Q7_LOG_TEXT = fs.readFileSync(path.join(ROOT, Q7_LOG_REL), 'utf8');
+const Q7_LOG = JSON.parse(Q7_LOG_TEXT);
+const Q7_SCOPE = Q7_LOG.decisions.find((d) => d.id === 'CHAT-11');
+if (!Q7_SCOPE) throw new Error(`${Q7_LOG_REL} has no CHAT-11`);
+const Q7_CONFIRMED = (Q7_LOG.decision_vocab || {})[Q7_SCOPE.decision] === 'approve' ? new Set(Q7_SCOPE.recommendation.split(':').pop().split(',').map((t) => t.trim().replace(/\.$/, '')).map((t) => (t.startsWith('parcel.lot.') ? t : `parcel.lot.${t}`))) : new Set();
+const Q7_CITE = '2026-10-20-chat-batch-b#CHAT-11';
+const q7Confirmed = [];
 for (const sec of out) for (const f of sec.fields) {
   const was = f.source;
   if (f.path.startsWith('parcel.lot.')) {
     const inScope = Q7_IN.has(f.path);
-    f.source = inScope ? AMEND : CONFIRM; const o = f.target; delete f.target;
+    const confirmed = !inScope && Q7_CONFIRMED.has(f.path);
+    if (confirmed) q7Confirmed.push(f.path);
+    f.source = inScope || confirmed ? AMEND : CONFIRM; const o = f.target; delete f.target;
     f.target = `consumer:${f.path}`;
     if (o && o.startsWith('parcels:')) f.origin = o;
     if (f.name === 'zone_class_label') { f.origin = 'parcels:zoning_class'; f.via = 'presentation:zone_class_label'; }
-    f.note = (inScope ? `Q-7 (decided): Spec 100 §3.2 whitelist amendment. ${f.note || ''}` : `Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. ${f.note || ''}`).trim();
+    f.note = (inScope ? `Q-7 (decided): Spec 100 §3.2 whitelist amendment. ${f.note || ''}` : confirmed ? `Q-7 scope (decided 2026-10-20, operator chat, ${Q7_CITE}): Spec 100 §3.2 whitelist amendment. ${f.note || ''}` : `Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. ${f.note || ''}`).trim();
   } else if (f.path.startsWith('parcel.street_view.')) {
     f.source = AMEND; f.target = 'consumer:parcel.street_view';
     f.note = `Q-9 (decided): server fetch (panorama lookup, heading toward the lot, signed URL), cache pano_id only, attribution always, usage cap + kill switch, never used as data; re-check Google's current pricing and terms (owed). Q-7: whitelisted key street_view. ${f.note || ''}`.trim();
@@ -324,6 +338,7 @@ for (const sec of out) for (const f of sec.fields) {
   if (was !== f.source) log.push(`ruling: ${f.path} ${was} → ${f.source}${f.target ? ` (target ${f.target})` : ''}`);
   if (f.source.startsWith('pending:operator_ruling:')) throw new Error(`still pending on a ruling: ${f.path} ${f.source}`);
 }
+for (const p of Q7_CONFIRMED) if (!q7Confirmed.includes(p) && !Q7_IN.has(p)) throw new Error(`${Q7_CITE} names ${p}, which is not a declared parcel.lot row`);
 const ui = out.find((x) => x.id === 'states');
 ui.fields.push(
   { path: 'ui.street_view', name: 'street_view', label: 'Street View photo block (display rules)', type: 'jsonb', status: 'new', source: 'presentation:street_view', render: 'rendered', note: 'Q-9 (decided): caption, attribution template, placement' },
@@ -386,7 +401,7 @@ const PINS = {
 const statusOf = (d) => (!d ? 'open' : d.decision === 'discuss' ? 'open' : 'decided');
 const rulings = {
   $comment: 'Operator rulings the v2 report schema waits on. Seeded mechanically from the Report Schema Rulings page export (questions: entries.json; decisions: answers/report_decisions/*.json; chat decisions after the export: a flagged overlay); `status` flips to "decided" only by transferring the operator decision, never by hand-editing a row source. RS-5 FAILs every row still pending on a decided ruling.',
-  source: { page: 'Report Schema Rulings (artifact)', questions: { export: 'scripts/surfaces/_schema/report-v2-seed/entries.json', sha256_16: sha(entriesText) }, decisions: { export: 'scripts/surfaces/_schema/report-v2-seed/answers/report_decisions/*.json', files: ansFiles.length, sha256_16: sha(ansText) }, chat_overlay: Object.keys(CHAT), exported: '2026-10-20', decision_vocabulary: { keep: 'decided: the recommendation stands', drop: 'decided: the recommendation is replaced by the note', discuss: 'open' } },
+  source: { page: 'Report Schema Rulings (artifact)', questions: { export: 'scripts/surfaces/_schema/report-v2-seed/entries.json', sha256_16: sha(entriesText) }, decisions: { export: 'scripts/surfaces/_schema/report-v2-seed/answers/report_decisions/*.json', files: ansFiles.length, sha256_16: sha(ansText) }, chat_overlay: Object.keys(CHAT), q7_scope: { decision: Q7_CITE, log: Q7_LOG_REL, sha256_16: sha(JSON.stringify(Q7_SCOPE)), confirmed: q7Confirmed }, exported: '2026-10-20', decision_vocabulary: { keep: 'decided: the recommendation stands', drop: 'decided: the recommendation is replaced by the note', discuss: 'open' } },
   rulings: E.map((e) => ({ ref: e.ref, topic: e.step, key: e.key, gap: e.evidence.map((x) => x.quote).join(' '), recommendation: e.note, status: statusOf(DEC[e.ref]), decision: DEC[e.ref] || null, ...(PINS[e.ref] ? { pins: PINS[e.ref] } : {}) })),
 };
 

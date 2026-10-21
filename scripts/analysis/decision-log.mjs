@@ -24,8 +24,12 @@
 //             log's lane-added fields (`decision_vocab`, `routing`, `amendments`, `options`). The sources:
 //             --answers <dir> --entries <file> --url <url> --title <text>   a review-page export: <dir>/*.json are the
 //                 page's decision documents ({ref, decision, updated_at}), <file> its entries ({ref, key, note, …});
+//             --page-rows <file> --url <url> --title <text>   a review page's rows export {source, rows [{id, question,
+//                 recommendation, answer {choice, decided_at, note} | null, answered_via}]} (an unanswered row is listed
+//                 in the log's `unanswered`, not a decision);
 //             --chat <file>   a chat record {source (with its date), operator_quote, decisions [{id, subject|question,
-//                 recommendation, decision, operator_quote?, decided_at?}]};
+//                 recommendation, decision, operator_quote? | quote_ref? (names another quote key in the record),
+//                 decided_at?}]};
 //             --rulings-md <file> --quote <text> --decided-at <date>   a rulings memo whose "## Spec N: …" sections
 //                 each carry a "**Recommendation.**" block and whose "Summary of asks" table has a "| N |" row.
 //
@@ -36,8 +40,8 @@
 // the row exists and `owed` is still there.
 //
 // A log: { log_id (= file stem), source {kind: page|chat, url | operator_quote, raw}, decision_vocab {value: approve |
-// amend | reject | defer}, decisions [{id, question, recommendation, decision, decided_at}], routing {id: {register,
-// row, owed?}}, amendments {id: {text, operator_quote, decided_at, source}}, options {id: text} }. An amendment turns
+// amend | reject | defer | no_ruling}, decisions [{id, question, recommendation, decision, decided_at}], routing {id:
+// {register, row, owed?} | {register, rests_on: [register id]} (no_ruling, R-DV-1)}, amendments {id: {text, operator_quote, decided_at, source}}, options {id: text} }. An amendment turns
 // an approval into `amend`; its routed row must carry the amendment's operator quote.
 //
 // Deterministic: sorted output, LF, no clock, no DB, no network. BUILDO_DECISION_LOG_ROOT (absolute) points every
@@ -52,7 +56,10 @@ export const REPO_ROOT = path.resolve(HERE, '..', '..');
 export const LOG_DIR_REL = 'docs/reports/decisions';
 export const SPEC_ROOT_REL = 'docs/specs';
 /** What a log's decision value means. Only `approve` and `amend` (approved with a change) need a register row. */
-export const MEANINGS = Object.freeze(['approve', 'amend', 'reject', 'defer']);
+// R-DV-1 (operator 2026-10-20, `2026-10-20-bylaw-fix-rulings#R-DV-1`): `no_ruling` records that an existing ruling already
+// decides the question. It needs no new register row; its routing names the register row(s) it rests on
+// (`routing.<id>.rests_on`), and --check is RED when one of them is not a register row in the routed register.
+export const MEANINGS = Object.freeze(['approve', 'amend', 'reject', 'defer', 'no_ruling']);
 const NEEDS_ROW = new Set(['approve', 'amend']);
 const STEM_RE = /^\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ID_RE = /^[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*$/;
@@ -65,12 +72,13 @@ export const MODES = Object.freeze(['--check', '--write', '--import']);
 const VALUE_FLAGS = Object.freeze({
   '--check': [],
   '--write': ['--out'],
-  '--import': ['--answers', '--entries', '--url', '--title', '--chat', '--rulings-md', '--quote', '--decided-at', '--out'],
+  '--import': ['--answers', '--entries', '--url', '--title', '--chat', '--rulings-md', '--quote', '--decided-at', '--page-rows', '--out'],
 });
 const REQUIRED_VALUES = Object.freeze({ '--check': [], '--write': [], '--import': ['--out'] });
 /** The --import sources: exactly one, each with the flags it needs. */
 const IMPORT_SOURCES = Object.freeze({
   page: ['--answers', '--entries', '--url', '--title'],
+  'page-rows': ['--page-rows', '--url', '--title'],
   chat: ['--chat'],
   'rulings-md': ['--rulings-md', '--quote', '--decided-at'],
 });
@@ -95,12 +103,12 @@ export function parseArgs(argv) {
     i += 1;
   }
   if (mode === '--import') {
-    const given = Object.entries(IMPORT_SOURCES).filter(([, fl]) => fl.some((x) => x in values));
+    const given = Object.entries(IMPORT_SOURCES).filter(([, fl]) => fl[0] in values);
     const usage = Object.values(IMPORT_SOURCES).map((fl) => fl.join(' ')).join(' | ');
     if (given.length !== 1) return { error: `--import needs exactly one source (${usage})` };
     const [form, fl] = given[0];
     for (const x of fl) if (!(x in values)) return { error: `--import (${form}) needs ${x}` };
-    for (const x of Object.values(IMPORT_SOURCES).flat()) if (x in values && !fl.includes(x)) return { error: `--import (${form}) does not take ${x}` };
+    for (const x of new Set(Object.values(IMPORT_SOURCES).flat())) if (x in values && !fl.includes(x)) return { error: `--import (${form}) does not take ${x}` };
   }
   for (const f of REQUIRED_VALUES[mode]) if (!(f in values)) return { error: `${mode} needs ${f}` };
   return { mode, values };
@@ -134,6 +142,15 @@ export function validateLog(stem, log) {
     if (!r || typeof r.register !== 'string' || !r.register.endsWith('.md')) p.push(`${stem}: routing.${id}.register must be a spec path`);
     if (r && r.row !== undefined && !(typeof r.row === 'string' && REGISTER_ROW_RE.test(`| ${r.row} |`))) p.push(`${stem}: routing.${id}.row "${r && r.row}" is not a register id`);
     if (r && r.owed !== undefined && !(typeof r.owed === 'string' && r.owed.trim() && r.row)) p.push(`${stem}: routing.${id}.owed needs the owing lane and a routed row`);
+    if (r && r.rests_on !== undefined) {
+      if (!Array.isArray(r.rests_on) || r.rests_on.length === 0) p.push(`${stem}: routing.${id}.rests_on must be a non-empty list of register ids`);
+      else for (const x of r.rests_on) if (!(typeof x === 'string' && REGISTER_ROW_RE.test(`| ${x} |`))) p.push(`${stem}: routing.${id}.rests_on "${x}" is not a register id`);
+    }
+  }
+  for (const d of log.decisions) {
+    if (!d || !seen.has(d.id) || vocab[d.decision] !== 'no_ruling') continue;
+    const r = (log.routing || {})[d.id];
+    if (!r || r.rests_on === undefined) p.push(`${stem}#${d.id}: a no_ruling decision needs routing.${d.id}.rests_on (the register row it rests on)`);
   }
   for (const id of Object.keys(log.options || {})) if (!seen.has(id)) p.push(`${stem}: options names unknown decision ${id}`);
   for (const [id, a] of Object.entries(log.amendments || {})) {
@@ -184,12 +201,17 @@ export function rawProblems(stem, log, io) {
       if (text === null) return [`${stem}: raw export missing (${raw.file})`];
       rebuilt = importChat({ stem, raw: JSON.parse(text), rawRel: raw.file, previous: log });
       fileOf = () => raw.file;
+    } else if (raw.form === 'page-rows') {
+      const text = io.read(raw.file);
+      if (text === null) return [`${stem}: raw export missing (${raw.file})`];
+      rebuilt = importPageRows({ stem, title: log.source.title, url: log.source.url, raw: JSON.parse(text), rawRel: raw.file, previous: log });
+      fileOf = () => raw.file;
     } else if (raw.form === 'rulings-md') {
       const text = io.read(raw.file);
       if (text === null) return [`${stem}: raw export missing (${raw.file})`];
       rebuilt = importRulingsMd({ stem, text, rawRel: raw.file, quote: log.source.operator_quote, decidedAt: raw.decided_at, previous: log });
       fileOf = () => raw.file;
-    } else return [`${stem}: source.raw.form "${raw.form}" is not page / chat / rulings-md`];
+    } else return [`${stem}: source.raw.form "${raw.form}" is not page / page-rows / chat / rulings-md`];
   } catch (err) {
     return [`${stem}: raw export does not import (${err.message})`];
   }
@@ -205,6 +227,7 @@ export function rawProblems(stem, log, io) {
       }
     }
   });
+  if (JSON.stringify(rebuilt.unanswered) !== JSON.stringify(log.unanswered)) p.push(`${stem}: unanswered differs from the committed raw export — re-import, never hand-edit`);
   for (const k of ['kind', 'url', 'title', 'operator_quote']) {
     if (rebuilt.source[k] !== undefined && rebuilt.source[k] !== log.source[k]) p.push(`${stem}: source.${k} differs from the committed raw export — re-import, never hand-edit`);
   }
@@ -235,12 +258,25 @@ export function checkDecisionLogs(logs, specs, opts = {}) {
   const missing = [];
   let decisions = 0;
   let owed = 0;
+  let noRuling = 0;
+  const rowIdsIn = new Map();
+  for (const s of specs) {
+    const ids = new Set();
+    for (const line of (lineText.get(s.rel) || [])) { const m = REGISTER_ROW_RE.exec(line); if (m) ids.add(m[1]); }
+    rowIdsIn.set(s.rel, ids);
+  }
   const rowKeys = new Set();
   for (const { stem, log } of logs) {
     for (const d of log.decisions || []) {
       if (!d || !d.id) continue;
       decisions += 1;
       const meaning = meaningOf(log, d);
+      if (meaning === 'no_ruling') {
+        noRuling += 1;
+        const route = (log.routing || {})[d.id] || {};
+        for (const x of route.rests_on || []) if (!(rowIdsIn.get(route.register) || new Set()).has(x)) problems.push(`${stem}#${d.id}: no_ruling rests on ${x}, which is not a register row in ${route.register}`);
+        continue;
+      }
       if (!NEEDS_ROW.has(meaning)) continue;
       const rows = cites.filter((c) => c.stem === stem && c.id === d.id && c.row_id);
       for (const c of rows) rowKeys.add(`${c.rel}|${c.row_id}`);
@@ -278,7 +314,7 @@ export function checkDecisionLogs(logs, specs, opts = {}) {
       }
     }
   }
-  return { problems, missing, citations: cites.length, decisions, rows: rowKeys.size, owed };
+  return { problems, missing, citations: cites.length, decisions, rows: rowKeys.size, owed, no_ruling: noRuling };
 }
 
 /** One table cell: line breaks become spaces and a literal pipe is escaped, so a skeleton row stays one row. PURE. */
@@ -368,14 +404,49 @@ export function importChat({ stem, raw, rawRel, previous }) {
   const decisions = (raw.decisions || []).map((d) => {
     const out = { id: d.id, question: d.question || d.subject, recommendation: d.recommendation, decision: d.decision, decided_at: d.decided_at || date };
     if (d.operator_quote) out.operator_quote = d.operator_quote;
+    if (d.quote_ref !== undefined) {
+      // A record with several operator quotes names the one each decision rests on (R-DV-1 import, batch C).
+      if (!String(raw[d.quote_ref] || '').trim()) throw new Error(`${d.id}: quote_ref "${d.quote_ref}" names no quote in the record`);
+      out.operator_quote = raw[d.quote_ref];
+    }
     return out;
   });
   return {
     $comment: `Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record ${rawRel}. ${LANE_COMMENT}`,
     log_id: stem,
     source: { kind: 'chat', operator_quote: raw.operator_quote, record: raw.source || null, raw: { form: 'chat', file: rawRel } },
-    ...laneFields(previous, vocabFor([...new Set(decisions.map((d) => d.decision))])),
+    // R-DV-1: the default vocabulary is computed only when the previous log declares none, so a log that declares
+    // a meaning for a non-approval word (settled, bug_fix) re-imports.
+    ...laneFields(previous, previous && previous.decision_vocab ? null : vocabFor([...new Set(decisions.map((d) => d.decision))])),
     decisions,
+  };
+}
+
+/**
+ * Build a log from a review page's rows export ({source, rows: [{id, question, recommendation, answer: {choice,
+ * decided_at, excluded, note} | null, answered_via}]}). A row with no answer is not a decision of this log; it is
+ * listed in `unanswered` with where it was answered instead. PURE over its inputs.
+ */
+export function importPageRows({ stem, title, url, raw, rawRel, previous }) {
+  if (!Array.isArray(raw.rows)) throw new Error('the page export has no rows[]');
+  const decisions = [];
+  const unanswered = [];
+  for (const r of raw.rows) {
+    if (!r.answer) { unanswered.push({ id: r.id, answered_via: r.answered_via || null }); continue; }
+    const d = { id: r.id, question: r.question, recommendation: r.recommendation, decision: r.answer.choice, decided_at: r.answer.decided_at };
+    if (String(r.answer.note || '').trim()) d.note = r.answer.note;
+    if ((r.answer.excluded || []).length) d.excluded = r.answer.excluded;
+    d.source_url = url;
+    decisions.push(d);
+  }
+  decisions.sort((a, b) => idCompare(a.id, b.id));
+  return {
+    $comment: `Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Question, recommendation and decision are the review page rows export ${rawRel}, verbatim. ${LANE_COMMENT}`,
+    log_id: stem,
+    source: { kind: 'page', title, url, record: raw.source || null, raw: { form: 'page-rows', file: rawRel } },
+    ...laneFields(previous, previous && previous.decision_vocab ? null : vocabFor([...new Set(decisions.map((d) => d.decision))])),
+    decisions,
+    ...(unanswered.length ? { unanswered } : {}),
   };
 }
 
@@ -460,7 +531,7 @@ const isMain = process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).h
 if (isMain) {
   const parsed = parseArgs(process.argv.slice(2));
   if (parsed.error) {
-    console.error(`[decision-log] ${parsed.error}\nusage: node scripts/analysis/decision-log.mjs --check | --write [--out <file>] | --import (--answers <dir> --entries <file> --url <url> --title <text> | --chat <file> | --rulings-md <file> --quote <text> --decided-at <date>) --out <log.json>`);
+    console.error(`[decision-log] ${parsed.error}\nusage: node scripts/analysis/decision-log.mjs --check | --write [--out <file>] | --import (--answers <dir> --entries <file> --url <url> --title <text> | --page-rows <file> --url <url> --title <text> | --chat <file> | --rulings-md <file> --quote <text> --decided-at <date>) --out <log.json>`);
     process.exit(2);
   }
   const root = process.env.BUILDO_DECISION_LOG_ROOT ? path.resolve(process.env.BUILDO_DECISION_LOG_ROOT) : REPO_ROOT;
@@ -478,6 +549,8 @@ if (isMain) {
         const answers = fs.readdirSync(answersDir).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(fs.readFileSync(path.join(answersDir, f), 'utf8')));
         const entries = JSON.parse(fs.readFileSync(values['--entries'], 'utf8'));
         log = importPageExport({ stem, title: values['--title'], url: values['--url'], answers, entries, answersRel: rel(answersDir), entriesRel: rel(values['--entries']), previous });
+      } else if (values['--page-rows']) {
+        log = importPageRows({ stem, title: values['--title'], url: values['--url'], raw: JSON.parse(fs.readFileSync(values['--page-rows'], 'utf8')), rawRel: rel(values['--page-rows']), previous });
       } else if (values['--chat']) {
         log = importChat({ stem, raw: JSON.parse(fs.readFileSync(values['--chat'], 'utf8')), rawRel: rel(values['--chat']), previous });
       } else {
@@ -503,7 +576,7 @@ if (isMain) {
         console.error(`[decision-log] RED — ${r.problems.length} problem(s):\n  ${r.problems.join('\n  ')}`);
         process.exitCode = 1;
       } else {
-        console.log(`[decision-log] clean — ${logs.length} log(s), ${r.decisions} decision(s), ${r.rows} register row(s), ${r.citations} citation(s), ${r.owed} owed by another lane; every approved decision has a register row or is owed, and every log matches its raw record`);
+        console.log(`[decision-log] clean — ${logs.length} log(s), ${r.decisions} decision(s), ${r.rows} register row(s), ${r.citations} citation(s), ${r.owed} owed by another lane, ${r.no_ruling} no_ruling resting on an existing row; every approved decision has a register row or is owed, and every log matches its raw record`);
       }
     }
   } catch (err) {

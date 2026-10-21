@@ -161,9 +161,9 @@
           "label": "Zone (plain words)",
           "type": "text",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. presentation map R/RD/RS/RT/RM → \"Residential Detached\" …",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. presentation map R/RD/RS/RT/RM → \"Residential Detached\" …",
           "target": "consumer:parcel.lot.zone_class_label",
           "origin": "parcels:zoning_class",
           "via": "presentation:zone_class_label"
@@ -174,9 +174,9 @@
           "label": "Exception number",
           "type": "text",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. parcels.exception_number; pairs with exception_not_authored",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. parcels.exception_number; pairs with exception_not_authored",
           "target": "consumer:parcel.lot.exception_number",
           "origin": "parcels:exception_number"
         },
@@ -212,9 +212,9 @@
           "label": "Irregular lot",
           "type": "boolean",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. parcels.is_irregular",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. parcels.is_irregular",
           "target": "consumer:parcel.lot.is_irregular",
           "origin": "parcels:is_irregular"
         },
@@ -224,9 +224,9 @@
           "label": "Corner lot",
           "type": "boolean",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. parcels",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. parcels",
           "target": "consumer:parcel.lot.is_corner_lot",
           "origin": "parcels:is_corner_lot"
         },
@@ -236,11 +236,11 @@
           "label": "Through lot",
           "type": "boolean",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
           "target": "consumer:parcel.lot.is_through_lot",
           "origin": "parcels:is_through_lot",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it."
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment."
         },
         {
           "path": "parcel.lot.abuts_laneway",
@@ -248,9 +248,9 @@
           "label": "Abuts a lane",
           "type": "boolean",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. never the laneway test (M-209)",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. never the laneway test (M-209)",
           "target": "consumer:parcel.lot.abuts_laneway",
           "origin": "parcels:abuts_laneway"
         },
@@ -261,9 +261,9 @@
           "type": "number",
           "unit": "deg",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. Spec 100 §8 map fast-follow names this exact extension",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. Spec 100 §8 map fast-follow names this exact extension",
           "target": "consumer:parcel.lot.centroid_lat",
           "origin": "parcels:centroid_lat"
         },
@@ -274,11 +274,11 @@
           "type": "number",
           "unit": "deg",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
           "target": "consumer:parcel.lot.centroid_lng",
           "origin": "parcels:centroid_lng",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it."
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment."
         },
         {
           "path": "parcel.lot.outline_geojson",
@@ -298,9 +298,9 @@
           "label": "Overlays",
           "type": "text[]",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. sixplex area (in_sixplex_area/sixplex_membership_basis), heritage, ravine, holding, major street, Coxwell (when held), lot-coverage overlay value. Assembled from several parcels columns (in_sixplex_area, zoning_holding, zoning_overlays, heritage/ravine joins), so no single target.",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. sixplex area (in_sixplex_area/sixplex_membership_basis), heritage, ravine, holding, major street, Coxwell (when held), lot-coverage overlay value. Assembled from several parcels columns (in_sixplex_area, zoning_holding, zoning_overlays, heritage/ravine joins), so no single target.",
           "target": "consumer:parcel.lot.overlays"
         },
         {
@@ -360,9 +360,9 @@
           "label": "Neighbourhood",
           "type": "text",
           "status": "proposed",
-          "source": "pending:operator_confirm:Q-7-scope",
+          "source": "pending:spec100_amendment:Q-7",
           "render": "rendered",
-          "note": "Q-7 scope: not in the approved list (zone label, frontage/depth, map outline, street_view, offers); the operator confirms whether the Spec 100 amendment covers it. neighbourhoods via parcels.neighbourhood_id (a join, not a parcels column)",
+          "note": "Q-7 scope (decided 2026-10-20, operator chat, 2026-10-20-chat-batch-b#CHAT-11): Spec 100 §3.2 whitelist amendment. neighbourhoods via parcels.neighbourhood_id (a join, not a parcels column)",
           "target": "consumer:parcel.lot.neighbourhood_name"
         }
       ]
