@@ -1,0 +1,35 @@
+{
+  "source": "operator rulings page 2026-10-21 https://claude.ai/artifact/LMgW4aaequHWXWZyAeqGCA (db collection decisions)",
+  "operator_quote": "completed teh rulings - proceed",
+  "context": "Next by-law fix round (CHAT-38): F-4D-1..21, Scarborough exceptions, Layer 2 prerequisites, data and tooling items. Each decision is the operator click on the page; operator_note is the operator text verbatim.",
+  "decisions": [
+    {
+      "id": "CHAT-38.L2-LOSERS",
+      "subject": "Tie-break losers: record why each rule lost",
+      "decision": "approve",
+      "recommendation": "Approve. Spec 134:121 and the Phase 2 plan line 192 define it; the Layer 2 plan itself only points at them (plan line 56). Until it lands, dropped_by is stored as not_recorded (Phase 2 plan line 192).",
+      "decided_at": "2026-10-21T19:44:11.411Z"
+    },
+    {
+      "id": "CHAT-38.L2-CLOSURE",
+      "subject": "Exception closure: a read-only list of the exceptions that apply to a lot",
+      "decision": "approve",
+      "recommendation": "Approve, as the plan recommends at line 165.",
+      "decided_at": "2026-10-21T19:44:34.295Z"
+    },
+    {
+      "id": "CHAT-38.L2-CLASSES",
+      "subject": "Scenario classes: define the building-type vectors",
+      "decision": "approve",
+      "recommendation": "Needs definition on one point. The plan says 'the three suite classes' (line 255) but then lists five classes (detached_house, detached_houseplex, semi_detached_houseplex, semi_detached_house, house_with_secondary_suite) and says garden and laneway are structures, so it does not say which three classes are new. Rule on the five-class list and which are new before the fix lane starts. The garden/laneway-as-structures reading is also OQ-7, which you answered in the Layer 2 page; the register row M-234 wording still needs your confirmation.",
+      "decided_at": "2026-10-21T19:45:19.720Z"
+    },
+    {
+      "id": "CHAT-38.L2-CHAPTERS",
+      "subject": "Exception chapters: zone letters to By-law 569-2013 Chapter 900 articles",
+      "decision": "approve",
+      "recommendation": "Approve. The plan defines it fully (line 327); the only content it names is the five-zone literal above, so the fix lane should confirm that list covers every in-scope residential zone.",
+      "decided_at": "2026-10-21T19:45:24.715Z"
+    }
+  ]
+}

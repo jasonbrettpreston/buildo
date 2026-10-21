@@ -629,7 +629,7 @@
   },
   "non_accessory_use": ["dwelling_unit", "secondary_suite_use", "parking_space"],
   "scenario_class_units": {
-    "$comment": "Spec 69a M-298 (operator 2026-10-21, 2026-10-21-page-4d-laneC#CHAT-38.L2-CLASSES): each class is the vector building_type, has_secondary_suite, has_garden_suite, has_laneway_suite, house_units, ancillary_units; the five Spec 78 P5.1 classes are detached_house, detached_houseplex, semi_detached_houseplex, semi_detached_house, house_with_secondary_suite (new in M-298); townhouse and detached_houseplex_5_6 stay (M-160, M-173); a garden or laneway suite is a structure evaluated under a class, not a class (has_garden_suite / has_laneway_suite are false for every class today). Pinned by sha in bylaw-layer2-vocab.logic.test.ts. Spec 69a M-160 (operator Q-D, 2026-10-15): dwelling-unit counts of the Layer 2 v1 P classes (scenario-classes.json, M-63 dated note 2026-10-14: P axis only, A = K = none). house_units = units in the principal building on the lot; ancillary_units = units in ancillary buildings (0 while A = none). A range is the ratified M-63 range; evaluated_at is the single value Layer 2 passes (C1 collapse: houseplex 2 = 3 = 4 when A = none).",
+    "$comment": "Spec 69a M-298 (operator 2026-10-21, 2026-10-21-page-4d-c#CHAT-38.L2-CLASSES): each class is the vector building_type, has_secondary_suite, has_garden_suite, has_laneway_suite, house_units, ancillary_units; the five Spec 78 P5.1 classes are detached_house, detached_houseplex, semi_detached_houseplex, semi_detached_house, house_with_secondary_suite (new in M-298); townhouse and detached_houseplex_5_6 stay (M-160, M-173); a garden or laneway suite is a structure evaluated under a class, not a class (has_garden_suite / has_laneway_suite are false for every class today). Pinned by sha in bylaw-layer2-vocab.logic.test.ts. Spec 69a M-160 (operator Q-D, 2026-10-15): dwelling-unit counts of the Layer 2 v1 P classes (scenario-classes.json, M-63 dated note 2026-10-14: P axis only, A = K = none). house_units = units in the principal building on the lot; ancillary_units = units in ancillary buildings (0 while A = none). A range is the ratified M-63 range; evaluated_at is the single value Layer 2 passes (C1 collapse: houseplex 2 = 3 = 4 when A = none).",
     "detached_house": {
       "building_type": "detached_house",
       "has_secondary_suite": false,
@@ -700,11 +700,11 @@
       "has_laneway_suite": false,
       "house_units": 2,
       "ancillary_units": 0,
-      "basis": "Spec 78 P5.1: detached_house + secondary_suite (M-182); O. Reg. 299/19 s.1: two residential units in a detached house (the house and its suite) with no ancillary unit"
+      "basis": "Spec 78 P5.1: detached_house + secondary_suite (M-182); Planning Act s. 35.1(1)(a) (external.json EXT-prov): two residential units in a detached house (the house and its suite), no ancillary unit"
     }
   },
   "exception_chapter": {
-    "$comment": "Spec 69a M-297 (operator 2026-10-21, 2026-10-21-page-4d-laneC#CHAT-38.L2-CHAPTERS; Spec 124 R-IV): the Chapter 900 article number of each zone's exceptions, so an exception id is 900.<n>.10(<exception number>) (900.1 is the general article, no zone). Locked both ways against the authored exception ids and the zone list (bylaw-layer2-vocab.logic.test.ts).",
+    "$comment": "Spec 69a M-297 (operator 2026-10-21, 2026-10-21-page-4d-c#CHAT-38.L2-CHAPTERS; Spec 124 R-IV): the Chapter 900 article number of each zone's exceptions, so an exception id is 900.<n>.10(<exception number>) (900.1 is the general article, no zone). Locked both ways against the authored exception ids and the zone list (bylaw-layer2-vocab.logic.test.ts).",
     "R": 2,
     "RD": 3,
     "RS": 4,
