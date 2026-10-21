@@ -25,7 +25,7 @@ INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, 
   ('resolve_bylaws_population_zone_classes', 0, '["R","RD","RS","RT","RM"]'::jsonb,
    'resolve_bylaws (Spec 134 §2; operator Q-L2-4 2026-10-21): the zones whose parcels are in the Layer 2 population. ' ||
    'A JSON array of evaluator zone codes (vocab.json zone); variable_value is the sentinel 0. Lots whose zone is not ' ||
-   'listed have their lot link row retracted (R-IR). CONSUMED by resolve_bylaws (inPopulation).')
+   'listed have their lot link row retracted (R-IU). CONSUMED by resolve_bylaws (inPopulation).')
 ON CONFLICT (variable_key) DO NOTHING;
 
 -- DOWN

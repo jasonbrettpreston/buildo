@@ -5197,7 +5197,7 @@
       }
     },
     {
-      "id": "R-II",
+      "id": "R-IL",
       "kind": "register-ruling",
       "status": "process",
       "handbook_line": "x-rulings.4",
@@ -5211,7 +5211,7 @@
       }
     },
     {
-      "id": "R-IJ",
+      "id": "R-IM",
       "kind": "register-ruling",
       "status": "process",
       "handbook_line": "x-rulings.4",
@@ -5219,49 +5219,7 @@
         "kind": "lock",
         "ref": "src/tests/decision-log.logic.test.ts"
       },
-      "statement": "The M-231 INCLUDE closure comes from one evaluator export, exceptionClosure (owed by the by-law fix lane); fully authored is read from the R-II input; until the export lands the compute refuses the run (operator CHAT-36.OQ2).",
-      "source": {
-        "register": true
-      }
-    },
-    {
-      "id": "R-IK",
-      "kind": "register-ruling",
-      "status": "process",
-      "handbook_line": "x-rulings.4",
-      "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
-      },
-      "statement": "cell_id = sha256 over the sorted path/token lines (cell-cache inputValue) of zone, exception and every lot input the results read; there is no inputs_hash column (operator CHAT-36.OQ3, simplified; Q-L2-1 ratified).",
-      "source": {
-        "register": true
-      }
-    },
-    {
-      "id": "R-IL",
-      "kind": "register-ruling",
-      "status": "process",
-      "handbook_line": "x-rulings.4",
-      "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts"
-      },
-      "statement": "layer2-map.json is one file of closed tables (evaluator_status, lot_gate, reason_code, evidence_kind, value_kind, layer3_image, permission_image); status stored bare, reason holds the parameter; the string form is derived on read (operator CHAT-36.OQ4, simplified).",
-      "source": {
-        "register": true
-      }
-    },
-    {
-      "id": "R-IM",
-      "kind": "register-ruling",
-      "status": "process",
-      "handbook_line": "x-rulings.4",
-      "enforcement": {
-        "kind": "lock",
-        "ref": "src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts"
-      },
-      "statement": "evidence_kind is the evaluator's own kinds: clause, absence, provincial, disapply, label_absent; a numeric winner records clause (provincial for a provincial winner) with its regulation id; I2 amended (operator CHAT-36.OQ5).",
+      "statement": "The M-231 INCLUDE closure comes from one evaluator export, exceptionClosure (owed by the by-law fix lane); fully authored is read from the R-IL input; until the export lands the compute refuses the run (operator CHAT-36.OQ2).",
       "source": {
         "register": true
       }
@@ -5275,7 +5233,7 @@
         "kind": "lock",
         "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
       },
-      "statement": "One lot gate per lot, the first in the map's lot_gate list order; -1 is no exception for the closure and present for the mismatch; the xN != number arm is part of the mismatch (operator CHAT-36.OQ6).",
+      "statement": "cell_id = sha256 over the sorted path/token lines (cell-cache inputValue) of zone, exception and every lot input the results read; there is no inputs_hash column (operator CHAT-36.OQ3, simplified; Q-L2-1 ratified).",
       "source": {
         "register": true
       }
@@ -5287,9 +5245,9 @@
       "handbook_line": "x-rulings.4",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
+        "ref": "src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts"
       },
-      "statement": "Classes are the five P5.1 scenario vectors; garden and laneway suites are structures under each class that has them; classes collapse by byte-equal results into the first in catalogue order (operator CHAT-36.OQ7).",
+      "statement": "layer2-map.json is one file of closed tables (evaluator_status, lot_gate, reason_code, evidence_kind, value_kind, layer3_image, permission_image); status stored bare, reason holds the parameter; the string form is derived on read (operator CHAT-36.OQ4, simplified).",
       "source": {
         "register": true
       }
@@ -5301,9 +5259,9 @@
       "handbook_line": "x-rulings.4",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts"
+        "ref": "src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts"
       },
-      "statement": "The v1 scope is scripts/seeds/bylaw/layer2-scope.json, locked both ways against the lineage registry's keyed.layer2_targets by structure kind; each target a vocab.dsl_target (operator CHAT-36.OQ8).",
+      "statement": "evidence_kind is the evaluator's own kinds: clause, absence, provincial, disapply, label_absent; a numeric winner records clause (provincial for a provincial winner) with its regulation id; I2 amended (operator CHAT-36.OQ5).",
       "source": {
         "register": true
       }
@@ -5315,9 +5273,9 @@
       "handbook_line": "x-rulings.4",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/decision-log.logic.test.ts"
+        "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
       },
-      "statement": "The row shape gains disclosures (signature row, inside the guard) and permitted_by_class (lot link row, permitted()'s own words) (operator CHAT-36.OQ9).",
+      "statement": "One lot gate per lot, the first in the map's lot_gate list order; -1 is no exception for the closure and present for the mismatch; the xN != number arm is part of the mismatch (operator CHAT-36.OQ6).",
       "source": {
         "register": true
       }
@@ -5331,13 +5289,55 @@
         "kind": "lock",
         "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
       },
-      "statement": "Lots leaving the population are retracted by a link_full_retraction replace_keys write on bylaw_resolution_lots before its guarded upsert (splitPopulation splits each batch; the predicate is inPopulation over the logic variable resolve_bylaws_population_zone_classes, Q-L2-4 ratified); a deleted parcel cascades; the runner's retracted counter feeds I11; no runner extension (operator CHAT-36.OQ10, simplified).",
+      "statement": "Classes are the five P5.1 scenario vectors; garden and laneway suites are structures under each class that has them; classes collapse by byte-equal results into the first in catalogue order (operator CHAT-36.OQ7).",
       "source": {
         "register": true
       }
     },
     {
       "id": "R-IS",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts"
+      },
+      "statement": "The v1 scope is scripts/seeds/bylaw/layer2-scope.json, locked both ways against the lineage registry's keyed.layer2_targets by structure kind; each target a vocab.dsl_target (operator CHAT-36.OQ8).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IT",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "The row shape gains disclosures (signature row, inside the guard) and permitted_by_class (lot link row, permitted()'s own words) (operator CHAT-36.OQ9).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IU",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
+      },
+      "statement": "Lots leaving the population are retracted by a link_full_retraction replace_keys write on bylaw_resolution_lots before its guarded upsert (splitPopulation splits each batch; the predicate is inPopulation over the logic variable resolve_bylaws_population_zone_classes, Q-L2-4 ratified); a deleted parcel cascades; the runner's retracted counter feeds I11; no runner extension (operator CHAT-36.OQ10, simplified).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IV",
       "kind": "register-ruling",
       "status": "process",
       "handbook_line": "x-rulings.4",
@@ -5351,7 +5351,7 @@
       }
     },
     {
-      "id": "R-IT",
+      "id": "R-IW",
       "kind": "register-ruling",
       "status": "process",
       "handbook_line": "x-rulings.4",
@@ -5365,7 +5365,7 @@
       }
     },
     {
-      "id": "R-IU",
+      "id": "R-IX",
       "kind": "register-ruling",
       "status": "process",
       "handbook_line": "x-rulings.4",

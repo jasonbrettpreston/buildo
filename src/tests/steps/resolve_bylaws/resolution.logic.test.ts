@@ -162,15 +162,15 @@ describe('purity (Spec 132 §1 compute purity; gate E at ①)', () => {
 });
 
 // ---------------------------------------------------------------------------------------------------------------------
-// The operator's batch-J rulings (2026-10-21, `2026-10-21-chat-batch-j`; Spec 124 R-IK, R-IL, R-IM, R-IN, R-IO, R-IR,
-// R-IT), each in its simplest compliant form. RED FIRST: committed as it.fails at c038d605, before the functions
+// The operator's batch-J rulings (2026-10-21, `2026-10-21-chat-batch-j`; Spec 124 R-IN, R-IO, R-IP, R-IQ, R-IR, R-IU,
+// R-IW), each in its simplest compliant form. RED FIRST: committed as it.fails at c038d605, before the functions
 // existed (gate K artifact docs/reports/red-evidence/resolve_bylaws/rulings-j-red.json); flipped to it with them.
 // ---------------------------------------------------------------------------------------------------------------------
 const MAP = (): Json => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/layer2-map.json'), 'utf8')) as Json;
 const CC = await load('scripts/analysis/bylaw/cell-cache.mjs');
 const sha = (s: string): string => crypto.createHash('sha256').update(s).digest('hex');
 
-describe('R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)', () => {
+describe('R-IW: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)', () => {
   it('sha256Hex is the hex sha256 of the bytes', () => {
     expect(rb().sha256Hex('abc')).toBe(sha('abc'));
     expect(rb().sha256Hex(Buffer.from('abc'))).toBe(sha('abc'));
@@ -193,7 +193,7 @@ describe('R-IT: version hashes (sha256 of bytes; several files hash the sorted p
   });
 });
 
-describe('R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included', () => {
+describe('R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included', () => {
   const lot: Json = { zone: 'RD', exception: null, label: { f: 9 }, vars: { lot_area_m2: 327.12 }, flags: { corner_lot: false } };
   const line = (p: string, l: Json = lot): string => `${p}\t${CC.inputValue(l, p)}`;
 
@@ -226,7 +226,7 @@ describe('R-IK: cell_id keys a lot by the inputs its results read, zone and exce
   });
 });
 
-describe('R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read', () => {
+describe('R-IO: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read', () => {
   it('statusText writes <status>:<reason>, or the bare status when there is no reason', () => {
     expect(rb().statusText('applies', null)).toBe('applies');
     expect(rb().statusText('not_applicable', '10.5.40.70(2)')).toBe('not_applicable:10.5.40.70(2)');
@@ -248,7 +248,7 @@ describe('R-IL: the Layer 2 status is stored bare, the reason holds the paramete
   });
 });
 
-describe('R-IM: evidence_kind is the evaluator\'s own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id', () => {
+describe('R-IP: evidence_kind is the evaluator\'s own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id', () => {
   it('each evaluator evidence kind keeps its name and takes its own ref', () => {
     const m = MAP();
     expect(rb().evidenceOf({ status: 'value', value: 'unregulated', winner: null, evidence: { kind: 'clause', clause: '10.20.40.10(1)#(B)' } }, m)).toEqual({ evidence_kind: 'clause', evidence_ref: '10.20.40.10(1)#(B)' });
@@ -271,7 +271,7 @@ describe('R-IM: evidence_kind is the evaluator\'s own kind; a numeric winner rec
   });
 });
 
-describe('R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule', () => {
+describe('R-IQ: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule', () => {
   it('firstLotGate returns the first fired gate in the declared order, or null', () => {
     const order = MAP().lot_gate as string[];
     expect(rb().firstLotGate(new Set(['lot_metric_missing', 'label_unparsed']), order)).toBe('label_unparsed');
@@ -294,7 +294,7 @@ describe('R-IN: one lot gate per lot, the first in the map order; the sentinel a
   });
 });
 
-describe('R-IO: classes collapse by byte-equal results into the first in catalogue order', () => {
+describe('R-IR: classes collapse by byte-equal results into the first in catalogue order', () => {
   it('equal results collapse into the earliest equal class; a different result keeps its own class', () => {
     const order = ['detached_house', 'detached_houseplex', 'semi_detached_houseplex', 'semi_detached_house'];
     const r1 = { status: 'value', value: 10 };
@@ -310,7 +310,7 @@ describe('R-IO: classes collapse by byte-equal results into the first in catalog
   });
 });
 
-describe('R-IR: a batch splits into the population and the keys to retract (the replace_keys write)', () => {
+describe('R-IU: a batch splits into the population and the keys to retract (the replace_keys write)', () => {
   it('rows in the population pass through; the others give their key to the retraction', () => {
     const batch = [{ id: 1, z: 'RD' }, { id: 2, z: 'CR' }, { id: 3, z: 'RM' }];
     expect(rb().splitPopulation(batch, 'id', (r: Json) => r.z.startsWith('R'))).toEqual({ inside: [batch[0], batch[2]], retract: [2] });
@@ -349,7 +349,7 @@ describe('Q-L2-4: the in-scope zone list is a logic variable, kept inside the ev
   });
 });
 
-describe('R-IU (Q-L2-3): commit ① waits for the evaluator prerequisites; nothing is registered before it', () => {
+describe('R-IX (Q-L2-3): commit ① waits for the evaluator prerequisites; nothing is registered before it', () => {
   it('there is no resolve_bylaws descriptor, shell or compute module yet (remove this case in the commit that lands ①)', () => {
     for (const rel of ['scripts/resolve-bylaws.descriptor.json', 'scripts/resolve-bylaws.js', 'scripts/lib/compute/resolve-bylaws.js']) {
       expect(fs.existsSync(path.join(ROOT, rel)), rel).toBe(false);

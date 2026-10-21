@@ -441,12 +441,12 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     }
   });
 
-  it('chat batch J (layer2-build-2): CHAT-36.OQ1…OQ12 → R-II…R-IT in order, each row citing its decision and the operator condition', () => {
+  it('chat batch J (layer2-build-2): CHAT-36.OQ1…OQ12 → R-IL…R-IW in order, each row citing its decision and the operator condition', () => {
     const A = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
     const j = byStem.get('2026-10-21-chat-batch-j') as { source: { operator_quote: string }; decisions: Array<{ id: string; decision: string }>; routing: Record<string, { register: string; row?: string }> };
     expect(j.source.operator_quote).toMatch(/^I approve the 12 layer questions on the condition/);
     const ids = Array.from({ length: 12 }, (_, i) => `CHAT-36.OQ${i + 1}`);
-    const rowIds = ['R-II', 'R-IJ', 'R-IK', 'R-IL', 'R-IM', 'R-IN', 'R-IO', 'R-IP', 'R-IQ', 'R-IR', 'R-IS', 'R-IT'];
+    const rowIds = ['R-IL', 'R-IM', 'R-IN', 'R-IO', 'R-IP', 'R-IQ', 'R-IR', 'R-IS', 'R-IT', 'R-IU', 'R-IV', 'R-IW'];
     expect(j.decisions.map((d) => [d.id, d.decision])).toEqual(ids.map((id) => [id, 'approve']));
     expect(Object.fromEntries(Object.entries(j.routing).map(([k, v]) => [k, [v.register, v.row]]))).toEqual(Object.fromEntries(ids.map((id, i) => [id, [A, rowIds[i]]])));
     const rows = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n');

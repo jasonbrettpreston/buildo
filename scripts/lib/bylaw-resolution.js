@@ -26,15 +26,15 @@
  *   resolveLot({ scope, gateStatus, resolveOne }) → gated rows, or resolveOne per scope entry            (gate first)
  *   valueKindOf(value)                           → 'number' | 'unlimited' | 'unregulated'                (§3)
  *
- * Batch J (Spec 124 R-II…R-IT, operator 2026-10-21, approved on the simplicity condition):
- *   sha256Hex(bytes), filesHash([{path, sha256}])  → version hashes                                       (R-IT)
- *   cellKey(lot, readPaths)                      → {cell_id}                                               (R-IK, Q-L2-1)
- *   statusText(status, reason), layer2Status(result, map) → the stored status and reason                   (R-IL)
- *   evidenceOf(result, map, {winnerLayer})       → {evidence_kind, evidence_ref}                           (R-IM)
- *   firstLotGate(fired, order), closureStart(n, sentinel), exceptionMismatch(n, xN, sentinel)             (R-IN)
- *   collapseClasses(order, resultsByClass)       → class → its representative class                        (R-IO)
- *   splitPopulation(batch, key, isIn)            → {inside, retract}                                       (R-IR)
- *   inPopulation(zoneList, vocabZones)           → the population predicate over a row's zone              (R-IR, Q-L2-4)
+ * Batch J (Spec 124 R-IL…R-IW, operator 2026-10-21, approved on the simplicity condition):
+ *   sha256Hex(bytes), filesHash([{path, sha256}])  → version hashes                                       (R-IW)
+ *   cellKey(lot, readPaths)                      → {cell_id}                                               (R-IN, Q-L2-1)
+ *   statusText(status, reason), layer2Status(result, map) → the stored status and reason                   (R-IO)
+ *   evidenceOf(result, map, {winnerLayer})       → {evidence_kind, evidence_ref}                           (R-IP)
+ *   firstLotGate(fired, order), closureStart(n, sentinel), exceptionMismatch(n, xN, sentinel)             (R-IQ)
+ *   collapseClasses(order, resultsByClass)       → class → its representative class                        (R-IR)
+ *   splitPopulation(batch, key, isIn)            → {inside, retract}                                       (R-IU)
+ *   inPopulation(zoneList, vocabZones)           → the population predicate over a row's zone              (R-IU, Q-L2-4)
  */
 'use strict';
 
@@ -121,19 +121,19 @@ function valueKindOf(value) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// The operator's batch-J rulings (2026-10-21, `2026-10-21-chat-batch-j`; Spec 124 R-IK, R-IL, R-IM, R-IN, R-IO, R-IR,
-// R-IT), each in its simplest compliant form. The map (`scripts/seeds/bylaw/layer2-map.json`) is passed in; nothing
+// The operator's batch-J rulings (2026-10-21, `2026-10-21-chat-batch-j`; Spec 124 R-IN, R-IO, R-IP, R-IQ, R-IR, R-IU,
+// R-IW), each in its simplest compliant form. The map (`scripts/seeds/bylaw/layer2-map.json`) is passed in; nothing
 // here holds a status, code, gate or class list.
 // ---------------------------------------------------------------------------------------------------------------------
 
-/** R-IT: the hex sha256 of a string's UTF-8 bytes or of a Buffer. */
+/** R-IW: the hex sha256 of a string's UTF-8 bytes or of a Buffer. */
 function sha256Hex(bytes) {
   return crypto.createHash('sha256').update(bytes).digest('hex');
 }
 
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 /**
- * R-IT: one hash over several files: sha256 of the `<path>\0<sha256>\n` lines sorted by path (order-free; a rename
+ * R-IW: one hash over several files: sha256 of the `<path>\0<sha256>\n` lines sorted by path (order-free; a rename
  * changes it). Paths are repo-relative POSIX paths.
  */
 function filesHash(entries) {
@@ -150,10 +150,10 @@ function filesHash(entries) {
   return sha256Hex(lines.join(''));
 }
 
-/** The two lot fields loadCandidates reads (evaluate.mjs): they fix the candidate set at one table_version (R-IK). */
+/** The two lot fields loadCandidates reads (evaluate.mjs): they fix the candidate set at one table_version (R-IN). */
 const CANDIDATE_INPUTS = Object.freeze(['zone', 'exception']);
 /**
- * R-IK: `cell_id` = sha256 over the sorted `<path>\t<token>` lines (token = cell-cache.mjs inputValue) of `zone`,
+ * R-IN: `cell_id` = sha256 over the sorted `<path>\t<token>` lines (token = cell-cache.mjs inputValue) of `zone`,
  * `exception` and every read path; `target.*` paths are dropped as in the cell cache. There is no `inputs_hash`: it would equal
  * `cell_id` (operator Q-L2-1, `2026-10-21-chat-batch-k-layer2`).
  * An input path the cell cache cannot value throws (never keyed loosely).
@@ -166,14 +166,14 @@ function cellKey(lot, readPaths) {
   return { cell_id: hash };
 }
 
-/** R-IL: the §5a written form, derived on read: `<status>:<reason>`, or the bare status. */
+/** R-IO: the §5a written form, derived on read: `<status>:<reason>`, or the bare status. */
 function statusText(status, reason) {
   return reason === null || reason === undefined ? status : `${status}:${reason}`;
 }
 
 const reasonCodeOf = (reason) => String(reason).split(':')[0];
 /**
- * R-IL: an effective() result's stored Layer 2 status and reason, through the map's `evaluator_status`. A
+ * R-IO: an effective() result's stored Layer 2 status and reason, through the map's `evaluator_status`. A
  * `not_evaluated` reason must carry a code in the map's `reason_code`; an unmapped status throws.
  */
 function layer2Status(result, map) {
@@ -191,7 +191,7 @@ function layer2Status(result, map) {
   return { status: m.status, reason };
 }
 
-/** R-IM: the ref each evaluator evidence kind carries. */
+/** R-IP: the ref each evaluator evidence kind carries. */
 const EVIDENCE_REF = Object.freeze({
   clause: (ev) => ev.clause,
   absence: (ev) => ev.ruling,
@@ -199,7 +199,7 @@ const EVIDENCE_REF = Object.freeze({
   disapply: (ev) => [...(ev.disapplied_by || [])].sort().join(','),
 });
 /**
- * R-IM: `evidence_kind` / `evidence_ref`. An evidence object keeps the evaluator's kind (it must be in the map's
+ * R-IP: `evidence_kind` / `evidence_ref`. An evidence object keeps the evaluator's kind (it must be in the map's
  * `evidence_kind`). A winner with no evidence object (a numeric rule-path winner) is `clause`, or `provincial` when the
  * caller says the winner's layer is provincial, with the winner's regulation id (`splitRef`, no unit read).
  */
@@ -215,20 +215,20 @@ function evidenceOf(result, map, { winnerLayer = null } = {}) {
   return { evidence_kind: null, evidence_ref: null };
 }
 
-/** R-IN: the first fired lot gate in the declared order (the map's `lot_gate`), or null; an undeclared gate throws. */
+/** R-IQ: the first fired lot gate in the declared order (the map's `lot_gate`), or null; an undeclared gate throws. */
 function firstLotGate(fired, order) {
   const set = new Set(fired);
   for (const g of set) if (!order.includes(g)) throw new Error(`firstLotGate: gate ${JSON.stringify(g)} is not in layer2-map.json lot_gate`);
   return order.find((g) => set.has(g)) || null;
 }
 
-/** R-IN: the exception number that starts the INCLUDE closure: none for an absent number or the sentinel. */
+/** R-IQ: the exception number that starts the INCLUDE closure: none for an absent number or the sentinel. */
 function closureStart(exceptionNumber, sentinel) {
   return exceptionNumber === null || exceptionNumber === undefined || exceptionNumber === sentinel ? null : exceptionNumber;
 }
 
 /**
- * R-IN (with P2's xN != number arm): the parcel's exception number and the label's (xN) disagree. With no (xN), only a
+ * R-IQ (with P2's xN != number arm): the parcel's exception number and the label's (xN) disagree. With no (xN), only a
  * real exception number mismatches (the sentinel base-resolves); with an (xN), anything but that same number does.
  */
 function exceptionMismatch(exceptionNumber, labelX, sentinel) {
@@ -243,7 +243,7 @@ function stableJson(v) {
 }
 
 /**
- * R-IO (iv): each class → its representative: the first class in catalogue order whose result is byte-equal under the
+ * R-IR (iv): each class → its representative: the first class in catalogue order whose result is byte-equal under the
  * stable JSON form (itself when none earlier is). Every declared class needs a result and every result a declared
  * class (Spec 134 I13).
  */
@@ -261,7 +261,7 @@ function collapseClasses(order, resultsByClass) {
 }
 
 /**
- * R-IR: one source batch split by the population predicate (passed in): the rows to resolve, and the keys whose link
+ * R-IU: one source batch split by the population predicate (passed in): the rows to resolve, and the keys whose link
  * rows the `replace_keys` write retracts.
  */
 function splitPopulation(batch, key, isIn) {

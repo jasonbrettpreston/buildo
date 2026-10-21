@@ -16,19 +16,19 @@
   "routing": {
     "CHAT-39.Q-L2-1": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IK"
+      "row": "R-IN"
     },
     "CHAT-39.Q-L2-2": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IP"
+      "row": "R-IS"
     },
     "CHAT-39.Q-L2-3": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IU"
+      "row": "R-IX"
     },
     "CHAT-39.Q-L2-4": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IR"
+      "row": "R-IU"
     }
   },
   "amendments": {},

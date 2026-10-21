@@ -1,5 +1,5 @@
 {
- "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/ run on the working tree at d9ee05b3 with the batch-J cases as plain it, before scripts/seeds/bylaw/layer2-map.json, scripts/seeds/bylaw/layer2-scope.json and the bylaw-resolution.js functions for Spec 124 R-IK, R-IL, R-IM, R-IN, R-IO, R-IR, R-IT existed (lane layer2-build-2, 2026-10-21). 36 red; the 20 passing are the 18 slice (a) cases and two guards that read the evaluator only (green by design). Paths made repo-relative; nothing else edited.",
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/ run on the working tree at d9ee05b3 with the batch-J cases as plain it, before scripts/seeds/bylaw/layer2-map.json, scripts/seeds/bylaw/layer2-scope.json and the bylaw-resolution.js functions for Spec 124 R-IN, R-IO, R-IP, R-IQ, R-IR, R-IU, R-IW existed (lane layer2-build-2, 2026-10-21). 36 red; the 20 passing are the 18 slice (a) cases and two guards that read the evaluator only (green by design). Paths made repo-relative; nothing else edited.",
  "numTotalTestSuites": 21,
  "numPassedTestSuites": 5,
  "numFailedTestSuites": 16,
@@ -32,9 +32,9 @@
    "assertionResults": [
     {
      "ancestorTitles": [
-      "R-IL: the stored Layer 2 status set and the evaluator status map"
+      "R-IO: the stored Layer 2 status set and the evaluator status map"
      ],
-     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)",
+     "fullName": "R-IO: the stored Layer 2 status set and the evaluator status map the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)",
      "status": "failed",
      "title": "the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)",
      "duration": 2.5947499999999906,
@@ -45,9 +45,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: the stored Layer 2 status set and the evaluator status map"
+      "R-IO: the stored Layer 2 status set and the evaluator status map"
      ],
-     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map every effective() status maps to a stored status, conflict to not_evaluated with reason conflict (Spec 134:56)",
+     "fullName": "R-IO: the stored Layer 2 status set and the evaluator status map every effective() status maps to a stored status, conflict to not_evaluated with reason conflict (Spec 134:56)",
      "status": "failed",
      "title": "every effective() status maps to a stored status, conflict to not_evaluated with reason conflict (Spec 134:56)",
      "duration": 0.22120799999999008,
@@ -58,9 +58,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: the stored Layer 2 status set and the evaluator status map"
+      "R-IO: the stored Layer 2 status set and the evaluator status map"
      ],
-     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map both ways: every status literal the evaluator returns is mapped (results or permissions), and every mapped key is one it returns",
+     "fullName": "R-IO: the stored Layer 2 status set and the evaluator status map both ways: every status literal the evaluator returns is mapped (results or permissions), and every mapped key is one it returns",
      "status": "failed",
      "title": "both ways: every status literal the evaluator returns is mapped (results or permissions), and every mapped key is one it returns",
      "duration": 0.16150000000000375,
@@ -71,9 +71,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: the stored Layer 2 status set and the evaluator status map"
+      "R-IO: the stored Layer 2 status set and the evaluator status map"
      ],
-     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map permitted() results keep their own words; prohibited images to not_applicable at Layer 2 and not_permitted at the scenario level",
+     "fullName": "R-IO: the stored Layer 2 status set and the evaluator status map permitted() results keep their own words; prohibited images to not_applicable at Layer 2 and not_permitted at the scenario level",
      "status": "failed",
      "title": "permitted() results keep their own words; prohibited images to not_applicable at Layer 2 and not_permitted at the scenario level",
      "duration": 0.12770799999999838,
@@ -84,9 +84,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: reason codes, value kinds and the Layer 3 image are closed and total"
+      "R-IO: reason codes, value kinds and the Layer 3 image are closed and total"
      ],
-     "fullName": "R-IL: reason codes, value kinds and the Layer 3 image are closed and total reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways",
+     "fullName": "R-IO: reason codes, value kinds and the Layer 3 image are closed and total reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways",
      "status": "failed",
      "title": "reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways",
      "duration": 0.14116699999999582,
@@ -97,9 +97,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: reason codes, value kinds and the Layer 3 image are closed and total"
+      "R-IO: reason codes, value kinds and the Layer 3 image are closed and total"
      ],
-     "fullName": "R-IL: reason codes, value kinds and the Layer 3 image are closed and total value_kind is number, unlimited, unregulated (Spec 134 §3)",
+     "fullName": "R-IO: reason codes, value kinds and the Layer 3 image are closed and total value_kind is number, unlimited, unregulated (Spec 134 §3)",
      "status": "failed",
      "title": "value_kind is number, unlimited, unregulated (Spec 134 §3)",
      "duration": 0.10791600000000301,
@@ -110,9 +110,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: reason codes, value kinds and the Layer 3 image are closed and total"
+      "R-IO: reason codes, value kinds and the Layer 3 image are closed and total"
      ],
-     "fullName": "R-IL: reason codes, value kinds and the Layer 3 image are closed and total every stored status has a Layer 3 field-status image; applies is imaged by value_kind; every image is a Spec 68 §11.1 field status",
+     "fullName": "R-IO: reason codes, value kinds and the Layer 3 image are closed and total every stored status has a Layer 3 field-status image; applies is imaged by value_kind; every image is a Spec 68 §11.1 field status",
      "status": "failed",
      "title": "every stored status has a Layer 3 field-status image; applies is imaged by value_kind; every image is a Spec 68 §11.1 field status",
      "duration": 0.11424999999999841,
@@ -123,9 +123,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IM: evidence_kind is the evaluator's own kinds plus provincial"
+      "R-IP: evidence_kind is the evaluator's own kinds plus provincial"
      ],
-     "fullName": "R-IM: evidence_kind is the evaluator's own kinds plus provincial the closed set is clause, absence, provincial, disapply, label_absent",
+     "fullName": "R-IP: evidence_kind is the evaluator's own kinds plus provincial the closed set is clause, absence, provincial, disapply, label_absent",
      "status": "failed",
      "title": "the closed set is clause, absence, provincial, disapply, label_absent",
      "duration": 0.0854580000000027,
@@ -136,9 +136,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IM: evidence_kind is the evaluator's own kinds plus provincial"
+      "R-IP: evidence_kind is the evaluator's own kinds plus provincial"
      ],
-     "fullName": "R-IM: evidence_kind is the evaluator's own kinds plus provincial both ways: every evidence kind the evaluator writes is in the set, and every member but provincial (derived by Layer 2) is written",
+     "fullName": "R-IP: evidence_kind is the evaluator's own kinds plus provincial both ways: every evidence kind the evaluator writes is in the set, and every member but provincial (derived by Layer 2) is written",
      "status": "failed",
      "title": "both ways: every evidence kind the evaluator writes is in the set, and every member but provincial (derived by Layer 2) is written",
      "duration": 0.17229199999999878,
@@ -149,9 +149,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IN: the lot gates in their declared order; the sentinel"
+      "R-IQ: the lot gates in their declared order; the sentinel"
      ],
-     "fullName": "R-IN: the lot gates in their declared order; the sentinel lot_gate is the six Spec 134 gates in the declared order",
+     "fullName": "R-IQ: the lot gates in their declared order; the sentinel lot_gate is the six Spec 134 gates in the declared order",
      "status": "failed",
      "title": "lot_gate is the six Spec 134 gates in the declared order",
      "duration": 0.1039169999999956,
@@ -162,9 +162,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IN: the lot gates in their declared order; the sentinel"
+      "R-IQ: the lot gates in their declared order; the sentinel"
      ],
-     "fullName": "R-IN: the lot gates in their declared order; the sentinel the two gates the evaluator also emits are its own closed codes",
+     "fullName": "R-IQ: the lot gates in their declared order; the sentinel the two gates the evaluator also emits are its own closed codes",
      "status": "passed",
      "title": "the two gates the evaluator also emits are its own closed codes",
      "duration": 0.21091699999999491,
@@ -173,9 +173,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IN: the lot gates in their declared order; the sentinel"
+      "R-IQ: the lot gates in their declared order; the sentinel"
      ],
-     "fullName": "R-IN: the lot gates in their declared order; the sentinel the exception-number sentinel is data (-1, Spec 134 I5)",
+     "fullName": "R-IQ: the lot gates in their declared order; the sentinel the exception-number sentinel is data (-1, Spec 134 I5)",
      "status": "failed",
      "title": "the exception-number sentinel is data (-1, Spec 134 I5)",
      "duration": 0.08937500000000398,
@@ -195,9 +195,9 @@
    "assertionResults": [
     {
      "ancestorTitles": [
-      "R-IP: the v1 scope seed"
+      "R-IS: the v1 scope seed"
      ],
-     "fullName": "R-IP: the v1 scope seed declares the three v1 structures (Spec 134 §6; M-233)",
+     "fullName": "R-IS: the v1 scope seed declares the three v1 structures (Spec 134 §6; M-233)",
      "status": "failed",
      "title": "declares the three v1 structures (Spec 134 §6; M-233)",
      "duration": 2.498374999999996,
@@ -208,9 +208,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IP: the v1 scope seed"
+      "R-IS: the v1 scope seed"
      ],
-     "fullName": "R-IP: the v1 scope seed every list is sorted and unique, and every target is a vocab.json dsl_target",
+     "fullName": "R-IS: the v1 scope seed every list is sorted and unique, and every target is a vocab.json dsl_target",
      "status": "failed",
      "title": "every list is sorted and unique, and every target is a vocab.json dsl_target",
      "duration": 0.20033300000000054,
@@ -221,9 +221,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IP: the v1 scope seed"
+      "R-IS: the v1 scope seed"
      ],
-     "fullName": "R-IP: the v1 scope seed both ways against the lineage registry: principal = targets keyed by a non-suite field; each suite = targets keyed by a suite_ field (minus deferred)",
+     "fullName": "R-IS: the v1 scope seed both ways against the lineage registry: principal = targets keyed by a non-suite field; each suite = targets keyed by a suite_ field (minus deferred)",
      "status": "failed",
      "title": "both ways against the lineage registry: principal = targets keyed by a non-suite field; each suite = targets keyed by a suite_ field (minus deferred)",
      "duration": 0.15491699999999753,
@@ -234,9 +234,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IP: the v1 scope seed"
+      "R-IS: the v1 scope seed"
      ],
-     "fullName": "R-IP: the v1 scope seed every lineage target is in scope or deferred with a reason, and nothing else is listed",
+     "fullName": "R-IS: the v1 scope seed every lineage target is in scope or deferred with a reason, and nothing else is listed",
      "status": "failed",
      "title": "every lineage target is in scope or deferred with a reason, and nothing else is listed",
      "duration": 0.13087500000000318,
@@ -454,9 +454,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
+      "R-IW: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
      ],
-     "fullName": "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) sha256Hex is the hex sha256 of the bytes",
+     "fullName": "R-IW: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) sha256Hex is the hex sha256 of the bytes",
      "status": "failed",
      "title": "sha256Hex is the hex sha256 of the bytes",
      "duration": 1.7622080000000153,
@@ -467,9 +467,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
+      "R-IW: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
      ],
-     "fullName": "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) filesHash is order-free and rename-visible",
+     "fullName": "R-IW: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) filesHash is order-free and rename-visible",
      "status": "failed",
      "title": "filesHash is order-free and rename-visible",
      "duration": 0.5115420000000199,
@@ -480,9 +480,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
+      "R-IW: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
      ],
-     "fullName": "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) a duplicate path, a bad sha or an absolute or parent path throws",
+     "fullName": "R-IW: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) a duplicate path, a bad sha or an absolute or parent path throws",
      "status": "failed",
      "title": "a duplicate path, a bad sha or an absolute or parent path throws",
      "duration": 0.9541670000000124,
@@ -493,9 +493,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+      "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included"
      ],
-     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; inputs_hash is the same hash",
+     "fullName": "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; inputs_hash is the same hash",
      "status": "failed",
      "title": "cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; inputs_hash is the same hash",
      "duration": 0.1384999999999934,
@@ -506,9 +506,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+      "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included"
      ],
-     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded",
+     "fullName": "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded",
      "status": "failed",
      "title": "target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded",
      "duration": 0.12162499999999454,
@@ -519,9 +519,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+      "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included"
      ],
-     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included two lots that differ only in an input no result read share a cell; a read input or the zone or exception splits them",
+     "fullName": "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included two lots that differ only in an input no result read share a cell; a read input or the zone or exception splits them",
      "status": "failed",
      "title": "two lots that differ only in an input no result read share a cell; a read input or the zone or exception splits them",
      "duration": 0.12029100000000881,
@@ -532,9 +532,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+      "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included"
      ],
-     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included zone and exception fix the candidate set: loadCandidates reads no other lot field",
+     "fullName": "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included zone and exception fix the candidate set: loadCandidates reads no other lot field",
      "status": "passed",
      "title": "zone and exception fix the candidate set: loadCandidates reads no other lot field",
      "duration": 0.08212499999999068,
@@ -543,9 +543,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+      "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included"
      ],
-     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included an input path the cell cache cannot value throws (refused, never keyed loosely)",
+     "fullName": "R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included an input path the cell cache cannot value throws (refused, never keyed loosely)",
      "status": "failed",
      "title": "an input path the cell cache cannot value throws (refused, never keyed loosely)",
      "duration": 0.21000000000000796,
@@ -556,9 +556,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
+      "R-IO: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
      ],
-     "fullName": "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read statusText writes <status>:<reason>, or the bare status when there is no reason",
+     "fullName": "R-IO: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read statusText writes <status>:<reason>, or the bare status when there is no reason",
      "status": "failed",
      "title": "statusText writes <status>:<reason>, or the bare status when there is no reason",
      "duration": 0.139458999999988,
@@ -569,9 +569,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
+      "R-IO: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
      ],
-     "fullName": "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read layer2Status maps each evaluator status through the map; a not_applicable prefix is stripped; conflict is not_evaluated:conflict",
+     "fullName": "R-IO: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read layer2Status maps each evaluator status through the map; a not_applicable prefix is stripped; conflict is not_evaluated:conflict",
      "status": "failed",
      "title": "layer2Status maps each evaluator status through the map; a not_applicable prefix is stripped; conflict is not_evaluated:conflict",
      "duration": 0.39570900000001075,
@@ -582,9 +582,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
+      "R-IO: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
      ],
-     "fullName": "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read an unmapped status, or a not_evaluated code outside the map, throws (the map is total and closed)",
+     "fullName": "R-IO: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read an unmapped status, or a not_evaluated code outside the map, throws (the map is total and closed)",
      "status": "failed",
      "title": "an unmapped status, or a not_evaluated code outside the map, throws (the map is total and closed)",
      "duration": 0.11020800000000008,
@@ -595,9 +595,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
+      "R-IP: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
      ],
-     "fullName": "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id each evaluator evidence kind keeps its name and takes its own ref",
+     "fullName": "R-IP: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id each evaluator evidence kind keeps its name and takes its own ref",
      "status": "failed",
      "title": "each evaluator evidence kind keeps its name and takes its own ref",
      "duration": 0.10266699999999673,
@@ -608,9 +608,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
+      "R-IP: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
      ],
-     "fullName": "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id a numeric winner has no evidence object: clause, or provincial when its layer is provincial, with splitRef(winner).reg",
+     "fullName": "R-IP: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id a numeric winner has no evidence object: clause, or provincial when its layer is provincial, with splitRef(winner).reg",
      "status": "failed",
      "title": "a numeric winner has no evidence object: clause, or provincial when its layer is provincial, with splitRef(winner).reg",
      "duration": 0.10550000000000637,
@@ -621,9 +621,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
+      "R-IP: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
      ],
-     "fullName": "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id a result with no winner and no evidence has no evidence; an evidence kind outside the map throws",
+     "fullName": "R-IP: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id a result with no winner and no evidence has no evidence; an evidence kind outside the map throws",
      "status": "failed",
      "title": "a result with no winner and no evidence has no evidence; an evidence kind outside the map throws",
      "duration": 0.10508300000000759,
@@ -634,9 +634,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
+      "R-IQ: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
      ],
-     "fullName": "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule firstLotGate returns the first fired gate in the declared order, or null",
+     "fullName": "R-IQ: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule firstLotGate returns the first fired gate in the declared order, or null",
      "status": "failed",
      "title": "firstLotGate returns the first fired gate in the declared order, or null",
      "duration": 0.10033300000000622,
@@ -647,9 +647,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
+      "R-IQ: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
      ],
-     "fullName": "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule a fired gate outside the declared order throws",
+     "fullName": "R-IQ: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule a fired gate outside the declared order throws",
      "status": "failed",
      "title": "a fired gate outside the declared order throws",
      "duration": 0.22649999999998727,
@@ -660,9 +660,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
+      "R-IQ: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
      ],
-     "fullName": "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule the sentinel is no exception for the closure; it is present for the mismatch test (xN != number arm included)",
+     "fullName": "R-IQ: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule the sentinel is no exception for the closure; it is present for the mismatch test (xN != number arm included)",
      "status": "failed",
      "title": "the sentinel is no exception for the closure; it is present for the mismatch test (xN != number arm included)",
      "duration": 0.11295800000002032,
@@ -673,9 +673,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IO: classes collapse by byte-equal results into the first in catalogue order"
+      "R-IR: classes collapse by byte-equal results into the first in catalogue order"
      ],
-     "fullName": "R-IO: classes collapse by byte-equal results into the first in catalogue order equal results collapse into the earliest equal class; a different result keeps its own class",
+     "fullName": "R-IR: classes collapse by byte-equal results into the first in catalogue order equal results collapse into the earliest equal class; a different result keeps its own class",
      "status": "failed",
      "title": "equal results collapse into the earliest equal class; a different result keeps its own class",
      "duration": 0.11095799999998235,
@@ -686,9 +686,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IO: classes collapse by byte-equal results into the first in catalogue order"
+      "R-IR: classes collapse by byte-equal results into the first in catalogue order"
      ],
-     "fullName": "R-IO: classes collapse by byte-equal results into the first in catalogue order a class missing from the results, or a result for an undeclared class, throws (I13)",
+     "fullName": "R-IR: classes collapse by byte-equal results into the first in catalogue order a class missing from the results, or a result for an undeclared class, throws (I13)",
      "status": "failed",
      "title": "a class missing from the results, or a result for an undeclared class, throws (I13)",
      "duration": 0.22637500000001864,
@@ -699,9 +699,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IR: a batch splits into the population and the keys to retract (the replace_keys write)"
+      "R-IU: a batch splits into the population and the keys to retract (the replace_keys write)"
      ],
-     "fullName": "R-IR: a batch splits into the population and the keys to retract (the replace_keys write) rows in the population pass through; the others give their key to the retraction",
+     "fullName": "R-IU: a batch splits into the population and the keys to retract (the replace_keys write) rows in the population pass through; the others give their key to the retraction",
      "status": "failed",
      "title": "rows in the population pass through; the others give their key to the retraction",
      "duration": 0.12195800000000645,
@@ -712,9 +712,9 @@
     },
     {
      "ancestorTitles": [
-      "R-IR: a batch splits into the population and the keys to retract (the replace_keys write)"
+      "R-IU: a batch splits into the population and the keys to retract (the replace_keys write)"
      ],
-     "fullName": "R-IR: a batch splits into the population and the keys to retract (the replace_keys write) a predicate that is not a function, or a row without its key, throws",
+     "fullName": "R-IU: a batch splits into the population and the keys to retract (the replace_keys write) a predicate that is not a function, or a row without its key, throws",
      "status": "failed",
      "title": "a predicate that is not a function, or a row without its key, throws",
      "duration": 0.16708399999998846,

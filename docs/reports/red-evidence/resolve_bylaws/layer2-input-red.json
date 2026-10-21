@@ -1,5 +1,5 @@
 {
- "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/bylaw-layer2-input.logic.test.ts run on the working tree at d3aa7b89 with every case as plain it, before scripts/generate-bylaw-layer2-input.mjs and docs/reference/bylaw-layer2-input.json existed (Spec 124 R-II, R-IT; lane layer2-build-2, 2026-10-21). 8 red. Absolute paths made repo-relative; nothing else edited.",
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/bylaw-layer2-input.logic.test.ts run on the working tree at d3aa7b89 with every case as plain it, before scripts/generate-bylaw-layer2-input.mjs and docs/reference/bylaw-layer2-input.json existed (Spec 124 R-IL, R-IW; lane layer2-build-2, 2026-10-21). 8 red. Absolute paths made repo-relative; nothing else edited.",
  "numTotalTestSuites": 4,
  "numPassedTestSuites": 0,
  "numFailedTestSuites": 4,
@@ -32,9 +32,9 @@
    "assertionResults": [
     {
      "ancestorTitles": [
-      "R-II / R-IT: the committed Layer 1 input is current"
+      "R-IL / R-IW: the committed Layer 1 input is current"
      ],
-     "fullName": "R-II / R-IT: the committed Layer 1 input is current table_version is filesHash over every file under scripts/seeds/bylaw and scripts/analysis/bylaw, the assembly and the generator",
+     "fullName": "R-IL / R-IW: the committed Layer 1 input is current table_version is filesHash over every file under scripts/seeds/bylaw and scripts/analysis/bylaw, the assembly and the generator",
      "status": "failed",
      "title": "table_version is filesHash over every file under scripts/seeds/bylaw and scripts/analysis/bylaw, the assembly and the generator",
      "duration": 2.194665999999998,
@@ -45,9 +45,9 @@
     },
     {
      "ancestorTitles": [
-      "R-II / R-IT: the committed Layer 1 input is current"
+      "R-IL / R-IW: the committed Layer 1 input is current"
      ],
-     "fullName": "R-II / R-IT: the committed Layer 1 input is current evaluator_version is filesHash over evaluate.mjs and dsl.mjs",
+     "fullName": "R-IL / R-IW: the committed Layer 1 input is current evaluator_version is filesHash over evaluate.mjs and dsl.mjs",
      "status": "failed",
      "title": "evaluator_version is filesHash over evaluate.mjs and dsl.mjs",
      "duration": 0.17762499999999193,
@@ -58,9 +58,9 @@
     },
     {
      "ancestorTitles": [
-      "R-II / R-IT: the committed Layer 1 input is current"
+      "R-IL / R-IW: the committed Layer 1 input is current"
      ],
-     "fullName": "R-II / R-IT: the committed Layer 1 input is current body_sha256 is the sha256 of the serialized body",
+     "fullName": "R-IL / R-IW: the committed Layer 1 input is current body_sha256 is the sha256 of the serialized body",
      "status": "failed",
      "title": "body_sha256 is the sha256 of the serialized body",
      "duration": 0.15008400000000677,
@@ -71,9 +71,9 @@
     },
     {
      "ancestorTitles": [
-      "R-II / R-IT: the committed Layer 1 input is current"
+      "R-IL / R-IW: the committed Layer 1 input is current"
      ],
-     "fullName": "R-II / R-IT: the committed Layer 1 input is current checkDoc is RED on a stale table_version, evaluator_version or body, and clean on the committed file",
+     "fullName": "R-IL / R-IW: the committed Layer 1 input is current checkDoc is RED on a stale table_version, evaluator_version or body, and clean on the committed file",
      "status": "failed",
      "title": "checkDoc is RED on a stale table_version, evaluator_version or body, and clean on the committed file",
      "duration": 0.12583399999999756,
@@ -84,9 +84,9 @@
     },
     {
      "ancestorTitles": [
-      "R-II: the committed body is the assembly (one function, no drift)"
+      "R-IL: the committed body is the assembly (one function, no drift)"
      ],
-     "fullName": "R-II: the committed body is the assembly (one function, no drift) a full rebuild with loadRealLotAssembly equals the committed body",
+     "fullName": "R-IL: the committed body is the assembly (one function, no drift) a full rebuild with loadRealLotAssembly equals the committed body",
      "status": "failed",
      "title": "a full rebuild with loadRealLotAssembly equals the committed body",
      "duration": 0.14270799999999895,
@@ -97,9 +97,9 @@
     },
     {
      "ancestorTitles": [
-      "R-II: the committed body is the assembly (one function, no drift)"
+      "R-IL: the committed body is the assembly (one function, no drift)"
      ],
-     "fullName": "R-II: the committed body is the assembly (one function, no drift) the evaluator context rebuilt from the body equals the assembly context",
+     "fullName": "R-IL: the committed body is the assembly (one function, no drift) the evaluator context rebuilt from the body equals the assembly context",
      "status": "failed",
      "title": "the evaluator context rebuilt from the body equals the assembly context",
      "duration": 1744.104875,
@@ -110,9 +110,9 @@
     },
     {
      "ancestorTitles": [
-      "R-II: explicit modes; no default write"
+      "R-IL: explicit modes; no default write"
      ],
-     "fullName": "R-II: explicit modes; no default write no mode, two modes and an unknown flag each exit 2 and write nothing",
+     "fullName": "R-IL: explicit modes; no default write no mode, two modes and an unknown flag each exit 2 and write nothing",
      "status": "failed",
      "title": "no mode, two modes and an unknown flag each exit 2 and write nothing",
      "duration": 0.2346660000000611,
@@ -123,9 +123,9 @@
     },
     {
      "ancestorTitles": [
-      "R-II: explicit modes; no default write"
+      "R-IL: explicit modes; no default write"
      ],
-     "fullName": "R-II: explicit modes; no default write --check exits 0 on the committed tree",
+     "fullName": "R-IL: explicit modes; no default write --check exits 0 on the committed tree",
      "status": "failed",
      "title": "--check exits 0 on the committed tree",
      "duration": 57.93987500000003,

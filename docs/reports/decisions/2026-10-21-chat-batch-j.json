@@ -16,51 +16,51 @@
   "routing": {
     "CHAT-36.OQ1": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-II"
+      "row": "R-IL"
     },
     "CHAT-36.OQ2": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IJ"
+      "row": "R-IM"
     },
     "CHAT-36.OQ3": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IK"
+      "row": "R-IN"
     },
     "CHAT-36.OQ4": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IL"
+      "row": "R-IO"
     },
     "CHAT-36.OQ5": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IM"
+      "row": "R-IP"
     },
     "CHAT-36.OQ6": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IN"
+      "row": "R-IQ"
     },
     "CHAT-36.OQ7": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IO"
+      "row": "R-IR"
     },
     "CHAT-36.OQ8": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IP"
+      "row": "R-IS"
     },
     "CHAT-36.OQ9": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IQ"
+      "row": "R-IT"
     },
     "CHAT-36.OQ10": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IR"
+      "row": "R-IU"
     },
     "CHAT-36.OQ11": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IS"
+      "row": "R-IV"
     },
     "CHAT-36.OQ12": {
       "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
-      "row": "R-IT"
+      "row": "R-IW"
     }
   },
   "amendments": {},

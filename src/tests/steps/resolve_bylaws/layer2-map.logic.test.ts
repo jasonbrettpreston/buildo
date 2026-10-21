@@ -1,9 +1,9 @@
 // SPEC LINK: docs/specs/01-pipeline/134_resolve_bylaws.md §4 (status sets and layer2-map.json), §7 I2, I3, I5;
 //            docs/specs/01-pipeline/69a_mcbylaw_register.md M-232 (one declared total map, locked both ways);
-//            docs/specs/01-pipeline/124_step_standard_policy.md §5 R-IL, R-IM, R-IN (operator chat batch J,
+//            docs/specs/01-pipeline/124_step_standard_policy.md §5 R-IO, R-IP, R-IQ (operator chat batch J,
 //            2026-10-21-chat-batch-j#CHAT-36.OQ4 / OQ5 / OQ6, approved on the simplicity condition)
 //
-// The Layer 2 status map, scripts/seeds/bylaw/layer2-map.json: one file of closed tables (R-IL). Locked both ways
+// The Layer 2 status map, scripts/seeds/bylaw/layer2-map.json: one file of closed tables (R-IO). Locked both ways
 // against what the evaluator exports and returns: its NOT_EVALUATED_CODES, its result status literals and its evidence
 // kinds, and against the Layer 3 vocabulary (vocab.json layer3). The static R-EMIT extraction of every emitted reason
 // string stays a Spec 134 prerequisite (134:121); this lock reads the exported codes and the status / kind literals.
@@ -32,7 +32,7 @@ const sorted = (xs: Iterable<string>): string[] => [...new Set(xs)].sort();
 const AUTHORING_STATE = new Set(['authored', 'partial']);
 const evaluatorStatusLiterals = (): string[] => sorted([...EV_SRC.matchAll(/status: '([a-z_]+)'/g)].map((m) => m[1]!).filter((s) => !AUTHORING_STATE.has(s)));
 
-describe('R-IL: the stored Layer 2 status set and the evaluator status map', () => {
+describe('R-IO: the stored Layer 2 status set and the evaluator status map', () => {
   it('the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)', () => {
     expect(map().status).toEqual(['applies', 'not_applicable', 'not_evaluated']);
     expect(EV_SRC).not.toMatch(/status: 'undecided'/);
@@ -69,7 +69,7 @@ describe('R-IL: the stored Layer 2 status set and the evaluator status map', () 
   });
 });
 
-describe('R-IL: reason codes, value kinds and the Layer 3 image are closed and total', () => {
+describe('R-IO: reason codes, value kinds and the Layer 3 image are closed and total', () => {
   it('reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways', () => {
     const m = map();
     expect(m.reason_code).toEqual(sorted([...E.NOT_EVALUATED_CODES, 'conflict', ...m.lot_gate]));
@@ -89,7 +89,7 @@ describe('R-IL: reason codes, value kinds and the Layer 3 image are closed and t
   });
 });
 
-describe('R-IM: evidence_kind is the evaluator\'s own kinds plus provincial', () => {
+describe('R-IP: evidence_kind is the evaluator\'s own kinds plus provincial', () => {
   it('the closed set is clause, absence, provincial, disapply, label_absent', () => {
     expect(map().evidence_kind).toEqual(['clause', 'absence', 'provincial', 'disapply', 'label_absent']);
   });
@@ -101,7 +101,7 @@ describe('R-IM: evidence_kind is the evaluator\'s own kinds plus provincial', ()
   });
 });
 
-describe('R-IN: the lot gates in their declared order; the sentinel', () => {
+describe('R-IQ: the lot gates in their declared order; the sentinel', () => {
   it('lot_gate is the six Spec 134 gates in the declared order', () => {
     expect(map().lot_gate).toEqual(['no_569_2013_zone', 'ambiguous_zone', 'label_unparsed', 'label_exception_mismatch', 'exception_not_authored', 'lot_metric_missing']);
   });

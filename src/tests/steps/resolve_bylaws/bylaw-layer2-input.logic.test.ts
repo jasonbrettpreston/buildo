@@ -1,5 +1,5 @@
-// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-II (Layer 1 reaches the compute as one generated
-//            file; operator chat batch J, 2026-10-21-chat-batch-j#CHAT-36.OQ1, simplified), R-IT (the version hash
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-IL (Layer 1 reaches the compute as one generated
+//            file; operator chat batch J, 2026-10-21-chat-batch-j#CHAT-36.OQ1, simplified), R-IW (the version hash
 //            recipe, #CHAT-36.OQ12), R-DJ (1) (every generator --check runs at pre-commit);
 //            docs/specs/01-pipeline/134_resolve_bylaws.md §2 (134:32, table_version and evaluator_version)
 //
@@ -35,7 +35,7 @@ const committed = (): Json => {
 const lib = require(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')) as Json;
 const cli = (...args: string[]) => spawnSync(process.execPath, [path.join(ROOT, GEN_REL), ...args], { cwd: ROOT, encoding: 'utf8' });
 
-describe('R-II / R-IT: the committed Layer 1 input is current', () => {
+describe('R-IL / R-IW: the committed Layer 1 input is current', () => {
   it('table_version is filesHash over every file under scripts/seeds/bylaw and scripts/analysis/bylaw, the assembly and the generator', async () => {
     const g = await gen();
     const entries = g.inputEntries(ROOT) as Array<{ path: string; sha256: string }>;
@@ -74,7 +74,7 @@ describe('R-II / R-IT: the committed Layer 1 input is current', () => {
   });
 });
 
-describe('R-II: the committed body is the assembly (one function, no drift)', () => {
+describe('R-IL: the committed body is the assembly (one function, no drift)', () => {
   it('a full rebuild with loadRealLotAssembly equals the committed body', async () => {
     const g = await gen();
     const body = await g.buildBody(ROOT);
@@ -91,7 +91,7 @@ describe('R-II: the committed body is the assembly (one function, no drift)', ()
   }, 60_000);
 });
 
-describe('R-II: explicit modes; no default write', () => {
+describe('R-IL: explicit modes; no default write', () => {
   it('no mode, two modes and an unknown flag each exit 2 and write nothing', () => {
     const before = fs.statSync(path.join(ROOT, OUT_REL)).mtimeMs;
     expect(cli().status).toBe(2);

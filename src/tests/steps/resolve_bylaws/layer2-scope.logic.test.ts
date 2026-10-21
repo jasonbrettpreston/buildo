@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/134_resolve_bylaws.md §1 (v1 scope), §6 (structures), §7 I1;
 //            docs/specs/01-pipeline/69a_mcbylaw_register.md M-233 (structures), M-234 (v1 scope; "join by a pin change");
-//            docs/specs/01-pipeline/124_step_standard_policy.md §5 R-IP (operator chat batch J,
+//            docs/specs/01-pipeline/124_step_standard_policy.md §5 R-IS (operator chat batch J,
 //            2026-10-21-chat-batch-j#CHAT-36.OQ8, approved on the simplicity condition)
 //
 // The v1 scope seed, scripts/seeds/bylaw/layer2-scope.json, locked both ways against the lineage registry
@@ -31,7 +31,7 @@ const keyedBy = (pick: (field: string) => boolean): string[] =>
   sorted(fields.filter((f) => pick(String(f.field)) && f.keyed && Array.isArray(f.keyed.layer2_targets)).flatMap((f) => f.keyed.layer2_targets as string[]));
 const SUITE = (f: string): boolean => f.startsWith('suite_');
 
-describe('R-IP: the v1 scope seed', () => {
+describe('R-IS: the v1 scope seed', () => {
   it('declares the three v1 structures (Spec 134 §6; M-233)', () => {
     expect(scope().structures).toEqual(['principal', 'garden_suite', 'laneway_suite']);
     expect(Object.keys(scope().targets)).toEqual(['principal', 'garden_suite', 'laneway_suite']);
