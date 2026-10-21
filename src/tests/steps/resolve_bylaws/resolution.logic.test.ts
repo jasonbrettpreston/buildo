@@ -15,6 +15,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped .js / .mjs module surface
 const ROOT = path.resolve(__dirname, '../../../../');
@@ -150,10 +152,179 @@ describe('Spec 134 §3: value_kind', () => {
 });
 
 describe('purity (Spec 132 §1 compute purity; gate E at ①)', () => {
-  it('the compute module requires nothing and reads no environment, clock or randomness', () => {
+  it('the library requires only node:crypto and the two pure evaluator modules, and reads no environment, clock or randomness', () => {
     const src = fs.readFileSync(path.join(ROOT, COMPUTE), 'utf8');
-    expect(src).not.toMatch(/\brequire\(/);
+    const required = [...src.matchAll(/\brequire\(([^)]*)\)/g)].map((m) => m[1]).sort();
+    for (const r of required) expect(["'../analysis/bylaw/cell-cache.mjs'", "'../analysis/bylaw/evaluate.mjs'", "'node:crypto'"], r).toContain(r);
     expect(src).not.toMatch(/\bprocess\./);
     expect(src).not.toMatch(/\bDate\b|Math\.random/);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// The operator's batch-J rulings (2026-10-21, `2026-10-21-chat-batch-j`; Spec 124 R-IK, R-IL, R-IM, R-IN, R-IO, R-IR,
+// R-IT), each in its simplest compliant form. RED FIRST: committed as it.fails before the functions exist (gate K
+// artifact docs/reports/red-evidence/resolve_bylaws/rulings-j-red.json); the implementation commit flips them to it.
+// ---------------------------------------------------------------------------------------------------------------------
+const MAP = (): Json => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/layer2-map.json'), 'utf8')) as Json;
+const CC = await load('scripts/analysis/bylaw/cell-cache.mjs');
+const sha = (s: string): string => crypto.createHash('sha256').update(s).digest('hex');
+
+describe('R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)', () => {
+  it.fails('sha256Hex is the hex sha256 of the bytes', () => {
+    expect(rb().sha256Hex('abc')).toBe(sha('abc'));
+    expect(rb().sha256Hex(Buffer.from('abc'))).toBe(sha('abc'));
+  });
+
+  it.fails('filesHash is order-free and rename-visible', () => {
+    const a = { path: 'scripts/a.json', sha256: sha('1') };
+    const b = { path: 'scripts/b.json', sha256: sha('2') };
+    expect(rb().filesHash([a, b])).toBe(sha(`${a.path}\0${a.sha256}\n${b.path}\0${b.sha256}\n`));
+    expect(rb().filesHash([b, a])).toBe(rb().filesHash([a, b]));
+    expect(rb().filesHash([{ ...a, path: 'scripts/c.json' }, b])).not.toBe(rb().filesHash([a, b]));
+  });
+
+  it.fails('a duplicate path, a bad sha or an absolute or parent path throws', () => {
+    const a = { path: 'scripts/a.json', sha256: sha('1') };
+    expect(() => rb().filesHash([a, a])).toThrow(/duplicate/);
+    expect(() => rb().filesHash([{ ...a, sha256: 'x' }])).toThrow(/sha256/);
+    expect(() => rb().filesHash([{ ...a, path: '/abs.json' }])).toThrow(/path/);
+    expect(() => rb().filesHash([{ ...a, path: '../up.json' }])).toThrow(/path/);
+  });
+});
+
+describe('R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included', () => {
+  const lot: Json = { zone: 'RD', exception: null, label: { f: 9 }, vars: { lot_area_m2: 327.12 }, flags: { corner_lot: false } };
+  const line = (p: string, l: Json = lot): string => `${p}\t${CC.inputValue(l, p)}`;
+
+  it.fails('cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; inputs_hash is the same hash', () => {
+    const k = rb().cellKey(lot, ['vars.lot_area_m2', 'label.f']);
+    const expected = sha(['exception', 'label.f', 'vars.lot_area_m2', 'zone'].map((p) => line(p)).join('\n'));
+    expect(k).toEqual({ cell_id: expected, inputs_hash: expected });
+  });
+
+  it.fails('target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded', () => {
+    expect(rb().cellKey(lot, ['label.f', 'target.height_m', 'label.f'])).toEqual(rb().cellKey(lot, ['label.f']));
+  });
+
+  it.fails('two lots that differ only in an input no result read share a cell; a read input or the zone or exception splits them', () => {
+    const other = { ...lot, vars: { lot_area_m2: 999 } };
+    expect(rb().cellKey(other, ['label.f']).cell_id).toBe(rb().cellKey(lot, ['label.f']).cell_id);
+    expect(rb().cellKey(other, ['vars.lot_area_m2']).cell_id).not.toBe(rb().cellKey(lot, ['vars.lot_area_m2']).cell_id);
+    expect(rb().cellKey({ ...lot, zone: 'RS' }, []).cell_id).not.toBe(rb().cellKey(lot, []).cell_id);
+    expect(rb().cellKey({ ...lot, exception: 'EXQ' }, []).cell_id).not.toBe(rb().cellKey(lot, []).cell_id);
+  });
+
+  it('zone and exception fix the candidate set: loadCandidates reads no other lot field', () => {
+    const a = E.loadCandidates({ ...rdLot, exception: 'EXQ' }, UNITS).candidates.map((u: Json) => u.unit_id);
+    const b = E.loadCandidates({ zone: 'RD', exception: 'EXQ' }, UNITS).candidates.map((u: Json) => u.unit_id);
+    expect(b).toEqual(a);
+  });
+
+  it.fails('an input path the cell cache cannot value throws (refused, never keyed loosely)', () => {
+    expect(() => rb().cellKey(lot, ['nonsense'])).toThrow(/unkeyable/);
+  });
+});
+
+describe('R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read', () => {
+  it.fails('statusText writes <status>:<reason>, or the bare status when there is no reason', () => {
+    expect(rb().statusText('applies', null)).toBe('applies');
+    expect(rb().statusText('not_applicable', '10.5.40.70(2)')).toBe('not_applicable:10.5.40.70(2)');
+    expect(rb().statusText('not_evaluated', 'exception_not_authored:EXQ')).toBe('not_evaluated:exception_not_authored:EXQ');
+  });
+
+  it.fails('layer2Status maps each evaluator status through the map; a not_applicable prefix is stripped; conflict is not_evaluated:conflict', () => {
+    const m = MAP();
+    expect(rb().layer2Status({ status: 'value', value: 7.5 }, m)).toEqual({ status: 'applies', reason: null });
+    expect(rb().layer2Status({ status: 'not_applicable', reason: 'not_applicable:10.5.40.70(2)' }, m)).toEqual({ status: 'not_applicable', reason: '10.5.40.70(2)' });
+    expect(rb().layer2Status({ status: 'not_evaluated', reason: 'missing_input:lot_area_m2' }, m)).toEqual({ status: 'not_evaluated', reason: 'missing_input:lot_area_m2' });
+    expect(rb().layer2Status({ status: 'conflict', reason: 'eval_conflict' }, m)).toEqual({ status: 'not_evaluated', reason: 'conflict' });
+  });
+
+  it.fails('an unmapped status, or a not_evaluated code outside the map, throws (the map is total and closed)', () => {
+    const m = MAP();
+    expect(() => rb().layer2Status({ status: 'maybe' }, m)).toThrow(/maybe/);
+    expect(() => rb().layer2Status({ status: 'not_evaluated', reason: 'invented_code:x' }, m)).toThrow(/invented_code/);
+  });
+});
+
+describe('R-IM: evidence_kind is the evaluator\'s own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id', () => {
+  it.fails('each evaluator evidence kind keeps its name and takes its own ref', () => {
+    const m = MAP();
+    expect(rb().evidenceOf({ status: 'value', value: 'unregulated', winner: null, evidence: { kind: 'clause', clause: '10.20.40.10(1)#(B)' } }, m)).toEqual({ evidence_kind: 'clause', evidence_ref: '10.20.40.10(1)#(B)' });
+    expect(rb().evidenceOf({ status: 'value', value: 'unregulated', evidence: { kind: 'absence', ruling: 'ABS-1' } }, m)).toEqual({ evidence_kind: 'absence', evidence_ref: 'ABS-1' });
+    expect(rb().evidenceOf({ status: 'value', value: 'unregulated', evidence: { kind: 'label_absent', letter: 'h', ruling: 'M-220' } }, m)).toEqual({ evidence_kind: 'label_absent', evidence_ref: 'M-220' });
+    expect(rb().evidenceOf({ status: 'not_applicable', evidence: { kind: 'disapply', disapplied_by: ['B#2', 'A#1'] } }, m)).toEqual({ evidence_kind: 'disapply', evidence_ref: 'A#1,B#2' });
+  });
+
+  it.fails('a numeric winner has no evidence object: clause, or provincial when its layer is provincial, with splitRef(winner).reg', () => {
+    const m = MAP();
+    const r = { status: 'value', value: 10, winner: '10.20.40.10(1)#(B)' };
+    expect(rb().evidenceOf(r, m)).toEqual({ evidence_kind: 'clause', evidence_ref: E.splitRef('10.20.40.10(1)#(B)').reg });
+    expect(rb().evidenceOf(r, m, { winnerLayer: 'provincial' })).toEqual({ evidence_kind: 'provincial', evidence_ref: E.splitRef('10.20.40.10(1)#(B)').reg });
+  });
+
+  it.fails('a result with no winner and no evidence has no evidence; an evidence kind outside the map throws', () => {
+    const m = MAP();
+    expect(rb().evidenceOf({ status: 'not_evaluated', reason: 'no_candidate' }, m)).toEqual({ evidence_kind: null, evidence_ref: null });
+    expect(() => rb().evidenceOf({ status: 'value', evidence: { kind: 'hunch' } }, m)).toThrow(/hunch/);
+  });
+});
+
+describe('R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule', () => {
+  it.fails('firstLotGate returns the first fired gate in the declared order, or null', () => {
+    const order = MAP().lot_gate as string[];
+    expect(rb().firstLotGate(new Set(['lot_metric_missing', 'label_unparsed']), order)).toBe('label_unparsed');
+    expect(rb().firstLotGate(['exception_not_authored'], order)).toBe('exception_not_authored');
+    expect(rb().firstLotGate([], order)).toBeNull();
+  });
+
+  it.fails('a fired gate outside the declared order throws', () => {
+    expect(() => rb().firstLotGate(['made_up_gate'], MAP().lot_gate)).toThrow(/made_up_gate/);
+  });
+
+  it.fails('the sentinel is no exception for the closure; it is present for the mismatch test (xN != number arm included)', () => {
+    const s = MAP().exception_number_sentinel as number;
+    expect(rb().closureStart(null, s)).toBeNull();
+    expect(rb().closureStart(s, s)).toBeNull();
+    expect(rb().closureStart(12, s)).toBe(12);
+    // [exception number, label xN] → mismatch?
+    const cases: Array<[number | null, number | null, boolean]> = [[null, null, false], [s, null, false], [12, 12, false], [null, 12, true], [12, null, true], [s, 12, true], [12, 13, true]];
+    for (const [n, x, want] of cases) expect(rb().exceptionMismatch(n, x, s), `${n} vs x${x}`).toBe(want);
+  });
+});
+
+describe('R-IO: classes collapse by byte-equal results into the first in catalogue order', () => {
+  it.fails('equal results collapse into the earliest equal class; a different result keeps its own class', () => {
+    const order = ['detached_house', 'detached_houseplex', 'semi_detached_houseplex', 'semi_detached_house'];
+    const r1 = { status: 'value', value: 10 };
+    const r2 = { value: 10, status: 'value' }; // the same result, keys in another order
+    const r3 = { status: 'value', value: 12 };
+    expect(rb().collapseClasses(order, { detached_house: r1, detached_houseplex: r3, semi_detached_houseplex: r2, semi_detached_house: r3 }))
+      .toEqual({ detached_house: 'detached_house', detached_houseplex: 'detached_houseplex', semi_detached_houseplex: 'detached_house', semi_detached_house: 'detached_houseplex' });
+  });
+
+  it.fails('a class missing from the results, or a result for an undeclared class, throws (I13)', () => {
+    expect(() => rb().collapseClasses(['a', 'b'], { a: {} })).toThrow(/b/);
+    expect(() => rb().collapseClasses(['a'], { a: {}, z: {} })).toThrow(/z/);
+  });
+});
+
+describe('R-IR: a batch splits into the population and the keys to retract (the replace_keys write)', () => {
+  it.fails('rows in the population pass through; the others give their key to the retraction', () => {
+    const batch = [{ id: 1, z: 'RD' }, { id: 2, z: 'CR' }, { id: 3, z: 'RM' }];
+    expect(rb().splitPopulation(batch, 'id', (r: Json) => r.z.startsWith('R'))).toEqual({ inside: [batch[0], batch[2]], retract: [2] });
+  });
+
+  it.fails('a predicate that is not a function, or a row without its key, throws', () => {
+    expect(() => rb().splitPopulation([{ id: 1 }], 'id', null)).toThrow(/predicate/);
+    expect(() => rb().splitPopulation([{ x: 1 }], 'id', () => false)).toThrow(/id/);
+  });
+});
+
+describe('PIN-L2-2: the CommonJS library requires the ES evaluator modules synchronously in plain Node (the bridge)', () => {
+  it.fails('node (no test transform) requires the library and reaches evaluate.mjs and cell-cache.mjs', () => {
+    const out = execFileSync(process.execPath, ['-e', `const r = require(${JSON.stringify(path.join(ROOT, COMPUTE))}); console.log(typeof r.cellKey, typeof r.evidenceOf, r.cellKey({ zone: 'RD', exception: null }, []).cell_id.length)`], { encoding: 'utf8' });
+    expect(out.trim()).toBe('function function 64');
   });
 });

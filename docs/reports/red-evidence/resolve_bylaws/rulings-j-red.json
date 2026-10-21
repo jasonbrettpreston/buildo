@@ -1,0 +1,747 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/ run on the working tree at d9ee05b3 with the batch-J cases as plain it, before scripts/seeds/bylaw/layer2-map.json, scripts/seeds/bylaw/layer2-scope.json and the bylaw-resolution.js functions for Spec 124 R-IK, R-IL, R-IM, R-IN, R-IO, R-IR, R-IT existed (lane layer2-build-2, 2026-10-21). 36 red; the 20 passing are the 18 slice (a) cases and two guards that read the evaluator only (green by design). Paths made repo-relative; nothing else edited.",
+ "numTotalTestSuites": 21,
+ "numPassedTestSuites": 5,
+ "numFailedTestSuites": 16,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 56,
+ "numPassedTests": 20,
+ "numFailedTests": 36,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792601319082,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "R-IL: the stored Layer 2 status set and the evaluator status map"
+     ],
+     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)",
+     "status": "failed",
+     "title": "the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)",
+     "duration": 2.5947499999999906,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:37:12\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: the stored Layer 2 status set and the evaluator status map"
+     ],
+     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map every effective() status maps to a stored status, conflict to not_evaluated with reason conflict (Spec 134:56)",
+     "status": "failed",
+     "title": "every effective() status maps to a stored status, conflict to not_evaluated with reason conflict (Spec 134:56)",
+     "duration": 0.22120799999999008,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:42:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: the stored Layer 2 status set and the evaluator status map"
+     ],
+     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map both ways: every status literal the evaluator returns is mapped (results or permissions), and every mapped key is one it returns",
+     "status": "failed",
+     "title": "both ways: every status literal the evaluator returns is mapped (results or permissions), and every mapped key is one it returns",
+     "duration": 0.16150000000000375,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:52:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: the stored Layer 2 status set and the evaluator status map"
+     ],
+     "fullName": "R-IL: the stored Layer 2 status set and the evaluator status map permitted() results keep their own words; prohibited images to not_applicable at Layer 2 and not_permitted at the scenario level",
+     "status": "failed",
+     "title": "permitted() results keep their own words; prohibited images to not_applicable at Layer 2 and not_permitted at the scenario level",
+     "duration": 0.12770799999999838,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:59:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: reason codes, value kinds and the Layer 3 image are closed and total"
+     ],
+     "fullName": "R-IL: reason codes, value kinds and the Layer 3 image are closed and total reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways",
+     "status": "failed",
+     "title": "reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways",
+     "duration": 0.14116699999999582,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:74:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: reason codes, value kinds and the Layer 3 image are closed and total"
+     ],
+     "fullName": "R-IL: reason codes, value kinds and the Layer 3 image are closed and total value_kind is number, unlimited, unregulated (Spec 134 §3)",
+     "status": "failed",
+     "title": "value_kind is number, unlimited, unregulated (Spec 134 §3)",
+     "duration": 0.10791600000000301,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:79:12\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: reason codes, value kinds and the Layer 3 image are closed and total"
+     ],
+     "fullName": "R-IL: reason codes, value kinds and the Layer 3 image are closed and total every stored status has a Layer 3 field-status image; applies is imaged by value_kind; every image is a Spec 68 §11.1 field status",
+     "status": "failed",
+     "title": "every stored status has a Layer 3 field-status image; applies is imaged by value_kind; every image is a Spec 68 §11.1 field status",
+     "duration": 0.11424999999999841,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:83:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IM: evidence_kind is the evaluator's own kinds plus provincial"
+     ],
+     "fullName": "R-IM: evidence_kind is the evaluator's own kinds plus provincial the closed set is clause, absence, provincial, disapply, label_absent",
+     "status": "failed",
+     "title": "the closed set is clause, absence, provincial, disapply, label_absent",
+     "duration": 0.0854580000000027,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:94:12\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IM: evidence_kind is the evaluator's own kinds plus provincial"
+     ],
+     "fullName": "R-IM: evidence_kind is the evaluator's own kinds plus provincial both ways: every evidence kind the evaluator writes is in the set, and every member but provincial (derived by Layer 2) is written",
+     "status": "failed",
+     "title": "both ways: every evidence kind the evaluator writes is in the set, and every member but provincial (derived by Layer 2) is written",
+     "duration": 0.17229199999999878,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:99:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IN: the lot gates in their declared order; the sentinel"
+     ],
+     "fullName": "R-IN: the lot gates in their declared order; the sentinel lot_gate is the six Spec 134 gates in the declared order",
+     "status": "failed",
+     "title": "lot_gate is the six Spec 134 gates in the declared order",
+     "duration": 0.1039169999999956,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:106:12\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IN: the lot gates in their declared order; the sentinel"
+     ],
+     "fullName": "R-IN: the lot gates in their declared order; the sentinel the two gates the evaluator also emits are its own closed codes",
+     "status": "passed",
+     "title": "the two gates the evaluator also emits are its own closed codes",
+     "duration": 0.21091699999999491,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IN: the lot gates in their declared order; the sentinel"
+     ],
+     "fullName": "R-IN: the lot gates in their declared order; the sentinel the exception-number sentinel is data (-1, Spec 134 I5)",
+     "status": "failed",
+     "title": "the exception-number sentinel is data (-1, Spec 134 I5)",
+     "duration": 0.08937500000000398,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-map.json should exist: expected false to be true // Object.is equality\n    at map (src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:24:78)\n    at src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts:114:12\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792601319318,
+   "endTime": 1792601319322.211,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "R-IP: the v1 scope seed"
+     ],
+     "fullName": "R-IP: the v1 scope seed declares the three v1 structures (Spec 134 §6; M-233)",
+     "status": "failed",
+     "title": "declares the three v1 structures (Spec 134 §6; M-233)",
+     "duration": 2.498374999999996,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-scope.json should exist: expected false to be true // Object.is equality\n    at scope (src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:22:82)\n    at src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:36:12\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IP: the v1 scope seed"
+     ],
+     "fullName": "R-IP: the v1 scope seed every list is sorted and unique, and every target is a vocab.json dsl_target",
+     "status": "failed",
+     "title": "every list is sorted and unique, and every target is a vocab.json dsl_target",
+     "duration": 0.20033300000000054,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-scope.json should exist: expected false to be true // Object.is equality\n    at scope (src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:22:82)\n    at src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:41:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IP: the v1 scope seed"
+     ],
+     "fullName": "R-IP: the v1 scope seed both ways against the lineage registry: principal = targets keyed by a non-suite field; each suite = targets keyed by a suite_ field (minus deferred)",
+     "status": "failed",
+     "title": "both ways against the lineage registry: principal = targets keyed by a non-suite field; each suite = targets keyed by a suite_ field (minus deferred)",
+     "duration": 0.15491699999999753,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-scope.json should exist: expected false to be true // Object.is equality\n    at scope (src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:22:82)\n    at src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:49:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IP: the v1 scope seed"
+     ],
+     "fullName": "R-IP: the v1 scope seed every lineage target is in scope or deferred with a reason, and nothing else is listed",
+     "status": "failed",
+     "title": "every lineage target is in scope or deferred with a reason, and nothing else is listed",
+     "duration": 0.13087500000000318,
+     "failureMessages": [
+      "AssertionError: scripts/seeds/bylaw/layer2-scope.json should exist: expected false to be true // Object.is equality\n    at scope (src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:22:82)\n    at src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts:58:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792601319293,
+   "endTime": 1792601319296.1309,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a lot with no exception (an empty closure) is not gated",
+     "status": "passed",
+     "title": "a lot with no exception (an empty closure) is not gated",
+     "duration": 0.722959000000003,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a fully authored closure is not gated, in either authored form",
+     "status": "passed",
+     "title": "a fully authored closure is not gated, in either authored form",
+     "duration": 0.07712499999999523,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) the lot own exception missing from the authored map gates the lot with its id",
+     "status": "passed",
+     "title": "the lot own exception missing from the authored map gates the lot with its id",
+     "duration": 0.055959000000001424,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a partial exception is not fully authored, even for the targets it lists",
+     "status": "passed",
+     "title": "a partial exception is not fully authored, even for the targets it lists",
+     "duration": 0.04345800000000111,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) an authored exception that INCLUDEs an unauthored one gates with the included id",
+     "status": "passed",
+     "title": "an authored exception that INCLUDEs an unauthored one gates with the included id",
+     "duration": 0.04274999999999807,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) the first unauthored id in closure order is reported",
+     "status": "passed",
+     "title": "the first unauthored id in closure order is reported",
+     "duration": 0.06329199999998991,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) a missing closure or authored map throws, never defaulted (I10)",
+     "status": "passed",
+     "title": "a missing closure or authored map throws, never defaulted (I10)",
+     "duration": 0.325917000000004,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the lot-wide unauthored-exception gate (Spec 134 §5)"
+     ],
+     "fullName": "M-231: the lot-wide unauthored-exception gate (Spec 134 §5) the gate status is not_evaluated:exception_not_authored:<id>, an evaluator closed code",
+     "status": "passed",
+     "title": "the gate status is not_evaluated:exception_not_authored:<id>, an evaluator closed code",
+     "duration": 0.23358400000000756,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) one row per declared target and structure, each with the gate status and no winner",
+     "status": "passed",
+     "title": "one row per declared target and structure, each with the gate status and no winner",
+     "duration": 0.24108400000000074,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) a duplicate scope entry throws (I1 counts exactly)",
+     "status": "passed",
+     "title": "a duplicate scope entry throws (I1 counts exactly)",
+     "duration": 0.0672919999999948,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) a scope entry without a target or a structure throws",
+     "status": "passed",
+     "title": "a scope entry without a target or a structure throws",
+     "duration": 0.08537499999999909,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: written per target (gatedRows)"
+     ],
+     "fullName": "M-231: written per target (gatedRows) a gate status outside the not_evaluated form is refused (I3: a gated row has a closed reason)",
+     "status": "passed",
+     "title": "a gate status outside the not_evaluated form is refused (I3: a gated row has a closed reason)",
+     "duration": 0.06879200000000196,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the gate fires before effective() (resolveLot)"
+     ],
+     "fullName": "M-231: the gate fires before effective() (resolveLot) a gated lot never calls the resolver",
+     "status": "passed",
+     "title": "a gated lot never calls the resolver",
+     "duration": 0.07062500000000682,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the gate fires before effective() (resolveLot)"
+     ],
+     "fullName": "M-231: the gate fires before effective() (resolveLot) an ungated lot resolves every scope entry once, in scope order",
+     "status": "passed",
+     "title": "an ungated lot resolves every scope entry once, in scope order",
+     "duration": 0.13070900000001018,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "M-231: the gate fires before effective() (resolveLot)"
+     ],
+     "fullName": "M-231: the gate fires before effective() (resolveLot) the A14 case with the real evaluator: a partial exception resolves its listed target in effective(), Layer 2 still gates every target",
+     "status": "passed",
+     "title": "the A14 case with the real evaluator: a partial exception resolves its listed target in effective(), Layer 2 still gates every target",
+     "duration": 2.205292,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3: value_kind"
+     ],
+     "fullName": "Spec 134 §3: value_kind a finite number is number; the two terminal strings map to themselves",
+     "status": "passed",
+     "title": "a finite number is number; the two terminal strings map to themselves",
+     "duration": 0.09658299999998121,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3: value_kind"
+     ],
+     "fullName": "Spec 134 §3: value_kind anything else throws, never guessed",
+     "status": "passed",
+     "title": "anything else throws, never guessed",
+     "duration": 0.28795900000000074,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "purity (Spec 132 §1 compute purity; gate E at ①)"
+     ],
+     "fullName": "purity (Spec 132 §1 compute purity; gate E at ①) the library requires only node:crypto and the two pure evaluator modules, and reads no environment, clock or randomness",
+     "status": "passed",
+     "title": "the library requires only node:crypto and the two pure evaluator modules, and reads no environment, clock or randomness",
+     "duration": 0.1825420000000122,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
+     ],
+     "fullName": "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) sha256Hex is the hex sha256 of the bytes",
+     "status": "failed",
+     "title": "sha256Hex is the hex sha256 of the bytes",
+     "duration": 1.7622080000000153,
+     "failureMessages": [
+      "TypeError: rb(...).sha256Hex is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:175:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
+     ],
+     "fullName": "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) filesHash is order-free and rename-visible",
+     "status": "failed",
+     "title": "filesHash is order-free and rename-visible",
+     "duration": 0.5115420000000199,
+     "failureMessages": [
+      "TypeError: rb(...).filesHash is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:182:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines)"
+     ],
+     "fullName": "R-IT: version hashes (sha256 of bytes; several files hash the sorted path NUL sha256 lines) a duplicate path, a bad sha or an absolute or parent path throws",
+     "status": "failed",
+     "title": "a duplicate path, a bad sha or an absolute or parent path throws",
+     "duration": 0.9541670000000124,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /duplicate/ but got 'rb(...).filesHash is not a function'\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:189:42\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+     ],
+     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; inputs_hash is the same hash",
+     "status": "failed",
+     "title": "cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; inputs_hash is the same hash",
+     "duration": 0.1384999999999934,
+     "failureMessages": [
+      "TypeError: rb(...).cellKey is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:201:20\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+     ],
+     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded",
+     "status": "failed",
+     "title": "target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded",
+     "duration": 0.12162499999999454,
+     "failureMessages": [
+      "TypeError: rb(...).cellKey is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:207:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+     ],
+     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included two lots that differ only in an input no result read share a cell; a read input or the zone or exception splits them",
+     "status": "failed",
+     "title": "two lots that differ only in an input no result read share a cell; a read input or the zone or exception splits them",
+     "duration": 0.12029100000000881,
+     "failureMessages": [
+      "TypeError: rb(...).cellKey is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:212:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+     ],
+     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included zone and exception fix the candidate set: loadCandidates reads no other lot field",
+     "status": "passed",
+     "title": "zone and exception fix the candidate set: loadCandidates reads no other lot field",
+     "duration": 0.08212499999999068,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included"
+     ],
+     "fullName": "R-IK: cell_id keys a lot by the inputs its results read, zone and exception always included an input path the cell cache cannot value throws (refused, never keyed loosely)",
+     "status": "failed",
+     "title": "an input path the cell cache cannot value throws (refused, never keyed loosely)",
+     "duration": 0.21000000000000796,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /unkeyable/ but got 'rb(...).cellKey is not a function'\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:225:51\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
+     ],
+     "fullName": "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read statusText writes <status>:<reason>, or the bare status when there is no reason",
+     "status": "failed",
+     "title": "statusText writes <status>:<reason>, or the bare status when there is no reason",
+     "duration": 0.139458999999988,
+     "failureMessages": [
+      "TypeError: rb(...).statusText is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:231:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
+     ],
+     "fullName": "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read layer2Status maps each evaluator status through the map; a not_applicable prefix is stripped; conflict is not_evaluated:conflict",
+     "status": "failed",
+     "title": "layer2Status maps each evaluator status through the map; a not_applicable prefix is stripped; conflict is not_evaluated:conflict",
+     "duration": 0.39570900000001075,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/seeds/bylaw/layer2-map.json'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at MAP (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:169:39)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:237:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read"
+     ],
+     "fullName": "R-IL: the Layer 2 status is stored bare, the reason holds the parameter; the string form is derived on read an unmapped status, or a not_evaluated code outside the map, throws (the map is total and closed)",
+     "status": "failed",
+     "title": "an unmapped status, or a not_evaluated code outside the map, throws (the map is total and closed)",
+     "duration": 0.11020800000000008,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/seeds/bylaw/layer2-map.json'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at MAP (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:169:39)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:245:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
+     ],
+     "fullName": "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id each evaluator evidence kind keeps its name and takes its own ref",
+     "status": "failed",
+     "title": "each evaluator evidence kind keeps its name and takes its own ref",
+     "duration": 0.10266699999999673,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/seeds/bylaw/layer2-map.json'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at MAP (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:169:39)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:253:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
+     ],
+     "fullName": "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id a numeric winner has no evidence object: clause, or provincial when its layer is provincial, with splitRef(winner).reg",
+     "status": "failed",
+     "title": "a numeric winner has no evidence object: clause, or provincial when its layer is provincial, with splitRef(winner).reg",
+     "duration": 0.10550000000000637,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/seeds/bylaw/layer2-map.json'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at MAP (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:169:39)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:261:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id"
+     ],
+     "fullName": "R-IM: evidence_kind is the evaluator's own kind; a numeric winner records clause (provincial for a provincial winner) and its regulation id a result with no winner and no evidence has no evidence; an evidence kind outside the map throws",
+     "status": "failed",
+     "title": "a result with no winner and no evidence has no evidence; an evidence kind outside the map throws",
+     "duration": 0.10508300000000759,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/seeds/bylaw/layer2-map.json'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at MAP (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:169:39)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:268:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
+     ],
+     "fullName": "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule firstLotGate returns the first fired gate in the declared order, or null",
+     "status": "failed",
+     "title": "firstLotGate returns the first fired gate in the declared order, or null",
+     "duration": 0.10033300000000622,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/seeds/bylaw/layer2-map.json'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at MAP (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:169:39)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:276:19\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
+     ],
+     "fullName": "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule a fired gate outside the declared order throws",
+     "status": "failed",
+     "title": "a fired gate outside the declared order throws",
+     "duration": 0.22649999999998727,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /made_up_gate/ but got 'ENOENT: no such file or directory, op…'\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:283:71\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule"
+     ],
+     "fullName": "R-IN: one lot gate per lot, the first in the map order; the sentinel and the mismatch rule the sentinel is no exception for the closure; it is present for the mismatch test (xN != number arm included)",
+     "status": "failed",
+     "title": "the sentinel is no exception for the closure; it is present for the mismatch test (xN != number arm included)",
+     "duration": 0.11295800000002032,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/seeds/bylaw/layer2-map.json'\n    at Object.readFileSync (node:fs:624:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at MAP (src/tests/steps/resolve_bylaws/resolution.logic.test.ts:169:39)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:287:15\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IO: classes collapse by byte-equal results into the first in catalogue order"
+     ],
+     "fullName": "R-IO: classes collapse by byte-equal results into the first in catalogue order equal results collapse into the earliest equal class; a different result keeps its own class",
+     "status": "failed",
+     "title": "equal results collapse into the earliest equal class; a different result keeps its own class",
+     "duration": 0.11095799999998235,
+     "failureMessages": [
+      "TypeError: rb(...).collapseClasses is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:303:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IO: classes collapse by byte-equal results into the first in catalogue order"
+     ],
+     "fullName": "R-IO: classes collapse by byte-equal results into the first in catalogue order a class missing from the results, or a result for an undeclared class, throws (I13)",
+     "status": "failed",
+     "title": "a class missing from the results, or a result for an undeclared class, throws (I13)",
+     "duration": 0.22637500000001864,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /z/ but got 'rb(...).collapseClasses is not a func…'\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:309:65\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IR: a batch splits into the population and the keys to retract (the replace_keys write)"
+     ],
+     "fullName": "R-IR: a batch splits into the population and the keys to retract (the replace_keys write) rows in the population pass through; the others give their key to the retraction",
+     "status": "failed",
+     "title": "rows in the population pass through; the others give their key to the retraction",
+     "duration": 0.12195800000000645,
+     "failureMessages": [
+      "TypeError: rb(...).splitPopulation is not a function\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:316:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IR: a batch splits into the population and the keys to retract (the replace_keys write)"
+     ],
+     "fullName": "R-IR: a batch splits into the population and the keys to retract (the replace_keys write) a predicate that is not a function, or a row without its key, throws",
+     "status": "failed",
+     "title": "a predicate that is not a function, or a row without its key, throws",
+     "duration": 0.16708399999998846,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /predicate/ but got 'rb(...).splitPopulation is not a func…'\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:320:65\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "PIN-L2-2: the CommonJS library requires the ES evaluator modules synchronously in plain Node (the bridge)"
+     ],
+     "fullName": "PIN-L2-2: the CommonJS library requires the ES evaluator modules synchronously in plain Node (the bridge) node (no test transform) requires the library and reaches evaluate.mjs and cell-cache.mjs",
+     "status": "failed",
+     "title": "node (no test transform) requires the library and reaches evaluate.mjs and cell-cache.mjs",
+     "duration": 64.10537500000001,
+     "failureMessages": [
+      "Error: Command failed: /opt/homebrew/Cellar/node/26.11.1/bin/node -e const r = require(\"scripts/lib/bylaw-resolution.js\"); console.log(typeof r.cellKey, typeof r.evidenceOf, r.cellKey({ zone: 'RD', exception: null }, []).cell_id.length)\n[eval]:1\nconst r = require(\"scripts/lib/bylaw-resolution.js\"); console.log(typeof r.cellKey, typeof r.evidenceOf, r.cellKey({ zone: 'RD', exception: null }, []).cell_id.length)\n                                                                                                                                                        ^\n\nTypeError: r.cellKey is not a function\n    at [eval]:1:153\n    at runScriptInThisContext (node:internal/vm:219:10)\n    at node:internal/process/execution:485:12\n    at [eval]-wrapper:6:24\n    at runScriptInContext (node:internal/process/execution:483:60)\n    at evalFunction (node:internal/process/execution:317:30)\n    at evalTypeScript (node:internal/process/execution:329:3)\n    at node:internal/main/eval_string:71:3\n\nNode.js v26.11.1\n\n    at genericNodeError (node:internal/errors:999:15)\n    at wrappedFn (node:internal/errors:544:14)\n    at checkExecSyncError (node:child_process:988:11)\n    at Proxy.execFileSync (node:child_process:1024:15)\n    at src/tests/steps/resolve_bylaws/resolution.logic.test.ts:327:17\n    at node_modules/@vitest/runner/dist/index.js:146:14\n    at node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792601319322,
+   "endTime": 1792601319398.1055,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
+  }
+ ]
+}
