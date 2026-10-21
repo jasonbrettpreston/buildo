@@ -982,21 +982,33 @@ function effCore(lot, target, candidates, C, env) {
   return NE_RESULT(reason, { trace: [...trace, `undecided: ${worlds.length} resolutions disagree (${[...new Set(worlds.map((w) => (w.status === 'value' ? String(w.value) : w.status === 'not_applicable' ? w.reason : `${w.status}:${w.reason}`)))].sort(cmpStr).join(' | ')})`], disclosures, inputs: ins() });
 }
 
-/** The lot's exception and its INCLUDE closure are authored for `target` (lot gate, ruling (d)); returns the first that is not, or null. */
-function exceptionNotAuthored(lot, target, candidates, C, info = null) {
-  if (!lot.exception) return null;
-  const excOf = (u) => u.exception || u.regulation_id || splitRef(u.unit_id).reg;
-  const ok = (s) => s === 'authored' || (s && s.status === 'authored') || (s && s.status === 'partial' && Array.isArray(s.targets) && s.targets.includes(target));
-  const pending = (u) => PENDING_ROW.includes(u.row_status) || statementsOf(u).some((s) => s.error)
-    || ((u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && hasTarget(u) && !statementsOf(u).length);
+const unitsOfException = (candidates, e, info) => (Array.isArray(candidates) ? exceptionUnits(candidates, e, info || infoOf(candidates)) : candidates.filter((u) => u.layer === 'exception' && excOfUnit(u) === e));
+/**
+ * L2-CLOSURE (M-296; Spec 134 §2, the third permitted reader): the lot's exception and every exception its INCLUDE links
+ * reach, in the order the lot gate (ruling (d)) walks them: the lot's own first, then breadth-first, each once (a cycle
+ * is walked once). Pure; [] for a lot with no exception. An id with no units is still listed (the gate reports it).
+ */
+export function exceptionClosure(lot, candidates, info = null) {
+  if (!lot || !lot.exception) return [];
   const seen = new Set(); const queue = [lot.exception];
   while (queue.length) {
     const e = queue.shift();
     if (seen.has(e)) continue;
     seen.add(e);
-    const us = Array.isArray(candidates) ? exceptionUnits(candidates, e, info || infoOf(candidates)) : candidates.filter((u) => u.layer === 'exception' && excOf(u) === e);
+    for (const u of unitsOfException(candidates, e, info)) if (u.archetype === 'INCLUDE' && u.include_ref) queue.push(splitRef(u.include_ref).reg);
+  }
+  return [...seen];
+}
+
+/** The lot's exception and its INCLUDE closure are authored for `target` (lot gate, ruling (d)); returns the first that is not, or null. */
+function exceptionNotAuthored(lot, target, candidates, C, info = null) {
+  if (!lot.exception) return null;
+  const ok = (s) => s === 'authored' || (s && s.status === 'authored') || (s && s.status === 'partial' && Array.isArray(s.targets) && s.targets.includes(target));
+  const pending = (u) => PENDING_ROW.includes(u.row_status) || statementsOf(u).some((s) => s.error)
+    || ((u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && hasTarget(u) && !statementsOf(u).length);
+  for (const e of exceptionClosure(lot, candidates, info)) { // the one walk, shared with Layer 2 (L2-CLOSURE)
+    const us = unitsOfException(candidates, e, info);
     if (!us.length || !ok(C.authored[e]) || us.some(pending)) return e;
-    for (const u of us) if (u.archetype === 'INCLUDE' && u.include_ref) queue.push(splitRef(u.include_ref).reg);
   }
   return null;
 }

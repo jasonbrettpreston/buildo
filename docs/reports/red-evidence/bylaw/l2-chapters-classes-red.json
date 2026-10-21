@@ -1,0 +1,60 @@
+{
+ "suite": "src/tests/bylaw-layer2-vocab.logic.test.ts",
+ "base": "a98480dd",
+ "run_on": "2026-10-21",
+ "note": "L2-CHAPTERS (M-297) and L2-CLASSES (M-298): vocab.exception_chapter and the class vector fields / house_with_secondary_suite do not exist yet, so the vocab cases fail; the cellKey cases fail on the missing class. The test file lands with the fix (pre-commit runs related tests).",
+ "counts": {
+  "red": 10,
+  "pass": 2
+ },
+ "cases": [
+  {
+   "name": "L2-CHAPTERS: vocab.exception_chapter (M-297) maps exactly the evaluator zones, each to its Chapter 900 article number",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CHAPTERS: vocab.exception_chapter (M-297) covers every zone of the Layer 2 population list (resolve_bylaws_population_zone_classes)",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CHAPTERS: vocab.exception_chapter (M-297) both ways against the authored exception ids: every authored 900.<n>.10(<id>) chapter is mapped, every mapped chapter has authored exceptions",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CHAPTERS: vocab.exception_chapter (M-297) the oracle puller reads the map from vocab and holds no literal zone-to-chapter table (G-EXC-LIT)",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLASSES: vocab.scenario_class_units (M-298) holds the five classes; the only class new against the six that existed is house_with_secondary_suite",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLASSES: vocab.scenario_class_units (M-298) garden and laneway suites are structures, never classes",
+   "status": "passed"
+  },
+  {
+   "name": "L2-CLASSES: vocab.scenario_class_units (M-298) every class carries all six vector fields; building_type is an evaluator building type; the suite flags are booleans",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLASSES: vocab.scenario_class_units (M-298) vectors: a house with a secondary suite is the detached house with two units in the house and the suite flag set",
+   "status": "failed"
+  },
+  {
+   "name": "L2-CLASSES: vocab.scenario_class_units (M-298) the catalogue is pinned by sha (an edit to any vector changes it, so it is a reviewed change)",
+   "status": "failed"
+  },
+  {
+   "name": "PIN L2-KEY-READPATHS: a class change moves the cellKey houseplex vs house: building_type is in the read paths, and the keys differ",
+   "status": "failed"
+  },
+  {
+   "name": "PIN L2-KEY-READPATHS: a class change moves the cellKey house vs house with a secondary suite: same building type, the suite flag moves the key for a target that reads it",
+   "status": "failed"
+  },
+  {
+   "name": "PIN L2-KEY-READPATHS: a class change moves the cellKey every pair of the five classes that differ in a read input has different keys, and dropping building_type from the read paths would merge them (the R-IR hazard)",
+   "status": "passed"
+  }
+ ]
+}
