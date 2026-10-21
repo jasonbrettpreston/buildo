@@ -437,7 +437,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(71);
+    expect(r.decisions).toBe(76);
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(3);
   });
@@ -451,6 +451,18 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
       'CHAT-29.F-SC-8': 'M-252', 'CHAT-29.F-SC-9': 'M-253', 'CHAT-29.F-SC-11.12': 'M-254', 'CHAT-29.F-SC-13.14': 'M-255',
       'CHAT-29.FRONT-YARD': 'M-256', 'CHAT-29.Front-yard-accuracy': 'M-256', 'CHAT-29.F-SH-12': 'M-257', 'CHAT-29.F-SH-13': 'M-258',
     });
+  });
+
+  it('chat batch H (lane wf1/bylaw-fix-5): CHAT-30 / CHAT-31 → M-250, CHAT-32 → M-247, CHAT-33 → M-259, CHAT-34 → M-257 (and M-258)', () => {
+    const h = byStem.get('2026-10-21-chat-batch-h') as { source: { operator_quote: string }; decisions: Array<{ id: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(h.source.operator_quote).toBe('1-5 y ensure.');
+    expect(h.decisions.map((x) => x.id)).toEqual(['CHAT-30', 'CHAT-31', 'CHAT-32', 'CHAT-33', 'CHAT-34']);
+    expect(Object.fromEntries(Object.entries(h.routing).map(([k, v]) => [k, v.row]))).toEqual({ 'CHAT-30': 'M-250', 'CHAT-31': 'M-250', 'CHAT-32': 'M-247', 'CHAT-33': 'M-259', 'CHAT-34': 'M-257' });
+    const reg = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/01-pipeline/69a_mcbylaw_register.md'), 'utf8').split('\n');
+    for (const [id, row] of [['CHAT-30', 'M-250'], ['CHAT-31', 'M-250'], ['CHAT-32', 'M-247'], ['CHAT-33', 'M-259'], ['CHAT-34', 'M-257'], ['CHAT-34', 'M-258']]) {
+      expect(reg.find((l) => l.startsWith(`| **${row}** |`)), `${id} ${row}`).toContain(`\`2026-10-21-chat-batch-h#${id}\``);
+    }
+    expect(reg.find((l) => l.startsWith('| **M-250** |'))).toContain('PIN `RD27-CAP-KEYING`');
   });
 
   it('chat batch D (integrate-16): CHAT-23 → R-IG, CHAT-24 → notes on R-IB and R-IC, CHAT-25 → R-IH; CHAT-26 is no_ruling on R-EY', () => {
