@@ -3,6 +3,8 @@
 //
 // CoA scorecard. READ-ONLY: reads the tree at --root, parser-shaped notices, a frozen parcels snapshot; writes a scorecard JSON.
 // Assembly = assembly.mjs loadRealLotAssembly (what eval-lots.mjs and the golden-lot helper use) + vocab design_choice_disclosure.default_overrides.
+// Classes: MATCH / DIFFER / NO ANSWER / OWED / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
+// Survey dimensions in --plan-facts are preferred; a parcel row >5% off the survey is flagged (F-4D-8/9/14). Calculator survey override is drafted, not built (owed).
 // Scorer fixes marked "4D-S<n>" (S1-S7) came from the four-district run at ac78d5dd.
 // Usage: node scripts/analysis/bylaw-validation/coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]
 //   --check: after scoring, compare the class totals with EXPECTED.json {commit, totals}; exit 1 on a mismatch when --root is at that commit,
@@ -116,7 +118,8 @@ function mainType(purpose) {
   if (/triplex/.test(p)) return { bt: 'detached_houseplex', units: 3 };
   if (/houseplex/.test(p)) return { bt: 'detached_houseplex', units: within ? num(within[1]) : 4 };
   if (/converted into a duplex|duplex/.test(p)) return { bt: 'detached_houseplex', units: 2 };
-  if (/(existing|new)[^.]{0,40}semi-detached dwelling/.test(p)) {
+  // CHAT-45 (D-LIPPINCOTT): "mixed-used semi-detached building" is typed semi-detached, as the City notice words it (not mixed-use)
+  if (/(existing|new)[^.]{0,40}semi-detached (dwelling|building)/.test(p)) {
     const two = /two residential dwelling units in this dwelling/.test(p);
     return two ? { bt: 'semi_detached_houseplex', units: 2 } : { bt: 'semi_detached_house', units: 1 };
   }
@@ -219,8 +222,31 @@ function evalTarget(lot, target, onlyUnits) {
 }
 
 // ---------- main ----------
+// F-4D-8/9/14 (data-quality flag): survey dimensions (plan facts) are preferred when held; a parcel row that disagrees with the survey by more than 5% is flagged.
+const SURVEY_TOL = 0.05;
+function surveyFacts(n) {
+  if (!PF_DIR) return null;
+  try { const pf = JSON.parse(fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8'));
+    const g = (k) => (typeof pf[k] === 'number' && pf[k] > 0 ? pf[k] : null);
+    const sv = { frontage_m: g('lot_frontage_m'), depth_m: g('lot_depth_m'), area_m2: g('lot_area_m2'), corner: typeof pf.corner_lot === 'boolean' ? pf.corner_lot : null };
+    return Object.values(sv).some((x) => x != null) ? sv : null; } catch { return null; }
+}
+function surveyCheck(sv, p) {
+  if (!sv || !p) return { held: sv, flag: false, disagree: [] };
+  const dis = [];
+  for (const [k, pv, label] of [['frontage_m', p.frontage_m, 'frontage'], ['depth_m', p.depth_m, 'depth'], ['area_m2', p.lot_size_sqm, 'area']]) {
+    if (sv[k] != null && pv != null && Math.abs(pv - sv[k]) / sv[k] > SURVEY_TOL) dis.push(`${label} parcel ${pv} vs survey ${sv[k]} (${Math.round(((pv - sv[k]) / sv[k]) * 1000) / 10}%)`);
+  }
+  if (sv.corner != null && p.is_corner_lot != null && !!p.is_corner_lot !== sv.corner) dis.push(`corner parcel ${!!p.is_corner_lot} vs survey ${sv.corner}`);
+  return { held: sv, flag: dis.length > 0, disagree: dis };
+}
+function applySurvey(base, sv) {
+  if (!sv) return base;
+  const vars = { ...base.vars }; if (sv.frontage_m != null) vars.lot_frontage_m = sv.frontage_m; if (sv.depth_m != null) vars.lot_depth_m = sv.depth_m; if (sv.area_m2 != null) vars.lot_area_m2 = sv.area_m2;
+  return { ...base, vars, flags: sv.corner != null ? { ...base.flags, corner_lot: sv.corner } : base.flags };
+}
 const rows = []; const lots = {};
-for (const n of notices) {
+function runNotice(n, surveyOn, rows, lots) {
   const P = parcels[n.file_number] || { parcels: [] };
   const uniq = [...new Map(P.parcels.map((p) => [p.id, p])).values()];
   const p = uniq[0] || null;
@@ -229,12 +255,13 @@ for (const n of notices) {
   const lc = p ? labelCompare(n.zoning, p.zoning_zn_string) : null;
   const areaGapPct = p && ia ? Math.round(((p.lot_size_sqm - ia.area) / ia.area) * 1000) / 10 : null;
   const nonRes = n.zoning && n.zoning.zone && !['R', 'RD', 'RS', 'RT', 'RM'].includes(n.zoning.zone);
-  const base = p ? lotFromParcel(p) : null;
+  const sv = surveyFacts(n); const svc = surveyCheck(sv, p);
+  const base = p ? (surveyOn ? applySurvey(lotFromParcel(p), sv) : lotFromParcel(p)) : null;
   const openings = openingsEvidence(n);
   lots[n.file_number] = { address: n.address, city_label: n.zoning?.label, kind: n.kind, hearing_date: n.hearing_date, purpose: n.purpose, main_type: main,
     parcel: p ? { id: p.id, parcel_id: p.parcel_id, label: p.zoning_zn_string, frontage_m: p.frontage_m, depth_m: p.depth_m, lot_area_m2: p.lot_size_sqm, lot_size_basis: p.lot_size_basis, lot_size_confidence: p.lot_size_confidence,
       corner: p.is_corner_lot, lane: p.abuts_laneway, major: p.on_policy_road, geog_area: p.geog_area, n_parcels: uniq.length } : null,
-    match_how: P.how, label_check: lc, implied_area: ia, area_gap_pct: areaGapPct, non_residential: !!nonRes,
+    match_how: P.how, label_check: lc, survey_check: svc, survey_preferred: !!(surveyOn && sv), implied_area: ia, area_gap_pct: areaGapPct, non_residential: !!nonRes,
     legacy: p ? { max_buildable_gfa_sqm: p.max_buildable_gfa_sqm, max_buildable_gfa_basis: p.max_buildable_gfa_basis, max_build_fsi: p.max_build_fsi, bylaw_max_fsi: p.bylaw_max_fsi,
       bylaw_max_coverage_pct: p.bylaw_max_coverage_pct, max_buildable_footprint_sqm: p.max_buildable_footprint_sqm, max_build_height_m: p.max_build_height_m, max_build_stories: p.max_build_stories, max_build_basis: p.max_build_basis } : null };
 
@@ -247,6 +274,11 @@ for (const n of notices) {
     // 4D-S5: platform clauses open with the definition "attached to or less than 0.3 m from a building"; that 0.3 m is not the limit. Take the next figure.
     let s5 = null; const ra = (v.required_all || []).filter((x) => x.unit === 'm');
     if (cityUnit === 'm' && cityVal === 0.3 && /(less than|within) 0\.3 ?m (from|of) a building/i.test(v.requirement || '') && ra.length > 1) { s5 = `definition figure 0.3 m dropped; City figure taken as ${ra[1].value} m`; cityVal = ra[1].value; }
+    // F-4D-13: same definition in the wording "within 0.3 m of the (rear) main wall"; the limit is the last m figure that is not a height "above grade" (none: no numeric limit)
+    else if (cityUnit === 'm' && cityVal === 0.3 && /(less than|within|attached to or within) 0\.3 ?m (from|of) the (\w+ )?main wall/i.test(v.requirement || '')) {
+      const lim = [...String(v.requirement).matchAll(/(\d+(?:\.\d+)?) ?m(?![\w²2])(?! above)/g)].map((m) => Number(m[1])).filter((x, i) => !(i === 0 && x === 0.3)).pop();
+      s5 = lim != null ? `definition figure 0.3 m (main wall) dropped; City figure taken as ${lim} m` : 'definition figure 0.3 m (main wall) dropped; no numeric limit stated'; cityVal = lim ?? null; if (lim == null) cityUnit = null;
+    }
     let target = pickTarget(targets, cityUnit, c, matched);
     // the notice names the lot line: a setback clause keyed to several setback targets follows it
     let lineNote = null;
@@ -281,8 +313,8 @@ for (const n of notices) {
       building_type: bt, dwelling_units: SUITE_TYPES.includes(bt) ? 1 : main.units, keyed_units: matched.map((u) => `${u.unit_id}:${u.archetype}:${[].concat(u.target || []).join('+')}`), target,
       family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null };
     const oos = outOfScope(c, v);
-    if (nonRes) { row.class = 'DATA'; row.why = `non-residential zone ${n.zoning.zone}: skipped`; rows.push(row); continue; }
-    if (!p) { row.class = 'DATA'; row.why = 'no parcel match for the notice address'; rows.push(row); continue; }
+    if (nonRes) { row.class = 'NOT SCORABLE'; row.why = `zone ${n.zoning.zone} is not a 569-2013 residential zone (former by-law zone or non-residential): not scorable`; /* F-4D-20 */ rows.push(row); continue; }
+    if (!p) { row.class = 'NOT SCORABLE'; row.why = 'no parcel match for the notice address: not scorable'; /* F-4D-20 */ rows.push(row); continue; }
     if (lc.hard.length) { row.class = 'DATA'; row.why = `zoning label disagrees: ${lc.hard.join('; ')}`; rows.push(row); continue; }
     if (!oos && roleNM) { row.class = 'NOT MODELLED'; row.why = roleNM; row.family = 'not modelled'; rows.push(row); continue; }
     if (oos) { row.class = 'NOT MODELLED'; row.why = oos; row.family = 'not modelled';
@@ -340,6 +372,22 @@ for (const n of notices) {
     } else { row.class = 'NO ANSWER'; row.why = `${r.status}: ${r.reason || ''}`; }
     rows.push(row);
   }
+}
+
+for (const n of notices) runNotice(n, true, rows, lots);
+// F-4D-8/9/14: on a flagged lot a DIFFER / NO ANSWER on parcel dimensions that matches the City on survey dimensions is an explained data flag, not an engine miss
+for (const n of notices) {
+  const svc = lots[n.file_number].survey_check; if (!svc.flag) continue;
+  const sr = []; const sl = {}; runNotice(n, false, sr, sl);
+  const mine = rows.filter((r) => r.notice === n.file_number);
+  mine.forEach((r, i) => {
+    const q = sr[i]; if (!q || q.clause !== r.clause) return;
+    r.parcel_dims_class = q.class;
+    if (r.class === 'MATCH' && (q.class === 'DIFFER' || q.class === 'NO ANSWER')) {
+      r.class = 'DATA'; r.survey_flag = true; r.class_on_survey = 'MATCH';
+      r.why = `explained data flag: parcel row disagrees with the survey (${svc.disagree.join('; ')}); on survey dimensions ours matches the City (${r.ours?.value}); on parcel dimensions it was ${q.class}`;
+    }
+  });
 }
 
 // in-flight findings (approved, being fixed in lane bylaw-fix-3)

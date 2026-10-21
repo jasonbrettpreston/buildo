@@ -29,3 +29,37 @@ describe.skipIf(!have)('CoA four-district scorecard', () => {
     expect(so).toMatch(/diff 0/);
   });
 });
+
+// Fix round 4D lane D (F-4D-13, F-4D-20, F-4D-8/9/14, D-LIPPINCOTT / CHAT-45): scorer fixes, pinned on the 172-notice set.
+const have172 = fs.existsSync(path.join(DATA, 'parcels-all2.json')) && fs.existsSync(path.join(DATA, 'notices-all2.json'));
+describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
+  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'coasc172-')), 'sc.json');
+  let sc: any;
+  const rowsOf = (f: string) => sc.rows.filter((r: any) => r.notice === f);
+  it('runs', () => {
+    execFileSync('node', [path.join(ROOT, TOOLS, 'coa-scorecard.mjs'), '--notices', path.join(DATA, 'notices-all2.json'),
+      '--parcels', path.join(DATA, 'parcels-all2.json'), '--plan-facts', path.join(DATA, 'plan-facts'), '--out', out], { encoding: 'utf8' });
+    sc = JSON.parse(fs.readFileSync(out, 'utf8'));
+  }, 120000);
+  it('F-4D-13: "within 0.3 m of the rear main wall" is a definition; the City figure is 1.8 m', () => {
+    const r = rowsOf('A0486/26TEY').find((x: any) => /\(E\)\(ii\)/.test(x.clause));
+    expect(r.city_value).toBe(1.8);
+    expect(r.scorer_fix || r.s5_note).toBeTruthy();
+  });
+  it('F-4D-20: non-569 zones and unmatched addresses are NOT SCORABLE, not DATA/misses', () => {
+    for (const f of ['A0114/26SC', 'A0553/26TEY']) for (const r of rowsOf(f)) expect(r.class).toBe('NOT SCORABLE');
+  });
+  it('F-4D-9: a parcel row that disagrees with the survey by more than 5 percent is flagged', () => {
+    const l = sc.lots['A0118/26TEY'];
+    expect(l.survey_check.flag).toBe(true);
+    expect(l.survey_check.disagree.join(' ')).toMatch(/area/);
+  });
+  it('F-4D-8/9/14: a flagged row that matches the City on survey dimensions is an explained DATA flag', () => {
+    const flagged = sc.rows.filter((r: any) => r.survey_flag);
+    expect(flagged.length).toBeGreaterThan(0);
+    for (const r of flagged) { expect(r.class).toBe('DATA'); expect(r.why).toMatch(/survey/); }
+  });
+  it('CHAT-45: 202 Lippincott St (A0375/26TEY) stays semi-detached, as the City notice words it', () => {
+    expect(sc.lots['A0375/26TEY'].main_type.bt).toBe('semi_detached_house');
+  });
+});
