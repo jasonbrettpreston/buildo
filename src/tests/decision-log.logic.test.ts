@@ -420,9 +420,23 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(59);
+    expect(r.decisions).toBe(60);
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(3);
+  });
+
+  it('chat batch F (refreeze-night-1c): CHAT-28 → a dated note on R-II (ingestor recaptures re-acquire public sources; drift explained under R-DA; PIN OFFLINE-REPLAY-MODE)', () => {
+    const A = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
+    const f = byStem.get('2026-10-21-chat-batch-f') as { source: { operator_quote: string }; decisions: Array<{ id: string; decision: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(f.source.operator_quote).toBe('option A');
+    expect(f.decisions.map((x) => [x.id, x.decision])).toEqual([['CHAT-28', 'approve']]);
+    expect(f.routing).toEqual({ 'CHAT-28': { register: A } });
+    const rows = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n');
+    const ii = rows.find((l) => l.startsWith('| R-II |')) as string;
+    expect(ii).toContain('**Dated note 2026-10-21 (CHAT-28, operator chat: "option A"; `2026-10-21-chat-batch-f#CHAT-28`):**');
+    expect(ii).toContain('under R-DA (124a:392) as source drift');
+    expect(ii).toContain('PIN OFFLINE-REPLAY-MODE');
+    expect(rows.filter((l) => l.includes('2026-10-21-chat-batch-f#CHAT-28'))).toHaveLength(1);
   });
 
   it('chat batch E (refreeze-night-1): CHAT-27 → R-II, the REFREEZE-BUNDLE-1 split; the dated note sits on the bundled-night line', () => {
