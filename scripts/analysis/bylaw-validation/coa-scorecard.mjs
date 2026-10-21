@@ -1,0 +1,412 @@
+// SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §7.5, §7.6; docs/specs/01-pipeline/69a_mcbylaw_register.md M-125, M-127, M-236 dated note 2026-10-20
+// DRAFT RULING pending (operator): this read-only tool scores the committed evaluator against City examiner figures from CoA notices.
+//
+// CoA scorecard. READ-ONLY: reads the tree at --root, parser-shaped notices, a frozen parcels snapshot; writes a scorecard JSON.
+// Assembly = assembly.mjs loadRealLotAssembly (what eval-lots.mjs and the golden-lot helper use) + vocab design_choice_disclosure.default_overrides.
+// Classes: MATCH / DIFFER / NO ANSWER / OWED / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
+// Survey dimensions in --plan-facts are preferred; a parcel row >5% off the survey is flagged (F-4D-8/9/14). Calculator survey override is drafted, not built (owed).
+// Scorer fixes marked "4D-S<n>" (S1-S7) came from the four-district run at ac78d5dd.
+// Usage: node scripts/analysis/bylaw-validation/coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]
+//   --check: after scoring, compare the class totals with EXPECTED.json {commit, totals}; exit 1 on a mismatch when --root is at that commit,
+//            otherwise print the diff as information only (the evaluator moved on; a changed total is a finding, not a failure).
+import fs from 'node:fs'; import path from 'node:path'; import { pathToFileURL, fileURLToPath } from 'node:url';
+import { normClause, unitsForClause } from './coa-clausemap.mjs';
+import { execFileSync } from 'node:child_process';
+
+const arg = (k, d = null) => { const i = process.argv.indexOf('--' + k); return i >= 0 ? process.argv[i + 1] : d; };
+const ROOT = path.resolve(arg('root', path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')));
+const NOT = arg('notices'); const PAR = arg('parcels'); const OUT = arg('out'); const CHECK = arg('check');
+if (!NOT || !PAR || !OUT) { console.error('usage: coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]'); process.exit(2); }
+const { I, E, units, C } = await (await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw-validation/assembly.mjs')).href)).loadRealLotAssembly(ROOT);
+const FA = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/front-averaging.mjs')).href);
+const defaults = {}; for (const [k, v] of Object.entries((I.vocab.design_choice_disclosure || {}).default_overrides || {})) if (k !== '$comment' && v && typeof v.taken_as === 'boolean') defaults[k] = v.taken_as;
+const SCU = I.vocab.scenario_class_units || {};
+const notices = JSON.parse(fs.readFileSync(NOT, 'utf8')); const parcels = JSON.parse(fs.readFileSync(PAR, 'utf8'));
+const PF_DIR = arg('plan-facts', process.env.PLAN_FACTS || null);
+// 4D-S4: openings evidence (notice text or plan facts) → take the blank_side_wall:false arm
+const OPEN_RE = /\b(windows?|openings?|doors?)\s+(in|on)\s+(the\s+)?(\w+\s+)?(side|main)\s+walls?|(?<!no\s)openings to dwelling units|side wall (has|with) (windows|openings)/i;
+function openingsEvidence(n) {
+  const txt = [n.purpose, ...n.variances.flatMap((v) => [v.requirement, v.proposal])].join(' ');
+  if (OPEN_RE.test(txt)) return 'notice text';
+  if (PF_DIR) { try { const pf = fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8'); if (/windows? in (the )?side wall|side wall[^"]{0,20}(windows|openings)/i.test(pf)) return 'plan facts'; } catch {} }
+  return null;
+}
+// 4D-S2/S3: which role the City figure plays in the requirement text (width / clearance / encroachment)
+function figureRole(req, val) {
+  const t = String(req || ''); if (val == null) return null;
+  const re = /\d+(?:\.\d+)?/g; let m; let pos = -1;
+  while ((m = re.exec(t))) if (Math.abs(Number(m[0]) - val) < 1e-9) { pos = m.index; break; }
+  if (pos < 0) return null;
+  const before = t.slice(Math.max(0, pos - 45), pos);
+  if (/(wide|width)[^.]{0,25}$/i.test(before)) return 'width';
+  if (/(lot line|closer|from|distance|clear(ance)?)[^.]{0,30}$/i.test(before) || /^[^.]{0,30}(from|to) (the|a|any) [^.]{0,15}lot line/i.test(t.slice(pos))) return 'clearance';
+  if (/(encroach|project|extend|into)[^.]{0,40}$/i.test(before)) return 'encroachment';
+  return null;
+}
+const FYA_ALLOWANCE = Number(process.env.FYA_ALLOWANCE || 1.0); // logic_variables fya_porch_allowance_m (migration 276 seed 1.0)
+
+// ---------- label parsing (pull-lots.cjs:9-15, verbatim logic) ----------
+const EXC_CH = { R: 2, RD: 3, RS: 4, RT: 5, RM: 6 };
+function parseLabel(zn) {
+  const m = /^\s*([A-Z]+)\s*(?:\(([^)]*)\))?/.exec(zn || ''); const label = {};
+  if (m && m[2]) for (const part of m[2].split(';')) { const p = /^\s*([a-wyz][a-z]?)\s*([\d.]+)\s*$/.exec(part); if (p) label[p[1]] = Number(p[2]); }
+  const x = /\(x(\d+)\)/.exec(zn || '');
+  return { label, exc: x ? Number(x[1]) : null };
+}
+function lotFromParcel(p) {
+  const { label, exc } = parseLabel(p.zoning_zn_string);
+  const ov = p.zoning_overlays || {}; const overlays = {};
+  if (ov.height_overlay && ov.height_overlay.applied) { if (ov.height_overlay.height_max_m != null) overlays.HT = Number(ov.height_overlay.height_max_m); if (ov.height_overlay.stories != null) overlays.ST = Number(ov.height_overlay.stories); }
+  if (ov.lot_coverage_overlay && ov.lot_coverage_overlay.applied && ov.lot_coverage_overlay.coverage_max_pct != null) overlays.LC = Number(ov.lot_coverage_overlay.coverage_max_pct);
+  return {
+    zone: p.zoning_class, zone_label: p.zoning_zn_string, label, overlays,
+    vars: { lot_frontage_m: p.frontage_m, lot_depth_m: p.depth_m, lot_area_m2: p.lot_size_sqm },
+    flags: { corner_lot: !!p.is_corner_lot, through_lot: !!p.is_through_lot, major_street: !!p.on_policy_road, abuts_lane: !!p.abuts_laneway, lawfully_existing: false },
+    building_type: 'detached_house', exception: exc != null ? `900.${EXC_CH[p.zoning_class]}.10(${exc})` : null, parcel_id: p.parcel_id,
+    address: [p.address_number, p.linear_name_full].filter(Boolean).join(' '),
+  };
+}
+
+// ---------- label comparison ----------
+function labelCompare(city, ours) {
+  const c = city || {}; const o = parseLabel(ours); const oz = /^\s*([A-Z]+)/.exec(ours || '')?.[1] || null;
+  const issues = []; const soft = [];
+  if (!c.zone) soft.push(`city label "${c.label}" is not a 569-2013 zone`);
+  else if (c.zone !== oz) issues.push(`zone ${c.zone} vs ours ${oz}`);
+  for (const k of ['f', 'a', 'd', 'u']) {
+    const cv = c[k]; const ov = o.label[k];
+    if (cv != null && ov != null && Math.abs(cv - ov) > 1e-6) issues.push(`${k}${cv} vs ours ${k}${ov}`);
+    else if (cv != null && ov == null) issues.push(`city ${k}${cv}, ours none`);
+    else if (cv == null && ov != null) soft.push(`city label omits ${k}${ov}`);
+  }
+  const cx = (c.exceptions || []).map((x) => Number(String(x).replace(/\D/g, ''))); const ox = o.exc;
+  if (cx.length && ox != null && !cx.includes(ox)) issues.push(`x${cx.join(',')} vs ours x${ox}`);
+  else if (cx.length && ox == null) issues.push(`city x${cx.join(',')}, ours none`);
+  else if (!cx.length && ox != null) soft.push(`city label omits x${ox}`);
+  return { hard: issues, soft };
+}
+
+// ---------- implied lot area ----------
+const LOTAREA_RE = /(lot area|area of the lot)/i;
+function impliedArea(n) {
+  const est = [];
+  for (const v of n.variances) {
+    for (const [txt, all] of [[v.requirement, v.required_all], [v.proposal, v.proposed_all]]) {
+      if (!txt || !LOTAREA_RE.test(txt) || !all) continue;
+      const r = all.find((x) => x.unit === '× lot area' || x.unit === '%'); const a = all.find((x) => x.unit === 'm²');
+      if (!r || !a || !r.value) continue;
+      const ratio = r.unit === '%' ? r.value / 100 : r.value; if (ratio <= 0) continue;
+      est.push({ from: `${v.clause} ${txt === v.requirement ? 'requirement' : 'proposal'}`, area: Math.round((a.value / ratio) * 100) / 100, exact: txt === v.requirement });
+    }
+  }
+  if (!est.length) return null;
+  const pick = est.find((e) => e.exact) || est.slice().sort((a, b) => a.area - b.area)[Math.floor(est.length / 2)];
+  return { area: pick.area, from: pick.from, all: est };
+}
+
+// ---------- building type ----------
+function mainType(purpose) {
+  const p = String(purpose || '').toLowerCase();
+  const within = /(\w+) units? within the main (?:building|dwelling)/.exec(p);
+  const W = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+  const num = (s) => (W[s] ?? Number(s));
+  if (/apartment building/.test(p)) { const m = /total of (\w+) dwelling units/.exec(p); return { bt: 'apartment_building', units: m ? num(m[1]) : 6 }; }
+  if (/total of (\w+) dwelling units will be provided/.test(p)) { const m = /total of (\w+) dwelling units/.exec(p); return { bt: 'apartment_building', units: num(m[1]) }; }
+  // 4D-S7: a townhouse notice is scored as a townhouse (was: detached_house)
+  if (/townhouse|row house/.test(p)) return { bt: 'townhouse', units: 1 };
+  if (/fourplex/.test(p)) return { bt: 'detached_houseplex', units: 4 };
+  if (/triplex/.test(p)) return { bt: 'detached_houseplex', units: 3 };
+  if (/houseplex/.test(p)) return { bt: 'detached_houseplex', units: within ? num(within[1]) : 4 };
+  if (/converted into a duplex|duplex/.test(p)) return { bt: 'detached_houseplex', units: 2 };
+  // CHAT-45 (D-LIPPINCOTT): "mixed-used semi-detached building" is typed semi-detached, as the City notice words it (not mixed-use)
+  if (/(existing|new)[^.]{0,40}semi-detached (dwelling|building)/.test(p)) {
+    const two = /two residential dwelling units in this dwelling/.test(p);
+    return two ? { bt: 'semi_detached_houseplex', units: 2 } : { bt: 'semi_detached_house', units: 1 };
+  }
+  return { bt: 'detached_house', units: within ? num(within[1]) : 1 };
+}
+const SUITE_TYPES = ['garden_suite', 'laneway_suite', 'ancillary_building'];
+function clauseType(c, matched, main) {
+  if (/^150\.7\./.test(c.norm)) return 'garden_suite';
+  if (/^150\.8\./.test(c.norm)) return 'laneway_suite';
+  if (/^10\.\d+\.60\./.test(c.norm)) return 'ancillary_building';
+  const bts = new Set(matched.filter((u) => u.archetype === 'LIMIT').flatMap((u) => u.application?.building_types || []));
+  if (bts.size && [...bts].every((b) => SUITE_TYPES.includes(b))) return [...bts][0];
+  return main.bt;
+}
+
+// ---------- scope, family, comparison ----------
+function outOfScope(c, v) {
+  const s = c.norm || '';
+  if (!c.section || !/^(5|10|150|200|230|900)\./.test(s) && !/^\d+\.\d+\.\d+\.\d+/.test(s)) return 'former by-law clause (not 569-2013)';
+  if (/^(13\.2\.6|3\.4\.11|6\(30\))/.test(s)) return 'former by-law clause (not 569-2013)';
+  if (/^200\./.test(s) || /^10\.5\.80\./.test(s)) return 'parking';
+  if (/^10\.5\.100\./.test(s)) return 'driveway';
+  if (/^230\./.test(s)) return 'bicycle parking';
+  if (/^10\.5\.150\./.test(s)) return 'waste storage';
+  if (/^10\.5\.40\.60\(3\)\(a\)\(ii\)/i.test(s)) return 'stairs width';
+  if (/^5\.10\./.test(s)) return 'shoreline / ravine (Ch.5 TRCA hazard)';
+  if (/^10\.5\.60\.1\(3\)/.test(s)) return 'ancillary-building use (food preparation / sanitary facilities)';
+  return null;
+}
+const ELEMENT_TARGETS_OLD = new Set(['encroachment_m', 'encroachment_clearance_m', 'element_width_pct', 'platform_height_m', 'height_projection_m']);
+// scorecard2: D-3 split encroachment_m into per-element targets (<element>_encroachment_m / <element>_clearance_m)
+const ELEMENT_TARGETS = { has: (t) => ELEMENT_TARGETS_OLD.has(t) || /_(encroachment|clearance)_m$/.test(t || '') };
+function tagTargets(matched, c) {
+  if (!c.path) return [];
+  const hits = [];
+  for (const u of matched) for (const st of [].concat(u.numeric_expression || [])) {
+    if (typeof st !== 'string') continue; const lhs = (/^\s*([a-z0-9_]+)\s*=/.exec(st) || [])[1]; if (!lhs) continue;
+    const tags = [...st.matchAll(/@(\([^\s;)]*\)(?:\[[A-Z]+\])?(?:\([^\s;)]*\))*)/g)].map((m) => m[1].replace(/\[[A-Z]+\]/g, '').toLowerCase());
+    const best = Math.max(0, ...tags.map((t) => (t.startsWith(c.path) ? c.path.length : c.path.startsWith(t) ? t.length : 0)));
+    if (best) hits.push({ lhs, best });
+  }
+  const top = Math.max(0, ...hits.map((h) => h.best));
+  return [...new Set(hits.filter((h) => h.best === top).map((h) => h.lhs))];
+}
+function pickTarget(targets, unit, c, matched) {
+  if (!targets.length) return null;
+  const byU = (t) => unit === '× lot area' ? t === 'fsi' : unit === '%' ? /_pct$/.test(t) : unit === 'm²' ? /_m2$/.test(t) : unit === 'storeys' ? t === 'height_storeys' : unit === 'm' ? /_m$/.test(t) : true;
+  const tagged = tagTargets(matched || [], c).filter((t) => targets.includes(t) && byU(t));
+  if (tagged.length) targets = tagged;
+  if (targets.length > 1 && targets.some((t) => /setback/.test(t))) targets = [...targets.filter((t) => /setback/.test(t)), ...targets.filter((t) => !/setback/.test(t))];
+  const byUnit = (t) => unit === '× lot area' ? t === 'fsi' : unit === '%' ? /_pct$/.test(t) : unit === 'm²' ? /_m2$/.test(t) : unit === 'storeys' ? t === 'height_storeys' : unit === 'm' ? /_m$/.test(t) : true;
+  let ts = targets.filter(byUnit); if (!ts.length) ts = targets;
+  if (ts.length > 1 && ts.includes('side_setback_m') && ts.includes('side_setback_street_m')) ts = ['side_setback_m'];
+  if (ts.length > 1 && ts.includes('front_soft_landscaping_pct')) ts = ['front_soft_landscaping_pct'];
+  if (ts.length > 1 && ts.includes('lot_coverage_pct') && ts.includes('ancillary_coverage_pct')) ts = ['ancillary_coverage_pct'];
+  return ts[0];
+}
+function family(c, target, bt) {
+  const s = c.norm || '';
+  if (/^150\.[78]\./.test(s)) return 'suites';
+  if (/^10\.\d+\.60\./.test(s) || bt === 'ancillary_building' || target === 'ancillary_coverage_pct' || target === 'ancillary_floor_area_m2') return 'ancillary';
+  if (/^10\.5\.40\.(50|60)/.test(s) || /^10\.\d+\.40\.50/.test(s) || (/^(encroachment|platform|element_width|height_projection)/.test(target || '') || /_(encroachment|clearance)_m$/.test(target || ''))) return 'encroachment/platform';
+  const T = { fsi: 'FSI', gfa_m2: 'FSI', lot_coverage_pct: 'coverage', height_m: 'height', main_wall_height_m: 'main wall', height_storeys: 'storeys',
+    front_setback_m: 'front', side_setback_m: 'side', side_setback_street_m: 'side', rear_setback_m: 'rear', building_length_m: 'length', building_depth_m: 'depth',
+    required_lot_frontage_m: 'lot frontage/area', required_lot_area_m2: 'lot frontage/area', entrance_height_m: 'height' };
+  if (target && T[target]) return T[target];
+  if (target && /landscaping/.test(target)) return 'landscaping';
+  if (/^10\.5\.50\./.test(s) || /^10\.\d+\.50\./.test(s)) return 'landscaping';
+  if (/^10\.\d+\.40\.40/.test(s)) return 'FSI';
+  if (/^10\.\d+\.30\.40/.test(s)) return 'coverage';
+  if (/^10\.\d+\.40\.10/.test(s)) return 'height';
+  if (/^10\.\d+\.40\.20/.test(s)) return 'length';
+  if (/^10\.\d+\.40\.70/.test(s) || /^900\./.test(s)) return 'side';
+  return 'other';
+}
+const tol = (unit) => unit === '%' ? 0.5 : unit === 'm²' ? 1 : unit === '× lot area' ? 0.005 : unit === 'storeys' ? 0 : 0.01;
+const OWED_TOKENS = new Set(['front_averaging_not_applicable', 'one_abutting_building_within_15_m', 'two_abutting_buildings_within_15_m', 'flat_or_shallow_roof',
+  'has_secondary_suite', 'has_garden_suite', 'has_laneway_suite', 'blank_side_wall', 'suite_wall_openings', 'all_units_front_street', 'individual_private_driveway']);
+function owedOrNoAnswer(reason) {
+  const r = String(reason || ''); const code = r.split(':')[0]; const det = r.slice(code.length + 1);
+  if (code === 'missing_input' || code === 'needs_user_input' || code === 'existing_building_facts') return 'OWED';
+  if (code === 'condition_unknown' && OWED_TOKENS.has(det)) return 'OWED';
+  return 'NO ANSWER';
+}
+const slim = (r) => ({ status: r.status, value: r.value ?? null, reason: r.reason ?? null, winner: r.winner ? (r.winner.unit_id || r.winner) : null,
+  applied: (r.applied || []).map((a) => (typeof a === 'string' ? a : a.unit_id || a.id)).filter(Boolean).slice(0, 6) });
+const regOf = (id) => String(id || '').split('#')[0].replace(/[@~].*$/, '');
+
+function makeLot(base, bt, nunits, extra = {}) {
+  const cls = SCU[bt] || {}; const hu = cls.house_units; const house = typeof hu === 'object' ? Math.max(nunits, hu.min || 0) : (hu ?? nunits);
+  return { ...base, building_type: bt, ...(extra.lot || {}),
+    vars: { ...base.vars, dwelling_units: nunits, ...(extra.vars || {}) },
+    flags: { ...defaults, ...base.flags, ...(extra.flags || {}) } };
+}
+function evalTarget(lot, target, onlyUnits) {
+  const { candidates } = E.loadCandidates(lot, units);
+  // element targets: drop only the OTHER units on the same target (other elements' limits); every other unit stays (exception gate, displacers)
+  const cand = onlyUnits ? candidates.filter((u) => onlyUnits.has(u.unit_id) || ![].concat(u.target || []).includes(target)) : candidates;
+  try { return slim(E.effective(lot, target, cand, C)); } catch (err) { return { status: 'error', reason: String(err.message).slice(0, 160) }; }
+}
+
+// ---------- main ----------
+// F-4D-8/9/14 (data-quality flag): survey dimensions (plan facts) are preferred when held; a parcel row that disagrees with the survey by more than 5% is flagged.
+const SURVEY_TOL = 0.05;
+function surveyFacts(n) {
+  if (!PF_DIR) return null;
+  try { const pf = JSON.parse(fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8'));
+    const g = (k) => (typeof pf[k] === 'number' && pf[k] > 0 ? pf[k] : null);
+    const sv = { frontage_m: g('lot_frontage_m'), depth_m: g('lot_depth_m'), area_m2: g('lot_area_m2'), corner: typeof pf.corner_lot === 'boolean' ? pf.corner_lot : null };
+    return Object.values(sv).some((x) => x != null) ? sv : null; } catch { return null; }
+}
+function surveyCheck(sv, p) {
+  if (!sv || !p) return { held: sv, flag: false, disagree: [] };
+  const dis = [];
+  for (const [k, pv, label] of [['frontage_m', p.frontage_m, 'frontage'], ['depth_m', p.depth_m, 'depth'], ['area_m2', p.lot_size_sqm, 'area']]) {
+    if (sv[k] != null && pv != null && Math.abs(pv - sv[k]) / sv[k] > SURVEY_TOL) dis.push(`${label} parcel ${pv} vs survey ${sv[k]} (${Math.round(((pv - sv[k]) / sv[k]) * 1000) / 10}%)`);
+  }
+  if (sv.corner != null && p.is_corner_lot != null && !!p.is_corner_lot !== sv.corner) dis.push(`corner parcel ${!!p.is_corner_lot} vs survey ${sv.corner}`);
+  return { held: sv, flag: dis.length > 0, disagree: dis };
+}
+function applySurvey(base, sv) {
+  if (!sv) return base;
+  const vars = { ...base.vars }; if (sv.frontage_m != null) vars.lot_frontage_m = sv.frontage_m; if (sv.depth_m != null) vars.lot_depth_m = sv.depth_m; if (sv.area_m2 != null) vars.lot_area_m2 = sv.area_m2;
+  return { ...base, vars, flags: sv.corner != null ? { ...base.flags, corner_lot: sv.corner } : base.flags };
+}
+const rows = []; const lots = {};
+function runNotice(n, surveyOn, rows, lots) {
+  const P = parcels[n.file_number] || { parcels: [] };
+  const uniq = [...new Map(P.parcels.map((p) => [p.id, p])).values()];
+  const p = uniq[0] || null;
+  const main = mainType(n.purpose);
+  const ia = impliedArea(n);
+  const lc = p ? labelCompare(n.zoning, p.zoning_zn_string) : null;
+  const areaGapPct = p && ia ? Math.round(((p.lot_size_sqm - ia.area) / ia.area) * 1000) / 10 : null;
+  const nonRes = n.zoning && n.zoning.zone && !['R', 'RD', 'RS', 'RT', 'RM'].includes(n.zoning.zone);
+  const sv = surveyFacts(n); const svc = surveyCheck(sv, p);
+  const base = p ? (surveyOn ? applySurvey(lotFromParcel(p), sv) : lotFromParcel(p)) : null;
+  const openings = openingsEvidence(n);
+  lots[n.file_number] = { address: n.address, city_label: n.zoning?.label, kind: n.kind, hearing_date: n.hearing_date, purpose: n.purpose, main_type: main,
+    parcel: p ? { id: p.id, parcel_id: p.parcel_id, label: p.zoning_zn_string, frontage_m: p.frontage_m, depth_m: p.depth_m, lot_area_m2: p.lot_size_sqm, lot_size_basis: p.lot_size_basis, lot_size_confidence: p.lot_size_confidence,
+      corner: p.is_corner_lot, lane: p.abuts_laneway, major: p.on_policy_road, geog_area: p.geog_area, n_parcels: uniq.length } : null,
+    match_how: P.how, label_check: lc, survey_check: svc, survey_preferred: !!(surveyOn && sv), implied_area: ia, area_gap_pct: areaGapPct, non_residential: !!nonRes,
+    legacy: p ? { max_buildable_gfa_sqm: p.max_buildable_gfa_sqm, max_buildable_gfa_basis: p.max_buildable_gfa_basis, max_build_fsi: p.max_build_fsi, bylaw_max_fsi: p.bylaw_max_fsi,
+      bylaw_max_coverage_pct: p.bylaw_max_coverage_pct, max_buildable_footprint_sqm: p.max_buildable_footprint_sqm, max_build_height_m: p.max_build_height_m, max_build_stories: p.max_build_stories, max_build_basis: p.max_build_basis } : null };
+
+  for (const v of n.variances) {
+    const c = normClause(v.clause);
+    if (c.norm === '10.20.40.20') { c.reg = '10.20.40.20(1)'; c.path = '(1)'; c.note = 'notice omits the subsection; read as (1)'; }
+    const matched = unitsForClause(c, units);
+    const targets = [...new Set(matched.flatMap((u) => [].concat(u.target || [])).filter((t) => t && t !== 'none'))];
+    let cityUnit = v.required?.unit ?? null; let cityVal = v.required?.value ?? null;
+    // 4D-S5: platform clauses open with the definition "attached to or less than 0.3 m from a building"; that 0.3 m is not the limit. Take the next figure.
+    let s5 = null; const ra = (v.required_all || []).filter((x) => x.unit === 'm');
+    if (cityUnit === 'm' && cityVal === 0.3 && /(less than|within) 0\.3 ?m (from|of) a building/i.test(v.requirement || '') && ra.length > 1) { s5 = `definition figure 0.3 m dropped; City figure taken as ${ra[1].value} m`; cityVal = ra[1].value; }
+    // F-4D-13: same definition in the wording "within 0.3 m of the (rear) main wall"; the limit is the last m figure that is not a height "above grade" (none: no numeric limit)
+    else if (cityUnit === 'm' && cityVal === 0.3 && /(less than|within|attached to or within) 0\.3 ?m (from|of) the (\w+ )?main wall/i.test(v.requirement || '')) {
+      const lim = [...String(v.requirement).matchAll(/(\d+(?:\.\d+)?) ?m(?![\w²2])(?! above)/g)].map((m) => Number(m[1])).filter((x, i) => !(i === 0 && x === 0.3)).pop();
+      s5 = lim != null ? `definition figure 0.3 m (main wall) dropped; City figure taken as ${lim} m` : 'definition figure 0.3 m (main wall) dropped; no numeric limit stated'; cityVal = lim ?? null; if (lim == null) cityUnit = null;
+    }
+    let target = pickTarget(targets, cityUnit, c, matched);
+    // the notice names the lot line: a setback clause keyed to several setback targets follows it
+    let lineNote = null;
+    if (target && /_setback(_street)?_m$/.test(target) && targets.filter((t) => /setback/.test(t)).length > 1) {
+      const pt = String(v.proposal || '');
+      const want = /\bside\b[^.]{0,20}lot line|side yard/i.test(pt) ? 'side_setback_m' : /\brear\b[^.]{0,20}lot line|rear yard/i.test(pt) ? 'rear_setback_m' : null;
+      if (want && want !== target && !(want === 'side_setback_m' && target === 'side_setback_street_m')) { lineNote = `notice names the ${want.split('_')[0]} lot line; clause keyed to ${targets.join('+')}`; target = want; }
+    }
+    // 4D-S1: 10.5.40.50(2) is the platform setback; score it on the platform target named by the lot line
+    let scorerFix = null;
+    if (/^10\.5\.40\.50\(2\)/.test(c.norm) && cityUnit === 'm' && targets.includes('platform_side_setback_m')) {
+      const pt = `${v.requirement || ''} ${v.proposal || ''}`;
+      const after = s5 ? (String(v.requirement).split(/within 0\.3 ?m of a building|less than 0\.3 ?m from a building/i)[1] || '') : ''; const fig = after.search(new RegExp(String(cityVal).replace('.', '\\.') + '\\s*m'));
+      const near = fig >= 0 ? after.slice(fig, fig + 40) : '';
+      if (near) target = /\brear\b/i.test(near) ? 'platform_rear_setback_m' : /\bfront\b/i.test(near) ? 'platform_front_setback_m' : 'platform_side_setback_m'; else
+      target = /rear (yard|lot line)/i.test(pt) ? 'platform_rear_setback_m' : /front (yard|lot line)/i.test(pt) ? 'platform_front_setback_m' : 'platform_side_setback_m'; scorerFix = '4D-S1';
+    }
+    // 4D-S6: the target is a % or × lot area limit but the parser picked the m² companion: take the matching figure
+    let s6 = null;
+    if (target && cityUnit === 'm²' && (/_pct$/.test(target) || target === 'fsi')) { const want = target === 'fsi' ? '× lot area' : '%'; const alt = (v.required_all || []).find((x) => x.unit === want); if (alt) { s6 = `figure ${cityVal} m² → ${alt.value} ${want}`; cityVal = alt.value; cityUnit = want; } }
+    // 4D-S2/S3: element clauses: width figure → width target (none for stairs: not modelled); clearance figure → clearance target
+    let roleNM = null;
+    if (target && /_(encroachment|clearance)_m$/.test(target) && cityUnit === 'm') {
+      const role = figureRole(v.requirement, cityVal); const el = target.replace(/_(encroachment|clearance)_m$/, '');
+      if (role === 'width') { roleNM = `${el} width (no ${el} width target)`; scorerFix = '4D-S2'; }
+      else if (role === 'clearance' && targets.includes(el + '_clearance_m') && target !== el + '_clearance_m') { target = el + '_clearance_m'; scorerFix = '4D-S3'; }
+      else if (role === 'encroachment' && targets.includes(el + '_encroachment_m') && target !== el + '_encroachment_m') { target = el + '_encroachment_m'; scorerFix = '4D-S3'; }
+    }
+    const bt = clauseType(c, matched, main);
+    const row = { notice: n.file_number, address: n.address, city_label: n.zoning?.label || null, our_label: p?.zoning_zn_string || null, parcel_id: p?.parcel_id || null, parcel_row_id: p?.id || null,
+      n: v.n, clause: v.clause, clause_norm: c.norm, clause_note: c.note || null, limit: v.limit, requirement: v.requirement, city_value: cityVal, city_unit: cityUnit,
+      building_type: bt, dwelling_units: SUITE_TYPES.includes(bt) ? 1 : main.units, keyed_units: matched.map((u) => `${u.unit_id}:${u.archetype}:${[].concat(u.target || []).join('+')}`), target,
+      family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null };
+    const oos = outOfScope(c, v);
+    if (nonRes) { row.class = 'NOT SCORABLE'; row.why = `zone ${n.zoning.zone} is not a 569-2013 residential zone (former by-law zone or non-residential): not scorable`; /* F-4D-20 */ rows.push(row); continue; }
+    if (!p) { row.class = 'NOT SCORABLE'; row.why = 'no parcel match for the notice address: not scorable'; /* F-4D-20 */ rows.push(row); continue; }
+    if (lc.hard.length) { row.class = 'DATA'; row.why = `zoning label disagrees: ${lc.hard.join('; ')}`; rows.push(row); continue; }
+    if (!oos && roleNM) { row.class = 'NOT MODELLED'; row.why = roleNM; row.family = 'not modelled'; rows.push(row); continue; }
+    if (oos) { row.class = 'NOT MODELLED'; row.why = oos; row.family = 'not modelled';
+      if (target) { const lot = makeLot(base, bt, row.dwelling_units); row.ours = evalTarget(lot, target); }
+      rows.push(row); continue; }
+    if (!matched.length) { row.class = 'NO ANSWER'; row.why = 'clause not keyed (no unit in the agreed set)'; rows.push(row); continue; }
+    if (!target) { row.class = 'NO ANSWER'; row.why = `clause keyed without a target (${[...new Set(matched.map((u) => u.archetype))].join('/')})`;
+      if (/^10\.5\.40\.50\(2\)/.test(c.norm) && cityUnit === 'm') { row.platform_probe = evalTarget(makeLot(base, bt, row.dwelling_units), 'platform_side_setback_m'); const pr = evalTarget(makeLot(base, bt, row.dwelling_units), 'side_setback_m'); row.proxy = { via: 'side_setback_m (10.5.40.50(2): the zone building setback)', ...pr, delta: typeof pr.value === 'number' ? Math.round((pr.value - cityVal) * 1000) / 1000 : null }; }
+      rows.push(row); continue; }
+    if (cityVal == null) { row.class = 'NOT MODELLED'; row.why = 'notice states no numeric requirement'; rows.push(row); continue; }
+
+    const lot = makeLot(base, bt, row.dwelling_units);
+    const only = ELEMENT_TARGETS.has(target) ? new Set(matched.map((u) => u.unit_id)) : null;
+    let r = evalTarget(lot, target, only);
+    // roof: if the plain vector is undecided on roof, take the arm whose winner is the cited clause (else pitched); record both
+    const pitched = evalTarget({ ...lot, flags: { ...lot.flags, flat_or_shallow_roof: false } }, target, only);
+    const flat = evalTarget({ ...lot, flags: { ...lot.flags, flat_or_shallow_roof: true } }, target, only);
+    if (r.status !== 'value' || String(r.reason || '').includes('flat_or_shallow_roof')) {
+      const hit = [pitched, flat].find((x) => x.status === 'value' && regOf(x.winner) === c.reg);
+      row.roof_arm = hit ? (hit === flat ? 'flat' : 'pitched') : 'pitched'; r = hit || pitched;
+    }
+    // [blfix5 probe, read-only: M-259 arms] the design with openings, and the platform target for 10.5.40.50(2)
+    if (target === 'side_setback_m') { row.bsw_arm = evalTarget({ ...lot, flags: { ...lot.flags, blank_side_wall: false } }, target, only); if (openings && row.bsw_arm.status === 'value') { row.bsw_taken = openings; row.scorer_fix = '4D-S4'; r = row.bsw_arm; } } if (/^10\.5\.40\.50\(2\)/.test(c.norm)) row.platform_probe = evalTarget(lot, 'platform_side_setback_m');
+    if (['garden_suite', 'laneway_suite'].includes(bt) && /setback/.test(target)) row.ours_arm = { flags: { suite_wall_openings: true }, ...evalTarget({ ...lot, flags: { ...lot.flags, suite_wall_openings: true } }, target, only) };
+    if (target === 'gfa_m2') { const fr = evalTarget(lot, 'fsi'); row.ours_fsi = fr; if (typeof fr.value === 'number') row.ours_fsi_cap_m2 = Math.round(fr.value * base.vars.lot_area_m2 * 100) / 100; }
+    row.ours = r; row.ours_flat = flat; row.ours_pitched = pitched; row.only_clause_units = !!only;
+
+    // front averaging (M-205(1)) as resolved today from parcel_abutments
+    if (target === 'front_setback_m') {
+      const plainOff = evalTarget({ ...lot, flags: { ...lot.flags, front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false } }, target);
+      row.front_zone_default = plainOff;
+      const zd = typeof plainOff.value === 'number' ? plainOff.value : 6.0;
+      let fa = null; try { fa = FA.resolveFrontAveraging(p.abutments || [], { fya_porch_allowance_m: FYA_ALLOWANCE }, { zone_default_m: zd }); } catch (e) { fa = { error: e.message }; }
+      if (fa && !fa.error) {
+        const rf = evalTarget({ ...lot, flags: { ...lot.flags, ...fa.flags }, vars: { ...lot.vars, ...fa.vars } }, target);
+        row.front_fa = { basis: fa.basis, qualifying: fa.qualifying, averaged_m: fa.averaged_m, floor_applied: fa.floor_applied, resolved_m: fa.front_setback_m, eval: rf,
+          delta_vs_city: typeof rf.value === 'number' ? Math.round((rf.value - cityVal) * 100) / 100 : null, raw_avg_delta: fa.averaged_m != null ? Math.round((fa.averaged_m - cityVal) * 100) / 100 : null };
+      } else row.front_fa = fa;
+      if (r.status !== 'value' && /map_area_not_held/.test(r.reason || '')) {
+        row.ours_map_areas_empty = evalTarget({ ...lot, map_areas: [] }, target);
+        if (fa && !fa.error) { const rm = evalTarget({ ...lot, map_areas: [], flags: { ...lot.flags, ...fa.flags }, vars: { ...lot.vars, ...fa.vars } }, target); row.front_fa_map_areas_empty = { ...rm, delta_vs_city: typeof rm.value === 'number' ? Math.round((rm.value - cityVal) * 100) / 100 : null }; }
+      }
+    }
+
+    if (r.status === 'value') {
+      if (typeof r.value === 'number') {
+        const d = Math.round((r.value - cityVal) * 1000) / 1000; row.delta = d;
+        row.class = Math.abs(d) <= tol(cityUnit) + 1e-9 ? 'MATCH' : 'DIFFER';
+        if (row.class === 'DIFFER' && row.bsw_arm && !row.bsw_taken && typeof row.bsw_arm.value === 'number' && Math.abs(row.bsw_arm.value - cityVal) <= tol(cityUnit) + 1e-9) row.arm_explains = 'blank_side_wall=false (openings) gives the City figure';
+        if (row.class === 'DIFFER' && row.ours_arm && typeof row.ours_arm.value === 'number' && Math.abs(row.ours_arm.value - cityVal) <= tol(cityUnit) + 1e-9) row.arm_explains = 'suite_wall_openings=true (M-197 default false) gives the City figure';
+        row.why = row.class === 'MATCH' ? (regOf(r.winner) === c.reg ? 'same value, same provision' : `same value, winner ${r.winner}`) : `ours ${r.value} vs City ${cityVal} (Δ ${d}); winner ${r.winner}`;
+      } else { row.class = 'DIFFER'; row.why = `ours ${r.value} (no numeric limit) vs City ${cityVal}; winner ${r.winner}`; }
+    } else if (r.status === 'not_evaluated') {
+      row.class = owedOrNoAnswer(r.reason); row.why = r.reason;
+    } else { row.class = 'NO ANSWER'; row.why = `${r.status}: ${r.reason || ''}`; }
+    rows.push(row);
+  }
+}
+
+for (const n of notices) runNotice(n, true, rows, lots);
+// F-4D-8/9/14: on a flagged lot a DIFFER / NO ANSWER on parcel dimensions that matches the City on survey dimensions is an explained data flag, not an engine miss
+for (const n of notices) {
+  const svc = lots[n.file_number].survey_check; if (!svc.flag) continue;
+  const sr = []; const sl = {}; runNotice(n, false, sr, sl);
+  const mine = rows.filter((r) => r.notice === n.file_number);
+  mine.forEach((r, i) => {
+    const q = sr[i]; if (!q || q.clause !== r.clause) return;
+    r.parcel_dims_class = q.class;
+    if (r.class === 'MATCH' && (q.class === 'DIFFER' || q.class === 'NO ANSWER')) {
+      r.class = 'DATA'; r.survey_flag = true; r.class_on_survey = 'MATCH';
+      r.why = `explained data flag: parcel row disagrees with the survey (${svc.disagree.join('; ')}); on survey dimensions ours matches the City (${r.ours?.value}); on parcel dimensions it was ${q.class}`;
+    }
+  });
+}
+
+// in-flight findings (approved, being fixed in lane bylaw-fix-3)
+for (const r of rows) {
+  if (/^10\.10\.60\.20\(1\)/.test(r.clause_norm || '')) r.in_flight = 'N-2';
+  if (/^10\.5\.60\.50\(2\)/.test(r.clause_norm || '')) r.in_flight = 'N-3';
+  if (/^10\.5\.40\.60\(7\)/.test(r.clause_norm || '')) r.in_flight = 'D-3';
+  if (r.target === 'front_setback_m' && r.front_fa && r.front_fa.floor_applied && ((r.front_fa.delta_vs_city > 0.01) || (r.front_fa_map_areas_empty && r.front_fa_map_areas_empty.delta_vs_city > 0.01))) r.in_flight = 'M-205(1)';
+  if (r.in_flight) r.in_flight_note = 'fix in flight (approved; lane bylaw-fix-3)';
+}
+fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allowance_m: FYA_ALLOWANCE, defaults, lots, rows }, null, 1));
+const by = {}; for (const r of rows) by[r.class] = (by[r.class] || 0) + 1;
+console.log('rows', rows.length, JSON.stringify(by));
+if (CHECK) {
+  const exp = JSON.parse(fs.readFileSync(CHECK, 'utf8'));
+  const head = execFileSync('git', ['-C', ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  const keys = [...new Set([...Object.keys(exp.totals), ...Object.keys(by)])];
+  const diffs = keys.filter((k) => (exp.totals[k] || 0) !== (by[k] || 0)).map((k) => k + ' expected ' + (exp.totals[k] || 0) + ' got ' + (by[k] || 0));
+  const pinned = head.startsWith(exp.commit);
+  if (diffs.length) { console.log((pinned ? 'CHECK FAIL' : 'CHECK INFO (tree moved on from ' + exp.commit + ')') + ': ' + diffs.join('; ')); process.exit(pinned ? 1 : 0); }
+  console.log('CHECK OK: totals equal ' + JSON.stringify(exp.totals) + ' at ' + exp.commit);
+}

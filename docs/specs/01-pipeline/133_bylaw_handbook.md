@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 327** (265 M-rows, 62 LC-rows): 324 in force (34 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 335** (273 M-rows, 62 LC-rows): 332 in force (36 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -735,6 +735,10 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-7 / M-285"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json
   Rules: `M-285` (Spec 69a)
 
+- **m.306** The scorer does not read a definition distance as the City limit: "within 0.3 m of the (rear) main wall" is dropped like "within 0.3 m of a building".
+  Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-13 …" (red first: docs/r…
+  Rules: `M-306` (Spec 69a)
+
 ### General / cross-cutting
 
 Rows that cite no by-law clause: process, method and cross-cutting rulings.
@@ -1275,6 +1279,34 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-10 / F-4D-16 …" (red first: docs/…
   Rules: `M-268` (Spec 69a)
 
+- **m.305** The CoA notice reader and scorecard tools live in scripts/analysis/bylaw-validation/coa-*; data are passed by path.
+  Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts
+  Rules: `M-305` (Spec 69a)
+
+- **m.307** A non-569 zone or an unmatched address is NOT SCORABLE, not a miss.
+  Status: RULED 2026-10-21 · OWED · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-20 …"
+  Rules: `M-307` (Spec 69a)
+
+- **m.308** Survey dimensions are preferred when held, and a parcel row that disagrees with the survey by more than 5 percent is flagged: an explained data flag, no by-law change.
+  Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-9 …", "F-4D-8/9/14 …"
+  Rules: `M-308` (Spec 69a)
+
+- **m.309** 39 Kirknewton Rd is file A0428/26TEY; A0974/16EYK is an earlier file for the same lot.
+  Status: RULED 2026-10-21 · Enforced by: none (data)
+  Rules: `M-309` (Spec 69a)
+
+- **m.310** A basement without underpinning is not CoA-testable.
+  Status: RULED 2026-10-21 · Enforced by: none (data)
+  Rules: `M-310` (Spec 69a)
+
+- **m.311** 202 Lippincott St (A0375/26TEY) stays semi-detached, as the City notice words it.
+  Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "CHAT-45 …"
+  Rules: `M-311` (Spec 69a)
+
+- **m.312** OWED: the calculator takes an optional survey override; drafted, not built.
+  Status: OWED 2026-10-21 · Enforced by: none
+  Rules: `M-312` (Spec 69a)
+
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
   Rules: `LC-1` (Spec 131)
@@ -1479,7 +1511,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); app tests at N12 (OWED)
   Rules: `LC-62` (Spec 131)
 
-## 3. Rows with an OWED marker (34 in force)
+## 3. Rows with an OWED marker (36 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -1490,6 +1522,8 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-251 | m.251 | RULED 2026-10-21 · OWED |
 | M-256 | m.256 | RULED 2026-10-21 · OWED |
 | M-259 | m.259 | RULED 2026-10-21 · OWED |
+| M-307 | m.307 | RULED 2026-10-21 · OWED |
+| M-312 | m.312 | OWED 2026-10-21 |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |

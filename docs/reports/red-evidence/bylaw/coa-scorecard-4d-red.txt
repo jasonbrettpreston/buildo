@@ -1,0 +1,10 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/coa-scorecard.logic.test.ts > CoA scorecard 4D fixes (172 notices) > F-4D-13: "within 0.3 m of the rear main wall" is a definition; the City figure is 1.8 m
+AssertionError: expected 0.3 to be 1.8 // Object.is equality
+ FAIL  src/tests/coa-scorecard.logic.test.ts > CoA scorecard 4D fixes (172 notices) > F-4D-20: non-569 zones and unmatched addresses are NOT SCORABLE, not DATA/misses
+AssertionError: expected 'DATA' to be 'NOT SCORABLE' // Object.is equality
+ FAIL  src/tests/coa-scorecard.logic.test.ts > CoA scorecard 4D fixes (172 notices) > F-4D-9: a parcel row that disagrees with the survey by more than 5 percent is flagged
+TypeError: Cannot read properties of undefined (reading 'flag')
+ FAIL  src/tests/coa-scorecard.logic.test.ts > CoA scorecard 4D fixes (172 notices) > CHAT-45: 202 Lippincott St (A0375/26TEY) stays semi-detached, as the City notice words it
+AssertionError: expected 'detached_house' to be 'semi_detached_house' // Object.is equality
+      Tests  4 failed | 4 passed (8)

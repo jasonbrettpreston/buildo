@@ -221,7 +221,7 @@ Acquires an outside source and writes it into its own tables.
 
 - **ingestor.6** Worked examples (one step each): load_parcels replaces geometry only on a material change beyond a variable tolerance; close_stale_permits folds into load_permits' declared retraction; coa made its change-detection hash timezone-independent at the cost of one measured re-upsert.
   *Why:* Shows how the general rules were applied where they were first needed.
-  Rules: `R-BS` `R-BX` `R-EN` `R-EV`
+  Rules: `R-BS` `R-BX` `R-EN` `R-EV` `R-JB`
 
 ### LINK
 
@@ -500,7 +500,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 364 mapped ids: 249 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 365 mapped ids: 250 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
