@@ -56,3 +56,39 @@ describe('F-SC-3 / M-248 — a dotted range "X(1) to (n)" displaces every regula
     expect([r.status, r.value, r.winner]).toEqual(['value', 7.5, '10.80.40.70(4)#(4)(B)']);
   });
 });
+
+// F-SC-4 / M-249 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-4`): RM 10.80.40.70(4)(D) in the
+// parallel form — (i) 2.4 m; (ii) the primary-window arm disclosed (M-197 form); (iii) deep_side_setback_m (M-205(2) form).
+describe('F-SC-4 / M-249 — RM apartment side yard on a major street keyed like its R / RD / RS / RT twins', () => {
+  const D = '10.80.40.70(4)#(4)(D)';
+  const keele = lot('RM', 'apartment_building', { label: {}, flags: { major_street: true }, vars: { lot_depth_m: 30.44, lot_frontage_m: 30 } });
+
+  it('the text names the three arms (ch10_80.txt)', () => {
+    expect(page('ch10_80')).toContain('(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres');
+  });
+
+  it('(4)(D) keys (i) on side_setback_m, (iii) on deep_side_setback_m and (iv) on the street side; no max() over the arms', () => {
+    const u = unitOf(D);
+    expect([].concat(u.numeric_expression).sort()).toEqual(['deep_side_setback_m = 7.5 m @(4)(D)(iii)', 'side_setback_m = 2.4 m @(4)(D)(i)', 'side_setback_street_m = 3.0 m @(4)(D)(iv)']);
+    expect([].concat(u.target).sort()).toEqual(['deep_side_setback_m', 'side_setback_m', 'side_setback_street_m']);
+  });
+
+  it('the (ii) primary-window arm is disclosed, never bound (M-197 form)', () => {
+    const g = String(unitOf(D).calculation_handling?.gaps ?? '');
+    expect(g).toMatch(/5\.5 m/);
+    expect(g).toMatch(/primary windows/);
+  });
+
+  it('1785 Keele St: side_setback_m 2.4 m (the City figure), deep_side_setback_m 7.5 m', () => {
+    const s = eff(keele, 'side_setback_m');
+    expect([s.status, s.value, s.winner]).toEqual(['value', 2.4, D]);
+    const d = eff(keele, 'deep_side_setback_m');
+    expect([d.status, d.value, d.winner]).toEqual(['value', 7.5, D]);
+  });
+
+  it('the twins key (i) alone on side_setback_m (rule by provision family)', () => {
+    for (const id of ['10.10.40.70(5)#(5)(D)', '10.20.40.70(7)#(7)(D)', '10.40.40.70(4)#(4)(D)', '10.60.40.70(4)#(4)(D)']) {
+      expect([].concat(unitOf(id).numeric_expression).filter((s: string) => s.startsWith('side_setback_m')), id).toHaveLength(1);
+    }
+  });
+});

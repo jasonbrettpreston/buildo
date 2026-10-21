@@ -82566,6 +82566,78 @@
           "reason": "threshold_used_in_application"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.70(4)#(4)(D)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "supersedes": "COR-10.80.40.70(4)#(4)(D)/target",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": [
+        "side_setback_m",
+        "side_setback_street_m",
+        "deep_side_setback_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.70(4)#(4)(D)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": [
+        "side_setback_m = 2.4 m @(4)(D)(i)",
+        "deep_side_setback_m = 7.5 m @(4)(D)(iii)",
+        "side_setback_street_m = 3.0 m @(4)(D)(iv)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.70(4)#(4)(D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": [
+        {
+          "clause": "(4)(D)(ii)",
+          "literal": "5.5 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(4)(D)(iii)",
+          "literal": "25.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.70(4)#(4)(D)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": {
+        "description": "On a major street, an apartment building needs a side yard setback of 2.4 m, 7.5 m for the wall beyond 25.0 m of building length, and 3.0 m from a street side lot line on a corner lot.",
+        "gaps": "The 2.4 m (i) is the side yard. The 5.5 m (ii) applies only to portions of the main wall that have primary windows: a design choice, taken as walls without primary windows (Spec 69a M-249, the M-197 form); if a portion of the main wall has primary windows, its side yard setback is 5.5 m. The 7.5 m (iii) is the deep-portion setback (deep_side_setback_m) for the wall beyond 25.0 m of building length, not a whole-building side yard (M-205(2) form). The unit text names no zone (the zone is implied only by its Section 10.80 placement), so application zones are left empty for want of an evidence phrase.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
     }
   ]
 }
