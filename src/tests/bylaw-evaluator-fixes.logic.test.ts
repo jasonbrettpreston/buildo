@@ -524,7 +524,7 @@ describe('M-159 / M-177(1) — a plain ancillary building (no suite) takes no ga
     }
   });
   it('the suite still takes its own caps: a one-storey garden suite 60 m2, a laneway suite 10.0 m long', () => {
-    const g = eff(lot('R', 'garden_suite', { vars: { height_storeys: 1 } }), 'gfa_m2');
+    const g = eff(lot('R', 'garden_suite', { flags: { suite_one_storey: true } }), 'gfa_m2'); // M-284: the one-storey arm is the design token
     expect([g.value, g.winner]).toEqual([60, '150.7.60.50(4)#(4)(B)']);
     const l = eff(lot('R', 'laneway_suite', { flags: { abuts_lane: true } }), 'building_length_m');
     expect([l.value, l.winner]).toEqual([10, '150.8.60.30(5)#whole']);

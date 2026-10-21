@@ -1,0 +1,156 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-page-4d-b/2026-10-21-page-4d.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-page-4d-b",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "completed teh rulings - proceed",
+    "record": "operator rulings page 2026-10-21 https://claude.ai/artifact/LMgW4aaequHWXWZyAeqGCA (db collection decisions)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-page-4d-b/2026-10-21-page-4d.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve",
+    "amend": "amend",
+    "reading-B": "approve"
+  },
+  "routing": {
+    "CHAT-38.F-4D-1": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-280"
+    },
+    "CHAT-38.F-4D-3": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-282"
+    },
+    "CHAT-38.F-4D-4": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-283"
+    },
+    "CHAT-38.F-4D-5": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-284"
+    },
+    "CHAT-38.F-4D-7": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-285"
+    },
+    "CHAT-38.F-4D-11": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-286"
+    },
+    "CHAT-38.F-4D-12": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-287"
+    },
+    "CHAT-38.F-4D-15": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-288"
+    },
+    "CHAT-38.F-4D-17": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-289"
+    },
+    "CHAT-38.F-4D-19": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-290"
+    },
+    "CHAT-38.F-4D-21": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-291"
+    }
+  },
+  "amendments": {
+    "CHAT-38.F-4D-11": {
+      "text": "Suite separation and height use the distance to the max-build envelope (new build) or the isolated suite; a laneway suite with an EXISTING house carries a disclosure because the existing dimensions are uncertain; no user-input field for distance.",
+      "operator_quote": "WE are building the max build and also determining the distance to the new build or an isolated garden or laneway suite.  The tricky one is the laneway suite with an existing build because we are not confident in the dimensions.  Need to make a disclosure in this case. ",
+      "decided_at": "2026-10-21",
+      "source": "operator rulings page 2026-10-21 (page 4D), operator_note on CHAT-38.F-4D-11"
+    }
+  },
+  "options": {
+    "CHAT-38.F-4D-12": "Reading B: R-zone ancillary lot coverage stays 5 percent per 10.10.60.70(1); the City's 10 percent on A0180/26TEY is an explained difference in the scorecard."
+  },
+  "decisions": [
+    {
+      "id": "CHAT-38.F-4D-1",
+      "question": "Platform and heating-device rules never reach the answer",
+      "recommendation": "Approve the platform half now; the heating-device half needs an operator ruling on new targets.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:35:24.018Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-3",
+      "question": "Townhouse separation always takes the largest figure",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:35:44.027Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-4",
+      "question": "Apartment on a major street: primary-window arm missing",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:36:00.350Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-5",
+      "question": "Garden suite floor area: one-storey 60 m2 figure not selected",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:36:21.815Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-7",
+      "question": "Named-street condition (exception RD 323) is never supplied",
+      "recommendation": "Needs operator decision on the join source.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:36:52.559Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-11",
+      "question": "Suite separation and height need two design inputs we never ask for",
+      "recommendation": "Approve.",
+      "decision": "amend",
+      "decided_at": "2026-10-21T19:40:42.075Z",
+      "operator_quote": "WE are building the max build and also determining the distance to the new build or an isolated garden or laneway suite.  The tricky one is the laneway suite with an existing build because we are not confident in the dimensions.  Need to make a disclosure in this case. "
+    },
+    {
+      "id": "CHAT-38.F-4D-12",
+      "question": "Ancillary lot coverage: City used 10 percent, our R-zone text says 5 percent",
+      "recommendation": "No recommendation. The quoted text does not decide it. Readings: Reading A: the City's (10 percent) — The parking-space exception in 10.10.60.70(1)(B) takes buildings that contain parking spaces out of the 5 percent cap, so the base rule 10.5.60.70(1)(B), 10 percent, applies. This is what the City used on A0180/26TEY. | Reading B: ours (5 percent) — The R-zone rule 10.10.60.70(1) says 'may not exceed 5% of the lot area'. The exception we have text for names parking-space buildings but states no figure of its own, so 5 percent stays.",
+      "decision": "reading-B",
+      "decided_at": "2026-10-21T19:40:43.808Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-15",
+      "question": "Further clauses keyed without a target or not keyed",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:41:37.679Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-17",
+      "question": "Townhouse and semi-detached side wall: 0.45 m versus 0.9 m is a design input again",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:42:04.267Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-19",
+      "question": "Platform side setback near a side wall: City 1.1 m, ours 0.9 m",
+      "recommendation": "Investigate; possible scorer reading.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:42:15.561Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-21",
+      "question": "Ancillary-building inputs missing: parking space and distance to residential",
+      "recommendation": "Approve.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:43:27.734Z",
+      "operator_quote": "This isn't important for us - we only care about laneway and garden suites "
+    }
+  ]
+}

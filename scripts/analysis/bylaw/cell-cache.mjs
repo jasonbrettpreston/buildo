@@ -23,7 +23,7 @@ const stableJson = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object
 const tok = (v) => (v === undefined ? 'U' : `J${stableJson(v)}`);
 /** A value inside a lot sub-object: the container being absent is its own token (map_area_not_held ≠ map_value_absent). */
 const inside = (obj, key) => (obj === undefined || obj === null ? `NC${obj === null ? 'n' : 'u'}` : tok(obj[key]));
-const WHOLE = new Set(['zone', 'building_type', 'exception', 'label', 'map_areas', 'address', 'parcel_id']);
+const WHOLE = new Set(['zone', 'building_type', 'exception', 'label', 'map_areas', 'address', 'parcel_id', 'primary_frontage_street_name']);
 const NESTED = new Map([['label.', 'label'], ['overlays.', 'overlays'], ['vars.', 'vars'], ['flags.', 'flags'], ['existing.', 'existing']]);
 
 /** The key token of one inputs[] path on a lot; null for `target.<name>` (derived: its own lot inputs are listed too). */

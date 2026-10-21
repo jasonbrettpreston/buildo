@@ -84,8 +84,12 @@
     "has_secondary_suite",
     "house_units",
     "lawfully_existing_status",
+    "main_wall_openings",
+    "main_wall_openings_each",
     "pool",
+    "primary_windows",
     "roof_type",
+    "suite_one_storey",
     "suite_wall_openings",
     "unit_count"
   ],
