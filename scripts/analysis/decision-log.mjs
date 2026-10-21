@@ -335,7 +335,7 @@ export function skeletons(missing) {
     L.push(`## ${reg}`, '');
     for (const { stem, id, log, d } of ms) {
       const route = (log.routing || {})[id] || {};
-      const src = log.source.kind === 'page' ? `${log.source.title || 'review page'}, ${log.source.url}` : `chat: "${log.source.operator_quote}"`;
+      const src = log.source.kind === 'page' ? `${log.source.title || 'review page'}, ${log.source.url}` : `chat: "${d.operator_quote || log.source.operator_quote}"`;
       const amend = (log.amendments || {})[id];
       const verb = meaningOf(log, d) === 'amend' ? 'approved, then amended' : 'approved';
       const amendText = amend ? ` Amended ${amend.decided_at} (${amend.source || 'chat'}: "${amend.operator_quote}"): ${amend.text}` : '';

@@ -1,0 +1,100 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Question, recommendation and decision are the review page rows export docs/reports/decisions/raw/2026-10-20-bylaw-fix-rulings/2026-10-20-page-bylaw-rulings.json, verbatim. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-bylaw-fix-rulings",
+  "source": {
+    "kind": "page",
+    "title": "By-law Fix Rulings",
+    "url": "https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb",
+    "record": "artifact 7kASZnqdVKkQLLqewVhHnb decisions collection",
+    "raw": {
+      "form": "page-rows",
+      "file": "docs/reports/decisions/raw/2026-10-20-bylaw-fix-rulings/2026-10-20-page-bylaw-rulings.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "R-DV-1": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HK"
+    },
+    "R-7a-v2": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-240"
+    },
+    "N-2": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-241"
+    },
+    "N-3": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-242"
+    },
+    "D-3": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-243"
+    },
+    "D-1": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-244"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "D-1",
+      "question": "The Eglinton exemption (10.10.40.71(1)) is for a transportation use, not houses. Scope it to that use so it stops blanking front setbacks on house lots.",
+      "recommendation": "Approve",
+      "decision": "approve",
+      "decided_at": "2026-10-20T23:55:55.573Z",
+      "source_url": "https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb"
+    },
+    {
+      "id": "D-3",
+      "question": "Give each projecting element its own encroachment target (eaves, window projections, porches, stairs) and let one rule carry both the maximum projection and the minimum clearance. Eaves: up to 0.9 m, no closer than 0.3 m to a lot line.",
+      "recommendation": "Approve (amends M-106)",
+      "decision": "approve",
+      "decided_at": "2026-10-20T23:56:40.551Z",
+      "source_url": "https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb"
+    },
+    {
+      "id": "N-2",
+      "question": "A garage rule (10.10.60.20(1)(A): 1.0 m from a rear or side lot line abutting a street or lane) applies to the garage itself. The user is asked whether the ancillary building holds a parking space; until answered, the result is \"needs user input\".",
+      "recommendation": "Approve",
+      "decision": "approve",
+      "decided_at": "2026-10-20T23:57:15.901Z",
+      "source_url": "https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb"
+    },
+    {
+      "id": "N-3",
+      "question": "\"In all other cases\" arms take the opposite of their sibling arm's condition. First use: 10.5.60.50(2)(B), 40 m² total ancillary floor area when frontage is under 12 m.",
+      "recommendation": "Approve",
+      "decision": "approve",
+      "decided_at": "2026-10-20T23:57:01.375Z",
+      "source_url": "https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb"
+    },
+    {
+      "id": "R-7a-v2",
+      "question": "When deciding a target is \"unregulated\" (nothing in the by-law limits it), ignore clauses that only define how to measure, and clauses that limit a different building type. Five new absence rulings close the last 16 open cells, including RM houseplexes answering \"not applicable\" for length, depth and main wall.",
+      "recommendation": "Approve",
+      "decision": "approve",
+      "decided_at": "2026-10-20T23:57:27.776Z",
+      "source_url": "https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb"
+    },
+    {
+      "id": "R-DV-1",
+      "question": "Let the decision log record \"no ruling needed\" items (CHAT-12 settled, CHAT-13 bug fix) as a new meaning, no_ruling, which must name the existing ruling it rests on.",
+      "recommendation": "Approve",
+      "decision": "approve",
+      "decided_at": "2026-10-20T23:57:35.197Z",
+      "source_url": "https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb"
+    }
+  ],
+  "unanswered": [
+    {
+      "id": "M-205(1)-floor",
+      "answered_via": "chat CHAT-21/CHAT-22"
+    }
+  ]
+}

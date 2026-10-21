@@ -327,6 +327,7 @@ describe('R-DV-1 — no_ruling: no new row, but it must rest on an existing regi
     const log = dl.importChat({ stem: STEM, raw, rawRel: 'raw/c.json', previous: null });
     expect(log.decisions[0].operator_quote).toBeUndefined();
     expect(log.decisions[1].operator_quote).toBe('approved, all of them');
+    expect(dl.skeletons([{ stem: STEM, id: 'CHAT-2', log, d: log.decisions[1] }])).toContain('(chat: "approved, all of them";');
     expect(() => dl.importChat({ stem: STEM, raw: { ...raw, operator_quote_2: undefined }, rawRel: 'raw/c.json', previous: null })).toThrow(/CHAT-2: quote_ref "operator_quote_2" names no quote in the record/);
   });
 
@@ -405,8 +406,21 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(34);
+    expect(r.decisions).toBe(42);
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(2);
+  });
+
+  it('the By-law Fix Rulings page (rows export) and the by-law half of chat batch C route to R-HK and M-240…M-246', () => {
+    const page = byStem.get('2026-10-20-bylaw-fix-rulings') as { source: { url: string; raw: { form: string } }; decisions: Array<{ id: string; decision: string }>; unanswered: Array<{ id: string }>; routing: Record<string, { row: string }> };
+    expect(page.source.url).toBe('https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb');
+    expect(page.source.raw.form).toBe('page-rows');
+    expect(page.decisions.map((d) => [d.id, d.decision])).toEqual([['D-1', 'approve'], ['D-3', 'approve'], ['N-2', 'approve'], ['N-3', 'approve'], ['R-7a-v2', 'approve'], ['R-DV-1', 'approve']]);
+    expect(page.unanswered.map((u) => u.id)).toEqual(['M-205(1)-floor']);
+    expect(Object.fromEntries(Object.entries(page.routing).map(([k, v]) => [k, v.row]))).toEqual({ 'R-DV-1': 'R-HK', 'R-7a-v2': 'M-240', 'N-2': 'M-241', 'N-3': 'M-242', 'D-3': 'M-243', 'D-1': 'M-244' });
+    const c = byStem.get('2026-10-20-chat-batch-c-bylaw') as { decisions: Array<{ id: string; operator_quote?: string }>; routing: Record<string, { row: string }> };
+    expect(c.decisions.map((d) => d.id)).toEqual(['CHAT-14', 'CHAT-21']);
+    expect(c.decisions[1]!.operator_quote).toMatch(/the missing answers for the bylaws and V3 page are approved as well/);
+    expect(Object.fromEntries(Object.entries(c.routing).map(([k, v]) => [k, v.row]))).toEqual({ 'CHAT-14': 'M-246', 'CHAT-21': 'M-245' });
   });
 });

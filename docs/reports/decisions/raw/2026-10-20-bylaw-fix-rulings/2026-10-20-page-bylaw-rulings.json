@@ -1,0 +1,85 @@
+{
+  "source": "artifact 7kASZnqdVKkQLLqewVhHnb decisions collection",
+  "full_drafts": "scratchpad/bf2/drafts.md",
+  "rows": [
+    {
+      "id": "R-DV-1",
+      "question": "Let the decision log record \"no ruling needed\" items (CHAT-12 settled, CHAT-13 bug fix) as a new meaning, no_ruling, which must name the existing ruling it rests on.",
+      "recommendation": "Approve",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:57:35.197Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "R-7a-v2",
+      "question": "When deciding a target is \"unregulated\" (nothing in the by-law limits it), ignore clauses that only define how to measure, and clauses that limit a different building type. Five new absence rulings close the last 16 open cells, including RM houseplexes answering \"not applicable\" for length, depth and main wall.",
+      "recommendation": "Approve",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:57:27.776Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "N-2",
+      "question": "A garage rule (10.10.60.20(1)(A): 1.0 m from a rear or side lot line abutting a street or lane) applies to the garage itself. The user is asked whether the ancillary building holds a parking space; until answered, the result is \"needs user input\".",
+      "recommendation": "Approve",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:57:15.901Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "N-3",
+      "question": "\"In all other cases\" arms take the opposite of their sibling arm's condition. First use: 10.5.60.50(2)(B), 40 m² total ancillary floor area when frontage is under 12 m.",
+      "recommendation": "Approve",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:57:01.375Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "D-3",
+      "question": "Give each projecting element its own encroachment target (eaves, window projections, porches, stairs) and let one rule carry both the maximum projection and the minimum clearance. Eaves: up to 0.9 m, no closer than 0.3 m to a lot line.",
+      "recommendation": "Approve (amends M-106)",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:56:40.551Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "D-1",
+      "question": "The Eglinton exemption (10.10.40.71(1)) is for a transportation use, not houses. Scope it to that use so it stops blanking front setbacks on house lots.",
+      "recommendation": "Approve",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:55:55.573Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "M-205(1)-floor",
+      "question": "Where front-yard averaging applies, the required front yard is the averaged neighbour figure plus the porch allowance, with no 6.0 m minimum. The 6.0 m applies only where averaging does not apply. Re-measured on the 219 notices before adoption.",
+      "recommendation": "Approve (amends your 2026-10-19 M-205(1) note)",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    }
+  ]
+}

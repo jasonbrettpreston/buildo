@@ -1,0 +1,44 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-20-chat-batch-c-bylaw/2026-10-20-batch-c-bylaw.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-chat-batch-c-bylaw",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "I recommend yes, because separate rows shift every later line and break line citations. - yes",
+    "record": "operator chat 2026-10-20",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-c-bylaw/2026-10-20-batch-c-bylaw.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-14": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-246"
+    },
+    "CHAT-21": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-245"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-14",
+      "question": "Status-cell dated notes in the 69a register",
+      "recommendation": "Sanction a dated note appended to a row's status cell (dated, names its source, keeps the prior text as a prefix) as a permitted form of 'appending a dated note to a row'; codify it in 69a §1a next to the separate-row form. Separate rows shift every later line and break line citations.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-21",
+      "question": "By-law ruling M-205(1)-floor (page save failed on the bracketed id; answered in chat)",
+      "recommendation": "Approve as drafted: no zone-default floor under the averaged front yard; re-measure on the 219 notices before adoption.",
+      "decision": "approve",
+      "decided_at": "2026-10-20",
+      "operator_quote": "approved [the cutover rulings table, pasted back] - the missing answers for the bylaws and V3 page are approved as well"
+    }
+  ]
+}
