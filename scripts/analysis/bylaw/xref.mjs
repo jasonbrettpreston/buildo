@@ -80,7 +80,17 @@ const FIRST_GAP = /^\s+(?:the\s+requirements\s+of\s+)?(?:the\s+[a-z ]{0,60}?\s+(
 /** The gap between references of one chain ("X and Y", "X, Y or Z"). */
 const NEXT_GAP = /^\s*(?:,\s*)?(?:and|or|to)?\s*(?:regulations?\s*|clauses?\s*)?$/i;
 /** A dotted id followed by " (B) and (C)" — a space, then clause groups (the City's split path, A4). */
-const GROUP_TAIL = /^ ((?:\([0-9A-Za-z]{1,7}\))+(?:\s*(?:,\s*(?:and\s+|or\s+)?|and|or)\s*(?:\([0-9A-Za-z]{1,7}\))+)*)/;
+// Spec 69a M-248 (F-SC-3): "to" joins groups as SEP already lets it (a range, expanded by expandRange).
+const GROUP_TAIL = /^ ((?:\([0-9A-Za-z]{1,7}\))+(?:\s*(?:,\s*(?:and\s+|or\s+|to\s+)?|and|or|to)\s*(?:\([0-9A-Za-z]{1,7}\))+)*)/;
+/** The group siblings a "to" range spans: "(1)" … "(3)" → ["(2)"] (the endpoints excluded), when both are one-level
+ * groups of the same sequence; [] otherwise. Spec 69a M-248. */
+function rangeMiddle(fromPath, toPath) {
+  const a = /^\(([0-9A-Za-z]{1,7})\)$/.exec(fromPath);
+  const b = /^\(([0-9A-Za-z]{1,7})\)$/.exec(toPath);
+  if (!a || !b) return [];
+  const seq = expandRange(a[1], b[1]);
+  return seq.length > 2 && seq[0] === a[1] && seq[seq.length - 1] === b[1] ? seq.slice(1, -1).map((s) => `(${s})`) : [];
+}
 
 /** Clauses in a unit's trigger scope: its subtree + its ancestors (lead-ins). */
 function scopeClauses(row, clausePath) {
@@ -191,12 +201,27 @@ export function displacesOf(index, unitId, vocab, external = null) {
     const refs = (row.refs || []).filter((r) => r.start >= from && r.start < to).sort((a, b) => a.start - b.start);
     let last = from;
     const out2 = [];
+    let prev = null;
     for (const r of refs) {
-      if (!(out2.length === 0 ? FIRST_GAP : NEXT_GAP).test(t.slice(last, r.start))) break;
+      const gap = t.slice(last, r.start);
+      if (!(out2.length === 0 ? FIRST_GAP : NEXT_GAP).test(gap)) break;
+      // M-248: "regulations 10.80.40.70(1) to (3)" — the regulations between the two dotted endpoints are cited too
+      if (prev && prev.id === r.id && /^\s*(?:,\s*)?to\s*$/i.test(gap)) {
+        for (const mid of rangeMiddle(prev.path, r.path)) out2.push({ citation: `${r.id}${mid}`, resolved: resolveCitation(index, cite(`${r.id}${mid}`), external) });
+      }
+      prev = r;
       last = r.end;
       const tail = GROUP_TAIL.exec(t.slice(r.end, to));
       if (tail) {
-        const groups = tail[1].split(/\s*(?:,\s*(?:and\s+|or\s+)?|and|or)\s*/).filter(Boolean);
+        // M-248: a "to" between tail groups is a range, expanded by expandRange like a relative "(A) to (D)"
+        const parts = tail[1].split(/(\s*(?:,\s*(?:and\s+|or\s+|to\s+)?|and|or|to)\s*)/);
+        const groups = [];
+        for (let k = 0; k < parts.length; k += 2) {
+          if (!parts[k]) continue;
+          const sep = parts[k - 1];
+          if (sep && /\bto\b/.test(sep) && groups.length) groups.push(...rangeMiddle(groups[groups.length - 1], parts[k]));
+          groups.push(parts[k]);
+        }
         const ex = groups.map((g) => ({ citation: `${r.citation}${g}`, resolved: resolveCitation(index, cite(`${r.citation}${g}`), external) }));
         if (ex.every((x) => x.resolved.ok)) {
           out2.push(...ex);
