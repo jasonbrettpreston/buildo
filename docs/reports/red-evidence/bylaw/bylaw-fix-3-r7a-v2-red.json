@@ -1,0 +1,56 @@
+{
+ "suite": "src/tests/bylaw-fix-3.logic.test.ts",
+ "base": "81ba1080",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-3, R-7a-v2 / M-240 (rule 7a v2, ABS-3..ABS-7), run on the working tree at 81ba1080 with the R-7a-v2 describe added, before the evaluator, vocab and absence-ruling changes.",
+ "counts": {
+  "red": 8,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit R: lot coverage of every principal type is unregulated by ABS-1 (DEFINE and ancillary-only units no longer block)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'detached_house', …(5) ] to deeply equal [ 'detached_house', 'value', …(4) ]"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit ABS-3: R building length of a house, semi or houseplex is unregulated; an R townhouse keeps 19.0 m from 10.10.40.20(1)(A)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'detached_house', …(5) ] to deeply equal [ 'detached_house', 'value', …(4) ]"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit ABS-4 / ABS-5: RT building length and depth of a house, semi or houseplex are unregulated; an RT townhouse keeps 19.0 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'detached_house', …(5) ] to deeply equal [ 'detached_house', 'value', …(4) ]"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit ABS-6: an RD semi-detached house's depth is unregulated; an RD detached house keeps 19.0 m from 10.20.40.30(1)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, …(3) ] to deeply equal [ 'value', 'unregulated', null, …(2) ]"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit ABS-7: an RM detached houseplex has no length, depth or main-wall rule — not_applicable:<the clause whose subject excludes it>",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'building_length_m', …(5) ] to deeply equal [ 'building_length_m', …(5) ]"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit the RM detached house keeps its 17.0 m length, 19.0 m depth and x.40.10(2) main wall",
+   "at_base": "pass"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit INV-19 open arm: no principal cell of the four targets is not_evaluated:no_candidate (ratchet 16 → 0)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(16) ] to deeply equal []"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit the absence rulings ABS-3…ABS-7 are each executed against their pinned page and pass",
+   "at_base": "red",
+   "reason": "AssertionError: expected [] to deeply equal [ 'ABS-3', 'ABS-4', 'ABS-5', …(4) ]"
+  },
+  {
+   "name": "R-7a-v2 / M-240 — absence per (zone, building type, target); a definition or another type's limit is not a limit an absence ruling may name building_types and answer not_applicable; not_applicable needs its subject_clause; one zone|target may carry a ruling per type",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'building_types')"
+  }
+ ]
+}
