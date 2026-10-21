@@ -22,6 +22,31 @@ Lane `layer2-build-1`, branch `wf2/layer2-build-1` from `ee5ed572`, 2026-10-21. 
 
 ---
 
+## 0. Layer 2 in plain English (for the operator; read this first)
+
+**What it does.** For each residential lot, Layer 2 asks the by-law engine (the evaluator, `effective()`) one question per rule: "what is the limit here?" Examples are maximum height, minimum front setback and maximum lot coverage. It asks for the house, and for a garden or laneway suite where the house type has one, under each house type we model. It writes down the answer, the by-law clause that decided it, and why the other clauses lost. The max-build report (Layer 3) reads only these answers and never runs the engine itself.
+
+**What it stores** (planned; the exact table split is measured first, at P2-0):
+
+| Table | One row per | Holds |
+|---|---|---|
+| lots | lot | which *cell* the lot belongs to (a cell is a group of lots that get exactly the same law), and the lot-level check that stopped it, if any (for example "its exception is not authored yet") |
+| cells | cell × rule | the answer, shared by every lot in the cell: `applies` with a value, `not_applicable` with the clause that says so, or `not_evaluated` with a reason code; the winning clause; the evidence |
+| structures | cell × rule × suite | the suite's own answer |
+
+Every row carries two stamps: `table_version` (which by-law data produced it) and `evaluator_version` (which engine code). A rerun with nothing changed writes nothing.
+
+**How to change it.** Nothing about Layer 2 is a list in code. Each thing you might change is one file, and a test tells you if the change is incomplete.
+
+| To change | Edit | Then |
+|---|---|---|
+| which rules are resolved, for the house and each suite | `scripts/seeds/bylaw/layer2-scope.json` | its lock checks every rule against the report's lineage registry |
+| how an engine answer becomes a Layer 2 status, the reason codes, the order of the lot checks | `scripts/seeds/bylaw/layer2-map.json` | its lock checks it against what the engine can return |
+| the by-law data (shards, adjudications, vocab) or the engine | as today | run `node scripts/generate-bylaw-layer2-input.mjs --write`; pre-commit stops you if you forget. The new `table_version` makes the next run recompute every lot |
+| a threshold, budget or bound | its `resolve_bylaws_*` logic variable (seeded by the migration at ①) | nothing else |
+
+**What is built and what waits.** Built (no database touched): the twelve rulings as register rows R-II…R-IT; the two seed files; the one input file Layer 2 reads; the pure functions that key a cell, map a status, pick a lot check and collapse equal house types. Waiting: the by-law fix lane's additions (`losers[]` and `exceptionClosure` in the evaluator, the class vectors and the exception-chapter map in the vocab) and the other Spec 134 prerequisites (the label parser R-LABEL, R-EMIT, R-DET), then P2-0 (a measurement on the local database), then commit ①, which registers the step and adds its tables (Q-L2-3).
+
 ## 1. What Layer 2 produces
 
 From Spec 134 §3 (134:40-50), not invented here. The **logical** row shape is the contract (134:40: *"the logical row shape is the contract the scenario step builds against"*); the **physical** split into three tables is fixed at ① from the P2-0 measurement (134:159, open).
@@ -94,7 +119,24 @@ Pre-commit runs vitest related on the staged tests, so a red test is committed a
 9. **`table_version` and `evaluator_version`**, which become the scenario row's `layer2_table_version` and `evaluator_version` (lineage; admin-only in the report schema).
 10. **A frozen row shape at ①** (134:153), so node N6a's pure modules can be built on fixtures now.
 
-## 6. Open questions Spec 134 leaves unsettled (drafted for the operator; not decided)
+## 6. Open questions Spec 134 left unsettled (ruled 2026-10-21)
+
+**Ruled.** The operator approved all twelve on 2026-10-21 on a condition: "keeping this simple, understandable, accruate, standardized, easy to fix or altar" (decision log `2026-10-21-chat-batch-j`). Each is now a Spec 124 register row in its simplest compliant form; where that form is simpler than the recommendation below, the row says how and why (124a §B26, conflict checks and V3 tables 124a §B33). The drafts below are kept as written.
+
+| OQ | Row | Built in lane layer2-build-2 | Simplified |
+|---|---|---|---|
+| OQ-1 | R-II | `scripts/generate-bylaw-layer2-input.mjs` → `docs/reference/bylaw-layer2-input.json`; `--check` at pre-commit | yes: one generated file the compute requires, no runner read (the shell shape is frozen) |
+| OQ-2 | R-IJ | nothing new (slice (a) takes the closure); `exceptionClosure` owed by the fix lane | no |
+| OQ-3 | R-IK | `cellKey` | yes: `zone` + `exception` tokens carry the candidate set, no unit sha (Q-L2-1: drop `inputs_hash`) |
+| OQ-4 | R-IL | `layer2-map.json` + lock; `statusText`, `layer2Status` | yes: the string form is derived on read, no column or view |
+| OQ-5 | R-IM | map `evidence_kind`; `evidenceOf` | no |
+| OQ-6 | R-IN | map `lot_gate` (ordered); `firstLotGate`, `closureStart`, `exceptionMismatch` | the order is the list order, no second table |
+| OQ-7 | R-IO | `collapseClasses`; the class vectors owed by the fix lane | no |
+| OQ-8 | R-IP | `layer2-scope.json` + lineage lock (25 house, 14 suite rules) | no (Q-L2-2: no skip predicate at v1) |
+| OQ-9 | R-IQ | the two columns land with the migration at ① | one column each, no per-cell permission table |
+| OQ-10 | R-IR | `splitPopulation` | yes: the existing `replace_keys` write, no runner field; a deleted parcel cascades (Q-L2-4: the population predicate) |
+| OQ-11 | R-IS | the sentinel and mismatch arms; the builder waits for R-LABEL | no |
+| OQ-12 | R-IT | `sha256Hex`, `filesHash`; both versions in the input file | no |
 
 Each question gives a recommendation, a conflict check and the seven-question V3 table (Spec 124 R-DF; the seven questions, EXTERNALIZED included). None is applied in this lane. The two §11 questions already open in Spec 134 (the physical split, 134:159; `undecided` before M-60, 134:160) are not repeated; OQ-4 only adds the mapping rows they leave.
 
@@ -331,6 +373,8 @@ The closure's source (OQ-2), the scope's source (OQ-8), the gate order (OQ-6) an
 ## 8. PINs (out of scope here)
 
 - **PIN-L2-1:** `pull-oracle.cjs:9` hard-codes the zone → Chapter 900 map. It is a read-only analysis script, but Layer 2 must not copy it (OQ-11).
-- **PIN-L2-2:** compute modules are CommonJS and `evaluate.mjs` is ESM. Slice (d) needs `require()` of an ES module (Node ≥ 22) or a dynamic import in the shell. Gate E / compute-closure must be confirmed to follow it before ②.
+- **PIN-L2-2:** compute modules are CommonJS and `evaluate.mjs` is ESM. **Bridge chosen (layer2-build-2):** a synchronous `require()` of the ES module (Node ≥ 22.12; the repo runs Node 26; neither `evaluate.mjs` nor `cell-cache.mjs` has top-level await), the simplest form, used by `scripts/lib/bylaw-resolution.js` and locked by a case that runs plain node. Still open (PIN L2-CLOSURE-ESM, 124a §B33): gate E's `compute-closure.mjs` follows `require()` edges only, so `evaluate.mjs`'s ESM `import` of `dsl.mjs` is not scanned; the gates lane closes it before ②.
 - **PIN-L2-3:** `mobile/node_modules`, a symlink, shows as untracked in a fresh worktree (the ignore rule matches the directory, not the link). It is never staged.
 - **PIN-L2-4:** `scripts/generate-system-map.mjs` has no mode flag (it always writes), so this lane did not run it. Spec 134's Target Files name the slice (a) files without their root, the convention its PLANNED line already uses, so the system map is unchanged. Registering the step at ① regenerates it.
+- **PIN-L2-5 (layer2-build-2):** slices (b) census/descriptor, (c) migration and (d) shell/runner wiring are not landed: Spec 134 §9 puts commit ① (census, `converted.json` pending at `red_suite`, admin entries, the migration, the logic-variable seed) after node N4, the evaluator prerequisites and P2-0 (134:145), and P2-0 fixes the physical table split (134:159) on the local DB; R-K.1 keeps the descriptor out of `red_suite`; a compute file must pair with a manifest step (step-conformance §5.5). Drafted Q-L2-3.
+- **PIN L2-INPUT-REGEN:** a commit that changes a file under `scripts/seeds/bylaw/` or `scripts/analysis/bylaw/` also runs `node scripts/generate-bylaw-layer2-input.mjs --write` (pre-commit enforces it); tell the by-law fix lane.
