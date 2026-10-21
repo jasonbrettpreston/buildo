@@ -10,6 +10,10 @@
  * node N6a form, Spec 134 §9). No descriptor, shell, migration or runner hook exists yet (Spec 124 R-K.1: at
  * red_suite there is no descriptor file). Pure: requires nothing; no fs, pg, env, clock or randomness.
  *
+ * A library, not the compute module: a file in scripts/lib/compute/ must pair with a manifest step (step-conformance
+ * §5.5), and the step is registered only at ①. The compute module `scripts/lib/compute/resolve-bylaws.js` (②) will
+ * require it, as compute modules require `../zoning-precedence` and `../safe-math`.
+ *
  * What is still open is passed IN, never decided here (plan §6): the INCLUDE closure and the authored map (OQ-2), the
  * declared (target, structure) scope (OQ-8), which lot gate is reported first (OQ-6), and the physical status columns
  * (OQ-4). Status strings use the Spec 68 §5a part 3 written form `not_evaluated:<code>` (Spec 134 §4; M-232).

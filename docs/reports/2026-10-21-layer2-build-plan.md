@@ -72,7 +72,7 @@ Pre-commit runs vitest related on the staged tests, so a red test is committed a
 
 | Slice | Contents | Red-first test | Waits for |
 |---|---|---|---|
-| **(a) pure resolution functions** | The pure, I/O-free functions of the compute module (`scripts/lib/compute/resolve-bylaws.js`, Spec 134 Target Files): built ahead on fixtures, as Spec 134 node N6a does for the scenario step. **Built in this lane:** the M-231 lot-wide exception gate, the per-target gated rows, the gate-before-evaluator order, `value_kind`. **Waiting on rulings:** the lot-vector builder (OQ-6, OQ-11), status mapping through `layer2-map.json` (OQ-4), evidence mapping (OQ-5), class collapse (OQ-7), `cell_id` and `inputs_hash` (OQ-3), the scope catalogue (OQ-8) | `src/tests/steps/resolve_bylaws/resolution.logic.test.ts` | nothing for the built part |
+| **(a) pure resolution functions** | The pure, I/O-free functions, in the library `scripts/lib/bylaw-resolution.js`, which the compute module `scripts/lib/compute/resolve-bylaws.js` requires at ②. A file in `scripts/lib/compute/` must pair with a manifest step (`step-conformance.infra` §5.5), so it cannot exist before ①. Built ahead on fixtures, as Spec 134 node N6a does for the scenario step. **Built in this lane:** the M-231 lot-wide exception gate, the per-target gated rows, the gate-before-evaluator order, `value_kind`. **Waiting on rulings:** the lot-vector builder (OQ-6, OQ-11), status mapping through `layer2-map.json` (OQ-4), evidence mapping (OQ-5), class collapse (OQ-7), `cell_id` and `inputs_hash` (OQ-3), the scope catalogue (OQ-8) | `src/tests/steps/resolve_bylaws/resolution.logic.test.ts` | nothing for the built part |
 | **(b) descriptor + notes** | the census row, `converted.json` pending at `red_suite`, admin entries (R-DL, R-DV); then the descriptor file and its notes (`descriptor_only`); the logic-variable names | `violations.test.ts` (the step suite), `admin-step-registration.logic`, `step-validate-net-new.logic` | OQ-1, OQ-8, OQ-10 (the descriptor must name the file inputs, the scope pin and the reset arm) |
 | **(c) migration** | one migration creating the three tables empty with indexes and closed-column CHECKs generated from `layer2-map.json`; the `resolve_bylaws_*` seed rows; DOWN drops the tables; `LARGE_TABLES` at landing (134:50) | a `*.db.test.ts` arm per CHECK; `validate-migration`; schema-baseline | OQ-3, OQ-4, OQ-9, and the physical split (134:159, fixed from P2-0) |
 | **(d) runner wiring** | the shell `scripts/resolve-bylaws.js` → `pipeline.step(descriptor, compute)`; `buildSourceSql`, `materializeRows`, `finalizeMatched`; the checks; the manifest slot at ③ (R-HD) | `violations.test.ts` arms I1–I15, R-SKIP, the reset arm, G-EXC-LIT, the structure set (134:126) | (b), (c), OQ-10; the Spec 134 prerequisites (`losers[]`, R-EMIT, R-DET, R-LABEL, P2-0; 134:121) |
@@ -316,7 +316,7 @@ Each question gives a recommendation, a conflict check and the seven-question V3
 
 ## 7. Slice (a) as built in this lane
 
-`scripts/lib/compute/resolve-bylaws.js` (pure; no fs, pg, env or clock) and `src/tests/steps/resolve_bylaws/resolution.logic.test.ts`. Only what M-231, M-232's Layer 2 set and Spec 134 §3 / §5 fully settle:
+`scripts/lib/bylaw-resolution.js` (pure; no fs, pg, env or clock; first committed as `scripts/lib/compute/resolve-bylaws.js` and moved, see §4 (a)) and `src/tests/steps/resolve_bylaws/resolution.logic.test.ts`. Only what M-231, M-232's Layer 2 set and Spec 134 §3 / §5 fully settle:
 
 | Function | Settled by | What it does |
 |---|---|---|

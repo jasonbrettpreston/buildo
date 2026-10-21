@@ -7,7 +7,7 @@
 // form, Spec 134 §9). Anything still open (the closure source, the scope file, the gate order, the status columns:
 // plan §6 OQ-2, OQ-8, OQ-6, OQ-4) is an INPUT of these functions, never decided here.
 //
-// RED FIRST: committed as it.fails at 027e5f72, before the compute module existed (gate K artifact
+// RED FIRST: committed as it.fails at 027e5f72, before the module existed (gate K artifact
 // docs/reports/red-evidence/resolve_bylaws/slice-a-red.json, 18 red at ee5ed572); the implementation commit flips
 // every case to it (flipped with the implementation).
 
@@ -18,7 +18,10 @@ import { pathToFileURL } from 'node:url';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped .js / .mjs module surface
 const ROOT = path.resolve(__dirname, '../../../../');
-const COMPUTE = 'scripts/lib/compute/resolve-bylaws.js';
+// A library the compute module will require (as compute modules require ../zoning-precedence), not the compute module
+// itself: a file in scripts/lib/compute/ must pair with a manifest step (step-conformance §5.5), and the step is not
+// registered before ① (Spec 134 §9). First committed at scripts/lib/compute/resolve-bylaws.js (f973687a).
+const COMPUTE = 'scripts/lib/bylaw-resolution.js';
 function rb(): Json {
   expect(fs.existsSync(path.join(ROOT, COMPUTE)), `${COMPUTE} should exist`).toBe(true);
   // eslint-disable-next-line @typescript-eslint/no-require-imports

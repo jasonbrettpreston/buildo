@@ -164,7 +164,7 @@ The step is born V3: `standard=V3` prints only when all nine R-EY conditions hol
 ## Operating Boundaries
 
 ### Target Files
-- **Built ahead of ① (slice (a), plan §7; pure functions only, no hook the runner reads; written without their root until ① registers the step):** the compute module `lib/compute/resolve-bylaws.js` and its test `tests/steps/resolve_bylaws/resolution.logic.test.ts`, red first (gate K artifact `reports/red-evidence/resolve_bylaws/slice-a-red.json`).
+- **Built ahead of ① (slice (a), plan §7; pure functions only, no hook the runner reads; written without their root until ① registers the step):** the library `lib/bylaw-resolution.js` (required by the compute module at ②) and its test `tests/steps/resolve_bylaws/resolution.logic.test.ts`, red first (gate K artifact `reports/red-evidence/resolve_bylaws/slice-a-red.json`).
 - **PLANNED (not created; paths written without their root so the system map does not list files that do not exist):** the step `resolve-bylaws.js` with its descriptor and notes, the rest of the compute module (the runner hooks), the seed `seeds/bylaw/layer2-map.json`, one migration creating the three tables, the logic-variable seed rows, and the tests under `tests/steps/resolve_bylaws/` plus the `layer2-map` lock.
 
 ### Out-of-Scope Files
