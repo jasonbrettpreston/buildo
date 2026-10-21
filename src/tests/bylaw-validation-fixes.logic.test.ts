@@ -57,16 +57,18 @@ describe('Q1 / D2 — an optional variation ("Despite …, … may …", no valu
       expect([id, displacement(id).displaces_optional]).toEqual([id, true]);
     }
   });
-  it('the sweep of every chapter: exactly these 17 valueless PERMIT / UNUSUAL units are optional variations that keep a numeric base limit', () => {
+  // amended 2026-10-21 (69a M-255, F-SC-13/14): the RD / RS / RM (2)(C) extension clearance is keyed (extension_side_setback_m), so
+  // it is no longer valueless; 14 remain
+  it('the sweep of every chapter: exactly these 14 valueless PERMIT / UNUSUAL units are optional variations that keep a numeric base limit', () => {
     const tg = (u: Json): string[] => [].concat(u.target || []).filter((t: string) => t && t !== 'none');
     const caught = units.filter((u) => !tg(u).length && ['PERMIT', 'UNUSUAL'].includes(u.archetype) && u.displaces_optional
       && units.some((x) => x !== u && tg(x).length && ['LIMIT', 'DEFINE'].includes(x.archetype) && u.displaces.some((r: string) => E.refMatch(r, x.unit_id))))
       .map((u) => u.unit_id).sort();
     expect(caught).toEqual([
-      '10.20.40.20(2)#(2)(A)', '10.20.40.20(2)#(2)(B)', '10.20.40.20(2)#(2)(C)', '10.20.40.70(4)#whole',
-      '10.40.40.20(2)#(2)(A)', '10.40.40.20(2)#(2)(B)', '10.40.40.20(2)#(2)(C)',
+      '10.20.40.20(2)#(2)(A)', '10.20.40.20(2)#(2)(B)', '10.20.40.70(4)#whole',
+      '10.40.40.20(2)#(2)(A)', '10.40.40.20(2)#(2)(B)',
       '10.5.20.40(7)#(7)(A)', '10.5.20.40(7)#(7)(B)', '10.5.60.20(7)#whole',
-      '10.80.40.20(2)#(2)(A)', '10.80.40.20(2)#(2)(B)', '10.80.40.20(2)#(2)(C)',
+      '10.80.40.20(2)#(2)(A)', '10.80.40.20(2)#(2)(B)',
       '200.5.10.1(11)#(11)(A)', '200.5.10.1(11)#(11)(B)', '200.5.10.1(13)@1075-2026#(13)', '970.10.15.10(2)#whole',
     ].sort());
   });

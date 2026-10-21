@@ -2,30 +2,30 @@
   "entries": {
     "building_footprints_foreign_key_space_rows": {
       "value": 0,
-      "cost_ms": 47,
-      "at": "2026-10-19T13:32:48.336Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 49,
+      "at": "2026-10-21T13:42:02.995Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 26
+      "sample_n": 29
     },
     "footprint_area_null_count": {
       "value": 0,
       "cost_ms": 36,
-      "at": "2026-10-19T13:32:48.336Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "at": "2026-10-21T13:42:02.995Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 26
+      "sample_n": 29
     },
     "geom_null_count": {
       "value": 0,
-      "cost_ms": 43,
-      "at": "2026-10-19T13:32:48.336Z",
-      "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "cost_ms": 41,
+      "at": "2026-10-21T13:42:02.995Z",
+      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 26
+      "sample_n": 29
     }
   }
 }

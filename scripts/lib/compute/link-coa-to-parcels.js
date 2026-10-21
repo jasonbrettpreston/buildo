@@ -134,6 +134,9 @@ function buildMatchSql(_descriptor, config) {
     // No spatial fallback: a CoA has no coordinates before its parcel match, so a tier-2 spatial pass is
     // unreachable by construction (Spec 42 §6.5 step 9; R2.v5 fix #14; the legacy file's own header).
     fallback_match_sql: null,
+    // R-ID (CoA cutover ruling 4): the two per-run bridge type counters, counted per batch by classifyMatches and
+    // summed by the runner (R-EG (1) additive amendment). Legacy :305-306, :407.
+    extra_counters: ['tier_1a_type_confirmed', 'tier_1a_type_tolerant'],
     primary_counter: 'cascade_matches',
     fallback_counter: 'spatial_fallback_matches',
     fallback_bbox_degrees: null,
@@ -262,7 +265,10 @@ function classifyMatches(matchRows, config) {
   const tier1a = Number(config[CONFIG_KEYS.tier1aConfidence]);
   const tier1b = Number(config[CONFIG_KEYS.tier1bConfidence]);
   const rows = [];
+  const counters = { tier_1a_type_confirmed: 0, tier_1a_type_tolerant: 0 };
   for (const r of matchRows) {
+    // Legacy :407: a bridge match whose candidate type equals the application's is confirmed; otherwise tolerant.
+    if (r.match_type === 'address_points_exact') counters[r.type_confirmed === true ? 'tier_1a_type_confirmed' : 'tier_1a_type_tolerant'] += 1;
     rows.push({
       lead_id: r.lead_id,
       parcel_id: Number(r.parcel_id),
@@ -270,7 +276,7 @@ function classifyMatches(matchRows, config) {
       confidence: r.match_type === 'tier_1b_name_only' ? tier1b : tier1a,
     });
   }
-  return { rows, parcels: rows.length, matches: rows.length };
+  return { rows, parcels: rows.length, matches: rows.length, counters };
 }
 
 /** Unreachable (fallback_match_sql is null); declared because the runner contract names it. */
@@ -326,6 +332,12 @@ function tier_1a_exact(ctx) {
 function tier_1a_via_bridge(ctx) {
   ctx.report('tier_1a_via_bridge', { violations: 0, detail: m(ctx, 'tier_1a_via_bridge') });
 }
+function tier_1a_type_confirmed(ctx) {
+  ctx.report('tier_1a_type_confirmed', { violations: 0, detail: m(ctx, 'tier_1a_type_confirmed') });
+}
+function tier_1a_type_tolerant(ctx) {
+  ctx.report('tier_1a_type_tolerant', { violations: 0, detail: m(ctx, 'tier_1a_type_tolerant') });
+}
 function tier_1b_name_only(ctx) {
   ctx.report('tier_1b_name_only', { violations: 0, detail: m(ctx, 'tier_1b_name_only') });
 }
@@ -373,6 +385,8 @@ const CHECKS = {
   coa_processed,
   tier_1a_exact,
   tier_1a_via_bridge,
+  tier_1a_type_confirmed,
+  tier_1a_type_tolerant,
   tier_1b_name_only,
   no_address_data,
   no_parcel_match,
@@ -396,6 +410,8 @@ function buildMeta(ctx) {
     coa_processed: m(ctx, 'coa_processed'),
     tier_1a_exact: m(ctx, 'tier_1a_via_bridge') + m(ctx, 'tier_1a_parcels_exact'),
     tier_1a_via_bridge: m(ctx, 'tier_1a_via_bridge'),
+    tier_1a_type_confirmed: m(ctx, 'tier_1a_type_confirmed'),
+    tier_1a_type_tolerant: m(ctx, 'tier_1a_type_tolerant'),
     tier_1b_name_only: m(ctx, 'tier_1b_name_only'),
     no_address_data: m(ctx, 'no_address_data'),
     no_parcel_match: m(ctx, 'no_parcel_match'),

@@ -421,11 +421,11 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 496510,
-        "at": "2026-10-05T19:28:16.983Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 949,
-        "sample_n": 3,
+        "value": 496536,
+        "at": "2026-10-21T13:21:38.274Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 49,
+        "sample_n": 25,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -451,10 +451,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-05T19:28:16.983Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1185,
-        "sample_n": 3,
+        "at": "2026-10-21T13:21:38.274Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 260,
+        "sample_n": 25,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -480,10 +480,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 1,
-        "at": "2026-10-05T19:28:16.983Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 88,
-        "sample_n": 3,
+        "at": "2026-10-21T13:21:38.274Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 70,
+        "sample_n": 25,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -509,10 +509,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 1716,
-        "at": "2026-10-05T19:28:16.983Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 860,
-        "sample_n": 3,
+        "at": "2026-10-21T13:21:38.274Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 262,
+        "sample_n": 25,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -537,11 +537,11 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 139261,
-        "at": "2026-10-05T19:28:16.983Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1474,
-        "sample_n": 3,
+        "value": 139280,
+        "at": "2026-10-21T13:21:38.274Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 334,
+        "sample_n": 25,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -567,10 +567,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 1528,
-        "at": "2026-10-05T19:28:16.983Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 992,
-        "sample_n": 3,
+        "at": "2026-10-21T13:21:38.274Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 268,
+        "sample_n": 25,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -599,10 +599,10 @@
       "retighten_when": "zero rows — BUILT and FIRED (CC-D3, WF3, 2026-08-30): a declared FULL mode (override.force_full, outputs.writes[1], LG-22) recomputed every drifted centroid live; this bound retightened to 0 the same run and is now the STEADY-STATE reading, not a standing WARN. A future genuine recurrence (a new algorithm change with no matching repair) would re-raise it — the retighten condition stays declared, not retired, per Rule 10 addendum R-H's own posture for a metric that CAN legitimately return to non-zero.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-05T19:28:16.983Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 3027,
-        "sample_n": 3,
+        "at": "2026-10-21T13:21:38.274Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 320,
+        "sample_n": 25,
         "source_run": {
           "run_id": null,
           "chain": "sources",

@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-schema.js",
   "chain": "coa",
-  "source_fingerprint": "c6cb40735b9c1a1ea3b2b1e73d7dccd00bd907798134c48456178f4c54efad21",
-  "git_head": "a475e71e098d107fa5f21cb8285f952ae78d32e0",
+  "source_fingerprint": "4649639c3ff944cffde753e46305fea2bcfdd62ee1cd891b75101dc854af74d8",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
     "calls": 9,
     "distinct": 9,
     "utility": 4,
-    "tracer_self_ms": 0.845,
-    "wall_ms": 719
+    "tracer_self_ms": 0.832,
+    "wall_ms": 1041
   },
   "statements": [
     {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 794,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [

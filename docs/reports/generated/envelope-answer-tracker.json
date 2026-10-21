@@ -2163,7 +2163,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.10.40.70(4)#(4)(D)/disclosure, COR-10.10.40.70(4)#(4)(D)/calculation_handling"
+    "correction COR-10.10.40.70(4)#(4)(D)/disclosure, COR-10.10.40.70(4)#(4)(D)/calculation_handling, COR-10.10.40.70(4)#(4)(D)/condition, COR-10.10.40.70(4)#(4)(D)/application.lot_conditions, COR-10.10.40.70(4)#(4)(D)/application.evidence, COR-10.10.40.70(4)#(4)(D)/calculation_handling~s1"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
@@ -2188,7 +2188,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.10.40.70(4)#(4)(E)/disclosure, COR-10.10.40.70(4)#(4)(E)/calculation_handling"
+    "correction COR-10.10.40.70(4)#(4)(E)/disclosure, COR-10.10.40.70(4)#(4)(E)/calculation_handling, COR-10.10.40.70(4)#(4)(E)/condition, COR-10.10.40.70(4)#(4)(E)/application.lot_conditions, COR-10.10.40.70(4)#(4)(E)/application.evidence, COR-10.10.40.70(4)#(4)(E)/calculation_handling~s1"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"

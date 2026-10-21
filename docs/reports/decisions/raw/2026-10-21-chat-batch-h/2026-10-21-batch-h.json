@@ -1,0 +1,12 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "1-5 y ensure.",
+  "context": "Answer to the five verify-20 operator-attention questions on wf1/bylaw-fix-4 @ b6d8e710: 1 F-SC-6 family extension; 2 private_garage tag on x28/x37; 3 M-247 scope; 4 F-SC-5 (dropped from batch G by an orchestrator bug); 5 F-SH-12/13 keep the by-law text.",
+  "decisions": [
+    {"id": "CHAT-30", "subject": "F-SC-6 family extension: gfa_m2 = min(base + 25 pct x lot_area_m2; 0.5 ratio x lot_area_m2) for RD 21, 28, 35, 37, 38 (the shared cap phrase 'plus 25% of the lot area, up to a maximum floor space index of 0.5')", "decision": "approve", "recommendation": "Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42) that called the min() form a conversion. RD 27 (D) shares the cap text but has no units: PIN for keying."},
+    {"id": "CHAT-31", "subject": "private_garage use dropped on 900.3.10(28) and (37) (C)(i)", "decision": "approve", "recommendation": "Drop the private_garage use on the x28 and x37 (C)(i) cap units (keyer took it from the garage-floor-area inclusion line), matching x21; the cap then binds the house (x37 FSI 0.5, the City figure on four 2017 notices)."},
+    {"id": "CHAT-32", "subject": "M-247 scope", "decision": "approve", "recommendation": "F-SC-1 covers x14 and the historical top-three correction (8 measurement-only DEFINE units in x18/x21/x37 take target none); keying the no-unit exceptions (x40, x225, x478, x863, x559, x14) stays owed through keyer A/B."},
+    {"id": "CHAT-33", "subject": "F-SC-5: the 0.45 m blank-wall side-yard reduction gets a condition", "decision": "approve", "recommendation": "Give 10.10.40.70(4) ('may be reduced to 0.45 metres if there are no windows or doors in that side of the building') a condition token blank_side_wall (default true per M-205(2)), so a design with openings takes 0.9 m and a platform never takes the reduction; amends the M-205(2) dated note, not the ruling."},
+    {"id": "CHAT-34", "subject": "F-SH-12 / F-SH-13 drafted rulings R-SH-12 and R-SH-13", "decision": "approve", "recommendation": "Keep the by-law text: the RD side-yard band follows the required minimum lot frontage (10.20.40.70(3), 10.20.30.20(1)); rear-yard soft landscaping on lots 6.0 m wide or less is 25 % (10.5.50.10(3)(B)). Record the City's contrary 2017 figures as examiner practice; no code change."}
+  ]
+}

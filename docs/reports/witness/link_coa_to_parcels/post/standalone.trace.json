@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/link-coa-to-parcels.js",
   "chain": "none",
-  "source_fingerprint": "4fdbcb3fe6f9a0972d9c45495cf65bd89de931674a7497191084c57f6a3d5801",
-  "git_head": "017538a25d5af64c3e7eed208e7e5011a212ab9e",
+  "source_fingerprint": "88a62e17ba6c565894c8164e51ab0e14d0482dcbb4a850d3af8bb6c9df3c680f",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
     "calls": 299,
     "distinct": 28,
     "utility": 75,
-    "tracer_self_ms": 162.52,
-    "wall_ms": 4845
+    "tracer_self_ms": 219.708,
+    "wall_ms": 4704
   },
   "statements": [
     {
@@ -136,7 +136,7 @@
       "fingerprint": "3af57a03a54f7cfe",
       "kind": "read",
       "count": 35,
-      "rowCount": 33857,
+      "rowCount": 33866,
       "reads": {
         "coa_applications": [
           "lead_id",
@@ -206,13 +206,13 @@
       "params": [
         [
           "completed_with_warnings",
-          4629,
+          4478,
           null,
-          3674,
-          33857,
+          3826,
+          33866,
           0,
           0,
-          "{\"duration_ms\":4609,\"coa_corpus_total\":33966,\"coa_corpus_linked_count\":31762,\"coa_corpus_unlinked_count\":2204,\"coa_corpus_missing_normalized_count\":106,\"coa_processed\":33857,\"tier_1a_exact\":31762,\"tier_1a_via_bridge\":31591,\"tier_1b_name_only\":0,\"no_address_data\":109,\"no_parcel_match\":2095,\"neighbourhood_matched\":31761,\"centroid_outside_polygon\":78,\"links_inserted\":0,\"links_updated\":0,\"links_retracted\":0,\"ghost_deleted\":0,\"coa_backfilled\":0,\"config\":{\"link_coa_to_parcels_conf_tier1a\":0.95,\"link_coa_to_parcels_conf_tier1b\":0.8,\"link_coa_to_parcels_unmatched_threshold_pct\":10,\"link_coa_to_parcels_neighbourhood_coverage_min_pct\":95,\"link_coa_to_parcels_centroid_outside_max_pct\":1},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"017538a25d5af64c3e7eed208e7e5011a212ab9e\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"coa_corpus_missing_normalized_count: 106\"],\"audit_table\":{\"phase\":4,\"name\":\"CoA Parcel Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_corpus_total\",\"value\":33966,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corpus_linked_count\",\"value\":31762,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corpus_unlinked_pct\",\"value\":\"6.5% (2204 of 33966; linked 93.5%)\",\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corpus_missing_normalized_count\",\"value\":106,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_processed\",\"value\":33857,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1a_exact\",\"value\":31762,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1a_via_bridge\",\"value\":31591,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1b_name_only\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_address_data\",\"value\":109,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_parcel_match\",\"value\":2095,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmatched_coa_pct\",\"value\":\"6.2% (2095 of 33857)\",\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_neighbourhood_coverage_pct\",\"value\":\"100.0%\",\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_geocoded_pct\",\"value\":\"100.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centroid_outside_polygon_count\",\"value\":\"78 (0.2% of linked CoAs)\",\"threshold\":\"pct <= 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"links_retracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ghost_orphans_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_backfilled\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"parcels\":496536,\"address_points\":525699,\"parcel_address_points\":526602},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":7314.11,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":4629,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":4455,\"coa_corpus_total\":33975,\"coa_corpus_linked_count\":31769,\"coa_corpus_unlinked_count\":2206,\"coa_corpus_missing_normalized_count\":106,\"coa_processed\":33866,\"tier_1a_exact\":31769,\"tier_1a_via_bridge\":31598,\"tier_1a_type_confirmed\":30906,\"tier_1a_type_tolerant\":692,\"tier_1b_name_only\":0,\"no_address_data\":109,\"no_parcel_match\":2097,\"neighbourhood_matched\":31768,\"centroid_outside_polygon\":78,\"links_inserted\":0,\"links_updated\":0,\"links_retracted\":0,\"ghost_deleted\":0,\"coa_backfilled\":0,\"config\":{\"link_coa_to_parcels_conf_tier1a\":0.95,\"link_coa_to_parcels_conf_tier1b\":0.8,\"link_coa_to_parcels_unmatched_threshold_pct\":10,\"link_coa_to_parcels_neighbourhood_coverage_min_pct\":95,\"link_coa_to_parcels_centroid_outside_max_pct\":1},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"coa_corpus_missing_normalized_count: 106\"],\"audit_table\":{\"phase\":4,\"name\":\"CoA Parcel Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_corpus_total\",\"value\":33975,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corpus_linked_count\",\"value\":31769,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corpus_unlinked_pct\",\"value\":\"6.5% (2206 of 33975; linked 93.5%)\",\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corpus_missing_normalized_count\",\"value\":106,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_processed\",\"value\":33866,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1a_exact\",\"value\":31769,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1a_via_bridge\",\"value\":31598,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1a_type_confirmed\",\"value\":30906,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1a_type_tolerant\",\"value\":692,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1b_name_only\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_address_data\",\"value\":109,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_parcel_match\",\"value\":2097,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmatched_coa_pct\",\"value\":\"6.2% (2097 of 33866)\",\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_neighbourhood_coverage_pct\",\"value\":\"100.0%\",\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_geocoded_pct\",\"value\":\"100.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centroid_outside_polygon_count\",\"value\":\"78 (0.2% of linked CoAs)\",\"threshold\":\"pct <= 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"links_retracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ghost_orphans_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_backfilled\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"parcels\":496536,\"address_points\":525699,\"parcel_address_points\":526603},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":7562.75,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":4478,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -378,7 +378,7 @@
       "fingerprint": "aac73c68679db309",
       "kind": "read",
       "count": 34,
-      "rowCount": 31762,
+      "rowCount": 31769,
       "reads": {
         "address_points": [
           "addr_num_normalized",
@@ -492,7 +492,7 @@
   ],
   "transactions": [
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -500,7 +500,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -508,7 +508,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -516,7 +516,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -524,7 +524,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -532,7 +532,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -540,7 +540,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -548,7 +548,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -556,7 +556,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -564,7 +564,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -572,7 +572,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -580,7 +580,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -588,7 +588,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -596,7 +596,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -604,7 +604,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -612,7 +612,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -620,7 +620,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -628,7 +628,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -636,7 +636,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -644,7 +644,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -652,7 +652,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -660,7 +660,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -668,7 +668,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -676,7 +676,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -684,7 +684,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -692,7 +692,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -700,7 +700,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -708,7 +708,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -716,7 +716,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -724,7 +724,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -732,7 +732,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -740,7 +740,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -748,7 +748,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -756,7 +756,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -764,7 +764,7 @@
       ]
     },
     {
-      "client": "14348:2",
+      "client": "85460:2",
       "write_fingerprints": [
         "496ad3c4b49c7a10"
       ]

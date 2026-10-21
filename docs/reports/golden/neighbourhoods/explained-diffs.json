@@ -22,7 +22,7 @@
     },
     {
       "key": "stdout_lines[]",
-      "why": "N-D5/N-D19/progress-cadence: legacy download/progress/Step 1/Step 2/Load complete lines (and the standalone \"Using cached …\" lines) are gone; the runner logs its target line, the two `acquired …` lines and completed-in."
+      "why": "N-D5/N-D19/progress-cadence: legacy download/progress/Step 1/Step 2/Load complete lines (and the standalone \"Using cached …\" lines) are gone; the runner logs its target line, the two `acquired …` lines and completed-in. Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): ENVIRONMENT line; and in the forced bracket only, invariant id_key_map_hash (b6599ff3 -> b147a028): it hashes the serial ids of the rows the bracket deletes and re-inserts, so it differs by construction on every bracket run (the existing entry's 'serial ids of the new rows'). The CKAN neighbourhood sources re-acquired byte-identical. NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output. ENVIRONMENT: the first stdout line names the local dev DB's applied-migration count, now 268 (264/266 at the 2026-10-19/20 captures; migrations other lanes applied to the local DB since), and run-scoped log text (durations, pipeline_runs ids, before-image file timestamps) differs every run."
     },
     {
       "key": "pipeline_runs[]",
@@ -114,7 +114,7 @@
     },
     {
       "key": "invariants[].value",
-      "why": "Forced pair only, N-D1/N-D20: geom_null 5→0, geom_types MULTIPOLYGON 158→163, geom_equals_geometry_derivation 153→163 (the 5 new rows' geom is written on INSERT, N-D1, and the 5 Q rows are now healed, N-D20); id_key_map_hash differs by construction (serial ids of the new rows, §8)."
+      "why": "Forced pair only, N-D1/N-D20: geom_null 5→0, geom_types MULTIPOLYGON 158→163, geom_equals_geometry_derivation 153→163 (the 5 new rows' geom is written on INSERT, N-D1, and the 5 Q rows are now healed, N-D20); id_key_map_hash differs by construction (serial ids of the new rows, §8). Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): ENVIRONMENT line; and in the forced bracket only, invariant id_key_map_hash (b6599ff3 -> b147a028): it hashes the serial ids of the rows the bracket deletes and re-inserts, so it differs by construction on every bracket run (the existing entry's 'serial ids of the new rows'). The CKAN neighbourhood sources re-acquired byte-identical. NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output. ENVIRONMENT: the first stdout line names the local dev DB's applied-migration count, now 268 (264/266 at the 2026-10-19/20 captures; migrations other lanes applied to the local DB since), and run-scoped log text (durations, pipeline_runs ids, before-image file timestamps) differs every run."
     },
     {
       "key": "table_state[].content_hash",

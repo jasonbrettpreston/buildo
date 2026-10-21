@@ -432,6 +432,9 @@ export function combineUnits(op, a, b) {
     // Spec 69 M-74: a count scales a length or area ("6.0 metres for each dwelling unit" → 6.0 m × dwelling_units → m)
     if (a === 'units' && (b === 'm' || b === 'm2')) return b;
     if (b === 'units' && (a === 'm' || a === 'm2')) return a;
+    // Spec 69a M-251 (M-74's count form): "0.6 metres for each additional storey" → 0.6 m × storeys → m
+    if (a === 'storeys' && b === 'm') return b;
+    if (b === 'storeys' && a === 'm') return a;
     if (a === 'm' && b === 'm') return 'm2';
     return null;
   }

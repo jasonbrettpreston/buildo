@@ -2505,10 +2505,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-08T06:02:44.433Z",
-        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
-        "cost_ms": 1814,
-        "sample_n": 2,
+        "at": "2026-10-21T14:47:59.216Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 1425,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2542,10 +2542,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-08T06:02:44.433Z",
-        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
-        "cost_ms": 1753,
-        "sample_n": 2,
+        "at": "2026-10-21T14:47:59.216Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 1425,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2582,11 +2582,11 @@
         }
       },
       "last_measured": {
-        "value": 3647,
-        "at": "2026-10-08T06:02:44.433Z",
-        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
-        "cost_ms": 2100,
-        "sample_n": 2,
+        "value": 3623,
+        "at": "2026-10-21T14:47:59.216Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 1134,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2621,10 +2621,10 @@
       },
       "last_measured": {
         "value": 1770,
-        "at": "2026-10-08T06:02:44.433Z",
-        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
-        "cost_ms": 2050,
-        "sample_n": 2,
+        "at": "2026-10-21T14:47:59.216Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 1134,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2659,10 +2659,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-08T06:02:44.433Z",
-        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
-        "cost_ms": 2174,
-        "sample_n": 2,
+        "at": "2026-10-21T14:47:59.216Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 1136,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2689,11 +2689,11 @@
       "frequency": "every_run",
       "retighten_when": "migration 247's tuned autovacuum params keep the post-run ratio under half the warn bound for 5 consecutive runs",
       "last_measured": {
-        "value": 0.7931,
-        "at": "2026-10-08T06:02:44.433Z",
-        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
-        "cost_ms": 43,
-        "sample_n": 2,
+        "value": 0.7961,
+        "at": "2026-10-21T14:47:59.216Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 31,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2793,7 +2793,7 @@
           "ref": "enrich_parcels_deferred_to_full"
         }
       },
-      "adjudicated_by": "operator (2026-10-06 rulings on the defer-observability WF3: INFO accepted as a declared interim; per-pass rows to the lib batch)",
+      "adjudicated_by": "operator (2026-10-06 rulings on the defer-observability WF3: INFO accepted as a declared interim; per-pass rows to the lib batch) [register: Spec 124 R-GK; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-10-06"
     }
   ],

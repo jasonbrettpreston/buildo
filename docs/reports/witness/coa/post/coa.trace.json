@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-coa.js",
   "chain": "coa",
-  "source_fingerprint": "695367ed3f8677a11da993dd578dafd6dc787ca28b05e8ccaf93c4ed577bce1f",
-  "git_head": "017538a25d5af64c3e7eed208e7e5011a212ab9e",
+  "source_fingerprint": "4b333229d492711acfd07342d7d9fde003a04107fc18de6a47d34611a50e292f",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
-    "calls": 28,
-    "distinct": 20,
-    "utility": 9,
-    "tracer_self_ms": 10.238,
-    "wall_ms": 3425
+    "calls": 31,
+    "distinct": 23,
+    "utility": 11,
+    "tracer_self_ms": 10.558,
+    "wall_ms": 3095
   },
   "statements": [
     {
@@ -59,7 +59,7 @@
       "fingerprint": "4b8516e33bbd1e35",
       "kind": "write",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 52,
       "reads": {
         "coa_applications": [
           "data_hash"
@@ -129,7 +129,7 @@
       "fingerprint": "54dbd8fadfdf89e0",
       "kind": "write",
       "count": 1,
-      "rowCount": 2689,
+      "rowCount": 2643,
       "reads": {
         "coa_applications": [
           "application_number",
@@ -156,6 +156,16 @@
         "pg_policy",
         "pg_roles"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "60d618658252d2af",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
       "error": null
     },
     {
@@ -201,6 +211,31 @@
       "error": null
     },
     {
+      "fingerprint": "83652c04b3894b86",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 32,
+      "reads": {
+        "lifecycle_status_history": [
+          "event_date"
+        ]
+      },
+      "writes": {
+        "lifecycle_status_history": [
+          "decision",
+          "decision_date",
+          "detected_by",
+          "event_date",
+          "from_status",
+          "lead_id",
+          "to_status",
+          "transitioned_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "86812768251ae751",
       "kind": "read",
       "count": 1,
@@ -225,6 +260,16 @@
       "excluded": [
         "logic_variables"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "8ebd566ea1bf947b",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
       "error": null
     },
     {
@@ -285,7 +330,7 @@
       "fingerprint": "f36afc5158390bc1",
       "kind": "read",
       "count": 1,
-      "rowCount": 2689,
+      "rowCount": 2686,
       "reads": {
         "coa_applications": [
           "application_number",
@@ -299,10 +344,11 @@
   ],
   "transactions": [
     {
-      "client": "10378:2",
+      "client": "81575:2",
       "write_fingerprints": [
         "4b8516e33bbd1e35",
-        "54dbd8fadfdf89e0"
+        "54dbd8fadfdf89e0",
+        "83652c04b3894b86"
       ]
     }
   ],
@@ -327,6 +373,16 @@
         "sub_type",
         "ward",
         "zoning_designation"
+      ],
+      "lifecycle_status_history": [
+        "decision",
+        "decision_date",
+        "detected_by",
+        "event_date",
+        "from_status",
+        "lead_id",
+        "to_status",
+        "transitioned_at"
       ],
       "pg_stat_user_tables": [
         "n_dead_tup",
@@ -353,6 +409,16 @@
         "sub_type",
         "ward",
         "zoning_designation"
+      ],
+      "lifecycle_status_history": [
+        "decision",
+        "decision_date",
+        "detected_by",
+        "event_date",
+        "from_status",
+        "lead_id",
+        "to_status",
+        "transitioned_at"
       ]
     }
   },

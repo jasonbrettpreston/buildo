@@ -1,0 +1,30 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "24d1f081",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-8 / M-252 (an exception arm naming the building type is not displaced by 10.80.30.1(2); duplex / triplex by unit count), run on the working tree at 24d1f081 with the F-SC-8 describe added, before the vocab and evaluator changes.",
+ "counts": {
+  "pass": 2,
+  "red": 2
+ },
+ "cases": [
+  {
+   "name": "F-SC-8 / M-252 — exception RM 18 \"35% for a duplex or triplex\" binds a 2- or 3-unit houseplex the texts (ch900_6.txt x18 (C); ch10_80.txt 10.80.30.1(2))",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-8 / M-252 — exception RM 18 \"35% for a duplex or triplex\" binds a 2- or 3-unit houseplex vocab.exception_type_alias.by_unit_count maps duplex / triplex to a detached houseplex of 2 / 3 units",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to match object { duplex: { …(2) }, triplex: { …(2) } }"
+  },
+  {
+   "name": "F-SC-8 / M-252 — exception RM 18 \"35% for a duplex or triplex\" binds a 2- or 3-unit houseplex 61 Redgrave Dr, a 2-unit houseplex: lot_coverage_pct 35 % from x18 (C) (the City figure); 3 units the same",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 2, 'value', 'unregulated', …(1) ] to deeply equal [ 2, 'value', 35, …(1) ]"
+  },
+  {
+   "name": "F-SC-8 / M-252 — exception RM 18 \"35% for a duplex or triplex\" binds a 2- or 3-unit houseplex a 4-unit houseplex is no duplex or triplex: the detached-house substitution (33 %) and the more-permissive rule still apply (M-180(1)/(2) unchanged)",
+   "at_base": "pass"
+  }
+ ]
+}

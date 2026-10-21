@@ -1,0 +1,50 @@
+{
+ "suite": "src/tests/bylaw-fix-5.logic.test.ts",
+ "base": "ddd00df8",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-5, F-SC-5 / M-259 (2026-10-21-chat-batch-h#CHAT-33): the 0.45 m blank-wall reduction 10.10.40.70(4) gets the design-choice token blank_side_wall (default true, M-205(2)); a platform never takes it; golden COA-F-02 flips with the scenario blank_side_wall false. Run in a throwaway detached worktree at ddd00df8 with only the new test file added, before the vocab / evaluator / M-75 changes.",
+ "counts": {
+  "pass": 2,
+  "red": 6
+ },
+ "cases": [
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) the text puts the condition in the lead-in of every item (ch10_10.txt); no parallel chapter has the reduction",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) vocab declares blank_side_wall: a user-input design choice licensed by the text, taken as met by default (M-205(2))",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to deeply equal { user_input: 'blank_side_wall', …(1) }"
+  },
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) every keyed unit of 10.10.40.70(4) carries the token in its condition and application, with the lead-in phrase as evidence",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ Array(3) ] to deeply equal [ '10.10.40.70(4)#(4)(A)', true, true ]"
+  },
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) taken as met (the M-205(2) default), the R side yard is the 0.45 m reduction",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) with windows or doors in that side (blank_side_wall false) the side yard is the (3)(A) 0.9 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'detached_house', 'value', …(2) ] to deeply equal [ Array(4) ]"
+  },
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) with the design not given the answer asks for it (needs_user_input), never an assumed 0.45 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', undefined ] to deeply equal [ 'not_evaluated', …(1) ]"
+  },
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) a platform has no side wall: its side setback and clearance are the unreduced side yard, 0.9 m, while the house keeps 0.45 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'value', value: 0.45, …(8) } to match object { status: 'value', value: 0.9, …(1) }"
+  },
+  {
+   "name": "F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a side without windows or doors (blank_side_wall) golden COA-F-02 (453 Durie St A0594/26TEY, 474 Beresford Ave A0510/26TEY): the City 0.9 m is answered once the scenario says the wall has openings",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'A0594/26TEY', 'FAILS', 'COA-F-02' ] to deeply equal [ 'A0594/26TEY', 'PROVEN', null ]"
+  }
+ ]
+}

@@ -96,6 +96,11 @@ export function makeContext(vocab, extra = {}) {
     accessoryUses: new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment')),
     // M-241 (N-2): the condition under which an accessory-structure unit binds the ancillary building itself (private
     // garage → ancillary_contains_parking_space), and each building type's declared structure class
+    // M-254: an accessory structure's own element targets (a platform's setbacks, clearance, encroachment) answer for it
+    accessoryElementTargets: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && Array.isArray(v.element_targets)).map(([k, v]) => [k, new Set(v.element_targets)])),
+    // M-259 (operator approved 2026-10-21, CHAT-33): the lot conditions under which an accessory structure's own element
+    // target reads the principal-building targets it references (a platform has no side wall: blank_side_wall false)
+    accessoryReferenceFlags: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.reference_flags && typeof v.reference_flags === 'object').map(([k, v]) => [k, v.reference_flags])),
     accessoryAncillaryCondition: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.ancillary_condition).map(([k, v]) => [k, v.ancillary_condition])),
     typeStructure: vocab.building_type_structure || {},
     // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
@@ -106,6 +111,9 @@ export function makeContext(vocab, extra = {}) {
     // M-219: an Article's own application regulation (x.40.1(1): "other than ancillary buildings or structures") — the
     // building types it excludes, by Article (3-part number).
     articleScope: vocabMap(vocab.article_application),
+    // M-251 (operator approved 2026-10-21, F-SC-7): the article_application form by unit id, for a unit whose text names no
+    // building type but which the operator scoped to the residential building (900.3.10(70)(B)).
+    unitScope: vocabMap(vocab.unit_application),
     // M-222 / M-224: a map-gated unit whose map is not held takes the literal reading (the unit is set aside, its own
     // disclosure says so), never not_evaluated:map_area_not_held on every lot.
     mapUnheldReading: vocabMap(vocab.map_area_unheld_reading),
@@ -128,6 +136,19 @@ export function makeContext(vocab, extra = {}) {
   };
 }
 function vocabMap(o) { return Object.fromEntries(Object.entries(o || {}).filter(([k]) => k !== '$comment')); }
+/**
+ * M-252 (operator approved 2026-10-21, F-SC-8): an exception written before By-law 648-2025 names a duplex or triplex; on
+ * the lot that is a detached houseplex of 2 or 3 dwelling units (vocab.exception_type_alias.by_unit_count). The name the
+ * lot's own type takes in such a clause, or null (unit count unknown, or no entry). Reads vars.dwelling_units.
+ */
+function unitCountType(lot, C, reads) {
+  const m = C.exceptionTypeAlias && C.exceptionTypeAlias.by_unit_count;
+  if (!m || !lot.building_type) return null;
+  reads.add('vars.dwelling_units');
+  const n = lot.vars ? lot.vars.dwelling_units : undefined;
+  for (const [k, v] of Object.entries(m).sort(([a], [b]) => cmpStr(a, b))) if (k !== '$comment' && v && v.type === lot.building_type && v.dwelling_units === n) return k;
+  return null;
+}
 const ctxOf = (c) => (c && c.units ? c : makeContext(c || {}));
 
 const MONTHS = { January: 1, February: 2, March: 3, April: 4, May: 5, June: 6, July: 7, August: 8, September: 9, October: 10, November: 11, December: 12 };
@@ -162,7 +183,7 @@ export function evaluate(expr, lot, ctx) {
   }
   const trace = [];
   const reads = new Set();
-  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {}, byTypeAlias: (ctx && ctx.byTypeAlias) || null };
+  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {}, byTypeAlias: (ctx && ctx.byTypeAlias) || null, byTypeCount: (ctx && ctx.byTypeCount) || null };
   const r = ev(ast, env);
   const inputs = [...reads].sort(cmpStr);
   if (r.ne) return { value: null, unit: r.unit ?? null, not_evaluated: r.ne, trace, inputs };
@@ -229,9 +250,11 @@ function ev(e, env) {
       // M-180(1) (E2E-F-06): an exception-layer by_type table's detached (semi-detached) house entry also binds the houseplex
       // class the zone's "Applicable" clause names (vocab.exception_type_alias) — the same alias applies() reads
       const viaAlias = env.byTypeAlias ? e.entries.find((x) => env.byTypeAlias[x.key] === bt) : null;
-      const hit = e.entries.find((x) => x.key === bt) || e.entries.find((x) => x.key === C.typeParent[bt]) || viaAlias || e.entries.find((x) => x.key === 'other');
+      // M-252: an exception table's duplex / triplex entry binds the 2- / 3-unit houseplex (vocab.exception_type_alias.by_unit_count)
+      const viaCount = env.byTypeCount ? e.entries.find((x) => x.key === env.byTypeCount) : null;
+      const hit = e.entries.find((x) => x.key === bt) || viaCount || e.entries.find((x) => x.key === C.typeParent[bt]) || viaAlias || e.entries.find((x) => x.key === 'other');
       if (!hit) return ne('by_type_unlisted', bt);
-      trace.push(hit === viaAlias ? `by_type ${hit.key} (M-180(1): binds ${bt})` : `by_type ${hit.key}`);
+      trace.push(hit === viaCount && hit.key !== bt ? `by_type ${hit.key} (M-252: binds ${bt} of ${lot.vars.dwelling_units} units)` : hit === viaAlias ? `by_type ${hit.key} (M-180(1): binds ${bt})` : `by_type ${hit.key}`);
       return ev(hit.expr, env);
     }
     case 'bin': {
@@ -468,7 +491,7 @@ function parsedCond(src) {
   return e.c;
 }
 // {ok:true} | {ok:false, why} | {ok:null, reason}
-export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = []) {
+export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = [], target = null) {
   const C = ctxOf(ctx);
   const app = u.application || {};
   const zones = app.zones || [];
@@ -487,6 +510,9 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     const out = scope.excluded_building_types ? scope.excluded_building_types.includes(bt) : !scope.included_building_types.includes(bt);
     if (out) return { ok: false, why: `building_type ${bt} (outside ${scope.citation})` };
   }
+  const uScope = C.unitScope && C.unitScope[u.unit_id];
+  if (uScope) reads.add('building_type');
+  if (uScope && bt && uScope.excluded_building_types.includes(bt)) return { ok: false, why: `building_type ${bt} (outside ${uScope.citation}, ${uScope.ruling})` };
   const types = app.building_types || [];
   if (types.length && !types.includes('any')) {
     reads.add('building_type');
@@ -498,7 +524,10 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     // (semi-detached) houseplex, where the zone's own "Applicable … Requirements" clause says so
     const alias = u.layer === 'exception' && bt && C.exceptionTypeAlias && C.exceptionTypeAlias[lot.zone];
     const aliased = Boolean(alias && types.some((t) => alias[t] === bt));
-    if (!suite && !aliased) {
+    // M-252: an exception clause naming a duplex / triplex binds the 2- / 3-unit houseplex as its own type
+    const counted = u.layer === 'exception' && bt ? unitCountType(lot, C, reads) : null;
+    if (counted && types.includes(counted)) trace.push(`M-252: ${u.unit_id} binds ${bt} of ${lot.vars.dwelling_units} units as its ${counted} rule`);
+    else if (!suite && !aliased) {
       if (!bt) unknown = 'needs_user_input:building_type';
       else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
     }
@@ -508,7 +537,11 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   // accessory_structure_use) limits that structure, never the principal building this evaluator answers for. Before
   // this check the 10.5.60.20(8)(A) swimming-pool rear setback (25.0 m) decided houses' rear setbacks.
   const accUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryUses && C.accessoryUses.has(x));
-  if (accUse) {
+  // M-254 (operator approved 2026-10-21, F-SC-11/12): on the structure's own element target the unit answers for the
+  // structure itself, so the M-175 set-aside (which protects principal-building targets) does not apply
+  const ownElement = Boolean(accUse && target && C.accessoryElementTargets && C.accessoryElementTargets[accUse] && C.accessoryElementTargets[accUse].has(target));
+  if (ownElement) trace.push(`M-254: ${target} is a ${accUse} element target`);
+  if (accUse && !ownElement) {
     reads.add('uses');
     // M-241 (N-2, operator approved 2026-10-20): the M-175 guard holds for a principal or suite building; when the building
     // answered is the ancillary class the unit names, a unit whose accessory use declares an ancillary condition (a
@@ -878,6 +911,22 @@ function effCore(lot, target, candidates, C, env) {
     if (!env.memo.has(key)) env.memo.set(key, effective(lot, name, candidates, C, { depth: env.depth, inScenario: env.inScenario, sorted: true, memo: env.memo }));
     return env.memo.get(key);
   };
+  // M-259 (operator approved 2026-10-21, CHAT-33): the same resolution on the lot with some lot conditions fixed (an
+  // accessory structure's vocab reference_flags). The flagged lot is a different lot, so it keeps its own memo.
+  const resolveVariableWith = (over) => {
+    const keys = Object.keys(over).sort(cmpStr);
+    if (keys.every((k) => (lot.flags || {})[k] === over[k])) return resolveVariable;
+    const tag = `flags\u0000${keys.map((k) => `${k}=${over[k]}`).join(',')}`;
+    if (!env.memo.has(tag)) env.memo.set(tag, new Map());
+    const memo = env.memo.get(tag);
+    const flagged = { ...lot, flags: { ...(lot.flags || {}), ...over } };
+    return (name) => {
+      if (name === target) return null;
+      const key = `${env.depth}\u0000${env.inScenario ? 1 : 0}\u0000${lot.building_type ?? ''}\u0000${name}`;
+      if (!memo.has(key)) memo.set(key, effective(flagged, name, candidates, C, { depth: env.depth, inScenario: env.inScenario, sorted: true, memo }));
+      return memo.get(key);
+    };
+  };
   const statics = infoOf(candidates).statics; // per (candidates array, target): lot-independent
   if (!statics.has(target)) statics.set(target, staticSets(candidates, target));
   const { valueSet, provTrace, prevailing, consideredOrdered, r3, r2, ro } = statics.get(target);
@@ -888,7 +937,7 @@ function effCore(lot, target, candidates, C, env) {
   const A = new Set(); const unknown = [];
   for (const u of consideredOrdered) {
     const t = [];
-    const a = applies(lot, u, C, resolveVariable, reads, t);
+    const a = applies(lot, u, C, resolveVariable, reads, t, target);
     if (t.length) trace.push(`condition ${u.unit_id}: ${t.join(', ')} → ${a.ok === true ? 'applies' : a.ok === false ? `not applicable (${a.why})` : `undecided (${a.reason})`}`);
     if (a.ok === true) A.add(u);
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
@@ -901,7 +950,7 @@ function effCore(lot, target, candidates, C, env) {
   }
   // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
   const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
-  const base = { lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive };
+  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -953,7 +1002,7 @@ function mpUnits(candidates) {
   return MP_UNITS.get(candidates);
 }
 const articleOf = (u) => String(u.regulation_id || splitRef(u.unit_id).reg).replace(/@.*$/, '').replace(/\(.*$/, '');
-function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [] }, A, trace, disclosures) {
+function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const sortedA = consideredOrdered.filter((u) => A.has(u)); // A ⊆ considered; consideredOrdered keeps the candidates order
   // rule 3 (M-38, M-49): a unit displacing a precedence rule ranks just above the highest layer that rule ranks
@@ -1066,7 +1115,18 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
     if (lost.length) trace.push(`rule 4: ${lost.join(', ')} replaced by a higher layer (bound ${b})`);
     // M-180(2): the exception layer won, but the zone's houseplex rule says the more permissive prevails — keep the
     // base units of the named articles as the alternative, compared after evaluation
-    if (b !== 'exact' && kept[b].some((u) => layerOf(u) === 'exception')) {
+    // M-252 (narrows M-180(2)): 10.x0.30.1(2) / x.40.1 "more permissive" compares with the detached-house rule that the
+    // substitution (M-180(1)) carries over to a houseplex; an exception unit that names the houseplex's own type (or its
+    // parent, or its duplex / triplex unit-count name) is not that substitution and is not compared
+    const namesOwnType = (u) => {
+      const ts = ((u.application || {}).building_types || []).map((x) => (x && typeof x === 'object' ? x.token : x));
+      const bt = lot.building_type; const cnt = unitCountType(lot, C, reads);
+      // only for the houseplex classes the zone's substitution targets (a house with a secondary suite still compares, M-180(2))
+      const subst = Object.values((C.exceptionTypeAlias && C.exceptionTypeAlias[lot.zone]) || {});
+      if (!bt || !(subst.includes(bt) || subst.includes(C.typeParent[bt]))) return false;
+      return ts.includes(bt) || ts.includes(C.typeParent[bt]) || Boolean(cnt && ts.includes(cnt));
+    };
+    if (b !== 'exact' && kept[b].some((u) => layerOf(u) === 'exception' && !namesOwnType(u))) {
       for (const p of morePermissive) {
         const arts = new Set((p.application && p.application.articles) || []);
         // E2E-F-06: the zone rule the exception's own "Despite" dropped is still the regulation M-180(2) compares against
@@ -1080,7 +1140,15 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   // evaluate + rule 4a
   const ev1 = (s, args, u) => {
     const alias = u && u.layer === 'exception' && C.exceptionTypeAlias ? C.exceptionTypeAlias[lot.zone] || null : null;
-    const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: args, byTypeAlias: alias });
+    const count = u && u.layer === 'exception' ? unitCountType(lot, C, reads) : null;
+    // M-259 (CHAT-33): on an accessory structure's own element target, the principal-building targets the statement
+    // references are read under the structure's vocab reference_flags (a platform has no side wall: blank_side_wall false)
+    const accUse = u && resolveVariableWith && C.accessoryReferenceFlags && C.accessoryElementTargets
+      ? ((u.application || {}).uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryReferenceFlags[x] && C.accessoryElementTargets[x] && C.accessoryElementTargets[x].has(target))
+      : null;
+    if (accUse) trace.push(`M-259: ${u.unit_id} reads its references with ${Object.entries(C.accessoryReferenceFlags[accUse]).map(([k, v]) => `${k}=${v}`).join(', ')} (${accUse})`);
+    const rv = accUse ? resolveVariableWith(C.accessoryReferenceFlags[accUse]) : resolveVariable;
+    const r = evaluate(s, lot, { ...C, resolveVariable: rv, argEdits: args, byTypeAlias: alias, byTypeCount: count });
     addAll(reads, r.inputs);
     return r;
   };

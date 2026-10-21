@@ -159,14 +159,14 @@
     "building_depth_m": { "unit": "m", "aspect": "envelope", "concept": "maximum building depth", "patterns": ["building depth"] },
     "building_width_m": { "unit": "m", "aspect": "envelope", "concept": "maximum (or minimum) width of the building the unit applies to", "patterns": ["building width", "width of the building"] },
     "dwelling_unit_width_m": { "unit": "m", "aspect": "envelope", "concept": "minimum width of a dwelling unit (e.g. a townhouse dwelling unit) (Spec 69 M-76 B8)", "patterns": ["width of a dwelling unit", "width of each dwelling unit"] },
-    "front_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum front yard setback", "patterns": ["front yard setback", "front yard or", "from a front lot line", "for a front lot line"] },
-    "rear_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum rear yard setback", "patterns": ["rear yard setback", "or rear yard", "from a rear lot line"] },
-    "side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum side yard setback (a side lot line not abutting a street)", "patterns": ["side yard setback", "from each side lot line", "from a side lot line"] },
+    "front_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum front yard setback", "patterns": ["front yard setback", "front yard or", "from a front lot line", "for a front lot line"], "reference_patterns": ["required minimum building setbacks for the zone"] },
+    "rear_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum rear yard setback", "patterns": ["rear yard setback", "or rear yard", "from a rear lot line"], "reference_patterns": ["required minimum building setbacks for the zone"] },
+    "side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum side yard setback (a side lot line not abutting a street)", "patterns": ["side yard setback", "from each side lot line", "from a side lot line"], "reference_patterns": ["required minimum building setbacks for the zone"] },
     "deep_side_setback_m": {
       "unit": "m",
       "aspect": "envelope",
-      "concept": "minimum side yard setback for the part of a building beyond a stated depth from the front (RD 10.20.40.70(5): beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard setback); never the whole-building side yard (Spec 69a M-205(2); operator 2026-10-19 Q2)",
-      "patterns": ["for any portion of a building that is farther from the front lot line"]
+      "concept": "minimum side yard setback for the part of a building beyond a stated depth from the front (RD 10.20.40.70(5): beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard setback; RM 10.80.40.70(4)(D)(iii): the portions of the main wall beyond 25.0 m of building length, Spec 69a M-249); never the whole-building side yard (Spec 69a M-205(2); operator 2026-10-19 Q2)",
+      "patterns": ["for any portion of a building that is farther from the front lot line", "for all portions of the main wall exceeding a building length"]
     },
     "aggregate_side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum aggregate of the side yard setbacks of both side yards (Spec 69a M-130)", "patterns": ["aggregate side yard"] },
     "side_setback_street_m": {
@@ -197,6 +197,15 @@
     "window_projection_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a bay window, box window or other window projection may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["window projection"] },
     "window_projection_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a bay window, box window or other window projection must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["are no closer to the side lot line than"] },
     "platform_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a platform without main walls (deck, porch, balcony), with its stairs or ramps may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["platform without main walls"] },
+    "platform_side_setback_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum side yard setback of a platform without main walls (deck, porch, balcony) that does not use a permitted encroachment: the zone's required minimum side yard setback (10.5.40.50(2); Spec 69a M-254, an element-scoped reference to side_setback_m)", "patterns": [], "reference_patterns": ["required minimum building setbacks for the zone"] },
+    "platform_rear_setback_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum rear yard setback of a platform without main walls (deck, porch, balcony) that does not use a permitted encroachment: the zone's required minimum rear yard setback (10.5.40.50(2); Spec 69a M-254, an element-scoped reference to rear_setback_m)", "patterns": [], "reference_patterns": ["required minimum building setbacks for the zone"] },
+    "platform_front_setback_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum front yard setback of a platform without main walls (deck, porch, balcony) that does not use a permitted encroachment: the zone's required minimum front yard setback (10.5.40.50(2); Spec 69a M-254, an element-scoped reference to front_setback_m)", "patterns": [], "reference_patterns": ["required minimum building setbacks for the zone"] },
+    "stairs_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance exterior stairs that encroach into a required setback must keep from a lot line (10.5.40.60(3)(A)(iii); Spec 69a M-254)", "patterns": ["exterior stairs, if the stairs are"] },
+    "ramp_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance an uncovered pedestrian access ramp that encroaches into a required setback must keep from a lot line (10.5.40.60(3)(B)(iii); Spec 69a M-254)", "patterns": ["an uncovered ramp, if the ramp is"] },
+    "elevating_device_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance an elevating device that encroaches into a required setback must keep from a lot line (10.5.40.60(3)(C)(iii); Spec 69a M-254)", "patterns": ["an elevating device, if the elevating device"] },
+    "extension_side_setback_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance the one-storey extension beyond the permitted maximum building length must keep from each side lot line (RD 10.20.40.20(2)(C), RS 10.40.40.20(2)(C); Spec 69a M-255)", "patterns": ["if the extended part"] },
+    "parapet_projection_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum height by which a parapet on a residential building may exceed the permitted maximum main wall height for a flat or shallow roof (RD 10.20.40.10(5) over 10.20.40.10(4); Spec 69a M-255)", "patterns": ["A parapet on a residential building"] },
+    "platform_count": { "unit": "units", "aspect": "envelope", "bound": "max", "concept": "maximum number of platforms (decks or balconies) with access from the second storey or above of a detached house (RD / RS / RM 10.x.40.50(1)(A); Spec 69a M-255)", "patterns": ["there may be no more than a total of"] },
     "platform_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a platform without main walls (deck, porch, balcony), with its stairs or ramps must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["if it is no closer to a side lot line than", "if it is no closer to the side lot line than"] },
     "canopy_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a canopy, awning or similar structure may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["canopy, awning or similar structure"] },
     "canopy_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a canopy, awning or similar structure must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["similar structure that is not covering a platform"] },
@@ -269,6 +278,7 @@
     },
     "proposed_building_depth_m": { "unit": "m", "definition": "800.50(100)", "licensed_by": ["building depth"], "note": "a scenario value" },
     "proposed_building_length_m": { "unit": "m", "definition": "800.50(105)", "licensed_by": ["building length"], "note": "a scenario value" },
+    "proposed_storeys": { "unit": "storeys", "null_reason": "not_a_measurement", "licensed_by": ["additional storey", "storey building"], "note": "the number of storeys of the building the unit applies to, a count (a scenario value; Spec 69a M-251, 900.3.10(70)(B))" },
     "abutting_front_setback_m": { "unit": "m", "definition": "800.50(290)", "licensed_by": ["front yard setback of", "abutting lot", "on the adjacent lot", "adjoining lot"], "note": "front yard setback of the abutting building(s), for front-yard averaging" },
     "parking_width_m": {
       "unit": "m",
@@ -363,6 +373,7 @@
     "ancillary_contains_parking_space": { "user_input": "ancillary_contains_parking_space", "patterns": ["containing a parking space"] },
     "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units"] },
     "suite_wall_openings": { "user_input": "suite_wall_openings", "patterns": ["openings such as"] },
+    "blank_side_wall": { "user_input": "blank_side_wall", "patterns": ["no windows or doors in that side"] },
     "individual_private_driveway": {},
     "garage_entrance_faces_street": {},
     "lowest_level_joists_1_0_to_1_5_m_for_80_pct": {},
@@ -432,7 +443,7 @@
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
   "heuristic_reason": ["modelling_assumption", "data_cleaning_bound", "tolerance", "statistical_default", "proxy_for_unmodelled_rule"],
   "adjudication_kind": ["disagreement", "consolidation_mismatch", "eval_mismatch", "eval_vector", "source_repeat_letter", "correction", "ref_target_absent", "instrument_not_published_online", "coa_mismatch"],
-  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm", "ancillary_contains_parking_space"],
+  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "blank_side_wall", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm", "ancillary_contains_parking_space"],
   "code_roots": ["scripts/lib/build-norms.js", "scripts/lib/compute/enrich-parcels.js", "scripts/lib/max-build.js", "scripts/lib/optimal-config.js", "scripts/lib/parcel-cost.js", "scripts/lib/zoning-precedence.js"],
   "banned_code_refs": [
     {
@@ -570,6 +581,10 @@
     "10.60.40": { "citation": "10.60.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
     "10.80.40": { "citation": "10.80.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
   },
+  "unit_application": {
+    "$comment": "Spec 69a M-251 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-7): a unit whose own text names no building type but which the operator scoped to the residential building (the x.40.1(1) form of article_application, by unit id). applies() sets the unit aside for the listed building types, so an ancillary building takes its own Article 10.5.60 rule.",
+    "900.3.10(70)#(70)[SSP](B)": { "citation": "900.3.10(70)(B)", "ruling": "M-251", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
+  },
   "map_area_unheld_reading": {
     "$comment": "Spec 69a M-222 / M-224: a map-gated unit whose map polygon is not held (lot.map_areas absent) takes the literal reading — the unit is set aside and its disclosure is attached — instead of not_evaluated:map_area_not_held on every lot. Listed units only; any other map-gated unit stays not_evaluated until its map is held.",
     "150.7.60.30(1)#(1)(C)": { "ruling": "M-224", "map": "Coxwell–Victoria Park area (bylaw_map_areas polygon owed, M-193)" }
@@ -580,7 +595,8 @@
     "RD": { "citation": "10.20.30.1(1), 10.20.40.1(6)", "detached_house": "detached_houseplex" },
     "RS": { "citation": "10.40.30.1(1), 10.40.40.1(5)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
     "RT": { "citation": "10.60.30.1(1), 10.60.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
-    "RM": { "citation": "10.80.30.1(1), 10.80.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" }
+    "RM": { "citation": "10.80.30.1(1), 10.80.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
+    "by_unit_count": { "$comment": "Spec 69a M-252 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-8): an exception clause written before By-law 648-2025 names a duplex or triplex; on the lot that is a detached houseplex of 2 or 3 dwelling units (vars.dwelling_units), and the clause binds it as its own type (not the M-180(1) substitution, so M-180(2) does not compare it).", "duplex": { "type": "detached_houseplex", "dwelling_units": 2 }, "triplex": { "type": "detached_houseplex", "dwelling_units": 3 } }
   },
   "label_absence_unregulated": {
     "$comment": "Spec 69a M-220 / M-202(3): when no unit applies to the target and the lot's zone label carries no such letter, the answer is unregulated (no label cap), not no_candidate.",
@@ -601,7 +617,7 @@
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
     "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },
-    "deck_or_platform": { "disclosure": "rules for a deck or platform on this lot are not part of this answer" },
+    "deck_or_platform": { "disclosure": "rules for a deck or platform on this lot are not part of this answer", "element_targets": ["platform_clearance_m", "platform_count", "platform_encroachment_m", "platform_front_setback_m", "platform_rear_setback_m", "platform_side_setback_m"], "element_targets_ruling": "Spec 69a M-254 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12): the platform's own setback, clearance and encroachment targets answer for the platform (interim before the structure dimension S.3); never a principal-building target (M-159(2), M-175)", "reference_flags": { "blank_side_wall": false }, "reference_flags_ruling": "Spec 69a M-259 (operator approved 2026-10-21, 2026-10-21-chat-batch-h#CHAT-33): a platform has no side wall, so a principal-building target its own element target references (the zone side yard, 10.5.40.50(2); the side yard clearance, 10.5.40.60(1)) is read with these lot conditions — never the 10.10.40.70(4) blank-wall reduction" },
     "private_garage": { "disclosure": "rules for a private garage on this lot are not part of this answer", "ancillary_condition": "ancillary_contains_parking_space" },
     "energy_device": { "disclosure": "rules for an energy device (solar or heating, ventilation and air conditioning equipment) on this lot are not part of this answer" },
     "portable_classroom": { "disclosure": "rules for a portable classroom building on this lot are not part of this answer" }
@@ -737,12 +753,14 @@
       "unit_not_fronting_street": "a townhouse dwelling unit does not front on a street",
       "no_individual_private_driveway": "the dwelling unit has no individual private driveway leading to its front",
       "flat_or_shallow_roof": "the roof slopes less than 1.0 in 10.0 over more than half of its area (a flat or shallow roof)",
-      "suite_wall_openings": "the suite's main wall has openings such as doors or windows"
+      "suite_wall_openings": "the suite's main wall has openings such as doors or windows",
+      "blank_side_wall": "the side of the building has no windows or doors"
     },
     "user_input": {
       "has_secondary_suite": "the house has a secondary suite",
       "roof_type": "the roof is of the type the rule names",
       "suite_wall_openings": "the suite's walls have the openings the rule names",
+      "blank_side_wall": "the side of the building has no windows or doors",
       "bedroom_count": "the dwelling units have the bedroom counts the rule names"
     },
     "default_overrides": {
@@ -754,6 +772,10 @@
       "suite_wall_openings": {
         "taken_as": false,
         "why": "operator 2026-10-18 (M-197): \"assume they will not put windows in doors — default is the smallest setback — rest is disclosure\"; the with-openings setback arms are disclosed, never bound"
+      },
+      "blank_side_wall": {
+        "taken_as": true,
+        "why": "Spec 69a M-259 (operator approved 2026-10-21, 2026-10-21-chat-batch-h#CHAT-33); M-205(2) (RATIFIED 2026-10-18): the 0.45 m side yard of 10.10.40.70(4) is taken by default, a side without windows or doors (the main-building analogue of LC-35 / M-197); with openings (blank_side_wall false) the 10.10.40.70(3) side yard applies, disclosed blank_side_wall"
       },
       "no_individual_private_driveway": {
         "taken_as": true,

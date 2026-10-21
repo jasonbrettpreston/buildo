@@ -94,7 +94,7 @@
     },
     {
       "key": "stdout_lines[]",
-      "why": "Log lines differ by construction: legacy prints one \"[load-zoning] completed in\" line; the converted runner prints the descriptor.database target line, one \"acquired ckan_datastore <layer>: N feature(s) from P page(s)\" line per primary (11719/2528/1242/4/352/8913/558/913/643/4, the same counts legacy loaded) and \"[load_zoning] completed in\". No data effect."
+      "why": "Log lines differ by construction: legacy prints one \"[load-zoning] completed in\" line; the converted runner prints the descriptor.database target line, one \"acquired ckan_datastore <layer>: N feature(s) from P page(s)\" line per primary (11719/2528/1242/4/352/8913/558/913/643/4, the same counts legacy loaded) and \"[load_zoning] completed in\". No data effect. Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): CLOCK: dataset_version_age_days 240 -> 242 (the source's published version is unchanged; two days elapsed between captures) and the duration row; the CKAN zoning sources re-acquired byte-identical. NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output. ENVIRONMENT: the first stdout line names the local dev DB's applied-migration count, now 268 (264/266 at the 2026-10-19/20 captures; migrations other lanes applied to the local DB since), and run-scoped log text (durations, pipeline_runs ids, before-image file timestamps) differs every run."
     },
     {
       "key": "summary.records_meta.audit_table.name",
@@ -138,7 +138,7 @@
     },
     {
       "key": "summary.records_meta.audit_table.rows[].value",
-      "why": "Positional only: with the reshaped row set, index i holds a different metric on each side. Compared by metric name there are 0 value differences across all shared metrics on both chains (measured from the goldens)."
+      "why": "Positional only: with the reshaped row set, index i holds a different metric on each side. Compared by metric name there are 0 value differences across all shared metrics on both chains (measured from the goldens). Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): CLOCK: dataset_version_age_days 240 -> 242 (the source's published version is unchanged; two days elapsed between captures) and the duration row; the CKAN zoning sources re-acquired byte-identical. NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output. ENVIRONMENT: the first stdout line names the local dev DB's applied-migration count, now 268 (264/266 at the 2026-10-19/20 captures; migrations other lanes applied to the local DB since), and run-scoped log text (durations, pipeline_runs ids, before-image file timestamps) differs every run."
     },
     {
       "key": "summary.records_meta.audit_table.rows[].warn_threshold",
@@ -195,6 +195,18 @@
     {
       "key": "summary.records_meta.zoning_rows_changed",
       "why": "New per-run, non-§9 records_meta key added by the enrich_parcels zoning-change-scope WF3 (Spec 58 zoning_rows_changed paragraph, operator ruling A1, 2026-10-06): the sum of inserted + updated + deleted over all 10 write targets, consumed by enrich_parcels readZoningChange (Spec 65 §2 step 6). Absent in PRE (the key did not exist). POST = 195 on both chains (2026-10-08 recapture) = 187 written + 8 orphans deleted on the forced cohort (per target: loaded_count - unchanged_skipped, plus orphans_removed_count). Additive; no table_state or other value changes."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value",
+      "why": "Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): CLOCK: dataset_version_age_days 240 -> 242 (the source's published version is unchanged; two days elapsed between captures) and the duration row; the CKAN zoning sources re-acquired byte-identical. NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output. ENVIRONMENT: the first stdout line names the local dev DB's applied-migration count, now 268 (264/266 at the 2026-10-19/20 captures; migrations other lanes applied to the local DB since), and run-scoped log text (durations, pipeline_runs ids, before-image file timestamps) differs every run."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.gate.dataset_version_age_days",
+      "why": "Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): CLOCK: dataset_version_age_days 240 -> 242 (the source's published version is unchanged; two days elapsed between captures) and the duration row; the CKAN zoning sources re-acquired byte-identical. NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output. ENVIRONMENT: the first stdout line names the local dev DB's applied-migration count, now 268 (264/266 at the 2026-10-19/20 captures; migrations other lanes applied to the local DB since), and run-scoped log text (durations, pipeline_runs ids, before-image file timestamps) differs every run."
+    },
+    {
+      "key": "summary.records_meta.gate.dataset_version_age_days",
+      "why": "Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): CLOCK: dataset_version_age_days 240 -> 242 (the source's published version is unchanged; two days elapsed between captures) and the duration row; the CKAN zoning sources re-acquired byte-identical. NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output. ENVIRONMENT: the first stdout line names the local dev DB's applied-migration count, now 268 (264/266 at the 2026-10-19/20 captures; migrations other lanes applied to the local DB since), and run-scoped log text (durations, pipeline_runs ids, before-image file timestamps) differs every run."
     }
   ]
 }

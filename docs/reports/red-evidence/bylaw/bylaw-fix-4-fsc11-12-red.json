@@ -1,0 +1,40 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "35e4fc50",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-11/12 / M-254 (10.5.40.50(2) as an element-scoped reference to the zone setbacks; the declared-bound form for 10.5.40.60(3); platform targets answer for the platform), run on the working tree at 35e4fc50 with the F-SC-11/12 describe added, before the vocab, evaluator and M-75 changes.",
+ "counts": {
+  "pass": 2,
+  "red": 4
+ },
+ "cases": [
+  {
+   "name": "F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp and lift clearances answer the texts (ch10_5.txt 10.5.40.50(2), 10.5.40.60(3))",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp and lift clearances answer 10.5.40.50(2) is a LIMIT list referencing the zone setbacks",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'PROCEDURAL', [ 'none' ] ] to deeply equal [ 'LIMIT', [ …(3) ] ]"
+  },
+  {
+   "name": "F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp and lift clearances answer 11 Westchester Rd: the platform side setback is the zone side yard, 1.2 m; rear 25 % of depth / 7.5 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, undefined ] to deeply equal [ 'value', 1.2, '10.5.40.50(2)#whole' ]"
+  },
+  {
+   "name": "F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp and lift clearances answer a porch answers its own clearance (10.5.40.60(1)(A)(i): no closer to a side lot line than the side yard) on a house lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'not_evaluated' to be 'value' // Object.is equality"
+  },
+  {
+   "name": "F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp and lift clearances answer exterior stairs, ramps and elevating devices keep 0.6 m from a lot line (10.5.40.60(3)(A)–(C)(iii))",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'stairs_clearance_m', …(3) ] to deeply equal [ 'stairs_clearance_m', 'value', …(2) ]"
+  },
+  {
+   "name": "F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp and lift clearances answer the platform never limits the principal building: side_setback_m stays the zone side yard",
+   "at_base": "pass"
+  }
+ ]
+}

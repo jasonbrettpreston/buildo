@@ -92,6 +92,20 @@ describe('R-GT — local acquisition overrides are retired by declared deviation
     expect(d.deviations.some((x) => from.test(x.from)), `${slug} declares the retirement`).toBe(true);
     for (const rel of [`scripts/${slug}.js`, `scripts/lib/compute/${slug}.js`]) expect(LOCAL.test(code(rel)), rel).toBe(false);
   });
+  // REFREEZE-BUNDLE-1 item (7) (124a:457; split by R-II), applied on night 1: the R-GR/R-GT re-cite moves each
+  // retirement's `adjudicated_by` from R-AZ to R-GT, so the descriptor agrees with the ledger (which already leads).
+  const recite: Array<[string, string, RegExp]> = [
+    ['load-centreline', 'LC-D6/LC-D11', /^the `CENTRELINE_LOCAL_ZIP` local-file override /],
+    ['load-massing', 'M-D10', /^M-D10 — /],
+    ['load-neighbourhoods', 'N-D5', /^N-D5 — /],
+  ];
+  it.each(recite)('%s (%s): the retirement\'s adjudicated_by cites Spec 124 R-GT, not R-AZ (night 1 re-cite)', (slug, _ids, from) => {
+    const d = JSON.parse(read(`scripts/${slug}.descriptor.json`)) as { deviations: Array<{ from: string; adjudicated_by: string }> };
+    const dev = d.deviations.filter((x) => from.test(x.from));
+    expect(dev, slug).toHaveLength(1);
+    expect(dev[0]!.adjudicated_by).toContain('Spec 124 R-GT');
+    expect(dev[0]!.adjudicated_by).not.toContain('R-AZ');
+  });
   it('RED — a shell that reads process.argv[2] again is caught', () => {
     expect(LOCAL.test("const p = process.argv[2] || url;")).toBe(true);
   });

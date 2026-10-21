@@ -474,13 +474,13 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T12:08:25.925Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 269,
-        "sample_n": 6,
+        "at": "2026-10-21T13:09:28.948Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 31,
+        "sample_n": 34,
         "source_run": {
-          "run_id": "2321",
-          "chain": null,
+          "run_id": null,
+          "chain": "permits",
           "event": "golden_capture"
         }
       },
@@ -503,13 +503,13 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T12:08:25.925Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 504,
-        "sample_n": 6,
+        "at": "2026-10-21T13:09:28.948Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 81,
+        "sample_n": 34,
         "source_run": {
-          "run_id": "2321",
-          "chain": null,
+          "run_id": null,
+          "chain": "permits",
           "event": "golden_capture"
         }
       },
@@ -535,13 +535,13 @@
       "retighten_when": "never — this bound is already at its floor and is declared at 0. It is a PHYSICAL bound, not a convergence target: the City of Toronto's own extent fits inside 43.5-43.9 N, -79.7 to -79.1 W with margin, so any row outside it is wrong rather than merely unusual. If the count ever becomes non-zero, the response is to find the geo_id that resolved to it, not to widen the box. Measured 0 on BOTH sides — over the 231,930 coordinate-bearing permits AND over the 525,346-row address_points corpus this step joins to — so the bound is currently vacuous on live data and is declared anyway, because its value is in the class of failure it catches, not in a count it is expected to move.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T12:08:25.925Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 233,
-        "sample_n": 6,
+        "at": "2026-10-21T13:09:28.948Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 42,
+        "sample_n": 34,
         "source_run": {
-          "run_id": "2321",
-          "chain": null,
+          "run_id": null,
+          "chain": "permits",
           "event": "golden_capture"
         }
       },

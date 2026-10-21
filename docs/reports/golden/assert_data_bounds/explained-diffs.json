@@ -105,7 +105,7 @@
     },
     {
       "key": "pipeline_runs[].records_meta.audit_table.rows[].value",
-      "why": "standalone ledger row: values compare different checks after the declared-order reshuffle (e.g. 207,632 is ghost_permits_30d on both sides at different indexes)."
+      "why": "standalone ledger row: values compare different checks after the declared-order reshuffle (e.g. 207,632 is ghost_permits_30d on both sides at different indexes). Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): INPUT DRIFT: coa_maxbuild_gfa_gt3lot 31 -> 32 from the night's CoA reload and re-enrichment (coa, enrich_coa_zoning entries). NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output."
     },
     {
       "key": "pipeline_runs[].records_meta.config",
@@ -185,7 +185,7 @@
     },
     {
       "key": "summary.records_meta.audit_table.rows[].value",
-      "why": "audit row values compare different checks after the declared-order reshuffle, plus parcel_lot_outliers 4 → 8 (the parcels reload since the PRE: 486,530 → 496,536 rows); ghost_permits_30d 207,632 on both sides."
+      "why": "audit row values compare different checks after the declared-order reshuffle, plus parcel_lot_outliers 4 → 8 (the parcels reload since the PRE: 486,530 → 496,536 rows); ghost_permits_30d 207,632 on both sides. Night 1 recapture 2026-10-21 (REFREEZE-BUNDLE-1 split by R-II; public re-acquisition per operator CHAT-28; Spec 124 R-DA): INPUT DRIFT: coa_maxbuild_gfa_gt3lot 31 -> 32 from the night's CoA reload and re-enrichment (coa, enrich_coa_zoning entries). NOT CODE: the night's runtime edits are runLinkPhase extra_counters (R-IG; this step declares none, so no key and no behaviour change, lock type-counters T6) and descriptor/notes/guard text that no runner reads at run time; they move lib_fingerprint (fef97e27 -> 93b059a9) and source_fingerprint, not this output."
     },
     {
       "key": "summary.records_meta.config",

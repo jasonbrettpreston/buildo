@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "c390361b8ef41cd8fbc4226421798f176d684ba69024c237f49fa80ab05fde12",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "062337f9eeceb433ab70900f7dee8b139783002877fef53d6351f6c0d5571e42",
+  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
   "header": {
     "processes": 1,
-    "calls": 51,
-    "distinct": 33,
+    "calls": 52,
+    "distinct": 34,
     "utility": 14,
-    "tracer_self_ms": 1.74,
-    "wall_ms": 12750
+    "tracer_self_ms": 2.198,
+    "wall_ms": 141176
   },
   "statements": [
     {
@@ -104,6 +104,21 @@
       ]
     },
     {
+      "fingerprint": "1d68338a42630d9f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": [
+          "from_intersection_id",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "2001bd6cc9d4a455",
       "kind": "read",
       "count": 1,
@@ -146,7 +161,7 @@
       "fingerprint": "46c7e018cd87d93a",
       "kind": "write",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 480482,
       "reads": {
         "parcels": [
           "abuts_laneway",
@@ -173,7 +188,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 788,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -245,21 +260,6 @@
       "error": null
     },
     {
-      "fingerprint": "6fe0fdbe591bd156",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "parcels": [
-          "centreline_dataset_version_when_enriched",
-          "geom"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "76533998925a04c0",
       "kind": "read",
       "count": 2,
@@ -290,39 +290,6 @@
       "count": 2,
       "rowCount": 0,
       "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "7e20c68440df3857",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {
-        "parcels": [
-          "address_number",
-          "centreline_dataset_version_when_enriched",
-          "geom",
-          "id",
-          "street_name_normalized"
-        ],
-        "toronto_centreline": [
-          "feature_code_desc",
-          "from_intersection_id",
-          "geom",
-          "hi_num_l",
-          "hi_num_r",
-          "id",
-          "linear_name",
-          "linear_name_full",
-          "lo_num_l",
-          "lo_num_r",
-          "parity_l",
-          "parity_r",
-          "to_intersection_id"
-        ]
-      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -387,6 +354,38 @@
       "error": null
     },
     {
+      "fingerprint": "ad05138ec9a364ad",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 480482,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "ae7bf354abe0d81b",
       "kind": "utility",
       "count": 1,
@@ -414,6 +413,22 @@
       "count": 2,
       "rowCount": 0,
       "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b2d013e8bdf1613d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "street_name_normalized"
+        ]
+      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -497,7 +512,7 @@
   ],
   "transactions": [
     {
-      "client": "57557:3",
+      "client": "89434:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

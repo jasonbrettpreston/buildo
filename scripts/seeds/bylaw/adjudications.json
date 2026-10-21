@@ -82566,6 +82566,1976 @@
           "reason": "threshold_used_in_application"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.70(4)#(4)(D)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "supersedes": "COR-10.80.40.70(4)#(4)(D)/target",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": [
+        "side_setback_m",
+        "side_setback_street_m",
+        "deep_side_setback_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.70(4)#(4)(D)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": [
+        "side_setback_m = 2.4 m @(4)(D)(i)",
+        "deep_side_setback_m = 7.5 m @(4)(D)(iii)",
+        "side_setback_street_m = 3.0 m @(4)(D)(iv)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.70(4)#(4)(D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": [
+        {
+          "clause": "(4)(D)(ii)",
+          "literal": "5.5 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(4)(D)(iii)",
+          "literal": "25.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.70(4)#(4)(D)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-4 (CoA scorecard, 2026-10-21). 10.80.40.70(4)(D): \"(i) 2.4 metres; (ii) Despite (i) above, 5.5 metres for portions of the main wall that have primary windows; (iii) Despite (i) and (ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres\". Keyed max(2.4; 5.5; 7.5), so the whole side yard took 7.5 m; the City applies (D)(i) 2.4 m on 1785 Keele St A0201/26EYK. Re-keyed in the parallel form of R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D): (i) on side_setback_m, (ii) a disclosed design-choice arm, (iii) on deep_side_setback_m.",
+      "rule": "Operator approved F-SC-4 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-4; Spec 69a M-249: \"side_setback_m = 2.4 m @(D)(i), as R 10.10.40.70(5)(D), RD 10.20.40.70(7)(D), RS 10.40.40.70(4)(D) and RT 10.60.40.70(4)(D) key (i); (ii) is a disclosed design-choice arm (the M-197 form ...); (iii) is deep_side_setback_m = 7.5 m for the part of the wall beyond 25.0 m of building length, the RD 10.20.40.70(5) form of M-205(2)\"); M-75",
+      "unit": "10.80.40.70(4)#(4)(D)",
+      "value": {
+        "description": "On a major street, an apartment building needs a side yard setback of 2.4 m, 7.5 m for the wall beyond 25.0 m of building length, and 3.0 m from a street side lot line on a corner lot.",
+        "gaps": "The 2.4 m (i) is the side yard. The 5.5 m (ii) applies only to portions of the main wall that have primary windows: a design choice, taken as walls without primary windows (Spec 69a M-249, the M-197 form); if a portion of the main wall has primary windows, its side yard setback is 5.5 m. The 7.5 m (iii) is the deep-portion setback (deep_side_setback_m) for the wall beyond 25.0 m of building length, not a whole-building side yard (M-205(2) form). The unit text names no zone (the zone is implied only by its Section 10.80 placement), so application zones are left empty for want of an evidence phrase.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(42)#(42)[SSP](A)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 (CoA scorecard, 2026-10-21). 900.3.10(42)(A)(i): \"the maximum gross floor area on a lot, plus the floor area of an attached or detached garage, is 118 square metres, plus 25% of the lot area, up to a maximum floor space index of 0.5\". The cap was keyed on fsi only and dropped from gfa_m2, which overstates the GFA (41 Bethnal Ave A0238/26EYK: City 195.72 m² = 0.5 × 391.44 m²).",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2); fsi = 0.5 ratio unchanged\"); M-75",
+      "unit": "900.3.10(42)#(42)[SSP](A)(i)",
+      "value": [
+        "fsi = 0.5 ratio @(42)[SSP](A)(i)",
+        "gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(42)[SSP](A)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-7 (CoA scorecard, 2026-10-21). 900.3.10(70)(B): \"The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof\". Keyed side_setback_m = 1.8 m on building type any, it leaked onto the ancillary pavilion and garage of 5 Parmbelle Cres A0257/26NY, where the City applied 10.5.60.20(3)(C)(ii) (half the height, 1.89 m and 1.99 m), and the per-storey increment was not keyed. The increment is keyed on the proposed storeys (a scenario input, vocab.dsl_input.proposed_storeys); the unit is scoped to the residential building by vocab.unit_application.",
+      "rule": "Operator approved F-SC-7 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-7; Spec 69a M-251: \"(1) Scoped to the residential building ..., never an ancillary building. (2) side_setback_m = 1.8 m + 0.6 m × (height_storeys − 1), OWED on height_storeys (a scenario input). (3) An ancillary building falls to 10.5.60.20(3)(C)(ii)\"); M-75",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": [
+        "side_setback_m = 1.8 m + 0.6 m × (proposed_storeys − 1 storeys) @(70)[SSP](B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-7 (CoA scorecard, 2026-10-21). 900.3.10(70)(B): \"The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof\". Keyed side_setback_m = 1.8 m on building type any, it leaked onto the ancillary pavilion and garage of 5 Parmbelle Cres A0257/26NY, where the City applied 10.5.60.20(3)(C)(ii) (half the height, 1.89 m and 1.99 m), and the per-storey increment was not keyed. The increment is keyed on the proposed storeys (a scenario input, vocab.dsl_input.proposed_storeys); the unit is scoped to the residential building by vocab.unit_application.",
+      "rule": "Operator approved F-SC-7 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-7; Spec 69a M-251: \"(1) Scoped to the residential building ..., never an ancillary building. (2) side_setback_m = 1.8 m + 0.6 m × (height_storeys − 1), OWED on height_storeys (a scenario input). (3) An ancillary building falls to 10.5.60.20(3)(C)(ii)\"); M-75",
+      "supersedes": "COR-900.3.10(70)#(70)[SSP](B)/literals_not_expressed",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": [
+        {
+          "clause": "(70)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-7 (CoA scorecard, 2026-10-21). 900.3.10(70)(B): \"The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof\". Keyed side_setback_m = 1.8 m on building type any, it leaked onto the ancillary pavilion and garage of 5 Parmbelle Cres A0257/26NY, where the City applied 10.5.60.20(3)(C)(ii) (half the height, 1.89 m and 1.99 m), and the per-storey increment was not keyed. The increment is keyed on the proposed storeys (a scenario input, vocab.dsl_input.proposed_storeys); the unit is scoped to the residential building by vocab.unit_application.",
+      "rule": "Operator approved F-SC-7 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-7; Spec 69a M-251: \"(1) Scoped to the residential building ..., never an ancillary building. (2) side_setback_m = 1.8 m + 0.6 m × (height_storeys − 1), OWED on height_storeys (a scenario input). (3) An ancillary building falls to 10.5.60.20(3)(C)(ii)\"); M-75",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": {
+        "description": "On Exception RD 70 lands, the residential building's side yard setback is 1.8 m for a one-storey building plus 0.6 m for each additional storey or portion of one.",
+        "gaps": "The storey count is the proposed building's (a scenario input, proposed_storeys); until it is known the answer is owed. Scoped to the residential building (Spec 69a M-251, vocab.unit_application): an ancillary building or suite takes its own Article 10.5.60 / Chapter 150 side yard.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.50(2)#whole/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/archetype",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.50(2)#whole/target",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": [
+        "platform_side_setback_m",
+        "platform_rear_setback_m",
+        "platform_front_setback_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.50(2)#whole/bound",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.50(2)#whole/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": [
+        "platform_side_setback_m = side_setback_m @(2)",
+        "platform_rear_setback_m = rear_setback_m @(2)",
+        "platform_front_setback_m = front_setback_m @(2)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.50(2)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": {
+        "description": "A platform without main walls (deck, porch, balcony) attached to or within 0.3 m of a building must meet the zone's required minimum building setbacks: its side, rear and front setbacks are the zone's.",
+        "gaps": "An element-scoped reference (Spec 69a M-254): each platform setback target takes the zone's setback for that yard, evaluated on the lot. A platform that uses a permitted encroachment (10.5.40.60(1), \"Despite regulation 10.5.40.50(2)\") is answered by the encroachment and clearance targets instead. Interim before the structure dimension (S.3): the platform's own floor height and area are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.50(2)#whole/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/disclosure",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "A deck, porch or balcony without main walls must meet the zone's required setbacks unless it uses a permitted encroachment."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.60(3)#(3)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.60(3)#(3)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "stairs_clearance_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.60(3)#(3)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.60(3)#(3)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": [
+        "stairs_clearance_m = 0.6 m @(3)(A)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.60(3)#(3)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(A)/literals_not_expressed",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": [
+        {
+          "clause": "(3)(A)(i)",
+          "literal": "1.5",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(A)(i)",
+          "literal": "1.0",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(A)(ii)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.60(3)#(3)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": {
+        "description": "Exterior stairs may encroach into a required setback if they run no more than 1.5 horizontal for each 1.0 vertical, are no wider than 2.0 m, and stay at least 0.6 m from a lot line.",
+        "gaps": "The 0.6 m lot-line clearance is keyed on stairs_clearance_m (bound min; Spec 69a M-254, the M-243 declared-bound form). The other conditions of the encroachment (proportion, width, height or area) describe the proposed exterior stairs, a design detail with no target; they are listed as not expressed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(A)/disclosure",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "Exterior stairs may encroach into a required setback if they run no more than 1.5 horizontal for each 1.0 vertical, are no wider than 2.0 m, and stay at least 0.6 m from a lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.60(3)#(3)(B)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.60(3)#(3)(B)/target",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "ramp_clearance_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.60(3)#(3)(B)/bound",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.60(3)#(3)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": [
+        "ramp_clearance_m = 0.6 m @(3)(B)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.60(3)#(3)(B)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(B)/literals_not_expressed",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": [
+        {
+          "clause": "(3)(B)(i)",
+          "literal": "15",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(B)(i)",
+          "literal": "1.0",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(B)(ii)",
+          "literal": "1.5 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.60(3)#(3)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": {
+        "description": "An uncovered ramp may encroach into a required setback if it runs no more than 15 horizontal for each 1.0 vertical, each sloped segment is no wider than 1.5 m, and it stays at least 0.6 m from a lot line.",
+        "gaps": "The 0.6 m lot-line clearance is keyed on ramp_clearance_m (bound min; Spec 69a M-254, the M-243 declared-bound form). The other conditions of the encroachment (proportion, width, height or area) describe the proposed an uncovered ramp, a design detail with no target; they are listed as not expressed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(B)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(B)/disclosure",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "An uncovered ramp may encroach into a required setback if it runs no more than 15 horizontal for each 1.0 vertical, each sloped segment is no wider than 1.5 m, and it stays at least 0.6 m from a lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.60(3)#(3)(C)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.60(3)#(3)(C)/target",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "elevating_device_clearance_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.60(3)#(3)(C)/bound",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.60(3)#(3)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": [
+        "elevating_device_clearance_m = 0.6 m @(3)(C)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.60(3)#(3)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(C)/literals_not_expressed~s1",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": [
+        {
+          "clause": "(3)(C)(ii)",
+          "literal": "3.0 square metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.60(3)#(3)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": {
+        "description": "An elevating device may encroach into a required setback if it rises no higher than the first floor, has an area of 3.0 m² or less, and stays at least 0.6 m from a lot line.",
+        "gaps": "The 0.6 m lot-line clearance is keyed on elevating_device_clearance_m (bound min; Spec 69a M-254, the M-243 declared-bound form). The other conditions of the encroachment (proportion, width, height or area) describe the proposed an elevating device, a design detail with no target; they are listed as not expressed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(C)/disclosure",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "An elevating device may encroach into a required setback if it rises no higher than the first floor, has an area of 3.0 m² or less, and stays at least 0.6 m from a lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.50(2)#whole/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/disclosure~s1",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "A deck, porch or balcony without main walls must meet the required setbacks."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(A)/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(A)/disclosure~s1",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(B)/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(B)/disclosure~s1",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(C)/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(C)/disclosure~s1",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.40.20(2)#(2)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/archetype",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.20(2)#(2)(C)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/target",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "extension_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.40.20(2)#(2)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/bound",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.20(2)#(2)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/numeric_expression",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": [
+        "extension_side_setback_m = 3.0 m @(2)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.20(2)#(2)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/literals_not_expressed~s1",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(2)",
+          "literal": "One Storey",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.20(2)#(2)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/calculation_handling",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": {
+        "description": "The one-storey extension (up to 2.0 m beyond the maximum building length) must be at least 3.0 m from each side lot line (RD).",
+        "gaps": "Keyed on extension_side_setback_m (bound min; Spec 69a M-255): it binds only the extended part, never the whole building. The 2.0 m extension itself and its height, storey and width conditions describe the proposed extension and are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.20(2)#(2)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.20(2)#(2)(C)/disclosure",
+      "unit": "10.20.40.20(2)#(2)(C)",
+      "value": "On RD lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.40.20(2)#(2)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/archetype",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.20(2)#(2)(C)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/target",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "extension_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.40.40.20(2)#(2)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/bound",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.20(2)#(2)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/numeric_expression",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": [
+        "extension_side_setback_m = 3.0 m @(2)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.20(2)#(2)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/literals_not_expressed~s1",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(2)(C)",
+          "literal": "two dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.20(2)#(2)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/calculation_handling",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": {
+        "description": "The one-storey extension (up to 2.0 m beyond the maximum building length) must be at least 3.0 m from each side lot line (RS).",
+        "gaps": "Keyed on extension_side_setback_m (bound min; Spec 69a M-255): it binds only the extended part, never the whole building. The 2.0 m extension itself and its height, storey and width conditions describe the proposed extension and are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.20(2)#(2)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.20(2)#(2)(C)/disclosure",
+      "unit": "10.40.40.20(2)#(2)(C)",
+      "value": "On RS lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.40.10(5)#whole/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.10(5)#whole/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "parapet_projection_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.40.10(5)#whole/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.10(5)#whole/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": [
+        "parapet_projection_m = 0.3 m @(5)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.10(5)#whole/literals_not_expressed",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.10(5)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": {
+        "description": "A parapet on a flat or shallow roof residential building may exceed the main wall height limit in 10.20.40.10(4) by up to 0.3 m.",
+        "gaps": "Keyed on parapet_projection_m (bound max; Spec 69a M-255): the allowance above the 10.20.40.10(4) main wall height, which answers for a flat or shallow roof.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.10(5)#whole/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.10(5)#whole",
+      "value": "On an RD flat or shallow roof, a parapet may rise up to 0.3 m above the main wall height limit."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.40.50(1)#(1)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.50(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "platform_count"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.40.50(1)#(1)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.50(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": [
+        "platform_count = 4 units @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.50(1)#(1)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.20.40.50(1)#(1)(A)/literals_not_expressed",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "one",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.50(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": {
+        "description": "A detached house in the RD zone may have at most four platforms (decks or balconies) reached from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "The total (four) is keyed on platform_count (bound max), a platform element target (Spec 69a M-254 / M-255); the one-per-side arm is listed. The platform design itself is a scenario detail.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.50(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.20.40.50(1)#(1)(A)",
+      "value": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.40.50(1)#(1)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.50(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "platform_count"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.40.40.50(1)#(1)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.50(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": [
+        "platform_count = 4 units @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.50(1)#(1)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.40.40.50(1)#(1)(A)/literals_not_expressed",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "one",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.50(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": {
+        "description": "A detached house in the RS zone may have at most four platforms (decks or balconies) reached from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "The total (four) is keyed on platform_count (bound max), a platform element target (Spec 69a M-254 / M-255); the one-per-side arm is listed. The platform design itself is a scenario detail.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.50(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.40.40.50(1)#(1)(A)",
+      "value": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.40.50(1)#(1)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.50(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "platform_count"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.80.40.50(1)#(1)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.50(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": [
+        "platform_count = 4 units @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.50(1)#(1)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.50(1)#(1)(A)/literals_not_expressed",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "one",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.50(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": {
+        "description": "A detached house in the RM zone may have at most four platforms (decks or balconies) reached from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "The total (four) is keyed on platform_count (bound max), a platform element target (Spec 69a M-254 / M-255); the one-per-side arm is listed. The platform design itself is a scenario detail.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.50(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "unit": "10.80.40.50(1)#(1)(A)",
+      "value": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.40.20(2)#(2)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/archetype",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.20(2)#(2)(C)/target~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/target",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "extension_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.80.40.20(2)#(2)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/bound",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.20(2)#(2)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/numeric_expression",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": [
+        "extension_side_setback_m = 3.0 m @(2)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.20(2)#(2)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/literals_not_expressed~s1",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(2)(C)",
+          "literal": "two dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.20(2)#(2)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/calculation_handling",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": {
+        "description": "The one-storey extension (up to 2.0 m beyond the maximum building length) must be at least 3.0 m from each side lot line (RM).",
+        "gaps": "Keyed on extension_side_setback_m (bound min; Spec 69a M-255): it binds only the extended part, never the whole building. The 2.0 m extension itself and its height, storey and width conditions describe the proposed extension and are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.20(2)#(2)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-13 (CoA scorecard, 2026-10-21): the City examiner enforces this clause (21 Kelso Ave, 74 Beaumonde Heights Dr, 15 Weetwood St); its text gives a plain value, so it is keyed on its own element target (Spec 69a M-255 triage: value -> LIMIT). Rule by provision family: the RS / RM twins with it.",
+      "rule": "Operator approved F-SC-13/14 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-13.14; Spec 69a M-255: \"10.20.40.20(2)(C) ... is a plain minimum on the one-storey extension; 10.20.40.10(5) ... is a parapet allowance; 10.20.40.50(1)(A) ... is a count\"); M-75",
+      "supersedes": "COR-10.80.40.20(2)#(2)(C)/disclosure",
+      "unit": "10.80.40.20(2)#(2)(C)",
+      "value": "On RM lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(18)#(18)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(18)#(18)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(18)#(18)[SSP](E)(ii)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(18)#(18)[SSP](E)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](B)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(ii)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(iii)(a)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(iii)(a)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(iii)(b)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(iii)(b)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(37)#(37)[SSP](B)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(37)#(37)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(ii)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(i)",
+      "value": [
+        "fsi = 0.5 ratio @(21)[SSP](C)",
+        "gfa_m2 = min(135 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(21)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(165 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(28)[SSP](C)",
+        "fsi = 0.5 ratio @(28)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses",
+      "kind": "correction",
+      "reason": "F-SC-1 (2) follow-up (CoA historical scorecard, 2026-10-21): 900.3.10(28)#(28)[SSP](C)(i) keys the exception's GFA cap (the (C) lead-in) on the leaf \"(i) the floor area of an attached or detached private garage\", and the keyer took the leaf's garage as the unit's use, so M-175 set the cap aside for the house (x37 FSI fell to the zone 0.45 where the City applies 0.5 on four 2017 notices). The garage is counted in the gross floor area (a measurement detail, M-171), it is not the subject: the use is dropped.",
+      "rule": "Spec 69a M-175 (\"A unit scoped to an accessory-structure use never limits the principal building\" — here the cap is the principal building's, the garage only an inclusion); M-171; M-247 (2) (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-1); M-75",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "as application.uses (the private_garage evidence goes with the use)",
+      "rule": "Spec 69a M-175; M-171; M-247 (2); M-75",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 28"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(35)#(35)[SSP](A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(35)#(35)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(35)[SSP](A)",
+        "fsi = 0.5 ratio @(35)[SSP](A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(37)[SSP](C)",
+        "fsi = 0.5 ratio @(37)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses",
+      "kind": "correction",
+      "reason": "F-SC-1 (2) follow-up (CoA historical scorecard, 2026-10-21): 900.3.10(37)#(37)[SSP](C)(i) keys the exception's GFA cap (the (C) lead-in) on the leaf \"(i) the floor area of an attached or detached private garage\", and the keyer took the leaf's garage as the unit's use, so M-175 set the cap aside for the house (x37 FSI fell to the zone 0.45 where the City applies 0.5 on four 2017 notices). The garage is counted in the gross floor area (a measurement detail, M-171), it is not the subject: the use is dropped.",
+      "rule": "Spec 69a M-175 (\"A unit scoped to an accessory-structure use never limits the principal building\" — here the cap is the principal building's, the garage only an inclusion); M-171; M-247 (2) (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-1); M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "as application.uses (the private_garage evidence goes with the use)",
+      "rule": "Spec 69a M-175; M-171; M-247 (2); M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 37"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(38)#(38)[SSP](A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(38)#(38)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(125 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(38)[SSP](A)",
+        "fsi = 0.5 ratio @(38)[SSP](A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(21)#(21)[SSP](C)(i)",
+      "value": [
+        "fsi = 0.5 ratio @(21)[SSP](C)",
+        "gfa_m2 = min(135 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(21)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(165 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(28)[SSP](C)",
+        "fsi = 0.5 ratio @(28)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(35)#(35)[SSP](A)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(35)#(35)[SSP](A)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(35)#(35)[SSP](A)/numeric_expression",
+      "unit": "900.3.10(35)#(35)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(35)[SSP](A)",
+        "fsi = 0.5 ratio @(35)[SSP](A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(37)[SSP](C)",
+        "fsi = 0.5 ratio @(37)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(38)#(38)[SSP](A)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(38)#(38)[SSP](A)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(38)#(38)[SSP](A)/numeric_expression",
+      "unit": "900.3.10(38)#(38)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(125 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(38)[SSP](A)",
+        "fsi = 0.5 ratio @(38)[SSP](A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 28"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 37"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(A)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "detached_house": "a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(A)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "description": "For a detached house, the side yard setback in 10.10.40.70(3) may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(B)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "semi_detached_house": "a semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(B)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(B)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "description": "For a semi-detached house, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(C)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "tokens": [
+          "all_units_front_street",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": [
+        "all_units_front_street",
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "R": "the R zone",
+        "all_units_front_street": "front directly on a street",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "townhouse": "a townhouse if"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(C)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "description": "For a townhouse whose dwelling units all front directly on a street, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(D)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "detached_houseplex": "a detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(D)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "description": "For a detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(E)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(E)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(E)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "semi_detached_houseplex": "a semi-detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(E)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(E)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "description": "For a semi-detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(G)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": {
+        "if": "proposed_height_m ≤ 13.0 m",
+        "tokens": [
+          "building_height_band",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(G)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": [
+        "building_height_band",
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(G)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": {
+        "R": "the R zone",
+        "apartment_building": "an apartment building",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "building_height_band": "height of 13.0 metres or less"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(G)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": {
+        "description": "For an apartment building 13.0 metres or less in height, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259), taken as met by default (vocab design_choice_disclosure.default_overrides, M-205(2)); with blank_side_wall false the unit does not apply and the 10.10.40.70(3) side yard applies.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
     }
   ]
 }

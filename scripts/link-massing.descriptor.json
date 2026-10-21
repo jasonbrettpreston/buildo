@@ -893,10 +893,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-07T04:33:29.781Z",
-        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
-        "cost_ms": 182,
-        "sample_n": 10,
+        "at": "2026-10-21T14:04:47.202Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 63,
+        "sample_n": 43,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -921,11 +921,11 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 534989,
-        "at": "2026-10-07T04:33:29.781Z",
-        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
-        "cost_ms": 76,
-        "sample_n": 10,
+        "value": 535039,
+        "at": "2026-10-21T14:04:47.202Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 32,
+        "sample_n": 43,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -950,11 +950,11 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 494932,
-        "at": "2026-10-07T04:33:29.781Z",
-        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
-        "cost_ms": 130,
-        "sample_n": 10,
+        "value": 494958,
+        "at": "2026-10-21T14:04:47.202Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 47,
+        "sample_n": 43,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -979,11 +979,11 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": {
-        "value": 496321,
-        "at": "2026-10-07T04:33:29.781Z",
-        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
-        "cost_ms": 371,
-        "sample_n": 10,
+        "value": 496535,
+        "at": "2026-10-21T14:04:47.202Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 172,
+        "sample_n": 43,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1009,10 +1009,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 20.14,
-        "at": "2026-10-07T04:33:29.781Z",
-        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
-        "cost_ms": 37,
-        "sample_n": 10,
+        "at": "2026-10-21T14:04:47.202Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 21,
+        "sample_n": 43,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1040,11 +1040,11 @@
       "frequency": "every_run",
       "retighten_when": "zero rows (this check is expected to already read 0 — a non-zero count is a genuine finding, not a standing residual)",
       "last_measured": {
-        "value": 186,
-        "at": "2026-10-07T04:33:29.781Z",
-        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
-        "cost_ms": 853,
-        "sample_n": 10,
+        "value": 0,
+        "at": "2026-10-21T14:04:47.202Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 1000,
+        "sample_n": 43,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1070,11 +1070,11 @@
       "frequency": "every_run",
       "retighten_when": "zero rows — closes when the overlap-only fallback narrowing (Spec 56 §3 new subsection, slice 1) retires the disjoint nearest matches that fabricate a borrowed primary; the surviving genuinely-overlapping nearest links resolve to a real apportioned share instead.",
       "last_measured": {
-        "value": 106275,
-        "at": "2026-10-07T04:33:29.781Z",
-        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
-        "cost_ms": 159,
-        "sample_n": 10,
+        "value": 106288,
+        "at": "2026-10-21T14:04:47.202Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 51,
+        "sample_n": 43,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1206,7 +1206,7 @@
           "ref": "scripts/lib/compute/link-massing.js"
         }
       },
-      "adjudicated_by": "operator ruling 2026-08-27 (pilot 3 authorization, A-8 override)",
+      "adjudicated_by": "operator ruling 2026-08-27 (pilot 3 authorization, A-8 override) [register: Spec 124 R-W (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-27"
     },
     {
@@ -1218,7 +1218,7 @@
           "ref": "scripts/run-chain.js"
         }
       },
-      "adjudicated_by": "operator ruling, plan D-8",
+      "adjudicated_by": "operator ruling, plan D-8 [register: Spec 124 R-FJ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-27"
     },
     {
@@ -1230,7 +1230,7 @@
           "ref": "scripts/lib/source-version.js"
         }
       },
-      "adjudicated_by": "plan S11 / Fold B",
+      "adjudicated_by": "plan S11 / Fold B [register: Spec 124 R-FL; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-27"
     },
     {
@@ -1242,7 +1242,7 @@
           "ref": "scripts/lib/step/verdict.js"
         }
       },
-      "adjudicated_by": "Spec 122 §1.7",
+      "adjudicated_by": "Spec 122 §1.7 [register: Spec 124 R-FL; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-27"
     },
     {

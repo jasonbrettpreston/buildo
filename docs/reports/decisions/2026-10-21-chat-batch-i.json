@@ -1,0 +1,32 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-i/2026-10-21-batch-i.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-i",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1. y 3. ready",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-i/2026-10-21-batch-i.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-35": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IJ"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-35",
+      "question": "R-IJ: an orphan witness trace is retired when superseded (REFREEZE-WITNESS-Q option A)",
+      "recommendation": "A post witness trace with no golden capture and no recapture.json entry is an orphan; it is deleted by literal path when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints (proved by the printed subset check), otherwise it gets a recipe and is retaken. First application: link_wsib cohort-entities, whose 39 statement fingerprints equal sources-full-forced-5's.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

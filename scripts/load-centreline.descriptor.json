@@ -560,7 +560,7 @@
         "text": "RETIRED per Spec 124 R-AZ (the argv-seam rule) / LC-D6 + LC-D11, on the address_points precedent. A debug affordance let an operator run the full parse→filter→validate→staging pipeline against a manually-fetched local zip when the CKAN large-resource endpoint was unservable, skipping the HEAD + download entirely. The frozen shell acquires through `inputs.reads.externals[]` and the fixture tier replaces the local seam for tests. The retirement is declared, not silent: with it goes the only fs/argv seam the step had, and the `centreline_local_zip_override` WARN row it used to push.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
       },
-      "adjudicated_by": "operator ruling, Spec 124 R-AZ / LC-D6, LC-D11",
+      "adjudicated_by": "operator ruling, Spec 124 R-GT / LC-D6, LC-D11",
       "date": "2026-09-24"
     },
     {
@@ -569,7 +569,7 @@
         "text": "The HEAD 4xx/5xx path (§3.9: WARN + proceed to download, do NOT skip on failure) is now the library's zero-row HEAD-error WARN row, driven by the declared `inputs.reads.externals[0].on_head_error: \"warn_row\"`. LC-D: the row keeps the legacy posture (a failed HEAD never halts, the download still runs and the content hash still gates) — the runner emits it, so the metric name `centreline_head_error` is retired into the library row rather than re-pushed by the step.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
       },
-      "adjudicated_by": "plan LC-D / INGESTOR prerequisite 0c (on_head_error seam)",
+      "adjudicated_by": "plan LC-D / INGESTOR prerequisite 0c (on_head_error seam) [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -578,7 +578,7 @@
         "text": "LC-D9 / LC-D10. The legacy download/zip/parse failure pushed a FAIL row and returned `{ failed: true }`; under the archetype that path is the library's `failed_acquisition` fail-error terminal (no write attempted, temp root cleaned). The metric name `centreline_acquisition_error` is retired into the terminal. The RENAMED-KEY case (CENTREL2 absent/renamed) does NOT land here: LC-D9 records that the library coerces the key BEFORE shapeRecord, so a renamed key ends at the staged-rows floor's `fail_check`, not at `failed_acquisition`.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
       },
-      "adjudicated_by": "plan LC-D9 / LC-D10",
+      "adjudicated_by": "plan LC-D9 / LC-D10 [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -587,7 +587,7 @@
         "text": "LC-D15, on the ravines LR-D1 precedent. The per-feature WARN rows made the audit table's row count bounded only by the feature count (47K streets). The dropped ids now travel as CAPPED detail on the `centreline_geometry_skipped_pct` row (with the exact dropped count and a truncation flag beside them), so the dropped set is inspectable without one row per dropped feature and the reader is never misled about how much was lost.",
         "liveness": { "kind": "check", "ref": "centreline_geometry_skipped_pct" }
       },
-      "adjudicated_by": "plan LC-D15 / ravines LR-D1 precedent",
+      "adjudicated_by": "plan LC-D15 / ravines LR-D1 precedent [register: Spec 124 R-EP (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -596,7 +596,7 @@
         "text": "RETIRED per LC-D12 (the address_points 525K-row precedent): the runner issues ONE validator call over the whole validated set rather than 5K-row chunks. The chunking was a pre-conversion planner-memory workaround; the converted library sizes its own validator input and the counter semantics (`geometry_collection_extracted`, `invalid_geometry_skipped`) are unchanged, so the drop is a mechanism retirement, not a behaviour change.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
       },
-      "adjudicated_by": "plan LC-D12 / address_points one-call precedent",
+      "adjudicated_by": "plan LC-D12 / address_points one-call precedent [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -605,7 +605,7 @@
         "text": "The F-C1 dual-mode guard's FIRST-RUN arm (no prior run, zero carried rows) now carries its own id `f_c1_empty_temp_guard_fired_first_run` (FAIL), separate from the subsequent-run arm `f_c1_empty_temp_guard_fired` (WARN + on_warn:skip_write). The legacy reused one metric name for two arms with different severities, so the audit table could not tell a build-blocking empty source from a preserved-table no-op; the split is additive and the ordering/liveness are unchanged.",
         "liveness": { "kind": "check", "ref": "f_c1_empty_temp_guard_fired_first_run" }
       },
-      "adjudicated_by": "plan LC-D14 / c2a4 declaration",
+      "adjudicated_by": "plan LC-D14 / c2a4 declaration [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -614,7 +614,7 @@
         "text": "The ravines Fold D precedent: every legacy `if (x > 0) push(...)` WARN is declared as a CHECK that also emits PASS at 0, so silence can no longer mean both 'zero' and 'nobody looked'. Applies to `centreline_bad_centreline_id_count`, `centreline_null_geometry_count`, `centreline_unknown_feature_code_count`, `centreline_unknown_jurisdiction_count`, `centreline_duplicate_centreline_id_count` and the standing-override row. Severity and bound are unchanged; only the observable-at-zero posture is added.",
         "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
       },
-      "adjudicated_by": "ravines Fold D precedent (operator ruling)",
+      "adjudicated_by": "ravines Fold D precedent (operator ruling) [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -623,7 +623,7 @@
         "text": "`CENTRELINE_FORCE_RELOAD` is ADDED as `override.force_run`: the retired local-zip seam was the only way an operator could bypass the staleness gates, so with it gone a deliberate full reload (a source the tier-1/tier-2 gates keep skipping) needs a declared force env. It is named in this descriptor and mirrored in `recovery.force` at c2a5, matching the ravines `RAVINE_FORCE_RELOAD` shape the conversion added there (declared deviation on that step).",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" }
       },
-      "adjudicated_by": "plan LC-D6 (force hatch) / ravines conversion precedent",
+      "adjudicated_by": "plan LC-D6 (force hatch) / ravines conversion precedent [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -632,7 +632,7 @@
         "text": "The geometry validation now runs BEFORE the drift gate (read-only, on the ravines Fold C / LR-D9 precedent): both `centreline_geometry_skipped_pct` and `centreline_count_drift_pct` are scored at `when: \"pre_write\"` between the read-only validation and the first write statement. The observable consequence is that a drift-FAIL run ALSO measures the skipped geometry — the validation is a pure SELECT, so this adds observability and moves no write. No spec guarantee is retired by this ordering (the legacy abort-before-withTransaction for L8 is preserved).",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
       },
-      "adjudicated_by": "ravines Fold C / LR-D9 precedent",
+      "adjudicated_by": "ravines Fold C / LR-D9 precedent [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     },
     {
@@ -641,7 +641,7 @@
         "text": "LC-D3: the six knobs are now `config.logic_variables[]` registered logic variables resolved through `ctx.config`, not a marketplace-config read inside the step body. `centrelineMinFeatureCount` is KNOWINGLY RETIRED rather than declared — it was never read (the L7 count-delta is a ratio check, and the F-C1 guard's bound is the staged-row count, not a floor); declaring it would be a phantom consumer (Rule 3's purpose, not its letter). The other five keep their seed defaults byte-equal to the pre-externalization literals.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
       },
-      "adjudicated_by": "plan LC-D3 / Spec 122 §1.2a",
+      "adjudicated_by": "plan LC-D3 / Spec 122 §1.2a [register: Spec 124 R-FV; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-24"
     }
   ],

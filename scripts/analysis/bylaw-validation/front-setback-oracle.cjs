@@ -77,6 +77,7 @@ async function main() {
   const c = new Client({ connectionString: process.env.DATABASE_URL });
   await c.connect();
   try {
+    await c.query('BEGIN READ ONLY'); // never a write (lane wf1/bylaw-fix-4); rolled back below
     const lvRow = (await c.query("SELECT variable_value::float AS v FROM logic_variables WHERE variable_key = 'fya_porch_allowance_m'")).rows[0];
     const allowance = lvRow ? lvRow.v : seed.fya_porch_allowance_m.default;
     const oracle = (await c.query(ORACLE_SQL)).rows.filter((r) =>
@@ -110,7 +111,7 @@ async function main() {
         err_m: est == null ? null : round2(est - Number(o.required_m)),
         err2_m: m2 == null ? null : round2(m2 - Number(o.required_m)),
         ruled_basis: ruled.basis, ruled_m: ruled.front_setback_m,
-        ruled_err_m: round2(ruled.front_setback_m - Number(o.required_m)),
+        ruled_err_m: typeof ruled.front_setback_m === 'number' ? round2(ruled.front_setback_m - Number(o.required_m)) : null,
       });
     }
     const est = rows.filter((r) => r.est_m != null);
@@ -126,10 +127,21 @@ async function main() {
         at_or_below_examiner_pct: share(est, (r) => r.est_m <= r.required_m) },
       ruled: { mae_m: mae(ruled), within_1m_pct: share(ruled, (x) => Math.abs(x) <= 1), below_examiner_pct: share(ruled, (x) => x < 0) },
       zone_default_alone: { mae_m: mae(flat), within_1m_pct: share(flat, (x) => Math.abs(x) <= 1), below_examiner_pct: share(flat, (x) => x < 0) },
+      // 69a M-256 (2026-10-21): over EVERY oracle notice, the ruled answer as served — a value (averaged or the zone default)
+      // or needs survey (no value). too_generous = a value below the examiner's figure, as a share of all notices.
+      all_notices: (() => {
+        const valued = rows.filter((r) => typeof r.ruled_m === 'number');
+        const gen = valued.filter((r) => r.ruled_m < r.required_m).length;
+        const byBasis = {}; for (const r of rows) byBasis[r.ruled_basis] = (byBasis[r.ruled_basis] || 0) + 1;
+        return { n: rows.length, valued: valued.length, needs_survey_no_value: rows.length - valued.length, too_generous: gen,
+          too_generous_pct_of_all: share(rows, (r) => typeof r.ruled_m === 'number' && r.ruled_m < r.required_m),
+          too_generous_pct_of_valued: share(valued, (r) => r.ruled_m < r.required_m), by_basis: byBasis };
+      })(),
     };
     fs.writeFileSync(out, JSON.stringify({ generated_from: 'coa_notice_variances x parcel_abutments', summary, rows }, null, 1));
     console.log(JSON.stringify(summary));
   } finally {
+    await c.query('ROLLBACK').catch((e) => console.error(`rollback: ${e.message}`));
     await c.end();
   }
 }

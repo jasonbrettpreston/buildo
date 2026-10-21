@@ -1,0 +1,26 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "82aef90b",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-3 / M-248 (dotted \"X(1) to (n)\" ranges displace every regulation in the range), run on the working tree at 82aef90b with the F-SC-3 describe added, before the xref.mjs change.",
+ "counts": {
+  "pass": 1,
+  "red": 2
+ },
+ "cases": [
+  {
+   "name": "F-SC-3 / M-248 — a dotted range \"X(1) to (n)\" displaces every regulation in the range the by-law text carries the dotted ranges (ch10_80.txt, ch10_20.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-3 / M-248 — a dotted range \"X(1) to (n)\" displaces every regulation in the range RM 10.80.40.70(4) displaces (1), (2) and (3); RD 10.20.40.70(7) displaces (1) to (6)",
+   "at_base": "red",
+   "reason": "AssertionError: A: expected [ '10.5.40.70(1)', …(2) ] to deeply equal ArrayContaining{…}"
+  },
+  {
+   "name": "F-SC-3 / M-248 — a dotted range \"X(1) to (n)\" displaces every regulation in the range 1785 Keele St (RM, major street, apartment, depth 30.44 m): rear yard 7.5 m from (4)(B), not 25 % of depth from (2)(B)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 7.61, …(1) ] to deeply equal [ 'value', 7.5, …(1) ]"
+  }
+ ]
+}

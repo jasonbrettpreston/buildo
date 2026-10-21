@@ -602,7 +602,7 @@
         "text": "The standalone pipeline_runs INSERT and UPDATE are the RUNNER's ledger row, not a step output; claim #39 consolidates ledger ownership into the library, so post-conversion this step writes nothing and outputs is \"none\" as the ASSERT profile requires.",
         "liveness": { "kind": "file", "ref": "scripts/run-chain.js" }
       },
-      "adjudicated_by": "Spec 122 §1.10 required-field profile",
+      "adjudicated_by": "Spec 122 §1.10 required-field profile [register: Spec 124 R-FI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-24"
     },
     {
@@ -611,7 +611,7 @@
         "text": "§1.10 forces an ASSERT to declare counters \"none\". Spec 122 §12.5 records that 0 of 5 ASSERTs comply today, so this profile is NORMATIVE, not descriptive; the differential at conversion must show the counter emission moving to the runner rather than changing value silently.",
         "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/122_pipeline_step_optimization.md" }
       },
-      "adjudicated_by": "operator ruling R2 / §1.10",
+      "adjudicated_by": "operator ruling R2 / §1.10 [register: Spec 124 R-FI; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-08-24"
     },
     {
@@ -620,7 +620,7 @@
         "text": "241 had no basis — it is fix_lead_id_trigger_column_scope, which this step never touches. The only table this step reads or writes is pipeline_runs (created by 033); the library writes records_meta (finalizeLedgerRow), a column added by migration 041, and pipeline.run applies no floor of its own, so 41 is the real floor (OUTPUT-panel grounder, 2026-08-25; earlier 33 under-counted). The database object admits no why field (additionalProperties:false), so the justification is recorded here",
         "liveness": { "kind": "table", "ref": "pipeline_runs" }
       },
-      "adjudicated_by": "Fold A correction 5 / Fold B",
+      "adjudicated_by": "Fold A correction 5 / Fold B [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-08-25"
     },
     {
@@ -629,7 +629,7 @@
         "text": "Both are one throw in the code — the circuit breaker — so nothing observable distinguishes them and a two-terminal declaration would be a fiction. Fold B merged them at commit 7; the fetch-path liveness handle is carried onto the survivor rather than lost. RE-EXAMINED AT PEEL 8b AND LEFT MERGED: check-id attribution now distinguishes the two CAUSES inside the audit table (an errored check renders as `check errored: <msg>` while a violated one renders its violation count), but `terminals[]` has no runtime consumer anywhere in the library — `grep -rn terminals scripts/lib/` returns 0 — so the runner selects no terminal and a second declared terminal would still be a fiction. Splitting them needs the terminal-selection wave, not another compute peel.",
         "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
       },
-      "adjudicated_by": "Fold B ruling 7",
+      "adjudicated_by": "Fold B ruling 7 [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-08-25"
     }
   ],

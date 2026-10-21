@@ -1,0 +1,31 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-f/2026-10-21-batch-f.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-f",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "option A",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-f/2026-10-21-batch-f.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-28": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-28",
+      "question": "REFREEZE-NET-Q: network acquisition for night 1's ingestor recaptures",
+      "recommendation": "Option A: the 10 ingestor steps re-acquire their public read-only sources during night 1's recapture (local DB writes only, under the dblock); every hash move caused by source drift is explained in explained-diffs.json under R-DA or the run stops. An offline record-and-replay mode is logged as a follow-up PIN, not a blocker.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

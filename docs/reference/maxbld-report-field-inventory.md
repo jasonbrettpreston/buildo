@@ -2026,10 +2026,10 @@ none
 
 ## Inputs
 
-- `docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json` sha256 `1844a47e9b8a7862`
-- `docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json` sha256 `823da11eb9ba7e00`
-- `docs/reports/witness/enrich_parcels/post/none_incremental.trace.json` sha256 `bb7337a6aaa9a488`
-- `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `ab446058c4d0743a`
+- `docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json` sha256 `fc6b11a478fc285d`
+- `docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json` sha256 `410bd8beb9b742ac`
+- `docs/reports/witness/enrich_parcels/post/none_incremental.trace.json` sha256 `42991087e45081a1`
+- `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `9f5cfe3429bb91da`
 - `migrations/205_archetype_cost_rates.sql` sha256 `9d8da50c991f1258`
 - `migrations/248_parcel_cost_lines.sql` sha256 `9f3caeb84373ef43`
 - `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `efb91c277ebc0f32`
@@ -2043,7 +2043,7 @@ none
 - `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
 - `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`
 - `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
-- `scripts/seeds/bylaw/vocab.json` sha256 `ccd6665cb9dcc81f`
+- `scripts/seeds/bylaw/vocab.json` sha256 `b24eb6c59cdd0cf5`
 - `scripts/seeds/lineage-meta-snapshot.json` sha256 `de2d2052aa3e611d`
 - `scripts/seeds/logic_variables.json` sha256 `bf215fa01d89312d`
 - `scripts/surfaces/_schema/report-fields.decl.json` sha256 `8f3c6f43dfb41e2d`

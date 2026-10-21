@@ -132,6 +132,13 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // not_evaluated:no_candidate (the fixture units predate the keying). A per-cell diff against 8cba529b…e8 moves no existing
     // cell (the declared bounds of encroachment_m / encroachment_clearance_m change no fixture result); N-2, N-3, D-1 and M-245
     // moved none either.
-    expect(h.digest('hex')).toBe('e4dca9efe4c5ce31fb84cb05703ac9fe24fdfcdb5e712da49634ec3649fce218');
+    // re-pinned 2026-10-21 (F-SC-11/12 / M-254, bylaw fix lane 4): six new dsl_targets (platform_side / rear / front_setback_m,
+    // stairs / ramp / elevating_device_clearance_m); their 840 cells are not_evaluated:no_candidate (the fixture units predate the
+    // keying). With the six left out the hash is the previous pin e4dca9ef…e218 exactly, so no existing cell moved (F-SC-3, F-SC-4,
+    // F-SC-6, F-SC-7, F-SC-8 and M-256 moved none either).
+    // re-pinned 2026-10-21 (F-SC-13/14 / M-255, bylaw fix lane 4): three new dsl_targets (extension_side_setback_m,
+    // parapet_projection_m, platform_count); their 420 cells are not_evaluated:no_candidate (the fixture units predate the keying).
+    // With the three left out the hash is the previous pin c1a1f04c…b595 exactly, so no existing cell moved.
+    expect(h.digest('hex')).toBe('3815ff0a60ff6443b1fe395929edcc0d004f85ea2e61a6e03f53d3d7c11d296d');
   }, 60_000);
 });

@@ -445,13 +445,13 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T15:44:30.847Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 561,
-        "sample_n": 9,
+        "at": "2026-10-21T14:06:28.373Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 14,
+        "sample_n": 31,
         "source_run": {
-          "run_id": "2333",
-          "chain": null,
+          "run_id": null,
+          "chain": "sources",
           "event": "golden_capture"
         }
       },
@@ -474,13 +474,13 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T15:44:30.847Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 94,
-        "sample_n": 9,
+        "at": "2026-10-21T14:06:28.373Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 7,
+        "sample_n": 31,
         "source_run": {
-          "run_id": "2333",
-          "chain": null,
+          "run_id": null,
+          "chain": "sources",
           "event": "golden_capture"
         }
       },
@@ -506,13 +506,13 @@
       "retighten_when": "the count falls below 672 (the sub-100m band this population's own distance profile makes plausibly attributable to boundary/projection precision) — NOT \"zero rows\", which this population cannot reach on its own. MEASURED PLATEAU (Reality-Check seat, 2026-09-16): 5138 rows, of which only 672 (13.1%) lie within 100m of their stamped polygon and 3675 (71.5%) lie more than 1km away, to a maximum of 26,211m; 5124 of the 5138 (99.7%) share first_seen_at = 2026-02 and a single geocoded_at batch. These rows' COORDINATES are correct and have no reason ever to be rewritten, so an LN-D4 invalidator keyed on a lat/lng rewrite would never re-touch them — the count plateaus near 5138 until a one-time operator remediation NULLs neighbourhood_id over exactly this violating scope and re-runs. That remediation is filed as its own peel (LN-D4 in docs/reports/defect-ledger.md), not performed here.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T15:44:30.847Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 3258,
-        "sample_n": 9,
+        "at": "2026-10-21T14:06:28.373Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 183,
+        "sample_n": 31,
         "source_run": {
-          "run_id": "2333",
-          "chain": null,
+          "run_id": null,
+          "chain": "sources",
           "event": "golden_capture"
         }
       },
@@ -536,13 +536,13 @@
       "retighten_when": "zero rows. CORRECTED at the Reality-Check plan seat (2026-09-16) — the draft claimed this was \"a population no surviving code path can produce, so it can only shrink\", and that absolute is FALSE. `scripts/geocode-permits.js`'s zombie cleanup (`UPDATE permits SET latitude=NULL, longitude=NULL, geocoded_at=NULL WHERE (geo_id IS NULL OR geo_id='') AND latitude IS NOT NULL AND geocoded_at IS NOT NULL`) is a live, shipped writer that produces a NEW member of this population every time it fires on an already-stamped permit. Measured: `zombies_cleaned = 0` in every recorded geocode_permits run back to 2026-06-25 (6 most recent checked), so it is not currently firing — but it is structurally capable, so this row is WATCHED, never assumed inert.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T15:44:30.847Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 2590,
-        "sample_n": 9,
+        "at": "2026-10-21T14:06:28.373Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 90,
+        "sample_n": 31,
         "source_run": {
-          "run_id": "2333",
-          "chain": null,
+          "run_id": null,
+          "chain": "sources",
           "event": "golden_capture"
         }
       },
@@ -565,14 +565,14 @@
       "frequency": "every_run",
       "retighten_when": "zero rows — reachable only by `geocode_permits` giving these permits real coordinates, or by an operator ruling that widens W1 to COALESCE(permit point, ST_Centroid(parcel geom)). Both are OUTSIDE this step: it is a floor this step cannot lower by itself, which is exactly why it must be reported rather than assumed.",
       "last_measured": {
-        "value": 10486,
-        "at": "2026-10-06T15:44:30.847Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 2192,
-        "sample_n": 9,
+        "value": 13499,
+        "at": "2026-10-21T14:06:28.373Z",
+        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "cost_ms": 67,
+        "sample_n": 31,
         "source_run": {
-          "run_id": "2333",
-          "chain": null,
+          "run_id": null,
+          "chain": "sources",
           "event": "golden_capture"
         }
       },
@@ -634,7 +634,7 @@
           "ref": "sentinel_residue"
         }
       },
-      "adjudicated_by": "OPERATOR RULING, PH-0 Ask 2, 2026-09-16 — RETIRE. Both unwriteability claims were re-verified by execution at the Regression Guardian plan seat, not taken on the draft's word: scripts/lib/safe-math.js throws on a negative parsed value at the exact call site 76dcca28 rewired, and migrations/013_neighbourhoods.sql declares `id SERIAL PRIMARY KEY` while migrations/109_fk_hardening.sql adds fk_permits_neighbourhoods NOT VALID, NULLs 13 orphans, then VALIDATEs — so no negative id can exist on either path. The 4699730f infinite-loop fence was confirmed independently defended by b1102cdb's composite keyset cursor. The SECOND purpose the sentinel served — bounding re-work on the permanently-unmatchable tail — is genuinely lost and is knowingly retired, not silently dropped: it is reported by the no_neighbourhood_match WARN row, which MEASURES 0 today (no coordinate-bearing permit matches no polygon), so the retirement currently costs nothing measurable.",
+      "adjudicated_by": "OPERATOR RULING, PH-0 Ask 2, 2026-09-16 — RETIRE. Both unwriteability claims were re-verified by execution at the Regression Guardian plan seat, not taken on the draft's word: scripts/lib/safe-math.js throws on a negative parsed value at the exact call site 76dcca28 rewired, and migrations/013_neighbourhoods.sql declares `id SERIAL PRIMARY KEY` while migrations/109_fk_hardening.sql adds fk_permits_neighbourhoods NOT VALID, NULLs 13 orphans, then VALIDATEs — so no negative id can exist on either path. The 4699730f infinite-loop fence was confirmed independently defended by b1102cdb's composite keyset cursor. The SECOND purpose the sentinel served — bounding re-work on the permanently-unmatchable tail — is genuinely lost and is knowingly retired, not silently dropped: it is reported by the no_neighbourhood_match WARN row, which MEASURES 0 today (no coordinate-bearing permit matches no polygon), so the retirement currently costs nothing measurable. [register: Spec 124 R-FQ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-16"
     },
     {
@@ -658,7 +658,7 @@
           "ref": "scripts/run-chain.js"
         }
       },
-      "adjudicated_by": "carried from the standing pilot precedent (link_massing plan D-8, 2026-08-27)",
+      "adjudicated_by": "carried from the standing pilot precedent (link_massing plan D-8, 2026-08-27) [register: Spec 124 R-FJ; V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-15"
     },
     {
@@ -670,7 +670,7 @@
           "ref": "scripts/lib/step/config.js"
         }
       },
-      "adjudicated_by": "OPERATOR RULING, PH-0 Ask 5, 2026-09-16 — REUSE sources_neighbourhoods_floor and amend its CONSUMED-by line, rather than mint link_neighbourhoods_expected_neighbourhood_count. Two registry rows for one municipal boundary count would be a second source of truth for the same fact (Rule 1, one home per concern); the un-prefixed shared-variable precedent is spatial_match_max_distance_m / spatial_match_confidence in link_parcels.",
+      "adjudicated_by": "OPERATOR RULING, PH-0 Ask 5, 2026-09-16 — REUSE sources_neighbourhoods_floor and amend its CONSUMED-by line, rather than mint link_neighbourhoods_expected_neighbourhood_count. Two registry rows for one municipal boundary count would be a second source of truth for the same fact (Rule 1, one home per concern); the un-prefixed shared-variable precedent is spatial_match_max_distance_m / spatial_match_confidence in link_parcels. [register: Spec 124 R-G (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-16"
     },
     {
@@ -682,7 +682,7 @@
           "ref": "scripts/link-neighbourhoods.js"
         }
       },
-      "adjudicated_by": "PLAN PANEL FOLD, 2026-09-16 — DeepSeek spec lens finding, grounded by re-executing the consumer grep and the 50-run query before acting.",
+      "adjudicated_by": "PLAN PANEL FOLD, 2026-09-16 — DeepSeek spec lens finding, grounded by re-executing the consumer grep and the 50-run query before acting. [register: Spec 124 R-HR; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-16"
     },
     {
@@ -694,7 +694,7 @@
           "ref": "link_rate"
         }
       },
-      "adjudicated_by": "PLAN PANEL FOLD, 2026-09-16 — Reality-Check seat measured the 94.83/100.00 split and the 11-of-12 WARN history; DeepSeek spec lens independently flagged the standing red. Disposition follows the plan's OWN Ask 3 ruling (a widening is a FIX; a fix belongs in its own peel after the conversion is green), so it needs no new operator ruling.",
+      "adjudicated_by": "PLAN PANEL FOLD, 2026-09-16 — Reality-Check seat measured the 94.83/100.00 split and the 11-of-12 WARN history; DeepSeek spec lens independently flagged the standing red. Disposition follows the plan's OWN Ask 3 ruling (a widening is a FIX; a fix belongs in its own peel after the conversion is green), so it needs no new operator ruling. [register: Spec 124 R-HV; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-16"
     },
     {
@@ -706,7 +706,7 @@
           "ref": "scripts/lib/compute/link-massing.js"
         }
       },
-      "adjudicated_by": "PLAN PANEL FOLD, 2026-09-16 — Idempotency Lens measured the no-op three independent ways; DeepSeek spec lens independently flagged the terminal name as a footgun. The fold REMOVES a net-new capability rather than adding one, so it is the conservative application of Spec 123 §3.1 and needs no new operator ruling. Filed for its own peel in docs/reports/review_followups.md.",
+      "adjudicated_by": "PLAN PANEL FOLD, 2026-09-16 — Idempotency Lens measured the no-op three independent ways; DeepSeek spec lens independently flagged the terminal name as a footgun. The fold REMOVES a net-new capability rather than adding one, so it is the conservative application of Spec 123 §3.1 and needs no new operator ruling. Filed for its own peel in docs/reports/review_followups.md. [register: Spec 124 R-HU; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-16"
     }
   ],

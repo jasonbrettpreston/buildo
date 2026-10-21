@@ -396,13 +396,27 @@ export function importPageExport({ stem, title, url, answers, entries, answersRe
   };
 }
 
+/**
+ * The citation id of a chat record's decision id. A record id that is already a usable id (ID_RE) is kept; one that is
+ * not (batch G, 2026-10-21: "CHAT-29/F-SC-1", "CHAT-29/Front yard accuracy") is derived mechanically — each "/" becomes
+ * ".", each run of spaces "-" — and the record's own id is kept verbatim as the decision's `raw_id`, so the transfer
+ * stays mechanical and no id is hand-typed (Spec 124 R-HK). PURE.
+ */
+export function citationId(rawId) {
+  const s = String(rawId == null ? '' : rawId);
+  if (ID_RE.test(s)) return s;
+  return s.trim().replace(/\s*\/\s*/g, '.').replace(/\s+/g, '-');
+}
+
 /** Build a log from a committed chat record. PURE over its inputs. */
 export function importChat({ stem, raw, rawRel, previous }) {
   const date = raw.decided_at || (/\d{4}-\d{2}-\d{2}/.exec(String(raw.source || '')) || [])[0];
   if (!date) throw new Error('the chat record names no date (decided_at, or a date in source)');
   if (!String(raw.operator_quote || '').trim()) throw new Error('the chat record has no operator_quote');
   const decisions = (raw.decisions || []).map((d) => {
-    const out = { id: d.id, question: d.question || d.subject, recommendation: d.recommendation, decision: d.decision, decided_at: d.decided_at || date };
+    const id = citationId(d.id);
+    const out = { id, question: d.question || d.subject, recommendation: d.recommendation, decision: d.decision, decided_at: d.decided_at || date };
+    if (id !== d.id) out.raw_id = d.id;
     if (d.operator_quote) out.operator_quote = d.operator_quote;
     if (d.quote_ref !== undefined) {
       // A record with several operator quotes names the one each decision rests on (R-DV-1 import, batch C).

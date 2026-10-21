@@ -1614,7 +1614,7 @@
           "ref": ".cursor/wf5_wd1_write_class_audit_active_task.md"
         }
       },
-      "adjudicated_by": "WD-1 / Spec 122 §1.10 required-field profile",
+      "adjudicated_by": "WD-1 / Spec 122 §1.10 required-field profile [register: Spec 124 R-X (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-12"
     },
     {
@@ -1626,7 +1626,7 @@
           "ref": "scripts/lib/step/verdict.js"
         }
       },
-      "adjudicated_by": "commit 7 scope constraint (no step.schema.json/scripts/lib/step edit authorized)",
+      "adjudicated_by": "commit 7 scope constraint (no step.schema.json/scripts/lib/step edit authorized) [register: Spec 124 R-HS; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-12"
     },
     {
@@ -1638,7 +1638,7 @@
           "ref": "docs/reports/defect-ledger.md"
         }
       },
-      "adjudicated_by": "commit 7 (ADB-D7, Spec 123 §3.1 — no silent behaviour fix during conversion)",
+      "adjudicated_by": "commit 7 (ADB-D7, Spec 123 §3.1 — no silent behaviour fix during conversion) [register: Spec 124 R-HZ; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-09-12"
     },
     {
@@ -1650,7 +1650,7 @@
           "ref": "scripts/seeds/logic_variables.json"
         }
       },
-      "adjudicated_by": "Spec 124 §2 Rule 3",
+      "adjudicated_by": "Spec 124 §2 Rule 3 [register: Spec 124 R-G (existing rule); V3 condition-9 backfill 2026-10-20]",
       "date": "2026-09-12"
     }
   ],

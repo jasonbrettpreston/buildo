@@ -16,7 +16,7 @@
 // `measuredFromCapture` / `mergeMeasured`, and `scripts/analysis/generate-last-measured.mjs`
 // does not exist at all — every assertion below is against an API written by the green steps.
 import { afterAll, describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, mkdtempSync, mkdirSync, copyFileSync, existsSync, rmSync } from 'node:fs';
+import { readFileSync, readdirSync, mkdtempSync, mkdirSync, copyFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -511,6 +511,21 @@ describe('generate-last-measured CLI — write is explicit', () => {
   for (const slug of readdirSync(join(live, 'docs/reports/golden'))) {
     for (const f of ['measured.json', 'measured-validate.json']) if (existsSync(join(live, 'docs/reports/golden', slug, f))) copy(`docs/reports/golden/${slug}/${f}`);
   }
+  // REFREEZE-BUNDLE-1 night 1 (item (7), R-GQ): the live tree has no stale entry left (baseline 84 -> 0), so the copy
+  // gets ONE: the first measured sidecar entry with a numeric value is bumped by 1 in the copy only.
+  (() => {
+    for (const slug of readdirSync(join(root, 'docs/reports/golden')).sort()) {
+      const f = join(root, 'docs/reports/golden', slug, 'measured.json');
+      if (!existsSync(f)) continue;
+      const doc = JSON.parse(readFileSync(f, 'utf8')) as { entries?: Record<string, { value?: unknown }> };
+      const hit = Object.values(doc.entries ?? {}).find((e) => typeof e.value === 'number');
+      if (!hit) continue;
+      hit.value = (hit.value as number) + 1;
+      writeFileSync(f, JSON.stringify(doc, null, 2) + '\n');
+      return;
+    }
+    throw new Error('no numeric measured sidecar entry to perturb');
+  })();
   const descriptorBytes = (): string => {
     const out: string[] = [];
     for (const dir of ['scripts', 'scripts/quality']) {

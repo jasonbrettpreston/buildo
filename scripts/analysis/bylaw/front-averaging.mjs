@@ -11,6 +11,11 @@
 // the time (CoA-notice oracle, n = 219), hence the allowance. Excluded estimates,
 // or three or more neighbours (Q-B2), keep the zone default, "needs survey" (front_yard_not_measured).
 // No qualifying neighbour: averaging does not apply, the zone default. PURE: no I/O, no clock.
+// 69a M-256 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.FRONT-YARD): where averaging may apply but a
+// neighbour's estimate is missing or excluded — one or two qualifying neighbours with an estimate that is not `estimated`,
+// or no qualifying neighbour while an abutting residential lot on the street is held whose street, building or distance is
+// not known — front_setback_m answers needs survey (no value; front_averaging_not_applicable undecided, so no layer answers
+// the zone default; front_yard_survey_required). Three or more neighbours (Q-B2) keep the zone default.
 
 /** 10.5.40.70(1): a building "in whole or in part, 15.0 metres or less from the subject lot". By-law literal. */
 export const FYA_NEIGHBOUR_MAX_DIST_M = 15.0;
@@ -50,8 +55,17 @@ export function resolveFrontAveraging(neighbours, config, lot) {
   const allEstimated = n > 0 && qualifying.every((r) => r.est_status === 'estimated' && r.front_setback_est_m != null);
   const off = { front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false };
   const base = { fya, qualifying: n, averaged_m: null, flags: off, vars: {} };
+  // M-256: averaging is undecided — the evaluator owes the front setback rather than answer the zone default
+  const undecided = { front_averaging_not_applicable: null, one_abutting_building_within_15_m: null, two_abutting_buildings_within_15_m: null };
+  const needsSurvey = { ...base, flags: undecided, basis: 'needs_survey', front_setback_m: null, needs_survey: true, disclosures: ['front_yard_survey_required'] };
 
   if (fya === 'fya_none') {
+    // M-256: an abutting residential lot on the street (or one whose street is not known) whose building or distance is not
+    // known may qualify; only a lot whose building is provably beyond 15.0 m, or that is not residential or not on the
+    // street, is set aside
+    const maybe = (neighbours || []).some((r) => r.neighbour_residential !== false && r.same_frontage_street !== false
+      && !(r.neighbour_building_id != null && r.bldg_to_subject_m != null && Number(r.bldg_to_subject_m) > FYA_NEIGHBOUR_MAX_DIST_M));
+    if (maybe) return needsSurvey;
     return { ...base, basis: 'zone_default', front_setback_m: zoneDefault, needs_survey: false, disclosures: [] };
   }
   if (allEstimated && (fya === 'fya_one' || fya === 'fya_two')) {
@@ -65,5 +79,6 @@ export function resolveFrontAveraging(neighbours, config, lot) {
       needs_survey: true, disclosures: ['front_yard_needs_survey'],
     };
   }
+  if (fya === 'fya_one' || fya === 'fya_two') return needsSurvey; // M-256: an excluded estimate
   return { ...base, basis: 'zone_default_needs_survey', front_setback_m: zoneDefault, needs_survey: true, disclosures: ['front_yard_not_measured'] };
 }

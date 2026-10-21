@@ -72,6 +72,7 @@
     "ancillary_contains_parking_space",
     "ancillary_units",
     "bedroom_count",
+    "blank_side_wall",
     "building_type",
     "current_stories",
     "existing_driveway_type",

@@ -100,7 +100,8 @@ function conditionUnitErrors(cond, dv) {
 }
 function licensePhrases(vocab, name) {
   const t = vocab.dsl_target && vocab.dsl_target[name];
-  if (t) return Array.isArray(t.patterns) ? t.patterns : [];
+  // M-254: a group reference phrase (reference_patterns) licenses the target too
+  if (t) return [...(Array.isArray(t.patterns) ? t.patterns : []), ...(Array.isArray(t.reference_patterns) ? t.reference_patterns : [])];
   const i = vocab.dsl_input && vocab.dsl_input[name];
   if (i) return Array.isArray(i.licensed_by) ? i.licensed_by : [];
   return null; // unknown: unit_binding reports it

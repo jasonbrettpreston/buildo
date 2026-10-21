@@ -733,7 +733,7 @@
   },
   {
    "field": "main_front_setback_basis",
-   "type": "text `averaged_two` / `averaged_one` / `zone_default` / `zone_default_needs_survey`",
+   "type": "text `averaged_two` / `averaged_one` / `zone_default` / `zone_default_needs_survey` / `needs_survey`",
    "scenarios": [
     "D",
     "H",
@@ -741,7 +741,7 @@
     "2",
     "RA"
    ],
-   "computation": "which arm of 10.5.40.70(1) / x.40.70(1) decided, with the neighbour estimate status; zone_default_needs_survey where averaging would apply but an estimate is excluded (LC-58); on a through lot the front lot line is the address street's line and the other street line the rear (10.5.30.20(1)(B), M-228; disclosed through_lot_front_line)",
+   "computation": "which arm of 10.5.40.70(1) / x.40.70(1) decided, with the neighbour estimate status; zone_default_needs_survey where three or more neighbours qualify (Q-B2); needs_survey (no value) where averaging may apply but a neighbour estimate is missing or excluded (69a M-256); on a through lot the front lot line is the address street's line and the other street line the rear (10.5.30.20(1)(B), M-228; disclosed through_lot_front_line)",
    "regulation_ids": [
     "10.5.40.70(1)",
     "10.5.30.20(1)"
@@ -762,7 +762,7 @@
    "null_when": "status ≠ permitted",
    "invariants": [],
    "persisted": true,
-   "change": "new 2026-10-18 (M-205); zone_default_needs_survey 2026-10-19 (LC-58)"
+   "change": "new 2026-10-18 (M-205); zone_default_needs_survey 2026-10-19 (LC-58); needs_survey 2026-10-21 (M-256)"
   },
   {
    "field": "main_side_setbacks_m",

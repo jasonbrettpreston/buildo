@@ -1,0 +1,26 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "f8d52ba2",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-6 family / M-250 (RD 21 / 28 / 35 / 37 / 38 GFA capped at FSI 0.5; the x28 / x37 cap carries no private_garage use), run on the working tree at f8d52ba2 with the describe added, before the M-75 corrections.",
+ "counts": {
+  "pass": 1,
+  "red": 2
+ },
+ "cases": [
+  {
+   "name": "F-SC-6 family / M-250 — RD 21 / 28 / 35 / 37 / 38 GFA capped at FSI 0.5; the x28 / x37 cap binds the house each text carries the cap (ch900_3.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-6 family / M-250 — RD 21 / 28 / 35 / 37 / 38 GFA capped at FSI 0.5; the x28 / x37 cap binds the house each keys gfa_m2 = min(X m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) and carries no accessory use",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 21, …(1) ] to deeply equal [ 21, …(1) ]"
+  },
+  {
+   "name": "F-SC-6 family / M-250 — RD 21 / 28 / 35 / 37 / 38 GFA capped at FSI 0.5; the x28 / x37 cap binds the house on a 400 m² lot: gfa_m2 is the FSI 0.5 cap (200 m²) and fsi 0.5 comes from the exception, for x28 and x37 too",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 21, 'value', 235, …(1) ] to deeply equal [ 21, 'value', 200, …(1) ]"
+  }
+ ]
+}

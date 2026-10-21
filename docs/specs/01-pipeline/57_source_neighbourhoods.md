@@ -93,6 +93,7 @@ A NON-NUMERIC key still throws at acquisition (`/positive integer/`, legacy halt
   - `scripts/load-neighbourhoods.descriptor.json`
   - `scripts/load-neighbourhoods.notes.json`
   - `scripts/lib/compute/load-neighbourhoods.js`
+  - `src/tests/steps/neighbourhoods/notes-vocabulary.logic.test.ts`
   - `src/tests/steps/neighbourhoods/violations.test.ts`
   - data (descriptor): `neighbourhoods` writes (migrations/013_neighbourhoods.sql)
   - upstream: none
