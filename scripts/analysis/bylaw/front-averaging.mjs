@@ -1,13 +1,14 @@
-// SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-205(1) (+ dated note 2026-10-19);
+// SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-205(1) (+ dated note 2026-10-19), M-245 (no floor, 2026-10-20);
 //            docs/specs/01-pipeline/131_lot_configuration_policy.md LC-58;
 //            docs/specs/01-pipeline/130_link_parcel_abutments.md §Applicability Belongs to McBylaw, Q-B1, Q-B2;
 //            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.10 main_front_setback_basis, P5.12
 //
 // Front-yard averaging (10.5.40.70(1)), derived ON READ from parcel_abutments rows, under the operator's ruling
-// of 2026-10-19. Where averaging applies (one or two qualifying neighbours, every estimate `estimated`):
-// front setback = max(averaged estimate + fya_porch_allowance_m, the zone's x.40.70(1) default), always
-// "needs survey" (front_yard_needs_survey). The estimates are footprint-based and sit at or below the examiner's
-// figure 89 % of the time (CoA-notice oracle, n = 219), hence the allowance and the floor. Excluded estimates,
+// of 2026-10-19, amended 2026-10-20 (69a M-245, CHAT-21: no zone-default floor under the averaged front yard; x.40.70(1)'s
+// 6.0 m applies only "If regulation 10.5.40.70(1) does not apply"). Where averaging applies (one or two qualifying
+// neighbours, every estimate `estimated`): front setback = averaged estimate + fya_porch_allowance_m, always "needs
+// survey" (front_yard_needs_survey). The estimates are footprint-based and sit at or below the examiner's figure 89 % of
+// the time (CoA-notice oracle, n = 219), hence the allowance. Excluded estimates,
 // or three or more neighbours (Q-B2), keep the zone default, "needs survey" (front_yard_not_measured).
 // No qualifying neighbour: averaging does not apply, the zone default. PURE: no I/O, no clock.
 
@@ -48,17 +49,16 @@ export function resolveFrontAveraging(neighbours, config, lot) {
   const fya = n === 0 ? 'fya_none' : n === 1 ? 'fya_one' : n === 2 ? 'fya_two' : 'fya_ambiguous_multi';
   const allEstimated = n > 0 && qualifying.every((r) => r.est_status === 'estimated' && r.front_setback_est_m != null);
   const off = { front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false };
-  const base = { fya, qualifying: n, averaged_m: null, floor_applied: false, flags: off, vars: {} };
+  const base = { fya, qualifying: n, averaged_m: null, flags: off, vars: {} };
 
   if (fya === 'fya_none') {
     return { ...base, basis: 'zone_default', front_setback_m: zoneDefault, needs_survey: false, disclosures: [] };
   }
   if (allEstimated && (fya === 'fya_one' || fya === 'fya_two')) {
     const avg = round2(qualifying.reduce((s, r) => s + Number(r.front_setback_est_m), 0) / n);
-    const adjusted = round2(avg + allowance);
-    const value = Math.max(adjusted, zoneDefault);
+    const value = round2(avg + allowance); // M-245: no zone-default floor
     return {
-      ...base, averaged_m: avg, floor_applied: adjusted < zoneDefault, front_setback_m: value,
+      ...base, averaged_m: avg, front_setback_m: value,
       flags: { front_averaging_not_applicable: false, one_abutting_building_within_15_m: n === 1, two_abutting_buildings_within_15_m: n === 2 },
       vars: { abutting_front_setback_m: value },
       basis: n === 1 ? 'averaged_one' : 'averaged_two',

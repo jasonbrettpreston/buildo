@@ -417,7 +417,7 @@ Every field has exactly one source: `lineage:` (docs/reference/maxbld-field-line
 | `flat_roof_setback` | normal |  | {s} | The top storey is set back {s} m from the front and rear walls. |
 | `forms_deferred` | normal |  |  | Townhouse and apartment forms, and a secondary suite in a semi or townhouse, are not modelled in this release. |
 | `front_yard_averaging` | normal |  | {X} | The front setback ({X} m) averages the neighbouring houses' estimated setbacks; a survey may differ. |
-| `front_yard_needs_survey` | high | yes | {X} | The by-law sets this lot's front setback as the average of the neighbouring houses' setbacks (10.5.40.70(1)). We estimate those from building outlines, adjusted for porches, and show the larger of that and the zone's standard {X} m. A survey is needed. |
+| `front_yard_needs_survey` | high | yes | {X} | The by-law sets this lot's front setback as the average of the neighbouring houses' setbacks (10.5.40.70(1)). We estimate those from building outlines, adjusted for porches, and show that estimate, {X} m, even where it is below the zone's standard. A survey is needed. |
 | `front_yard_not_measured` | high | yes | {X} | The by-law sets this lot's front setback as the average of the neighbouring houses' setbacks (10.5.40.70(1)). We could not measure those reliably, so the zone's standard {X} m is shown; the actual setback may be larger or smaller. A survey is needed. |
 | `gfa_deductions_not_applied` | normal |  |  | The City's floor-area total (GFA) may also leave out garage, void and similar areas; these depend on the design and are not applied. |
 | `heritage_designated` | normal |  |  | The property is heritage-designated; changes need heritage approval beyond zoning. |

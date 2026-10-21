@@ -22,6 +22,7 @@ const E = await mod('scripts/analysis/bylaw/evaluate.mjs');
 const VO = await mod('scripts/analysis/bylaw/vocab.mjs');
 const D = await mod('scripts/analysis/bylaw/dsl.mjs');
 const CL = await mod('scripts/analysis/bylaw/clause.mjs');
+const FA = await mod('scripts/analysis/bylaw/front-averaging.mjs');
 const I = V.loadInputs({ root: process.cwd() });
 const ag = AG.checkAgree({ shards: AU.loadAuthored(process.cwd()), adjudications: I.adjudications, vocab: I.vocab });
 const index = AU.buildIndex(I.slice);
@@ -183,5 +184,32 @@ describe('D-1 / M-244 — the Eglinton transportation-use exemption is scoped to
     expect(E.applies(rNoMap(), u, C).ok).toBe(false);
     const transit = lot('R', 'detached_house', { uses: ['transportation_use'], map_areas: ['Eglinton Avenue West'], flags: { abuts_named_street: true } });
     expect(E.applies(transit, u, C).ok).toBe(true);
+  });
+});
+
+// M-205(1)-floor / M-245 (operator approved 2026-10-20 in chat, `2026-10-20-chat-batch-c-bylaw#CHAT-21`): where
+// 10.5.40.70(1) applies, front_setback_m = averaged estimate + fya_porch_allowance_m with no zone-default floor; the zone
+// default applies only where averaging does not apply. City figures under averaging below 6.0 m: 453 Durie St
+// A0594/26TEY (R) 3.91 m, 24 Gardens Cres A0491/26TEY (RD) 4.86 m.
+describe('M-205(1)-floor / M-245 — no zone-default floor under the averaged front yard', () => {
+  const nb = (est: number): Json => ({ neighbour_residential: true, same_frontage_street: true, neighbour_building_id: 1, bldg_to_subject_m: 1.2, front_setback_est_m: est, est_status: 'estimated' });
+  const viaEvaluator = (zone: string, r: Json): Json => eff(lot(zone, 'detached_house', { flags: r.flags, vars: r.vars }), 'front_setback_m');
+  it('R: two neighbours at 2.91 m → 3.91 m (453 Durie St\'s examiner figure), through 10.5.40.70(1)(B), needs survey', () => {
+    const r = FA.resolveFrontAveraging([nb(2.91), nb(2.91)], { fya_porch_allowance_m: 1.0 }, { zone_default_m: 6.0 });
+    expect([r.front_setback_m, r.basis, r.needs_survey, r.disclosures]).toEqual([3.91, 'averaged_two', true, ['front_yard_needs_survey']]);
+    const e = viaEvaluator('R', r);
+    expect([e.value, e.winner]).toEqual([3.91, '10.5.40.70(1)#(1)(B)']);
+  });
+  it('RD: one neighbour at 3.86 m → 4.86 m (24 Gardens Cres\'s examiner figure), through 10.5.40.70(1)(A)', () => {
+    const r = FA.resolveFrontAveraging([nb(3.86)], { fya_porch_allowance_m: 1.0 }, { zone_default_m: 6.0 });
+    expect(r.front_setback_m).toBe(4.86);
+    const e = viaEvaluator('RD', r);
+    expect([e.value, e.winner]).toEqual([4.86, '10.5.40.70(1)#(1)(A)']);
+  });
+  it('the zone default applies only where averaging does not: no qualifying neighbour, an excluded estimate, three or more neighbours', () => {
+    const cfg = { fya_porch_allowance_m: 1.0 }; const z = { zone_default_m: 6.0 };
+    expect(FA.resolveFrontAveraging([], cfg, z).front_setback_m).toBe(6.0);
+    expect(FA.resolveFrontAveraging([nb(2.0), { ...nb(2.0), est_status: 'estimate_negative', front_setback_est_m: null }], cfg, z).front_setback_m).toBe(6.0);
+    expect(FA.resolveFrontAveraging([nb(2.0), nb(2.0), nb(2.0)], cfg, z).front_setback_m).toBe(6.0);
   });
 });
