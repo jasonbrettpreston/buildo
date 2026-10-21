@@ -82702,6 +82702,435 @@
           "building_type"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.50(2)#whole/archetype~s1",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/archetype",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.50(2)#whole/target",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": [
+        "platform_side_setback_m",
+        "platform_rear_setback_m",
+        "platform_front_setback_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.50(2)#whole/bound",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.50(2)#whole/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": [
+        "platform_side_setback_m = side_setback_m @(2)",
+        "platform_rear_setback_m = rear_setback_m @(2)",
+        "platform_front_setback_m = front_setback_m @(2)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.50(2)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "unit": "10.5.40.50(2)#whole",
+      "value": {
+        "description": "A platform without main walls (deck, porch, balcony) attached to or within 0.3 m of a building must meet the zone's required minimum building setbacks: its side, rear and front setbacks are the zone's.",
+        "gaps": "An element-scoped reference (Spec 69a M-254): each platform setback target takes the zone's setback for that yard, evaluated on the lot. A platform that uses a permitted encroachment (10.5.40.60(1), \"Despite regulation 10.5.40.50(2)\") is answered by the encroachment and clearance targets instead. Interim before the structure dimension (S.3): the platform's own floor height and area are not modelled.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.50(2)#whole/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-11 (CoA scorecard, 2026-10-21). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". Keyed PROCEDURAL, so the seven notices that cite it (11 Westchester Rd 1.2 m, 21 Norcross Rd 1.8 m ×2, 453 Durie St, 23 MacKenzie Cres, 63 Johnston Ave 0.9 m) had no answer. Keyed as an element-scoped reference: the platform's own side / rear / front setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m (licensed by the group phrase, vocab reference_patterns).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (1): \"10.5.40.50(2) ... is keyed as an element-scoped reference: the platform's own setback targets equal the zone's side_setback_m / rear_setback_m / front_setback_m\"); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/disclosure",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "A deck, porch or balcony without main walls must meet the zone's required setbacks unless it uses a permitted encroachment."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.60(3)#(3)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.60(3)#(3)(A)/target",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "stairs_clearance_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.60(3)#(3)(A)/bound",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.60(3)#(3)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": [
+        "stairs_clearance_m = 0.6 m @(3)(A)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.60(3)#(3)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(A)/literals_not_expressed",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": [
+        {
+          "clause": "(3)(A)(i)",
+          "literal": "1.5",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(A)(i)",
+          "literal": "1.0",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(A)(ii)",
+          "literal": "2.0 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.60(3)#(3)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": {
+        "description": "Exterior stairs may encroach into a required setback if they run no more than 1.5 horizontal for each 1.0 vertical, are no wider than 2.0 m, and stay at least 0.6 m from a lot line.",
+        "gaps": "The 0.6 m lot-line clearance is keyed on stairs_clearance_m (bound min; Spec 69a M-254, the M-243 declared-bound form). The other conditions of the encroachment (proportion, width, height or area) describe the proposed exterior stairs, a design detail with no target; they are listed as not expressed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(A)/disclosure",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "Exterior stairs may encroach into a required setback if they run no more than 1.5 horizontal for each 1.0 vertical, are no wider than 2.0 m, and stay at least 0.6 m from a lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.60(3)#(3)(B)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.60(3)#(3)(B)/target",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "ramp_clearance_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.60(3)#(3)(B)/bound",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.60(3)#(3)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": [
+        "ramp_clearance_m = 0.6 m @(3)(B)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.60(3)#(3)(B)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(B)/literals_not_expressed",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": [
+        {
+          "clause": "(3)(B)(i)",
+          "literal": "15",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(B)(i)",
+          "literal": "1.0",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(3)(B)(ii)",
+          "literal": "1.5 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.60(3)#(3)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": {
+        "description": "An uncovered ramp may encroach into a required setback if it runs no more than 15 horizontal for each 1.0 vertical, each sloped segment is no wider than 1.5 m, and it stays at least 0.6 m from a lot line.",
+        "gaps": "The 0.6 m lot-line clearance is keyed on ramp_clearance_m (bound min; Spec 69a M-254, the M-243 declared-bound form). The other conditions of the encroachment (proportion, width, height or area) describe the proposed an uncovered ramp, a design detail with no target; they are listed as not expressed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(B)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(B)/disclosure",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "An uncovered ramp may encroach into a required setback if it runs no more than 15 horizontal for each 1.0 vertical, each sloped segment is no wider than 1.5 m, and it stays at least 0.6 m from a lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.40.60(3)#(3)(C)/archetype",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.60(3)#(3)(C)/target",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "elevating_device_clearance_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.40.60(3)#(3)(C)/bound",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.60(3)#(3)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": [
+        "elevating_device_clearance_m = 0.6 m @(3)(C)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.60(3)#(3)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(C)/literals_not_expressed~s1",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": [
+        {
+          "clause": "(3)(C)(ii)",
+          "literal": "3.0 square metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.60(3)#(3)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": {
+        "description": "An elevating device may encroach into a required setback if it rises no higher than the first floor, has an area of 3.0 m² or less, and stays at least 0.6 m from a lot line.",
+        "gaps": "The 0.6 m lot-line clearance is keyed on elevating_device_clearance_m (bound min; Spec 69a M-254, the M-243 declared-bound form). The other conditions of the encroachment (proportion, width, height or area) describe the proposed an elevating device, a design detail with no target; they are listed as not expressed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-SC-12 (CoA scorecard, 2026-10-21). 10.5.40.60(3): exterior stairs, an uncovered ramp and an elevating device \"may encroach into a required minimum building setback\" if, among other things, each is \"no closer to a lot line than 0.6 metres\". Keyed PERMIT with no target, so the stair clearance the City applies (93 Wright Ave, 50 Melville Ave, 82 Hillcroft Dr: 0.6 m) had no answer. Each arm keys its clearance on its own element target (bound min, the M-239 / M-243 declared-bound form); the slope ratio, width and area conditions stay listed (limit_arm_not_modelled).",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254 (2): \"The M-239 / M-243 declared-bound form ... is extended to the remaining 10.5.40.60 units (1)-(8) still keyed PERMIT / PROHIBIT / UNUSUAL, so porch and stair clearances (0.3 m, 0.6 m) answer\"); M-243; M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(C)/disclosure",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "An elevating device may encroach into a required setback if it rises no higher than the first floor, has an area of 3.0 m² or less, and stays at least 0.6 m from a lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.50(2)#whole/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/disclosure~s1",
+      "unit": "10.5.40.50(2)#whole",
+      "value": "A deck, porch or balcony without main walls must meet the required setbacks."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(A)/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(A)/disclosure~s1",
+      "unit": "10.5.40.60(3)#(3)(A)",
+      "value": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(B)/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(B)/disclosure~s1",
+      "unit": "10.5.40.60(3)#(3)(B)",
+      "value": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(3)#(3)(C)/disclosure~s2",
+      "kind": "correction",
+      "reason": "F-SC-11/12 (CoA scorecard, 2026-10-21): the batch-5 sentence (M-169(4)) kept, its \"not modelled\" clause dropped because the clearance / setback reference is now evaluated (the D-3 precedent: the disclosure no longer says \"not evaluated\").",
+      "rule": "Operator approved F-SC-11/12 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12; Spec 69a M-254); M-169(4); M-243 (D-3 precedent); M-75",
+      "supersedes": "COR-10.5.40.60(3)#(3)(C)/disclosure~s1",
+      "unit": "10.5.40.60(3)#(3)(C)",
+      "value": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line."
     }
   ]
 }

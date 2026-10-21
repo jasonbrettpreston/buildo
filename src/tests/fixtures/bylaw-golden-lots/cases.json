@@ -18740,7 +18740,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18802,7 +18802,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18864,7 +18864,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18926,7 +18926,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -18988,7 +18988,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks; decks and platforms are not modelled.",
+   "keyed_disclosure": "A deck, porch or balcony without main walls must meet the required setbacks.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20620,7 +20620,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20682,7 +20682,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20744,7 +20744,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20806,7 +20806,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20868,7 +20868,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20930,7 +20930,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20992,7 +20992,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21054,7 +21054,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21116,7 +21116,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21178,7 +21178,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21240,7 +21240,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21302,7 +21302,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21364,7 +21364,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21426,7 +21426,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21488,7 +21488,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
+   "keyed_disclosure": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {

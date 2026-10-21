@@ -119,7 +119,12 @@ export function checkVocab(vocab) {
     if (!isStr(t.concept)) v.push(`vocab_missing_field: dsl_target.${name}.concept`);
     // M-239 (CHAT-9): a target may declare its own bound (the share tiers are minimums; the attic thresholds exact)
     if (t.bound !== undefined && !(vocab.bound || []).includes(t.bound)) v.push(`vocab_reference_invalid: dsl_target.${name}.bound ${t.bound}`);
-    if (!Array.isArray(t.patterns) || t.patterns.length === 0 || t.patterns.some((p) => !isStr(p))) v.push(`vocab_missing_field: dsl_target.${name}.patterns`);
+    // M-254: a target may be licensed only by a group reference phrase (reference_patterns: a phrase that names a set of
+    // targets, e.g. "the required minimum building setbacks for the zone"); reference phrases are licensing only, so they
+    // are outside the synonym check
+    const refs = t.reference_patterns === undefined ? [] : t.reference_patterns;
+    if (!Array.isArray(refs) || refs.some((p) => !isStr(p))) v.push(`vocab_missing_field: dsl_target.${name}.reference_patterns`);
+    if (!Array.isArray(t.patterns) || (t.patterns.length === 0 && !(Array.isArray(refs) && refs.length)) || t.patterns.some((p) => !isStr(p))) v.push(`vocab_missing_field: dsl_target.${name}.patterns`);
     for (const p of t.patterns || []) {
       const k = String(p).toLowerCase();
       if (patternOwner.has(k)) v.push(`vocab_synonym: dsl_target ${patternOwner.get(k)} and ${name} share the pattern "${p}"`);

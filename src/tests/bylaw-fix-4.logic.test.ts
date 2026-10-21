@@ -235,3 +235,45 @@ describe('front yard / M-256 — a missing or excluded neighbour estimate answer
     expect([r.status, r.reason]).toEqual(['not_evaluated', 'condition_unknown:front_averaging_not_applicable']);
   });
 });
+
+// F-SC-11/12 / M-254 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12`): interim before the
+// structure dimension (S.3) — 10.5.40.50(2) is an element-scoped reference to the zone's setbacks; the declared-bound
+// form reaches the remaining 10.5.40.60 units, so platform and stair clearances answer. A platform's own targets answer
+// for the platform (M-159(2) / M-175 keep it off every principal-building target).
+describe('F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp and lift clearances answer', () => {
+  // 11 Westchester Rd: RD (f12.0), detached house; 10.5.40.50(2) City 1.2 m (the RD (3)(C) side yard)
+  const west = lot('RD', 'detached_house', { label: { f: 12 }, vars: { lot_frontage_m: 12, lot_depth_m: 40 } });
+
+  it('the texts (ch10_5.txt 10.5.40.50(2), 10.5.40.60(3))', () => {
+    expect(page('ch10_5')).toContain('a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone');
+    expect(page('ch10_5')).toContain('(ii) no wider than 2.0 metres; and (iii) no closer to a lot line than 0.6 metres');
+  });
+
+  it('10.5.40.50(2) is a LIMIT list referencing the zone setbacks', () => {
+    const u = unitOf('10.5.40.50(2)#whole');
+    expect([u.archetype, [].concat(u.numeric_expression).sort()]).toEqual(['LIMIT', ['platform_front_setback_m = front_setback_m @(2)', 'platform_rear_setback_m = rear_setback_m @(2)', 'platform_side_setback_m = side_setback_m @(2)']]);
+  });
+
+  it('11 Westchester Rd: the platform side setback is the zone side yard, 1.2 m; rear 25 % of depth / 7.5 m', () => {
+    const s = eff(west, 'platform_side_setback_m');
+    expect([s.status, s.value, s.winner]).toEqual(['value', 1.2, '10.5.40.50(2)#whole']);
+    expect(eff(west, 'platform_rear_setback_m').value).toBe(10);
+  });
+
+  it('a porch answers its own clearance (10.5.40.60(1)(A)(i): no closer to a side lot line than the side yard) on a house lot', () => {
+    const c = eff(west, 'platform_clearance_m');
+    expect(c.status).toBe('value');
+    expect(c.value).toBe(1.2);
+  });
+
+  it('exterior stairs, ramps and elevating devices keep 0.6 m from a lot line (10.5.40.60(3)(A)–(C)(iii))', () => {
+    for (const [t, id] of [['stairs_clearance_m', '10.5.40.60(3)#(3)(A)'], ['ramp_clearance_m', '10.5.40.60(3)#(3)(B)'], ['elevating_device_clearance_m', '10.5.40.60(3)#(3)(C)']] as Array<[string, string]>) {
+      const r = eff(west, t);
+      expect([t, r.status, r.value, r.winner]).toEqual([t, 'value', 0.6, id]);
+    }
+  });
+
+  it('the platform never limits the principal building: side_setback_m stays the zone side yard', () => {
+    expect(eff(west, 'side_setback_m')).toMatchObject({ value: 1.2, winner: '10.20.40.70(3)#(3)(C)' });
+  });
+});

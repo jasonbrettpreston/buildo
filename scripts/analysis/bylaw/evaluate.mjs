@@ -96,6 +96,8 @@ export function makeContext(vocab, extra = {}) {
     accessoryUses: new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment')),
     // M-241 (N-2): the condition under which an accessory-structure unit binds the ancillary building itself (private
     // garage → ancillary_contains_parking_space), and each building type's declared structure class
+    // M-254: an accessory structure's own element targets (a platform's setbacks, clearance, encroachment) answer for it
+    accessoryElementTargets: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && Array.isArray(v.element_targets)).map(([k, v]) => [k, new Set(v.element_targets)])),
     accessoryAncillaryCondition: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.ancillary_condition).map(([k, v]) => [k, v.ancillary_condition])),
     typeStructure: vocab.building_type_structure || {},
     // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
@@ -486,7 +488,7 @@ function parsedCond(src) {
   return e.c;
 }
 // {ok:true} | {ok:false, why} | {ok:null, reason}
-export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = []) {
+export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = [], target = null) {
   const C = ctxOf(ctx);
   const app = u.application || {};
   const zones = app.zones || [];
@@ -532,7 +534,11 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   // accessory_structure_use) limits that structure, never the principal building this evaluator answers for. Before
   // this check the 10.5.60.20(8)(A) swimming-pool rear setback (25.0 m) decided houses' rear setbacks.
   const accUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryUses && C.accessoryUses.has(x));
-  if (accUse) {
+  // M-254 (operator approved 2026-10-21, F-SC-11/12): on the structure's own element target the unit answers for the
+  // structure itself, so the M-175 set-aside (which protects principal-building targets) does not apply
+  const ownElement = Boolean(accUse && target && C.accessoryElementTargets && C.accessoryElementTargets[accUse] && C.accessoryElementTargets[accUse].has(target));
+  if (ownElement) trace.push(`M-254: ${target} is a ${accUse} element target`);
+  if (accUse && !ownElement) {
     reads.add('uses');
     // M-241 (N-2, operator approved 2026-10-20): the M-175 guard holds for a principal or suite building; when the building
     // answered is the ancillary class the unit names, a unit whose accessory use declares an ancillary condition (a
@@ -912,7 +918,7 @@ function effCore(lot, target, candidates, C, env) {
   const A = new Set(); const unknown = [];
   for (const u of consideredOrdered) {
     const t = [];
-    const a = applies(lot, u, C, resolveVariable, reads, t);
+    const a = applies(lot, u, C, resolveVariable, reads, t, target);
     if (t.length) trace.push(`condition ${u.unit_id}: ${t.join(', ')} → ${a.ok === true ? 'applies' : a.ok === false ? `not applicable (${a.why})` : `undecided (${a.reason})`}`);
     if (a.ok === true) A.add(u);
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
