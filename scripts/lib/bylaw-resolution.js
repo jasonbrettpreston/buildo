@@ -28,7 +28,7 @@
  *
  * Batch J (Spec 124 R-IL…R-IW, operator 2026-10-21, approved on the simplicity condition):
  *   sha256Hex(bytes), filesHash([{path, sha256}])  → version hashes                                       (R-IW)
- *   cellKey(lot, readPaths)                      → {cell_id}                                               (R-IN, Q-L2-1)
+ *   cellKey(lot, readPaths, {structure, target}) → {cell_id}   one target's result, by its own read inputs (R-IN, CHAT-41)
  *   statusText(status, reason), layer2Status(result, map) → the stored status and reason                   (R-IO)
  *   evidenceOf(result, map, {winnerLayer})       → {evidence_kind, evidence_ref}                           (R-IP)
  *   firstLotGate(fired, order), closureStart(n, sentinel), exceptionMismatch(n, xN, sentinel)             (R-IQ)
@@ -153,17 +153,18 @@ function filesHash(entries) {
 /** The two lot fields loadCandidates reads (evaluate.mjs): they fix the candidate set at one table_version (R-IN). */
 const CANDIDATE_INPUTS = Object.freeze(['zone', 'exception']);
 /**
- * R-IN: `cell_id` = sha256 over the sorted `<path>\t<token>` lines (token = cell-cache.mjs inputValue) of `zone`,
- * `exception` and every read path; `target.*` paths are dropped as in the cell cache. There is no `inputs_hash`: it would equal
- * `cell_id` (operator Q-L2-1, `2026-10-21-chat-batch-k-layer2`).
- * An input path the cell cache cannot value throws (never keyed loosely).
+ * R-IN (option B, operator CHAT-41): `cell_id` keys ONE stored result: the `structure` and `target` lines, then the sorted
+ * `<path>\t<token>` lines (token = cell-cache.mjs inputValue) of `zone`, `exception` and that target's own read paths
+ * (`target.*` paths are dropped as in the cell cache). Lots whose values agree on those inputs share the row. There is no
+ * `inputs_hash` (Q-L2-1). An input path the cell cache cannot value throws (never keyed loosely).
  */
-function cellKey(lot, readPaths) {
+function cellKey(lot, readPaths, scope) {
   if (!lot || typeof lot !== 'object') throw new TypeError('cellKey: lot must be the lot vector');
-  if (!Array.isArray(readPaths)) throw new TypeError('cellKey: readPaths must be the union of the results\' inputs[]');
+  if (!Array.isArray(readPaths)) throw new TypeError('cellKey: readPaths must be the target\'s inputs[]');
+  if (!scope || typeof scope.structure !== 'string' || typeof scope.target !== 'string') throw new TypeError('cellKey: scope must be {structure, target}');
   const paths = [...new Set([...CANDIDATE_INPUTS, ...readPaths.filter((p) => !String(p).startsWith('target.'))])].sort();
-  const hash = sha256Hex(paths.map((p) => `${p}\t${inputValue(lot, p)}`).join('\n'));
-  return { cell_id: hash };
+  const lines = [`structure\t${scope.structure}`, `target\t${scope.target}`, ...paths.map((p) => `${p}\t${inputValue(lot, p)}`)];
+  return { cell_id: sha256Hex(lines.join('\n')) };
 }
 
 /** R-IO: the §5a written form, derived on read: `<status>:<reason>`, or the bare status. */

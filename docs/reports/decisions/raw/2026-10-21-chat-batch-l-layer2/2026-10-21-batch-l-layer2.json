@@ -1,0 +1,13 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "push running, b, data dump new scarborough and toronto COa to close the gaps",
+  "context": "Answer to the Layer 2 result-storage key choice raised by LAYER2-BUILD-3's read-only measurement (docs/reports/2026-10-21-layer2-build-plan.md §9): option A = one cell_id per lot (~110,223 cells, ~5.84M rows, ~2.4 GB, over the 10% kill line); option B = key each target's result by that target's own read inputs (~300,463 rows, ~0.13 GB, 19x fewer). Also: operator uploaded new Scarborough and Toronto CoA data to Drive COA_PLANS_MAXBLD to close coverage gaps.",
+  "decisions": [
+    {
+      "id": "CHAT-41",
+      "subject": "Layer 2 result storage key",
+      "decision": "approve",
+      "recommendation": "Option B: key each target's stored result by the values of that target's own read inputs (shared across lots with the same inputs), not one cell_id per lot. Amends the Layer 2 key row (cell_id) and the Spec 134 §3 row shape before commit ① freezes it."
+    }
+  ]
+}

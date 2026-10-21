@@ -1,0 +1,32 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-l-layer2/2026-10-21-batch-l-layer2.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-l-layer2",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "push running, b, data dump new scarborough and toronto COa to close the gaps",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-l-layer2/2026-10-21-batch-l-layer2.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-41": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IN"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-41",
+      "question": "Layer 2 result storage key",
+      "recommendation": "Option B: key each target's stored result by the values of that target's own read inputs (shared across lots with the same inputs), not one cell_id per lot. Amends the Layer 2 key row (cell_id) and the Spec 134 §3 row shape before commit ① freezes it.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

@@ -193,26 +193,35 @@ describe('R-IW: version hashes (sha256 of bytes; several files hash the sorted p
   });
 });
 
-describe('R-IN: cell_id keys a lot by the inputs its results read, zone and exception always included', () => {
+describe('R-IN (option B, CHAT-41): cell_id keys ONE target\'s result by the values of that target\'s own read inputs, zone and exception always included', () => {
   const lot: Json = { zone: 'RD', exception: null, label: { f: 9 }, vars: { lot_area_m2: 327.12 }, flags: { corner_lot: false } };
   const line = (p: string, l: Json = lot): string => `${p}\t${CC.inputValue(l, p)}`;
+  const S = { structure: 'principal', target: 'height_m' };
 
   it('cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; there is no separate inputs_hash column (Q-L2-1)', () => {
-    const k = rb().cellKey(lot, ['vars.lot_area_m2', 'label.f']);
-    const expected = sha(['exception', 'label.f', 'vars.lot_area_m2', 'zone'].map((p) => line(p)).join('\n'));
+    const k = rb().cellKey(lot, ['vars.lot_area_m2', 'label.f'], S);
+    const expected = sha(['structure\tprincipal', 'target\theight_m', ...['exception', 'label.f', 'vars.lot_area_m2', 'zone'].map((p) => line(p))].join('\n'));
     expect(k).toEqual({ cell_id: expected });
   });
 
   it('target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded', () => {
-    expect(rb().cellKey(lot, ['label.f', 'target.height_m', 'label.f'])).toEqual(rb().cellKey(lot, ['label.f']));
+    expect(rb().cellKey(lot, ['label.f', 'target.height_m', 'label.f'], S)).toEqual(rb().cellKey(lot, ['label.f'], S));
   });
 
   it('two lots that differ only in an input no result read share a cell; a read input or the zone or exception splits them', () => {
     const other = { ...lot, vars: { lot_area_m2: 999 } };
-    expect(rb().cellKey(other, ['label.f']).cell_id).toBe(rb().cellKey(lot, ['label.f']).cell_id);
-    expect(rb().cellKey(other, ['vars.lot_area_m2']).cell_id).not.toBe(rb().cellKey(lot, ['vars.lot_area_m2']).cell_id);
-    expect(rb().cellKey({ ...lot, zone: 'RS' }, []).cell_id).not.toBe(rb().cellKey(lot, []).cell_id);
-    expect(rb().cellKey({ ...lot, exception: 'EXQ' }, []).cell_id).not.toBe(rb().cellKey(lot, []).cell_id);
+    expect(rb().cellKey(other, ['label.f'], S).cell_id).toBe(rb().cellKey(lot, ['label.f'], S).cell_id);
+    expect(rb().cellKey(other, ['vars.lot_area_m2'], S).cell_id).not.toBe(rb().cellKey(lot, ['vars.lot_area_m2'], S).cell_id);
+    expect(rb().cellKey({ ...lot, zone: 'RS' }, [], S).cell_id).not.toBe(rb().cellKey(lot, [], S).cell_id);
+    expect(rb().cellKey({ ...lot, exception: 'EXQ' }, [], S).cell_id).not.toBe(rb().cellKey(lot, [], S).cell_id);
+  });
+
+  it('the same inputs give a different id for another target or structure (one key per stored result); no scope throws', () => {
+    const k = rb().cellKey(lot, ['label.f'], S).cell_id;
+    expect(rb().cellKey(lot, ['label.f'], { ...S, target: 'fsi' }).cell_id).not.toBe(k);
+    expect(rb().cellKey(lot, ['label.f'], { ...S, structure: 'garden_suite' }).cell_id).not.toBe(k);
+    expect(() => rb().cellKey(lot, ['label.f'])).toThrow(/scope/);
+    expect(() => rb().cellKey(lot, ['label.f'], { structure: 'principal' })).toThrow(/scope/);
   });
 
   it('zone and exception fix the candidate set: loadCandidates reads no other lot field', () => {
@@ -222,7 +231,7 @@ describe('R-IN: cell_id keys a lot by the inputs its results read, zone and exce
   });
 
   it('an input path the cell cache cannot value throws (refused, never keyed loosely)', () => {
-    expect(() => rb().cellKey(lot, ['nonsense'])).toThrow(/unkeyable/);
+    expect(() => rb().cellKey(lot, ['nonsense'], S)).toThrow(/unkeyable/);
   });
 });
 
@@ -359,7 +368,7 @@ describe('R-IX (Q-L2-3): commit ① waits for the evaluator prerequisites; nothi
 
 describe('PIN-L2-2: the CommonJS library requires the ES evaluator modules synchronously in plain Node (the bridge)', () => {
   it('node (no test transform) requires the library and reaches evaluate.mjs and cell-cache.mjs', () => {
-    const out = execFileSync(process.execPath, ['-e', `const r = require(${JSON.stringify(path.join(ROOT, COMPUTE))}); console.log(typeof r.cellKey, typeof r.evidenceOf, r.cellKey({ zone: 'RD', exception: null }, []).cell_id.length)`], { encoding: 'utf8' });
+    const out = execFileSync(process.execPath, ['-e', `const r = require(${JSON.stringify(path.join(ROOT, COMPUTE))}); console.log(typeof r.cellKey, typeof r.evidenceOf, r.cellKey({ zone: 'RD', exception: null }, [], { structure: 'principal', target: 'height_m' }).cell_id.length)`], { encoding: 'utf8' });
     expect(out.trim()).toBe('function function 64');
   });
 });

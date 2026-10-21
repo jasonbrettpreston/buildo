@@ -55,7 +55,7 @@ From Spec 134 §3 (134:40-50), not invented here. The **logical** row shape is t
 |---|---|---|
 | `bylaw_resolution_cells` (signature row) | `(cell_id, target)` | `candidates[]`, `winner_unit_id`, `winner_layer`, `losers[]` (`dropped_by`), `status`, `reason`, `value`, `value_kind` (number · unlimited · unregulated), `evidence_kind` (clause · absence · provincial), `evidence_ref`, `inputs_used`, `by_class` (only the classes that differ; the rest `collapsed_into`) |
 | `bylaw_resolution_structures` (structure row) | `(cell_id, target, structure)` | the signature pointer, `structure` (principal · garden_suite · laneway_suite), and only the fields where this structure differs: `status`, `reason`, `value`, its own winner or condition values |
-| `bylaw_resolution_lots` (lot link row) | `parcel_id` | `cell_id`, `lot_gate`, `applied_values`, `inputs_defaulted` |
+| `bylaw_resolution_lots` (lot link row) | `parcel_id` | its pointer to its per-target result rows (CHAT-41; form settled at ①), `lot_gate`, `applied_values`, `inputs_defaulted` |
 
 On every row (134:48-49): `table_version`, `evaluator_version`, `row_sha` (sha256 over the canonical result columns, recomputed by SQL every run, I14), and the nullable `chain_run_id` (Spec 124 R-U). Write guard: `IS DISTINCT FROM` over the result columns only; `chain_run_id`, `table_version`, `evaluator_version` and timestamps are outside it (134:48). The step writes nothing else, never `parcels` (134:24, Spec 69a M-25).
 
@@ -127,7 +127,7 @@ Pre-commit runs vitest related on the staged tests, so a red test is committed a
 |---|---|---|---|
 | OQ-1 | R-IL | `scripts/generate-bylaw-layer2-input.mjs` → `docs/reference/bylaw-layer2-input.json`; `--check` at pre-commit | yes: one generated file the compute requires, no runner read (the shell shape is frozen) |
 | OQ-2 | R-IM | nothing new (slice (a) takes the closure); `exceptionClosure` owed by the fix lane | no |
-| OQ-3 | R-IN | `cellKey` | yes: `zone` + `exception` tokens carry the candidate set, no unit sha; no `inputs_hash` column (Q-L2-1, ratified) |
+| OQ-3 | R-IN | `cellKey` | yes: `zone` + `exception` tokens carry the candidate set, no unit sha; no `inputs_hash` column (Q-L2-1, ratified); per target, not per lot (CHAT-41, option B) |
 | OQ-4 | R-IO | `layer2-map.json` + lock; `statusText`, `layer2Status` | yes: the string form is derived on read, no column or view |
 | OQ-5 | R-IP | map `evidence_kind`; `evidenceOf` | no |
 | OQ-6 | R-IQ | map `lot_gate` (ordered); `firstLotGate`, `closureStart`, `exceptionMismatch` | the order is the list order, no second table |
@@ -401,4 +401,4 @@ Run by lane LAYER2-BUILD-3 (Q-L2-3: measurement first). One `BEGIN READ ONLY` tr
 
 **Caveats.** The lot vector here omits the derived flags the real builder will add (front-averaging, secondary-suite and similar), so the cell counts are a lower bound. Scenario classes (`by_class`) are not modelled; each structure uses one building type. Bytes are the logical row text, not the heap size. The second-seat re-execution Spec 134 §9 asks for has not been run. Exception-gated lots (20.6 %) are excluded, as the gate excludes them.
 
-**Owed to the operator (a ruling, not made here).** Whether the signature row is keyed by the per-lot union (`cell_id`, as ruled in R-IN, about 5.8 M rows) or by each target's own read inputs (about 0.3 M rows, with the lot link row carrying one pointer per target, or a small per-lot map). The measurement favours the second; it changes R-IN, Spec 134 §3 and the row shape the scenario step reads, so it needs the operator before ① freezes the shape.
+**Ruled (operator, 2026-10-21, `2026-10-21-chat-batch-l-layer2#CHAT-41`): option B.** Each target's stored result is keyed by the values of that target's own read inputs, shared across lots (R-IN amended; `cellKey(lot, readPaths, {structure, target})`). The why is the measurement above: 300,463 rows (0.13 GB) instead of 5,841,819 (2.4 GB). **Still open for ①:** how the lot link row points at its per-target rows. A per-lot map of about 53 short ids is roughly 0.5 GB and must be measured against the kill line before the shape freezes.

@@ -5275,7 +5275,7 @@
         "kind": "lock",
         "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
       },
-      "statement": "cell_id = sha256 over the sorted path/token lines (cell-cache inputValue) of zone, exception and every lot input the results read; there is no inputs_hash column (operator CHAT-36.OQ3, simplified; Q-L2-1 ratified).",
+      "statement": "cell_id = sha256 over the sorted path/token lines (cell-cache inputValue) of zone, exception and every lot input the results read; there is no inputs_hash column; option B (CHAT-41): cell_id keys one target's result by that target's own read inputs, scoped by structure and target (operator CHAT-36.OQ3, simplified; Q-L2-1 ratified).",
       "source": {
         "register": true
       }
