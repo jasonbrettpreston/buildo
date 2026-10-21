@@ -53,5 +53,5 @@ its source.
 ## Integration actions taken
 
 - **Merge.** `wf2/layer2-build-1` @ `01917510`, `--no-ff`, hooks on. `wf2/layer2-build-1` already contains `ee874371`
-  (merged and renumbered there), so the merge should be clean.
-- **Checks run on the merged tree:** see the commit that records them.
+  (merged and renumbered there), so the merge was clean (merge commit `da53cccd`).
+- **Checks on the merged tree:** `decision-log --check` clean (21 logs, 97 decisions); `spec-split-check --check` clean (8312 citations, 0 dangling); `generate-bylaw-layer2-input --check` clean; `generate-step-handbook --check` up to date; `system-map` unchanged; `tsc --noEmit` clean. Full suite (db tests excluded): 826 files, 19,606 tests passed, 0 failed. In this fresh worktree one file failed first, `admin-lead-schemas.contract.test.ts`, only because `mobile/node_modules` is absent here (PIN L2-3); with the symlink it passes (24 tests).
