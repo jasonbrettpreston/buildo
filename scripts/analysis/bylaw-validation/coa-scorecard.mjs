@@ -304,7 +304,9 @@ function runNotice(n, surveyOn, rows, lots) {
       const pt = `${v.requirement || ''} ${v.proposal || ''}`;
       const after = s5 ? (String(v.requirement).split(/within 0\.3 ?m of a building|less than 0\.3 ?m from a building/i)[1] || '') : ''; const fig = after.search(new RegExp(String(cityVal).replace('.', '\\.') + '\\s*m'));
       const near = fig >= 0 ? after.slice(Math.max(0, after.lastIndexOf('.', fig - 1) + 1, fig - 70), fig) : ''; // the clause of the figure: the words before it name the line (M-290)
-      const lineWord = (near.match(/\b(front|rear|side)\b/gi) || []).pop();
+      // when the words before the figure name no line, the words after it do ("1.8m from the side lot lines ... and 10.88m from the rear"): the first line word up to the next figure (A0205/26NY, a regression of the M-290 label found at integrate-21)
+      const nextWords = fig >= 0 ? (after.slice(fig).replace(/^[\d.]+\s*m/, '').split(/\d/)[0] || '').slice(0, 40) : '';
+      const lineWord = (near.match(/\b(front|rear|side)\b/gi) || []).pop() || (nextWords.match(/\b(front|rear|side)\b/i) || [])[0];
       if (lineWord) target = /^rear$/i.test(lineWord) ? 'platform_rear_setback_m' : /^front$/i.test(lineWord) ? 'platform_front_setback_m' : 'platform_side_setback_m'; else
       target = /rear (yard|lot line)/i.test(pt) ? 'platform_rear_setback_m' : /front (yard|lot line)/i.test(pt) ? 'platform_front_setback_m' : 'platform_side_setback_m'; scorerFix = '4D-S1';
     }
