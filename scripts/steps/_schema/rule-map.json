@@ -5421,6 +5421,20 @@
       }
     },
     {
+      "id": "R-JB",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "ingestor.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "coa_applications.ward is two digits ('03'): the load pads a one-digit ward and a staged migration backfills the rows; landing is parked until a capture night re-takes the coa captures (operator, 4D page CHAT-38.D-WARD).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",

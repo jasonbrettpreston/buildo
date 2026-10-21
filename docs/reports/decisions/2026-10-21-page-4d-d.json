@@ -1,0 +1,131 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-page-4d-d/2026-10-21-page-4d-d.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-page-4d-d",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "completed teh rulings - proceed",
+    "record": "operator rulings page 2026-10-21 https://claude.ai/artifact/LMgW4aaequHWXWZyAeqGCA (db collection decisions)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-page-4d-d/2026-10-21-page-4d-d.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-38.D-TOOLS": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-305"
+    },
+    "CHAT-38.F-4D-13": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-306"
+    },
+    "CHAT-38.F-4D-20": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-307"
+    },
+    "CHAT-38.F-4D-8": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-308"
+    },
+    "CHAT-38.F-4D-9": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-308"
+    },
+    "CHAT-38.F-4D-14": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-308"
+    },
+    "CHAT-38.D-KIRK": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-309"
+    },
+    "CHAT-38.D-BASEMENT": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-310"
+    },
+    "CHAT-38.D-LIPPINCOTT": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-311"
+    },
+    "CHAT-38.D-WARD": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-JB"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-38.F-4D-8",
+      "question": "Parcel corner-lot flag and frontage disagree with the survey",
+      "recommendation": "Approve as a data-quality flag; no by-law change.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:37:21.546Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-9",
+      "question": "Parcel is half the surveyed lot",
+      "recommendation": "Data fix; no by-law change.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:37:45.915Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-13",
+      "question": "Scorer misreads \"within 0.3 m of the rear main wall\" as the limit",
+      "recommendation": "Approve (scorer only).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:41:02.920Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-14",
+      "question": "Garden suite side setback uses parcel frontage; City used 12 m",
+      "recommendation": "Data fix.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:41:22.873Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-20",
+      "question": "Non-569 zones and unmatched address cannot be scored",
+      "recommendation": "Data note.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:42:37.651Z"
+    },
+    {
+      "id": "CHAT-38.D-TOOLS",
+      "question": "Where the CoA notice reader and scorecard tools live",
+      "recommendation": "Ratify as written (the draft's own recommendation). Note Spec 133 was not present in the tree at ac78d5dd, so it could not be checked.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:45:47.602Z"
+    },
+    {
+      "id": "CHAT-38.D-KIRK",
+      "question": "39 Kirknewton Rd is file A0428/26TEY, not A0974/16EYK",
+      "recommendation": "Confirm A0428/26TEY.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:46:02.825Z"
+    },
+    {
+      "id": "CHAT-38.D-LIPPINCOTT",
+      "question": "202 Lippincott St: mixed-use with 6 residential units, typed semi-detached",
+      "recommendation": "Your call. The notice wording supports semi-detached; the 6 units point to mixed-use. I cannot ground a by-law rule that decides it.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:46:24.674Z"
+    },
+    {
+      "id": "CHAT-38.D-WARD",
+      "question": "Ward codes are stored inconsistently",
+      "recommendation": "Approve. Pick the form: two digits ('03') matches the bracketed number in the notices.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:46:34.024Z"
+    },
+    {
+      "id": "CHAT-38.D-BASEMENT",
+      "question": "Basement without underpinning: not CoA-testable",
+      "recommendation": "Confirm: leave as not CoA-testable.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:46:38.507Z"
+    }
+  ]
+}
