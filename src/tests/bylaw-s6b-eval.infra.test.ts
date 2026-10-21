@@ -15,6 +15,7 @@ const ROOT = process.cwd();
 const RAW = fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/eval-vectors.json'), 'utf8');
 const SEED: Json = JSON.parse(RAW);
 const V: Json[] = SEED.vectors;
+const ABSR: Json[] = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/absence-rulings.json'), 'utf8')).rulings;
 const SPEC67 = fs.readFileSync(path.join(ROOT, SEED.spec67), 'utf8').split('\n').map((l) => l.replace(/\r$/, ''));
 const ws = (s: string) => s.replace(/\s+/g, ' ');
 const pageFor = (clause: string): string | null => {
@@ -53,7 +54,10 @@ describe('every expected value is anchored (§7.6)', () => {
     const bad: string[] = [];
     for (const v of V.filter((x) => x.vector_status === 'by_law_expected')) {
       if (!v.bylaw_clause) { bad.push(`${v.id}: no bylaw_clause`); continue; }
-      if (v.clause_check && v.clause_check.checked === false) { if (!v.expected.not_evaluated) bad.push(`${v.id}: unchecked clause with a value`); continue; }
+      // M-240 (2026-10-20): an absence claim may expect `unregulated` when it names the absence ruling that is executed
+      // against the pinned page (absence-rulings.json, bylaw-harden) for its zone and target
+      const absCovered = (x: Json): boolean => x.expected.value === 'unregulated' && ABSR.some((a: Json) => a.id === x.clause_check.absence_ruling && a.zone === x.lot.zone && a.target === x.target && !a.answer);
+      if (v.clause_check && v.clause_check.checked === false) { if (!v.expected.not_evaluated && !absCovered(v)) bad.push(`${v.id}: unchecked clause with a value`); continue; }
       const page = pageFor(v.bylaw_clause);
       if (!page) { bad.push(`${v.id}: no pinned page for ${v.bylaw_clause}`); continue; }
       const lits: string[] = (v.clause_check && v.clause_check.literals) || [];

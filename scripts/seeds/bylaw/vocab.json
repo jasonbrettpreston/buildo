@@ -572,10 +572,12 @@
     "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }
   },
   "absence_ignore": {
-    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building.",
+    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building. Rule 7a v2 (operator approved 2026-10-20, Spec 69a M-240): absence is decided per (zone, building type, target): a DEFINE unit with no statement for the target (define_without_statement) and a unit whose building_types exclude the lot's type and its parent (other_building_types) do not count either.",
     "lot_conditions": ["lawfully_existing"],
     "building_types": ["ancillary_building", "garden_suite", "laneway_suite"],
-    "accessory_structure_uses": true
+    "accessory_structure_uses": true,
+    "define_without_statement": true,
+    "other_building_types": true
   },
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",

@@ -123,6 +123,10 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-20 (CHAT-9 / M-239, O-7, bylaw fix lane 2): six new dsl_targets (the two main-wall share tiers,
     // the four attic-test thresholds); their 840 cells are not_evaluated:no_candidate (the fixture units predate the
     // keying). With the six left out the hash is the previous pin 459ee9f1…e931 exactly, so no existing cell moved.
-    expect(h.digest('hex')).toBe('0baad134ff29613222f23daec02ac87a0e0060df3445291125afd6d56bc3fd48');
+    // re-pinned 2026-10-20 (R-7a-v2 / M-240, rule 7a v2, ABS-3…ABS-7; bylaw fix lane 3): a per-cell diff against 0baad134…fd48
+    // moves the top-level status of 42 cells only: RT building_depth_m (40, every type: no 10.60.40.30, ABS-5) and RT detached_house
+    // building_length_m (2, ABS-4), no_candidate → unregulated; 90 null-type cells change only their M-50 per_type entries (RD semi
+    // depth ABS-6, RM houseplex ABS-7, RT); 28 gain building_type in inputs[] and 19 an absence trace line. Nothing else moved.
+    expect(h.digest('hex')).toBe('8cba529b3db21fd60741c5b8825343fc5906b321839cd61fd4610e39f6aeafe8');
   }, 60_000);
 });
