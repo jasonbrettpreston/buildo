@@ -45,7 +45,7 @@ Every row carries two stamps: `table_version` (which by-law data produced it) an
 | the by-law data (shards, adjudications, vocab) or the engine | as today | run `node scripts/generate-bylaw-layer2-input.mjs --write`; pre-commit stops you if you forget. The new `table_version` makes the next run recompute every lot |
 | a threshold, budget or bound | its `resolve_bylaws_*` logic variable (seeded by the migration at ①) | nothing else |
 
-**What is built and what waits.** Built (no database touched): the twelve rulings as register rows R-II…R-IT; the two seed files; the one input file Layer 2 reads; the pure functions that key a cell, map a status, pick a lot check and collapse equal house types. Waiting: the by-law fix lane's additions (`losers[]` and `exceptionClosure` in the evaluator, the class vectors and the exception-chapter map in the vocab) and the other Spec 134 prerequisites (the label parser R-LABEL, R-EMIT, R-DET), then P2-0 (a measurement on the local database), then commit ①, which registers the step and adds its tables (Q-L2-3).
+**What is built and what waits.** Built (no database touched): the twelve rulings as register rows R-II…R-IT; the two seed files; the one input file Layer 2 reads; the pure functions that key a cell, map a status, pick a lot check and collapse equal house types. Waiting: the by-law fix lane's additions (`losers[]` and `exceptionClosure` in the evaluator, the class vectors and the exception-chapter map in the vocab) and the other Spec 134 prerequisites (the label parser R-LABEL, R-EMIT, R-DET), then P2-0 (a measurement on the local database), then commit ①, which registers the step and adds its tables (Q-L2-3, ratified 2026-10-21 as R-IU; the measurement is §9).
 
 ## 1. What Layer 2 produces
 
@@ -55,7 +55,7 @@ From Spec 134 §3 (134:40-50), not invented here. The **logical** row shape is t
 |---|---|---|
 | `bylaw_resolution_cells` (signature row) | `(cell_id, target)` | `candidates[]`, `winner_unit_id`, `winner_layer`, `losers[]` (`dropped_by`), `status`, `reason`, `value`, `value_kind` (number · unlimited · unregulated), `evidence_kind` (clause · absence · provincial), `evidence_ref`, `inputs_used`, `by_class` (only the classes that differ; the rest `collapsed_into`) |
 | `bylaw_resolution_structures` (structure row) | `(cell_id, target, structure)` | the signature pointer, `structure` (principal · garden_suite · laneway_suite), and only the fields where this structure differs: `status`, `reason`, `value`, its own winner or condition values |
-| `bylaw_resolution_lots` (lot link row) | `parcel_id` | `cell_id`, `inputs_hash`, `lot_gate`, `applied_values`, `inputs_defaulted` |
+| `bylaw_resolution_lots` (lot link row) | `parcel_id` | `cell_id`, `lot_gate`, `applied_values`, `inputs_defaulted` |
 
 On every row (134:48-49): `table_version`, `evaluator_version`, `row_sha` (sha256 over the canonical result columns, recomputed by SQL every run, I14), and the nullable `chain_run_id` (Spec 124 R-U). Write guard: `IS DISTINCT FROM` over the result columns only; `chain_run_id`, `table_version`, `evaluator_version` and timestamps are outside it (134:48). The step writes nothing else, never `parcels` (134:24, Spec 69a M-25).
 
@@ -127,14 +127,14 @@ Pre-commit runs vitest related on the staged tests, so a red test is committed a
 |---|---|---|---|
 | OQ-1 | R-II | `scripts/generate-bylaw-layer2-input.mjs` → `docs/reference/bylaw-layer2-input.json`; `--check` at pre-commit | yes: one generated file the compute requires, no runner read (the shell shape is frozen) |
 | OQ-2 | R-IJ | nothing new (slice (a) takes the closure); `exceptionClosure` owed by the fix lane | no |
-| OQ-3 | R-IK | `cellKey` | yes: `zone` + `exception` tokens carry the candidate set, no unit sha (Q-L2-1: drop `inputs_hash`) |
+| OQ-3 | R-IK | `cellKey` | yes: `zone` + `exception` tokens carry the candidate set, no unit sha; no `inputs_hash` column (Q-L2-1, ratified) |
 | OQ-4 | R-IL | `layer2-map.json` + lock; `statusText`, `layer2Status` | yes: the string form is derived on read, no column or view |
 | OQ-5 | R-IM | map `evidence_kind`; `evidenceOf` | no |
 | OQ-6 | R-IN | map `lot_gate` (ordered); `firstLotGate`, `closureStart`, `exceptionMismatch` | the order is the list order, no second table |
 | OQ-7 | R-IO | `collapseClasses`; the class vectors owed by the fix lane | no |
-| OQ-8 | R-IP | `layer2-scope.json` + lineage lock (25 house, 14 suite rules) | no (Q-L2-2: no skip predicate at v1) |
+| OQ-8 | R-IP | `layer2-scope.json` + lineage lock (25 house, 14 suite rules) | no (Q-L2-2, ratified: no skip predicate at v1) |
 | OQ-9 | R-IQ | the two columns land with the migration at ① | one column each, no per-cell permission table |
-| OQ-10 | R-IR | `splitPopulation` | yes: the existing `replace_keys` write, no runner field; a deleted parcel cascades (Q-L2-4: the population predicate) |
+| OQ-10 | R-IR | `splitPopulation` | yes: the existing `replace_keys` write, no runner field; a deleted parcel cascades; `inPopulation` over the logic variable `resolve_bylaws_population_zone_classes`, pending migration 280 written not applied (Q-L2-4, ratified) |
 | OQ-11 | R-IS | the sentinel and mismatch arms; the builder waits for R-LABEL | no |
 | OQ-12 | R-IT | `sha256Hex`, `filesHash`; both versions in the input file | no |
 
@@ -377,4 +377,28 @@ The closure's source (OQ-2), the scope's source (OQ-8), the gate order (OQ-6) an
 - **PIN-L2-3:** `mobile/node_modules`, a symlink, shows as untracked in a fresh worktree (the ignore rule matches the directory, not the link). It is never staged.
 - **PIN-L2-4:** `scripts/generate-system-map.mjs` has no mode flag (it always writes), so this lane did not run it. Spec 134's Target Files name the slice (a) files without their root, the convention its PLANNED line already uses, so the system map is unchanged. Registering the step at ① regenerates it.
 - **PIN-L2-5 (layer2-build-2):** slices (b) census/descriptor, (c) migration and (d) shell/runner wiring are not landed: Spec 134 §9 puts commit ① (census, `converted.json` pending at `red_suite`, admin entries, the migration, the logic-variable seed) after node N4, the evaluator prerequisites and P2-0 (134:145), and P2-0 fixes the physical table split (134:159) on the local DB; R-K.1 keeps the descriptor out of `red_suite`; a compute file must pair with a manifest step (step-conformance §5.5). Drafted Q-L2-3.
+- **PIN L2-PREREQ (R-IU):** commit ① waits for the by-law fix lane's evaluator additions (`losers[]`, `exceptionClosure`, the scenario class vectors, the exception chapters); then slices (b)-(d) land in one go. Migration 280 (`resolve_bylaws_population_zone_classes`) is written and NOT applied, and sits in `docs/reports/layer2-measure/pending-migrations/` (a file in `migrations/` would change the migration count 28 generated scorecards embed); it moves to `migrations/`, renumbered to the next free number, at ①; its seed-file entry, registry row and admin group wait for ①, which also settles how the seed loader types a list-valued variable (the seed file has number and string types only).
 - **PIN L2-INPUT-REGEN:** a commit that changes a file under `scripts/seeds/bylaw/` or `scripts/analysis/bylaw/` also runs `node scripts/generate-bylaw-layer2-input.mjs --write` (pre-commit enforces it); tell the by-law fix lane.
+
+## 9. Round-0 measurement: how the result tables split (P2-0 (a) and (b), read-only, 2026-10-21)
+
+Run by lane LAYER2-BUILD-3 (Q-L2-3: measurement first). One `BEGIN READ ONLY` transaction on the local DB, rolled back, under the DB lock. Script and raw output: `docs/reports/layer2-measure/p2-0a-measure.mjs` and `p2-0a-full.json` (working copy in `~/Buildo-scratch/layer2/`). It evaluates every in-scope lot with the real evaluator (the `loadRealLotAssembly` assembly) over the scope file's targets (25 principal, 14 garden suite, 14 laneway suite = 53), one building type per structure.
+
+| Measure | Result |
+|---|---|
+| In-scope parcels (zones R, RD, RS, RT, RM) | 440,093 (RD 236,070; R 104,546; RM 54,868; RS 29,681; RT 14,928) |
+| Lot gates | evaluable 347,456 (79.0 %); `exception_not_authored` 90,680 (20.6 %); metrics missing 1,508; ambiguous zone 449 |
+| Lot link rows | 347,456 (one per evaluable lot) |
+| Distinct `cell_id` (R-IK as ruled: union of every read input) | 110,223 (3.15 lots per cell) |
+| Signature + structure rows if keyed by `cell_id` × target × structure | 5,841,819 (principal 2,755,575; garden 1,543,122; laneway 1,543,122) |
+| Their size as JSON, without `candidates[]` | 2.05 GB (994 + 525 + 533 MB); the server `jsonb` form is 1.16 times the JSON text (sample of 240 rows: 86,848 to 100,452 bytes), so about 2.4 GB before tuple headers and indexes |
+| Their size with `candidates[]` on every row | 344 GB. A plain lot has about 2,250 candidates; the list must never ride on a row |
+| Distinct evaluator results if keyed by each target's own read inputs | 300,463 rows (principal 99,225; garden 96,088; laneway 105,150), 113 MB as JSON |
+| Evaluator speed (b) | 1.69 ms per lot and 5.3 ms per distinct cell, through the cell cache; the whole population takes 586 s |
+| Database size | 16.4 GB. Spec 134 §6's kill line is 10 % of the DB, about 1.2 GB on the 12 GB figure it was written against and 1.64 GB on today's DB |
+
+**What it says about the split.** The split is decided by the key, not by the table layout. Keyed by `cell_id` as R-IK words it (one hash over the union of every input any target read), a cell is nearly one lot, so the rows are lots times targets: 5.8 M rows, 2.4 GB, over the kill line on either figure. Keyed by each target's own read inputs (what the cell cache already does), the same law is 0.30 M rows and 0.13 GB, 19 times fewer rows. Either way `candidates[]` is stored once per candidate set (221 sets in the population) or not at all.
+
+**Caveats.** The lot vector here omits the derived flags the real builder will add (front-averaging, secondary-suite and similar), so the cell counts are a lower bound. Scenario classes (`by_class`) are not modelled; each structure uses one building type. Bytes are the logical row text, not the heap size. The second-seat re-execution Spec 134 §9 asks for has not been run. Exception-gated lots (20.6 %) are excluded, as the gate excludes them.
+
+**Owed to the operator (a ruling, not made here).** Whether the signature row is keyed by the per-lot union (`cell_id`, as ruled in R-IK, about 5.8 M rows) or by each target's own read inputs (about 0.3 M rows, with the lot link row carrying one pointer per target, or a small per-lot map). The measurement favours the second; it changes R-IK, Spec 134 §3 and the row shape the scenario step reads, so it needs the operator before ① freezes the shape.

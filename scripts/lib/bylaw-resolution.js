@@ -28,12 +28,13 @@
  *
  * Batch J (Spec 124 R-II…R-IT, operator 2026-10-21, approved on the simplicity condition):
  *   sha256Hex(bytes), filesHash([{path, sha256}])  → version hashes                                       (R-IT)
- *   cellKey(lot, readPaths)                      → {cell_id, inputs_hash}                                  (R-IK)
+ *   cellKey(lot, readPaths)                      → {cell_id}                                               (R-IK, Q-L2-1)
  *   statusText(status, reason), layer2Status(result, map) → the stored status and reason                   (R-IL)
  *   evidenceOf(result, map, {winnerLayer})       → {evidence_kind, evidence_ref}                           (R-IM)
  *   firstLotGate(fired, order), closureStart(n, sentinel), exceptionMismatch(n, xN, sentinel)             (R-IN)
  *   collapseClasses(order, resultsByClass)       → class → its representative class                        (R-IO)
  *   splitPopulation(batch, key, isIn)            → {inside, retract}                                       (R-IR)
+ *   inPopulation(zoneList, vocabZones)           → the population predicate over a row's zone              (R-IR, Q-L2-4)
  */
 'use strict';
 
@@ -153,7 +154,8 @@ function filesHash(entries) {
 const CANDIDATE_INPUTS = Object.freeze(['zone', 'exception']);
 /**
  * R-IK: `cell_id` = sha256 over the sorted `<path>\t<token>` lines (token = cell-cache.mjs inputValue) of `zone`,
- * `exception` and every read path; `target.*` paths are dropped as in the cell cache. `inputs_hash` is the same hash.
+ * `exception` and every read path; `target.*` paths are dropped as in the cell cache. There is no `inputs_hash`: it would equal
+ * `cell_id` (operator Q-L2-1, `2026-10-21-chat-batch-k-layer2`).
  * An input path the cell cache cannot value throws (never keyed loosely).
  */
 function cellKey(lot, readPaths) {
@@ -161,7 +163,7 @@ function cellKey(lot, readPaths) {
   if (!Array.isArray(readPaths)) throw new TypeError('cellKey: readPaths must be the union of the results\' inputs[]');
   const paths = [...new Set([...CANDIDATE_INPUTS, ...readPaths.filter((p) => !String(p).startsWith('target.'))])].sort();
   const hash = sha256Hex(paths.map((p) => `${p}\t${inputValue(lot, p)}`).join('\n'));
-  return { cell_id: hash, inputs_hash: hash };
+  return { cell_id: hash };
 }
 
 /** R-IL: the §5a written form, derived on read: `<status>:<reason>`, or the bare status. */
@@ -273,6 +275,22 @@ function splitPopulation(batch, key, isIn) {
   return { inside, retract };
 }
 
+/**
+ * Q-L2-4 (R-AY): the in-scope zone list is a logic variable (`resolve_bylaws_population_zone_classes`, migration 280),
+ * read by the shell and passed in; this checks it against the evaluator's zone vocabulary (vocab.json `zone`) and
+ * returns the predicate `splitPopulation` takes. A list that is not an array of vocabulary strings, or is empty, throws.
+ */
+function inPopulation(zoneList, vocabZones) {
+  if (!Array.isArray(zoneList)) throw new TypeError('inPopulation: the zone list must be an array');
+  if (zoneList.length === 0) throw new Error('inPopulation: the zone list is empty (an empty population retracts every lot)');
+  for (const z of zoneList) {
+    if (typeof z !== 'string') throw new TypeError('inPopulation: every zone must be a string');
+    if (!vocabZones.includes(z)) throw new Error(`inPopulation: zone ${z} is not in the evaluator zone vocabulary`);
+  }
+  const set = new Set(zoneList);
+  return (row) => set.has(row.zone);
+}
+
 module.exports = {
   unauthoredException,
   exceptionGateStatus,
@@ -291,4 +309,5 @@ module.exports = {
   stableJson,
   collapseClasses,
   splitPopulation,
+  inPopulation,
 };

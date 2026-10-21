@@ -197,10 +197,10 @@ describe('R-IK: cell_id keys a lot by the inputs its results read, zone and exce
   const lot: Json = { zone: 'RD', exception: null, label: { f: 9 }, vars: { lot_area_m2: 327.12 }, flags: { corner_lot: false } };
   const line = (p: string, l: Json = lot): string => `${p}\t${CC.inputValue(l, p)}`;
 
-  it('cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; inputs_hash is the same hash', () => {
+  it('cell_id = sha256 over the sorted path TAB token lines of zone, exception and the read paths; there is no separate inputs_hash column (Q-L2-1)', () => {
     const k = rb().cellKey(lot, ['vars.lot_area_m2', 'label.f']);
     const expected = sha(['exception', 'label.f', 'vars.lot_area_m2', 'zone'].map((p) => line(p)).join('\n'));
-    expect(k).toEqual({ cell_id: expected, inputs_hash: expected });
+    expect(k).toEqual({ cell_id: expected });
   });
 
   it('target.* paths are dropped (derived: their own lot inputs are listed too, as in the cell cache); duplicates are folded', () => {
@@ -319,6 +319,41 @@ describe('R-IR: a batch splits into the population and the keys to retract (the 
   it('a predicate that is not a function, or a row without its key, throws', () => {
     expect(() => rb().splitPopulation([{ id: 1 }], 'id', null)).toThrow(/predicate/);
     expect(() => rb().splitPopulation([{ x: 1 }], 'id', () => false)).toThrow(/id/);
+  });
+});
+
+describe('Q-L2-4: the in-scope zone list is a logic variable, kept inside the evaluator zone vocabulary', () => {
+  // Kept out of migrations/ until commit ① (a migration file changes the migration count 28 generated scorecards embed).
+  const MIG = 'docs/reports/layer2-measure/pending-migrations/280_resolve_bylaws_logic_variables.sql';
+  const zones: string[] = PVOCAB.zone;
+
+  it('inPopulation(zoneList, vocabZones) is the predicate splitPopulation takes: a row is in when its zone is listed', () => {
+    const isIn = rb().inPopulation(['RD', 'RM'], zones);
+    expect(rb().splitPopulation([{ id: 1, zone: 'RD' }, { id: 2, zone: 'RS' }, { id: 3, zone: 'CR' }], 'id', isIn)).toEqual({ inside: [{ id: 1, zone: 'RD' }], retract: [2, 3] });
+  });
+
+  it('a list that is empty, not strings, or names a zone outside the vocabulary throws (the lock R-AY words)', () => {
+    expect(() => rb().inPopulation([], zones)).toThrow(/empty/);
+    expect(() => rb().inPopulation('RD', zones)).toThrow(/array/);
+    expect(() => rb().inPopulation([3], zones)).toThrow(/string/);
+    expect(() => rb().inPopulation(['RD', 'ZZ'], zones)).toThrow(/ZZ/);
+  });
+
+  it('pending migration 280 seeds resolve_bylaws_population_zone_classes with a list inside vocab.zone, idempotently', () => {
+    expect(fs.existsSync(path.join(ROOT, MIG)), `${MIG} should exist`).toBe(true);
+    const sql = fs.readFileSync(path.join(ROOT, MIG), 'utf8');
+    expect(sql).toMatch(/'resolve_bylaws_population_zone_classes'/);
+    expect(sql).toMatch(/ON CONFLICT \(variable_key\) DO NOTHING/);
+    const list = JSON.parse(/'(\[[^']*\])'::jsonb/.exec(sql)![1] as string) as string[];
+    expect(() => rb().inPopulation(list, zones)).not.toThrow();
+  });
+});
+
+describe('R-IU (Q-L2-3): commit ① waits for the evaluator prerequisites; nothing is registered before it', () => {
+  it('there is no resolve_bylaws descriptor, shell or compute module yet (remove this case in the commit that lands ①)', () => {
+    for (const rel of ['scripts/resolve-bylaws.descriptor.json', 'scripts/resolve-bylaws.js', 'scripts/lib/compute/resolve-bylaws.js']) {
+      expect(fs.existsSync(path.join(ROOT, rel)), rel).toBe(false);
+    }
   });
 });
 

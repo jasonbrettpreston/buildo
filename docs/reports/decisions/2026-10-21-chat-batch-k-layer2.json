@@ -1,0 +1,65 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-k-layer2/2026-10-21-batch-k-layer2.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-k-layer2",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1. y 2. y. 3.y we are at 93% usage for a max 20X plan - so we should use spec 08 and deepseek as well to maximize token use - please update all the new build information from toronto for the calculator - and other verifciation accuracy is loking good",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-k-layer2/2026-10-21-batch-k-layer2.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-39.Q-L2-1": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IK"
+    },
+    "CHAT-39.Q-L2-2": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IP"
+    },
+    "CHAT-39.Q-L2-3": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IU"
+    },
+    "CHAT-39.Q-L2-4": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IR"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-39.Q-L2-1",
+      "question": "Drop the inputs-hash column",
+      "recommendation": "Yes — with the simplification it always equals the cell id.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-39.Q-L2-2",
+      "question": "Recompute every lot each run (no skipping in v1)",
+      "recommendation": "Yes — unchanged results write 0 rows.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-39.Q-L2-3",
+      "question": "Keep the spec order for Layer 2 database slices",
+      "recommendation": "Yes — read-only DB measurement next, then build slices b-d in one go after the by-law fixes land.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-39.Q-L2-4",
+      "question": "Where the in-scope zone list lives",
+      "recommendation": "A logic variable (R-AY preference), changeable without code.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

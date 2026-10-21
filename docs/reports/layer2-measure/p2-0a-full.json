@@ -1,0 +1,76 @@
+{
+ "measured_on": "local DB, read-only",
+ "limit": null,
+ "db_bytes": 16376288947,
+ "in_scope_parcels": 440093,
+ "by_zone": {
+  "R": 104546,
+  "RM": 54868,
+  "RD": 236070,
+  "RS": 29681,
+  "RT": 14928
+ },
+ "lot_gates": {
+  "none": 347456,
+  "ambiguous_zone": 449,
+  "lot_metric_missing": 1508,
+  "exception_not_authored": 90680
+ },
+ "evaluated_lots": 347456,
+ "distinct_cells": 110223,
+ "cells_per_zone": {
+  "R": 34521,
+  "RD": 58364,
+  "RM": 11044,
+  "RS": 5435,
+  "RT": 859
+ },
+ "lots_per_cell_mean": 3.152300336590367,
+ "cache": {
+  "hits": 13137015,
+  "misses": 300463,
+  "entries": 299107,
+  "clears": 0,
+  "candidate_sets": 221
+ },
+ "elapsed_ms": 586149.196,
+ "ms_per_lot": 1.6869738787069442,
+ "ms_per_cell": 5.317848325667057,
+ "structure_rows": {
+  "principal": {
+   "rows": 2755575,
+   "bytes": 994092657,
+   "bytesC": 162133749007
+  },
+  "garden_suite": {
+   "rows": 1543122,
+   "bytes": 525103064,
+   "bytesC": 90763310620
+  },
+  "laneway_suite": {
+   "rows": 1543122,
+   "bytes": 532710585,
+   "bytesC": 90770918141
+  }
+ },
+ "target_keyed_rows": {
+  "principal": {
+   "rows": 99225,
+   "bytes": 36768155
+  },
+  "garden_suite": {
+   "rows": 96088,
+   "bytes": 35534119
+  },
+  "laneway_suite": {
+   "rows": 105150,
+   "bytes": 40868516
+  }
+ },
+ "jsonb_vs_json_sample": {
+  "rows": 240,
+  "json_bytes": 86848,
+  "server_jsonb_bytes": 100452
+ },
+ "caveat": "lot vector omits derived flags the builder will add (front_averaging_*, has_secondary_suite, etc.): cell counts are a lower bound; classes (by_class) not modelled; building_type per structure only"
+}

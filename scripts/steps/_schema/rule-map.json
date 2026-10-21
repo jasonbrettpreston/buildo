@@ -5233,7 +5233,7 @@
         "kind": "lock",
         "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
       },
-      "statement": "cell_id = sha256 over the sorted path/token lines (cell-cache inputValue) of zone, exception and every lot input the results read; inputs_hash is the same hash (operator CHAT-36.OQ3, simplified; Q-L2-1 drafted).",
+      "statement": "cell_id = sha256 over the sorted path/token lines (cell-cache inputValue) of zone, exception and every lot input the results read; there is no inputs_hash column (operator CHAT-36.OQ3, simplified; Q-L2-1 ratified).",
       "source": {
         "register": true
       }
@@ -5331,7 +5331,7 @@
         "kind": "lock",
         "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
       },
-      "statement": "Lots leaving the population are retracted by a link_full_retraction replace_keys write on bylaw_resolution_lots before its guarded upsert (splitPopulation splits each batch; the predicate is drafted Q-L2-4); a deleted parcel cascades; the runner's retracted counter feeds I11; no runner extension (operator CHAT-36.OQ10, simplified).",
+      "statement": "Lots leaving the population are retracted by a link_full_retraction replace_keys write on bylaw_resolution_lots before its guarded upsert (splitPopulation splits each batch; the predicate is inPopulation over the logic variable resolve_bylaws_population_zone_classes, Q-L2-4 ratified); a deleted parcel cascades; the runner's retracted counter feeds I11; no runner extension (operator CHAT-36.OQ10, simplified).",
       "source": {
         "register": true
       }
@@ -5360,6 +5360,20 @@
         "ref": "src/tests/steps/resolve_bylaws/bylaw-layer2-input.logic.test.ts"
       },
       "statement": "Version hashes: sha256 of raw bytes; several files hash the sorted path NUL sha256 lines; evaluator_version over evaluate.mjs and dsl.mjs (operator CHAT-36.OQ12).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IU",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/resolve_bylaws/resolution.logic.test.ts"
+      },
+      "statement": "Layer 2 commit 1 keeps the Spec 134 section 9 order: the read-only P2-0 measurement first, then slices (b)-(d) together after the by-law fixes land (operator Q-L2-3).",
       "source": {
         "register": true
       }
