@@ -264,3 +264,61 @@ describe('N-2 / M-241 — a private-garage rule binds the ancillary building tha
     }
   });
 });
+
+// D-3 / M-243 (operator approved 2026-10-20, `2026-10-20-bylaw-fix-rulings#D-3`, "Approve (amends M-106)"): once
+// encroachment_m declares bound max and encroachment_clearance_m min (the M-239 mechanism), one LIMIT lists a projection
+// maximum and a clearance minimum, so the pair is no longer UNUSUAL; each projecting element gets its own targets (eaves,
+// window projection, platform, canopy, cladding, architectural feature, equipment); the M-106 card units are re-keyed as
+// LIMIT lists. 10.5.40.60(7)(B): "the eaves of a roof may encroach into a required minimum building setback a maximum of
+// 0.9 metres, if they are no closer to a lot line than 0.3 metres".
+describe('D-3 / M-243 — encroachment targets per element; one LIMIT carries a max projection and a min clearance', () => {
+  const ELEMENTS = ['eaves', 'window_projection', 'platform', 'canopy', 'cladding', 'architectural_feature', 'equipment'];
+  const CARD = ['10.5.40.60(1)#(1)(A)', '10.5.40.60(1)#(1)(B)', '10.5.40.60(1)#(1)(C)', '10.5.40.60(1)#(1)(E)', '10.5.40.60(2)#(2)(B)', '10.5.40.60(4)#(4)(A)',
+    '10.5.40.60(5)#(5)(A)', '10.5.40.60(5)#(5)(B)', '10.5.40.60(6)#(6)(B)', '10.5.40.60(7)#(7)(B)', '10.5.40.60(8)#(8)(A)', '10.5.40.60(8)#(8)(B)',
+    '10.5.40.60(8)#(8)(C)', '10.5.40.60(8)#(8)(D)', '10.5.40.60(4)@1075-2026#(4)', '10.5.60.60(1)#whole', '150.8.60.60(7)@1075-2026#(7)'];
+  it('vocab: each element has an encroachment (max) and a clearance (min) target; encroachment_m / encroachment_clearance_m declare max / min', () => {
+    for (const e of ELEMENTS) {
+      expect([e, I.vocab.dsl_target[`${e}_encroachment_m`]?.unit, I.vocab.dsl_target[`${e}_encroachment_m`]?.bound]).toEqual([e, 'm', 'max']);
+      expect([e, I.vocab.dsl_target[`${e}_clearance_m`]?.unit, I.vocab.dsl_target[`${e}_clearance_m`]?.bound]).toEqual([e, 'm', 'min']);
+    }
+    expect([I.vocab.dsl_target.encroachment_m.bound, I.vocab.dsl_target.encroachment_clearance_m.bound]).toEqual(['max', 'min']);
+  });
+  it('10.5.40.60(7)(B) is one LIMIT: eaves_encroachment_m 0.9 m and eaves_clearance_m 0.3 m', () => {
+    const u = unitOf('10.5.40.60(7)#(7)(B)');
+    expect([u.archetype, u.target, u.numeric_expression]).toEqual(['LIMIT', ['eaves_encroachment_m', 'eaves_clearance_m'], ['eaves_encroachment_m = 0.9 m @(7)(B)', 'eaves_clearance_m = 0.3 m @(7)(B)']]);
+  });
+  it('a house answers eaves 0.9 m (max) and 0.3 m from a lot line (min), from (7)(B), in every zone', () => {
+    for (const zone of ZONES) {
+      const l = lot(zone, 'detached_house');
+      const e = eff(l, 'eaves_encroachment_m'); const c = eff(l, 'eaves_clearance_m');
+      expect([zone, e.value, e.bound, e.winner, c.value, c.bound, c.winner]).toEqual([zone, 0.9, 'max', '10.5.40.60(7)#(7)(B)', 0.3, 'min', '10.5.40.60(7)#(7)(B)']);
+    }
+  });
+  it('window answers no longer mix with the eaves: window projections answer from (6) only; no 10.5.40.60 unit answers encroachment_m', () => {
+    const l = lot('RD', 'detached_house');
+    const w = eff(l, 'window_projection_encroachment_m');
+    expect([w.value, touched(w).every((id) => id.startsWith('10.5.40.60(6)'))]).toEqual([0.6, true]);
+    expect(touched(eff(l, 'eaves_encroachment_m')).some((id) => id.startsWith('10.5.40.60(6)'))).toBe(false);
+    expect(touched(eff(l, 'encroachment_m')).filter((id) => id.startsWith('10.5.40.60('))).toEqual([]);
+  });
+  it('every M-106 card unit is a LIMIT whose targets are element targets', () => {
+    for (const id of CARD) {
+      const u = unitOf(id);
+      expect([id, u.archetype, [].concat(u.target).every((t: string) => ELEMENTS.some((e) => t.startsWith(`${e}_`)) || t === 'element_width_pct')]).toEqual([id, 'LIMIT', true]);
+    }
+  });
+  it('an ancillary building answers eaves 0.3 m / 0.15 m from 10.5.60.60(1) (474 Beresford Ave\'s examiner figures)', () => {
+    const l = lot('R', 'ancillary_building', { flags: { ancillary_contains_parking_space: true } });
+    const e = eff(l, 'eaves_encroachment_m'); const c = eff(l, 'eaves_clearance_m');
+    expect([e.value, e.winner, c.value, c.winner]).toEqual([0.3, '10.5.60.60(1)#whole', 0.15, '10.5.60.60(1)#whole']);
+  });
+  it('the parallel suite chapters key the same elements (150.7 / 150.8.60.60 platforms, canopies, architectural features, equipment)', () => {
+    const want: Record<string, string> = {
+      '150.7.60.60(4)#whole': 'platform_encroachment_m', '150.8.60.60(4)#whole': 'platform_encroachment_m',
+      '150.7.60.60(5)#(5)(B)': 'canopy_encroachment_m', '150.8.60.60(5)#(5)(C)': 'canopy_encroachment_m',
+      '150.7.60.60(6)#(6)(B)': 'architectural_feature_encroachment_m', '150.8.60.60(6)#(6)(A)': 'architectural_feature_encroachment_m',
+      '150.7.60.60(7)#(7)(A)': 'equipment_encroachment_m', '150.8.60.60(7)#(7)(B)': 'equipment_encroachment_m',
+    };
+    for (const [id, t] of Object.entries(want)) expect([id, [].concat(unitOf(id).target)[0]]).toEqual([id, t]);
+  });
+});

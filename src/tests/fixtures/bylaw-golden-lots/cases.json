@@ -3128,7 +3128,8 @@
        "winner": "10.20.40.10(7)#(7)(B)",
        "applied": [
         "10.20.40.10(7)#(7)(B)",
-        "10.5.40.60(6)#(6)(A)"
+        "10.5.40.60(6)#(6)(A)",
+        "10.5.40.60(6)#(6)(B)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -4548,7 +4549,8 @@
        "winner": "10.40.40.10(5)#(5)(B)",
        "applied": [
         "10.40.40.10(5)#(5)(B)",
-        "10.5.40.60(6)#(6)(A)"
+        "10.5.40.60(6)#(6)(A)",
+        "10.5.40.60(6)#(6)(B)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -19320,7 +19322,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19383,7 +19385,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19446,7 +19448,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19509,7 +19511,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19572,7 +19574,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck or porch no higher than the first storey may extend into the front setback by the lesser of 2.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19635,7 +19637,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19698,7 +19700,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19761,7 +19763,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19824,7 +19826,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19887,7 +19889,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A front-yard deck, porch or balcony above the first storey may extend into the front setback by the lesser of 1.5 m or half the setback, if it keeps the side yard setback from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -19950,7 +19952,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground. This is not evaluated.",
+   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20013,7 +20015,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground. This is not evaluated.",
+   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20076,7 +20078,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground. This is not evaluated.",
+   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20139,7 +20141,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground. This is not evaluated.",
+   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20202,7 +20204,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground. This is not evaluated.",
+   "keyed_disclosure": "A rear-yard deck no higher than the first storey may extend into the rear setback by the lesser of 2.5 m or half the setback, if it stays from the side lot line at least the greater of 0.3 m or its floor height above the ground.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20265,7 +20267,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20328,7 +20330,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20391,7 +20393,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20454,7 +20456,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -20517,7 +20519,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "A side-yard deck no higher than the first storey may extend up to 1.5 m into the side setback if it stays at least 0.3 m from the side lot line.",
    "reason": "accessory-structure unit (M-175): loaded on the lot, never a principal limit; the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21509,7 +21511,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21571,7 +21573,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21633,7 +21635,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21695,7 +21697,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21757,7 +21759,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding may extend up to 0.15 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21819,7 +21821,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21881,7 +21883,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -21943,7 +21945,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22005,7 +22007,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22067,7 +22069,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Added cladding (including on an addition) may extend up to 0.3 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22129,7 +22131,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22191,7 +22193,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22253,7 +22255,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22315,7 +22317,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22377,7 +22379,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Pilasters, cornices, sills and similar features may extend up to 0.6 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22439,7 +22441,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22501,7 +22503,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22563,7 +22565,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22625,7 +22627,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -22687,7 +22689,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A chimney breast up to 2.0 m wide may extend up to 0.6 m into a required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23059,7 +23061,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23121,7 +23123,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23183,7 +23185,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23245,7 +23247,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23307,7 +23309,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line. This is not evaluated.",
+   "keyed_disclosure": "Bay or box windows may extend up to 0.6 m into the side setback if they take up no more than 30% of the side wall at each storey and stay at least 0.6 m from the side lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23679,7 +23681,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23741,7 +23743,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23803,7 +23805,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23865,7 +23867,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23927,7 +23929,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Roof eaves may extend up to 0.9 m into a required setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -23989,7 +23991,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24051,7 +24053,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24113,7 +24115,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24175,7 +24177,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24237,7 +24239,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into a rear or side setback if they stay at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24299,7 +24301,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24361,7 +24363,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24423,7 +24425,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24485,7 +24487,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24547,7 +24549,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24609,7 +24611,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24671,7 +24673,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24733,7 +24735,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24795,7 +24797,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24857,7 +24859,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted antenna may extend up to 0.9 m into a rear or side setback if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24919,7 +24921,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -24981,7 +24983,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -25043,7 +25045,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -25105,7 +25107,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -25167,7 +25169,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `setback_encroachments`)",
-   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line. This is not evaluated.",
+   "keyed_disclosure": "A wall-mounted air conditioner may extend up to 0.9 m into the rear setback, or the side setback if not above the first storey, if it stays at least 0.3 m from a lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -64567,7 +64569,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -64629,7 +64631,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -64691,7 +64693,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -64753,7 +64755,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -64815,7 +64817,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "disclosures (P5.12 `decks_platforms_not_modelled`)",
-   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line. This is not evaluated.",
+   "keyed_disclosure": "Wall-mounted equipment on a laneway suite may extend up to 0.6 m if it stays at least 0.3 m from the lot line.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
