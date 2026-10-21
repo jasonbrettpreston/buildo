@@ -1,0 +1,50 @@
+{
+ "suite": "src/tests/bylaw-fix-3.logic.test.ts",
+ "base": "81c23a9d",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-3, N-2 / M-241 (private-garage rules bind the garage; 10.10.60.20(1)(A) keyed as its text reads), run on the working tree at 81c23a9d with the N-2 describe added, before the guard, vocab, DSL and keying changes.",
+ "counts": {
+  "red": 6,
+  "pass": 2
+ },
+ "cases": [
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage vocab: ancillary_contains_parking_space is a user-input lot condition, and private_garage names it as its ancillary condition",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'building_type', …(16) ] to include 'ancillary_contains_parking_space'"
+  },
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage 10.10.60.20(1)(A) keys rear, side-street and lane setbacks of 1.0 m, each on its own abutment condition",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(2) ] to deeply equal [ …(3) ]"
+  },
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage 20 Norwood Rd facts (R, abuts a lane, a garage with parking): 1.0 m from the lane line and the rear line, from 10.10.60.20(1)(A)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, undefined, 0.3, …(1) ] to deeply equal [ 1, '10.10.60.20(1)#(1)(A)', 1, …(1) ]"
+  },
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage while the parking space is unknown the answer is needs_user_input, never the shed rule",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', undefined ] to deeply equal [ 'not_evaluated', …(1) ]"
+  },
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage a shed (no parking space) keeps the ancillary rules: rear 0.3 m from 10.5.60.20(2)(C)",
+   "at_base": "pass"
+  },
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage (1)(B): a garage whose rear line abuts no street or lane has no rear minimum; a side line abutting a street takes 1.0 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected 0.3 to be 'unregulated' // Object.is equality"
+  },
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage RD: a garage with parking on a lane lot takes 10.5.60.20(6)(A) 1.0 m from the lane",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, undefined ] to deeply equal [ 1, '10.5.60.20(6)#(6)(A)' ]"
+  },
+  {
+   "name": "N-2 / M-241 — a private-garage rule binds the ancillary building that is the garage M-175 kept: no private-garage unit decides a house's setbacks",
+   "at_base": "pass"
+  }
+ ]
+}

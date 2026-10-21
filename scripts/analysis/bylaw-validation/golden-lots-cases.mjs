@@ -21,6 +21,7 @@ const disp = new Map(read('docs/reference/envelope-answer-dispositions.json').di
 const prov = new Map(read('docs/reference/bylaw-provisions.json').rows.map((r) => [r.regulation_id, r]));
 const vocab = read('scripts/seeds/bylaw/vocab.json');
 const ACC = new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment'));
+const SPEC_USE = new Set(Object.keys(vocab.specific_use || {}).filter((k) => k !== '$comment')); // M-159(3) / M-244
 const CHZ = { '10.10': ['R'], '10.20': ['RD'], '10.40': ['RS'], '10.60': ['RT'], '10.80': ['RM'] };
 const ALLZ = ['R', 'RD', 'RS', 'RT', 'RM'];
 const r4 = (x) => Math.round(x * 1e6) / 1e6;
@@ -44,6 +45,9 @@ function scenarioOf(u) {
   else if (bt.includes('any')) s = { building_type: 'detached_house' };
   else s = { building_type: ['detached_house', 'detached_houseplex', 'semi_detached_house', 'semi_detached_houseplex', 'townhouse', 'apartment_building', 'ancillary_building', 'duplex', 'triplex', 'fourplex', 'non_residential_building'].find((t) => bt.includes(t)) || bt[0] };
   if (Object.keys(flags).length) s.flags = flags;
+  // M-159(3) / M-244: a specific-use unit reaches only a lot that has the use, so its scenario carries it
+  const su = (u.application?.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).filter((x) => SPEC_USE.has(x));
+  if (su.length) s.uses = su;
   return s;
 }
 // golden-lot categories that make a lot "affected" by an answer: from the unit's own lot conditions and the answer's P5.12 code
@@ -232,6 +236,69 @@ for (const r of rows) {
       checks: [...ok.map((t) => ({ kind: acc ? 'loaded' : 'reach', unit: u.unit_id, lot: t.g.id, scenario: s, rationale: `${want.size ? (m(t) ? 'category-matched ' : `no ${[...want].join('/')} lot in ${zone} reaches it; `) : ''}affected lot (${t.g.cats.join('+')}): ${acc ? 'candidate' : `applies ${t.res.observed.applies === true ? 'true' : `undecided (${t.res.observed.why})`}`}` })),
         ...(PARTIAL[r.disclosure_code] ? ok.slice(0, 1).map((t) => ({ kind: 'value', unit: u.unit_id, lot: t.g.id, scenario: s, ...PARTIAL[r.disclosure_code] })) : [])] });
   }
+}
+// ------------------------------------------------------------------ CoA notice lots: the City examiner's figures (lane wf1/bylaw-fix-3)
+// Eight Committee of Adjustment notices (scratchpad CoA register, matched by file number) whose lots were appended to the
+// snapshot by scripts/analysis/bylaw-validation/pull-golden-lots.cjs --add. Each case asserts the evaluator's answer equals
+// the figure the City's examiner stated for the cited regulation (PROVEN), or is an honest FAILS with its finding:
+//   COA-F-01  front yard by averaging (10.5.40.70(1)): the neighbour estimate + fya_porch_allowance_m is not the examiner's
+//             surveyed figure (Spec 130 Q-B1 open for a better estimator; 69a M-245 removed the 6.0 m floor). The averaging
+//             facts are the lot's parcel_abutments rows, pulled read-only 2026-10-20 and resolved by front-averaging.mjs.
+//   COA-F-02  side yard: the evaluator answers the 0.45 m blank-wall reduction (x.40.70(4), 69a M-205(2)) as the maximum
+//             build; the examiner applied the 0.9 m side yard of a wall with openings, a design fact the lot does not hold.
+const COA_FAMILY = 'CoA notices — City examiner figures (69a M-240..M-245)';
+const GARAGE = (vars = {}) => ({ building_type: 'ancillary_building', flags: { ancillary_contains_parking_space: true }, vars: { distance_to_residential_m: 5, ...vars } });
+const HOUSE = { building_type: 'detached_house' };
+const COA = [
+  { notice: 'A0594/26TEY', lot: '5447457', cited: '10.5.40.60(7)(B); 10.10.40.40(1)(A)', cls: 'PROVEN', checks: [
+    ['10.5.40.60(7)#(7)(B)', HOUSE, 'eaves_encroachment_m', { value: 0.9 }, 'City: roof eaves may project a maximum of 0.9 m (D-3, M-243)'],
+    ['10.5.40.60(7)#(7)(B)', HOUSE, 'eaves_clearance_m', { value: 0.3 }, 'City: no closer than 0.3 m to a lot line (D-3, M-243)'],
+    ['10.10.40.40(1)#(1)(A)', HOUSE, 'fsi', { value: 0.6 }, 'City: the maximum FSI is 0.6 times the lot area'] ] },
+  { notice: 'A0594/26TEY', lot: '5447457', cited: '10.20.40.70(1)', cls: 'FAILS', finding: 'COA-F-01', checks: [
+    ['10.5.40.70(1)#(1)(A)', { building_type: 'detached_house', flags: { front_averaging_not_applicable: false, one_abutting_building_within_15_m: true, two_abutting_buildings_within_15_m: false }, vars: { abutting_front_setback_m: 2.9 } }, 'front_setback_m', { value: 3.91 }, 'City: required front yard 3.91 m; the evaluator: one qualifying neighbour, estimate 1.90 m + 1.0 m allowance = 2.90 m (M-245, no floor; was 6.0 m with the floor)'] ] },
+  { notice: 'A0594/26TEY', lot: '5447457', cited: '10.20.40.70(3)(B)', cls: 'FAILS', finding: 'COA-F-02', checks: [
+    ['10.10.40.70(3)#(3)(A)', HOUSE, 'side_setback_m', { value: 0.9 }, 'City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))'] ] },
+  { notice: 'A0625/26TEY', lot: '5343399', cited: '10.10.60.70(1)(B); 10.5.60.50(2)(B); 10.10.60.20(1)(A); 10.5.40.60(8)(A)', cls: 'PROVEN', checks: [
+    ['10.10.60.70(1)#(1)(A)', GARAGE({ proposed_height_m: 3.5 }), 'ancillary_coverage_pct', { value: 5 }, 'City: ancillary buildings may cover at most 5 % of the lot (N-1)'],
+    ['10.5.60.50(2)#(2)(B)', GARAGE({ proposed_height_m: 3.5 }), 'ancillary_floor_area_m2', { value: 40 }, 'City: at most 40 m2 total ancillary floor area, frontage 7.63 m < 12.0 m (N-3, M-242)'],
+    ['10.10.60.20(1)#(1)(A)', GARAGE({ proposed_height_m: 3.5 }), 'lane_setback_m', { value: 1 }, 'City: a 1.0 m side yard for the garage under 10.10.60.20(1)(A), "a side lot line abutting a street or lane" (N-2, M-241); which line abuts the lane is the ML-1 lot-line classification (owed), so the lane arm answers it'],
+    ['10.5.40.60(8)#(8)(A)', HOUSE, 'equipment_encroachment_m', { value: 0.6 }, 'City: wall mounted vents or utility equipment may encroach 0.6 m into the side yard (D-3); Article 10.5.40 binds the house, not the garage (10.5.40.1(1))'],
+    ['10.5.40.60(8)#(8)(A)', HOUSE, 'equipment_clearance_m', { value: 0.3 }, 'City: no closer to a lot line than 0.3 m (D-3)'] ] },
+  { notice: 'A0383/26TEY', lot: '5326193', cited: '10.40.30.40(1)(A)', cls: 'PROVEN', checks: [
+    ['10.40.30.40(1)#(1)(A)', { building_type: 'semi_detached_house' }, 'lot_coverage_pct', { value: 35 }, 'City: maximum lot coverage 35 % (semi-detached house)'] ] },
+  { notice: 'A0491/26TEY', lot: '5255493', cited: '10.20.40.10(1)(A); 10.20.40.10(6); 10.20.30.40(1)(A)', cls: 'PROVEN', checks: [
+    ['10.20.40.10(1)#(1)(A)', HOUSE, 'height_m', { value: 8.5 }, 'City: maximum building height 8.5 m'],
+    ['10.20.40.10(6)#whole', HOUSE, 'entrance_height_m', { value: 1.2 }, 'City: main pedestrian entrance at most 1.2 m above established grade'],
+    ['10.20.30.40(1)#(1)(A)', HOUSE, 'lot_coverage_pct', { value: 35 }, 'City: maximum lot coverage 35 %'] ] },
+  { notice: 'A0491/26TEY', lot: '5255493', cited: '10.20.40.70(1)', cls: 'FAILS', finding: 'COA-F-01', checks: [
+    ['10.5.40.70(1)#(1)(B)', { building_type: 'detached_house', flags: { front_averaging_not_applicable: false, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: true }, vars: { abutting_front_setback_m: 5.07 } }, 'front_setback_m', { value: 4.86 }, 'City: required front yard 4.86 m; the evaluator: two qualifying neighbours, averaged estimate 4.07 m + 1.0 m = 5.07 m (M-245, no floor; was 6.0 m with the floor)'] ] },
+  { notice: 'A0533/26TEY', lot: '5473105', cited: '10.10.40.10(1); 10.10.40.40(1)', cls: 'PROVEN', checks: [
+    ['10.10.40.10(1)#(1)(A)', HOUSE, 'height_m', { value: 11 }, 'City: maximum building height 11 m'],
+    ['10.10.40.40(1)#(1)(A)', HOUSE, 'fsi', { value: 1 }, 'City: maximum FSI 1.0'] ] },
+  { notice: 'A0507/26TEY', lot: '5464792', cited: '10.10.40.10(2)(B)(ii); 10.5.40.60(7)', cls: 'PROVEN', checks: [
+    ['10.10.40.10(2)#(2)(B)', HOUSE, 'main_wall_height_m', { value: 8.5 }, 'City: front and rear main walls at most 8.5 m'],
+    ['10.10.40.10(2)#(2)(B)', HOUSE, 'main_wall_front_rear_share_pct', { value: 50 }, 'City: for no less than 50 % of their width (frontage 7.67 m: tier (ii))'],
+    ['10.5.40.60(7)#(7)(B)', HOUSE, 'eaves_encroachment_m', { value: 0.9 }, 'City: eaves may project a maximum of 0.9 m (D-3)'],
+    ['10.5.40.60(7)#(7)(B)', HOUSE, 'eaves_clearance_m', { value: 0.3 }, 'City: no closer than 0.3 m to a lot line (D-3)'] ] },
+  { notice: 'A0510/26TEY', lot: '5443676', cited: '10.10.60.20(1)(A); 10.5.60.40(2)(B); 10.5.60.40(3); 10.5.60.60(1); 10.10.40.70(2)', cls: 'PROVEN', checks: [
+    ['10.10.60.20(1)#(1)(A)', GARAGE({ proposed_height_m: 4.5 }), 'rear_setback_m', { value: 1 }, 'City: a 1.0 m rear yard for the garage, the rear lot line abutting the lane (N-2, M-241)'],
+    ['10.5.60.40(2)#(2)(B)', GARAGE(), 'height_m', { value: 4 }, 'City: ancillary building height at most 4.0 m'],
+    ['10.5.60.40(3)#whole', GARAGE(), 'height_storeys', { value: 1 }, 'City: one storey'],
+    ['10.5.60.60(1)#whole', GARAGE(), 'eaves_encroachment_m', { value: 0.3 }, 'City: ancillary eaves may encroach 0.3 m (D-3, M-243)'],
+    ['10.5.60.60(1)#whole', GARAGE(), 'eaves_clearance_m', { value: 0.15 }, 'City: no closer to a lot line than 0.15 m (D-3, M-243)'],
+    ['10.10.40.70(2)#whole', HOUSE, 'rear_setback_m', { value: 7.5 }, 'City: required rear yard 7.5 m'] ] },
+  { notice: 'A0510/26TEY', lot: '5443676', cited: '10.10.40.70(3)(A)(i)', cls: 'FAILS', finding: 'COA-F-02', checks: [
+    ['10.10.40.70(3)#(3)(A)', HOUSE, 'side_setback_m', { value: 0.9 }, 'City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))'] ] },
+  { notice: 'A0461/26TEY', lot: '5305360', cited: '10.80.40.70(3)(A)', cls: 'PROVEN', checks: [
+    ['10.80.40.70(3)#(3)(A)', { building_type: 'detached_houseplex' }, 'side_setback_m', { value: 1.2 }, 'City: required side yard 1.2 m (a houseplex)'] ] },
+];
+const COA_REASON = { 'COA-F-01': 'front yard by averaging: the neighbour estimate + allowance is not the examiner\'s surveyed figure (Spec 130 Q-B1 open; M-245 removed the 6.0 m floor)', 'COA-F-02': 'side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings' };
+for (const c of COA) {
+  const g = L(c.lot);
+  cases.push({ unit_id: c.cited, family: COA_FAMILY, verdict: 'city_figure', disposition: `CoA ${c.notice}`, tracker_state: 'coa_notice', fix_ids: [], disclosure_code: null, corrected_value: '',
+    zone: g.lot.zone, class: c.cls, finding: c.finding || null, owed_field: null, coa: c.notice, address: g.address,
+    reason: c.cls === 'PROVEN' ? `the evaluator answers the City examiner's figures on ${g.address} (${c.notice})` : `${COA_REASON[c.finding]} — ${g.address} (${c.notice})`,
+    checks: c.checks.map(([unit, scenario, target, expect, rationale]) => ({ kind: 'value', unit, lot: c.lot, scenario, target, expect, rationale })) });
 }
 // the field-lineage entry each OWED case is owed to (docs/reference/maxbld-field-lineage.json)
 const LIN = new Map(read('docs/reference/maxbld-field-lineage.json').fields.map((x) => [x.field, x]));

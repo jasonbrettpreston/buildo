@@ -499,24 +499,17 @@ describe('INV-19 — no not_evaluated where the zone regulates the main wall (M-
   });
 });
 
-describe('INV-19 open arm — where the article does not exist the answer is still not_evaluated:no_candidate (M-220 "Also", OWED; a ratchet that only shrinks)', () => {
-  it('the open cells are exactly these (R coverage and length; RD semi depth; RT length and depth; RM houseplex length, depth and main wall)', () => {
+describe('INV-19 open arm — where the article does not exist the answer is never not_evaluated:no_candidate (M-220 "Also"; M-237, M-240; a ratchet at 0)', () => {
+  it('no open cell is left (was: R coverage and length; RD semi depth; RT length and depth; RM houseplex length, depth and main wall)', () => {
     const open: string[] = [];
     for (const zone of ZONES) for (const bt of PRINCIPAL) for (const t of ['lot_coverage_pct', 'building_length_m', 'building_depth_m', 'main_wall_height_m']) {
       const r = eff(lot(zone, bt), t);
       if (r.status === 'not_evaluated' && r.reason === 'no_candidate') open.push(`${zone} ${bt} ${t}`);
     }
-    expect(open).toEqual([
-      'R detached_house lot_coverage_pct', 'R detached_house building_length_m',
-      'R semi_detached_house lot_coverage_pct', 'R semi_detached_house building_length_m',
-      'R detached_houseplex lot_coverage_pct', 'R detached_houseplex building_length_m',
-      'RD semi_detached_house building_depth_m',
-      // CHAT-8 / ABS-2 (bylaw fix lane 2, 2026-10-20): the three RT main_wall_height_m cells left (unregulated by absence, M-186)
-      'RT detached_house building_length_m', 'RT detached_house building_depth_m',
-      'RT semi_detached_house building_length_m', 'RT semi_detached_house building_depth_m',
-      'RT detached_houseplex building_length_m', 'RT detached_houseplex building_depth_m',
-      'RM detached_houseplex building_length_m', 'RM detached_houseplex building_depth_m', 'RM detached_houseplex main_wall_height_m',
-    ]);
+    // R-7a-v2 / M-240 (bylaw fix lane 3, 2026-10-20; operator approved, 2026-10-20-bylaw-fix-rulings#R-7a-v2): the last 16
+    // cells close — R coverage by ABS-1, ABS-3 R length, ABS-4 / ABS-5 RT length and depth, ABS-6 RD semi depth, ABS-7.1…7.3
+    // RM houseplex not_applicable. The ratchet is at 0.
+    expect(open).toEqual([]);
   });
 });
 

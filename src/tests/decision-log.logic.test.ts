@@ -278,6 +278,76 @@ describe('R-HK (verify-13 N5) — amendment quote, extra citations, owed rows, a
   });
 });
 
+// R-DV-1 (operator 2026-10-20, By-law Fix Rulings page, `2026-10-20-bylaw-fix-rulings#R-DV-1`): MEANINGS gains
+// `no_ruling` — the decision records that an existing ruling already decides the question. It needs no new register
+// row; its routing names the ruling it rests on (`routing.<id>.rests_on`), and --check is RED when that id is not a
+// register row. importChat computes the default vocabulary only when the previous log has none.
+describe('R-DV-1 — no_ruling: no new row, but it must rest on an existing register row', () => {
+  const nr = (routing: Record<string, unknown>) => {
+    const log = fixtureLog({ decision_vocab: { keep: 'approve', drop: 'reject', later: 'defer', settled: 'no_ruling' }, routing: { 'R-1': { register: REG, row: 'X-1' }, 'R-2': { register: REG, row: 'X-2' }, ...routing } });
+    (log.decisions as Array<Record<string, string>>)[2]!.decision = 'settled';
+    return log;
+  };
+
+  it('MEANINGS is closed and holds no_ruling', () => {
+    expect(dl.MEANINGS).toEqual(['approve', 'amend', 'reject', 'defer', 'no_ruling']);
+  });
+
+  it('RED — a no_ruling decision with no routing.rests_on', () => {
+    expect(dl.validateLog(STEM, nr({}))).toEqual([`${STEM}#R-3: a no_ruling decision needs routing.R-3.rests_on (the register row it rests on)`]);
+    expect(dl.validateLog(STEM, nr({ 'R-3': { register: REG, rests_on: ['not an id'] } }))).toEqual([`${STEM}: routing.R-3.rests_on "not an id" is not a register id`]);
+  });
+
+  it('RED — rests_on names a row that is not in its register; GREEN — it is, and no citing row is needed', () => {
+    const log = nr({ 'R-3': { register: REG, rests_on: ['X-1', 'X-5'] } });
+    const red = dl.checkDecisionLogs([{ stem: STEM, log }], [spec(row('X-1', `${STEM}#R-1`), row('X-2', `${STEM}#R-2`))]);
+    expect(red.problems).toEqual([`${STEM}#R-3: no_ruling rests on X-5, which is not a register row in ${REG}`]);
+    const green = dl.checkDecisionLogs([{ stem: STEM, log }], [spec(row('X-1', `${STEM}#R-1`), row('X-2', `${STEM}#R-2`), '| **X-5** | An older rule. | s | l | RULED |')]);
+    expect(green.problems).toEqual([]);
+    expect(green.no_ruling).toBe(1);
+  });
+
+  it('importChat keeps an existing log\'s decision_vocab (the default is computed only when there is none)', () => {
+    const raw = { source: 'operator chat 2026-01-05', operator_quote: 'y', decisions: [
+      { id: 'CHAT-1', subject: 'One', decision: 'approve', recommendation: 'Do one.' },
+      { id: 'CHAT-2', subject: 'Two', decision: 'settled', recommendation: 'Already decided.' },
+    ] };
+    expect(() => dl.importChat({ stem: STEM, raw, rawRel: 'raw/c.json', previous: null })).toThrow(/decision value "settled" has no default meaning/);
+    const previous = { decision_vocab: { approve: 'approve', settled: 'no_ruling' }, routing: { 'CHAT-2': { register: REG, rests_on: ['X-1'] } } };
+    const log = dl.importChat({ stem: STEM, raw, rawRel: 'raw/c.json', previous });
+    expect(log.decision_vocab).toEqual(previous.decision_vocab);
+    expect(dl.validateLog(STEM, log)).toEqual([]);
+  });
+
+  it('importChat resolves a per-decision quote_ref to the record\'s named quote', () => {
+    const raw = { source: 'operator chat 2026-01-05', operator_quote: 'yes', operator_quote_2: 'approved, all of them', decisions: [
+      { id: 'CHAT-1', subject: 'One', decision: 'approve', recommendation: 'Do one.' },
+      { id: 'CHAT-2', subject: 'Two', decision: 'approve', quote_ref: 'operator_quote_2', recommendation: 'Do two.' },
+    ] };
+    const log = dl.importChat({ stem: STEM, raw, rawRel: 'raw/c.json', previous: null });
+    expect(log.decisions[0].operator_quote).toBeUndefined();
+    expect(log.decisions[1].operator_quote).toBe('approved, all of them');
+    expect(dl.skeletons([{ stem: STEM, id: 'CHAT-2', log, d: log.decisions[1] }])).toContain('(chat: "approved, all of them";');
+    expect(() => dl.importChat({ stem: STEM, raw: { ...raw, operator_quote_2: undefined }, rawRel: 'raw/c.json', previous: null })).toThrow(/CHAT-2: quote_ref "operator_quote_2" names no quote in the record/);
+  });
+
+  it('--import --page-rows reads a review page rows export ({rows: [{id, question, recommendation, answer}]}); an unanswered row is not a decision', () => {
+    expect(dl.parseArgs(['--import', '--page-rows', 'p.json', '--url', 'https://x.invalid', '--title', 'T', '--out', 'a.json'])).toEqual({ mode: '--import', values: { '--page-rows': 'p.json', '--url': 'https://x.invalid', '--title': 'T', '--out': 'a.json' } });
+    expect(dl.parseArgs(['--import', '--page-rows', 'p.json', '--out', 'a.json']).error).toMatch(/--import \(page-rows\) needs --url/);
+    const raw = { source: 'artifact X decisions collection', rows: [
+      { id: 'N-2', question: 'Q n2', recommendation: 'Approve', answer: { choice: 'approve', decided_at: '2026-01-07T10:00:00.000Z', excluded: [], note: '' }, answered_via: 'page' },
+      { id: 'D-1', question: 'Q d1', recommendation: 'Approve', answer: { choice: 'approve', decided_at: '2026-01-07T09:00:00.000Z', excluded: [], note: 'with care' }, answered_via: 'page' },
+      { id: 'M-205(1)-floor', question: 'Q m', recommendation: 'Approve', answer: null, answered_via: 'chat CHAT-21' },
+    ] };
+    const log = dl.importPageRows({ stem: STEM, title: 'T', url: 'https://x.invalid/p', raw, rawRel: 'raw/p.json', previous: null });
+    expect(log.source).toMatchObject({ kind: 'page', title: 'T', url: 'https://x.invalid/p', raw: { form: 'page-rows', file: 'raw/p.json' } });
+    expect(log.decisions.map((d: { id: string }) => d.id)).toEqual(['D-1', 'N-2']);
+    expect(log.decisions[0]).toEqual({ id: 'D-1', question: 'Q d1', recommendation: 'Approve', decision: 'approve', decided_at: '2026-01-07T09:00:00.000Z', note: 'with care', source_url: 'https://x.invalid/p' });
+    expect(log.unanswered).toEqual([{ id: 'M-205(1)-floor', answered_via: 'chat CHAT-21' }]);
+    expect(dl.validateLog(STEM, log)).toEqual([]);
+  });
+});
+
 describe('R-HK — the committed decision logs are fully recorded (real tree)', () => {
   const { logs, specs, io } = dl.loadTree(REPO_ROOT);
   const byStem = new Map(logs.map((l: { stem: string; log: Record<string, unknown> }) => [l.stem, l.log]));
@@ -333,10 +403,38 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     expect(rows).toHaveLength(8);
   });
 
+  it('batch B (R-DV-1): CHAT-6…11 route to M-235…M-239 and R-HM; CHAT-12 / CHAT-13 are no_ruling resting on M-229 and M-175 / M-235', () => {
+    const b = byStem.get('2026-10-20-chat-batch-b') as { source: { operator_quote: string }; decision_vocab: Record<string, string>; routing: Record<string, { register: string; row?: string; rests_on?: string[] }> };
+    expect(b.source.operator_quote).toBe('y to all');
+    expect(b.decision_vocab).toEqual({ approve: 'approve', settled: 'no_ruling', bug_fix: 'no_ruling' });
+    expect(Object.fromEntries(Object.entries(b.routing).map(([k, v]) => [k, v.row ?? v.rests_on]))).toEqual({
+      'CHAT-6': 'M-235', 'CHAT-7': 'M-236', 'CHAT-8': 'M-237', 'CHAT-9': 'M-239', 'CHAT-10': 'M-238', 'CHAT-11': 'R-HM',
+      'CHAT-12': ['M-229'], 'CHAT-13': ['M-175', 'M-235'],
+    });
+    const reg = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/01-pipeline/69a_mcbylaw_register.md'), 'utf8').split('\n');
+    for (const [id, row] of [['CHAT-6', 'M-235'], ['CHAT-7', 'M-236'], ['CHAT-8', 'M-237'], ['CHAT-9', 'M-239'], ['CHAT-10', 'M-238']]) {
+      expect(reg.find((l) => l.startsWith(`| **${row}** |`)), row).toContain(`\`2026-10-20-chat-batch-b#${id}\``);
+    }
+  });
+
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(38);
+    expect(r.decisions).toBe(54);
     expect(r.owed).toBe(0);
+    expect(r.no_ruling).toBe(2);
+  });
+
+  it('the By-law Fix Rulings page (rows export) and the by-law half of chat batch C route to R-HK and M-240…M-246', () => {
+    const page = byStem.get('2026-10-20-bylaw-fix-rulings') as { source: { url: string; raw: { form: string } }; decisions: Array<{ id: string; decision: string }>; unanswered: Array<{ id: string }>; routing: Record<string, { row: string }> };
+    expect(page.source.url).toBe('https://claude.ai/artifact/7kASZnqdVKkQLLqewVhHnb');
+    expect(page.source.raw.form).toBe('page-rows');
+    expect(page.decisions.map((d) => [d.id, d.decision])).toEqual([['D-1', 'approve'], ['D-3', 'approve'], ['N-2', 'approve'], ['N-3', 'approve'], ['R-7a-v2', 'approve'], ['R-DV-1', 'approve']]);
+    expect(page.unanswered.map((u) => u.id)).toEqual(['M-205(1)-floor']);
+    expect(Object.fromEntries(Object.entries(page.routing).map(([k, v]) => [k, v.row]))).toEqual({ 'R-DV-1': 'R-HK', 'R-7a-v2': 'M-240', 'N-2': 'M-241', 'N-3': 'M-242', 'D-3': 'M-243', 'D-1': 'M-244' });
+    const c = byStem.get('2026-10-20-chat-batch-c-bylaw') as { decisions: Array<{ id: string; operator_quote?: string }>; routing: Record<string, { row: string }> };
+    expect(c.decisions.map((d) => d.id)).toEqual(['CHAT-14', 'CHAT-21']);
+    expect(c.decisions[1]!.operator_quote).toMatch(/the missing answers for the bylaws and V3 page are approved as well/);
+    expect(Object.fromEntries(Object.entries(c.routing).map(([k, v]) => [k, v.row]))).toEqual({ 'CHAT-14': 'M-246', 'CHAT-21': 'M-245' });
   });
 });

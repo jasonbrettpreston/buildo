@@ -1,0 +1,51 @@
+{
+ "suite": "src/tests/bylaw-fix-3.logic.test.ts,src/tests/bylaw-fix-2.logic.test.ts",
+ "base": "dbbd31ca",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-3, N-3 / M-242 (complement arm, 10.5.60.50(2)(B)), run on the working tree at dbbd31ca with the N-3 describe added and the two bylaw-fix-2 N-3 it.fails flipped to it, before the DSL, G-CLAUSE, vocab and keying changes.",
+ "counts": {
+  "red": 7,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "N-3 / Spec 68 §6 / M-242 — 10.5.60.50(2)(B) \"in all other cases\" resolves: under 12.0 m of frontage, 40 m² (B) carries condition.if complement((A)): under 12.0 m of frontage",
+   "at_base": "red",
+   "reason": "AssertionError: expected { tokens: [ 'frontage_band' ] } to deeply equal { tokens: [ 'frontage_band' ], …(1) }"
+  },
+  {
+   "name": "N-3 / Spec 68 §6 / M-242 — 10.5.60.50(2)(B) \"in all other cases\" resolves: under 12.0 m of frontage, 40 m² a 9.0 m lot answers 40 m² from (B); a 12.0 m lot 60 m² from (A)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', null, undefined ] to deeply equal [ 'R', 40, '10.5.60.50(2)#(2)(B)' ]"
+  },
+  {
+   "name": "N-3 / M-242 — \"in all other cases\" takes the complement of its sibling arm (10.5.60.50(2)(B)) vocab declares the complement phrases",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to deeply equal [ 'in all other cases', …(2) ]"
+  },
+  {
+   "name": "N-3 / M-242 — \"in all other cases\" takes the complement of its sibling arm (10.5.60.50(2)(B)) the DSL parses complement(<unit id>, …) as one condition form, with a canonical text",
+   "at_base": "red",
+   "reason": "DslError: syntax: unexpected character '.' at 15 in: complement(10.5.60.50(2)#(2)(A))"
+  },
+  {
+   "name": "N-3 / M-242 — \"in all other cases\" takes the complement of its sibling arm (10.5.60.50(2)(B)) (B) is keyed complement((A)) and the evaluator reads it as not (lot_frontage_m ≥ 12.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected { tokens: [ 'frontage_band' ] } to deeply equal { tokens: [ 'frontage_band' ], …(1) }"
+  },
+  {
+   "name": "N-3 / M-242 — \"in all other cases\" takes the complement of its sibling arm (10.5.60.50(2)(B)) the 20 Norwood Rd facts (R, frontage 7.63 m, a plain ancillary building) answer 40 m² from (B); 12.0 m answers 60 m² from (A)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, undefined ] to deeply equal [ 40, '10.5.60.50(2)#(2)(B)' ]"
+  },
+  {
+   "name": "N-3 / M-242 — \"in all other cases\" takes the complement of its sibling arm (10.5.60.50(2)(B)) an unknown frontage leaves both arms undecided (the complement of unknown is unknown)",
+   "at_base": "pass"
+  },
+  {
+   "name": "N-3 / M-242 — \"in all other cases\" takes the complement of its sibling arm (10.5.60.50(2)(B)) G-CLAUSE: the production units pass; a complement on a unit whose text has no complement phrase is refused",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'expression_unparseable' ] to include 'variable_unlicensed'"
+  }
+ ]
+}

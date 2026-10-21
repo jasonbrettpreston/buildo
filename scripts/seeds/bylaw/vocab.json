@@ -176,7 +176,7 @@
       "patterns": ["side yard abutting a street", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line", "lot that flanks on a street", "if the lot line abuts a street"]
     },
     "street_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from any lot line abutting a street", "patterns": ["lot line abutting a street", "lot line that abuts a street"] },
-    "lane_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from a lot line abutting a lane", "patterns": ["abutting a lane", "abuts a lane"] },
+    "lane_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from a lot line abutting a lane", "patterns": ["abutting a lane", "abuts a lane", "abutting a street or lane"] },
     "lane_centreline_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum setback from the original centreline of a lane (Spec 69a M-82 V5b)", "patterns": ["centreline of a lane"] },
     "lot_line_setback_m": {
       "unit": "m",
@@ -190,8 +190,22 @@
       "concept": "minimum separation distance between buildings (or main walls) on the same lot",
       "patterns": ["separation distance", "from the residential building", "separation", "closer to a residential building", "from the main wall of the residential building"]
     },
-    "encroachment_m": { "unit": "m", "aspect": "envelope", "concept": "maximum distance a building element may encroach into a required setback", "patterns": ["may encroach", "permitted to project"] },
-    "encroachment_clearance_m": { "unit": "m", "aspect": "envelope", "concept": "minimum distance an encroaching element must keep from a lot line", "patterns": ["no closer than", "from the lot line", "no closer to a lot line than", "no closer to a side lot line than", "no closer to the side lot line than"] },
+    "encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a building element may encroach into a required setback, for a clause that names no element (Spec 69a M-243: an element's own target otherwise; bound declared, amends M-106)", "patterns": ["may encroach", "permitted to project"] },
+    "encroachment_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance an encroaching element must keep from a lot line, for a clause that names no element (Spec 69a M-243; bound declared, amends M-106)", "patterns": ["no closer than", "from the lot line", "no closer to a lot line than", "no closer to a side lot line than", "no closer to the side lot line than"] },
+    "eaves_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance the eaves of a roof may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["the eaves of a roof"] },
+    "eaves_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance the eaves of a roof must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["if they are no closer to a lot line than", "if the eaves are no closer to a lot line than"] },
+    "window_projection_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a bay window, box window or other window projection may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["window projection"] },
+    "window_projection_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a bay window, box window or other window projection must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["are no closer to the side lot line than"] },
+    "platform_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a platform without main walls (deck, porch, balcony), with its stairs or ramps may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["platform without main walls"] },
+    "platform_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a platform without main walls (deck, porch, balcony), with its stairs or ramps must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["if it is no closer to a side lot line than", "if it is no closer to the side lot line than"] },
+    "canopy_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a canopy, awning or similar structure may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["canopy, awning or similar structure"] },
+    "canopy_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a canopy, awning or similar structure must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["similar structure that is not covering a platform"] },
+    "cladding_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance cladding added to the exterior surface of a main wall may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["cladding added to the original exterior surface"] },
+    "cladding_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance cladding added to the exterior surface of a main wall must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["if the added cladding is no closer to a lot line than"] },
+    "architectural_feature_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance an architectural feature (pilaster, decorative column, cornice, sill, belt course, chimney breast) may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["architectural feature", "chimney breast"] },
+    "architectural_feature_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance an architectural feature (pilaster, decorative column, cornice, sill, belt course, chimney breast) must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["architectural features on a building must comply"] },
+    "equipment_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance wall mounted equipment (vents, pipes, utility equipment, satellite dish, antenna, air conditioner, meters) may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["wall mounted equipment"] },
+    "equipment_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance wall mounted equipment (vents, pipes, utility equipment, satellite dish, antenna, air conditioner, meters) must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["if the equipment is no closer to a lot line than", "if the equipment is no closer than"] },
     "platform_common_wall_distance_m": { "unit": "m", "aspect": "envelope", "concept": "minimum distance of a platform from the common wall dividing dwelling units (Spec 69 M-76 B8)", "patterns": ["from the common wall"] },
     "platform_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum area of a deck, balcony or platform", "patterns": ["platform", "balcony"] },
     "platform_height_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of a platform above established grade", "patterns": ["platform height", "above established grade"] },
@@ -314,7 +328,7 @@
     "aspect_without_target": { "PERMIT": "use_permission", "PROHIBIT": "use_permission" }
   },
   "lot_condition": {
-    "corner_lot": { "patterns": ["corner lot"] },
+    "corner_lot": { "patterns": ["corner lot", "side lot line abutting a street"] },
     "through_lot": { "patterns": ["through lot", "rear lot line also abuts a street"] },
     "flanking_lot": { "patterns": ["flanking"] },
     "side_yard_abuts_street": { "patterns": ["side yard abuts a street"] },
@@ -346,6 +360,7 @@
     "one_abutting_building_within_15_m": {},
     "two_abutting_buildings_within_15_m": {},
     "has_secondary_suite": { "user_input": "has_secondary_suite" },
+    "ancillary_contains_parking_space": { "user_input": "ancillary_contains_parking_space", "patterns": ["containing a parking space"] },
     "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units"] },
     "suite_wall_openings": { "user_input": "suite_wall_openings", "patterns": ["openings such as"] },
     "individual_private_driveway": {},
@@ -382,7 +397,7 @@
     "ancillary_units": "ancillary_units"
   },
   "instrument_kind": ["former_bylaw", "former_section", "schedule_map"],
-  "uses": ["dwelling_unit", "secondary_suite_use", "parking_space", "private_garage", "swimming_pool", "deck_or_platform", "energy_device", "school", "portable_classroom"],
+  "uses": ["dwelling_unit", "secondary_suite_use", "parking_space", "private_garage", "swimming_pool", "deck_or_platform", "energy_device", "school", "portable_classroom", "transportation_use"],
   "requirement": ["parking_in_building", "comply_or_minor_variance", "units_within_existing_building", "landscaping_type", "access_from_lane", "located_within_building", "principal_residence_occupation", "occupy_entire_building", "regulated_or_supervised", "waste_storage_in_building", "same_lot_as_use", "parking_in_rear_yard", "parking_in_side_yard", "parking_within_table_range", "identified_and_marked", "bicycle_access_unobstructed", "accessible_parking_location", "ev_charging_outlet", "parking_space_available_for_required_use", "vehicle_entrance_above_driveway_centreline", "access_from_street", "payment_in_lieu", "agreement_with_city", "municipal_services_operational", "retain_lawfully_existing", "fenced", "comply_with_bylaw"],
   "calculation_handling_status": ["modelled", "partially_modelled", "not_modelled", "informational"],
   "not_modelled_reason": ["needs_user_input", "needs_data_we_lack", "existing_building_facts", "deferred_phase2", "ch900_backlog", "outside_maxbld_building_types", "procedural_not_numeric", "map_area_not_held", "named_lots_only", "prevailing_alternate_path"],
@@ -417,7 +432,7 @@
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
   "heuristic_reason": ["modelling_assumption", "data_cleaning_bound", "tolerance", "statistical_default", "proxy_for_unmodelled_rule"],
   "adjudication_kind": ["disagreement", "consolidation_mismatch", "eval_mismatch", "eval_vector", "source_repeat_letter", "correction", "ref_target_absent", "instrument_not_published_online", "coa_mismatch"],
-  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm"],
+  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm", "ancillary_contains_parking_space"],
   "code_roots": ["scripts/lib/build-norms.js", "scripts/lib/compute/enrich-parcels.js", "scripts/lib/max-build.js", "scripts/lib/optimal-config.js", "scripts/lib/parcel-cost.js", "scripts/lib/zoning-precedence.js"],
   "banned_code_refs": [
     {
@@ -572,22 +587,29 @@
     "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }
   },
   "absence_ignore": {
-    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building.",
+    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building. Rule 7a v2 (operator approved 2026-10-20, Spec 69a M-240): absence is decided per (zone, building type, target): a DEFINE unit with no statement for the target (define_without_statement) and a unit whose building_types exclude the lot's type and its parent (other_building_types) do not count either.",
     "lot_conditions": ["lawfully_existing"],
     "building_types": ["ancillary_building", "garden_suite", "laneway_suite"],
-    "accessory_structure_uses": true
+    "accessory_structure_uses": true,
+    "define_without_statement": true,
+    "other_building_types": true
+  },
+  "complement_phrases": {
+    "$comment": "Spec 69a M-242 (N-3, operator approved 2026-10-20): a unit whose own text holds one of these phrases may carry condition.if = complement(<sibling unit id>, …), the negation of each sibling arm's keyed condition; G-CLAUSE licenses its variables and literals from the sibling's clause (clause.mjs), the evaluator reads the sibling conditions resolved over the agreed units (agree.mjs resolveComplements).",
+    "phrases": ["in all other cases", "in any other case", "otherwise"]
   },
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
     "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },
     "deck_or_platform": { "disclosure": "rules for a deck or platform on this lot are not part of this answer" },
-    "private_garage": { "disclosure": "rules for a private garage on this lot are not part of this answer" },
+    "private_garage": { "disclosure": "rules for a private garage on this lot are not part of this answer", "ancillary_condition": "ancillary_contains_parking_space" },
     "energy_device": { "disclosure": "rules for an energy device (solar or heating, ventilation and air conditioning equipment) on this lot are not part of this answer" },
     "portable_classroom": { "disclosure": "rules for a portable classroom building on this lot are not part of this answer" }
   },
   "specific_use": {
     "$comment": "Spec 69a M-159 (3): a unit whose application.uses names one of these applies only on a lot that has that use; on a lot without it the unit does not apply, with this closed disclosure.",
-    "school": { "section": "150.48", "disclosure": "rules for a school on this lot are not part of this answer" }
+    "school": { "section": "150.48", "disclosure": "rules for a school on this lot are not part of this answer" },
+    "transportation_use": { "regulations": ["10.10.40.71(1)"], "ruling": "Spec 69a M-244 (D-1, operator approved 2026-10-20)", "disclosure": "rules for a transportation use on this lot are not part of this answer" }
   },
   "non_accessory_use": ["dwelling_unit", "secondary_suite_use", "parking_space"],
   "scenario_class_units": {
@@ -642,6 +664,7 @@
     },
     "lot_condition": {
       "flanking_lot": "the lot flanks a street",
+      "ancillary_contains_parking_space": "the ancillary building contains a parking space",
       "side_yard_abuts_street": "a side yard of the lot abuts a street",
       "abuts_named_street": "the lot abuts the street the rule names",
       "shoreline_or_top_of_bank": "the lot is on a shoreline or top of bank",
@@ -670,7 +693,8 @@
       "existing_driveway_type": "the lot has an existing driveway of the type the rule names",
       "existing_driveway_width_m": "the existing driveway's width meets the rule's test",
       "existing_front_parking_pad": "the lot has an existing front yard parking pad",
-      "pool": "the lot has a swimming pool"
+      "pool": "the lot has a swimming pool",
+      "ancillary_contains_parking_space": "the ancillary building contains a parking space"
     },
     "data_filled": [
       "corner_lot",

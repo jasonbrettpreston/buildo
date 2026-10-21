@@ -1,0 +1,41 @@
+{
+ "suite": "src/tests/decision-log.logic.test.ts",
+ "base": "885c2ad2",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-3, R-DV-1 (no_ruling meaning, importChat default-vocab defect, quote_ref, --page-rows): the R-DV-1 describe run against the generator at 885c2ad2 (a detached base worktree with only the test file copied in).",
+ "counts": {
+  "red": 6
+ },
+ "cases": [
+  {
+   "name": "R-DV-1 — no_ruling: no new row, but it must rest on an existing register row MEANINGS is closed and holds no_ruling",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'approve', 'amend', 'reject', …(1) ] to deeply equal [ 'approve', 'amend', 'reject', …(2) ]"
+  },
+  {
+   "name": "R-DV-1 — no_ruling: no new row, but it must rest on an existing register row RED — a no_ruling decision with no routing.rests_on",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]"
+  },
+  {
+   "name": "R-DV-1 — no_ruling: no new row, but it must rest on an existing register row RED — rests_on names a row that is not in its register; GREEN — it is, and no citing row is needed",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]"
+  },
+  {
+   "name": "R-DV-1 — no_ruling: no new row, but it must rest on an existing register row importChat keeps an existing log's decision_vocab (the default is computed only when there is none)",
+   "at_base": "red",
+   "reason": "Error: decision value \"settled\" has no default meaning; declare decision_vocab in the existing log"
+  },
+  {
+   "name": "R-DV-1 — no_ruling: no new row, but it must rest on an existing register row importChat resolves a per-decision quote_ref to the record's named quote",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'approved, all of them' // Object.is equality"
+  },
+  {
+   "name": "R-DV-1 — no_ruling: no new row, but it must rest on an existing register row --import --page-rows reads a review page rows export ({rows: [{id, question, recommendation, answer}]}); an unanswered row is not a decision",
+   "at_base": "red",
+   "reason": "AssertionError: expected { Object (error) } to deeply equal { mode: '--import', values: { …(4) } }"
+  }
+ ]
+}

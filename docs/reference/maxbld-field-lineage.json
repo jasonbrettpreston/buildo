@@ -230,7 +230,7 @@
   {
    "id": "INV-19",
    "statement": "No `not_evaluated:no_candidate` on a target whose article does not exist in that zone (R coverage, R/RT length, RT/RM-houseplex depth, main walls with the roof-slope condition) — those are `unregulated` / `not_applicable` (M-218, M-220).",
-   "runs_at": "test `bylaw-evaluator-fixes.logic.test.ts` › \"INV-19 — …\" (M-218 and the M-220 label arm, green 2026-10-20) and › \"INV-19 open arm …\" (the absent-article cells, a ratchet; OWED) + step check"
+   "runs_at": "test `bylaw-evaluator-fixes.logic.test.ts` › \"INV-19 — …\" (M-218 and the M-220 label arm, green 2026-10-20) and › \"INV-19 open arm …\" (the absent-article cells, a ratchet; at 0 since 2026-10-20, 69a M-240) + step check"
   },
   {
    "id": "INV-20",

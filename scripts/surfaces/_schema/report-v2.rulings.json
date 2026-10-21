@@ -14,6 +14,23 @@
     "chat_overlay": [
       "Q-7"
     ],
+    "q7_scope": {
+      "decision": "2026-10-20-chat-batch-b#CHAT-11",
+      "log": "docs/reports/decisions/2026-10-20-chat-batch-b.json",
+      "sha256_16": "1bdf7c4c96b2a06e",
+      "confirmed": [
+        "parcel.lot.zone_class_label",
+        "parcel.lot.exception_number",
+        "parcel.lot.is_irregular",
+        "parcel.lot.is_corner_lot",
+        "parcel.lot.is_through_lot",
+        "parcel.lot.abuts_laneway",
+        "parcel.lot.centroid_lat",
+        "parcel.lot.centroid_lng",
+        "parcel.lot.overlays",
+        "parcel.lot.neighbourhood_name"
+      ]
+    },
     "exported": "2026-10-20",
     "decision_vocabulary": {
       "keep": "decided: the recommendation stands",

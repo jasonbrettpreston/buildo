@@ -76,7 +76,8 @@ describe('golden-lot fixtures are complete and self-contained', () => {
   });
   it('PROVEN and OWED cases carry at least one check on a real lot; FAILS cases name a finding', () => {
     expect(CASES.filter((c) => c.class === 'PROVEN' && !c.checks.length).map(label)).toEqual([]);
-    expect(CASES.filter((c) => c.class === 'FAILS' && !/^E2E-F-\d\d$/.test(String(c.finding))).map(label)).toEqual([]);
+    // E2E-F-nn: the golden-lot verification findings; COA-F-nn: the CoA notice City-figure findings (lane wf1/bylaw-fix-3)
+    expect(CASES.filter((c) => c.class === 'FAILS' && !/^(E2E-F|COA-F)-\d\d$/.test(String(c.finding))).map(label)).toEqual([]);
   });
 });
 

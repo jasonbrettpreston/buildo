@@ -173,7 +173,10 @@ describe('G-EVAL (a)+(b) over scripts/seeds/bylaw/eval-vectors.json (fixture uni
   it('vector verdict counts (pinned; a change is a reviewed edit)', () => {
     // hardening 2026-10-07 (Spec 69 M-60): Derwyn / Eastbourne carry the detached-house type their Spec 67 source states
     // (+9 match); 7 untyped vectors whose types disagree are no_expected:building_type_unstated (M-50)
-    expect(r.counts).toEqual({ units_evaluated: 115, unit_vector_evaluations: 4863, vectors: 109, match: 70, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 21, pending: 0, excluded: 7, inexpressible: 2, no_expected: 9 });
+    // M-240 (rule 7a v2, 2026-10-20): the two RT depth vectors (p5071306, bijou) now expect `unregulated` (ABS-5; the fixture
+    // units still answer no_candidate, so they count not_evaluated, 70 → 68 match), and V22 is no_expected:building_type_dependent
+    // (68 → 67 match, 9 → 10 no_expected)
+    expect(r.counts).toEqual({ units_evaluated: 115, unit_vector_evaluations: 4863, vectors: 109, match: 67, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 23, pending: 0, excluded: 7, inexpressible: 2, no_expected: 10 });
   });
   it('every not_evaluated vector carries a reason from the closed set', () => {
     const bad = r.rows.filter((x: Json) => x.verdict === 'not_evaluated' && !E.NOT_EVALUATED_CODES.includes(E.reasonCode(String(x.got).replace(/^not_evaluated:/, '')))).map((x: Json) => `${x.id} ${x.got}`);
@@ -190,9 +193,10 @@ describe('G-EVAL (a)+(b) over scripts/seeds/bylaw/eval-vectors.json (fixture uni
     const unl = r.rows.filter((x: Json) => x.expected && (x.expected.value === 'unlimited' || x.expected.value === 'unregulated'));
     expect(unl.map((x: Json) => `${x.id}:${x.verdict}`)).toEqual([
       'derwyn:height_storeys:match', 'eastbourne:lot_coverage_pct:match', 'futura:fsi:not_evaluated', 'cordella:lot_coverage_pct:match',
-      'p5071306:fsi:not_evaluated', 'bijou:fsi:not_evaluated', 'bijou:lot_coverage_pct:match',
+      'p5071306:fsi:not_evaluated', 'p5071306:building_depth_m:not_evaluated', 'bijou:fsi:not_evaluated', 'bijou:building_depth_m:not_evaluated', 'bijou:lot_coverage_pct:match',
     ]);
-    expect(unl.filter((x: Json) => x.verdict === 'not_evaluated').map((x: Json) => x.got)).toEqual(Array(3).fill('not_evaluated:needs_user_input:has_secondary_suite'));
+    // the two RT depth vectors expect `unregulated` since M-240 (ABS-5); the fixture units (older keying) still answer no_candidate
+    expect(unl.filter((x: Json) => x.verdict === 'not_evaluated').map((x: Json) => x.got)).toEqual([...Array(2).fill('not_evaluated:needs_user_input:has_secondary_suite'), 'not_evaluated:no_candidate', 'not_evaluated:needs_user_input:has_secondary_suite', 'not_evaluated:no_candidate']);
     expect(r.rows.filter((x: Json) => x.verdict === 'inexpressible').map((x: Json) => x.id)).toEqual(['p5071306:front_landscaping_pct', 'bijou:front_landscaping_pct']);
   });
 });
@@ -281,7 +285,11 @@ describe('operator ruling 2026-10-07 (Spec 69 M-54 note): R-zone coverage unregu
   });
   it('absence is zone- and target-scoped: RD coverage and R height are untouched', () => {
     expect(effA({ ...DERWYN, overlays: { HT: 8.5 }, building_type: 'detached_house' }).evidence.kind).toBe('clause');
-    expect(show(E.effective(rLot, 'building_length_m', E.loadCandidates(rLot, UNITS).candidates, CA))).toBe('not_evaluated:no_candidate');
+    // ABS-1 covers R lot_coverage_pct only: with ABS-1 alone, R building length stays no_candidate. (Since M-240, 2026-10-20,
+    // R building length has its own ruling, ABS-3, so the full set answers it unregulated.)
+    const CA1 = E.makeContext(VOCAB, { enactments: ENACT, absences: ABS.rulings.filter((r: Json) => r.id === 'ABS-1') });
+    expect(show(E.effective(rLot, 'building_length_m', E.loadCandidates(rLot, UNITS).candidates, CA1))).toBe('not_evaluated:no_candidate');
+    expect(show(E.effective(rLot, 'building_length_m', E.loadCandidates(rLot, UNITS).candidates, CA))).toBe('unregulated');
   });
   it('with building type unknown (M-50) every type agrees, so the absence result stands with its evidence', () => {
     const r = effA({ ...rLot, building_type: null });
@@ -325,7 +333,7 @@ describe('G-EVAL known-bad fixtures (each fails for its reason; the good twin pa
   });
   it('the zero-agreed state (no units at all) passes with every vector pending', () => {
     const res = ok(VECTORS, []);
-    expect([res.pass, res.counts.pending, res.counts.match]).toEqual([true, 93, 0]); // 109 − 7 composite − 9 no_expected
+    expect([res.pass, res.counts.pending, res.counts.match]).toEqual([true, 92, 0]); // 109 − 7 composite − 10 no_expected (V22 since M-240)
   });
   it('parse_error: an agreed expression that does not parse fails G-EVAL (a)', () => {
     const res = ok(base, [...UNITS, { unit_id: '10.20.40.70(9)#(A)', regulation_id: '10.20.40.70(9)', layer: 'base', archetype: 'LIMIT', target: 'rear_setback_m', bound: 'min', numeric_expression: ['rear_setback_m = 7.5 @(9)(A)'], condition: 'none', applies_to: { part: 'whole', refs: [] }, application: { zones: ['RD'], building_types: ['any'] }, displaces: [] }]);

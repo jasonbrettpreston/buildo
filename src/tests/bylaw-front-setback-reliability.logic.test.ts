@@ -3,13 +3,15 @@
 //            docs/specs/01-pipeline/130_link_parcel_abutments.md Q-B1 (measured 2026-10-19);
 //            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.10 main_front_setback_basis, P5.12 front_yard_needs_survey / front_yard_not_measured
 //
-// Operator ruling 2026-10-19 (revised; replaces the all-or-nothing switch): where 10.5.40.70(1) averaging applies
-// (one or two qualifying neighbours, every estimate est_status `estimated`), the front setback is
-// max(averaged estimate + fya_porch_allowance_m, the zone's x.40.70(1) default), always "needs survey", disclosed
+// Operator ruling 2026-10-19 (revised; replaces the all-or-nothing switch), amended 2026-10-20 (69a M-245, CHAT-21: no
+// zone-default floor under the averaged front yard): where 10.5.40.70(1) averaging applies (one or two qualifying
+// neighbours, every estimate est_status `estimated`), the front setback is averaged estimate + fya_porch_allowance_m
+// (it was max(…, the zone's x.40.70(1) default) from 2026-10-19 to 2026-10-20), always "needs survey", disclosed
 // front_yard_needs_survey (mandatory, high importance). Excluded estimates (or three or more neighbours, Q-B2) keep
 // the zone default, "needs survey", front_yard_not_measured. No qualifying neighbour: the zone default, no flag.
 // Basis (CoA-notice oracle, n = 219): the estimate is at or below the examiner's figure 89 % of the time;
-// max(est + 1.0, 6.0) has mean error 1.39 m, 55 % within 1 m, 22 % below the examiner (6.0 m alone: 2.53 m, 64 %).
+// max(est + 1.0, 6.0) had mean error 1.39 m, 55 % within 1 m, 22 % below the examiner (6.0 m alone: 2.53 m, 64 %);
+// re-measured 2026-10-20 (n = 220): est + 1.0 with no floor has mean error 1.15 m, 67 % within 1 m, 48 % below the examiner.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -71,17 +73,17 @@ describe('LC-58 / M-205(1): one admin setting, the porch allowance; the switch a
   });
 });
 
-describe('averaging applies: max(averaged estimate + porch allowance, zone default), needs survey', () => {
-  it('estimate + allowance above the floor: 7.0 / 7.4 → 7.2 + 1.0 = 8.2 m', () => {
+describe('averaging applies: averaged estimate + porch allowance, no zone-default floor (M-245), needs survey', () => {
+  it('estimate + allowance above the zone default: 7.0 / 7.4 → 7.2 + 1.0 = 8.2 m', () => {
     const r = FA.resolveFrontAveraging([nb({ front_setback_est_m: 7.0 }), nb({ front_setback_est_m: 7.4 })], CFG, LOT);
-    expect([r.fya, r.basis, r.front_setback_m, r.floor_applied, r.needs_survey]).toEqual(['fya_two', 'averaged_two', 8.2, false, true]);
+    expect([r.fya, r.basis, r.front_setback_m, r.needs_survey]).toEqual(['fya_two', 'averaged_two', 8.2, true]);
     expect(r.disclosures).toEqual(['front_yard_needs_survey']);
     expect(r.flags).toEqual({ front_averaging_not_applicable: false, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: true });
     expect(r.vars).toEqual({ abutting_front_setback_m: 8.2 });
   });
-  it('estimate + allowance below the floor: 4.0 / 5.0 → 4.5 + 1.0 = 5.5, floor 6.0 m', () => {
+  it('estimate + allowance below the zone default: 4.0 / 5.0 → 4.5 + 1.0 = 5.5 m, no floor (M-245: "If regulation 10.5.40.70(1) does not apply" — the 6.0 m is the fallback)', () => {
     const r = FA.resolveFrontAveraging([nb({ front_setback_est_m: 4.0 }), nb({ front_setback_est_m: 5.0 })], CFG, LOT);
-    expect([r.front_setback_m, r.floor_applied, r.needs_survey]).toEqual([6.0, true, true]);
+    expect([r.front_setback_m, r.needs_survey, 'floor_applied' in r]).toEqual([5.5, true, false]);
   });
   it('one neighbour: its estimate + allowance (averaged_one)', () => {
     const r = FA.resolveFrontAveraging([nb({ front_setback_est_m: 6.3 })], CFG, LOT);
@@ -135,17 +137,17 @@ describe('evaluator, production units: the resolved lot gives the same front set
       expect(String(e.winner).startsWith(unit)).toBe(true);
     });
   }
-  it('averaging applies: the max-rule value wins through 10.5.40.70(1)(B), above and at the floor', () => {
+  it('averaging applies: the averaged value wins through 10.5.40.70(1)(B), above and below the zone default (M-245)', () => {
     const above = front('RD', FA.resolveFrontAveraging([nb({ front_setback_est_m: 7.0 }), nb({ front_setback_est_m: 7.4 })], CFG, LOT));
     expect([above.status, above.value, above.winner]).toEqual(['value', 8.2, '10.5.40.70(1)#(1)(B)']);
-    const floor = front('RD', FA.resolveFrontAveraging([nb({ front_setback_est_m: 4.0 }), nb({ front_setback_est_m: 5.0 })], CFG, LOT));
-    expect([floor.value, floor.winner]).toEqual([6.0, '10.5.40.70(1)#(1)(B)']);
+    const below = front('RD', FA.resolveFrontAveraging([nb({ front_setback_est_m: 4.0 }), nb({ front_setback_est_m: 5.0 })], CFG, LOT));
+    expect([below.value, below.winner]).toEqual([5.5, '10.5.40.70(1)#(1)(B)']);
   });
 });
 
 describe('P5.12 wording (LC-52: plain, at most 45 words)', () => {
-  it('front_yard_needs_survey: averaging by-law, outlines adjusted for porches, the larger of that and the standard, survey', () => {
-    expect(template('front_yard_needs_survey')).toBe('The by-law sets this lot\'s front setback as the average of the neighbouring houses\' setbacks (10.5.40.70(1)). We estimate those from building outlines, adjusted for porches, and show the larger of that and the zone\'s standard {X} m. A survey is needed.');
+  it('front_yard_needs_survey: averaging by-law, outlines adjusted for porches, that estimate even below the standard (M-245), survey', () => {
+    expect(template('front_yard_needs_survey')).toBe('The by-law sets this lot\'s front setback as the average of the neighbouring houses\' setbacks (10.5.40.70(1)). We estimate those from building outlines, adjusted for porches, and show that estimate, {X} m, even where it is below the zone\'s standard. A survey is needed.');
     expect(words(template('front_yard_needs_survey'))).toBeLessThanOrEqual(45);
   });
   it('front_yard_not_measured: the operator-approved excluded-case sentence (actual may be larger or smaller)', () => {

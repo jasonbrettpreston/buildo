@@ -1,9 +1,7 @@
 {
   "source": "operator chat 2026-10-20",
-  "operator_quote": "approved [the cutover rulings table, pasted back] - the missing answers for the bylaws and V3 page are approved as well",
+  "operator_quote": "I recommend yes, because separate rows shift every later line and break line citations. - yes",
   "context": "Answer to verify-16 N1: should a dated note appended inside a register row's status cell (as on M-76, integrate-15 commit 2ebf33e8) be a sanctioned form, alongside the 69a §1a separate dated-note row? | Second answer (same day): the six CoA cutover rulings and the page answers that failed to save.",
-  "split_from": "scratchpad chat-decisions/2026-10-20-batch-c.json, split by subject (lane steps-rulings-1): CHAT-14 (69a status-cell notes) and CHAT-21 (by-law M-205(1)-floor) belong to another lane and are not in this record. Every decision below quotes operator_quote_2 of the source, which is this record operator_quote; the source operator_quote (CHAT-14 answer) is kept verbatim as source_operator_quote_1.",
-  "source_operator_quote_1": "I recommend yes, because separate rows shift every later line and break line citations. - yes",
   "decisions": [
     {
       "id": "CHAT-15",
@@ -54,5 +52,23 @@
       "quote_ref": "operator_quote_2",
       "recommendation": "Approve each as recommended on the V3 Exception Rulings page (exact recommendation texts in scratchpad/v3-cite/proposed-rulings.json)."
     }
-  ]
+  ],
+  "operator_quote_2": "approved [the cutover rulings table, pasted back] - the missing answers for the bylaws and V3 page are approved as well",
+  "split": {
+    "from": "scratchpad chat-decisions/2026-10-20-batch-c.json (operator chat 2026-10-20, batch C)",
+    "kept": [
+      "CHAT-15",
+      "CHAT-16",
+      "CHAT-17",
+      "CHAT-18",
+      "CHAT-19",
+      "CHAT-20",
+      "CHAT-22"
+    ],
+    "left_to_other_lane": [
+      "CHAT-14",
+      "CHAT-21"
+    ],
+    "note": "Split by subject (lane wf2/steps-rulings-1): the cutover rulings and the V3 condition-9 families only; every kept field is verbatim, and operator_quote_2 keeps its source key (verify-18 F-1, integrate-16). CHAT-14 (69a status-cell notes) and CHAT-21 (by-law M-205(1)-floor) are imported by another lane."
+  }
 }

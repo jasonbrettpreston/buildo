@@ -2919,11 +2919,12 @@
       },
       "bylaw_clause": "(absence: no RT building-depth regulation)",
       "clause_check": {
+        "absence_ruling": "ABS-5",
         "checked": false,
-        "why": "absence claim (Spec 67 plan NF-11)"
+        "why": "absence claim (Spec 67 plan NF-11); executed as absence ruling ABS-5 against page ch10_60 (Spec 69a M-240)"
       },
       "expected": {
-        "not_evaluated": "no_candidate"
+        "value": "unregulated"
       },
       "id": "p5071306:building_depth_m",
       "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
@@ -2953,6 +2954,7 @@
         "zone": "RT",
         "zone_label": "RT (au220.0)"
       },
+      "note": "expected re-encoded 2026-10-20 (Spec 69a M-240, rule 7a v2; ABS-5): Spec 67's NULL (no RT depth provision, confirmed absence NF-11) is unregulated by absence; it was encoded not_evaluated:no_candidate while no absence ruling covered RT depth.",
       "source": "parcel 5071306",
       "spec67_anchor": {
         "line": 2024,
@@ -3518,11 +3520,12 @@
       },
       "bylaw_clause": "(absence: no RT building-depth regulation)",
       "clause_check": {
+        "absence_ruling": "ABS-5",
         "checked": false,
-        "why": "absence claim (Spec 67 plan NF-11)"
+        "why": "absence claim (Spec 67 plan NF-11); executed as absence ruling ABS-5 against page ch10_60 (Spec 69a M-240)"
       },
       "expected": {
-        "not_evaluated": "no_candidate"
+        "value": "unregulated"
       },
       "id": "bijou:building_depth_m",
       "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
@@ -3549,6 +3552,7 @@
         "zone": "RT",
         "zone_label": "RT"
       },
+      "note": "expected re-encoded 2026-10-20 (Spec 69a M-240, rule 7a v2; ABS-5): Spec 67's NULL (no RT depth provision, confirmed absence NF-11) is unregulated by absence; it was encoded not_evaluated:no_candidate while no absence ruling covered RT depth.",
       "source": "7 Bijou Walk",
       "spec67_anchor": {
         "line": 2209,
@@ -4714,7 +4718,7 @@
         ]
       },
       "expected": {
-        "not_evaluated": "no_candidate"
+        "note": "Expectation withdrawn 2026-10-20 (Spec 69a M-240, rule 7a v2; ABS-4): Spec 67 states no building type, and with none the answer depends on it — a house, semi or houseplex is unregulated by ABS-4 (10.60.40.20 binds only a townhouse or apartment building on a major street), while a townhouse off a major street keeps not_evaluated:no_candidate (its own 10.60.40.20(1)(A) unit counts, M-240 (2)). Never 17.0 m, as Spec 67 asks (bylaw-fix-3.logic). Before M-240 every type answered no_candidate."
       },
       "id": "V22",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
@@ -4740,7 +4744,7 @@
         "text": "| V22 | RT | not on major street | NF-10 length | RT has no base case | `NULL` — confirm NOT `17.0` (the RD/RS/RM number must not leak into RT) |"
       },
       "target": "building_length_m",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_dependent"
     },
     {
       "bylaw_clause": "10.5.50.10(2)#(A)",

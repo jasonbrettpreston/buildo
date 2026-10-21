@@ -2397,7 +2397,7 @@
       "mandatory": false
     },
     "front_yard_needs_survey": {
-      "template": "The by-law sets this lot's front setback as the average of the neighbouring houses' setbacks (10.5.40.70(1)). We estimate those from building outlines, adjusted for porches, and show the larger of that and the zone's standard {X} m. A survey is needed.",
+      "template": "The by-law sets this lot's front setback as the average of the neighbouring houses' setbacks (10.5.40.70(1)). We estimate those from building outlines, adjusted for porches, and show that estimate, {X} m, even where it is below the zone's standard. A survey is needed.",
       "slots": [
         "X"
       ],

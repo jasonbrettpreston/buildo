@@ -1,0 +1,36 @@
+{
+ "suite": "src/tests/bylaw-fix-3.logic.test.ts",
+ "base": "df434e5c",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-3, D-1 / M-244 (Eglinton transportation-use exemption scoped to its use; M-159(3)), run on the working tree at df434e5c with the D-1 describe added, before the vocab, keying and applies() changes.",
+ "counts": {
+  "red": 5
+ },
+ "cases": [
+  {
+   "name": "D-1 / M-244 — the Eglinton transportation-use exemption is scoped to its use vocab: transportation_use is a use and a specific use with its closed disclosure",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'dwelling_unit', …(8) ] to include 'transportation_use'"
+  },
+  {
+   "name": "D-1 / M-244 — the Eglinton transportation-use exemption is scoped to its use 10.10.40.71(1) is keyed uses [transportation_use], evidence \"a transportation use\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ [], undefined ] to deeply equal [ [ 'transportation_use' ], …(1) ]"
+  },
+  {
+   "name": "D-1 / M-244 — the Eglinton transportation-use exemption is scoped to its use an R lot without map areas and no averaging answers 6.0 m from 10.10.40.70(1), and never reads the Eglinton map gate",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(2) ] to deeply equal []"
+  },
+  {
+   "name": "D-1 / M-244 — the Eglinton transportation-use exemption is scoped to its use an R lot without map areas where averaging applies answers by averaging (10.5.40.70(1)), never map_area_not_held",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, undefined ] to deeply equal [ Array(3) ]"
+  },
+  {
+   "name": "D-1 / M-244 — the Eglinton transportation-use exemption is scoped to its use M-159(3): the unit applies only on a lot that has the use",
+   "at_base": "red",
+   "reason": "AssertionError: expected null to be false // Object.is equality"
+  }
+ ]
+}

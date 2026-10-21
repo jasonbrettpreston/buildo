@@ -17,7 +17,8 @@
  * boundary within lot_street_m + 1.5 m of its frontage street), instead of the step's
  * difference of two distances to the street centreline.
  *
- * Reports the ruled front setback, max(averaged estimate + fya_porch_allowance_m, zone default),
+ * Reports the ruled front setback, averaged estimate + fya_porch_allowance_m (69a M-245, 2026-10-20: no zone-default floor;
+ * it was max(…, zone default) from 2026-10-19),
  * resolved by scripts/analysis/bylaw/front-averaging.mjs at the current allowance (the DB value,
  * else the seed default), against the examiner's figure, beside the zone default alone.
  *

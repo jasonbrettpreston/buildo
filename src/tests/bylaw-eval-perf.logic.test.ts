@@ -123,6 +123,15 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-20 (CHAT-9 / M-239, O-7, bylaw fix lane 2): six new dsl_targets (the two main-wall share tiers,
     // the four attic-test thresholds); their 840 cells are not_evaluated:no_candidate (the fixture units predate the
     // keying). With the six left out the hash is the previous pin 459ee9f1…e931 exactly, so no existing cell moved.
-    expect(h.digest('hex')).toBe('0baad134ff29613222f23daec02ac87a0e0060df3445291125afd6d56bc3fd48');
+    // re-pinned 2026-10-20 (R-7a-v2 / M-240, rule 7a v2, ABS-3…ABS-7; bylaw fix lane 3): a per-cell diff against 0baad134…fd48
+    // moves the top-level status of 42 cells only: RT building_depth_m (40, every type: no 10.60.40.30, ABS-5) and RT detached_house
+    // building_length_m (2, ABS-4), no_candidate → unregulated; 90 null-type cells change only their M-50 per_type entries (RD semi
+    // depth ABS-6, RM houseplex ABS-7, RT); 28 gain building_type in inputs[] and 19 an absence trace line. Nothing else moved.
+    // re-pinned 2026-10-20 (D-3 / M-243, bylaw fix lane 3): fourteen new dsl_targets (an encroachment and a clearance target per
+    // element: eaves, window projection, platform, canopy, cladding, architectural feature, equipment); their 1,960 cells are
+    // not_evaluated:no_candidate (the fixture units predate the keying). A per-cell diff against 8cba529b…e8 moves no existing
+    // cell (the declared bounds of encroachment_m / encroachment_clearance_m change no fixture result); N-2, N-3, D-1 and M-245
+    // moved none either.
+    expect(h.digest('hex')).toBe('e4dca9efe4c5ce31fb84cb05703ac9fe24fdfcdb5e712da49634ec3649fce218');
   }, 60_000);
 });

@@ -1,0 +1,53 @@
+{
+ "suite": "src/tests/bylaw-fix-3.logic.test.ts,src/tests/bylaw-front-setback-reliability.logic.test.ts",
+ "base": "4acb171f",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-3, M-205(1)-floor / M-245 (no zone-default floor under the averaged front yard; CHAT-21), run on the working tree at 4acb171f with the M-245 describe added and the reliability lock's floor cases rewritten, before front-averaging.mjs changes. Re-measure before (n = 220, local dev DB 2026-10-20, max(est + 1.0, 6.0)): mean error 1.39 m, 54.5 % within 1 m, 22.3 % too generous.",
+ "counts": {
+  "red": 5,
+  "pass": 4
+ },
+ "cases": [
+  {
+   "name": "M-205(1)-floor / M-245 — no zone-default floor under the averaged front yard R: two neighbours at 2.91 m → 3.91 m (453 Durie St's examiner figure), through 10.5.40.70(1)(B), needs survey",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 6, 'averaged_two', true, …(1) ] to deeply equal [ 3.91, 'averaged_two', true, …(1) ]"
+  },
+  {
+   "name": "M-205(1)-floor / M-245 — no zone-default floor under the averaged front yard RD: one neighbour at 3.86 m → 4.86 m (24 Gardens Cres's examiner figure), through 10.5.40.70(1)(A)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 6 to be 4.86 // Object.is equality"
+  },
+  {
+   "name": "M-205(1)-floor / M-245 — no zone-default floor under the averaged front yard the zone default applies only where averaging does not: no qualifying neighbour, an excluded estimate, three or more neighbours",
+   "at_base": "pass"
+  },
+  {
+   "name": "averaging applies: averaged estimate + porch allowance, no zone-default floor (M-245), needs survey estimate + allowance above the zone default: 7.0 / 7.4 → 7.2 + 1.0 = 8.2 m",
+   "at_base": "pass"
+  },
+  {
+   "name": "averaging applies: averaged estimate + porch allowance, no zone-default floor (M-245), needs survey estimate + allowance below the zone default: 4.0 / 5.0 → 4.5 + 1.0 = 5.5 m, no floor (M-245: \"If regulation 10.5.40.70(1) does not apply\" — the 6.0 m is the fallback)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 6, true, true ] to deeply equal [ 5.5, true, false ]"
+  },
+  {
+   "name": "averaging applies: averaged estimate + porch allowance, no zone-default floor (M-245), needs survey one neighbour: its estimate + allowance (averaged_one)",
+   "at_base": "pass"
+  },
+  {
+   "name": "averaging applies: averaged estimate + porch allowance, no zone-default floor (M-245), needs survey the allowance setting changes the result",
+   "at_base": "pass"
+  },
+  {
+   "name": "evaluator, production units: the resolved lot gives the same front setback averaging applies: the averaged value wins through 10.5.40.70(1)(B), above and below the zone default (M-245)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 6, '10.5.40.70(1)#(1)(B)' ] to deeply equal [ 5.5, '10.5.40.70(1)#(1)(B)' ]"
+  },
+  {
+   "name": "P5.12 wording (LC-52: plain, at most 45 words) front_yard_needs_survey: averaging by-law, outlines adjusted for porches, that estimate even below the standard (M-245), survey",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The by-law sets this lot\\'s front set…' to be 'The by-law sets this lot\\'s front set…' // Object.is equality"
+  }
+ ]
+}

@@ -94,6 +94,12 @@ export function makeContext(vocab, extra = {}) {
     thresholdTokens: new Set(vocab.lot_condition_threshold || []),
     // M-175: uses that name an accessory structure (pool, garage, deck, …); a unit scoped to one limits that structure.
     accessoryUses: new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment')),
+    // M-241 (N-2): the condition under which an accessory-structure unit binds the ancillary building itself (private
+    // garage → ancillary_contains_parking_space), and each building type's declared structure class
+    accessoryAncillaryCondition: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.ancillary_condition).map(([k, v]) => [k, v.ancillary_condition])),
+    typeStructure: vocab.building_type_structure || {},
+    // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
+    specificUses: new Set(Object.keys(vocab.specific_use || {}).filter((k) => k !== '$comment')),
     // M-159(1) / M-217: chapter → {category, zones}; a base unit of a mapped chapter with no zones of its own loads only
     // on a lot whose zone is in its category (an Institutional or Commercial Residential rule never limits a house).
     zoneCategory: vocabMap(vocab.zone_category_chapter),
@@ -323,6 +329,14 @@ function evCond(c, env) {
       env.trace.push(`mapped(${c.code})=${r === true || r === false ? r : 'unknown'}`);
       return r;
     }
+    case 'holds': {
+      // M-241: a lot condition token, three-valued (a user input that is unknown asks the user)
+      env.reads.add(`flags.${c.token}`);
+      const v = lot.flags ? lot.flags[c.token] : undefined;
+      env.trace.push(`holds(${c.token})=${v === true || v === false ? v : 'unknown'}`);
+      if (v === true || v === false) return v;
+      return ne(env.C && env.C.userInputs && env.C.userInputs.has(c.token) ? 'needs_user_input' : 'condition_unknown', c.token);
+    }
     case 'labelled': {
       env.reads.add(`label.${c.letter}`);
       const r = lot.label ? lot.label[c.letter] !== undefined && lot.label[c.letter] !== null : ne('missing_input', 'zone_label');
@@ -411,6 +425,34 @@ function absenceIgnored(u, C) {
   if (ig.accessory_structure_uses === true && (app.uses || []).some((x) => C.accessoryUses && C.accessoryUses.has(x && typeof x === 'object' ? x.token : x))) return true;
   return false;
 }
+// M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2): absence is decided per (zone,
+// building type, target). Besides absenceIgnored, rule 7a does not count a DEFINE unit with no statement for the target
+// (it says how a measure is taken; vocab.absence_ignore.define_without_statement) nor a unit whose building_types exclude
+// the lot's type and its parent (vocab.absence_ignore.other_building_types) — the same fields applies() reads.
+function absenceCounts(u, lot, target, C, reads) {
+  if (absenceIgnored(u, C)) return false;
+  const ig = C.absenceIgnore || {};
+  if (ig.define_without_statement === true && u.archetype === 'DEFINE' && !parsedFor(u, target).length) return false;
+  if (ig.other_building_types === true) {
+    const types = ((u.application || {}).building_types || []).map((x) => (x && typeof x === 'object' ? x.token : x));
+    if (types.length && !types.includes('any')) {
+      reads.add('building_type');
+      const bt = lot.building_type;
+      if (bt && !types.includes(bt) && !types.includes(C.typeParent[bt])) return false;
+    }
+  }
+  return true;
+}
+// M-240: an absence ruling may name building_types; it covers only those types (or their children).
+function absenceRulingFor(lot, target, C, reads) {
+  return (C.absences || []).find((a) => {
+    if (a.zone !== lot.zone || a.target !== target) return false;
+    if (!a.building_types) return true;
+    reads.add('building_type');
+    const bt = lot.building_type;
+    return Boolean(bt && (a.building_types.includes(bt) || a.building_types.includes(C.typeParent[bt])));
+  });
+}
 
 // condition.if string → its parsed AST (or the DslError it throws), parsed once per string, not once per applies()
 // call; the AST is only read (as the PARSED statement ASTs are). Perf only, outputs unchanged.
@@ -466,7 +508,28 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   // accessory_structure_use) limits that structure, never the principal building this evaluator answers for. Before
   // this check the 10.5.60.20(8)(A) swimming-pool rear setback (25.0 m) decided houses' rear setbacks.
   const accUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryUses && C.accessoryUses.has(x));
-  if (accUse) { reads.add('uses'); return { ok: false, why: `use ${accUse} (an accessory structure, not the principal building)` }; }
+  if (accUse) {
+    reads.add('uses');
+    // M-241 (N-2, operator approved 2026-10-20): the M-175 guard holds for a principal or suite building; when the building
+    // answered is the ancillary class the unit names, a unit whose accessory use declares an ancillary condition (a
+    // private garage: the ancillary building contains a parking space) binds it when that condition holds
+    const anc = C.accessoryAncillaryCondition && C.accessoryAncillaryCondition[accUse];
+    reads.add('building_type');
+    if (!(anc && bt && C.typeStructure[bt] === 'ancillary' && types.includes(bt))) return { ok: false, why: `use ${accUse} (an accessory structure, not the principal building)` };
+    reads.add(`flags.${anc}`);
+    const v = lot.flags ? lot.flags[anc] : undefined;
+    trace.push(`${anc}=${v === true || v === false ? v : 'unknown'}`);
+    if (v === false) return { ok: false, why: `condition ${anc} (use ${accUse})` };
+    if (v !== true) unknown = unknown || (C.userInputs.has(anc) ? `needs_user_input:${anc}` : `condition_unknown:${anc}`);
+  }
+  // M-159(3) (specific-use scope) / M-244 (D-1, operator approved 2026-10-20): a unit scoped to a specific use (vocab
+  // specific_use) applies only on a lot that has that use (lot.uses); a house lot has none, so e.g. the Eglinton
+  // transportation-use exemption 10.10.40.71(1) is set aside before its map gate is read.
+  const specUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.specificUses && C.specificUses.has(x));
+  if (specUse) {
+    reads.add('uses');
+    if (!(Array.isArray(lot.uses) && lot.uses.includes(specUse))) return { ok: false, why: `use ${specUse} (a specific use the lot does not have, M-159(3))` };
+  }
   const part = (u.applies_to && u.applies_to.part) || 'whole';
   let unheldLiteral = null;
   const refs = (u.applies_to && u.applies_to.refs) || [];
@@ -497,6 +560,15 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   if (cond && cond !== 'none' && cond.if && cond.if !== 'none') {
     let c;
     try { c = parsedCond(cond.if); } catch (err) { if (err instanceof DslError) return { ok: null, reason: `expression_error:${err.code}` }; throw err; }
+    if (c.type === 'complement') {
+      // M-242: not (the sibling arms' keyed conditions), resolved over the agreed units (agree.mjs resolveComplements)
+      const sib = Array.isArray(cond.complement_if) && cond.complement_if.length === c.of.length ? cond.complement_if : null;
+      if (!sib) return { ok: null, reason: 'expression_error:complement_unresolved' };
+      let xs;
+      try { xs = sib.map((x) => parsedCond(x)); } catch (err) { if (err instanceof DslError) return { ok: null, reason: `expression_error:${err.code}` }; throw err; }
+      trace.push(`complement(${c.of.join(', ')}) = not (${sib.join(' or ')})`);
+      c = { type: 'not', x: xs.length === 1 ? xs[0] : { type: 'or', xs } };
+    }
     const r = evCond(c, { C, lot, trace, reads, resolveVariable, argEdits: {} });
     if (r === false) return { ok: false, why: `condition ${cond.if}` };
     if (r !== true) unknown = unknown || r.ne;
@@ -960,9 +1032,15 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
     // (zone, target), (ii) the lot's exception and its INCLUDE closure are authored for the target — guaranteed here:
     // effective()'s lot gate already returned exception_not_authored otherwise (ruling (d)), (iii) no by-law unit of
     // any layer carries the target, keyed or pending.
-    const abs = (C.absences || []).find((a) => a.zone === lot.zone && a.target === target);
+    const abs = absenceRulingFor(lot, target, C, reads);
     if (abs) {
-      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length) && !absenceIgnored(u, C));
+      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length) && absenceCounts(u, lot, target, C, reads));
+      if (!any.length && abs.answer === 'not_applicable') {
+        // M-240 (3): the lot's type is outside the subject of the zone's clause → not_applicable:<that clause>
+        return { status: 'not_applicable', value: null, reason: `not_applicable:${abs.subject_clause}`, unit: C.units.target[target] ?? null, bound: null, winner: null,
+          evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true, subject_clause: abs.subject_clause },
+          bounds: {}, applied: [], trace: [...trace, `rule 7 + ${abs.id}: no unit for ${target} binds ${lot.building_type}; ${abs.subject_clause} names another subject — not applicable (${abs.statement})`], disclosures, inputs: ins() };
+      }
       if (!any.length) {
         return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
           evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true },
@@ -1283,6 +1361,9 @@ function landDefaultProblems(land, name) {
 // ---------------------------------------------------------------- absence rulings (rule 7a) — verified against the page
 const foldText = (s) => String(s).toLowerCase().replace(/\s+/g, ' ');
 const ABS_KEYS = Object.freeze(['absent_phrases', 'accounted_occurrences', 'checked_page', 'evidence_kind', 'expert_sample', 'id', 'occurrence_patterns', 'present_phrases', 'ruling', 'statement', 'target', 'zone']);
+// M-240: an absence ruling may name the building types it covers and answer not_applicable with the clause whose subject
+// excludes them (subject_clause).
+const ABS_OPTIONAL = Object.freeze(['answer', 'building_types', 'subject_clause']);
 /**
  * One absence ruling against its pinned page text (case-insensitive, whitespace-folded). Structural: EVERY occurrence
  * of every occurrence pattern (which must cover the target's vocab licensing patterns) lies inside a declared
@@ -1293,9 +1374,13 @@ export function verifyAbsence(ruling, pageText, vocab) {
   const v = []; const id = ruling && ruling.id;
   if (!ruling || typeof ruling !== 'object') return { pass: false, violations: ['absence_malformed: not an object'] };
   for (const k of ABS_KEYS) if (ruling[k] === undefined) v.push(`absence_malformed: ${id} missing ${k}`);
-  for (const k of Object.keys(ruling)) if (!ABS_KEYS.includes(k)) v.push(`absence_malformed: ${id} unknown key ${k}`);
+  for (const k of Object.keys(ruling)) if (!ABS_KEYS.includes(k) && !ABS_OPTIONAL.includes(k)) v.push(`absence_malformed: ${id} unknown key ${k}`);
   if (v.length) return { pass: false, violations: v };
-  if (!/^ABS-\d+$/.test(id)) v.push(`absence_malformed: ${id} id must be ABS-<n>`);
+  if (!/^ABS-\d+(\.\d+)?$/.test(id)) v.push(`absence_malformed: ${id} id must be ABS-<n> or ABS-<n>.<m>`);
+  if (ruling.answer !== undefined && ruling.answer !== 'not_applicable') v.push(`absence_malformed: ${id} answer must be not_applicable (unregulated is the default)`);
+  if (ruling.answer === 'not_applicable' && !(typeof ruling.subject_clause === 'string' && ruling.subject_clause.trim())) v.push(`absence_malformed: ${id} answer not_applicable needs subject_clause`);
+  if (ruling.subject_clause !== undefined && ruling.answer !== 'not_applicable') v.push(`absence_malformed: ${id} subject_clause only with answer not_applicable`);
+  if (ruling.building_types !== undefined && !(Array.isArray(ruling.building_types) && ruling.building_types.length && ruling.building_types.every((t) => !vocab || (vocab.building_type && vocab.building_type[t])))) v.push(`absence_malformed: ${id} building_types must be vocab building types`);
   if (ruling.evidence_kind !== 'absence' || ruling.expert_sample !== true) v.push(`absence_malformed: ${id} evidence_kind absence + expert_sample true`);
   if (vocab && !(vocab.zone || []).includes(ruling.zone)) v.push(`absence_malformed: ${id} zone ${ruling.zone}`);
   const tgt = vocab && vocab.dsl_target && vocab.dsl_target[ruling.target];
@@ -1334,7 +1419,15 @@ export function checkAbsenceRulings({ rulings, pages, vocab }) {
     v.push(...verifyAbsence(r, pages ? pages[r && r.checked_page] : null, vocab).violations);
   }
   const pairs = new Set();
-  for (const r of rulings || []) { const k = `${r.zone}|${r.target}`; if (pairs.has(k)) v.push(`absence_malformed: two rulings for ${k}`); pairs.add(k); }
+  // M-240: one (zone, target) may carry a ruling per building type; two rulings that could both cover a lot are refused
+  const list = rulings || [];
+  for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+    const a = list[i]; const b = list[j];
+    if (a.zone !== b.zone || a.target !== b.target) continue;
+    const overlap = !a.building_types || !b.building_types || a.building_types.some((t) => b.building_types.includes(t));
+    const k = `${a.zone}|${a.target}`;
+    if (overlap && !pairs.has(k)) { v.push(`absence_malformed: two rulings for ${k}`); pairs.add(k); }
+  }
   return { pass: v.length === 0, violations: v, executed };
 }
 

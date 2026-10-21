@@ -182,15 +182,19 @@ describe('RS-11 decided rulings pin the semi_half rules (Q-1/Q-2/Q-3)', () => {
 });
 
 describe('Q-7 scope', () => {
-  it('keeps only the approved list on spec100_amendment; the rest wait on operator_confirm', () => {
+  it('the approved list and the ten rows CHAT-11 confirmed (2026-10-20-chat-batch-b#CHAT-11, read from the decision log) are on spec100_amendment; none waits on operator_confirm', () => {
     const inp = fresh();
     expect(field(inp, 'parcel.lot.zone_label').source).toBe('pending:spec100_amendment:Q-7');
-    expect(field(inp, 'parcel.lot.centroid_lat').source).toBe('pending:operator_confirm:Q-7-scope');
+    for (const p of ['zone_class_label', 'exception_number', 'is_irregular', 'is_corner_lot', 'is_through_lot', 'abuts_laneway', 'centroid_lat', 'centroid_lng', 'overlays', 'neighbourhood_name']) {
+      expect(field(inp, `parcel.lot.${p}`).source, p).toBe('pending:spec100_amendment:Q-7');
+    }
+    expect(JSON.stringify(inp.decl)).not.toContain('pending:operator_confirm:Q-7-scope');
   });
-  it('FAILs an operator_confirm row once the whitelist carries its target', () => {
+  it('FAILs an operator_confirm row once the whitelist carries its target (a synthetic row: CHAT-11 left none on operator_confirm)', () => {
     const inp = fresh();
+    field(inp, 'parcel.lot.exception_number').source = 'pending:operator_confirm:Q-7-scope';
     inp.consumer.whitelist.push('parcel.lot.exception_number');
-    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('parcel.lot.exception_number');
+    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('parcel.lot.exception_number: the S-001 whitelist now has');
   });
 });
 
