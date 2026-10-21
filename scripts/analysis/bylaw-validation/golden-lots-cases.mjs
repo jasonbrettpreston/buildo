@@ -244,11 +244,14 @@ for (const r of rows) {
 //   COA-F-01  front yard by averaging (10.5.40.70(1)): the neighbour estimate + fya_porch_allowance_m is not the examiner's
 //             surveyed figure (Spec 130 Q-B1 open for a better estimator; 69a M-245 removed the 6.0 m floor). The averaging
 //             facts are the lot's parcel_abutments rows, pulled read-only 2026-10-20 and resolved by front-averaging.mjs.
-//   COA-F-02  side yard: the evaluator answers the 0.45 m blank-wall reduction (x.40.70(4), 69a M-205(2)) as the maximum
-//             build; the examiner applied the 0.9 m side yard of a wall with openings, a design fact the lot does not hold.
+//   COA-F-02  (closed 2026-10-21, 69a M-259, `2026-10-21-chat-batch-h#CHAT-33`) side yard: the 0.45 m blank-wall reduction
+//             (10.10.40.70(4)) now holds only under the design-choice token blank_side_wall (default true, M-205(2)); the
+//             examiner applied the 0.9 m side yard of a wall with openings, so these cases' scenario supplies
+//             blank_side_wall: false (OPENINGS) and the City figure is answered.
 const COA_FAMILY = 'CoA notices — City examiner figures (69a M-240..M-245)';
 const GARAGE = (vars = {}) => ({ building_type: 'ancillary_building', flags: { ancillary_contains_parking_space: true }, vars: { distance_to_residential_m: 5, ...vars } });
 const HOUSE = { building_type: 'detached_house' };
+const OPENINGS = { building_type: 'detached_house', flags: { blank_side_wall: false } }; // M-259: the side wall has windows or doors
 const COA = [
   { notice: 'A0594/26TEY', lot: '5447457', cited: '10.5.40.60(7)(B); 10.10.40.40(1)(A)', cls: 'PROVEN', checks: [
     ['10.5.40.60(7)#(7)(B)', HOUSE, 'eaves_encroachment_m', { value: 0.9 }, 'City: roof eaves may project a maximum of 0.9 m (D-3, M-243)'],
@@ -256,8 +259,8 @@ const COA = [
     ['10.10.40.40(1)#(1)(A)', HOUSE, 'fsi', { value: 0.6 }, 'City: the maximum FSI is 0.6 times the lot area'] ] },
   { notice: 'A0594/26TEY', lot: '5447457', cited: '10.20.40.70(1)', cls: 'FAILS', finding: 'COA-F-01', checks: [
     ['10.5.40.70(1)#(1)(A)', { building_type: 'detached_house', flags: { front_averaging_not_applicable: false, one_abutting_building_within_15_m: true, two_abutting_buildings_within_15_m: false }, vars: { abutting_front_setback_m: 2.9 } }, 'front_setback_m', { value: 3.91 }, 'City: required front yard 3.91 m; the evaluator: one qualifying neighbour, estimate 1.90 m + 1.0 m allowance = 2.90 m (M-245, no floor; was 6.0 m with the floor)'] ] },
-  { notice: 'A0594/26TEY', lot: '5447457', cited: '10.20.40.70(3)(B)', cls: 'FAILS', finding: 'COA-F-02', checks: [
-    ['10.10.40.70(3)#(3)(A)', HOUSE, 'side_setback_m', { value: 0.9 }, 'City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))'] ] },
+  { notice: 'A0594/26TEY', lot: '5447457', cited: '10.20.40.70(3)(B)', cls: 'PROVEN', checks: [
+    ['10.10.40.70(3)#(3)(A)', OPENINGS, 'side_setback_m', { value: 0.9, winner: '10.10.40.70(3)#(3)(A)' }, 'City: required side yard 0.9 m — a side wall with windows or doors (blank_side_wall false): the 0.45 m reduction 10.10.40.70(4)(A) does not apply (M-259, was COA-F-02)'] ] },
   { notice: 'A0625/26TEY', lot: '5343399', cited: '10.10.60.70(1)(B); 10.5.60.50(2)(B); 10.10.60.20(1)(A); 10.5.40.60(8)(A)', cls: 'PROVEN', checks: [
     ['10.10.60.70(1)#(1)(A)', GARAGE({ proposed_height_m: 3.5 }), 'ancillary_coverage_pct', { value: 5 }, 'City: ancillary buildings may cover at most 5 % of the lot (N-1)'],
     ['10.5.60.50(2)#(2)(B)', GARAGE({ proposed_height_m: 3.5 }), 'ancillary_floor_area_m2', { value: 40 }, 'City: at most 40 m2 total ancillary floor area, frontage 7.63 m < 12.0 m (N-3, M-242)'],
@@ -287,12 +290,12 @@ const COA = [
     ['10.5.60.60(1)#whole', GARAGE(), 'eaves_encroachment_m', { value: 0.3 }, 'City: ancillary eaves may encroach 0.3 m (D-3, M-243)'],
     ['10.5.60.60(1)#whole', GARAGE(), 'eaves_clearance_m', { value: 0.15 }, 'City: no closer to a lot line than 0.15 m (D-3, M-243)'],
     ['10.10.40.70(2)#whole', HOUSE, 'rear_setback_m', { value: 7.5 }, 'City: required rear yard 7.5 m'] ] },
-  { notice: 'A0510/26TEY', lot: '5443676', cited: '10.10.40.70(3)(A)(i)', cls: 'FAILS', finding: 'COA-F-02', checks: [
-    ['10.10.40.70(3)#(3)(A)', HOUSE, 'side_setback_m', { value: 0.9 }, 'City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))'] ] },
+  { notice: 'A0510/26TEY', lot: '5443676', cited: '10.10.40.70(3)(A)(i)', cls: 'PROVEN', checks: [
+    ['10.10.40.70(3)#(3)(A)', OPENINGS, 'side_setback_m', { value: 0.9, winner: '10.10.40.70(3)#(3)(A)' }, 'City: required side yard 0.9 m — a side wall with windows or doors (blank_side_wall false): the 0.45 m reduction 10.10.40.70(4)(A) does not apply (M-259, was COA-F-02)'] ] },
   { notice: 'A0461/26TEY', lot: '5305360', cited: '10.80.40.70(3)(A)', cls: 'PROVEN', checks: [
     ['10.80.40.70(3)#(3)(A)', { building_type: 'detached_houseplex' }, 'side_setback_m', { value: 1.2 }, 'City: required side yard 1.2 m (a houseplex)'] ] },
 ];
-const COA_REASON = { 'COA-F-01': 'front yard by averaging: the neighbour estimate + allowance is not the examiner\'s surveyed figure (Spec 130 Q-B1 open; M-245 removed the 6.0 m floor)', 'COA-F-02': 'side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings' };
+const COA_REASON = { 'COA-F-01': 'front yard by averaging: the neighbour estimate + allowance is not the examiner\'s surveyed figure (Spec 130 Q-B1 open; M-245 removed the 6.0 m floor)' };
 for (const c of COA) {
   const g = L(c.lot);
   cases.push({ unit_id: c.cited, family: COA_FAMILY, verdict: 'city_figure', disposition: `CoA ${c.notice}`, tracker_state: 'coa_notice', fix_ids: [], disclosure_code: null, corrected_value: '',

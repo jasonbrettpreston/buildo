@@ -163,6 +163,12 @@ export function checkVocab(vocab) {
     if (!isMap(x)) v.push(`vocab_missing_field: lot_condition.${tok}`);
     else if (x.user_input !== undefined && !userInputs.has(x.user_input)) v.push(`vocab_reference_invalid: lot_condition.${tok}.user_input ${x.user_input}`);
   }
+  // M-259 (CHAT-33): an accessory structure's reference_flags name lot_condition tokens, each fixed to a boolean
+  for (const [use, x] of Object.entries(vocab.accessory_structure_use || {})) {
+    if (use === '$comment' || !isMap(x) || x.reference_flags === undefined) continue;
+    if (!isMap(x.reference_flags)) { v.push(`vocab_reference_invalid: accessory_structure_use.${use}.reference_flags`); continue; }
+    for (const [tok, b] of Object.entries(x.reference_flags)) if (!Object.hasOwn(vocab.lot_condition, tok) || typeof b !== 'boolean') v.push(`vocab_reference_invalid: accessory_structure_use.${use}.reference_flags.${tok}`);
+  }
 
   // scope reasons
   const oos = vocab.scope.out_of_scope_reason;

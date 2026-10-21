@@ -70279,37 +70279,41 @@
    "disclosure_code": null,
    "corrected_value": "",
    "zone": "R",
-   "class": "FAILS",
-   "finding": "COA-F-02",
+   "class": "PROVEN",
+   "finding": null,
    "owed_field": null,
    "coa": "A0594/26TEY",
    "address": "453 Durie St",
-   "reason": "side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings — 453 Durie St (A0594/26TEY)",
+   "reason": "the evaluator answers the City examiner's figures on 453 Durie St (A0594/26TEY)",
    "checks": [
     {
      "kind": "value",
      "unit": "10.10.40.70(3)#(3)(A)",
      "lot": "5447457",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "blank_side_wall": false
+      }
      },
      "target": "side_setback_m",
      "expect": {
-      "value": 0.9
+      "value": 0.9,
+      "winner": "10.10.40.70(3)#(3)(A)"
      },
-     "rationale": "City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))",
+     "rationale": "City: required side yard 0.9 m — a side wall with windows or doors (blank_side_wall false): the 0.45 m reduction 10.10.40.70(4)(A) does not apply (M-259, was COA-F-02)",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 0.45,
+       "value": 0.9,
        "reason": null,
-       "winner": "10.10.40.70(4)#(4)(A)",
+       "winner": "10.10.40.70(3)#(3)(A)",
        "applied": [
-        "10.10.40.70(4)#(4)(A)"
+        "10.10.40.70(3)#(3)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30
@@ -71193,37 +71197,41 @@
    "disclosure_code": null,
    "corrected_value": "",
    "zone": "R",
-   "class": "FAILS",
-   "finding": "COA-F-02",
+   "class": "PROVEN",
+   "finding": null,
    "owed_field": null,
    "coa": "A0510/26TEY",
    "address": "474 Beresford Ave",
-   "reason": "side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings — 474 Beresford Ave (A0510/26TEY)",
+   "reason": "the evaluator answers the City examiner's figures on 474 Beresford Ave (A0510/26TEY)",
    "checks": [
     {
      "kind": "value",
      "unit": "10.10.40.70(3)#(3)(A)",
      "lot": "5443676",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "blank_side_wall": false
+      }
      },
      "target": "side_setback_m",
      "expect": {
-      "value": 0.9
+      "value": 0.9,
+      "winner": "10.10.40.70(3)#(3)(A)"
      },
-     "rationale": "City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))",
+     "rationale": "City: required side yard 0.9 m — a side wall with windows or doors (blank_side_wall false): the 0.45 m reduction 10.10.40.70(4)(A) does not apply (M-259, was COA-F-02)",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 0.45,
+       "value": 0.9,
        "reason": null,
-       "winner": "10.10.40.70(4)#(4)(A)",
+       "winner": "10.10.40.70(3)#(3)(A)",
        "applied": [
-        "10.10.40.70(4)#(4)(A)"
+        "10.10.40.70(3)#(3)(A)"
        ],
        "disclosures": [],
        "alternate_paths": 30

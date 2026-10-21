@@ -84146,6 +84146,396 @@
       "value": {
         "RD": "Exception RD 37"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(A)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "detached_house": "a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(A)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "description": "For a detached house, the side yard setback in 10.10.40.70(3) may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(B)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "semi_detached_house": "a semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(B)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(B)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "description": "For a semi-detached house, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(C)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "tokens": [
+          "all_units_front_street",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": [
+        "all_units_front_street",
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "R": "the R zone",
+        "all_units_front_street": "front directly on a street",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "townhouse": "a townhouse if"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(C)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "description": "For a townhouse whose dwelling units all front directly on a street, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(D)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "detached_houseplex": "a detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(D)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "description": "For a detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(E)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "tokens": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(E)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": [
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(E)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "R": "the R zone",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "semi_detached_houseplex": "a semi-detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(E)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(E)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "description": "For a semi-detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-205(2): the max build takes that side without openings by default (vocab design_choice_disclosure.default_overrides), so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with blank_side_wall false the unit does not apply and the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.70(4)#(4)(G)/condition",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": {
+        "if": "proposed_height_m ≤ 13.0 m",
+        "tokens": [
+          "building_height_band",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(4)#(4)(G)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": [
+        "building_height_band",
+        "blank_side_wall"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(4)#(4)(G)/application.evidence",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": {
+        "R": "the R zone",
+        "apartment_building": "an apartment building",
+        "blank_side_wall": "if there are no windows or doors in that side of the building",
+        "building_height_band": "height of 13.0 metres or less"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(G)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-5 (CoA scorecards, 2026-10-21; operator approved CHAT-33): 10.10.40.70(4) reads \"may be reduced to 0.45 metres if there are no windows or doors in that side of the building\" (ch10_10.txt); the condition is in the lead-in that governs every item, so each keyed unit carries the design-choice token blank_side_wall (taken as met by default, M-205(2); with openings the (3) side yard applies). Keyed with condition none, the unit bound every R side yard whatever the wall.",
+      "rule": "Operator approved F-SC-5 in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-33; Spec 69a M-259 (1): \"Every keyed unit of (4) ... carries the lot-condition token blank_side_wall\"); M-205(2); M-172; M-75",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": {
+        "description": "For an apartment building 13.0 metres or less in height, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259), taken as met by default (vocab design_choice_disclosure.default_overrides, M-205(2)); with blank_side_wall false the unit does not apply and the 10.10.40.70(3) side yard applies.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
     }
   ]
 }

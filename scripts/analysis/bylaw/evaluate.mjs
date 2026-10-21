@@ -98,6 +98,9 @@ export function makeContext(vocab, extra = {}) {
     // garage → ancillary_contains_parking_space), and each building type's declared structure class
     // M-254: an accessory structure's own element targets (a platform's setbacks, clearance, encroachment) answer for it
     accessoryElementTargets: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && Array.isArray(v.element_targets)).map(([k, v]) => [k, new Set(v.element_targets)])),
+    // M-259 (operator approved 2026-10-21, CHAT-33): the lot conditions under which an accessory structure's own element
+    // target reads the principal-building targets it references (a platform has no side wall: blank_side_wall false)
+    accessoryReferenceFlags: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.reference_flags && typeof v.reference_flags === 'object').map(([k, v]) => [k, v.reference_flags])),
     accessoryAncillaryCondition: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.ancillary_condition).map(([k, v]) => [k, v.ancillary_condition])),
     typeStructure: vocab.building_type_structure || {},
     // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
@@ -908,6 +911,22 @@ function effCore(lot, target, candidates, C, env) {
     if (!env.memo.has(key)) env.memo.set(key, effective(lot, name, candidates, C, { depth: env.depth, inScenario: env.inScenario, sorted: true, memo: env.memo }));
     return env.memo.get(key);
   };
+  // M-259 (operator approved 2026-10-21, CHAT-33): the same resolution on the lot with some lot conditions fixed (an
+  // accessory structure's vocab reference_flags). The flagged lot is a different lot, so it keeps its own memo.
+  const resolveVariableWith = (over) => {
+    const keys = Object.keys(over).sort(cmpStr);
+    if (keys.every((k) => (lot.flags || {})[k] === over[k])) return resolveVariable;
+    const tag = `flags\u0000${keys.map((k) => `${k}=${over[k]}`).join(',')}`;
+    if (!env.memo.has(tag)) env.memo.set(tag, new Map());
+    const memo = env.memo.get(tag);
+    const flagged = { ...lot, flags: { ...(lot.flags || {}), ...over } };
+    return (name) => {
+      if (name === target) return null;
+      const key = `${env.depth}\u0000${env.inScenario ? 1 : 0}\u0000${lot.building_type ?? ''}\u0000${name}`;
+      if (!memo.has(key)) memo.set(key, effective(flagged, name, candidates, C, { depth: env.depth, inScenario: env.inScenario, sorted: true, memo }));
+      return memo.get(key);
+    };
+  };
   const statics = infoOf(candidates).statics; // per (candidates array, target): lot-independent
   if (!statics.has(target)) statics.set(target, staticSets(candidates, target));
   const { valueSet, provTrace, prevailing, consideredOrdered, r3, r2, ro } = statics.get(target);
@@ -931,7 +950,7 @@ function effCore(lot, target, candidates, C, env) {
   }
   // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
   const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
-  const base = { lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive };
+  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -983,7 +1002,7 @@ function mpUnits(candidates) {
   return MP_UNITS.get(candidates);
 }
 const articleOf = (u) => String(u.regulation_id || splitRef(u.unit_id).reg).replace(/@.*$/, '').replace(/\(.*$/, '');
-function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [] }, A, trace, disclosures) {
+function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const sortedA = consideredOrdered.filter((u) => A.has(u)); // A ⊆ considered; consideredOrdered keeps the candidates order
   // rule 3 (M-38, M-49): a unit displacing a precedence rule ranks just above the highest layer that rule ranks
@@ -1122,7 +1141,14 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   const ev1 = (s, args, u) => {
     const alias = u && u.layer === 'exception' && C.exceptionTypeAlias ? C.exceptionTypeAlias[lot.zone] || null : null;
     const count = u && u.layer === 'exception' ? unitCountType(lot, C, reads) : null;
-    const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: args, byTypeAlias: alias, byTypeCount: count });
+    // M-259 (CHAT-33): on an accessory structure's own element target, the principal-building targets the statement
+    // references are read under the structure's vocab reference_flags (a platform has no side wall: blank_side_wall false)
+    const accUse = u && resolveVariableWith && C.accessoryReferenceFlags && C.accessoryElementTargets
+      ? ((u.application || {}).uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryReferenceFlags[x] && C.accessoryElementTargets[x] && C.accessoryElementTargets[x].has(target))
+      : null;
+    if (accUse) trace.push(`M-259: ${u.unit_id} reads its references with ${Object.entries(C.accessoryReferenceFlags[accUse]).map(([k, v]) => `${k}=${v}`).join(', ')} (${accUse})`);
+    const rv = accUse ? resolveVariableWith(C.accessoryReferenceFlags[accUse]) : resolveVariable;
+    const r = evaluate(s, lot, { ...C, resolveVariable: rv, argEdits: args, byTypeAlias: alias, byTypeCount: count });
     addAll(reads, r.inputs);
     return r;
   };
