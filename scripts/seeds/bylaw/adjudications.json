@@ -83901,6 +83901,124 @@
       "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
       "unit": "900.3.10(37)#(37)[SSP](C)(ii)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(i)",
+      "value": [
+        "fsi = 0.5 ratio @(21)[SSP](C)",
+        "gfa_m2 = min(135 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(21)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(165 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(28)[SSP](C)",
+        "fsi = 0.5 ratio @(28)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses",
+      "kind": "correction",
+      "reason": "F-SC-1 (2) follow-up (CoA historical scorecard, 2026-10-21): 900.3.10(28)#(28)[SSP](C)(i) keys the exception's GFA cap (the (C) lead-in) on the leaf \"(i) the floor area of an attached or detached private garage\", and the keyer took the leaf's garage as the unit's use, so M-175 set the cap aside for the house (x37 FSI fell to the zone 0.45 where the City applies 0.5 on four 2017 notices). The garage is counted in the gross floor area (a measurement detail, M-171), it is not the subject: the use is dropped.",
+      "rule": "Spec 69a M-175 (\"A unit scoped to an accessory-structure use never limits the principal building\" — here the cap is the principal building's, the garage only an inclusion); M-171; M-247 (2) (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-1); M-75",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "as application.uses (the private_garage evidence goes with the use)",
+      "rule": "Spec 69a M-175; M-171; M-247 (2); M-75",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 28"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(35)#(35)[SSP](A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(35)#(35)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(35)[SSP](A)",
+        "fsi = 0.5 ratio @(35)[SSP](A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(37)[SSP](C)",
+        "fsi = 0.5 ratio @(37)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses",
+      "kind": "correction",
+      "reason": "F-SC-1 (2) follow-up (CoA historical scorecard, 2026-10-21): 900.3.10(37)#(37)[SSP](C)(i) keys the exception's GFA cap (the (C) lead-in) on the leaf \"(i) the floor area of an attached or detached private garage\", and the keyer took the leaf's garage as the unit's use, so M-175 set the cap aside for the house (x37 FSI fell to the zone 0.45 where the City applies 0.5 on four 2017 notices). The garage is counted in the gross floor area (a measurement detail, M-171), it is not the subject: the use is dropped.",
+      "rule": "Spec 69a M-175 (\"A unit scoped to an accessory-structure use never limits the principal building\" — here the cap is the principal building's, the garage only an inclusion); M-171; M-247 (2) (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-1); M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "as application.uses (the private_garage evidence goes with the use)",
+      "rule": "Spec 69a M-175; M-171; M-247 (2); M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 37"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(38)#(38)[SSP](A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-6 family (CoA scorecard, 2026-10-21). The exception reads \"... square metres plus 25% of the lot area, up to a maximum floor space index of 0.5\" (ch900_3.txt), word for word the RD 42 text M-250 rules on; the cap was keyed on fsi only and dropped from gfa_m2. Rule by provision family: the M-250 reading applies to every exception with the same wording.",
+      "rule": "Operator approved F-SC-6 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-6; Spec 69a M-250: \"gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2)\" for the same \"up to a maximum floor space index of 0.5\" wording), applied by provision family; M-75",
+      "unit": "900.3.10(38)#(38)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(125 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(38)[SSP](A)",
+        "fsi = 0.5 ratio @(38)[SSP](A)"
+      ]
     }
   ]
 }

@@ -331,3 +331,32 @@ describe('F-SC-1 / M-247 (2) — a measurement-only DEFINE no longer blocks RD 1
     expect(eff(rd(37, 12), 'eaves_encroachment_m')).toMatchObject({ status: 'value', value: 0.9 });
   });
 });
+
+// F-SC-6 family / M-250 + M-247 (2): the five RD exceptions with the same "X square metres plus 25% of the lot area, up to a
+// maximum floor space index of 0.5" wording take the M-250 reading (rule by provision family), and x28 / x37 (C)(i) — the GFA
+// cap keyed on the garage-inclusion leaf — no longer carry the `private_garage` use that set them aside for the house (M-175):
+// the garage is counted in the GFA (M-171), it is not the subject. Exposed by unblocking x37 (F-SC-1 (2)).
+describe('F-SC-6 family / M-250 — RD 21 / 28 / 35 / 37 / 38 GFA capped at FSI 0.5; the x28 / x37 cap binds the house', () => {
+  const S = [[21, '(21)[SSP](C)(i)', 135], [28, '(28)[SSP](C)(i)', 165], [35, '(35)[SSP](A)', 150], [37, '(37)[SSP](C)(i)', 150], [38, '(38)[SSP](A)', 125]] as Array<[number, string, number]>;
+  const rd = (x: number, area: number): Json => lot('RD', 'detached_house', { exception: `900.3.10(${x})`, label: { f: 12, a: 510, d: 0.45 }, overlays: { HT: 10, ST: 2 }, vars: { lot_frontage_m: 12, lot_depth_m: area / 12, lot_area_m2: area } });
+
+  it('each text carries the cap (ch900_3.txt)', () => {
+    for (const [x, , base] of S) expect(page('ch900_3')).toMatch(new RegExp(`\\(${x}\\) Exception RD ${x}[^]{0,1500}${base} square metres,? plus 25% of the lot area, up to a maximum floor space index of 0\\.5`));
+  });
+
+  it('each keys gfa_m2 = min(X m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) and carries no accessory use', () => {
+    for (const [x, c, base] of S) {
+      const u = unitOf(`900.3.10(${x})#${c}`);
+      expect([x, [].concat(u.numeric_expression).find((s: string) => s.startsWith('gfa_m2'))]).toEqual([x, `gfa_m2 = min(${base} m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @${c.replace(/\((i)\)$/, '')}`]);
+      expect([x, u.application.uses]).toEqual([x, []]);
+    }
+  });
+
+  it('on a 400 m² lot: gfa_m2 is the FSI 0.5 cap (200 m²) and fsi 0.5 comes from the exception, for x28 and x37 too', () => {
+    for (const [x, c] of S) {
+      const g = eff(rd(x, 400), 'gfa_m2');
+      expect([x, g.status, g.value, g.winner]).toEqual([x, 'value', 200, `900.3.10(${x})#${c}`]);
+      expect([x, eff(rd(x, 400), 'fsi').value]).toEqual([x, 0.5]);
+    }
+  });
+});
