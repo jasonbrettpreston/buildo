@@ -1,0 +1,33 @@
+{
+  "a_seal": {
+    "seal_id": 451,
+    "sha256": "810648935be61ebd331dddc6ee1f7218bdbfc5a6e55e954e6914a0659f445af9"
+  },
+  "b_run": {
+    "ledger_sha256": "609d43a19228b67587f294ca6e1e49c0578a9e847dfc1378a110278b9dc55c29",
+    "read_paths": [],
+    "run_id": "20261021T202710Z-a79e9651",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W2",
+  "briefs": {
+    "a": "c8c483d5b5109de77af1d94dc0969df8f08d11d68796d7f3ba17212a1b87328e",
+    "b": "a8e461cfc951a61a18ea98eb59260dcd7dffc81fe15ba8cb8b162ac0493639fb"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s15",
+  "unit_shas": {
+    "900.3.10(1437)#(1437)[PBS](I)": "3c02222975fecbf5211b8b620754248594794914ed87c3af47064126e212a4eb",
+    "900.3.10(1437)#(1437)[PBS](J)": "12bcc4cfb821420560ea28cc3723d5ffb88e45e1378e9dd00498cc6170bed3e2"
+  }
+}

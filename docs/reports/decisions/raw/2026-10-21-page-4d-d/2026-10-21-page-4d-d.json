@@ -1,0 +1,77 @@
+{
+  "source": "operator rulings page 2026-10-21 https://claude.ai/artifact/LMgW4aaequHWXWZyAeqGCA (db collection decisions)",
+  "operator_quote": "completed teh rulings - proceed",
+  "context": "Next by-law fix round (CHAT-38): F-4D-1..21, Scarborough exceptions, Layer 2 prerequisites, data and tooling items. Each decision is the operator click on the page; operator_note is the operator text verbatim. [Trimmed to fix-round-4d lane D (data and tooling) items; each decision object is copied verbatim.]",
+  "decisions": [
+    {
+      "id": "CHAT-38.F-4D-8",
+      "subject": "Parcel corner-lot flag and frontage disagree with the survey",
+      "decision": "approve",
+      "recommendation": "Approve as a data-quality flag; no by-law change.",
+      "decided_at": "2026-10-21T19:37:21.546Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-9",
+      "subject": "Parcel is half the surveyed lot",
+      "decision": "approve",
+      "recommendation": "Data fix; no by-law change.",
+      "decided_at": "2026-10-21T19:37:45.915Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-13",
+      "subject": "Scorer misreads \"within 0.3 m of the rear main wall\" as the limit",
+      "decision": "approve",
+      "recommendation": "Approve (scorer only).",
+      "decided_at": "2026-10-21T19:41:02.920Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-14",
+      "subject": "Garden suite side setback uses parcel frontage; City used 12 m",
+      "decision": "approve",
+      "recommendation": "Data fix.",
+      "decided_at": "2026-10-21T19:41:22.873Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-20",
+      "subject": "Non-569 zones and unmatched address cannot be scored",
+      "decision": "approve",
+      "recommendation": "Data note.",
+      "decided_at": "2026-10-21T19:42:37.651Z"
+    },
+    {
+      "id": "CHAT-38.D-TOOLS",
+      "subject": "Where the CoA notice reader and scorecard tools live",
+      "decision": "approve",
+      "recommendation": "Ratify as written (the draft's own recommendation). Note Spec 133 was not present in the tree at ac78d5dd, so it could not be checked.",
+      "decided_at": "2026-10-21T19:45:47.602Z"
+    },
+    {
+      "id": "CHAT-38.D-KIRK",
+      "subject": "39 Kirknewton Rd is file A0428/26TEY, not A0974/16EYK",
+      "decision": "approve",
+      "recommendation": "Confirm A0428/26TEY.",
+      "decided_at": "2026-10-21T19:46:02.825Z"
+    },
+    {
+      "id": "CHAT-38.D-LIPPINCOTT",
+      "subject": "202 Lippincott St: mixed-use with 6 residential units, typed semi-detached",
+      "decision": "approve",
+      "recommendation": "Your call. The notice wording supports semi-detached; the 6 units point to mixed-use. I cannot ground a by-law rule that decides it.",
+      "decided_at": "2026-10-21T19:46:24.674Z"
+    },
+    {
+      "id": "CHAT-38.D-WARD",
+      "subject": "Ward codes are stored inconsistently",
+      "decision": "approve",
+      "recommendation": "Approve. Pick the form: two digits ('03') matches the bracketed number in the notices.",
+      "decided_at": "2026-10-21T19:46:34.024Z"
+    },
+    {
+      "id": "CHAT-38.D-BASEMENT",
+      "subject": "Basement without underpinning: not CoA-testable",
+      "decision": "approve",
+      "recommendation": "Confirm: leave as not CoA-testable.",
+      "decided_at": "2026-10-21T19:46:38.507Z"
+    }
+  ]
+}

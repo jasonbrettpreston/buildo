@@ -1,0 +1,256 @@
+{
+ "suite": "src/tests/bylaw-fix-4d-a.logic.test.ts (authoring describe) and the CoA scorecard rows",
+ "base": "ec8fff4b",
+ "run_on": "2026-10-21",
+ "note": "Lane A (wf1/bylaw-fix-5), exceptions 1437 1389 1434 117 258 287 528 1436 199 245 256 unauthored: every CoA notice row on these lots is NO ANSWER (exception_not_authored, ruling (d)) or the clause has no unit. Taken from the 172-notice scorecard at edd18529 (identical at ec8fff4b).",
+ "counts": {
+  "rows_no_answer": 35
+ },
+ "rows": [
+  {
+   "notice": "A0063/26SC",
+   "n": 2,
+   "clause": "10.20.40.40(1)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(199)"
+  },
+  {
+   "notice": "A0063/26SC",
+   "n": 3,
+   "clause": "10.10.40.10(1)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(199)"
+  },
+  {
+   "notice": "A0076/26SC",
+   "n": 1,
+   "clause": "10.50.60.70",
+   "class": "NO ANSWER",
+   "why": "clause not keyed (no unit in the agreed set)"
+  },
+  {
+   "notice": "A0076/26SC",
+   "n": 2,
+   "clause": "10.5.60.40(1)(2)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(245)"
+  },
+  {
+   "notice": "A0103/26SC",
+   "n": 1,
+   "clause": "10.5.40.71(4)(B)(i)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(256)"
+  },
+  {
+   "notice": "A0103/26SC",
+   "n": 2,
+   "clause": "10.5.40.60(7)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(256)"
+  },
+  {
+   "notice": "A0103/26SC",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(256)"
+  },
+  {
+   "notice": "A0103/26SC",
+   "n": 4,
+   "clause": "10.5.40.60(1)(A)(i)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(256)"
+  },
+  {
+   "notice": "A0384/26TEY",
+   "n": 3,
+   "clause": "10.20.40.40(1)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1437)"
+  },
+  {
+   "notice": "A0384/26TEY",
+   "n": 4,
+   "clause": "10.20.40.70(3)(C)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1437)"
+  },
+  {
+   "notice": "A0384/26TEY",
+   "n": 5,
+   "clause": "10.5.50.10(1)(D)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1437)"
+  },
+  {
+   "notice": "A0484/26TEY",
+   "n": 1,
+   "clause": "10.20.40.20(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1389)"
+  },
+  {
+   "notice": "A0484/26TEY",
+   "n": 2,
+   "clause": "10.20.40.70(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1389)"
+  },
+  {
+   "notice": "A0484/26TEY",
+   "n": 3,
+   "clause": "10.20.40.40(1)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1389)"
+  },
+  {
+   "notice": "A0484/26TEY",
+   "n": 4,
+   "clause": "10.20.40.50(1)(B)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1389)"
+  },
+  {
+   "notice": "A0496/26TEY",
+   "n": 1,
+   "clause": "10.5.40.60(7)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1434)"
+  },
+  {
+   "notice": "A0496/26TEY",
+   "n": 2,
+   "clause": "10.5.40.60(8)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1434)"
+  },
+  {
+   "notice": "A0496/26TEY",
+   "n": 3,
+   "clause": "900.3.10(1434)(A), Exception RD 1434",
+   "class": "NO ANSWER",
+   "why": "clause not keyed (no unit in the agreed set)"
+  },
+  {
+   "notice": "A0496/26TEY",
+   "n": 4,
+   "clause": "900.3.10(1434)(B), Exception RD 1434",
+   "class": "NO ANSWER",
+   "why": "clause not keyed (no unit in the agreed set)"
+  },
+  {
+   "notice": "A0112/26SC",
+   "n": 1,
+   "clause": "10.20.40.20(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(117)"
+  },
+  {
+   "notice": "A0120/26SC",
+   "n": 1,
+   "clause": "10.20.40.10(2)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(258)"
+  },
+  {
+   "notice": "A0120/26SC",
+   "n": 2,
+   "clause": "10.20.40.10(2)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(258)"
+  },
+  {
+   "notice": "A0120/26SC",
+   "n": 3,
+   "clause": "900.3.10(1462)(A)(iii)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(258)"
+  },
+  {
+   "notice": "A0135/26SC",
+   "n": 1,
+   "clause": "10.20.40.20(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(287)"
+  },
+  {
+   "notice": "A0135/26SC",
+   "n": 2,
+   "clause": "10.20.40.30(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(287)"
+  },
+  {
+   "notice": "A0135/26SC",
+   "n": 3,
+   "clause": "10.20.30.40(1)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(287)"
+  },
+  {
+   "notice": "A0135/26SC",
+   "n": 5,
+   "clause": "10.5.60.20(2)(B)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(287)"
+  },
+  {
+   "notice": "A0135/26SC",
+   "n": 6,
+   "clause": "10.5.60.40(2)(B)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(287)"
+  },
+  {
+   "notice": "A0135/26SC",
+   "n": 7,
+   "clause": "10.5.50.10(1)(D)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(287)"
+  },
+  {
+   "notice": "A0138/26SC",
+   "n": 1,
+   "clause": "10.20.40.20(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(528)"
+  },
+  {
+   "notice": "A0138/26SC",
+   "n": 2,
+   "clause": "10.20.40.30(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(528)"
+  },
+  {
+   "notice": "A0138/26SC",
+   "n": 3,
+   "clause": "10.20.40.70(2)(B)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(528)"
+  },
+  {
+   "notice": "A0138/26SC",
+   "n": 4,
+   "clause": "10.20.30.40(1)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(528)"
+  },
+  {
+   "notice": "A0521/26TEY",
+   "n": 1,
+   "clause": "150.7.60.20(5)(A)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1436)"
+  },
+  {
+   "notice": "A0521/26TEY",
+   "n": 5,
+   "clause": "10.5.60.60(1)",
+   "class": "NO ANSWER",
+   "why": "exception_not_authored:900.3.10(1436)"
+  }
+ ]
+}

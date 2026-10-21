@@ -1,0 +1,32 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-batch-p/2026-10-21-batch-p.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-batch-p",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "pushing - 1y 3. yV3",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-batch-p/2026-10-21-batch-p.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-50": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-315"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-50",
+      "question": "Ratify exception 528 lawfully_existing corrections",
+      "recommendation": "Ratify the 6 M-75 corrections on 900.x.10(528) (A)/(B) that drop the lawfully_existing token, matching the family; re-label the other 7 lane-A gate-fix corrections as lane mechanical (not operator).",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

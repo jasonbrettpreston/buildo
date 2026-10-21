@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "yes semi detached",
+  "context": "Clarifies rulings-page item D-LIPPINCOTT (CHAT-38.D-LIPPINCOTT was 'approve' without choosing an option): 202 Lippincott St (A0375/26TEY) — keep semi-detached as the City notice words it ('the existing three-storey mixed-used semi-detached building'), or retype as mixed-use with 6 residential units.",
+  "decisions": [
+    {"id": "CHAT-45", "subject": "202 Lippincott St dwelling type", "decision": "approve", "recommendation": "Keep semi-detached, as the City notice words it. Do not retype to mixed-use."}
+  ]
+}

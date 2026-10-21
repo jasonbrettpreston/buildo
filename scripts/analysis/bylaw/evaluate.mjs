@@ -34,6 +34,12 @@
 import { DslError, combineUnits, parseCond, parseExpr, parseStatement, unitTable } from './dsl.mjs';
 
 export const LAYER_RANK = Object.freeze({ base: 0, overlay: 1, exception: 2, provincial: 3 });
+/**
+ * L2-LOSERS (Spec 134 §2; P2:192): why a unit did not decide a value. effective() returns losers[] of
+ * {unit_id, dropped_by, by} beside the free-text trace[]: `by` is the unit that decided it (null for condition_false).
+ * rule2_arg_displaced names the unit whose ARGUMENT was replaced or removed (the unit may still win, edited).
+ */
+export const DROPPED_BY = Object.freeze(['rule2_displaced', 'rule2_arg_displaced', 'rule3_outranked', 'rule4_higher_layer', 'rule4_provincial_restraint', 'rule4a_less_restrictive', 'condition_false', 'order_tiebreak']);
 export const NOT_EVALUATED_CODES = Object.freeze([
   'no_569_2013_zone', // rule 0 (Spec 69 M-27)
   'no_candidate', // rule 7
@@ -101,8 +107,13 @@ export function makeContext(vocab, extra = {}) {
     // M-259 (operator approved 2026-10-21, CHAT-33): the lot conditions under which an accessory structure's own element
     // target reads the principal-building targets it references (a platform has no side wall: blank_side_wall false)
     accessoryReferenceFlags: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.reference_flags && typeof v.reference_flags === 'object').map(([k, v]) => [k, v.reference_flags])),
+    // M-281 (operator approved 2026-10-21, CHAT-38.F-4D-1): an accessory structure whose rules sit in an Article that scopes by the
+    // principal building type (10.5.60 binds ancillary buildings) answers on its own element target whatever the lot's building type
+    accessoryArticleScopeIgnored: new Set(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.article_scope_ignored === true).map(([k]) => k)),
     accessoryAncillaryCondition: Object.fromEntries(Object.entries(vocab.accessory_structure_use || {}).filter(([k, v]) => k !== '$comment' && v && v.ancillary_condition).map(([k, v]) => [k, v.ancillary_condition])),
     typeStructure: vocab.building_type_structure || {},
+    // M-285 (operator approved 2026-10-21, CHAT-38.F-4D-7): per-unit named streets, joined to the lot's primary frontage street name
+    namedStreet: vocab.named_street || null,
     // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
     specificUses: new Set(Object.keys(vocab.specific_use || {}).filter((k) => k !== '$comment')),
     // M-159(1) / M-217: chapter → {category, zones}; a base unit of a mapped chapter with no zones of its own loads only
@@ -490,6 +501,22 @@ function parsedCond(src) {
   if (e.err) throw e.err;
   return e.c;
 }
+// M-285: a street name compared whole-word without case or punctuation, the suffix and direction words spelled short (vocab named_street.suffixes)
+const streetKey = (name, suffixes) => String(name).toLowerCase().replace(/[.,]/g, ' ').split(/\s+/).filter(Boolean).map((w) => (suffixes && Object.hasOwn(suffixes, w) ? suffixes[w] : w)).join(' ');
+/** true | false | undefined (undecided: no table row, no street name on the lot, or a clause that does not say which line abuts) */
+function namedStreetJoin(lot, u, C, reads, trace) {
+  const t = C.namedStreet;
+  const row = t && t.units && t.units[u.unit_id];
+  if (!row) return undefined;
+  reads.add(t.lot_field);
+  const name = lot[t.lot_field];
+  if (typeof name !== 'string' || !name.trim()) return undefined;
+  const key = streetKey(name, t.suffixes);
+  const hit = row.streets.some((s) => streetKey(s, t.suffixes) === key);
+  const out = hit ? true : row.line === 'front' ? false : undefined;
+  trace.push(`abuts_named_street: ${t.lot_field} "${name}" ${hit ? 'is' : 'is not'} ${row.streets.join(' / ')} (${row.line} lot line) → ${out === undefined ? 'undecided' : out}`);
+  return out;
+}
 // {ok:true} | {ok:false, why} | {ok:null, reason}
 export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = [], target = null) {
   const C = ctxOf(ctx);
@@ -506,7 +533,8 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   const bt = lot.building_type;
   const scope = C.articleScope && C.articleScope[String(reg).split('.').slice(0, 3).join('.')];
   if (scope) reads.add('building_type'); // read whether or not the type is known: an unknown type is a value too
-  if (scope && bt) { // M-219: the Article's own application regulation
+  const deviceUse = target ? (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryArticleScopeIgnored && C.accessoryArticleScopeIgnored.has(x) && C.accessoryElementTargets[x] && C.accessoryElementTargets[x].has(target)) : undefined;
+  if (scope && bt && !deviceUse) { // M-219: the Article's own application regulation (M-281: not for a device's own element target)
     const out = scope.excluded_building_types ? scope.excluded_building_types.includes(bt) : !scope.included_building_types.includes(bt);
     if (out) return { ok: false, why: `building_type ${bt} (outside ${scope.citation})` };
   }
@@ -584,6 +612,10 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     // error-paths lens, adjudicated by execution 2026-10-07)
     if (C.thresholdTokens.has(t) && !hasIf) { trace.push(`${t}=unknown (threshold token without condition.if)`); unknown = unknown || `condition_unknown:${t}`; continue; }
     if (C.thresholdTokens.has(t) || t === 'exception_area') continue; // truth from condition.if / the loader
+    // M-285: abuts_named_street is joined from the lot's primary frontage street name to the street(s) this unit names
+    const joined = t === 'abuts_named_street' ? namedStreetJoin(lot, u, C, reads, trace) : undefined;
+    if (joined === true) continue;
+    if (joined === false) return { ok: false, why: `condition ${t}` };
     reads.add(`flags.${t}`);
     const v = lot.flags ? lot.flags[t] : undefined;
     trace.push(`${t}=${v === true || v === false ? v : 'unknown'}`);
@@ -803,7 +835,7 @@ function effResolve(lot, target, cands, C, _env) {
   if (distinct.length === 1 && C.residentialTypes.length && (results[C.residentialTypes[0]].status !== 'not_evaluated' || results[C.residentialTypes[0]].reason === 'no_candidate')) {
     const any = results[C.residentialTypes[0]];
     const winners = [...new Set(C.residentialTypes.map((t) => results[t].winner ?? null))];
-    return { ...any, winner: winners.length === 1 ? any.winner : null, ...(winners.length > 1 ? { winners_per_type: Object.fromEntries(C.residentialTypes.map((t) => [t, results[t].winner ?? null])) } : {}), trace: [...trace, 'all residential types agree'], per_type: per, inputs: ins };
+    return { ...any, ...(any.losers ? { losers: commonLosers(C.residentialTypes.map((t) => results[t].losers)) } : {}), winner: winners.length === 1 ? any.winner : null, ...(winners.length > 1 ? { winners_per_type: Object.fromEntries(C.residentialTypes.map((t) => [t, results[t].winner ?? null])) } : {}), trace: [...trace, 'all residential types agree'], per_type: per, inputs: ins };
   }
   return NE_RESULT('needs_user_input:building_type', { trace, per_type: per, inputs: ins });
 }
@@ -835,11 +867,11 @@ function staticSets(candidates, target) {
 }
 /**
  * Spec 68 §7.5 rule 2 (operator 2026-10-19 Q1, validation defect D2): a "Despite …" clause that only PERMITS an optional
- * variation — no value of its own (no target), a PERMIT or UNUSUAL, its trigger governing a permissive "may" sentence
- * (xref.mjs optional_variation, generated from the wording) — never drops the limit it names: the base limit stays and the
+ * variation — no value of its own (no target), a PERMIT, UNUSUAL or DEFINE, its trigger governing a permissive "may" sentence
+ * or wording that restates the displaced regulation as still applying (M-266: vocab keeps_limit_phrases; xref.mjs optional_variation, generated from the wording) — never drops the limit it names: the base limit stays and the
  * variation is disclosed. A DISAPPLY ("does not apply"), a PROHIBIT, a PREVAILING and every unit with a value still displace.
  */
-const optionalVariation = (d) => d.displaces_optional === true && !hasTarget(d) && (d.archetype === 'PERMIT' || d.archetype === 'UNUSUAL');
+const optionalVariation = (d) => d.displaces_optional === true && !hasTarget(d) && (d.archetype === 'PERMIT' || d.archetype === 'UNUSUAL' || d.archetype === 'DEFINE');
 const tryRef = (ref, id) => { try { return { m: refMatch(ref, id) }; } catch (err) { return { err }; } };
 /**
  * resolveSet's rule-3 and rule-2 loops visit (unit, ref, unit) triples in a fixed order and keep those whose both units
@@ -934,7 +966,7 @@ function effCore(lot, target, candidates, C, env) {
 
   // applicability (rule 1's condition filter, run here because conditions read effective targets and the scenario type);
   // every condition input read is recorded (reads → result.inputs; the values → the trace)
-  const A = new Set(); const unknown = [];
+  const A = new Set(); const unknown = []; const condLosers = [];
   for (const u of consideredOrdered) {
     const t = [];
     const a = applies(lot, u, C, resolveVariable, reads, t, target);
@@ -942,6 +974,7 @@ function effCore(lot, target, candidates, C, env) {
     if (a.ok === true) A.add(u);
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
     else if (a.disclosure && !disclosures.includes(a.disclosure)) disclosures.push(a.disclosure); // M-224 literal reading
+    if (a.ok === false && valueSet.has(u)) condLosers.push({ unit_id: u.unit_id, dropped_by: 'condition_false', by: null });
   }
   for (const u of prevailing) {
     const a = applies(lot, u, C, resolveVariable, reads, []);
@@ -950,7 +983,7 @@ function effCore(lot, target, candidates, C, env) {
   }
   // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
   const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
-  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive };
+  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive, condLosers };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -969,27 +1002,39 @@ function effCore(lot, target, candidates, C, env) {
   if (keys.size === 1) {
     const w0 = worlds[0];
     const winners = [...new Set(worlds.map((w) => w.winner ?? null))];
-    return { ...w0, winner: winners.length === 1 ? w0.winner : null, undecided: unknown.map((x) => ({ unit_id: x.u.unit_id, reason: x.reason })),
+    return { ...w0, ...(w0.losers ? { losers: commonLosers(worlds.map((w) => w.losers)) } : {}), winner: winners.length === 1 ? w0.winner : null, undecided: unknown.map((x) => ({ unit_id: x.u.unit_id, reason: x.reason })),
       trace: [...w0.trace, `undecided: ${unknown.map((x) => x.u.unit_id).join(', ')} — all ${worlds.length} resolutions agree (M-60)`], inputs: ins() };
   }
   return NE_RESULT(reason, { trace: [...trace, `undecided: ${worlds.length} resolutions disagree (${[...new Set(worlds.map((w) => (w.status === 'value' ? String(w.value) : w.status === 'not_applicable' ? w.reason : `${w.status}:${w.reason}`)))].sort(cmpStr).join(' | ')})`], disclosures, inputs: ins() });
 }
 
-/** The lot's exception and its INCLUDE closure are authored for `target` (lot gate, ruling (d)); returns the first that is not, or null. */
-function exceptionNotAuthored(lot, target, candidates, C, info = null) {
-  if (!lot.exception) return null;
-  const excOf = (u) => u.exception || u.regulation_id || splitRef(u.unit_id).reg;
-  const ok = (s) => s === 'authored' || (s && s.status === 'authored') || (s && s.status === 'partial' && Array.isArray(s.targets) && s.targets.includes(target));
-  const pending = (u) => PENDING_ROW.includes(u.row_status) || statementsOf(u).some((s) => s.error)
-    || ((u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && hasTarget(u) && !statementsOf(u).length);
+const unitsOfException = (candidates, e, info) => (Array.isArray(candidates) ? exceptionUnits(candidates, e, info || infoOf(candidates)) : candidates.filter((u) => u.layer === 'exception' && excOfUnit(u) === e));
+/**
+ * L2-CLOSURE (M-296; Spec 134 §2, the third permitted reader): the lot's exception and every exception its INCLUDE links
+ * reach, in the order the lot gate (ruling (d)) walks them: the lot's own first, then breadth-first, each once (a cycle
+ * is walked once). Pure; [] for a lot with no exception. An id with no units is still listed (the gate reports it).
+ */
+export function exceptionClosure(lot, candidates, info = null) {
+  if (!lot || !lot.exception) return [];
   const seen = new Set(); const queue = [lot.exception];
   while (queue.length) {
     const e = queue.shift();
     if (seen.has(e)) continue;
     seen.add(e);
-    const us = Array.isArray(candidates) ? exceptionUnits(candidates, e, info || infoOf(candidates)) : candidates.filter((u) => u.layer === 'exception' && excOf(u) === e);
+    for (const u of unitsOfException(candidates, e, info)) if (u.archetype === 'INCLUDE' && u.include_ref) queue.push(splitRef(u.include_ref).reg);
+  }
+  return [...seen];
+}
+
+/** The lot's exception and its INCLUDE closure are authored for `target` (lot gate, ruling (d)); returns the first that is not, or null. */
+function exceptionNotAuthored(lot, target, candidates, C, info = null) {
+  if (!lot.exception) return null;
+  const ok = (s) => s === 'authored' || (s && s.status === 'authored') || (s && s.status === 'partial' && Array.isArray(s.targets) && s.targets.includes(target));
+  const pending = (u) => PENDING_ROW.includes(u.row_status) || statementsOf(u).some((s) => s.error)
+    || ((u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && hasTarget(u) && !statementsOf(u).length);
+  for (const e of exceptionClosure(lot, candidates, info)) { // the one walk, shared with Layer 2 (L2-CLOSURE)
+    const us = unitsOfException(candidates, e, info);
     if (!us.length || !ok(C.authored[e]) || us.some(pending)) return e;
-    for (const u of us) if (u.archetype === 'INCLUDE' && u.include_ref) queue.push(splitRef(u.include_ref).reg);
   }
   return null;
 }
@@ -1002,8 +1047,16 @@ function mpUnits(candidates) {
   return MP_UNITS.get(candidates);
 }
 const articleOf = (u) => String(u.regulation_id || splitRef(u.unit_id).reg).replace(/@.*$/, '').replace(/\(.*$/, '');
-function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [] }, A, trace, disclosures) {
+/** The losers every resolution agrees on (the first list's order): a world or building type that disagrees drops the entry. */
+function commonLosers(lists) {
+  const ls = lists.map((l) => l || []);
+  const key = (l) => `${l.unit_id}\u0000${l.dropped_by}\u0000${l.by}\u0000${l.arg ?? ''}`;
+  return ls[0].filter((l) => ls.every((o) => o.some((m) => key(m) === key(l))));
+}
+function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
+  const losers = [...condLosers]; // L2-LOSERS: structured beside the trace; DROPPED_BY names the reasons
+  const lose = (u, dropped_by, by, extra = {}) => { if (!losers.some((l) => l.unit_id === u && l.dropped_by === dropped_by && l.by === by && l.arg === extra.arg)) losers.push({ unit_id: u, dropped_by, by, ...extra }); };
   const sortedA = consideredOrdered.filter((u) => A.has(u)); // A ⊆ considered; consideredOrdered keeps the candidates order
   // rule 3 (M-38, M-49): a unit displacing a precedence rule ranks just above the highest layer that rule ranks
   const immune = new Map();
@@ -1028,7 +1081,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
     if (!A.has(d) || (v && !A.has(v))) continue;
     if (err) throw err;
     {
-      if (m === 'full') { dropped.add(v.unit_id); if (d.archetype === 'DISAPPLY' && !disappliedBy.has(v.unit_id)) disappliedBy.set(v.unit_id, d.unit_id); if (d.layer === 'exception' && v.layer === 'base') droppedByException.add(v.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
+      if (m === 'full') { dropped.add(v.unit_id); if (d.archetype === 'DISAPPLY' && !disappliedBy.has(v.unit_id)) disappliedBy.set(v.unit_id, d.unit_id); if (d.layer === 'exception' && v.layer === 'base') droppedByException.add(v.unit_id); if (valueSet.has(v)) lose(v.unit_id, 'rule2_displaced', d.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
       const tagged = parsedFor(v, target).some((s) => argPaths(s.expr).includes(m.arg));
       if (!tagged) return NE_RESULT(`displaced_argument_not_found:${m.arg}`, { trace: [...trace, `rule 2: ${d.unit_id} names ${m.arg} inside ${v.unit_id}, which tags no such argument`], disclosures, inputs: ins() });
       const own = parsedFor(d, target);
@@ -1038,6 +1091,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
       else { e.args[m.arg] = null; trace.push(`rule 2: ${d.unit_id} removes argument ${m.arg} of ${v.unit_id}`); }
       e.by.push(d.unit_id);
       edits.set(v.unit_id, e);
+      lose(v.unit_id, 'rule2_arg_displaced', d.unit_id, { arg: m.arg });
     }
   }
   // Q1 (Spec 68 §7.5 rule 2): an optional variation keeps the limit it names; its own disclosure says what it permits
@@ -1066,7 +1120,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
     if (disapplied.length && sortedA.filter((u) => valueSet.has(u) && u.layer !== 'provincial').every((u) => disappliedBy.has(u.unit_id))) {
       const by = [...new Set(disapplied.map((u) => disappliedBy.get(u.unit_id)))];
       return { status: 'not_applicable', value: null, reason: `not_applicable:${by[0]}`, unit: C.units.target[target] ?? null, bound: null, winner: null,
-        evidence: { kind: 'disapply', disapplied_by: by, disapplied: disapplied.map((u) => u.unit_id) }, bounds: {}, applied: [],
+        evidence: { kind: 'disapply', disapplied_by: by, disapplied: disapplied.map((u) => u.unit_id) }, bounds: {}, applied: [], losers,
         trace: [...trace, `rule 2 + M-183: ${by.join(', ')} disapplies every candidate for ${target} (${disapplied.map((u) => u.unit_id).join(', ')}) — does not apply`], disclosures, inputs: ins() };
     }
     // M-220 / M-202(3): nothing applies, and the target's rule is a zone-label letter the lot does not carry → no cap
@@ -1111,7 +1165,11 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
   for (const [b, us] of Object.entries(byBound).sort(([a], [c]) => cmpStr(a, c))) {
     const top = Math.max(...us.map(rank));
     kept[b] = us.filter((u) => rank(u) === top);
-    const lost = us.filter((u) => rank(u) !== top).map((u) => u.unit_id);
+    const lostUnits = us.filter((u) => rank(u) !== top);
+    const lost = lostUnits.map((u) => u.unit_id);
+    // rule 3 raised the winner's rank above its layer (immunity) → rule3_outranked; otherwise the plain layer order
+    const viaRule3 = kept[b].some((u) => rank(u) > (LAYER_RANK[layerOf(u)] ?? 0));
+    for (const u of lostUnits) lose(u.unit_id, viaRule3 ? 'rule3_outranked' : 'rule4_higher_layer', kept[b][0].unit_id);
     if (lost.length) trace.push(`rule 4: ${lost.join(', ')} replaced by a higher layer (bound ${b})`);
     // M-180(2): the exception layer won, but the zone's houseplex rule says the more permissive prevails — keep the
     // base units of the named articles as the alternative, compared after evaluation
@@ -1185,6 +1243,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
       const d = [...new Set(xs.map((x) => String(x.v)))].sort(cmpStr);
       if (d.length > 1) return { status: 'conflict', value: null, reason: 'eval_conflict', conflict: `two exact values ${d.join(' vs ')}`, applied: xs.map((x) => x.id), trace: [...trace, 'rule 4a: CONFLICT (two exact values)'], disclosures, inputs: ins() };
       res.exact = xs[0];
+      for (const x of xs) if (x.unitId !== xs[0].unitId) lose(x.unitId, 'order_tiebreak', xs[0].unitId);
     } else {
       const f = finite(xs);
       // only non-finite values (`unlimited` / `unregulated`, M-48 / M-54): no bound; a mix reports `unlimited` (traced;
@@ -1192,6 +1251,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
       if (!f.length) { res[b] = xs.find((x) => x.v === 'unlimited') || xs[0]; if (new Set(xs.map((x) => x.v)).size > 1) trace.push('rule 4a: unlimited and unregulated both apply; reported unlimited'); }
       else res[b] = f.reduce((a, c) => ((b === 'min' ? c.v > a.v : c.v < a.v) ? c : a)); // ties: the first in the declared order
       if (f.length && f.length < xs.length) trace.push(`rule 4a: unlimited / unregulated loses to a finite ${b}`);
+      for (const x of xs) if (x.unitId !== res[b].unitId) lose(x.unitId, x.v === res[b].v ? 'order_tiebreak' : 'rule4a_less_restrictive', res[b].unitId);
     }
   }
   // rule 4 provincial restraint (Spec 69 M-55 + note): a provincial unit only restrains a MORE RESTRICTIVE by-law value
@@ -1210,7 +1270,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
     }
     applied.push(p.unit_id);
     const restrains = typeof x.v === 'number' && (b === 'max' ? (pv === 'unlimited' || (typeof pv === 'number' && x.v < pv - EPS)) : (typeof pv === 'number' && x.v > pv + EPS));
-    if (restrains) { trace.push(`rule 4 (M-55): ${p.unit_id} (${p.provincial.limits_bylaw} ${pv}) restrains ${x.id} (${x.v}) → ${pv}`); res[b] = { id: p.unit_id, unitId: p.unit_id, v: pv, restrained: x.id }; }
+    if (restrains) { lose(x.unitId, 'rule4_provincial_restraint', p.unit_id); trace.push(`rule 4 (M-55): ${p.unit_id} (${p.provincial.limits_bylaw} ${pv}) restrains ${x.id} (${x.v}) → ${pv}`); res[b] = { id: p.unit_id, unitId: p.unit_id, v: pv, restrained: x.id }; }
     else trace.push(`rule 4 (M-55): ${x.id} (${x.v}) is not more restrictive than ${p.unit_id} (${pv}) — the by-law stands`);
   }
   if (res.min && res.max && typeof res.min.v === 'number' && typeof res.max.v === 'number' && res.min.v > res.max.v + EPS) {
@@ -1222,7 +1282,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
     status: 'value', value: win.v, unit: tUnit, bound: boundOf, winner: win.id,
     ...(win.v === 'unregulated' ? { clause: win.unitId, evidence: { kind: 'clause', clause: win.unitId } } : {}),
     bounds: Object.fromEntries(Object.entries(res).map(([k, x]) => [k, x.v])),
-    applied, trace, disclosures, inputs: ins(),
+    applied, trace, disclosures, inputs: ins(), losers,
   };
 }
 

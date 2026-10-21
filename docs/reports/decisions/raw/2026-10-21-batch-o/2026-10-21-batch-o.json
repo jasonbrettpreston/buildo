@@ -1,0 +1,11 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "1-4 y",
+  "context": "Answers to four asks: (1) curved lot fronts (A0247 court lot): the survey frontage measured along a curved front lot line is not used; keep the calculated frontage at the by-law measurement; survey preference stays for straight fronts. (2) Ward-code two-digit normalisation (parked patch d-ward-parked.patch, COA-D17, migration 280_coa_ward_two_digits.sql): bundle into the next CoA capture night rather than a dedicated one. (3) house_with_secondary_suite counts house_units = 2 (Planning Act s.35.1(1)(a), EXT-prov-1). (4) Fix the possible side-yard leak of newly keyed exceptions (117, 199, 245, 256, 258, 287; 155 (E), 340 (C)) onto garden and laneway suites with the M-267 / F-SC-7 unit_application pattern.",
+  "decisions": [
+    {"id": "CHAT-46", "subject": "Curved lot fronts: survey arc frontage", "decision": "approve", "recommendation": "Do not prefer a survey frontage measured along a curved front lot line; keep the calculated frontage. Survey preference stays for straight-fronted lots."},
+    {"id": "CHAT-47", "subject": "Ward-code normalisation timing", "decision": "approve", "recommendation": "Bundle the parked ward two-digit fix and its backfill into the next CoA capture night."},
+    {"id": "CHAT-48", "subject": "House with secondary suite unit count", "decision": "approve", "recommendation": "house_with_secondary_suite has house_units = 2 (Planning Act s.35.1(1)(a), EXT-prov-1)."},
+    {"id": "CHAT-49", "subject": "Suite side-yard leak from newly keyed exceptions", "decision": "approve", "recommendation": "Apply the M-267 / F-SC-7 unit_application pattern so exception side-yard figures bind the principal building, not garden or laneway suites, for the newly keyed exceptions."}
+  ]
+}

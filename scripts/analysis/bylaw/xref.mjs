@@ -161,6 +161,9 @@ export function displacesOf(index, unitId, vocab, external = null) {
   const row = view.row;
   const t = row.verbatim;
   const phrases = (vocab.displacement_triggers && vocab.displacement_triggers.phrases) || [];
+  // M-265 (F-4D-6): wording that restates the displaced regulation as still applying ("the maximum building depth permitted by that
+  // regulation includes …"): the trigger keeps the limit it names, like a permissive "may" (Q1); vocab data, easy to alter
+  const keepsLimit = ((vocab.displacement_triggers && vocab.displacement_triggers.keeps_limit_phrases) || []).map((x) => String(x).toLowerCase());
   // Spec 69a M-230 (operator CHAT-5): a declared, ruled mis-citation in this row's text resolves to the intended regulation
   const fixes = (vocab.citation_corrections && vocab.citation_corrections[row.regulation_id]) || {};
   const cite = (c) => (Object.hasOwn(fixes, c) && typeof fixes[c] === 'string' ? fixes[c] : c);
@@ -270,7 +273,7 @@ export function displacesOf(index, unitId, vocab, external = null) {
         // may …") is a value clause, not an optional variation
         const sentence = t.slice(at, cc.end).split(SENTENCE_END)[0];
         const may = PERMISSIVE_MAY.exec(sentence);
-        const optional = !backward && Boolean(may) && !STATES_VALUE.test(sentence.slice(0, may.index));
+        const optional = !backward && ((Boolean(may) && !STATES_VALUE.test(sentence.slice(0, may.index))) || keepsLimit.some((k) => sentence.toLowerCase().includes(k)));
         out.triggers.push({ phrase, at, clause_path: c.path, n: named, backward, optional });
       }
     }

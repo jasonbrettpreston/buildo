@@ -16,7 +16,15 @@ export async function loadRealLotAssembly(root) {
   const ag = AG.checkAgree({ shards: AU.loadAuthored(root), adjudications: I.adjudications, vocab: I.vocab });
   const index = AU.buildIndex(I.slice);
   const base = [...AG.agreedUnits(ag).values()].map(AU.withGeneratedFields);
-  const units = base.map((u) => { let d = { targets: [], optional_variation: false }; try { d = X.displacesOf(index, u.unit_id, I.vocab, external); } catch { /* unresolved: no links */ } return { ...u, displaces: d.targets.map((t) => t.id), displaces_optional: d.optional_variation === true }; });
+  // include_ref (Spec 68 §6 G): the generated link of an INCLUDE unit, set only when it names a Ch.900 exception row, which is
+  // what the loader (evaluate.mjs loadCandidates) and the lot gate (ruling (d)) expand; a section / article / base-row
+  // INCLUDE has no exception units to expand and is left unlinked.
+  const includeLink = (u) => {
+    if (u.archetype !== 'INCLUDE') return {};
+    let r = null; try { r = X.includeOf(index, u.unit_id, external); } catch { /* unresolved: no link */ }
+    return r && r.resolved && r.resolved.ok && r.resolved.kind === 'row' && /^900\.[2-6]\.10\(\d+\)$/.test(r.resolved.id) ? { include_ref: r.resolved.id } : {};
+  };
+  const units = base.map((u) => { let d = { targets: [], optional_variation: false }; try { d = X.displacesOf(index, u.unit_id, I.vocab, external); } catch { /* unresolved: no links */ } return { ...u, displaces: d.targets.map((t) => t.id), displaces_optional: d.optional_variation === true, ...includeLink(u) }; });
   const enactments = {}; for (const p of I.snap.pages || []) Object.assign(enactments, E.enactedDatesFromText(p.normalized || ''));
   // exception authoring state (ruling (d)), as the review builder: authored when every unit of the exception is agreed / adjudicated
   const isExcReg = (r) => /^900\.\d+\.10\(/.test(r);

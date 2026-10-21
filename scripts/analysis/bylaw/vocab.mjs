@@ -170,6 +170,24 @@ export function checkVocab(vocab) {
     for (const [tok, b] of Object.entries(x.reference_flags)) if (!Object.hasOwn(vocab.lot_condition, tok) || typeof b !== 'boolean') v.push(`vocab_reference_invalid: accessory_structure_use.${use}.reference_flags.${tok}`);
   }
 
+  // M-281 (CHAT-38.F-4D-1): article_scope_ignored is a boolean on an accessory structure that lists element targets
+  for (const [use, x] of Object.entries(vocab.accessory_structure_use || {})) {
+    if (use === '$comment' || !isMap(x) || x.article_scope_ignored === undefined) continue;
+    if (x.article_scope_ignored !== true || !Array.isArray(x.element_targets) || x.element_targets.length === 0) v.push(`vocab_reference_invalid: accessory_structure_use.${use}.article_scope_ignored`);
+  }
+  // M-285 (CHAT-38.F-4D-7): the named-street table — every unit lists the streets it names and which lot line it speaks of
+  if (vocab.named_street !== undefined) {
+    const ns = vocab.named_street;
+    if (!isMap(ns) || !isStr(ns.lot_field) || !isMap(ns.suffixes) || !isMap(ns.units) || !Array.isArray(ns.unnamed)) v.push('vocab_missing_field: named_street (lot_field, suffixes, units, unnamed)');
+    else {
+      for (const [id, r] of Object.entries(ns.units)) {
+        if (!isMap(r) || !Array.isArray(r.streets) || r.streets.length === 0 || r.streets.some((x) => !isStr(x)) || !['front', 'any'].includes(r.line)) v.push(`vocab_reference_invalid: named_street.units.${id}`);
+        if (ns.unnamed.includes(id)) v.push(`vocab_duplicate: named_street ${id} is both named and unnamed`);
+      }
+      for (const [w, short] of Object.entries(ns.suffixes)) if (w !== w.toLowerCase() || !isStr(short)) v.push(`vocab_reference_invalid: named_street.suffixes.${w}`);
+    }
+  }
+
   // scope reasons
   const oos = vocab.scope.out_of_scope_reason;
   if (!isMap(oos)) v.push('vocab_missing_field: scope.out_of_scope_reason');
@@ -219,6 +237,7 @@ export function evaluatorVocab(vocab) {
     article_application: vocab.article_application, // M-219: x.40.1(1) excludes ancillary buildings from Article x.40
     exception_type_alias: vocab.exception_type_alias, // M-180(1): exception detached-house rules bind the houseplex
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
+    named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
     map_area_unheld_reading: vocab.map_area_unheld_reading, // M-222 / M-224: literal reading while a map is not held
     specific_use: vocab.specific_use, // M-159(3) / M-244: a specific-use unit applies only on a lot that has the use
     unit_application: vocab.unit_application, // M-251: a unit the operator scoped to the residential building (by unit id)

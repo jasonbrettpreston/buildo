@@ -1,0 +1,219 @@
+{
+ "suite": "src/tests/bylaw-fix-6.logic.test.ts",
+ "base": "edd18529",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-6 (fix round 4D lane B), items F-4D-1, -3, -4, -5, -7, -11, -12, -15, -17: design inputs and keying. Run in the lane worktree at edd18529 with only the new test file added, before the vocab / evaluator / M-75 changes.",
+ "counts": {
+  "pass": 13,
+  "red": 31
+ },
+ "cases": [
+  {
+   "name": "F-4D-1 / M-280 — platform area, height and common-wall distance are platform element targets (M-254) the text carries the three limits (ch10_20.txt, ch10_40.txt, ch10_5.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-1 / M-280 — platform area, height and common-wall distance are platform element targets (M-254) deck_or_platform.element_targets lists them beside the M-254 setbacks",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'platform_clearance_m', …(5) ] to deeply equal ArrayContaining{…}"
+  },
+  {
+   "name": "F-4D-1 / M-280 — platform area, height and common-wall distance are platform element targets (M-254) platform_area_m2 is 4.0 m2 in RD, RS and RM (detached house) and for a semi-detached house in RS and RM",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RD', 'detached_house', …(3) ] to deeply equal [ 'RD', 'detached_house', …(3) ]"
+  },
+  {
+   "name": "F-4D-1 / M-280 — platform area, height and common-wall distance are platform element targets (M-254) platform_common_wall_distance_m is 1.8 m for a semi-detached house in RS and RM",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RS', 'not_evaluated', null, …(1) ] to deeply equal [ 'RS', 'value', 1.8, …(1) ]"
+  },
+  {
+   "name": "F-4D-1 / M-280 — platform area, height and common-wall distance are platform element targets (M-254) platform_height_m is 1.2 m in the Residential Zone category (10.5.40.50(4)(A)), on every residential zone",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', 'not_evaluated', null, …(1) ] to deeply equal [ 'R', 'value', 1.2, …(1) ]"
+  },
+  {
+   "name": "F-4D-1 / M-280 — platform area, height and common-wall distance are platform element targets (M-254) the garden suite 0.2 m rule is a height above the access floor, not above grade, so it no longer answers platform_height_m (150.7.60.60(3)(A))",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'platform_height_m' ] to deeply equal [ 'platform_above_access_floor_m' ]"
+  },
+  {
+   "name": "F-4D-1 / M-280 — platform area, height and common-wall distance are platform element targets (M-254) the principal-building targets are unchanged (M-159(2), M-175): a platform rule never limits the house",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-1 / M-281 — a ground-mounted heating or air-conditioning device has its own targets (energy_device_*) the text (ch10_5.txt 10.5.60.20(10)): front yard at least 6.0 m from the front lot line; side yard the lesser of 0.9 m or the building side yard",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-1 / M-281 — a ground-mounted heating or air-conditioning device has its own targets (energy_device_*) vocab declares energy_device_front_setback_m and energy_device_side_clearance_m (min) and lists them as the energy_device element targets",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to match object { unit: 'm', bound: 'min' }"
+  },
+  {
+   "name": "F-4D-1 / M-281 — a ground-mounted heating or air-conditioning device has its own targets (energy_device_*) 10.5.60.20(10)(A) and (B) are keyed on the device targets, not on the house front setback and encroachment clearance",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m' ] to deeply equal [ 'energy_device_front_setback_m' ]"
+  },
+  {
+   "name": "F-4D-1 / M-281 — a ground-mounted heating or air-conditioning device has its own targets (energy_device_*) answers 6.0 m from the front lot line; the side clearance is the lesser of 0.9 m and the house side yard (0.45 m blank wall, 0.9 m with openings)",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'not_evaluated', …(6) } to match object { status: 'value', value: 6, …(1) }"
+  },
+  {
+   "name": "F-4D-1 / M-281 — a ground-mounted heating or air-conditioning device has its own targets (energy_device_*) the device never limits the house: the house front setback keeps its own winner",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-3 / M-282 — separation between main walls follows the openings (main_wall_openings, main_wall_openings_each) the text has three arms in R, RD, RS (neither wall / one wall / each wall) and two in RT, RM (ch10_10.txt, ch10_60.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-3 / M-282 — separation between main walls follows the openings (main_wall_openings, main_wall_openings_each) vocab: both tokens are user-input design choices taken as absent (M-259 pattern)",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'main_wall_openings' // Object.is equality"
+  },
+  {
+   "name": "F-4D-3 / M-282 — separation between main walls follows the openings (main_wall_openings, main_wall_openings_each) the 5.5 m arm carries main_wall_openings and the 11.0 m arm main_wall_openings_each in R, RD, RS; RT and RM carry the 11.0 m arm token only",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '10.10.40.80(1)#', false ] to deeply equal [ '10.10.40.80(1)#', true ]"
+  },
+  {
+   "name": "F-4D-3 / M-282 — separation between main walls follows the openings (main_wall_openings, main_wall_openings_each) no openings (the default): 2.0 m in R, RD, RS; 5.5 m in RT, RM (the City figure on A0251/26TEY is 2.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', 'value', 11, …(1) ] to deeply equal [ 'R', 'value', 2, …(1) ]"
+  },
+  {
+   "name": "F-4D-3 / M-282 — separation between main walls follows the openings (main_wall_openings, main_wall_openings_each) openings in one facing wall: 5.5 m; in each facing wall: 11.0 m (R, RD, RS)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', 11, '10.10.40.80(1)#(1)(C)' ] to deeply equal [ 'R', 5.5, '10.10.40.80(1)#(1)(B)' ]"
+  },
+  {
+   "name": "F-4D-3 / M-282 — separation between main walls follows the openings (main_wall_openings, main_wall_openings_each) with the design not given the answer asks for it (needs_user_input), never an assumed 11 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'value' to be 'not_evaluated' // Object.is equality"
+  },
+  {
+   "name": "F-4D-4 / M-283 — the apartment primary-windows arm is behind an input (primary_windows) the text names the two arms (ch10_10.txt 10.10.40.70(5)(D), (E))",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-4 / M-283 — the apartment primary-windows arm is behind an input (primary_windows) vocab: primary_windows is a user-input design choice taken as absent (M-259 pattern)",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'primary_windows' // Object.is equality"
+  },
+  {
+   "name": "F-4D-4 / M-283 — the apartment primary-windows arm is behind an input (primary_windows) (5)(D) and (5)(E) express both arms on the token: 1.8 / 5.5 m and 2.4 / 5.5 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'side_setback_m = 1.8 m @(5)(D)(i) sid…' to match /holds\\(primary_windows\\).*5\\.5 m.*1\\.…/"
+  },
+  {
+   "name": "F-4D-4 / M-283 — the apartment primary-windows arm is behind an input (primary_windows) A0426/26TEY: without primary windows 1.8 m (default), with primary windows 5.5 m (the City figure); through lot 2.4 m / 5.5 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'value', value: 1.8, …(9) } to match object { status: 'value', value: 5.5, …(1) }"
+  },
+  {
+   "name": "F-4D-4 / M-283 — the apartment primary-windows arm is behind an input (primary_windows) with the design not given the answer asks for it (needs_user_input)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', undefined ] to deeply equal [ 'not_evaluated', …(1) ]"
+  },
+  {
+   "name": "F-4D-5 / M-284 — the garden suite one-storey 60 m2 arm is chosen by an input (suite_one_storey) the text (ch150_7.txt 150.7.60.50(4))",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-5 / M-284 — the garden suite one-storey 60 m2 arm is chosen by an input (suite_one_storey) vocab: suite_one_storey is a user-input design choice taken as false — two storeys, the larger 120 m2 (M-177(2)); the one-storey arm is disclosed",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'suite_one_storey' // Object.is equality"
+  },
+  {
+   "name": "F-4D-5 / M-284 — the garden suite one-storey 60 m2 arm is chosen by an input (suite_one_storey) (4)(B) is conditioned on the token, not on the resolved storey cap",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'building_height_band' ] to deeply equal [ 'suite_one_storey' ]"
+  },
+  {
+   "name": "F-4D-5 / M-284 — the garden suite one-storey 60 m2 arm is chosen by an input (suite_one_storey) A0079/26SC: one storey 60 m2 (the City figure), otherwise 120 m2",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'value', value: 120, …(8) } to match object { status: 'value', value: 60, …(1) }"
+  },
+  {
+   "name": "F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names the exception text (ch900_3.txt RD 323 (C))",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names vocab.named_street is a table unit -> streets (+ line) that covers every unit carrying abuts_named_street, or lists it as unnamed",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'units')"
+  },
+  {
+   "name": "F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names a parcel on Huntingwood Dr. takes the 7.5 m front setback; a parcel on Ravencliff Cres. does not (A0096/26SC)",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'not_evaluated', …(6) } to match object { status: 'value', value: 7.5, …(1) }"
+  },
+  {
+   "name": "F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names street names compare whole-word and without case, punctuation or suffix spelling (Huntingwood Drive = HUNTINGWOOD DR.)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'HUNTINGWOOD DR.', null ] to deeply equal [ 'HUNTINGWOOD DR.', 7.5 ]"
+  },
+  {
+   "name": "F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names with no street name the flag decides exactly as before; with neither the answer asks for it",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names a clause that does not say \"front lot line\" cannot be refuted by the front street: a different frontage stays undecided (never false)",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'units')"
+  },
+  {
+   "name": "F-4D-11 / M-286 — suite separation and height: derived distance, laneway-with-existing-house disclosure, no distance input distance_to_residential_m and proposed_height_m are derived scenario values, never user inputs",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'distance_to_residential_m')"
+  },
+  {
+   "name": "F-4D-11 / M-286 — suite separation and height: derived distance, laneway-with-existing-house disclosure, no distance input the existing-house disclosure is one closed sentence in vocab, carried by the four laneway separation and height units",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'laneway_suite_with_existing_house')"
+  },
+  {
+   "name": "F-4D-11 / M-286 — suite separation and height: derived distance, laneway-with-existing-house disclosure, no distance input the garden suite units do not carry it (the operator named the laneway suite with an existing house)",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'laneway_suite_with_existing_house')"
+  },
+  {
+   "name": "F-4D-11 / M-286 — suite separation and height: derived distance, laneway-with-existing-house disclosure, no distance input with the two derived values supplied the rows answer: 6.3 m at 8.0 m from the new build, 7.5 m separation (A0174/26NY, A0486/26TEY)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-12 / M-287 — R-zone ancillary coverage stays at 5 percent (reading B) the R text says 5% and names the parking-space exception without a figure of its own (ch10_10.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-12 / M-287 — R-zone ancillary coverage stays at 5 percent (reading B) a garage lot in R answers 5, winner 10.10.60.70(1)(A); RD and the base figure are unchanged",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-4D-12 / M-287 — R-zone ancillary coverage stays at 5 percent (reading B) the explained difference is recorded as data the scorecard reads: vocab.explained_differences",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading '10.5.60.70(1)(B)')"
+  },
+  {
+   "name": "F-4D-15 / M-288 — laneway platform floor height keyed; the clauses that cannot be keyed faithfully are held 150.8.60.60(3)(A) is a height above the access floor, 0.2 m, on the platform element target",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'none' ] to deeply equal [ 'platform_above_access_floor_m' ]"
+  },
+  {
+   "name": "F-4D-15 / M-288 — laneway platform floor height keyed; the clauses that cannot be keyed faithfully are held 150.8.60.60(3)(B) keeps platform_height_m = 4.0 m; both are now answered for a platform on a laneway suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'not_evaluated', …(6) } to match object { status: 'value', value: 0.2 }"
+  },
+  {
+   "name": "F-4D-15 / M-288 — laneway platform floor height keyed; the clauses that cannot be keyed faithfully are held held, with the reason on the register (M-288): 150.8.60.60(2)(B), 10.5.40.50(4)(B)/(C), 10.5.40.60(2)(A) stay unkeyed, so no wrong figure is answered",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'not_evaluated', …(6) } to match object { status: 'value', value: 0.2 }"
+  },
+  {
+   "name": "F-4D-17 / M-289 — the City 0.9 m on a side wall with openings is the blank_side_wall:false arm (M-259), for every type of the notices detached, semi-detached and detached houseplex: 0.45 m by default, 0.9 m with openings",
+   "at_base": "pass"
+  }
+ ]
+}

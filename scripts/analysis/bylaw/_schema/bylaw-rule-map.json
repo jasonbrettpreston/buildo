@@ -71,12 +71,20 @@
       "family": "40.40"
     },
     {
+      "id": "fam-40.50",
+      "family": "40.50"
+    },
+    {
       "id": "fam-40.70",
       "family": "40.70"
     },
     {
       "id": "fam-40.71",
       "family": "40.71"
+    },
+    {
+      "id": "fam-40.80",
+      "family": "40.80"
     },
     {
       "id": "fam-60.20",
@@ -121,6 +129,10 @@
     {
       "id": "fam-10.5.40.40",
       "family": "10.5.40.40"
+    },
+    {
+      "id": "fam-10.5.40.50",
+      "family": "10.5.40.50"
     },
     {
       "id": "fam-10.5.40.60",
@@ -1154,6 +1166,134 @@
     {
       "id": "m.260",
       "section": "fam-40.10"
+    },
+    {
+      "id": "m.295",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.296",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.297",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.298",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.265",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.266",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.267",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.268",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.280",
+      "section": "fam-40.50"
+    },
+    {
+      "id": "m.281",
+      "section": "fam-10.5.60.20"
+    },
+    {
+      "id": "m.282",
+      "section": "fam-40.80"
+    },
+    {
+      "id": "m.283",
+      "section": "fam-40.70"
+    },
+    {
+      "id": "m.284",
+      "section": "fam-150"
+    },
+    {
+      "id": "m.285",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.286",
+      "section": "fam-150"
+    },
+    {
+      "id": "m.287",
+      "section": "fam-60.70"
+    },
+    {
+      "id": "m.288",
+      "section": "fam-150"
+    },
+    {
+      "id": "m.289",
+      "section": "fam-40.70"
+    },
+    {
+      "id": "m.290",
+      "section": "fam-10.5.40.50"
+    },
+    {
+      "id": "m.291",
+      "section": "fam-10.5.60.20"
+    },
+    {
+      "id": "m.305",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.306",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.307",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.308",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.309",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.310",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.311",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.312",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.313",
+      "section": "fam-800"
+    },
+    {
+      "id": "m.314",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.315",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.316",
+      "section": "fam-900"
     },
     {
       "id": "lc.1",
@@ -4098,6 +4238,358 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-260**"
+      }
+    },
+    {
+      "id": "M-295",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.295",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-295**"
+      }
+    },
+    {
+      "id": "M-296",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.296",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-296**"
+      }
+    },
+    {
+      "id": "M-297",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.297",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-297**"
+      }
+    },
+    {
+      "id": "M-298",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.298",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-298**"
+      }
+    },
+    {
+      "id": "M-265",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.265",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-265**"
+      }
+    },
+    {
+      "id": "M-266",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.266",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-266**"
+      }
+    },
+    {
+      "id": "M-267",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.267",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-267**"
+      }
+    },
+    {
+      "id": "M-268",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.268",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-268**"
+      }
+    },
+    {
+      "id": "M-280",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.280",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-280**"
+      }
+    },
+    {
+      "id": "M-281",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.281",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-281**"
+      }
+    },
+    {
+      "id": "M-282",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.282",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-282**"
+      }
+    },
+    {
+      "id": "M-283",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.283",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-283**"
+      }
+    },
+    {
+      "id": "M-284",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.284",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-284**"
+      }
+    },
+    {
+      "id": "M-285",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.285",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-285**"
+      }
+    },
+    {
+      "id": "M-286",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.286",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-286**"
+      }
+    },
+    {
+      "id": "M-287",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.287",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-287**"
+      }
+    },
+    {
+      "id": "M-288",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.288",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-288**"
+      }
+    },
+    {
+      "id": "M-289",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.289",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-289**"
+      }
+    },
+    {
+      "id": "M-290",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.290",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-290**"
+      }
+    },
+    {
+      "id": "M-291",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.291",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-291**"
+      }
+    },
+    {
+      "id": "M-305",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.305",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-305**"
+      }
+    },
+    {
+      "id": "M-306",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.306",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-306**"
+      }
+    },
+    {
+      "id": "M-307",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.307",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-307**"
+      }
+    },
+    {
+      "id": "M-308",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.308",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-308**"
+      }
+    },
+    {
+      "id": "M-309",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.309",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-309**"
+      }
+    },
+    {
+      "id": "M-310",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.310",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-310**"
+      }
+    },
+    {
+      "id": "M-311",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.311",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-311**"
+      }
+    },
+    {
+      "id": "M-312",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.312",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-312**"
+      }
+    },
+    {
+      "id": "M-313",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.313",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-313**"
+      }
+    },
+    {
+      "id": "M-314",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.314",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-314**"
+      }
+    },
+    {
+      "id": "M-315",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.315",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-315**"
+      }
+    },
+    {
+      "id": "M-316",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.316",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-316**"
       }
     },
     {

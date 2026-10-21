@@ -5435,6 +5435,21 @@
       }
     },
     {
+      "id": "R-JB",
+      "kind": "register-ruling",
+      "status": "historical",
+      "handbook_line": "ingestor.6",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "coa_applications.ward is two digits (03): the load pads a one-digit ward and a staged migration (281_coa_ward_two_digits.sql, in the parked patch) backfills the rows. PARKED / OWED: not landed; bundled into the next CoA capture night (operator, 4D page CHAT-38.D-WARD and 2026-10-21-batch-o#CHAT-47). Flips to active/lock when the patch lands.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "PARKED, not in force (CHAT-47): the compute change makes the four coa captures stale, so it lands with the next CoA capture night; until then no lock enforces it (the decision-log test only locks that the register row exists). Listed `historical` (the closest existing status: not in force, kept so citations resolve) so the handbook counts do not include it; it flips to active/lock when the patch lands."
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",

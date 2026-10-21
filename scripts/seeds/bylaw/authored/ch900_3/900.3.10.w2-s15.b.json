@@ -1,0 +1,109 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s15",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(1437)#(1437)[PBS](I)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "former City of Toronto by-laws 81-79 and 535-81",
+      "evaluated_by_us": "no",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "addresses": "the odd numbered addresses of 11-17 NANTON AVE"
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "11-17",
+          "reason": "cross_reference_value",
+          "clause_path": "(1437)[PBS](I)",
+          "note": "address range identifying the lands, not a limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1437"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "The lands, or a portion thereof"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "gaps": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1437)#(1437)[PBS](J)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "former City of Toronto by-law 81-79",
+      "evaluated_by_us": "no",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "addresses": "the odd numbered addresses of 21-53 NANTON AVE, the odd numbered addresses of 3-9 NANTON AVE, the even numbered addresses of 18-50 NANTON AVE"
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "21-53",
+          "reason": "cross_reference_value",
+          "clause_path": "(1437)[PBS](J)",
+          "note": "address range identifying the lands, not a limit"
+        },
+        {
+          "literal": "3-9",
+          "reason": "cross_reference_value",
+          "clause_path": "(1437)[PBS](J)",
+          "note": "address range identifying the lands, not a limit"
+        },
+        {
+          "literal": "18-50",
+          "reason": "cross_reference_value",
+          "clause_path": "(1437)[PBS](J)",
+          "note": "address range identifying the lands, not a limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1437"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "The lands, or a portion thereof"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "gaps": []
+      }
+    }
+  ]
+}

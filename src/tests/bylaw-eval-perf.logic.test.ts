@@ -85,6 +85,10 @@ describe('3. a candidates array changed between calls gives a fresh answer', () 
   });
 });
 
+// L2-LOSERS (M-295, 2026-10-21): effective() gained a losers[] field, purely additive. The golden below is hashed with that one
+// field left out, so it proves no existing byte moved (the pin is unchanged: 3815ff0a…); losers[] itself is locked by
+// bylaw-losers.logic.test.ts, one fixture per dropped_by member.
+const noLosers = (x: unknown): unknown => JSON.parse(JSON.stringify(x, (k, v) => (k === 'losers' ? undefined : v)));
 describe('4. equivalence: the fixture corpus is byte-identical to the pre-refactor evaluator', () => {
   it('35 eval-vector lots × 4 variants × every target + permitted() hash to the bd332ec8 golden', () => {
     const lots = [...new Set(VECTORS.map((v) => stable(v.lot)))].sort(cmp).map((s) => JSON.parse(s));
@@ -93,8 +97,8 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     for (const L of lots) {
       for (const lot of [L, { ...L, building_type: null }, { ...L, flags: {} }, { ...L, building_type: null, flags: {} }]) {
         const cands = E.loadCandidates(lot, UNITS).candidates;
-        for (const t of targets) h.update(stable(E.effective(lot, t, cands, C)));
-        for (const bt of EV.building_type_residential) h.update(stable(E.permitted(lot, bt, cands, C)));
+        for (const t of targets) h.update(stable(noLosers(E.effective(lot, t, cands, C))));
+        for (const bt of EV.building_type_residential) h.update(stable(noLosers(E.permitted(lot, bt, cands, C))));
       }
     }
     expect(lots.length).toBe(35);
@@ -139,6 +143,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-21 (F-SC-13/14 / M-255, bylaw fix lane 4): three new dsl_targets (extension_side_setback_m,
     // parapet_projection_m, platform_count); their 420 cells are not_evaluated:no_candidate (the fixture units predate the keying).
     // With the three left out the hash is the previous pin c1a1f04c…b595 exactly, so no existing cell moved.
-    expect(h.digest('hex')).toBe('3815ff0a60ff6443b1fe395929edcc0d004f85ea2e61a6e03f53d3d7c11d296d');
+    // re-pinned 2026-10-21 (F-4D-1 / M-281, bylaw fix lane 6): two new dsl_targets (energy_device_front_setback_m,
+    // energy_device_side_clearance_m); their 280 cells are not_evaluated:no_candidate (the fixture units predate the keying). With the two
+    // left out the hash is the previous pin 3815ff0a…296d exactly, so no existing cell moved (M-280, M-282..M-286 moved none either).
+    expect(h.digest('hex')).toBe('751d494ca36e891a2d0236c77950f9cec324493ad9289dbc0ef49e3b75e375bc');
   }, 60_000);
 });

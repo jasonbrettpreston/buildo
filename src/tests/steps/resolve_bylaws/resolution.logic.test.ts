@@ -333,7 +333,8 @@ describe('R-IU: a batch splits into the population and the keys to retract (the 
 
 describe('Q-L2-4: the in-scope zone list is a logic variable, kept inside the evaluator zone vocabulary', () => {
   // Kept out of migrations/ until commit ① (a migration file changes the migration count 28 generated scorecards embed).
-  const MIG = 'docs/reports/layer2-measure/pending-migrations/280_resolve_bylaws_logic_variables.sql';
+  // The file moves to migrations/ at commit (1); the lock finds it in either place (integrate-21).
+  const MIG = ['docs/reports/layer2-measure/pending-migrations', 'migrations'].map((d) => `${d}/280_resolve_bylaws_logic_variables.sql`).find((p) => fs.existsSync(path.join(ROOT, p))) ?? 'docs/reports/layer2-measure/pending-migrations/280_resolve_bylaws_logic_variables.sql';
   const zones: string[] = PVOCAB.zone;
 
   it('inPopulation(zoneList, vocabZones) is the predicate splitPopulation takes: a row is in when its zone is listed', () => {

@@ -7,7 +7,8 @@
 const fs = require('node:fs');
 const { Client } = require('pg');
 const [OUTA, OUTB] = process.argv.slice(2, 4); const NA = Number(process.argv[4] || 300); const NB = Number(process.argv[5] || 500);
-const EXC_CH = { R: 2, RD: 3, RS: 4, RT: 5, RM: 6 };
+// zone -> Chapter 900 article number: vocab data (M-297), never a literal here (G-EXC-LIT)
+const EXC_CH = Object.fromEntries(Object.entries(require('../../seeds/bylaw/vocab.json').exception_chapter).filter(([k]) => !k.startsWith('$')));
 function parseLabel(zn) {
   const m = /^\s*([A-Z]+)\s*(?:\(([^)]*)\))?/.exec(zn || ''); const label = {};
   if (m && m[2]) for (const part of m[2].split(';')) { const p = /^\s*([a-wyz][a-z]?)\s*([\d.]+)\s*$/.exec(part); if (p) label[p[1]] = Number(p[2]); }

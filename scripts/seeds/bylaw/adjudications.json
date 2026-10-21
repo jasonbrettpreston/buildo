@@ -84536,6 +84536,1510 @@
           "blank_side_wall"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(100)#(100)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(100)#(100)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1428)#(1428)[PBS](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(1428)#(1428)[PBS](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(199)#(199)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(199)#(199)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The listed literals are not numbers of the clause as G-CLAUSE reads it (street numbers, a schedule exception number, an ordinal word); an empty list is the faithful record.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(1434)#(1434)[SSP](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "not_an_override",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](F)/not_an_override",
+      "kind": "correction",
+      "reason": "The trigger \"Despite regulation 10.5.40.60(1)\" names a target, so the generator already accounts for it as a displacement; G-XREF refuses a not_an_override entry for it, and \"narrows_permission\" is not in vocab.displacement_triggers.not_an_override.",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(1437)#(1437)[SSP](F)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "not_an_override",
+      "id": "COR-900.3.10(100)#(100)[SSP](D)/not_an_override",
+      "kind": "correction",
+      "reason": "\"where (c) does not apply\" states the condition of the 7.5 m setback, not a displacement of another regulation (vocab not_an_override: condition_not_displacement).",
+      "rule": "Spec 69a M-75 (mechanical gate correction in the shard keyed for CHAT-38.F-4D-SC-199 / F-4D-10 / F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(100)#(100)[SSP](D)",
+      "value": [
+        {
+          "phrase": "does not apply",
+          "reason": "condition_not_displacement"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(528)#(528)[SSP](A)/condition",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (mechanical family correction in the shard keyed for CHAT-38.F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(528)#(528)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(528)#(528)[SSP](A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (mechanical family correction in the shard keyed for CHAT-38.F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(528)#(528)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(528)#(528)[SSP](A)/application.evidence",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (mechanical family correction in the shard keyed for CHAT-38.F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(528)#(528)[SSP](A)",
+      "value": {
+        "RD": "Exception RD 528"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(528)#(528)[SSP](B)/condition",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (mechanical family correction in the shard keyed for CHAT-38.F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(528)#(528)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(528)#(528)[SSP](B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (mechanical family correction in the shard keyed for CHAT-38.F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(528)#(528)[SSP](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(528)#(528)[SSP](B)/application.evidence",
+      "kind": "correction",
+      "reason": "\"that which existed on the day of the enactment of this By-law\" is unconditional; the 137 other authored units of this form carry no condition and no lawfully_existing token (the lot condition would set the rule aside on every new design, leaving the zone minimum).",
+      "rule": "Spec 69a M-75 (mechanical family correction in the shard keyed for CHAT-38.F-4D-16: 2026-10-21-page-4d-a)",
+      "unit": "900.3.10(528)#(528)[SSP](B)",
+      "value": {
+        "RD": "Exception RD 528"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.60.20(10)#(10)(A)/target",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (A) despite regulation 10.5.60.10(1), the device may be located in a front yard, if it is at least 6.0 metres from the front lot line\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"a ground-mounted heating or air-conditioning device has its own energy_device_* targets\"; M-75",
+      "unit": "10.5.60.20(10)#(10)(A)",
+      "value": "energy_device_front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.60.20(10)#(10)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (A) ... at least 6.0 metres from the front lot line\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"energy_device_front_setback_m = 6.0 m\"; M-75",
+      "unit": "10.5.60.20(10)#(10)(A)",
+      "value": [
+        "energy_device_front_setback_m = 6.0 m @(10)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.60.20(10)#(10)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (A)\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"energy_device_front_setback_m\"; M-75",
+      "unit": "10.5.60.20(10)#(10)(A)",
+      "value": {
+        "description": "Despite 10.5.60.10(1), a ground-mounted heating or air-conditioning device may be located in a front yard if it is at least 6.0 metres from the front lot line.",
+        "gaps": "The device's own target (energy_device_front_setback_m, M-281) answers for the device; it never limits the house's front setback. Whether a device is placed in the front yard is a design fact.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.60.20(10)#(10)(B)/target~s1",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (B) despite regulation 10.5.60.20(3)(A), the device may be in a side yard, if it is no closer to the side lot line than the lesser of: (i) 0.9 metres; or (ii) the required minimum side yard setback for the residential building on the lot\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"energy_device_side_clearance_m\"; M-75",
+      "supersedes": "COR-10.5.60.20(10)#(10)(B)/target",
+      "unit": "10.5.60.20(10)#(10)(B)",
+      "value": "energy_device_side_clearance_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.60.20(10)#(10)(B)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (B) ... the lesser of: (i) 0.9 metres; or (ii) the required minimum side yard setback for the residential building on the lot\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"energy_device_side_clearance_m = min(0.9 m; side_setback_m)\"; M-75",
+      "supersedes": "COR-10.5.60.20(10)#(10)(B)/numeric_expression",
+      "unit": "10.5.60.20(10)#(10)(B)",
+      "value": [
+        "energy_device_side_clearance_m = min(0.9 m @(10)(B)(i); side_setback_m) @(10)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.60.20(10)#(10)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (B)\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"side_setback_m is the residential building's\"; M-75",
+      "unit": "10.5.60.20(10)#(10)(B)",
+      "value": {
+        "description": "Despite 10.5.60.20(3)(A), a ground-mounted heating or air-conditioning device may be in a side yard if it is no closer to the side lot line than the lesser of 0.9 m or the required minimum side yard setback for the residential building on the lot.",
+        "gaps": "The device's own target (energy_device_side_clearance_m, M-281) answers for the device; side_setback_m is the residential building's required side yard (the blank_side_wall design choice, M-259, applies to it). Whether a device is placed in a side yard is a design fact.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.60.20(10)#(10)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (A)\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"disclosures keep the sentences without their not-evaluated clause\"; M-75",
+      "unit": "10.5.60.20(10)#(10)(A)",
+      "value": "A ground-mounted heating or air-conditioning unit may sit in the front yard if it is at least 6.0 m from the front lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.60.20(10)#(10)(B)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-1 (CoA scorecard 4D, 2026-10-21). 10.5.60.20(10): \"for a heating or air-conditioning device that is mounted on the ground: (B)\" (ch10_5.txt). The unit was keyed on the house's own target, so it was set aside for the house and never answered; the device gets its own target (energy_device_*), declared in vocab.accessory_structure_use.energy_device.element_targets.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-281: \"disclosures keep the sentences without their not-evaluated clause\"; M-75",
+      "unit": "10.5.60.20(10)#(10)(B)",
+      "value": "A ground-mounted heating or air-conditioning unit in a side yard must be at least 0.9 m (or the house's side setback, if less) from the side lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.7.60.60(3)#(3)(A)/target",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.7.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-280: \"the garden suite 0.2 m rule is a height above the access floor, not above grade\"; M-75",
+      "unit": "150.7.60.60(3)#(3)(A)",
+      "value": "platform_above_access_floor_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.60(3)#(3)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.7.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-280: \"platform_above_access_floor_m = 0.2 m\"; M-75",
+      "unit": "150.7.60.60(3)#(3)(A)",
+      "value": [
+        "platform_above_access_floor_m = 0.2 m @(3)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.60(3)#(3)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.7.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-280: \"disclosures keep the sentences without their not-modelled clause\"; M-75",
+      "unit": "150.7.60.60(3)#(3)(A)",
+      "value": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-150.8.60.60(3)#(3)(A)/archetype",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-15 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288: \"150.8.60.60(3)(A) is keyed platform_above_access_floor_m = 0.2 m\"; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.8.60.60(3)#(3)(A)/target",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-15 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288: \"platform_above_access_floor_m\"; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": "platform_above_access_floor_m"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-150.8.60.60(3)#(3)(A)/bound",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-15 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288: \"bound max\"; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.8.60.60(3)#(3)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-15 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288: \"platform_above_access_floor_m = 0.2 m\"; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": [
+        "platform_above_access_floor_m = 0.2 m @(3)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.8.60.60(3)#(3)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-15 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288: \"the 0.2 is the limit itself\"; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.8.60.60(3)#(3)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-15 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288: \"keyed on the platform element target\"; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": {
+        "description": "Despite 10.5.60.40(5)(B), the floor of a permitted laneway suite platform (other than a green roof) must be no higher than 0.2 m above the floor of the storey from which it gains access.",
+        "gaps": "The limit is measured from the floor of the access storey, so it is keyed on platform_above_access_floor_m (a platform element target, M-280), not on platform_height_m. Overrides 10.5.60.40(5)(B). The unit text names no building type; the platform is the one permitted under (2) on a laneway suite.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.60(3)#(3)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-15 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288: \"disclosures keep the sentences without their not-modelled clause\"; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.60(3)#(3)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-1 / F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.7.60.60(3): \"the level of the floor of a platform ... must be: (A) no higher than 0.2 metres above the level of the floor of the storey from which it gains access\" (ch150_*.txt). The limit is measured from the access floor, not from grade: it belongs on platform_above_access_floor_m (the target 10.5.40.50(3) already uses). platform_height_m (above established grade) is now a platform element target (M-280), so keeping 0.2 m there would answer 0.2 m for the platform height.",
+      "rule": "Operator approved F-4D-1 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-1); Spec 69a M-280: \"platform_above_access_floor_m\"; M-75",
+      "unit": "150.7.60.60(3)#(3)(A)",
+      "value": {
+        "description": "Despite 10.5.60.40(5)(B), the floor of a garden-suite platform permitted by (2) (other than a green roof) may be no higher than 0.2 m above the floor of the storey it is accessed from.",
+        "gaps": "The height is measured above the floor of the access storey, so it is keyed on platform_above_access_floor_m (a platform element target, M-280), not on platform_height_m (above established grade). The unit text names no building type (the garden suite is named only in (3)(B)), so building_types is 'any'. Displaces 10.5.60.40(5)(B). No zone is named.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.80(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(A)",
+      "value": {
+        "description": "Minimum 2.0 m above-ground separation between facing main walls of the same townhouse or apartment building in the R zone when neither wall has openings to dwelling units.",
+        "gaps": "The base arm: it applies to every design; the arms that need openings carry the design-choice tokens main_wall_openings (one wall) and main_wall_openings_each (each wall) (M-282), so the smallest separation is answered by default and the larger arms are disclosed. Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.80(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(A)",
+      "value": "Facing main walls need 2.0 m between them if neither has openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.80(1)#(1)(B)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(B)",
+      "value": {
+        "tokens": [
+          "main_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.80(1)#(1)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(B)",
+      "value": [
+        "main_wall_openings"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.80(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(B)",
+      "value": {
+        "R": "In the R zone",
+        "apartment_building": "an apartment building",
+        "main_wall_openings": "no openings to dwelling units in one of those main walls",
+        "townhouse": "a townhouse or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.80(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(B)",
+      "value": {
+        "description": "Minimum 5.5 m above-ground separation between facing main walls of the same townhouse or apartment building in the R zone when one of the walls has no openings to dwelling units.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings (M-282; user input main_wall_openings, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type",
+          "main_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.80(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(B)",
+      "value": "Facing main walls need 5.5 m between them if one of them has no openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.80(1)#(1)(C)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(C)",
+      "value": {
+        "tokens": [
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.80(1)#(1)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(C)",
+      "value": [
+        "main_wall_openings_each"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.80(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(C)",
+      "value": {
+        "R": "In the R zone",
+        "apartment_building": "an apartment building",
+        "main_wall_openings_each": "each main wall has an opening to a dwelling unit",
+        "townhouse": "a townhouse or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.80(1)#(1)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(C)",
+      "value": {
+        "description": "Minimum 11.0 m above-ground separation between facing main walls of the same townhouse or apartment building in the R zone when each wall has an opening to a dwelling unit.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings_each (M-282; user input main_wall_openings_each, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type",
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.80(1)#(1)(C)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.10.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_10.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.10.40.80(1)#(1)(C)",
+      "value": "Facing main walls need 11.0 m between them if each has an opening to a dwelling unit."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.80(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(A)",
+      "value": {
+        "description": "Minimum 2.0 m above-ground separation between facing main walls of the same townhouse or apartment building (major-street lot) where neither wall has openings to dwelling units.",
+        "gaps": "The base arm: it applies to every design; the arms that need openings carry the design-choice tokens main_wall_openings (one wall) and main_wall_openings_each (each wall) (M-282), so the smallest separation is answered by default and the larger arms are disclosed. Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.80(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(A)",
+      "value": "Facing main walls need 2.0 m between them if neither has openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.20.40.80(1)#(1)(B)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(B)",
+      "value": {
+        "tokens": [
+          "major_street",
+          "main_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.20.40.80(1)#(1)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(B)",
+      "value": [
+        "major_street",
+        "main_wall_openings"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.40.80(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(B)",
+      "value": {
+        "RD": "In the RD zone",
+        "apartment_building": "an apartment building",
+        "dwelling_unit": "openings to dwelling units",
+        "main_wall_openings": "no openings to dwelling units in one of those main walls",
+        "major_street": "abutting a major street",
+        "townhouse": "a townhouse or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.80(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(B)",
+      "value": {
+        "description": "Minimum 5.5 m separation between facing main walls of the same building where one of the walls has no openings to dwelling units.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings (M-282; user input main_wall_openings, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type",
+          "main_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.80(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(B)",
+      "value": "Facing main walls need 5.5 m between them if one of them has no openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.20.40.80(1)#(1)(C)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(C)",
+      "value": {
+        "tokens": [
+          "major_street",
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.20.40.80(1)#(1)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(C)",
+      "value": [
+        "major_street",
+        "main_wall_openings_each"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.40.80(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(C)",
+      "value": {
+        "RD": "In the RD zone",
+        "apartment_building": "an apartment building",
+        "dwelling_unit": "opening to a dwelling unit",
+        "main_wall_openings_each": "each main wall has an opening to a dwelling unit",
+        "major_street": "abutting a major street",
+        "townhouse": "a townhouse or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.80(1)#(1)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(C)",
+      "value": {
+        "description": "Minimum 11.0 m separation between facing main walls of the same building where each wall has an opening to a dwelling unit.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings_each (M-282; user input main_wall_openings_each, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type",
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.80(1)#(1)(C)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.20.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_20.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.20.40.80(1)#(1)(C)",
+      "value": "Facing main walls need 11.0 m between them if each has an opening to a dwelling unit."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.80(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(A)",
+      "value": {
+        "description": "Where facing main walls of the same townhouse or apartment building have no openings to dwelling units, they must be at least 2.0 m apart above ground.",
+        "gaps": "The base arm: it applies to every design; the arms that need openings carry the design-choice tokens main_wall_openings (one wall) and main_wall_openings_each (each wall) (M-282), so the smallest separation is answered by default and the larger arms are disclosed. Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.80(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(A)",
+      "value": "Facing main walls need 2.0 m between them if neither has openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.40.40.80(1)#(1)(B)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(B)",
+      "value": {
+        "tokens": [
+          "major_street",
+          "main_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.40.40.80(1)#(1)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(B)",
+      "value": [
+        "major_street",
+        "main_wall_openings"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.40.80(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(B)",
+      "value": {
+        "RS": "the RS zone",
+        "apartment_building": "an apartment building",
+        "dwelling_unit": "openings to dwelling units",
+        "main_wall_openings": "no openings to dwelling units in one of those main walls",
+        "major_street": "abutting a major street",
+        "townhouse": "a townhouse or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.80(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(B)",
+      "value": {
+        "description": "Where one of the facing main walls of the same townhouse or apartment building has no openings to dwelling units, they must be at least 5.5 m apart above ground.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings (M-282; user input main_wall_openings, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type",
+          "main_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.80(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(B)",
+      "value": "Facing main walls need 5.5 m between them if one of them has no openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.40.40.80(1)#(1)(C)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(C)",
+      "value": {
+        "tokens": [
+          "major_street",
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.40.40.80(1)#(1)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(C)",
+      "value": [
+        "major_street",
+        "main_wall_openings_each"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.40.80(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(C)",
+      "value": {
+        "RS": "the RS zone",
+        "apartment_building": "an apartment building",
+        "dwelling_unit": "opening to a dwelling unit",
+        "main_wall_openings_each": "each main wall has an opening to a dwelling unit",
+        "major_street": "abutting a major street",
+        "townhouse": "a townhouse or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.80(1)#(1)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(C)",
+      "value": {
+        "description": "Where each facing main wall of the same townhouse or apartment building has an opening to a dwelling unit, they must be at least 11.0 m apart above ground.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings_each (M-282; user input main_wall_openings_each, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type",
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.80(1)#(1)(C)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.40.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 2.0 metres if there are no openings to dwelling units in those main walls; (B) 5.5 metres if there are no openings to dwelling units in one of those main walls; and (C) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_40.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.40.40.80(1)#(1)(C)",
+      "value": "Facing main walls need 11.0 m between them if each has an opening to a dwelling unit."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.60.40.80(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.60.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_60.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.60.40.80(1)#(1)(A)",
+      "value": {
+        "description": "Where main walls of the same residential building face each other (a right-angle projection from one meets another), they must be at least 5.5 m apart above ground if one or more of them has no openings to dwelling units.",
+        "gaps": "The base arm: it applies to every design; the arms that need openings carry the design-choice tokens main_wall_openings (one wall) and main_wall_openings_each (each wall) (M-282), so the smallest separation is answered by default and the larger arms are disclosed. Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.60.40.80(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.60.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_60.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.60.40.80(1)#(1)(A)",
+      "value": "Facing main walls need 5.5 m between them if one or more of them has no openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.60.40.80(1)#(1)(B)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.60.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_60.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.60.40.80(1)#(1)(B)",
+      "value": {
+        "tokens": [
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.60.40.80(1)#(1)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.60.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_60.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.60.40.80(1)#(1)(B)",
+      "value": [
+        "main_wall_openings_each"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.60.40.80(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.60.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_60.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.60.40.80(1)#(1)(B)",
+      "value": {
+        "RT": "the RT zone",
+        "dwelling_unit": "an opening to a dwelling unit",
+        "main_wall_openings_each": "each main wall has an opening to a dwelling unit"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.60.40.80(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.60.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_60.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.60.40.80(1)#(1)(B)",
+      "value": {
+        "description": "Facing main walls of the same building must be at least 11.0 m apart if each has an opening to a dwelling unit.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings_each (M-282; user input main_wall_openings_each, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.60.40.80(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.60.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_60.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.60.40.80(1)#(1)(B)",
+      "value": "Facing main walls need 11.0 m between them if each has an opening to a dwelling unit."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.80(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.80.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_80.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.80.40.80(1)#(1)(A)",
+      "value": {
+        "description": "Where facing main walls of the same apartment building or townhouse include one or more walls with no openings to dwelling units, they must be at least 5.5 m apart above ground.",
+        "gaps": "The base arm: it applies to every design; the arms that need openings carry the design-choice tokens main_wall_openings (one wall) and main_wall_openings_each (each wall) (M-282), so the smallest separation is answered by default and the larger arms are disclosed. Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.80(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.80.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_80.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.80.40.80(1)#(1)(A)",
+      "value": "Facing main walls need 5.5 m between them if one or more of them has no openings to dwelling units."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.80.40.80(1)#(1)(B)/condition",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.80.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_80.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.80.40.80(1)#(1)(B)",
+      "value": {
+        "tokens": [
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.80.40.80(1)#(1)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.80.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_80.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.80.40.80(1)#(1)(B)",
+      "value": [
+        "main_wall_openings_each"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.40.80(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.80.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_80.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.80.40.80(1)#(1)(B)",
+      "value": {
+        "RM": "the RM zone",
+        "apartment_building": "an apartment building",
+        "dwelling_unit": "opening to a dwelling unit",
+        "main_wall_openings_each": "each main wall has an opening to a dwelling unit",
+        "townhouse": "or townhouse has"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.80(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.80.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_80.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.80.40.80(1)#(1)(B)",
+      "value": {
+        "description": "Where each facing main wall of the same apartment building or townhouse has an opening to a dwelling unit, they must be at least 11.0 m apart above ground.",
+        "gaps": "The arm applies when the design has the openings to dwelling units the text names: the design-choice token main_wall_openings_each (M-282; user input main_wall_openings_each, taken as absent, so the smallest separation is answered and this arm is disclosed). Separation is measured between main walls of the same building where a perpendicular line from one intercepts the other.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type",
+          "main_wall_openings_each"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.80(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "F-4D-3 (CoA scorecard 4D, 2026-10-21; A0251/26TEY: City 2.0 m, ours 11 m). 10.80.40.80(1): \"the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls; and (B) 11.0 metres if each main wall has an opening to a dwelling unit\" (ch10_80.txt). The three arms were keyed without the openings condition, so the largest (11.0 m) always won. The arm that needs openings carries a design-choice token (M-259 pattern, taken as absent: the smallest separation, the other arms disclosed).",
+      "rule": "Operator approved F-4D-3 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-3); Spec 69a M-282: \"two design tokens, main_wall_openings and main_wall_openings_each ... taken as absent\"; M-75",
+      "unit": "10.80.40.80(1)#(1)(B)",
+      "value": "Facing main walls need 11.0 m between them if each has an opening to a dwelling unit."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.70(5)#(5)(D)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(D): \"(i) 1.8 metres for all portions of the main wall that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "supersedes": "COR-10.10.40.70(5)#(5)(D)/numeric_expression",
+      "unit": "10.10.40.70(5)#(5)(D)",
+      "value": [
+        "side_setback_m = if(holds(primary_windows); 5.5 m; 1.8 m) @(5)(D)",
+        "side_setback_street_m = 3.0 m @(5)(D)(iv)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.70(5)#(5)(D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(D): \"(i) 1.8 metres for all portions of the main wall that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "supersedes": "COR-10.10.40.70(5)#(5)(D)/literals_not_expressed",
+      "unit": "10.10.40.70(5)#(5)(D)",
+      "value": [
+        {
+          "clause": "(5)(D)(iii)",
+          "literal": "7.5 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(5)(D)(iii)",
+          "literal": "25.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(5)#(5)(D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(D): \"(i) 1.8 metres for all portions of the main wall that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "unit": "10.10.40.70(5)#(5)(D)",
+      "value": [
+        "major_street",
+        "corner_lot",
+        "primary_windows"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(5)#(5)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(D): \"(i) 1.8 metres for all portions of the main wall that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "unit": "10.10.40.70(5)#(5)(D)",
+      "value": {
+        "apartment_building": "for an apartment building",
+        "corner_lot": "a corner lot",
+        "major_street": "abutting a major street",
+        "primary_windows": "portions of the main wall that have primary windows"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(5)#(5)(D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(D): \"(i) 1.8 metres for all portions of the main wall that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "supersedes": "COR-10.10.40.70(5)#(5)(D)/calculation_handling",
+      "unit": "10.10.40.70(5)#(5)(D)",
+      "value": {
+        "description": "An apartment building on a lot abutting a major street has minimum side yard setbacks of 1.8 m for main-wall portions without primary windows, 5.5 m for portions with primary windows, 7.5 m for portions beyond a building length of 25.0 m, and on a corner lot 3.0 m from a side lot line abutting a street.",
+        "gaps": "The side setback is 1.8 m for wall portions without primary windows and 5.5 m for portions with them: one statement on the design-choice token primary_windows (M-283; taken as absent, so 1.8 m is answered and the 5.5 m arm is disclosed). The 7.5 m arm for portions beyond a building length of 25.0 m is an additive arm the DSL cannot express (M-130); the base is a necessary minimum on every wall.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "primary_windows"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.70(5)#(5)(E)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(E): \"(i) 2.4 metres for all portions of the main wall with that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "supersedes": "COR-10.10.40.70(5)#(5)(E)/numeric_expression",
+      "unit": "10.10.40.70(5)#(5)(E)",
+      "value": [
+        "side_setback_m = if(holds(primary_windows); 5.5 m; 2.4 m) @(5)(E)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.70(5)#(5)(E)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(E): \"(i) 2.4 metres for all portions of the main wall with that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "supersedes": "COR-10.10.40.70(5)#(5)(E)/literals_not_expressed",
+      "unit": "10.10.40.70(5)#(5)(E)",
+      "value": [
+        {
+          "clause": "(5)(E)(iii)",
+          "literal": "7.5 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(5)(E)(iii)",
+          "literal": "25.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.70(5)#(5)(E)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(E): \"(i) 2.4 metres for all portions of the main wall with that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "unit": "10.10.40.70(5)#(5)(E)",
+      "value": [
+        "major_street",
+        "through_lot",
+        "primary_windows"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.70(5)#(5)(E)/application.evidence",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(E): \"(i) 2.4 metres for all portions of the main wall with that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "unit": "10.10.40.70(5)#(5)(E)",
+      "value": {
+        "apartment_building": "for an apartment building",
+        "major_street": "abutting a major street",
+        "primary_windows": "portions of the main wall that have primary windows",
+        "through_lot": "a through lot"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(5)#(5)(E)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "F-4D-4 (CoA scorecard 4D, 2026-10-21; A0426/26TEY: City 5.5 m with primary windows, ours 1.8 m). 10.10.40.70(5)(E): \"(i) 2.4 metres for all portions of the main wall with that do not have primary windows; (ii) 5.5 metres for all portions of the main wall that have primary windows\" (ch10_10.txt). The (ii) arm was left unexpressed; both arms are now behind the design-choice token primary_windows (M-259 pattern, taken as absent: the smaller setback, the 5.5 m arm disclosed).",
+      "rule": "Operator approved F-4D-4 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-4); Spec 69a M-283: \"split the two arms behind a primary-windows input\"; M-75",
+      "supersedes": "COR-10.10.40.70(5)#(5)(E)/calculation_handling",
+      "unit": "10.10.40.70(5)#(5)(E)",
+      "value": {
+        "description": "Despite (D), an apartment building on a through lot abutting a major street has minimum side yard setbacks of 2.4 m for main-wall portions without primary windows, 5.5 m for portions with primary windows, and 7.5 m for portions beyond a building length of 25.0 m.",
+        "gaps": "The side setback is 2.4 m for wall portions without primary windows and 5.5 m for portions with them: one statement on the design-choice token primary_windows (M-283; taken as absent, so 2.4 m is answered and the 5.5 m arm is disclosed). The 7.5 m arm for portions beyond a building length of 25.0 m is an additive arm the DSL cannot express (M-130); the base is a necessary minimum on every wall.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "primary_windows"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.50(4)#(4)(B)/condition",
+      "kind": "correction",
+      "reason": "F-4D-5 (CoA scorecard 4D, 2026-10-21; A0079/26SC: City 60 m2, ours 120 m2). 150.7.60.50(4)(B): \"despite (A) above, the maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres\" (ch150_7.txt). The arm read the resolved storey cap (height_storeys, 2) so it never applied. Whether the suite is one storey is a design choice: the token suite_one_storey (M-259 pattern, taken as false: two storeys, 120 m2; the 60 m2 arm disclosed).",
+      "rule": "Operator approved F-4D-5 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-5); Spec 69a M-284: \"a suite-storeys design input chooses the arm\"; M-75",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": {
+        "tokens": [
+          "suite_one_storey"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.50(4)#(4)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-4D-5 (CoA scorecard 4D, 2026-10-21; A0079/26SC: City 60 m2, ours 120 m2). 150.7.60.50(4)(B): \"despite (A) above, the maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres\" (ch150_7.txt). The arm read the resolved storey cap (height_storeys, 2) so it never applied. Whether the suite is one storey is a design choice: the token suite_one_storey (M-259 pattern, taken as false: two storeys, 120 m2; the 60 m2 arm disclosed).",
+      "rule": "Operator approved F-4D-5 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-5); Spec 69a M-284: \"a suite-storeys design input chooses the arm\"; M-75",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": [
+        "suite_one_storey"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.50(4)#(4)(B)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "F-4D-5 (CoA scorecard 4D, 2026-10-21; A0079/26SC: City 60 m2, ours 120 m2). 150.7.60.50(4)(B): \"despite (A) above, the maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres\" (ch150_7.txt). The arm read the resolved storey cap (height_storeys, 2) so it never applied. Whether the suite is one storey is a design choice: the token suite_one_storey (M-259 pattern, taken as false: two storeys, 120 m2; the 60 m2 arm disclosed).",
+      "rule": "Operator approved F-4D-5 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-5); Spec 69a M-284: \"a suite-storeys design input chooses the arm\"; M-75",
+      "supersedes": "COR-150.7.60.50(4)#(4)(B)/application.evidence",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": {
+        "garden_suite": "containing a garden suite",
+        "suite_one_storey": "that is one storey"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.50(4)#(4)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-4D-5 (CoA scorecard 4D, 2026-10-21; A0079/26SC: City 60 m2, ours 120 m2). 150.7.60.50(4)(B): \"despite (A) above, the maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres\" (ch150_7.txt). The arm read the resolved storey cap (height_storeys, 2) so it never applied. Whether the suite is one storey is a design choice: the token suite_one_storey (M-259 pattern, taken as false: two storeys, 120 m2; the 60 m2 arm disclosed).",
+      "rule": "Operator approved F-4D-5 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-5); Spec 69a M-284: \"a suite-storeys design input chooses the arm\"; M-75",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": {
+        "description": "Despite (4)(A), a one-storey garden suite building may have at most 60 m2 GFA.",
+        "gaps": "\"one storey\" is the design-choice token suite_one_storey (M-284; user input, taken as false: two storeys, the 120 m2 arm answered; the one-storey 60 m2 arm is disclosed).",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "has_garden_suite",
+          "suite_one_storey"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.30(1)#(1)(A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-4D-11 (CoA scorecard 4D, 2026-10-21; operator AMENDED: \"The tricky one is the laneway suite with an existing build because we are not confident in the dimensions. Need to make a disclosure in this case.\"). The separation and height rows of 150.8.60.30(1) and 150.8.60.40(1) read the distance to the house, derived from the maximum build (M-177(2)); with an existing house its dimensions are not held, so the answer carries one closed sentence (vocab.suite_scenario.laneway_suite_with_existing_house).",
+      "rule": "Operator approved F-4D-11 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-11); Spec 69a M-286: \"a laneway suite with an EXISTING house carries a disclosure, because existing dimensions are uncertain\"; M-75",
+      "supersedes": "COR-150.8.60.30(1)#(1)(A)/disclosure",
+      "unit": "150.8.60.30(1)#(1)(A)",
+      "value": "A laneway suite no taller than 4.0 m must be at least 4.0 m from the house; a 6.3 m suite needs 7.5 m, taken where the lot depth fits. If the laneway suite sits with an existing house, the separation and height rows are indicative only: the existing house's dimensions are not held, so its distance to the suite is not confirmed."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.30(1)#(1)(B)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-4D-11 (CoA scorecard 4D, 2026-10-21; operator AMENDED: \"The tricky one is the laneway suite with an existing build because we are not confident in the dimensions. Need to make a disclosure in this case.\"). The separation and height rows of 150.8.60.30(1) and 150.8.60.40(1) read the distance to the house, derived from the maximum build (M-177(2)); with an existing house its dimensions are not held, so the answer carries one closed sentence (vocab.suite_scenario.laneway_suite_with_existing_house).",
+      "rule": "Operator approved F-4D-11 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-11); Spec 69a M-286: \"a laneway suite with an EXISTING house carries a disclosure, because existing dimensions are uncertain\"; M-75",
+      "supersedes": "COR-150.8.60.30(1)#(1)(B)/disclosure",
+      "unit": "150.8.60.30(1)#(1)(B)",
+      "value": "A laneway suite taller than 4.0 m must be at least 7.5 m from the house; at 4.0 m from the house the suite is limited to 4.0 m. If the laneway suite sits with an existing house, the separation and height rows are indicative only: the existing house's dimensions are not held, so its distance to the suite is not confirmed."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.40(1)#(1)(A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-4D-11 (CoA scorecard 4D, 2026-10-21; operator AMENDED: \"The tricky one is the laneway suite with an existing build because we are not confident in the dimensions. Need to make a disclosure in this case.\"). The separation and height rows of 150.8.60.30(1) and 150.8.60.40(1) read the distance to the house, derived from the maximum build (M-177(2)); with an existing house its dimensions are not held, so the answer carries one closed sentence (vocab.suite_scenario.laneway_suite_with_existing_house).",
+      "rule": "Operator approved F-4D-11 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-11); Spec 69a M-286: \"a laneway suite with an EXISTING house carries a disclosure, because existing dimensions are uncertain\"; M-75",
+      "supersedes": "COR-150.8.60.40(1)#(1)(A)/disclosure",
+      "unit": "150.8.60.40(1)#(1)(A)",
+      "value": "If the laneway suite sits with an existing house, the separation and height rows are indicative only: the existing house's dimensions are not held, so its distance to the suite is not confirmed."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.40(1)#(1)(B)/disclosure~s1",
+      "kind": "correction",
+      "reason": "F-4D-11 (CoA scorecard 4D, 2026-10-21; operator AMENDED: \"The tricky one is the laneway suite with an existing build because we are not confident in the dimensions. Need to make a disclosure in this case.\"). The separation and height rows of 150.8.60.30(1) and 150.8.60.40(1) read the distance to the house, derived from the maximum build (M-177(2)); with an existing house its dimensions are not held, so the answer carries one closed sentence (vocab.suite_scenario.laneway_suite_with_existing_house).",
+      "rule": "Operator approved F-4D-11 on the 2026-10-21 rulings page (2026-10-21-page-4d-b#CHAT-38.F-4D-11); Spec 69a M-286: \"a laneway suite with an EXISTING house carries a disclosure, because existing dimensions are uncertain\"; M-75",
+      "supersedes": "COR-150.8.60.40(1)#(1)(B)/disclosure",
+      "unit": "150.8.60.40(1)#(1)(B)",
+      "value": "If the laneway suite sits with an existing house, the separation and height rows are indicative only: the existing house's dimensions are not held, so its distance to the suite is not confirmed."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.8.60.60(3)#(3)(A)/application",
+      "kind": "correction",
+      "reason": "F-4D-15 (CoA scorecard 4D, 2026-10-21). The unit text names no building type (the platform is the one permitted under (2) for a laneway suite), so it is building_types any like its sibling (3)(B); the G-SHAPE feeds check needs a structure once the unit has a target. The laneway scope is vocab.unit_application (M-288).",
+      "rule": "Operator approved F-4D-15 (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288; M-251 form; M-75",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "deck_or_platform": "a platform permitted"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.60.50(4)#(4)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "F-4D-5 (CoA scorecard 4D, 2026-10-21). \"one storey\" was used by the condition expression (height_storeys = 1 storeys); it is now the design-choice token suite_one_storey, so the literal is listed as the threshold the application carries.",
+      "rule": "Operator approved F-4D-5 (2026-10-21-page-4d-b#CHAT-38.F-4D-5); Spec 69a M-284; M-75",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": [
+        {
+          "clause": "(4)(B)",
+          "literal": "one storey",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(3)#(3)(A)/application.building_types~s1",
+      "kind": "correction",
+      "reason": "F-4D-15 (CoA scorecard 4D, 2026-10-21). 150.8.60.60(3)(A) now has a target (platform_above_access_floor_m), so the G-SHAPE feeds check needs a structure: the unit text names no building type (the platform is the one permitted under (2) for a laneway suite), so it is \"any\" like its sibling (3)(B); the laneway scope is vocab.unit_application (M-288).",
+      "rule": "Operator approved F-4D-15 (2026-10-21-page-4d-b#CHAT-38.F-4D-15); Spec 69a M-288; M-251 form; M-75",
+      "supersedes": "COR-150.8.60.60(3)#(3)(A)/application.building_types",
+      "unit": "150.8.60.60(3)#(3)(A)",
+      "value": [
+        "any"
+      ]
     }
   ]
 }

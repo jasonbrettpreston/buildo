@@ -437,7 +437,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(98);
+    expect(r.decisions).toBe(141); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50); the number decision-log --check prints
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(3);
   });
@@ -483,6 +483,22 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     expect(ij).toContain('`2026-10-21-chat-batch-i#CHAT-35`');
     expect(rows.indexOf(ij)).toBe(rows.findIndex((l) => l.startsWith('| R-II |')) + 1);
     expect(rows.some((l) => l.startsWith('## Appendix §B34 — Conflict check and V3 admission table for R-IJ'))).toBe(true);
+  });
+
+  it('4D page lane D (fix-4d): the data-and-tooling items route to M-305..M-311 and R-JB; CHAT-45 settles D-LIPPINCOTT', () => {
+    const M = 'docs/specs/01-pipeline/69a_mcbylaw_register.md';
+    const A = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
+    const d = byStem.get('2026-10-21-page-4d-d') as { routing: Record<string, { register: string; row?: string }> };
+    const n = byStem.get('2026-10-21-batch-n-d') as { routing: Record<string, { register: string; row?: string }> };
+    expect(d.routing['CHAT-38.D-WARD']).toEqual({ register: A, row: 'R-JB' });
+    expect(d.routing['CHAT-38.D-TOOLS']).toEqual({ register: M, row: 'M-305' });
+    expect(d.routing['CHAT-38.F-4D-9']).toEqual({ register: M, row: 'M-308' });
+    expect(n.routing).toEqual({ 'CHAT-45': { register: M, row: 'M-311' } });
+    const reg = fs.readFileSync(path.join(REPO_ROOT, M), 'utf8').split('\n');
+    for (const row of ['M-305', 'M-306', 'M-307', 'M-308', 'M-309', 'M-310', 'M-311', 'M-312']) expect(reg.some((l) => l.startsWith(`| **${row}** |`)), row).toBe(true);
+    const rjb = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n').find((l) => l.startsWith('| R-JB |')) as string;
+    expect(rjb).toContain('`2026-10-21-page-4d-d#CHAT-38.D-WARD`');
+    expect(rjb).toContain('PARKED');
   });
 
   it('R-IJ lock: every committed post witness trace has a same-name golden capture (no orphan trace; red while link_wsib cohort-entities was committed)', () => {

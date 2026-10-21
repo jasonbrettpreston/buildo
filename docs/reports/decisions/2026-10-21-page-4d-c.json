@@ -1,0 +1,65 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-page-4d-c/2026-10-21-page-4d-c.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-page-4d-c",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "completed teh rulings - proceed",
+    "record": "operator rulings page 2026-10-21 https://claude.ai/artifact/LMgW4aaequHWXWZyAeqGCA (db collection decisions)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-page-4d-c/2026-10-21-page-4d-c.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-38.L2-LOSERS": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-295"
+    },
+    "CHAT-38.L2-CLOSURE": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-296"
+    },
+    "CHAT-38.L2-CHAPTERS": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-297"
+    },
+    "CHAT-38.L2-CLASSES": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-298"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-38.L2-LOSERS",
+      "question": "Tie-break losers: record why each rule lost",
+      "recommendation": "Approve. Spec 134:121 and the Phase 2 plan line 192 define it; the Layer 2 plan itself only points at them (plan line 56). Until it lands, dropped_by is stored as not_recorded (Phase 2 plan line 192).",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:44:11.411Z"
+    },
+    {
+      "id": "CHAT-38.L2-CLOSURE",
+      "question": "Exception closure: a read-only list of the exceptions that apply to a lot",
+      "recommendation": "Approve, as the plan recommends at line 165.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:44:34.295Z"
+    },
+    {
+      "id": "CHAT-38.L2-CLASSES",
+      "question": "Scenario classes: define the building-type vectors",
+      "recommendation": "Needs definition on one point. The plan says 'the three suite classes' (line 255) but then lists five classes (detached_house, detached_houseplex, semi_detached_houseplex, semi_detached_house, house_with_secondary_suite) and says garden and laneway are structures, so it does not say which three classes are new. Rule on the five-class list and which are new before the fix lane starts. The garden/laneway-as-structures reading is also OQ-7, which you answered in the Layer 2 page; the register row M-234 wording still needs your confirmation.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:45:19.720Z"
+    },
+    {
+      "id": "CHAT-38.L2-CHAPTERS",
+      "question": "Exception chapters: zone letters to By-law 569-2013 Chapter 900 articles",
+      "recommendation": "Approve. The plan defines it fully (line 327); the only content it names is the five-zone literal above, so the fix lane should confirm that list covers every in-scope residential zone.",
+      "decision": "approve",
+      "decided_at": "2026-10-21T19:45:24.715Z"
+    }
+  ]
+}

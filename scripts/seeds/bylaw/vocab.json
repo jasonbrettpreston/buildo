@@ -219,6 +219,8 @@
     "platform_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum area of a deck, balcony or platform", "patterns": ["platform", "balcony"] },
     "platform_height_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of a platform above established grade", "patterns": ["platform height", "above established grade"] },
     "platform_above_access_floor_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of a platform floor above the floor of the storey from which it gains access (Spec 69a M-82 V5c)", "patterns": ["above the level of the floor of the storey"] },
+    "energy_device_front_setback_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a ground-mounted heating or air-conditioning device located in a front yard must keep from the front lot line (10.5.60.20(10)(A); Spec 69a M-281)", "patterns": ["the device may be located in a front yard"] },
+    "energy_device_side_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance a ground-mounted heating or air-conditioning device located in a side yard must keep from the side lot line: the lesser of 0.9 m and the residential building's required side yard setback (10.5.60.20(10)(B); Spec 69a M-281)", "patterns": ["the device may be in a side yard"] },
     "element_width_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum share of a wall's width taken by an element (dormers, bay windows)", "patterns": ["dormer", "of the width of the"] },
     "element_width_m": { "unit": "m", "aspect": "envelope", "concept": "maximum width of a projecting element (dormer, bay window, porch, stairs)", "patterns": ["maximum width", "in width", "no wider than"] },
     "front_landscaping_pct": { "unit": "pct", "aspect": "landscaping", "concept": "minimum share of the front yard that is landscaping", "patterns": ["front yard landscaping", "front yard must be"] },
@@ -374,6 +376,10 @@
     "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units"] },
     "suite_wall_openings": { "user_input": "suite_wall_openings", "patterns": ["openings such as"] },
     "blank_side_wall": { "user_input": "blank_side_wall", "patterns": ["no windows or doors in that side"] },
+    "main_wall_openings": { "user_input": "main_wall_openings", "patterns": ["openings to dwelling units"] },
+    "main_wall_openings_each": { "user_input": "main_wall_openings_each", "patterns": ["has an opening to a dwelling unit"] },
+    "primary_windows": { "user_input": "primary_windows", "patterns": ["primary windows"] },
+    "suite_one_storey": { "user_input": "suite_one_storey", "patterns": ["that is one storey"] },
     "individual_private_driveway": {},
     "garage_entrance_faces_street": {},
     "lowest_level_joists_1_0_to_1_5_m_for_80_pct": {},
@@ -438,12 +444,13 @@
   },
   "displacement_triggers": {
     "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in", "may be reduced to"],
-    "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
+    "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"],
+    "keeps_limit_phrases": ["permitted by that regulation"]
   },
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
   "heuristic_reason": ["modelling_assumption", "data_cleaning_bound", "tolerance", "statistical_default", "proxy_for_unmodelled_rule"],
   "adjudication_kind": ["disagreement", "consolidation_mismatch", "eval_mismatch", "eval_vector", "source_repeat_letter", "correction", "ref_target_absent", "instrument_not_published_online", "coa_mismatch"],
-  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "blank_side_wall", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm", "ancillary_contains_parking_space"],
+  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "blank_side_wall", "main_wall_openings", "main_wall_openings_each", "primary_windows", "suite_one_storey", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm", "ancillary_contains_parking_space"],
   "code_roots": ["scripts/lib/build-norms.js", "scripts/lib/compute/enrich-parcels.js", "scripts/lib/max-build.js", "scripts/lib/optimal-config.js", "scripts/lib/parcel-cost.js", "scripts/lib/zoning-precedence.js"],
   "banned_code_refs": [
     {
@@ -582,8 +589,27 @@
     "10.80.40": { "citation": "10.80.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
   },
   "unit_application": {
-    "$comment": "Spec 69a M-251 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-7): a unit whose own text names no building type but which the operator scoped to the residential building (the x.40.1(1) form of article_application, by unit id). applies() sets the unit aside for the listed building types, so an ancillary building takes its own Article 10.5.60 rule.",
-    "900.3.10(70)#(70)[SSP](B)": { "citation": "900.3.10(70)(B)", "ruling": "M-251", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
+    "$comment": "Spec 69a M-251 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-7): a unit whose own text names no building type but which the operator scoped to the residential building (the x.40.1(1) form of article_application, by unit id). applies() sets the unit aside for the listed building types, so an ancillary building takes its own Article 10.5.60 rule. M-288 (lane B, 2026-10-21-page-4d-b#CHAT-38.F-4D-15, consequence of M-280): the two 150.8.60.60(3) laneway-suite platform-height units name no building type (the platform is the one permitted under (2) for a laneway suite), M-314 (CHAT-49, 2026-10-21-batch-o#CHAT-49): the same pattern for the type-less side-yard units of exceptions 117, 199, 245, 256, 258, 287, 155 (E) and 340 (C); units that name a building type (a garage) are left alone. M-288: with platform_height_m and platform_above_access_floor_m now platform element targets they are set aside for the other suite and ancillary types.",
+    "900.3.10(70)#(70)[SSP](B)": { "citation": "900.3.10(70)(B)", "ruling": "M-251", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(155)#(155)[SSP](D)": { "citation": "900.3.10(155)(D)", "ruling": "M-267", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(340)#(340)[SSP](B)": { "citation": "900.3.10(340)(B)", "ruling": "M-267", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(117)#(117)[SSP](B)": { "citation": "900.3.10(117)(B)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(117)#(117)[SSP](C)": { "citation": "900.3.10(117)(C)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(199)#(199)[SSP](B)": { "citation": "900.3.10(199)(B)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(199)#(199)[SSP](C)": { "citation": "900.3.10(199)(C)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(245)#(245)[SSP](D)": { "citation": "900.3.10(245)(D)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(245)#(245)[SSP](E)": { "citation": "900.3.10(245)(E)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(256)#(256)[SSP](A)": { "citation": "900.3.10(256)(A)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(256)#(256)[SSP](B)": { "citation": "900.3.10(256)(B)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.4.10(256)#(256)[SSP](E)": { "citation": "900.4.10(256)(E)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(258)#(258)[SSP](A)": { "citation": "900.3.10(258)(A)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(258)#(258)[SSP](B)": { "citation": "900.3.10(258)(B)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(287)#(287)[SSP](C)": { "citation": "900.3.10(287)(C)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(287)#(287)[SSP](D)": { "citation": "900.3.10(287)(D)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(155)#(155)[SSP](E)": { "citation": "900.3.10(155)(E)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(340)#(340)[SSP](C)": { "citation": "900.3.10(340)(C)", "ruling": "M-314", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "150.8.60.60(3)#(3)(A)": { "citation": "150.8.60.60(3)", "ruling": "M-288", "excluded_building_types": ["ancillary_building", "garden_suite", "secondary_suite"] },
+    "150.8.60.60(3)#(3)(B)": { "citation": "150.8.60.60(3)", "ruling": "M-288", "excluded_building_types": ["ancillary_building", "garden_suite", "secondary_suite"] }
   },
   "map_area_unheld_reading": {
     "$comment": "Spec 69a M-222 / M-224: a map-gated unit whose map polygon is not held (lot.map_areas absent) takes the literal reading — the unit is set aside and its disclosure is attached — instead of not_evaluated:map_area_not_held on every lot. Listed units only; any other map-gated unit stays not_evaluated until its map is held.",
@@ -617,9 +643,9 @@
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
     "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },
-    "deck_or_platform": { "disclosure": "rules for a deck or platform on this lot are not part of this answer", "element_targets": ["platform_clearance_m", "platform_count", "platform_encroachment_m", "platform_front_setback_m", "platform_rear_setback_m", "platform_side_setback_m"], "element_targets_ruling": "Spec 69a M-254 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12): the platform's own setback, clearance and encroachment targets answer for the platform (interim before the structure dimension S.3); never a principal-building target (M-159(2), M-175)", "reference_flags": { "blank_side_wall": false }, "reference_flags_ruling": "Spec 69a M-259 (operator approved 2026-10-21, 2026-10-21-chat-batch-h#CHAT-33): a platform has no side wall, so a principal-building target its own element target references (the zone side yard, 10.5.40.50(2); the side yard clearance, 10.5.40.60(1)) is read with these lot conditions — never the 10.10.40.70(4) blank-wall reduction" },
+    "deck_or_platform": { "disclosure": "rules for a deck or platform on this lot are not part of this answer", "element_targets": ["platform_above_access_floor_m", "platform_area_m2", "platform_clearance_m", "platform_common_wall_distance_m", "platform_count", "platform_encroachment_m", "platform_front_setback_m", "platform_height_m", "platform_rear_setback_m", "platform_side_setback_m"], "element_targets_ruling": "Spec 69a M-254 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-11.12), extended by M-280 (operator approved 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-1: the platform's own area, height, floor level and common-wall distance): the platform's own setback, clearance and encroachment targets answer for the platform (interim before the structure dimension S.3); never a principal-building target (M-159(2), M-175)", "reference_flags": { "blank_side_wall": false }, "reference_flags_ruling": "Spec 69a M-259 (operator approved 2026-10-21, 2026-10-21-chat-batch-h#CHAT-33): a platform has no side wall, so a principal-building target its own element target references (the zone side yard, 10.5.40.50(2); the side yard clearance, 10.5.40.60(1)) is read with these lot conditions — never the 10.10.40.70(4) blank-wall reduction" },
     "private_garage": { "disclosure": "rules for a private garage on this lot are not part of this answer", "ancillary_condition": "ancillary_contains_parking_space" },
-    "energy_device": { "disclosure": "rules for an energy device (solar or heating, ventilation and air conditioning equipment) on this lot are not part of this answer" },
+    "energy_device": { "disclosure": "rules for an energy device (solar or heating, ventilation and air conditioning equipment) on this lot are not part of this answer", "element_targets": ["energy_device_front_setback_m", "energy_device_side_clearance_m"], "article_scope_ignored": true, "element_targets_ruling": "Spec 69a M-281 (operator approved 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-1): a ground-mounted heating or air-conditioning device has its own front-yard and side-yard targets (10.5.60.20(10)); they answer for the device, never for the house's front or side setback (M-159(2), M-175). article_scope_ignored: 10.5.60 binds ancillary buildings (article_application), but the device stands beside whatever building the answer is for, so on its own element targets the Article's building-type scope is not applied" },
     "portable_classroom": { "disclosure": "rules for a portable classroom building on this lot are not part of this answer" }
   },
   "specific_use": {
@@ -629,12 +655,20 @@
   },
   "non_accessory_use": ["dwelling_unit", "secondary_suite_use", "parking_space"],
   "scenario_class_units": {
-    "$comment": "Spec 69a M-160 (operator Q-D, 2026-10-15): dwelling-unit counts of the Layer 2 v1 P classes (scenario-classes.json, M-63 dated note 2026-10-14: P axis only, A = K = none). house_units = units in the principal building on the lot; ancillary_units = units in ancillary buildings (0 while A = none). A range is the ratified M-63 range; evaluated_at is the single value Layer 2 passes (C1 collapse: houseplex 2 = 3 = 4 when A = none).",
+    "$comment": "Spec 69a M-298 (operator 2026-10-21, 2026-10-21-page-4d-c#CHAT-38.L2-CLASSES): each class is the vector building_type, has_secondary_suite, has_garden_suite, has_laneway_suite, house_units, ancillary_units; the five Spec 78 P5.1 classes are detached_house, detached_houseplex, semi_detached_houseplex, semi_detached_house, house_with_secondary_suite (new in M-298); townhouse and detached_houseplex_5_6 stay (M-160, M-173); a garden or laneway suite is a structure evaluated under a class, not a class (has_garden_suite / has_laneway_suite are false for every class today). Pinned by sha in bylaw-layer2-vocab.logic.test.ts. Spec 69a M-160 (operator Q-D, 2026-10-15): dwelling-unit counts of the Layer 2 v1 P classes (scenario-classes.json, M-63 dated note 2026-10-14: P axis only, A = K = none). house_units = units in the principal building on the lot; ancillary_units = units in ancillary buildings (0 while A = none). A range is the ratified M-63 range; evaluated_at is the single value Layer 2 passes (C1 collapse: houseplex 2 = 3 = 4 when A = none).",
     "detached_house": {
+      "building_type": "detached_house",
+      "has_secondary_suite": false,
+      "has_garden_suite": false,
+      "has_laneway_suite": false,
       "house_units": 1,
       "ancillary_units": 0
     },
     "detached_houseplex": {
+      "building_type": "detached_houseplex",
+      "has_secondary_suite": false,
+      "has_garden_suite": false,
+      "has_laneway_suite": false,
       "house_units": {
         "min": 2,
         "max": 4,
@@ -643,10 +677,18 @@
       "ancillary_units": 0
     },
     "semi_detached_house": {
+      "building_type": "semi_detached_house",
+      "has_secondary_suite": false,
+      "has_garden_suite": false,
+      "has_laneway_suite": false,
       "house_units": 1,
       "ancillary_units": 0
     },
     "semi_detached_houseplex": {
+      "building_type": "semi_detached_houseplex",
+      "has_secondary_suite": false,
+      "has_garden_suite": false,
+      "has_laneway_suite": false,
       "house_units": {
         "min": 2,
         "max": 4,
@@ -655,10 +697,18 @@
       "ancillary_units": 0
     },
     "townhouse": {
+      "building_type": "townhouse",
+      "has_secondary_suite": false,
+      "has_garden_suite": false,
+      "has_laneway_suite": false,
       "house_units": 1,
       "ancillary_units": 0
     },
     "detached_houseplex_5_6": {
+      "building_type": "detached_houseplex",
+      "has_secondary_suite": false,
+      "has_garden_suite": false,
+      "has_laneway_suite": false,
       "house_units": {
         "min": 5,
         "max": 6,
@@ -668,7 +718,24 @@
       "applies_within": "600.60 overlay map area (By-law 654-2025)",
       "outside_or_unheld": "not_evaluated:map_area_not_held",
       "basis": "M-63 P value 'houseplex 5–6 (inside 600.60 only)'; Spec 78 §6.2 C2: houseplex 5 = 6 (600.60 only), so 6 stands for the range"
+    },
+    "house_with_secondary_suite": {
+      "building_type": "detached_house",
+      "has_secondary_suite": true,
+      "has_garden_suite": false,
+      "has_laneway_suite": false,
+      "house_units": 2,
+      "ancillary_units": 0,
+      "basis": "Spec 78 P5.1: detached_house + secondary_suite (M-182); Planning Act s. 35.1(1)(a) (external.json EXT-prov): two residential units in a detached house (the house and its suite), no ancillary unit"
     }
+  },
+  "exception_chapter": {
+    "$comment": "Spec 69a M-297 (operator 2026-10-21, 2026-10-21-page-4d-c#CHAT-38.L2-CHAPTERS; Spec 124 R-IV): the Chapter 900 article number of each zone's exceptions, so an exception id is 900.<n>.10(<exception number>) (900.1 is the general article, no zone). Locked both ways against the authored exception ids and the zone list (bylaw-layer2-vocab.logic.test.ts).",
+    "R": 2,
+    "RD": 3,
+    "RS": 4,
+    "RT": 5,
+    "RM": 6
   },
   "undetermined_condition_disclosure": {
     "$comment": "Spec 69a M-169 (operator 2026-10-15, envelope review): a condition no data source fills is taken as NOT holding (the permitted new build is answered); each unit set aside this way attaches 'If {condition}: {effect}.' with {condition} from this map and {effect} generated from the unit (its target measure, bound and value). Closed set: an uncovered undetermined token or input fails validation. lawfully_existing / existing_footprint_sqm use the specialised M-158 caveat. Data-filled (NOT covered): corner_lot, through_lot, major_street (parcels), threshold tokens (their if reads data, scenario or resolved inputs), exception_area (generated); scenario-filled: building_type, house_units, ancillary_units, unit_count, has_garden_suite, has_laneway_suite (M-160). M-172 (2026-10-15): this map holds SITE FACTS only (the builder cannot choose them); DESIGN CHOICES are in design_choice_disclosure.",
@@ -754,13 +821,21 @@
       "no_individual_private_driveway": "the dwelling unit has no individual private driveway leading to its front",
       "flat_or_shallow_roof": "the roof slopes less than 1.0 in 10.0 over more than half of its area (a flat or shallow roof)",
       "suite_wall_openings": "the suite's main wall has openings such as doors or windows",
-      "blank_side_wall": "the side of the building has no windows or doors"
+      "blank_side_wall": "the side of the building has no windows or doors",
+      "main_wall_openings": "a facing main wall has an opening to a dwelling unit",
+      "main_wall_openings_each": "each facing main wall has an opening to a dwelling unit",
+      "primary_windows": "the main wall portion has primary windows",
+      "suite_one_storey": "the garden suite is one storey"
     },
     "user_input": {
       "has_secondary_suite": "the house has a secondary suite",
       "roof_type": "the roof is of the type the rule names",
       "suite_wall_openings": "the suite's walls have the openings the rule names",
       "blank_side_wall": "the side of the building has no windows or doors",
+      "main_wall_openings": "the facing main walls have the openings to dwelling units the rule names",
+      "main_wall_openings_each": "each facing main wall has the opening to a dwelling unit the rule names",
+      "primary_windows": "the main wall portion has the primary windows the rule names",
+      "suite_one_storey": "the garden suite has the storeys the rule names",
       "bedroom_count": "the dwelling units have the bedroom counts the rule names"
     },
     "default_overrides": {
@@ -776,6 +851,22 @@
       "blank_side_wall": {
         "taken_as": true,
         "why": "Spec 69a M-259 (operator approved 2026-10-21, 2026-10-21-chat-batch-h#CHAT-33); M-205(2) (RATIFIED 2026-10-18): the 0.45 m side yard of 10.10.40.70(4) is taken by default, a side without windows or doors (the main-building analogue of LC-35 / M-197); with openings (blank_side_wall false) the 10.10.40.70(3) side yard applies, disclosed blank_side_wall"
+      },
+      "main_wall_openings": {
+        "taken_as": false,
+        "why": "Spec 69a M-282 (operator approved 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-3); M-197 / M-172 (a design choice is taken in the direction that builds more, the other arm disclosed): no opening to a dwelling unit in a facing main wall is assumed, so the smallest separation of 10.10.40.80(1) and its parallel chapters is answered (2.0 m in R, RD and RS); the 5.5 m and 11.0 m arms are disclosed"
+      },
+      "main_wall_openings_each": {
+        "taken_as": false,
+        "why": "Spec 69a M-282 (operator approved 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-3); M-197 / M-172 (a design choice is taken in the direction that builds more, the other arm disclosed): not every facing main wall is assumed to have an opening, so the 11.0 m arm is disclosed, not bound"
+      },
+      "primary_windows": {
+        "taken_as": false,
+        "why": "Spec 69a M-283 (operator approved 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-4); M-197 / M-172 (a design choice is taken in the direction that builds more, the other arm disclosed): no primary windows are assumed in the apartment side main wall, so 1.8 m (2.4 m on a through lot) is answered and the 5.5 m arm is disclosed"
+      },
+      "suite_one_storey": {
+        "taken_as": false,
+        "why": "Spec 69a M-284 (operator approved 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-5); M-197 / M-172 (a design choice is taken in the direction that builds more, the other arm disclosed): the garden suite is taken as two storeys (M-177(2)), so the 120 m2 floor-area cap is answered and the one-storey 60 m2 arm is disclosed"
       },
       "no_individual_private_driveway": {
         "taken_as": true,
@@ -805,6 +896,155 @@
       "10.40.40.10(5)#(5)(B)": "Dormer walls do not count as main walls if the dormer faces total no more than 40% of the width of the main walls below them that are within the main wall height limit; the design chooses the dormers.",
       "10.80.40.10(5)#(5)(A)": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers.",
       "10.80.40.10(5)#(5)(B)": "Dormer walls do not count as main walls if the dormer faces total no more than 40% of the width of the main walls below them that are within the main wall height limit; the design chooses the dormers."
+    }
+  },
+  "suite_scenario": {
+    "$comment": "Spec 69a M-286 (operator AMENDED 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-11, applies M-177(2)): the suite separation (150.7.60.30(1), 150.8.60.30(1)) and height (150.7.60.40(1), 150.8.60.40(1)) rows read two scenario values. They are derived from the layout the maximum build produces; they are never user inputs and no field asks for the distance.",
+    "distance_to_residential_m": {
+      "basis": "max_build_envelope",
+      "user_input": false,
+      "isolated_suite": "the suite stands alone on the lot: there is no residential building to measure to, so no distance is asked of anyone",
+      "basis_note": "the distance from the suite to the maximum-build envelope of the new house (M-177(2): the Layer 3 geometry test of the lot depth behind the principal rear wall)"
+    },
+    "proposed_height_m": {
+      "basis": "max_build_envelope",
+      "user_input": false,
+      "basis_note": "the suite height the layout allows at that distance: 6.3 m at 7.5 m or more from the house, otherwise 4.0 m (M-177(2))"
+    },
+    "laneway_suite_with_existing_house": "If the laneway suite sits with an existing house, the separation and height rows are indicative only: the existing house's dimensions are not held, so its distance to the suite is not confirmed."
+  },
+  "named_street": {
+    "$comment": "Spec 69a M-285 (operator approved 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-7): abuts_named_street is joined, per unit, from the lot's primary frontage street name to the street(s) the unit names. Source: parcels.primary_frontage_street_name (Spec 62 L1 / L5: the address-side street; read from the lot as primary_frontage_street_name). line \"front\": the clause says \"front lot line\", so a different frontage street refutes it; line \"any\": the clause does not say which line abuts, so a different frontage street leaves the condition undecided. `unnamed` units carry the token but name no street. Closed: every unit that carries abuts_named_street is in `units` or `unnamed` (test-locked).",
+    "lot_field": "primary_frontage_street_name",
+    "source": "parcels.primary_frontage_street_name (Spec 62 L1 / L5)",
+    "suffixes": {
+      "avenue": "ave",
+      "boulevard": "blvd",
+      "court": "crt",
+      "crescent": "cres",
+      "drive": "dr",
+      "east": "e",
+      "lane": "ln",
+      "north": "n",
+      "parkway": "pkwy",
+      "place": "pl",
+      "road": "rd",
+      "south": "s",
+      "street": "st",
+      "terrace": "terr",
+      "trail": "trl",
+      "west": "w"
+    },
+    "units": {
+      "10.10.40.71(1)#whole": {"streets":["Eglinton Avenue West"],"line":"any"},
+      "220.5.10.11(5)#whole": {"streets":["Eglinton Avenue West"],"line":"any"},
+      "900.2.10(736)#(736)[SSP](A)(ii)": {"streets":["Craven Road"],"line":"any"},
+      "900.2.10(736)#(736)[SSP](A)(iii)": {"streets":["Craven Road"],"line":"any"},
+      "900.2.10@1018-2026#(C)": {"streets":["Baldwin Street"],"line":"any"},
+      "900.2.10@1018-2026#(D)": {"streets":["Baldwin Street"],"line":"any"},
+      "900.2.10@1018-2026#(E)": {"streets":["Baldwin Street"],"line":"any"},
+      "900.3.10(10)#(10)[SSP](H)": {"streets":["Martin Grove Rd."],"line":"any"},
+      "900.3.10(100)#(100)[SSP](C)": {"streets":["Scarborough Golf Club Rd."],"line":"any"},
+      "900.3.10(101)#(101)[SSP](C)": {"streets":["Scarborough Golf Club Rd.","Orton Park Rd."],"line":"any"},
+      "900.3.10(101)#(101)[SSP](D)": {"streets":["Markham Rd."],"line":"any"},
+      "900.3.10(102)#(102)[SSP](C)": {"streets":["Scarborough Golf Club Rd."],"line":"any"},
+      "900.3.10(1032)#(1032)[SSP](C)(i)": {"streets":["McCowan Rd.","Brimley Rd.","Brimwood Blvd."],"line":"any"},
+      "900.3.10(1057)#(1057)[SSP](C)(i)": {"streets":["Huntingwood Dr.","Chartland Blvd. S."],"line":"any"},
+      "900.3.10(1142)#(1142)[SSP](A)(i)": {"streets":["Lawson Rd."],"line":"any"},
+      "900.3.10(1142)#(1142)[SSP](E)": {"streets":["Meadowvale Road"],"line":"any"},
+      "900.3.10(1170)#(1170)[SSP](A)(i)": {"streets":["Conference Boulevard"],"line":"any"},
+      "900.3.10(123)#(123)[SSP](C)": {"streets":["Livingston Rd.","Guildwood Parkway","Galloway Rd."],"line":"any"},
+      "900.3.10(142)#(142)[SSP](C)": {"streets":["Birchmount Rd."],"line":"any"},
+      "900.3.10(142)#(142)[SSP](D)": {"streets":["Kennedy Rd."],"line":"any"},
+      "900.3.10(143)#(143)[SSP](C)(i)": {"streets":["Birchmount Rd."],"line":"any"},
+      "900.3.10(143)#(143)[SSP](E)(i)": {"streets":["Birchmount Rd."],"line":"any"},
+      "900.3.10(1460)#(1460)[SSP](C)": {"streets":["Warden Ave.","Pharmacy Ave."],"line":"any"},
+      "900.3.10(149)#(149)[SSP](E)": {"streets":["Ellesmere Rd."],"line":"any"},
+      "900.3.10(154)#(154)[SSP](C)": {"streets":["St. Clair Ave."],"line":"any"},
+      "900.3.10(155)#(155)[SSP](C)": {"streets":["Kingston Rd."],"line":"any"},
+      "900.3.10(156)#(156)[SSP](A)": {"streets":["Kennedy Rd."],"line":"any"},
+      "900.3.10(167)#(167)[SSP](C)": {"streets":["Victoria Park Ave.","Pharmacy Ave."],"line":"front"},
+      "900.3.10(168)#(168)[SSP](D)": {"streets":["Victoria Park Ave."],"line":"front"},
+      "900.3.10(169)#(169)[SSP](B)": {"streets":["Victoria Park Ave.","Pharmacy Ave.","St Clair Ave E."],"line":"front"},
+      "900.3.10(197)#(197)[SSP](D)(iv)": {"streets":["Cathedral Bluffs Drive"],"line":"any"},
+      "900.3.10(234)#(234)[SSP](A)": {"streets":["Midland Ave."],"line":"front"},
+      "900.3.10(235)#(235)[SSP](C)": {"streets":["McCowan Road"],"line":"front"},
+      "900.3.10(236)#(236)[SSP](C)": {"streets":["Brimley Rd."],"line":"front"},
+      "900.3.10(237)#(237)[SSP](C)": {"streets":["Brimley Rd."],"line":"front"},
+      "900.3.10(244)#(244)[SSP](C)": {"streets":["Brimley Road","McCowan Road"],"line":"front"},
+      "900.3.10(244)#(244)[SSP](D)": {"streets":["Ellesmere Road"],"line":"front"},
+      "900.3.10(247)#(247)[SSP](C)": {"streets":["Brimley Rd."],"line":"front"},
+      "900.3.10(28)#(28)[SSP](F)": {"streets":["Ashley Park Rd."],"line":"front"},
+      "900.3.10(285)#(285)[SSP](C)": {"streets":["Warden Ave.","Pharmacy Ave."],"line":"any"},
+      "900.3.10(286)#(286)[SSP](C)": {"streets":["Warden Ave."],"line":"any"},
+      "900.3.10(289)#(289)[SSP](E)": {"streets":["Pharmacy Ave."],"line":"any"},
+      "900.3.10(289)#(289)[SSP](G)": {"streets":["Dyson Blvd."],"line":"any"},
+      "900.3.10(302)#(302)[SSP](C)": {"streets":["Ellesmere Rd."],"line":"front"},
+      "900.3.10(303)#(303)[SSP](C)": {"streets":["Ellesmere Rd."],"line":"front"},
+      "900.3.10(303)#(303)[SSP](D)": {"streets":["Pharmacy Ave. Rd."],"line":"front"},
+      "900.3.10(309)#(309)[SSP](C)(i)": {"streets":["Birchmount Rd."],"line":"any"},
+      "900.3.10(309)#(309)[SSP](C)(ii)": {"streets":["Birchmount Rd."],"line":"any"},
+      "900.3.10(309)#(309)[SSP](D)": {"streets":["Kennedy Rd."],"line":"any"},
+      "900.3.10(316)#(316)[SSP](C)": {"streets":["Victoria Park Ave.","Warden Ave.","Sheppard Ave."],"line":"front"},
+      "900.3.10(316)#(316)[SSP](D)": {"streets":["Pharmacy Ave."],"line":"front"},
+      "900.3.10(316)#(316)[SSP](H)": {"streets":["Abbottsfield Lane"],"line":"any"},
+      "900.3.10(323)#(323)[SSP](C)": {"streets":["Huntingwood Dr."],"line":"front"},
+      "900.3.10(340)#(340)[SSP](A)": {"streets":["Birchmount Rd.","St. Clair Ave.","Danforth Rd.","Kennedy Rd."],"line":"front"},
+      "900.3.10(365)#(365)[SSP](C)": {"streets":["Bellamy Rd."],"line":"front"},
+      "900.3.10(366)#(366)[SSP](C)": {"streets":["Bellamy Rd."],"line":"front"},
+      "900.3.10(367)#(367)[SSP](E)": {"streets":["Bellamy Rd."],"line":"front"},
+      "900.3.10(369)#(369)[SSP](C)": {"streets":["Brimley Rd."],"line":"front"},
+      "900.3.10(416)#(416)[SSP](C)": {"streets":["Bellamy Rd."],"line":"front"},
+      "900.3.10(426)#(426)[SSP](C)": {"streets":["Bellamy Rd.","Scarborough Golf Club Rd.","Orton Park Rd.","McCowan Rd."],"line":"front"},
+      "900.3.10(437)#(437)[SSP](A)": {"streets":["Lawrence Ave."],"line":"any"},
+      "900.3.10(438)#(438)[SSP](C)": {"streets":["Lawrence Ave."],"line":"any"},
+      "900.3.10(464)#(464)[SSP](A)": {"streets":["Galloway Rd."],"line":"any"},
+      "900.3.10(464)#(464)[SSP](B)": {"streets":["Lawrence Ave."],"line":"any"},
+      "900.3.10(471)#(471)[SSP](A)": {"streets":["Galloway Rd."],"line":"any"},
+      "900.3.10(471)#(471)[SSP](B)": {"streets":["Lawrence Ave."],"line":"any"},
+      "900.3.10(524)#(524)[SSP](C)": {"streets":["Neilson Rd.","Finch Ave.","Tapscott Rd."],"line":"any"},
+      "900.3.10(526)#(526)[SSP](C)": {"streets":["Neilson Rd.","Sheppard Ave.","Tapscott Rd.","Milner Ave."],"line":"any"},
+      "900.3.10(540)#(540)[SSP](G)": {"streets":["Steeles Ave.","Warden Ave.","Kennedy Rd."],"line":"any"},
+      "900.3.10(560)#(560)[SSP](C)(i)": {"streets":["Warden Ave."],"line":"any"},
+      "900.3.10(613)#(613)[SSP](C)": {"streets":["Lawrence Avenue East"],"line":"any"},
+      "900.3.10(692)#(692)[SSP](D)(i)": {"streets":["Conlins Rd."],"line":"front"},
+      "900.3.10(692)#(692)[SSP](D)(ii)": {"streets":["Ellesmere Rd."],"line":"front"},
+      "900.3.10(692)#(692)[SSP](D)(iii)": {"streets":["Morningside Ave."],"line":"front"},
+      "900.3.10(701)#(701)[SSP](A)(i)": {"streets":["Conlins Rd.","Morrish Rd.","Meadowvale Rd.","Military Trail"],"line":"front"},
+      "900.3.10(701)#(701)[SSP](A)(ii)": {"streets":["Ellesmere Rd."],"line":"front"},
+      "900.3.10(701)#(701)[SSP](A)(iii)": {"streets":["Morningside Ave.","Highway 2"],"line":"front"},
+      "900.3.10(86)#(86)[SSP](C)": {"streets":["Bellamy Rd."],"line":"any"},
+      "900.3.10(86)#(86)[SSP](D)": {"streets":["Lawrence Ave."],"line":"any"},
+      "900.3.10(88)#(88)[SSP](C)": {"streets":["Bellamy Rd."],"line":"any"},
+      "900.3.10(98)#(98)[SSP](C)": {"streets":["Scarborough Golf Club Rd."],"line":"any"},
+      "900.3.10(99)#(99)[SSP](C)": {"streets":["Markham Rd."],"line":"front"},
+      "900.4.10(24)#(24)[SSP](B)(iii)": {"streets":["Midland Ave."],"line":"any"},
+      "900.4.10(24)#(24)[SSP](C)(iii)": {"streets":["Midland Ave."],"line":"any"},
+      "900.4.10(25)#(25)[SSP](B)(iii)": {"streets":["Birchmount Rd.","Kennedy Rd."],"line":"any"},
+      "900.4.10(25)#(25)[SSP](C)(iii)": {"streets":["Birchmount Rd.","Kennedy Rd."],"line":"any"},
+      "900.4.10(256)#(256)[SSP](D)(i)": {"streets":["Finch Ave.","Brimley Rd.","Midland Ave."],"line":"any"},
+      "900.4.10(256)#(256)[SSP](D)(ii)": {"streets":["Alexmuir Blvd.","Cleadon Rd.","South Shields Ave."],"line":"any"},
+      "900.4.10(48)#(48)[SSP](A)(i)": {"streets":["St. Clair Ave."],"line":"front"},
+      "900.4.10(48)#(48)[SSP](A)(iv)": {"streets":["Birchmount Rd."],"line":"front"},
+      "900.4.10(52)#(52)[SSP](F)": {"streets":["St. Clair Ave."],"line":"front"},
+      "900.4.10(55)#(55)[SSP](A)(i)": {"streets":["Birchmount Rd."],"line":"front"},
+      "900.4.10(70)#(70)[SSP](A)(i)": {"streets":["Birchmount Rd."],"line":"any"},
+      "900.4.10(70)#(70)[SSP](A)(ii)": {"streets":["Birchmount Rd."],"line":"any"},
+      "900.4.10(90)#(90)[SSP](A)(i)": {"streets":["Birchmount Rd."],"line":"front"},
+      "900.4.10(98)#(98)[SSP](A)(i)(a)": {"streets":["Birchmount Rd."],"line":"any"}
+    },
+    "unnamed": ["900.3.10(301)#(301)[SSP](C)(i)","900.3.10(301)#(301)[SSP](C)(ii)","900.3.10(301)#(301)[SSP](C)(iii)"]
+  },
+  "explained_differences": {
+    "$comment": "Spec 69a M-287 (operator chose reading B 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-12): a City figure that differs from ours by a recorded operator ruling. The CoA scorecard reads this table and reports the row as an explained difference, not a miss.",
+    "10.5.60.70(1)(B)": {
+      "notice": "A0180/26TEY",
+      "target": "ancillary_coverage_pct",
+      "ours": 5,
+      "city": 10,
+      "unit": "pct",
+      "ruling": "M-287",
+      "reading": "R-zone ancillary lot coverage stays 5 percent per 10.10.60.70(1) (\"may not exceed 5% of the lot area\"); the City applied the 10 percent base rule 10.5.60.70(1)(B), reading the parking-space exception of 10.10.60.70(1)(B) as lifting the cap"
     }
   },
   "measure_deduction_disclosure": {
