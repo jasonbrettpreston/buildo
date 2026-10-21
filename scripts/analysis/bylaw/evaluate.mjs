@@ -94,6 +94,8 @@ export function makeContext(vocab, extra = {}) {
     thresholdTokens: new Set(vocab.lot_condition_threshold || []),
     // M-175: uses that name an accessory structure (pool, garage, deck, …); a unit scoped to one limits that structure.
     accessoryUses: new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment')),
+    // M-159(3) / M-244: specific uses (school, transportation use); a unit scoped to one applies only on a lot that has it.
+    specificUses: new Set(Object.keys(vocab.specific_use || {}).filter((k) => k !== '$comment')),
     // M-159(1) / M-217: chapter → {category, zones}; a base unit of a mapped chapter with no zones of its own loads only
     // on a lot whose zone is in its category (an Institutional or Commercial Residential rule never limits a house).
     zoneCategory: vocabMap(vocab.zone_category_chapter),
@@ -495,6 +497,14 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   // this check the 10.5.60.20(8)(A) swimming-pool rear setback (25.0 m) decided houses' rear setbacks.
   const accUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryUses && C.accessoryUses.has(x));
   if (accUse) { reads.add('uses'); return { ok: false, why: `use ${accUse} (an accessory structure, not the principal building)` }; }
+  // M-159(3) (specific-use scope) / M-244 (D-1, operator approved 2026-10-20): a unit scoped to a specific use (vocab
+  // specific_use) applies only on a lot that has that use (lot.uses); a house lot has none, so e.g. the Eglinton
+  // transportation-use exemption 10.10.40.71(1) is set aside before its map gate is read.
+  const specUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.specificUses && C.specificUses.has(x));
+  if (specUse) {
+    reads.add('uses');
+    if (!(Array.isArray(lot.uses) && lot.uses.includes(specUse))) return { ok: false, why: `use ${specUse} (a specific use the lot does not have, M-159(3))` };
+  }
   const part = (u.applies_to && u.applies_to.part) || 'whole';
   let unheldLiteral = null;
   const refs = (u.applies_to && u.applies_to.refs) || [];

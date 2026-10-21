@@ -152,3 +152,36 @@ describe('N-3 / M-242 — "in all other cases" takes the complement of its sibli
     expect(r.violations.filter((x: Json) => x.id === '10.5.60.50(2)#(2)(A)').map((x: Json) => x.code)).toContain('variable_unlicensed');
   });
 });
+
+// D-1 / M-244 (operator approved 2026-10-20, `2026-10-20-bylaw-fix-rulings#D-1`; M-159(3) specific-use scope):
+// 10.10.40.71(1) "… do not apply to a transportation use along Eglinton Avenue West and Eglinton Avenue East …" is scoped to
+// its use. transportation_use joins vocab.uses and vocab.specific_use; a house lot never has it, so the Eglinton map gate is
+// never read for a house and front_setback_m resolves from 10.10.40.70(1) or by averaging, never map_area_not_held.
+describe('D-1 / M-244 — the Eglinton transportation-use exemption is scoped to its use', () => {
+  const rNoMap = (flags: Json = {}, vars: Json = {}): Json => lot('R', 'detached_house', { map_areas: undefined, flags, vars });
+  it('vocab: transportation_use is a use and a specific use with its closed disclosure', () => {
+    expect(I.vocab.uses).toContain('transportation_use');
+    expect(I.vocab.specific_use.transportation_use?.disclosure).toBe('rules for a transportation use on this lot are not part of this answer');
+  });
+  it('10.10.40.71(1) is keyed uses [transportation_use], evidence "a transportation use"', () => {
+    const u = unitOf('10.10.40.71(1)#whole');
+    expect([u.application.uses, u.application.evidence.transportation_use]).toEqual([['transportation_use'], 'a transportation use']);
+  });
+  it('an R lot without map areas and no averaging answers 6.0 m from 10.10.40.70(1), and never reads the Eglinton map gate', () => {
+    const r = eff(rNoMap({ front_averaging_not_applicable: true }), 'front_setback_m');
+    expect([r.value, r.winner]).toEqual([6, '10.10.40.70(1)#whole']);
+    expect((r.trace ?? []).filter((t: string) => /map_area_not_held/.test(t))).toEqual([]);
+  });
+  it('an R lot without map areas where averaging applies answers by averaging (10.5.40.70(1)), never map_area_not_held', () => {
+    const r = eff(rNoMap({ front_averaging_not_applicable: false, one_abutting_building_within_15_m: true, two_abutting_buildings_within_15_m: false }, { abutting_front_setback_m: 4.5 }), 'front_setback_m');
+    expect([r.status, r.value, r.winner]).toEqual(['value', 4.5, '10.5.40.70(1)#(1)(A)']);
+    const u = eff(rNoMap({ front_averaging_not_applicable: false }), 'front_setback_m');
+    expect(String(u.reason)).not.toMatch(/map_area_not_held/);
+  });
+  it('M-159(3): the unit applies only on a lot that has the use', () => {
+    const u = units.find((x) => x.unit_id === '10.10.40.71(1)#whole') as Json;
+    expect(E.applies(rNoMap(), u, C).ok).toBe(false);
+    const transit = lot('R', 'detached_house', { uses: ['transportation_use'], map_areas: ['Eglinton Avenue West'], flags: { abuts_named_street: true } });
+    expect(E.applies(transit, u, C).ok).toBe(true);
+  });
+});

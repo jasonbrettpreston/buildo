@@ -80304,6 +80304,32 @@
           "frontage_band"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.10.40.71(1)#whole/application",
+      "kind": "correction",
+      "reason": "D-1 (bylaw fix lanes 2 and 3, 2026-10-20). 10.10.40.71(1): \"Regulation 10.5.40.70(1) and Regulations 10.10.40.70 (1)(2)(3) and (4) do not apply to a transportation use along Eglinton Avenue West and Eglinton Avenue East, provided that setbacks are between 0 and 10.5 metres.\" Keyed with uses [] the DISAPPLY bound every R lot, and its Eglinton map gate made front_setback_m not_evaluated:map_area_not_held on every R lot without map areas where averaging applies. The clause's subject is a transportation use.",
+      "rule": "Operator approved D-1 on the By-law Fix Rulings page, 2026-10-20 (2026-10-20-bylaw-fix-rulings#D-1; Spec 69a M-244: \"The unit takes uses [transportation_use] by M-75 correction, evidence 'a transportation use'\"); Spec 69a M-159(3) (specific-use scope); M-75",
+      "unit": "10.10.40.71(1)#whole",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "abuts_named_street": "along Eglinton Avenue West",
+          "transportation_use": "a transportation use"
+        },
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [
+          "transportation_use"
+        ],
+        "zones": []
+      }
     }
   ]
 }

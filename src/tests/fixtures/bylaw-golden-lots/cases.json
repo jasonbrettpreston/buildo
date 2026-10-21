@@ -2213,7 +2213,10 @@
      "unit": "10.10.40.71(1)#whole",
      "lot": "5195536",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "uses": [
+       "transportation_use"
+      ]
      },
      "rationale": "affected lot (ravine): applies undecided (map_area_not_held:Eglinton Avenue West+Eglinton Avenue East)",
      "initial": {
@@ -2231,7 +2234,10 @@
      "unit": "10.10.40.71(1)#whole",
      "lot": "5265152",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "uses": [
+       "transportation_use"
+      ]
      },
      "rationale": "affected lot (exc_m180): applies undecided (map_area_not_held:Eglinton Avenue West+Eglinton Avenue East)",
      "initial": {

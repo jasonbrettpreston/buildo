@@ -382,7 +382,7 @@
     "ancillary_units": "ancillary_units"
   },
   "instrument_kind": ["former_bylaw", "former_section", "schedule_map"],
-  "uses": ["dwelling_unit", "secondary_suite_use", "parking_space", "private_garage", "swimming_pool", "deck_or_platform", "energy_device", "school", "portable_classroom"],
+  "uses": ["dwelling_unit", "secondary_suite_use", "parking_space", "private_garage", "swimming_pool", "deck_or_platform", "energy_device", "school", "portable_classroom", "transportation_use"],
   "requirement": ["parking_in_building", "comply_or_minor_variance", "units_within_existing_building", "landscaping_type", "access_from_lane", "located_within_building", "principal_residence_occupation", "occupy_entire_building", "regulated_or_supervised", "waste_storage_in_building", "same_lot_as_use", "parking_in_rear_yard", "parking_in_side_yard", "parking_within_table_range", "identified_and_marked", "bicycle_access_unobstructed", "accessible_parking_location", "ev_charging_outlet", "parking_space_available_for_required_use", "vehicle_entrance_above_driveway_centreline", "access_from_street", "payment_in_lieu", "agreement_with_city", "municipal_services_operational", "retain_lawfully_existing", "fenced", "comply_with_bylaw"],
   "calculation_handling_status": ["modelled", "partially_modelled", "not_modelled", "informational"],
   "not_modelled_reason": ["needs_user_input", "needs_data_we_lack", "existing_building_facts", "deferred_phase2", "ch900_backlog", "outside_maxbld_building_types", "procedural_not_numeric", "map_area_not_held", "named_lots_only", "prevailing_alternate_path"],
@@ -593,7 +593,8 @@
   },
   "specific_use": {
     "$comment": "Spec 69a M-159 (3): a unit whose application.uses names one of these applies only on a lot that has that use; on a lot without it the unit does not apply, with this closed disclosure.",
-    "school": { "section": "150.48", "disclosure": "rules for a school on this lot are not part of this answer" }
+    "school": { "section": "150.48", "disclosure": "rules for a school on this lot are not part of this answer" },
+    "transportation_use": { "regulations": ["10.10.40.71(1)"], "ruling": "Spec 69a M-244 (D-1, operator approved 2026-10-20)", "disclosure": "rules for a transportation use on this lot are not part of this answer" }
   },
   "non_accessory_use": ["dwelling_unit", "secondary_suite_use", "parking_space"],
   "scenario_class_units": {

@@ -25,6 +25,8 @@ export interface Scenario {
   building_type: string;
   flags?: Json;
   vars?: Json;
+  /** M-159(3) / M-244: the specific uses the lot has (a unit scoped to one applies only on such a lot) */
+  uses?: string[];
 }
 
 export type Check =
@@ -62,7 +64,7 @@ export async function loadAssembly(root: string): Promise<Assembly> {
  */
 export function vectorOf(g: GoldenLot, s: Scenario, defaults: Json = {}): Json {
   const units = UNITS_OF[s.building_type] ?? 1;
-  return { ...g.lot, building_type: s.building_type, vars: { ...g.lot.vars, dwelling_units: units, ...(s.vars || {}) }, flags: { ...defaults, ...g.lot.flags, ...(s.flags || {}) } };
+  return { ...g.lot, building_type: s.building_type, vars: { ...g.lot.vars, dwelling_units: units, ...(s.vars || {}) }, flags: { ...defaults, ...g.lot.flags, ...(s.flags || {}) }, ...(s.uses ? { uses: s.uses } : {}) };
 }
 
 const idOf = (a: unknown): string => (typeof a === 'string' ? a : ((a as Json)?.unit_id || (a as Json)?.id || ''));

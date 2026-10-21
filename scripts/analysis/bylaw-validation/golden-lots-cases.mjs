@@ -21,6 +21,7 @@ const disp = new Map(read('docs/reference/envelope-answer-dispositions.json').di
 const prov = new Map(read('docs/reference/bylaw-provisions.json').rows.map((r) => [r.regulation_id, r]));
 const vocab = read('scripts/seeds/bylaw/vocab.json');
 const ACC = new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment'));
+const SPEC_USE = new Set(Object.keys(vocab.specific_use || {}).filter((k) => k !== '$comment')); // M-159(3) / M-244
 const CHZ = { '10.10': ['R'], '10.20': ['RD'], '10.40': ['RS'], '10.60': ['RT'], '10.80': ['RM'] };
 const ALLZ = ['R', 'RD', 'RS', 'RT', 'RM'];
 const r4 = (x) => Math.round(x * 1e6) / 1e6;
@@ -44,6 +45,9 @@ function scenarioOf(u) {
   else if (bt.includes('any')) s = { building_type: 'detached_house' };
   else s = { building_type: ['detached_house', 'detached_houseplex', 'semi_detached_house', 'semi_detached_houseplex', 'townhouse', 'apartment_building', 'ancillary_building', 'duplex', 'triplex', 'fourplex', 'non_residential_building'].find((t) => bt.includes(t)) || bt[0] };
   if (Object.keys(flags).length) s.flags = flags;
+  // M-159(3) / M-244: a specific-use unit reaches only a lot that has the use, so its scenario carries it
+  const su = (u.application?.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).filter((x) => SPEC_USE.has(x));
+  if (su.length) s.uses = su;
   return s;
 }
 // golden-lot categories that make a lot "affected" by an answer: from the unit's own lot conditions and the answer's P5.12 code
