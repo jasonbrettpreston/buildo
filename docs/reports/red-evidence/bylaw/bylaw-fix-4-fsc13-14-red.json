@@ -1,0 +1,31 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "13303dfe",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-13/14 / M-255 (the extension side clearance, the RD parapet allowance and the platform count keyed; RS / RM twins), run on the working tree at 13303dfe with the F-SC-13/14 describe added, before the vocab and M-75 changes.",
+ "counts": {
+  "pass": 1,
+  "red": 3
+ },
+ "cases": [
+  {
+   "name": "F-SC-13/14 / M-255 — the extension side clearance, the RD parapet allowance and the platform count are keyed the texts (ch10_20.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-13/14 / M-255 — the extension side clearance, the RD parapet allowance and the platform count are keyed RD / RS 10.x.40.20(2)(C): the one-storey extension keeps 3.0 m from each side lot line (extension_side_setback_m, min)",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'not_evaluated', …(6) } to match object { status: 'value', value: 3, …(1) }"
+  },
+  {
+   "name": "F-SC-13/14 / M-255 — the extension side clearance, the RD parapet allowance and the platform count are keyed RD 10.20.40.10(5): a parapet may exceed the flat-roof main wall height by 0.3 m (parapet_projection_m, max)",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'not_evaluated', …(6) } to match object { status: 'value', value: 0.3, …(1) }"
+  },
+  {
+   "name": "F-SC-13/14 / M-255 — the extension side clearance, the RD parapet allowance and the platform count are keyed RD / RS / RM 10.x.40.50(1)(A): at most four upper platforms on a detached house (platform_count, max) — a platform element target",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RD', …(1) ] to match object [ 'RD', { status: 'value', …(2) } ]"
+  }
+ ]
+}
