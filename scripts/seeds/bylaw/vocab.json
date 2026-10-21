@@ -579,6 +579,10 @@
     "define_without_statement": true,
     "other_building_types": true
   },
+  "complement_phrases": {
+    "$comment": "Spec 69a M-242 (N-3, operator approved 2026-10-20): a unit whose own text holds one of these phrases may carry condition.if = complement(<sibling unit id>, …), the negation of each sibling arm's keyed condition; G-CLAUSE licenses its variables and literals from the sibling's clause (clause.mjs), the evaluator reads the sibling conditions resolved over the agreed units (agree.mjs resolveComplements).",
+    "phrases": ["in all other cases", "in any other case", "otherwise"]
+  },
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
     "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },

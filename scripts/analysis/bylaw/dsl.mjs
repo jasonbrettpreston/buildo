@@ -260,8 +260,21 @@ export function parseStatement(src) {
 /** Parse a bare expression (no target, no final @). */
 export function parseExpr(src) { const p = new Parser(src); const e = p.expr(); p.done(); return e; }
 
+// M-242 (N-3, operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#N-3): a whole condition may be the complement of
+// one or more sibling arms, complement(<unit id>, …) — "in all other cases" takes not (the condition of each arm it
+// complements). The sibling's condition is resolved over the agreed units (agree.mjs resolveComplements).
+const COMPLEMENT_RE = /^\s*complement\s*\(([\s\S]*)\)\s*$/;
+const UNIT_REF_RE = /^[0-9][0-9A-Za-z.()@-]*#[0-9A-Za-z().-]+$/;
 /** Parse a condition (`condition.if`). */
-export function parseCond(src) { const p = new Parser(src); const c = p.cond(); p.done(); return c; }
+export function parseCond(src) {
+  const m = typeof src === 'string' ? COMPLEMENT_RE.exec(src) : null;
+  if (m) {
+    const of = m[1].split(',').map((x) => x.trim());
+    if (!of.length || of.some((x) => !UNIT_REF_RE.test(x))) throw new DslError('syntax', `complement(…) names sibling unit ids: ${src}`);
+    return { type: 'complement', of };
+  }
+  const p = new Parser(src); const c = p.cond(); p.done(); return c;
+}
 
 /** A unit's numeric_expression: "none" | string | string[] → statement ASTs ([] for "none"). */
 export function parseExpression(numericExpression) {
@@ -324,6 +337,7 @@ function canonCond0(c) {
       return `${c.type}(${flat.map(canonCond).join(';')})`;
     }
     case 'not': return `not(${canonCond(c.x)})`;
+    case 'complement': return `complement(${c.of.join(';')})`;
     case 'mapped': return `mapped(${c.code})`;
     case 'labelled': return `labelled(${c.letter})`;
     case 'cmp': return canonExpr(c.lhs) + c.cmp + canonExpr(c.lit);
@@ -480,6 +494,7 @@ function same(us, msg, errs) {
   return known[0] ?? null;
 }
 function condUnits(c, U, errs) {
+  if (c.type === 'complement') return; // M-242: its sibling's units are checked on the sibling
   if (c.type === 'and' || c.type === 'or') { for (const x of c.xs) condUnits(x, U, errs); return; }
   if (c.type === 'not') { condUnits(c.x, U, errs); return; }
   if (c.type === 'mapped') { if (!U.overlay[c.code]) errs.push(`unknown_overlay_code: ${c.code}`); return; }

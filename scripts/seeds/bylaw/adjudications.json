@@ -80287,6 +80287,23 @@
         "semi_detached_houseplex": "residential building, other than an apartment building",
         "townhouse": "residential building, other than an apartment building"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.5.60.50(2)#(2)(B)/condition~s1",
+      "kind": "correction",
+      "reason": "N-3 (bylaw fix lanes 2 and 3, 2026-10-20). 10.5.60.50(2): \"(A) 60.0 square metres for a lot with a lot frontage of 12.0 metres or more; and (B) 40.0 square metres in all other cases\". (B) carried frontage_band with no condition.if, so it was always undecided (condition_unknown:frontage_band); the City applies 40 m² on 20 Norwood Rd A0625/26TEY (frontage 7.63 m) and 27 Regal. Its condition is the complement of (A)'s keyed lot_frontage_m ≥ 12.0 m.",
+      "rule": "Operator approved N-3 on the By-law Fix Rulings page, 2026-10-20 (2026-10-20-bylaw-fix-rulings#N-3; Spec 69a M-242: \"A unit whose own text is a complement phrase ('in all other cases', 'in any other case', 'otherwise') may carry condition.if = not (<the condition of each sibling arm it complements>), written complement(<sibling unit id>, …)\"); Spec 68 §6 (a band token carries its numeric if); M-75",
+      "supersedes": "COR-10.5.60.50(2)#(2)(B)/condition",
+      "unit": "10.5.60.50(2)#(2)(B)",
+      "value": {
+        "if": "complement(10.5.60.50(2)#(2)(A))",
+        "tokens": [
+          "frontage_band"
+        ]
+      }
     }
   ]
 }

@@ -107,15 +107,14 @@ describe('N-4 / M-171 — 10.10.60.70(1)(B) is an exclusion from the 5 %, not a 
 // N-3 (CoA 20 Norwood Rd A0625/26TEY and 27 Regal: the City applied 10.5.60.50(2)(B) as 40 m²). (B) "40.0 square metres in
 // all other cases" is the complement of (A) "a lot with a lot frontage of 12.0 metres or more"; its frontage_band token
 // had no condition.if, and a threshold token without one is undecided (Spec 68 §6: a band token carries its numeric if).
-// NOT FIXED in this lane: G-CLAUSE binds a condition's literals to the unit's own clause and licenses its variables from
-// the unit's own text, and (B)'s text names neither "lot frontage" nor 12.0, so the complement condition is refused
-// (literal_not_in_clause, variable_unlicensed). A complement-arm ruling is drafted for the operator; these cases are
-// it.fails until it lands, then they flip.
-describe('N-3 / Spec 68 §6 — 10.5.60.50(2)(B) "in all other cases" resolves: under 12.0 m of frontage, 40 m² (OWED: complement-arm ruling)', () => {
-  it.fails('(B) carries condition.if lot_frontage_m < 12.0 m', () => {
-    expect(unitOf('10.5.60.50(2)#(2)(B)').condition).toEqual({ tokens: ['frontage_band'], if: 'lot_frontage_m < 12.0 m' });
+// Not fixed in lane 2 (G-CLAUSE refused the complement condition on (B)'s own text); FIXED by lane wf1/bylaw-fix-3 under the
+// approved complement-arm ruling (69a M-242, `2026-10-20-bylaw-fix-rulings#N-3`): (B) is keyed complement((A)), which reads
+// as not (lot_frontage_m ≥ 12.0 m), licensed from (A)'s clause. The two it.fails cases flipped to it.
+describe('N-3 / Spec 68 §6 / M-242 — 10.5.60.50(2)(B) "in all other cases" resolves: under 12.0 m of frontage, 40 m²', () => {
+  it('(B) carries condition.if complement((A)): under 12.0 m of frontage', () => {
+    expect(unitOf('10.5.60.50(2)#(2)(B)').condition).toEqual({ tokens: ['frontage_band'], if: 'complement(10.5.60.50(2)#(2)(A))' });
   });
-  it.fails('a 9.0 m lot answers 40 m² from (B); a 12.0 m lot 60 m² from (A)', () => {
+  it('a 9.0 m lot answers 40 m² from (B); a 12.0 m lot 60 m² from (A)', () => {
     for (const zone of ZONES) {
       const narrow = eff(lot(zone, 'ancillary_building', { vars: { lot_frontage_m: 9 } }), 'ancillary_floor_area_m2');
       expect([zone, narrow.value, narrow.winner]).toEqual([zone, 40, '10.5.60.50(2)#(2)(B)']);

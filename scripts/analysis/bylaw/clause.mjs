@@ -290,7 +290,31 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
         if (bind(lit.value, lit.unit, at.path, 'expression literal')) counts.literals_bound++;
       }
     }
-    if (cond) {
+    // M-242 (N-3, operator approved 2026-10-20): complement(<sibling>, …) is licensed by a complement phrase in the unit's own
+    // text (vocab.complement_phrases); its literals bind to, and its variables are licensed by, each sibling's own clause
+    if (cond && cond.type === 'complement') {
+      const phrases = (vocab && vocab.complement_phrases && vocab.complement_phrases.phrases) || [];
+      if (!phrases.some((p) => norm(view.text).includes(norm(p)))) v.push(violation('variable_unlicensed', id, `complement(…) needs a complement phrase (${phrases.join(' / ')}) in the clause`));
+      cond.of.forEach((sid, k) => {
+        const sib = units.get(sid);
+        const sv = sib ? unitView(index, sid) : null;
+        if (!sib || !sv || sv.row.regulation_id !== reg) { v.push(violation('cited_clause_unresolved', id, `complement sibling ${sid} is not an agreed unit of ${row.article}`)); return; }
+        const sif = (u.condition.complement_if || [])[k] ?? (sib.condition && sib.condition.if);
+        let sc = null;
+        try { sc = typeof sif === 'string' && sif !== 'none' ? parseCond(sif) : null; } catch (err) { if (!(err instanceof DslError)) throw err; }
+        if (!sc || sc.type === 'complement') { v.push(violation('cited_clause_unresolved', id, `complement sibling ${sid} has no keyed condition`)); return; }
+        for (const e of conditionUnitErrors(sc, dv)) v.push(violation('unit_binding', id, `complement condition: ${e}`));
+        for (const { lit } of boundLiterals(sc, null)) if (bind(lit.value, lit.unit, sv.clause_path, `complement literal (${sid})`)) counts.literals_bound++;
+        const sLead = row.clauses.filter((c) => c.path !== sv.clause_path && sv.clause_path.startsWith(c.path)).map((c) => c.text.trim());
+        const sLic = norm([...sLead, sv.text, ...headerTexts(row, sv.clause_path)].join(' '));
+        for (const name of [...variablesOf(sc)].sort(cmpStr)) {
+          const ps = licensePhrases(vocab, name);
+          if (ps === null) continue;
+          if (!ps.length) v.push(violation('variable_unlicensed', id, `${name}: vocab declares no licensing phrase`));
+          else if (!ps.some((p) => sLic.includes(norm(p)))) v.push(violation('variable_unlicensed', id, `${name}: none of ${JSON.stringify(ps)} occurs in the complemented clause ${sid}`));
+        }
+      });
+    } else if (cond) {
       for (const x of variablesOf(cond)) vars.add(x);
       for (const e of conditionUnitErrors(cond, dv)) v.push(violation('unit_binding', id, `condition: ${e}`));
       for (const { lit } of boundLiterals(cond, null)) if (bind(lit.value, lit.unit, view.clause_path, 'condition literal')) counts.literals_bound++;

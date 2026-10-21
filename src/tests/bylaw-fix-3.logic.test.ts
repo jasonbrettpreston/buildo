@@ -20,6 +20,8 @@ const AG = await mod('scripts/analysis/bylaw/agree.mjs');
 const XR = await mod('scripts/analysis/bylaw/xref.mjs');
 const E = await mod('scripts/analysis/bylaw/evaluate.mjs');
 const VO = await mod('scripts/analysis/bylaw/vocab.mjs');
+const D = await mod('scripts/analysis/bylaw/dsl.mjs');
+const CL = await mod('scripts/analysis/bylaw/clause.mjs');
 const I = V.loadInputs({ root: process.cwd() });
 const ag = AG.checkAgree({ shards: AU.loadAuthored(process.cwd()), adjudications: I.adjudications, vocab: I.vocab });
 const index = AU.buildIndex(I.slice);
@@ -109,5 +111,44 @@ describe('R-7a-v2 / M-240 — absence per (zone, building type, target); a defin
     const two = [r6, { ...r6, id: 'ABS-99', building_types: ['semi_detached_houseplex'] }];
     expect(E.checkAbsenceRulings({ rulings: two, pages: { [r6.checked_page]: page(r6.checked_page) }, vocab: I.vocab }).violations.filter((v: string) => /two rulings/.test(v))).toEqual([]);
     expect(E.checkAbsenceRulings({ rulings: [r6, { ...r6, id: 'ABS-99' }], pages: { [r6.checked_page]: page(r6.checked_page) }, vocab: I.vocab }).violations.join(' ')).toMatch(/two rulings/);
+  });
+});
+
+// N-3 / M-242 (operator approved 2026-10-20, `2026-10-20-bylaw-fix-rulings#N-3`): a unit whose own text is a complement
+// phrase ("in all other cases", "in any other case", "otherwise"; vocab.complement_phrases) may carry condition.if =
+// complement(<sibling unit id>, …), the negation of each sibling's keyed condition; G-CLAUSE licenses its variables and
+// literals from the sibling's clause. First use: 10.5.60.50(2)(B) "40.0 square metres in all other cases" (City: 40 m² on
+// 20 Norwood Rd A0625/26TEY, frontage 7.63 m, and 27 Regal).
+describe('N-3 / M-242 — "in all other cases" takes the complement of its sibling arm (10.5.60.50(2)(B))', () => {
+  it('vocab declares the complement phrases', () => {
+    expect(I.vocab.complement_phrases?.phrases).toEqual(['in all other cases', 'in any other case', 'otherwise']);
+  });
+  it('the DSL parses complement(<unit id>, …) as one condition form, with a canonical text', () => {
+    const c = D.parseCond('complement(10.5.60.50(2)#(2)(A))');
+    expect(c).toEqual({ type: 'complement', of: ['10.5.60.50(2)#(2)(A)'] });
+    expect(D.canonCond(D.parseCond('complement(1#(A), 1#(B))'))).toBe('complement(1#(A);1#(B))');
+  });
+  it('(B) is keyed complement((A)) and the evaluator reads it as not (lot_frontage_m ≥ 12.0 m)', () => {
+    expect(unitOf('10.5.60.50(2)#(2)(B)').condition).toEqual({ tokens: ['frontage_band'], if: 'complement(10.5.60.50(2)#(2)(A))' });
+    expect(units.find((u) => u.unit_id === '10.5.60.50(2)#(2)(B)')?.condition.complement_if).toEqual(['lot_frontage_m ≥ 12.0 m']);
+  });
+  it('the 20 Norwood Rd facts (R, frontage 7.63 m, a plain ancillary building) answer 40 m² from (B); 12.0 m answers 60 m² from (A)', () => {
+    const narrow = eff(lot('R', 'ancillary_building', { label: { d: 1.0 }, vars: { lot_frontage_m: 7.63, lot_depth_m: 34.0, lot_area_m2: 259.6 } }), 'ancillary_floor_area_m2');
+    expect([narrow.value, narrow.winner]).toEqual([40, '10.5.60.50(2)#(2)(B)']);
+    const wide = eff(lot('R', 'ancillary_building', { vars: { lot_frontage_m: 12 } }), 'ancillary_floor_area_m2');
+    expect([wide.value, wide.winner]).toEqual([60, '10.5.60.50(2)#(2)(A)']);
+  });
+  it('an unknown frontage leaves both arms undecided (the complement of unknown is unknown)', () => {
+    const r = eff(lot('R', 'ancillary_building', { vars: { lot_frontage_m: undefined } }), 'ancillary_floor_area_m2');
+    expect(r.status).toBe('not_evaluated');
+  });
+  it('G-CLAUSE: the production units pass; a complement on a unit whose text has no complement phrase is refused', () => {
+    const agreed = AG.agreedUnits(ag);
+    const ok = CL.checkClause({ slice: I.slice, units: agreed, vocab: I.vocab, adjudications: I.adjudications });
+    expect(ok.violations.filter((x: Json) => x.id === '10.5.60.50(2)#(2)(B)')).toEqual([]);
+    const a = agreed.get('10.5.60.50(2)#(2)(A)');
+    const bad = new Map([['10.5.60.50(2)#(2)(A)', { ...a, condition: { tokens: ['frontage_band'], if: 'complement(10.5.60.50(2)#(2)(B))' } }], ['10.5.60.50(2)#(2)(B)', agreed.get('10.5.60.50(2)#(2)(B)')]]);
+    const r = CL.checkClause({ slice: I.slice, units: bad, vocab: I.vocab, adjudications: I.adjudications });
+    expect(r.violations.filter((x: Json) => x.id === '10.5.60.50(2)#(2)(A)').map((x: Json) => x.code)).toContain('variable_unlicensed');
   });
 });

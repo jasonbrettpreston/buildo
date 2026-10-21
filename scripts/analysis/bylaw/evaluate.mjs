@@ -525,6 +525,15 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   if (cond && cond !== 'none' && cond.if && cond.if !== 'none') {
     let c;
     try { c = parsedCond(cond.if); } catch (err) { if (err instanceof DslError) return { ok: null, reason: `expression_error:${err.code}` }; throw err; }
+    if (c.type === 'complement') {
+      // M-242: not (the sibling arms' keyed conditions), resolved over the agreed units (agree.mjs resolveComplements)
+      const sib = Array.isArray(cond.complement_if) && cond.complement_if.length === c.of.length ? cond.complement_if : null;
+      if (!sib) return { ok: null, reason: 'expression_error:complement_unresolved' };
+      let xs;
+      try { xs = sib.map((x) => parsedCond(x)); } catch (err) { if (err instanceof DslError) return { ok: null, reason: `expression_error:${err.code}` }; throw err; }
+      trace.push(`complement(${c.of.join(', ')}) = not (${sib.join(' or ')})`);
+      c = { type: 'not', x: xs.length === 1 ? xs[0] : { type: 'or', xs } };
+    }
     const r = evCond(c, { C, lot, trace, reads, resolveVariable, argEdits: {} });
     if (r === false) return { ok: false, why: `condition ${cond.if}` };
     if (r !== true) unknown = unknown || r.ne;

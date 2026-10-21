@@ -38,7 +38,7 @@
 //   correction_supersede_duplicate  two records supersede the same correction id (Spec 69a M-75 note 2026-10-08)
 // Counted, never failing: pending units, open disagreements, draft failures (a draft whose DSL does not parse).
 
-import { DslError } from './dsl.mjs';
+import { DslError, parseCond } from './dsl.mjs';
 import { DOUBLE_KEYED, OPTIONAL_KEYED, canonicalField, gateResult, getField, sortedJson, supersession, violation } from './authored.mjs';
 import { agreeFixtures } from './authored-fixtures.mjs';
 
@@ -298,7 +298,32 @@ export function checkAgree({ shards = [], adjudications = null, vocab = null, do
 export function agreedUnits(agreeResult) {
   const out = new Map();
   for (const [id, rec] of agreeResult.units) if (rec.state === 'agreed' || rec.state === 'adjudicated') out.set(id, rec.unit);
-  return out;
+  return resolveComplements(out);
+}
+
+/**
+ * M-242 (N-3, operator approved 2026-10-20): a unit keyed condition.if = complement(<sibling unit id>, …) reads as not (the
+ * sibling conditions). The sibling texts are attached, verbatim, as condition.complement_if (one per named sibling) so the
+ * evaluator and G-CLAUSE read the exact negation of the sibling's keyed condition; a sibling that is not agreed, has no
+ * condition.if, or is itself a complement leaves the unit unresolved (the evaluator answers expression_error, G-CLAUSE
+ * names it). PURE: returns the same map with the resolved units replaced by copies.
+ */
+export function resolveComplements(units) {
+  for (const [id, u] of [...units]) {
+    const ci = u && u.condition && u.condition !== 'none' ? u.condition.if : null;
+    if (typeof ci !== 'string' || !/^\s*complement\s*\(/.test(ci)) continue;
+    let c;
+    try { c = parseCond(ci); } catch (err) { if (err instanceof DslError) continue; throw err; }
+    if (c.type !== 'complement') continue;
+    const ifs = c.of.map((sid) => {
+      const s = units.get(sid);
+      const si = s && s.condition && s.condition !== 'none' ? s.condition.if : null;
+      return typeof si === 'string' && si !== 'none' && !/^\s*complement\s*\(/.test(si) ? si : null;
+    });
+    if (ifs.some((x) => x === null)) continue;
+    units.set(id, { ...u, condition: { ...u.condition, complement_if: ifs } });
+  }
+  return units;
 }
 
 // ---------------------------------------------------------------- self-test (real clause text: authored-fixtures.mjs)
