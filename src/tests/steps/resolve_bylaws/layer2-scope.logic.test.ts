@@ -8,8 +8,8 @@
 // field that is not a `suite_` field keys it, and in each suite structure exactly when a `suite_` field keys it; a
 // lineage target outside every list is `deferred` with a reason. Each target is a vocab.json `dsl_target`.
 //
-// RED FIRST: committed as it.fails before the seed exists (gate K artifact
-// docs/reports/red-evidence/resolve_bylaws/rulings-j-red.json); the commit that adds the seed flips them to it.
+// RED FIRST: committed as it.fails at c038d605, before the seed existed (gate K artifact
+// docs/reports/red-evidence/resolve_bylaws/rulings-j-red.json); flipped to it with the seed.
 
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -32,12 +32,12 @@ const keyedBy = (pick: (field: string) => boolean): string[] =>
 const SUITE = (f: string): boolean => f.startsWith('suite_');
 
 describe('R-IP: the v1 scope seed', () => {
-  it.fails('declares the three v1 structures (Spec 134 §6; M-233)', () => {
+  it('declares the three v1 structures (Spec 134 §6; M-233)', () => {
     expect(scope().structures).toEqual(['principal', 'garden_suite', 'laneway_suite']);
     expect(Object.keys(scope().targets)).toEqual(['principal', 'garden_suite', 'laneway_suite']);
   });
 
-  it.fails('every list is sorted and unique, and every target is a vocab.json dsl_target', () => {
+  it('every list is sorted and unique, and every target is a vocab.json dsl_target', () => {
     const s = scope();
     for (const [k, list] of Object.entries(s.targets) as Array<[string, string[]]>) {
       expect(list, k).toEqual(sorted(list));
@@ -45,7 +45,7 @@ describe('R-IP: the v1 scope seed', () => {
     }
   });
 
-  it.fails('both ways against the lineage registry: principal = targets keyed by a non-suite field; each suite = targets keyed by a suite_ field (minus deferred)', () => {
+  it('both ways against the lineage registry: principal = targets keyed by a non-suite field; each suite = targets keyed by a suite_ field (minus deferred)', () => {
     const s = scope();
     const deferred = new Set(Object.keys(s.deferred || {}));
     const live = (xs: string[]): string[] => xs.filter((t) => !deferred.has(t));
@@ -54,7 +54,7 @@ describe('R-IP: the v1 scope seed', () => {
     expect(s.targets.laneway_suite).toEqual(live(keyedBy(SUITE)));
   });
 
-  it.fails('every lineage target is in scope or deferred with a reason, and nothing else is listed', () => {
+  it('every lineage target is in scope or deferred with a reason, and nothing else is listed', () => {
     const s = scope();
     const lineage = keyedBy(() => true);
     expect(lineage.length).toBeGreaterThan(0);

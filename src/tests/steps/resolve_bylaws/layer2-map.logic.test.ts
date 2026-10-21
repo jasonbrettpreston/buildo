@@ -8,8 +8,8 @@
 // kinds, and against the Layer 3 vocabulary (vocab.json layer3). The static R-EMIT extraction of every emitted reason
 // string stays a Spec 134 prerequisite (134:121); this lock reads the exported codes and the status / kind literals.
 //
-// RED FIRST: committed as it.fails before the map exists (gate K artifact
-// docs/reports/red-evidence/resolve_bylaws/rulings-j-red.json); the commit that adds the map flips them to it.
+// RED FIRST: committed as it.fails at c038d605, before the map existed (gate K artifact
+// docs/reports/red-evidence/resolve_bylaws/rulings-j-red.json); flipped to it with the map.
 
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -33,12 +33,12 @@ const AUTHORING_STATE = new Set(['authored', 'partial']);
 const evaluatorStatusLiterals = (): string[] => sorted([...EV_SRC.matchAll(/status: '([a-z_]+)'/g)].map((m) => m[1]!).filter((s) => !AUTHORING_STATE.has(s)));
 
 describe('R-IL: the stored Layer 2 status set and the evaluator status map', () => {
-  it.fails('the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)', () => {
+  it('the stored statuses are applies, not_applicable and not_evaluated; undecided joins when M-60 emits it (Spec 134:58)', () => {
     expect(map().status).toEqual(['applies', 'not_applicable', 'not_evaluated']);
     expect(EV_SRC).not.toMatch(/status: 'undecided'/);
   });
 
-  it.fails('every effective() status maps to a stored status, conflict to not_evaluated with reason conflict (Spec 134:56)', () => {
+  it('every effective() status maps to a stored status, conflict to not_evaluated with reason conflict (Spec 134:56)', () => {
     const m = map();
     expect(m.evaluator_status).toEqual({
       value: { status: 'applies' },
@@ -48,14 +48,14 @@ describe('R-IL: the stored Layer 2 status set and the evaluator status map', () 
     });
   });
 
-  it.fails('both ways: every status literal the evaluator returns is mapped (results or permissions), and every mapped key is one it returns', () => {
+  it('both ways: every status literal the evaluator returns is mapped (results or permissions), and every mapped key is one it returns', () => {
     const m = map();
     const mapped = sorted([...Object.keys(m.evaluator_status), ...Object.keys(m.permission_image)]);
     for (const s of evaluatorStatusLiterals()) expect(mapped, `evaluator status ${s}`).toContain(s);
     for (const k of mapped) expect(EV_SRC, `mapped key ${k}`).toContain(`'${k}'`);
   });
 
-  it.fails('permitted() results keep their own words; prohibited images to not_applicable at Layer 2 and not_permitted at the scenario level', () => {
+  it('permitted() results keep their own words; prohibited images to not_applicable at Layer 2 and not_permitted at the scenario level', () => {
     const m = map();
     expect(m.permission_image).toEqual({
       permitted: { scenario: 'permitted' },
@@ -70,16 +70,16 @@ describe('R-IL: the stored Layer 2 status set and the evaluator status map', () 
 });
 
 describe('R-IL: reason codes, value kinds and the Layer 3 image are closed and total', () => {
-  it.fails('reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways', () => {
+  it('reason_code is exactly NOT_EVALUATED_CODES, conflict and the lot gates, both ways', () => {
     const m = map();
     expect(m.reason_code).toEqual(sorted([...E.NOT_EVALUATED_CODES, 'conflict', ...m.lot_gate]));
   });
 
-  it.fails('value_kind is number, unlimited, unregulated (Spec 134 §3)', () => {
+  it('value_kind is number, unlimited, unregulated (Spec 134 §3)', () => {
     expect(map().value_kind).toEqual(['number', 'unlimited', 'unregulated']);
   });
 
-  it.fails('every stored status has a Layer 3 field-status image; applies is imaged by value_kind; every image is a Spec 68 §11.1 field status', () => {
+  it('every stored status has a Layer 3 field-status image; applies is imaged by value_kind; every image is a Spec 68 §11.1 field status', () => {
     const m = map();
     expect(sorted(Object.keys(m.layer3_image))).toEqual(sorted(m.status));
     expect(sorted(Object.keys(m.layer3_image.applies))).toEqual(sorted(m.value_kind));
@@ -90,11 +90,11 @@ describe('R-IL: reason codes, value kinds and the Layer 3 image are closed and t
 });
 
 describe('R-IM: evidence_kind is the evaluator\'s own kinds plus provincial', () => {
-  it.fails('the closed set is clause, absence, provincial, disapply, label_absent', () => {
+  it('the closed set is clause, absence, provincial, disapply, label_absent', () => {
     expect(map().evidence_kind).toEqual(['clause', 'absence', 'provincial', 'disapply', 'label_absent']);
   });
 
-  it.fails('both ways: every evidence kind the evaluator writes is in the set, and every member but provincial (derived by Layer 2) is written', () => {
+  it('both ways: every evidence kind the evaluator writes is in the set, and every member but provincial (derived by Layer 2) is written', () => {
     const written = sorted([...EV_SRC.matchAll(/evidence: \{ kind: '([a-z_]+)'/g)].map((x) => x[1]!));
     const m = map();
     expect(written).toEqual(sorted(m.evidence_kind.filter((k: string) => k !== 'provincial')));
@@ -102,7 +102,7 @@ describe('R-IM: evidence_kind is the evaluator\'s own kinds plus provincial', ()
 });
 
 describe('R-IN: the lot gates in their declared order; the sentinel', () => {
-  it.fails('lot_gate is the six Spec 134 gates in the declared order', () => {
+  it('lot_gate is the six Spec 134 gates in the declared order', () => {
     expect(map().lot_gate).toEqual(['no_569_2013_zone', 'ambiguous_zone', 'label_unparsed', 'label_exception_mismatch', 'exception_not_authored', 'lot_metric_missing']);
   });
 
@@ -110,7 +110,7 @@ describe('R-IN: the lot gates in their declared order; the sentinel', () => {
     for (const g of ['no_569_2013_zone', 'exception_not_authored']) expect(E.NOT_EVALUATED_CODES).toContain(g);
   });
 
-  it.fails('the exception-number sentinel is data (-1, Spec 134 I5)', () => {
+  it('the exception-number sentinel is data (-1, Spec 134 I5)', () => {
     expect(map().exception_number_sentinel).toBe(-1);
   });
 });

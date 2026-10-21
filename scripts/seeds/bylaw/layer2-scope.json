@@ -1,0 +1,70 @@
+{
+  "$comment": "Spec 134 v1 scope (Spec 124 R-IP, operator chat batch J 2026-10-21-chat-batch-j#CHAT-36.OQ8; Spec 69a M-233 structures, M-234 scope: more targets join by a pin change, i.e. an edit of this file). Each list is the Layer 2 targets the lineage registry docs/reference/maxbld-field-lineage.json keys for that structure: principal = targets keyed by a field that is not a suite_ field; garden_suite and laneway_suite = targets keyed by a suite_ field. A lineage target left out of every list is listed in deferred with its reason. Locked both ways by src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts; every target is a vocab.json dsl_target.",
+  "structures": [
+    "principal",
+    "garden_suite",
+    "laneway_suite"
+  ],
+  "targets": {
+    "principal": [
+      "attic_counted_clearance_m",
+      "attic_qualifying_area_m2",
+      "attic_qualifying_clearance_m",
+      "attic_qualifying_share_pct",
+      "averaging_distance_m",
+      "bedrooms",
+      "building_depth_m",
+      "building_length_m",
+      "dwelling_units_max",
+      "element_width_pct",
+      "entrance_height_m",
+      "front_setback_m",
+      "fsi",
+      "height_m",
+      "height_storeys",
+      "lane_centreline_setback_m",
+      "lot_coverage_pct",
+      "main_wall_front_rear_share_pct",
+      "main_wall_height_m",
+      "main_wall_side_share_pct",
+      "rear_setback_m",
+      "roof_slope_max",
+      "side_setback_m",
+      "side_setback_street_m",
+      "upper_storey_setback_m"
+    ],
+    "garden_suite": [
+      "ancillary_coverage_pct",
+      "building_length_m",
+      "building_width_m",
+      "gfa_m2",
+      "height_m",
+      "interior_floor_area_m2",
+      "lane_centreline_setback_m",
+      "lot_coverage_pct",
+      "rear_setback_m",
+      "rear_soft_landscaping_pct",
+      "separation_m",
+      "side_setback_m",
+      "side_setback_street_m",
+      "upper_side_setback_m"
+    ],
+    "laneway_suite": [
+      "ancillary_coverage_pct",
+      "building_length_m",
+      "building_width_m",
+      "gfa_m2",
+      "height_m",
+      "interior_floor_area_m2",
+      "lane_centreline_setback_m",
+      "lot_coverage_pct",
+      "rear_setback_m",
+      "rear_soft_landscaping_pct",
+      "separation_m",
+      "side_setback_m",
+      "side_setback_street_m",
+      "upper_side_setback_m"
+    ]
+  },
+  "deferred": {}
+}

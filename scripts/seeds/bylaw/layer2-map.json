@@ -1,0 +1,98 @@
+{
+  "$comment": "Spec 134 §4 layer2-map.json (Spec 69a M-232: two closed status sets joined by one declared total map; Spec 124 R-IL, R-IM, R-IN, operator chat batch J 2026-10-21-chat-batch-j#CHAT-36.OQ4..OQ6, in their simplest form). status: the stored Layer 2 statuses (bare; the parameter is the row reason; undecided joins when M-60 emits it, Spec 134:58). evaluator_status: each effective() result status -> its stored status (strip_prefix: the evaluator reason prefix removed; reason: a fixed reason). permission_image: each permitted() status -> its Layer 2 image (layer2) and scenario image (scenario, vocab layer3.scenario_status); the lot link row stores the permitted() word verbatim (R-IQ). reason_code: the closed not_evaluated codes (the evaluator NOT_EVALUATED_CODES, conflict, the lot gates); a stored reason is <code>[:<detail>]. lot_gate: the six Layer 2 lot gates in their declared order (the first fired is reported, R-IN). evidence_kind: the evaluator evidence kinds plus provincial (R-IM). value_kind: Spec 134 §3. layer3_image: each stored status -> its Spec 68 §11.1 field status (vocab layer3.field_status), applies by value_kind. exception_number_sentinel: the parcels.exception_number value meaning no exception for the closure and present for the mismatch test (R-IN). Locked both ways by src/tests/steps/resolve_bylaws/layer2-map.logic.test.ts.",
+  "status": [
+    "applies",
+    "not_applicable",
+    "not_evaluated"
+  ],
+  "evaluator_status": {
+    "value": {
+      "status": "applies"
+    },
+    "not_applicable": {
+      "status": "not_applicable",
+      "strip_prefix": "not_applicable:"
+    },
+    "not_evaluated": {
+      "status": "not_evaluated"
+    },
+    "conflict": {
+      "status": "not_evaluated",
+      "reason": "conflict"
+    }
+  },
+  "permission_image": {
+    "permitted": {
+      "scenario": "permitted"
+    },
+    "prohibited": {
+      "layer2": "not_applicable",
+      "scenario": "not_permitted"
+    },
+    "not_evaluated": {
+      "layer2": "not_evaluated",
+      "scenario": "not_evaluated"
+    }
+  },
+  "reason_code": [
+    "all_arguments_displaced",
+    "all_map_arguments_absent",
+    "ambiguous_zone",
+    "band_no_match",
+    "by_type_unlisted",
+    "condition_unknown",
+    "conflict",
+    "displaced_argument_not_found",
+    "division_by_zero",
+    "enactment_date_unknown",
+    "exception_not_authored",
+    "existing_building_facts",
+    "expression_error",
+    "label_exception_mismatch",
+    "label_letter_unknown",
+    "label_unparsed",
+    "label_value_absent",
+    "lot_metric_missing",
+    "map_area_not_held",
+    "map_value_absent",
+    "missing_input",
+    "named_lots_only",
+    "needs_user_input",
+    "no_569_2013_zone",
+    "no_candidate",
+    "referenced_target_conflict",
+    "target_cycle",
+    "unlimited_in_arithmetic",
+    "unregulated_in_arithmetic"
+  ],
+  "lot_gate": [
+    "no_569_2013_zone",
+    "ambiguous_zone",
+    "label_unparsed",
+    "label_exception_mismatch",
+    "exception_not_authored",
+    "lot_metric_missing"
+  ],
+  "evidence_kind": [
+    "clause",
+    "absence",
+    "provincial",
+    "disapply",
+    "label_absent"
+  ],
+  "value_kind": [
+    "number",
+    "unlimited",
+    "unregulated"
+  ],
+  "layer3_image": {
+    "applies": {
+      "number": "computed",
+      "unlimited": "unlimited",
+      "unregulated": "unregulated"
+    },
+    "not_applicable": "not_applicable",
+    "not_evaluated": "not_evaluated"
+  },
+  "exception_number_sentinel": -1
+}
