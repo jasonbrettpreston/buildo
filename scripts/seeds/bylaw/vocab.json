@@ -438,7 +438,8 @@
   },
   "displacement_triggers": {
     "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in", "may be reduced to"],
-    "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
+    "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"],
+    "keeps_limit_phrases": ["permitted by that regulation"]
   },
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
   "heuristic_reason": ["modelling_assumption", "data_cleaning_bound", "tolerance", "statistical_default", "proxy_for_unmodelled_rule"],
@@ -583,7 +584,9 @@
   },
   "unit_application": {
     "$comment": "Spec 69a M-251 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-7): a unit whose own text names no building type but which the operator scoped to the residential building (the x.40.1(1) form of article_application, by unit id). applies() sets the unit aside for the listed building types, so an ancillary building takes its own Article 10.5.60 rule.",
-    "900.3.10(70)#(70)[SSP](B)": { "citation": "900.3.10(70)(B)", "ruling": "M-251", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
+    "900.3.10(70)#(70)[SSP](B)": { "citation": "900.3.10(70)(B)", "ruling": "M-251", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(155)#(155)[SSP](D)": { "citation": "900.3.10(155)(D)", "ruling": "M-267", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "900.3.10(340)#(340)[SSP](B)": { "citation": "900.3.10(340)(B)", "ruling": "M-267", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
   },
   "map_area_unheld_reading": {
     "$comment": "Spec 69a M-222 / M-224: a map-gated unit whose map polygon is not held (lot.map_areas absent) takes the literal reading — the unit is set aside and its disclosure is attached — instead of not_evaluated:map_area_not_held on every lot. Listed units only; any other map-gated unit stays not_evaluated until its map is held.",
