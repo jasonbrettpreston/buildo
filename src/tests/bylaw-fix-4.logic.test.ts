@@ -308,3 +308,26 @@ describe('F-SC-13/14 / M-255 — the extension side clearance, the RD parapet al
     expect(I.vocab.accessory_structure_use.deck_or_platform.element_targets).toContain('platform_count');
   });
 });
+
+// F-SC-1 / M-247 (2) (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-1`): the historical top four —
+// 900.3.10(21), (37), (18) carry units but stay `exception_not_authored`, each blocked by a DEFINE unit that has a target and
+// no statement (a measurement rule, M-240(1) / M-171); corrected to target none, they no longer block the lot.
+describe('F-SC-1 / M-247 (2) — a measurement-only DEFINE no longer blocks RD 18 / 21 / 37', () => {
+  const DEF = ['900.3.10(18)#(18)[SSP](D)', '900.3.10(18)#(18)[SSP](E)(ii)', '900.3.10(21)#(21)[SSP](B)', '900.3.10(21)#(21)[SSP](C)(ii)',
+    '900.3.10(21)#(21)[SSP](C)(iii)(a)', '900.3.10(21)#(21)[SSP](C)(iii)(b)', '900.3.10(37)#(37)[SSP](B)', '900.3.10(37)#(37)[SSP](C)(ii)'];
+  // HT 10 / ST 2 (x18 / x21 key their side yard for a house "that is 2 or more storeys")
+  const rd = (x: number, f: number): Json => lot('RD', 'detached_house', { exception: `900.3.10(${x})`, label: { f, a: 510, d: 0.45 }, overlays: { HT: 10, ST: 2 }, vars: { lot_frontage_m: f, lot_depth_m: 40, lot_area_m2: f * 40 } });
+
+  it('the eight DEFINE units are measurement rules with no target', () => {
+    for (const id of DEF) expect([id, unitOf(id).archetype, [].concat(unitOf(id).target)]).toEqual([id, 'DEFINE', ['none']]);
+  });
+
+  it('RD 18 / 21 / 37 lots answer: the exception side yard (0.9 m under 15.3 m / 15.0 m of frontage) and the zone FSI, not exception_not_authored', () => {
+    for (const x of [18, 21, 37]) {
+      const s = eff(rd(x, 12), 'side_setback_m');
+      expect([x, s.status, s.value, String(s.winner).startsWith(`900.3.10(${x})#`)]).toEqual([x, 'value', 0.9, true]);
+    }
+    // 7 Mattice Rd (x37): the D-3 eaves row answers
+    expect(eff(rd(37, 12), 'eaves_encroachment_m')).toMatchObject({ status: 'value', value: 0.9 });
+  });
+});

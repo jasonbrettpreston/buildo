@@ -83813,6 +83813,94 @@
       "supersedes": "COR-10.80.40.20(2)#(2)(C)/disclosure",
       "unit": "10.80.40.20(2)#(2)(C)",
       "value": "On RM lots in the frontage band, a one-storey extension of up to 2.0 m beyond the maximum building length must be at least 3.0 m from each side lot line."
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(18)#(18)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(18)#(18)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(18)#(18)[SSP](E)(ii)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(18)#(18)[SSP](E)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](B)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(ii)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(iii)(a)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(iii)(a)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(iii)(b)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](C)(iii)(b)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(37)#(37)[SSP](B)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(37)#(37)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(ii)/target",
+      "kind": "correction",
+      "reason": "F-SC-1 (CoA scorecard, 2026-10-21; historical top four). The unit is a measurement rule (\"the maximum building depth permitted by that regulation includes the one storey extension\"; \"including ... the floor area of an attached or detached garage\" / \"void areas\"), keyed DEFINE with a target and no statement; exceptionNotAuthored counts such a unit as pending, so every target on the lot was exception_not_authored (302 historical NO ANSWER rows across F-SC-1, 7 Mattice Rd A0206/26EYK among them). Its measurement stays disclosed in its own calculation_handling / disclosure; the target becomes none.",
+      "rule": "Operator approved F-SC-1 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-1; Spec 69a M-247 (2): \"Such a unit says how a measure is taken (M-240(1) ...; M-171 ...), so it is corrected to target none with its measurement disclosed (M-75), never left to block the lot\"); M-240(1); M-171; M-75",
+      "unit": "900.3.10(37)#(37)[SSP](C)(ii)",
+      "value": "none"
     }
   ]
 }
