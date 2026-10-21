@@ -108,10 +108,12 @@ describe('R-GU — the step handbook is Spec 132, generated', () => {
     const cap = m.generated_size_caps['132']!;
     expect(cap.why.length).toBeGreaterThan(40);
     const text = read(SPEC_132_REL);
-    expect(ck.checkGeneratedSizeCaps({ '132': text }, m)).toEqual([]);
+    // Spec 133's cap (R-IY) is checked in spec133-bylaw-handbook.logic; this fixture holds Spec 132's alone.
+    const only132 = { ...m, generated_size_caps: { '132': cap } };
+    expect(ck.checkGeneratedSizeCaps({ '132': text }, only132)).toEqual([]);
     const tight = { ...m, generated_size_caps: { '132': { ...cap, max_bytes: 10 } } };
     expect(ck.checkGeneratedSizeCaps({ '132': text }, tight).join(' ')).toMatch(/SIZE CAP spec 132/);
-    const both = { ...m, budgets: { ...m.budgets, '132': { headroom_pct: 10, measured_at: { lines: 1, bytes: 1, commit: 'x' } } } };
+    const both = { ...m, generated_size_caps: { '132': cap }, budgets: { ...m.budgets, '132': { headroom_pct: 10, measured_at: { lines: 1, bytes: 1, commit: 'x' } } } };
     expect(ck.checkGeneratedSizeCaps({ '132': text }, both).join(' ')).toMatch(/generated spec 132 also has a hand-written budget/);
     expect(ck.SPEC_FILES['132']).toBe('132_step_standard_handbook.md');
   });
