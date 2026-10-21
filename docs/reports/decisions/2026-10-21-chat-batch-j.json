@@ -1,0 +1,153 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-j/2026-10-21-batch-j.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-j",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "I approve the 12 layer questions on the condition - we are being pramtica - ie.  keeping this simple, understandable, accruate, standardized, easy to fix or altar.",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-j/2026-10-21-batch-j.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-36.OQ1": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-II"
+    },
+    "CHAT-36.OQ2": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IJ"
+    },
+    "CHAT-36.OQ3": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IK"
+    },
+    "CHAT-36.OQ4": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IL"
+    },
+    "CHAT-36.OQ5": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IM"
+    },
+    "CHAT-36.OQ6": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IN"
+    },
+    "CHAT-36.OQ7": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IO"
+    },
+    "CHAT-36.OQ8": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IP"
+    },
+    "CHAT-36.OQ9": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IQ"
+    },
+    "CHAT-36.OQ10": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IR"
+    },
+    "CHAT-36.OQ11": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IS"
+    },
+    "CHAT-36.OQ12": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IT"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-36.OQ1",
+      "question": "How the by-law rules reach Layer 2's calculation",
+      "recommendation": "**Recommendation.** (1) The shell builds the Layer 1 assembly once per run with the existing `loadRealLotAssembly` (one shared function, so Layer 2 and the golden-lot tests cannot drift) and hands it to compute through a declared, hashed descriptor input. That needs one runner addition: a `kind: \"filesystem\"` external read under the rows arm, handed to `materializeRows` as a lookup. It is a runner change, so it is its own Spec 124 row. (2) `table_version` hashes the assembly's input files (shards, adjudications, vocab, external, absence rulings), or the generated `bylaw-provisions.json` only if its generator is proven to change whenever any of them does. A `--check` lock decides which.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ2",
+      "question": "Where the \"is this exception fully authored?\" check reads from",
+      "recommendation": "**Recommendation.** Ask the by-law fix lane, the single writer of `evaluate.mjs`, for one additive pure export `exceptionClosure(lot, candidates)`. It returns the ordered closure the evaluator already walks (EV:936-944), red-first. Spec 134 §2 then names it as the third permitted reader. \"Fully authored\" is the assembly's `authored[id] === 'authored'` (or `{status: 'authored'}`), the same outcome the evaluator reads, so there is one source. Slice (a) already takes the closure and the authored map as inputs (§7), so either answer plugs in without changing it.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ3",
+      "question": "How each result row is identified",
+      "recommendation": "**Recommendation.** `cell_id` = sha256 over the candidate-set signature (sorted `unit_id` + unit sha) and the canonical tokens (`cell-cache.mjs` `inputValue`) of every lot input in the union of `inputs[]` that the targets' results read. `inputs_hash` = sha256 over the same tokens for the lot. This reuses the cache's proven keying and its mutation test. I12 (equivalence) is the runtime witness. P2-0 (a) measures the distinct-cell count before ①.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ4",
+      "question": "The status-to-report mapping file",
+      "recommendation": "**Recommendation.** (i) One JSON file with four declared tables: `evaluator_status`, `lot_gate`, `reason_code`, `layer3_image`. `layer3_image` is keyed by status, plus `value_kind` for `applies`. (ii) Store `status` as the closed bare member (`applies`, `not_applicable`, `undecided`, `not_evaluated`) and `reason` as the parameter (`<clause>` or `<code>[:<detail>]`). The §5a string form is a generated column or a view, so the CHECK constraints stay closed sets. (iii) `prohibited` → `not_applicable:<winning PROHIBIT clause>` at Layer 2, and `not_permitted:<clause>` at the scenario level (Spec 68 §11.1). (iv) As in (i). (v) The map strips the prefix, which the lock proves.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ5",
+      "question": "Evidence labels for the evaluator's actual outputs",
+      "recommendation": "**Recommendation.** Extend the closed set to `clause · absence · provincial · disapply · label_absent` through `layer2-map.json`, never by renaming the evaluator's kinds. For a numeric winner, `evidence_kind` is `clause` (or `provincial` when the winner's layer is provincial) and `evidence_ref` is the winner's `regulation_id`, derived by Layer 2 as P2 I2 says. I2 is amended to accept the two extra kinds with their own ref rules (the `vocab.label_absence_unregulated` ruling and the disapplying unit ids).",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ6",
+      "question": "Order of the lot-level checks",
+      "recommendation": "**Recommendation.** A declared total order in `layer2-map.json` (`lot_gate_order`): `no_569_2013_zone` → `ambiguous_zone` → `label_unparsed` → `label_exception_mismatch` → `exception_not_authored` → `lot_metric_missing`. Earlier gates make the later ones unreadable: no zone means no label grammar, and no parsed label means no xN to compare. One gate is reported per lot, and the others are counted in `records_meta`. The sentinel −1 is \"no exception\" for the closure (it base-resolves, never an exception winner) but \"present\" for the mismatch test, so −1 with an (xN) label is a mismatch. Adopt P2's xN ≠ number arm as part of the mismatch rule.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ7",
+      "question": "Scenario classes vs. buildings (garden/laneway suites)",
+      "recommendation": "**Recommendation.** (i) The fix lane adds the vector fields and the three suite classes to `scenario_class_units` (M-223(4)), sha-pinned. (ii) Classes are the P5.1 scenario vectors (`detached_house`, `detached_houseplex`, `semi_detached_houseplex`, `semi_detached_house`, `house_with_secondary_suite`); garden and laneway are **structures** evaluated under each class whose vector has that suite (P2 §S.3). They are classes only where Spec 78 names a scenario for them, and it names none (78:713-724). (iii) A structure is passed as its building type through `building_type_structure`. (iv) Collapse by result equality: two classes whose `effective()` results are byte-equal under the stable JSON form collapse into the first in catalogue order. That needs no unit read and is exact by construction (I12 witnesses it).",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ8",
+      "question": "Where the v1 scope (which targets for which buildings) is declared",
+      "recommendation": "**Recommendation.** One seed, `scripts/seeds/bylaw/layer2-scope.json`: `{ structures: [...], targets: { principal: [...], garden_suite: [...], laneway_suite: [...] } }`. Each target must be a `vocab.dsl_target`. A both-direction lock against the lineage registry's `keyed.layer2_targets` (32 targets today) applies, with each lineage target either in scope or listed `deferred` with a reason. Its sha joins the skip predicate. The suite setbacks are enumerated from the lineage's suite fields.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ9",
+      "question": "Two things Layer 3 needs that the row shape lacks",
+      "recommendation": "**Recommendation.** (i) Add `disclosures` (sorted) to the signature row, inside the write guard. (ii) Add `permitted_by_class` (class → `permitted` / `prohibited` + clause / `not_evaluated` + reason) to the lot link row, or to a per-cell permission row if P2-0 shows it shared. Both are frozen with the row shape at ①.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ10",
+      "question": "Removing lots that leave the population",
+      "recommendation": "**Recommendation.** A runner extension, recorded as its own Spec 124 row: an optional `outputs.writes[i].population_retract` on a `guarded_upsert` target. After the loop, inside the run's transaction, it deletes keys not in the declared population query and reports the count to a declared check. The same predicate gives I11.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ11",
+      "question": "Building each lot's input vector",
+      "recommendation": "**Recommendation.** The zone → Chapter 900 article map becomes vocab data (`vocab.exception_chapter`), with a lock against the authored shard ids, so G-EXC-LIT stays clean. The lot-vector builder is one pure function beside R-LABEL, shared with the golden-lot helper. It never defaults a missing input; it raises the lot gate and counts `inputs_defaulted` (I10).",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-36.OQ12",
+      "question": "How version hashes are computed",
+      "recommendation": "**Recommendation.** sha256 over the raw bytes, and for several files sha256 over the sorted `path\\0sha256\\n` lines (order-free, rename-visible). `table_version` covers the Layer 1 inputs per OQ-1. The skip predicate keeps `vocab.version` separately (134:81), so no hash needs to cover vocab twice.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}

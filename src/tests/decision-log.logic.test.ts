@@ -420,7 +420,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(58);
+    expect(r.decisions).toBe(70);
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(3);
   });
@@ -439,6 +439,22 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     for (const [id, row] of [['CHAT-23', 'R-IG'], ['CHAT-24', 'R-IB'], ['CHAT-24', 'R-IC'], ['CHAT-25', 'R-IH']]) {
       expect(rows.find((l) => l.startsWith(`| ${row} |`)), row).toContain(`\`2026-10-20-chat-batch-d-rulings#${id}\``);
     }
+  });
+
+  it('chat batch J (layer2-build-2): CHAT-36.OQ1…OQ12 → R-II…R-IT in order, each row citing its decision and the operator condition', () => {
+    const A = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
+    const j = byStem.get('2026-10-21-chat-batch-j') as { source: { operator_quote: string }; decisions: Array<{ id: string; decision: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(j.source.operator_quote).toMatch(/^I approve the 12 layer questions on the condition/);
+    const ids = Array.from({ length: 12 }, (_, i) => `CHAT-36.OQ${i + 1}`);
+    const rowIds = ['R-II', 'R-IJ', 'R-IK', 'R-IL', 'R-IM', 'R-IN', 'R-IO', 'R-IP', 'R-IQ', 'R-IR', 'R-IS', 'R-IT'];
+    expect(j.decisions.map((d) => [d.id, d.decision])).toEqual(ids.map((id) => [id, 'approve']));
+    expect(Object.fromEntries(Object.entries(j.routing).map(([k, v]) => [k, [v.register, v.row]]))).toEqual(Object.fromEntries(ids.map((id, i) => [id, [A, rowIds[i]]])));
+    const rows = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n');
+    ids.forEach((id, i) => {
+      const row = rows.find((l) => l.startsWith(`| ${rowIds[i]} | **`));
+      expect(row, rowIds[i]).toContain(`\`2026-10-21-chat-batch-j#${id}\``);
+      expect(row, rowIds[i]).toContain('keeping this simple, understandable, accruate, standardized, easy to fix or altar');
+    });
   });
 
   it('the By-law Fix Rulings page (rows export) and the by-law half of chat batch C route to R-HK and M-240…M-246', () => {

@@ -1,0 +1,91 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "I approve the 12 layer questions on the condition - we are being pramtica - ie.  keeping this simple, understandable, accruate, standardized, easy to fix or altar.",
+  "context": "Answer to the 12 Layer 2 open questions (docs/reports/2026-10-21-layer2-build-plan.md §6, page https://claude.ai/artifact/GkMJvJHFEyZdd2V88nXXeK). Approval is conditional: each implementation takes the simplest form that satisfies the recommendation (simple, understandable, accurate, standardized, easy to fix or alter); where a recommendation is not the simplest form, the lane drafts the simpler alternative instead of building the heavier one.",
+  "decisions": [
+    {
+      "id": "CHAT-36.OQ1",
+      "subject": "How the by-law rules reach Layer 2's calculation",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** (1) The shell builds the Layer 1 assembly once per run with the existing `loadRealLotAssembly` (one shared function, so Layer 2 and the golden-lot tests cannot drift) and hands it to compute through a declared, hashed descriptor input. That needs one runner addition: a `kind: \"filesystem\"` external read under the rows arm, handed to `materializeRows` as a lookup. It is a runner change, so it is its own Spec 124 row. (2) `table_version` hashes the assembly's input files (shards, adjudications, vocab, external, absence rulings), or the generated `bylaw-provisions.json` only if its generator is proven to change whenever any of them does. A `--check` lock decides which.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ2",
+      "subject": "Where the \"is this exception fully authored?\" check reads from",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** Ask the by-law fix lane, the single writer of `evaluate.mjs`, for one additive pure export `exceptionClosure(lot, candidates)`. It returns the ordered closure the evaluator already walks (EV:936-944), red-first. Spec 134 §2 then names it as the third permitted reader. \"Fully authored\" is the assembly's `authored[id] === 'authored'` (or `{status: 'authored'}`), the same outcome the evaluator reads, so there is one source. Slice (a) already takes the closure and the authored map as inputs (§7), so either answer plugs in without changing it.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ3",
+      "subject": "How each result row is identified",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** `cell_id` = sha256 over the candidate-set signature (sorted `unit_id` + unit sha) and the canonical tokens (`cell-cache.mjs` `inputValue`) of every lot input in the union of `inputs[]` that the targets' results read. `inputs_hash` = sha256 over the same tokens for the lot. This reuses the cache's proven keying and its mutation test. I12 (equivalence) is the runtime witness. P2-0 (a) measures the distinct-cell count before ①.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ4",
+      "subject": "The status-to-report mapping file",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** (i) One JSON file with four declared tables: `evaluator_status`, `lot_gate`, `reason_code`, `layer3_image`. `layer3_image` is keyed by status, plus `value_kind` for `applies`. (ii) Store `status` as the closed bare member (`applies`, `not_applicable`, `undecided`, `not_evaluated`) and `reason` as the parameter (`<clause>` or `<code>[:<detail>]`). The §5a string form is a generated column or a view, so the CHECK constraints stay closed sets. (iii) `prohibited` → `not_applicable:<winning PROHIBIT clause>` at Layer 2, and `not_permitted:<clause>` at the scenario level (Spec 68 §11.1). (iv) As in (i). (v) The map strips the prefix, which the lock proves.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ5",
+      "subject": "Evidence labels for the evaluator's actual outputs",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** Extend the closed set to `clause · absence · provincial · disapply · label_absent` through `layer2-map.json`, never by renaming the evaluator's kinds. For a numeric winner, `evidence_kind` is `clause` (or `provincial` when the winner's layer is provincial) and `evidence_ref` is the winner's `regulation_id`, derived by Layer 2 as P2 I2 says. I2 is amended to accept the two extra kinds with their own ref rules (the `vocab.label_absence_unregulated` ruling and the disapplying unit ids).",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ6",
+      "subject": "Order of the lot-level checks",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** A declared total order in `layer2-map.json` (`lot_gate_order`): `no_569_2013_zone` → `ambiguous_zone` → `label_unparsed` → `label_exception_mismatch` → `exception_not_authored` → `lot_metric_missing`. Earlier gates make the later ones unreadable: no zone means no label grammar, and no parsed label means no xN to compare. One gate is reported per lot, and the others are counted in `records_meta`. The sentinel −1 is \"no exception\" for the closure (it base-resolves, never an exception winner) but \"present\" for the mismatch test, so −1 with an (xN) label is a mismatch. Adopt P2's xN ≠ number arm as part of the mismatch rule.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ7",
+      "subject": "Scenario classes vs. buildings (garden/laneway suites)",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** (i) The fix lane adds the vector fields and the three suite classes to `scenario_class_units` (M-223(4)), sha-pinned. (ii) Classes are the P5.1 scenario vectors (`detached_house`, `detached_houseplex`, `semi_detached_houseplex`, `semi_detached_house`, `house_with_secondary_suite`); garden and laneway are **structures** evaluated under each class whose vector has that suite (P2 §S.3). They are classes only where Spec 78 names a scenario for them, and it names none (78:713-724). (iii) A structure is passed as its building type through `building_type_structure`. (iv) Collapse by result equality: two classes whose `effective()` results are byte-equal under the stable JSON form collapse into the first in catalogue order. That needs no unit read and is exact by construction (I12 witnesses it).",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ8",
+      "subject": "Where the v1 scope (which targets for which buildings) is declared",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** One seed, `scripts/seeds/bylaw/layer2-scope.json`: `{ structures: [...], targets: { principal: [...], garden_suite: [...], laneway_suite: [...] } }`. Each target must be a `vocab.dsl_target`. A both-direction lock against the lineage registry's `keyed.layer2_targets` (32 targets today) applies, with each lineage target either in scope or listed `deferred` with a reason. Its sha joins the skip predicate. The suite setbacks are enumerated from the lineage's suite fields.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ9",
+      "subject": "Two things Layer 3 needs that the row shape lacks",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** (i) Add `disclosures` (sorted) to the signature row, inside the write guard. (ii) Add `permitted_by_class` (class → `permitted` / `prohibited` + clause / `not_evaluated` + reason) to the lot link row, or to a per-cell permission row if P2-0 shows it shared. Both are frozen with the row shape at ①.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ10",
+      "subject": "Removing lots that leave the population",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** A runner extension, recorded as its own Spec 124 row: an optional `outputs.writes[i].population_retract` on a `guarded_upsert` target. After the loop, inside the run's transaction, it deletes keys not in the declared population query and reports the count to a declared check. The same predicate gives I11.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ11",
+      "subject": "Building each lot's input vector",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** The zone → Chapter 900 article map becomes vocab data (`vocab.exception_chapter`), with a lock against the authored shard ids, so G-EXC-LIT stays clean. The lot-vector builder is one pure function beside R-LABEL, shared with the golden-lot helper. It never defaults a missing input; it raises the lot gate and counts `inputs_defaulted` (I10).",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    },
+    {
+      "id": "CHAT-36.OQ12",
+      "subject": "How version hashes are computed",
+      "decision": "approve",
+      "recommendation": "**Recommendation.** sha256 over the raw bytes, and for several files sha256 over the sorted `path\\0sha256\\n` lines (order-free, rename-visible). `table_version` covers the Layer 1 inputs per OQ-1. The skip predicate keeps `vocab.version` separately (134:81), so no hash needs to cover vocab twice.",
+      "condition": "pragmatic: simple, understandable, accurate, standardized, easy to fix or alter"
+    }
+  ]
+}
