@@ -5225,6 +5225,20 @@
       }
     },
     {
+      "id": "R-IK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-label-enforcement.logic.test.ts"
+      },
+      "statement": "The V3 label and its E1 ratchet count only steps converted or passing as-converted; the generator run judges pending steps as-converted and removes a slug only through --retire on a strict V2 reading (operator CHAT-37).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",
