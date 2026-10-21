@@ -158,12 +158,14 @@ The step is born V3: `standard=V3` prints only when all nine R-EY conditions hol
 
 - **The physical table split** (§3): the lean three-table form vs P2's two tables (P2:58-59) is fixed at ① from the P2-0 bytes-per-row measurement; the logical row shape does not change.
 - **`undecided` before M-60 lands:** the evaluator returns `not_evaluated` for disagreeing worlds today (P2 is silent on the mapping); `layer2-map.json` maps it until the status exists, and the map's lock then moves it.
+- **Drafted 2026-10-21, not ruled:** OQ-1…OQ-12 in `docs/reports/2026-10-21-layer2-build-plan.md` §6 (Layer 1 delivery to compute, the M-231 closure source, `cell_id`, the map form, `evidence_kind`, the gate order, the class catalogue, the scope file, two row-shape gaps for Layer 3, the reset arm, the lot vector, the version hashes), each with a conflict check and a V3 table.
 - Settled 2026-10-20: front-yard averaging stays in the scenario step (Spec 124 R-HL); the renovation section's render form is Spec 131 LC-62 (`2026-10-20-chat-batch-a#CHAT-1`). Layer 2 serves the renovation class (`semi_detached_house` / `detached_house`) unchanged.
 
 ## Operating Boundaries
 
 ### Target Files
-- **PLANNED (not created; paths written without their root so the system map does not list files that do not exist):** the step `resolve-bylaws.js` with its descriptor and notes, the compute module `lib/compute/resolve-bylaws.js`, the seed `seeds/bylaw/layer2-map.json`, one migration creating the three tables, the logic-variable seed rows, and the tests under `tests/steps/resolve_bylaws/` plus the `layer2-map` lock.
+- **Built ahead of ① (slice (a), plan §7; pure functions only, no hook the runner reads; written without their root until ① registers the step):** the compute module `lib/compute/resolve-bylaws.js` and its test `tests/steps/resolve_bylaws/resolution.logic.test.ts`, red first (gate K artifact `reports/red-evidence/resolve_bylaws/slice-a-red.json`).
+- **PLANNED (not created; paths written without their root so the system map does not list files that do not exist):** the step `resolve-bylaws.js` with its descriptor and notes, the rest of the compute module (the runner hooks), the seed `seeds/bylaw/layer2-map.json`, one migration creating the three tables, the logic-variable seed rows, and the tests under `tests/steps/resolve_bylaws/` plus the `layer2-map` lock.
 
 ### Out-of-Scope Files
 - `scripts/analysis/bylaw/evaluate.mjs` and `dsl.mjs` (Spec 68 §7.6; the `losers[]` prerequisite is an evaluator change under Spec 68, landed red-first before ①).

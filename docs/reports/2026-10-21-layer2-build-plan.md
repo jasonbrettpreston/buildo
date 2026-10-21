@@ -67,7 +67,8 @@ Two things Layer 3 reads are **not** in this row shape; they are drafted as OQ-9
 
 ## 4. Build slices, in order, each red-first
 
-Every slice commits its failing tests (with a gate-K red-evidence artifact under `docs/reports/red-evidence/resolve_bylaws/`, which R-DK item 4 also needs) before the code that turns them green. Pre-commit runs `vitest related`, so a red test is committed as `it.fails` with its JSON artifact, and the implementation commit flips it to `it` (the bylaw-fix-3 precedent, 69a M-242).
+Every slice commits its failing tests, with a gate-K red-evidence artifact for the slug resolve_bylaws (R-DK item 4 also needs one), before the code that turns them green.
+Pre-commit runs vitest related on the staged tests, so a red test is committed as it.fails with its JSON artifact, and the implementation commit flips it to it (the bylaw-fix-3 precedent, 69a M-242).
 
 | Slice | Contents | Red-first test | Waits for |
 |---|---|---|---|
@@ -332,3 +333,4 @@ The closure's source (OQ-2), the scope's source (OQ-8), the gate order (OQ-6) an
 - **PIN-L2-1:** `pull-oracle.cjs:9` hard-codes the zone → Chapter 900 map. It is a read-only analysis script, but Layer 2 must not copy it (OQ-11).
 - **PIN-L2-2:** compute modules are CommonJS and `evaluate.mjs` is ESM. Slice (d) needs `require()` of an ES module (Node ≥ 22) or a dynamic import in the shell. Gate E / compute-closure must be confirmed to follow it before ②.
 - **PIN-L2-3:** `mobile/node_modules`, a symlink, shows as untracked in a fresh worktree (the ignore rule matches the directory, not the link). It is never staged.
+- **PIN-L2-4:** `scripts/generate-system-map.mjs` has no mode flag (it always writes), so this lane did not run it. Spec 134's Target Files name the slice (a) files without their root, the convention its PLANNED line already uses, so the system map is unchanged. Registering the step at ① regenerates it.
