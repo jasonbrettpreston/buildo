@@ -1,0 +1,97 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-20-chat-batch-c-steps/2026-10-20-batch-c-steps.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-chat-batch-c-steps",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "approved [the cutover rulings table, pasted back] - the missing answers for the bylaws and V3 page are approved as well",
+    "record": "operator chat 2026-10-20",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-c-steps/2026-10-20-batch-c-steps.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-15": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IA"
+    },
+    "CHAT-16": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IB"
+    },
+    "CHAT-17": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IC"
+    },
+    "CHAT-18": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-ID"
+    },
+    "CHAT-19": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IE"
+    },
+    "CHAT-20": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IF"
+    },
+    "CHAT-22": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-15",
+      "question": "Cutover ruling 1: enrich_coa_zoning coa_row_count_zero renders every run",
+      "recommendation": "Approve. A count that's always shown is easier to watch, and nothing reads its absence.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-16",
+      "question": "Cutover ruling 2: enrich_coa_zoning 16 information_schema probes -> database.min_migration floor",
+      "recommendation": "Approve. It's the standard form every converted step uses, and it catches the same thing.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-17",
+      "question": "Cutover ruling 3: enrich_coa_zoning pipeline_runs recency via the runner's producer reader",
+      "recommendation": "Approve. It's one shared reader instead of a copy, and the answer is identical.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-18",
+      "question": "Cutover ruling 4: link_coa_to_parcels tier_1a_type_confirmed / tier_1a_type_tolerant counters",
+      "recommendation": "Restore both counters in the new step. They measure how the CoA-to-parcel match is doing. (The R-EG amendment draft that said the legacy shell still emits them is stale and is withdrawn.)",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-19",
+      "question": "Cutover ruling 5: coa $9/$10 timestamptz[] into DATE columns (COA-D3)",
+      "recommendation": "Approve. It fixes a bug, and the stored values are identical at day precision.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-20",
+      "question": "Cutover ruling 6: coa avg_latency_ms / api_errors audit rows and records_meta.api_health",
+      "recommendation": "Decide on usage: if a consumer search shows zero readers, approve dropping them under legacy-row-or-query-retired (a retired row must show zero readers); if anything reads them, restore them.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-22",
+      "question": "V3 condition-9 families not saved on the page: library-audit-table-form, audit-phase-is-chain-phase-index, conversion-draft-correction, config-and-limit-form-gaps, count-semantics-discrepancy, rule9-grandfather-guard-none, ledger-declared-deviation, stale-entry-retires-on-bundled-night",
+      "recommendation": "Approve each as recommended on the V3 Exception Rulings page (exact recommendation texts in scratchpad/v3-cite/proposed-rulings.json).",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    }
+  ]
+}

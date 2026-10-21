@@ -196,3 +196,56 @@ describe('V3 condition-9 backfill — rows R-FI…R-GO govern the exception entr
     expect(record.entries.filter((e) => e.rule_id === 'R-GF')).toEqual([]);
   });
 });
+
+// rule-map: R-HN R-HO R-HP R-HQ R-HR R-HS R-HT R-HU R-HV R-HW R-HX R-HY R-HZ R-IA R-IB R-IC R-ID R-IE R-IF — the
+// operator's 2026-10-20 condition-9 family rulings (V3 Exception Rulings page + chat CHAT-22) and the six CoA
+// cutover rulings (CHAT-15…CHAT-20), recorded as 124a rows by decision log (R-HK; 124a §B26 appended rows, §B31).
+// This lock asserts the record end to end: each row is a LIVE register row cited by its decision log; every class-c
+// entry the operator ruled is class d with its row; an entry applied now carries the citation in its file; a
+// bundled-night entry still names its deviation by index and `from`; N-D1 alone stays class c (RULING-OWED); and
+// R-HR's named exception is noted under Spec 123 §3.1. (steps-rulings-1)
+describe('V3 condition-9 rulings — rows R-HN…R-IF govern the entries the operator ruled (steps-rulings-1)', () => {
+  type Cite = { ref: string; class: string; file: string; key: string; deviation_index: number | null; rule_id: string | null; apply: string; append_text: string | null; decision_log?: string };
+  const ROWS = ['R-HN', 'R-HO', 'R-HP', 'R-HQ', 'R-HR', 'R-HS', 'R-HT', 'R-HU', 'R-HV', 'R-HW', 'R-HX', 'R-HY', 'R-HZ', 'R-IA', 'R-IB', 'R-IC', 'R-ID', 'R-IE', 'R-IF'];
+  const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+  const record = JSON.parse(read('docs/reports/2026-10-20-v3-condition9-backfill-citations.json')) as { entries: Cite[] };
+  const A = read('docs/specs/01-pipeline/124a_step_standard_policy_appendix.md');
+  let registerIds: Set<string>;
+  beforeAll(async () => {
+    const ssc = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/spec-split-check.mjs')).href)) as unknown as { extractRegisterRulingIds: (a: string, b: string) => Set<string> };
+    registerIds = ssc.extractRegisterRulingIds(read('docs/specs/01-pipeline/124_step_standard_policy.md'), A);
+  });
+
+  it.each(ROWS)('%s is a LIVE register row that cites its decision log, and every entry it governs is where the record says', (id) => {
+    expect(registerIds.has(id), id).toBe(true);
+    const row = A.split('\n').find((l) => l.startsWith(`| ${id} |`))!;
+    expect(row).toMatch(/`2026-10-20-(v3-exception-rulings#[a-z0-9-]+|chat-batch-c-steps#CHAT-(1[5-9]|2[02]))`/);
+    const mine = record.entries.filter((e) => e.rule_id === id);
+    expect(mine.length, id).toBeGreaterThan(0);
+    for (const e of mine) {
+      expect(e.class, e.ref).toBe('d');
+      expect(e.append_text, e.ref).toContain(`Spec 124 ${id}`);
+      if (e.apply === 'now') {
+        expect(read(e.file).includes(e.append_text!), `${e.ref} ${e.file}`).toBe(true);
+      } else {
+        expect(e.apply, e.ref).toBe('bundled-night');
+        const dev = (JSON.parse(read(e.file)) as { deviations?: Array<{ from?: string }> }).deviations?.[e.deviation_index ?? -1];
+        expect(dev?.from, `${e.ref} ${e.file} deviations[${e.deviation_index}]`).toBe(e.key);
+      }
+    }
+  });
+
+  it('the operator ruled every class-c entry except N-D1, and the bundled-night list grew 102 -> 141', () => {
+    expect(record.entries.filter((e) => e.class === 'c').map((e) => e.key)).toEqual(['N-D1']);
+    expect(record.entries.filter((e) => e.apply === 'bundled-night').length).toBe(141);
+    expect(record.entries.filter((e) => e.class === 'd' && e.apply === 'now').map((e) => e.ref).sort()).toEqual(['g1-21', 'g1-26', 'g5-15', 'g5-17', 'g5-6']);
+  });
+
+  it('R-HR is recorded under Spec 123 §3.1 as a dated named exception, and CCT-D10 takes the R-GR closed form', () => {
+    const s123 = read('docs/specs/01-pipeline/123_step_opt_assessment_validation.md');
+    const at = s123.indexOf('### 3.1 The rule for DEFECT');
+    expect(s123.slice(at, s123.indexOf('### 3.2', at))).toContain('AMENDED 2026-10-20 (Spec 124 R-HR');
+    const cct = read('docs/reports/defect-ledger.md').split('\n').find((l) => l.startsWith('| CCT-D10 |'))!;
+    expect(cct).toContain('| CLOSED · declared deviation (R-HY) |');
+  });
+});

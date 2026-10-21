@@ -1,0 +1,109 @@
+{
+  "source": "artifact KBCVRNvhQWd1powYowmZek decisions collection",
+  "proposals": "scratchpad/v3-cite/proposed-rulings.json",
+  "rows": [
+    {
+      "id": "progress-cadence-retirement",
+      "question": "May an INGESTOR conversion retire the legacy console progress-cadence literals (bytes window, row modulo, expected-total denominator) as dead under the whole-array acquisition, as massing, neighbourhoods and load_wsib already did under their own plan rulings?",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:58:07.468Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "txn-scope-step-widening",
+      "question": "May parcels declare `execution.txn_scope: \"step\"` (one all-or-nothing transaction) in place of the legacy per-1,000-row batch commits, the same widening address_points received under Fold B3?",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:58:30.541Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "guards-requires-scope-and-blocking-pin",
+      "question": "Do you ratify, for address_points and parcels, (1) declaring `guards.requires` only for what the write and its consumers need, and (2) pinning every FAIL check `blocking: false` at conversion (promotion is a later peel)?",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-20T23:58:50.650Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "legacy-defect-corrected-inline",
+      "question": "Each entry records a legacy defect the conversion corrected inline as a declared change (Spec 122 rung (e)) rather than pinning it and fixing after (Spec 123 §3.1). Do you ratify each one individually (AP-D4, link_wsib LW-D15 dry-run write suppression restored, LH-D8 (a), LH-D11, the heritage mass-delete row, LZ-D12 thrown path, the zoning empty-base path, link_parcels THE FIX)?",
+      "answer": {
+        "choice": "approve",
+        "decided_at": "2026-10-21T00:00:42.561Z",
+        "excluded": [],
+        "note": ""
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "legacy-row-or-query-retired",
+      "question": "May a conversion retire a legacy audit row, records_meta key, constant row or log-only query when its measured thing no longer exists or no consumer reads it (consumer grep recorded in the entry)?",
+      "answer": {
+        "choice": "change",
+        "decided_at": "2026-10-20T23:59:50.457Z",
+        "excluded": [],
+        "note": "Approve with the evidence condition: the entry must cite a consumer grep (zero readers) or show the counted mechanism is gone. Precedent: R-GM already dropped coa's log-only stats query (CoA decision 5). Covers link_neighbourhoods polygon_tests_skipped, load_wsib's post-load stats query and compute_coa_cost_estimates' phase_h_gap_active constant. coa deviation 6 (api telemetry rows) is an owed operator ruling, listed only; no recommendation."
+      },
+      "answered_via": "page"
+    },
+    {
+      "id": "library-audit-table-form",
+      "question": "Does the library's audit-table/emit form govern row position, table name, always-render rows and the one-object INGESTOR emit, so a legacy position/name/conditional-row/key-split difference is a declared deviation and not a parity failure?",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    },
+    {
+      "id": "audit-phase-is-chain-phase-index",
+      "question": "Is `audit_table.phase` the chain phase index declared in `sharing.varies_by_chain.phase` (the 2026-09-21 O1 coordinator ruling), retiring the legacy spec-number and disagreeing-ternary values?",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    },
+    {
+      "id": "conversion-draft-correction",
+      "question": "Do you ratify these measured corrections of a step's own draft descriptor or plan made during conversion: assert_schema min_migration 241 -> 41 and its merged failed terminal; link_neighbourhoods dropping the draft's net-new FULL mode; link_parcels declaring no compute_centroids seam; load_bylaw_map_areas using the library no_source_file skip instead of the plan's fail_error; load_wsib keeping the CSV header check in compute?",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    },
+    {
+      "id": "config-and-limit-form-gaps",
+      "question": "Do you accept (a) assert_global_coverage dropping the 3 cross-field warn<pass startup throws (no schema home for cross-field ordering), (b) link_neighbourhoods seeding its link-rate variable at the legacy literal 95 while the check ships red (denominator defect pinned), and (c) link_wsib's pct `>=` floor form added to the closed limit form set?",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    },
+    {
+      "id": "count-semantics-discrepancy",
+      "question": "Do you accept two declared count differences: link_parcels' unresolved near-tie count (19 exact ties agree; near-tie bucket 72 vs 40) and load_zoning counting shaped (pre-dedupe) base rows for the zn_zone distribution?",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    },
+    {
+      "id": "rule9-grandfather-guard-none",
+      "question": "Do you ratify the two grandfathered.json Rule 9 entries: link_parcels (keyed DELETE + parcel_linked_at watermark UPDATE, guard \"none\") and refresh_snapshot (68-column snapshot upsert, guard \"none\")?",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    },
+    {
+      "id": "ledger-declared-deviation",
+      "question": "CCT-D10: may the converted vocab-coverage checks report an empty-vocabulary-with-data case as unmeasurable (FAIL) where legacy showed WARN? (N-D1 is already on your rulings page as RULING-OWED and is listed here only for completeness.)",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    },
+    {
+      "id": "stale-entry-retires-on-bundled-night",
+      "question": "None needed: ADB-D7 is CLOSED (f39cd9b4) and this assert_data_bounds entry is already scheduled to be retired through its generator on the bundled RE-FREEZE night (124a §B22 \"Stale texts\"). Confirm no ruling is owed.",
+      "answer": null,
+      "answered_via": "chat CHAT-21/CHAT-22"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+[
+  {
+    "ref": "progress-cadence-retirement",
+    "step": "V3 condition-9 family",
+    "key": "May an INGESTOR conversion retire the legacy console progress-cadence literals (bytes window, row modulo, expected-total denominator) as dead under the whole-array acquisition, as massing, neighbourhoods and load_wsib already did under their own plan rulings?",
+    "note": "Approve. The literals governed only console lines of a per-row streaming loop that no longer exists; no audit row, records_meta key or verdict reads them. Sibling steps retired the same literals under operator-authorized plans (R-FX \"the cadence retirement\", R-FY, R-FZ), so this makes one form for the archetype instead of two step-local precedents.",
+    "evidence": [
+      {
+        "file": "scripts/load-address-points.descriptor.json deviations[0].adjudicated_by",
+        "quote": "three config.logic_variables[] declared for the download-progress/parse-progress console cadence (`address_points_progress_bytes_window` :66, `address_points_progress_row_modulo` :380, `address_points_expected_total_rows` :381)"
+      },
+      {
+        "file": "scripts/load-parcels.descriptor.json deviations[2].adjudicated_by",
+        "quote": "the legacy download/parse progress-cadence literals (`10 * 1024 * 1024` download window :181, `processed % 50000 === 0` progress modulo :556, `484000` progress denominator :557)"
+      }
+    ]
+  },
+  {
+    "ref": "txn-scope-step-widening",
+    "step": "V3 condition-9 family",
+    "key": "May parcels declare `execution.txn_scope: \"step\"` (one all-or-nothing transaction) in place of the legacy per-1,000-row batch commits, the same widening address_points received under Fold B3?",
+    "note": "Approve. The library executeWrite wraps all insert batches in one step-scoped transaction, so \"step\" is the truth; the success path is unchanged and a mid-run failure now leaves no partial load. address_points has the identical deviation ratified (R-FT). verify-12c found parcels' own D1 orchestrator-ruled only.",
+    "evidence": [
+      {
+        "file": "scripts/load-parcels.descriptor.json deviations[0].adjudicated_by",
+        "quote": "the pre-conversion per-batch transaction shape (`pipeline.withTransaction` once per 1,000-row BATCH_SIZE batch, :252-253, :275)"
+      }
+    ]
+  },
+  {
+    "ref": "guards-requires-scope-and-blocking-pin",
+    "step": "V3 condition-9 family",
+    "key": "Do you ratify, for address_points and parcels, (1) declaring `guards.requires` only for what the write and its consumers need, and (2) pinning every FAIL check `blocking: false` at conversion (promotion is a later peel)?",
+    "note": "Approve both halves. Half (2) is already the load_ravines D-8 ruling (R-FJ); verify-12c held that R-FJ covers only that half here. Half (1) is the minimal-precondition form every converted INGESTOR uses; a wider guard set would be a behaviour change at conversion (Spec 123 §3.1).",
+    "evidence": [
+      {
+        "file": "scripts/load-address-points.descriptor.json deviations[4].adjudicated_by",
+        "quote": "declaring `guards.requires` only for what the write needs, and pinning every FAIL check as blocking:false"
+      },
+      {
+        "file": "scripts/load-parcels.descriptor.json deviations[3].adjudicated_by",
+        "quote": "declaring `guards.requires` only for what the write/consumers need, and pinning every FAIL check as blocking:false"
+      }
+    ]
+  },
+  {
+    "ref": "legacy-defect-corrected-inline",
+    "step": "V3 condition-9 family",
+    "key": "Each entry records a legacy defect the conversion corrected inline as a declared change (Spec 122 rung (e)) rather than pinning it and fixing after (Spec 123 §3.1). Do you ratify each one individually (AP-D4, link_wsib LW-D15 dry-run write suppression restored, LH-D8 (a), LH-D11, the heritage mass-delete row, LZ-D12 thrown path, the zoning empty-base path, link_parcels THE FIX)?",
+    "note": "Approve per entry, NOT as a general rule. Each entry carries measured exposure and verdict/chain parity, but a general \"fix inline\" rule would contradict Spec 123 §3.1 / Known Failure Mode #3. Recommend one register row listing the ratified entries by id. coa COA-D3 (coa deviation 5) is an owed operator ruling and is listed for completeness only; this lane makes no recommendation on it.",
+    "evidence": [
+      {
+        "file": "scripts/load-address-points.descriptor.json deviations[6].adjudicated_by",
+        "quote": "the legacy loader's non-idempotent guarded upsert (8,199 rows re-updated every run, values never settling; stale class_family_desc / geometry on sampled rows 9085880, 553334, 349849)"
+      },
+      {
+        "file": "scripts/link-wsib.descriptor.json deviations[4].adjudicated_by",
+        "quote": "the pre-conversion script's dry-run simulation (5de41cc1: read-only COUNT queries mirroring tier1/tier2/tier3's wsib_registry match predicate only)"
+      },
+      {
+        "file": "scripts/load-heritage.descriptor.json deviations[0].adjudicated_by",
+        "quote": "LH-D8 (a) — a per-dataset failure returned `{ failed: true }`, which `pipeline.run` ignored, so a STANDALONE run exited 0 and its ledger row read `completed` with verdict FAIL (legacy :768; pipeline.js:589-600)"
+      },
+      {
+        "file": "scripts/load-heritage.descriptor.json deviations[1].adjudicated_by",
+        "quote": "LH-D11 — tally order: the legacy classified STATUS / HCD_TYPE (L25) BEFORE coercing the key and checking the geometry (`const cls = classifyRegisterStatus(p.STATUS)` :328 before `coerceSourceId(p.Folder_Row)` :334)"
+      },
+      {
+        "file": "scripts/load-heritage.descriptor.json deviations[4].adjudicated_by",
+        "quote": "heritage_<id>_load_failed on a post-commit mass delete — legacy set the dataset outcome `failed` when L7c breached without HERITAGE_ACCEPT_MASS_DELETE (:613), which pushed the load_failed row"
+      },
+      {
+        "file": "scripts/load-zoning.descriptor.json deviations[7].adjudicated_by",
+        "quote": "LZ-D12 (thrown-overlay path) — legacy recorded EVERY layer's new version in zoning_layer_versions, including an overlay whose fetch or load threw [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:698]"
+      },
+      {
+        "file": "scripts/load-zoning.descriptor.json deviations[12].adjudicated_by",
+        "quote": "the base empty / all-discarded path — legacy threw on an empty base before any overlay but, when every base geometry was discarded, wrote nothing to the base, FAILed the row and still loaded the overlays [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:406-410, :551, :681-682]"
+      },
+      {
+        "file": "scripts/link-parcels.descriptor.json deviations[0].adjudicated_by",
+        "quote": "Spec 123 §3.1 / Known Failure Mode #3 — a DEFECT is PINNED at conversion and fixed after"
+      },
+      {
+        "file": "scripts/load-coa.descriptor.json deviations[4].adjudicated_by",
+        "quote": "$9/$10::timestamptz[] bound into DATE columns [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:307-308]"
+      }
+    ]
+  },
+  {
+    "ref": "legacy-row-or-query-retired",
+    "step": "V3 condition-9 family",
+    "key": "May a conversion retire a legacy audit row, records_meta key, constant row or log-only query when its measured thing no longer exists or no consumer reads it (consumer grep recorded in the entry)?",
+    "note": "Approve with the evidence condition: the entry must cite a consumer grep (zero readers) or show the counted mechanism is gone. Precedent: R-GM already dropped coa's log-only stats query (CoA decision 5). Covers link_neighbourhoods polygon_tests_skipped, load_wsib's post-load stats query and compute_coa_cost_estimates' phase_h_gap_active constant. coa deviation 6 (api telemetry rows) is an owed operator ruling, listed only; no recommendation.",
+    "evidence": [
+      {
+        "file": "scripts/link-neighbourhoods.descriptor.json deviations[4].adjudicated_by",
+        "quote": "Spec 123 §3.1 — every pre-conversion audit ROW is carried across the conversion"
+      },
+      {
+        "file": "scripts/load-wsib.descriptor.json deviations[9].adjudicated_by",
+        "quote": "the post-load DB stats query COUNT(*)/linked/with_trade/class_count (legacy :363-372)"
+      },
+      {
+        "file": "scripts/compute-coa-cost-estimates.descriptor.json deviations[2].adjudicated_by",
+        "quote": "legacy phase_h_gap_active: true constant row (:802)"
+      },
+      {
+        "file": "scripts/load-coa.descriptor.json deviations[5].adjudicated_by",
+        "quote": "avg_latency_ms / api_errors audit rows and records_meta.api_health [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:623-624, :665-669]"
+      }
+    ]
+  }
+]

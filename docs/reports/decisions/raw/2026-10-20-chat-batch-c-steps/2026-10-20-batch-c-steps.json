@@ -1,0 +1,58 @@
+{
+  "source": "operator chat 2026-10-20",
+  "operator_quote": "approved [the cutover rulings table, pasted back] - the missing answers for the bylaws and V3 page are approved as well",
+  "context": "Answer to verify-16 N1: should a dated note appended inside a register row's status cell (as on M-76, integrate-15 commit 2ebf33e8) be a sanctioned form, alongside the 69a §1a separate dated-note row? | Second answer (same day): the six CoA cutover rulings and the page answers that failed to save.",
+  "split_from": "scratchpad chat-decisions/2026-10-20-batch-c.json, split by subject (lane steps-rulings-1): CHAT-14 (69a status-cell notes) and CHAT-21 (by-law M-205(1)-floor) belong to another lane and are not in this record. Every decision below quotes operator_quote_2 of the source, which is this record operator_quote; the source operator_quote (CHAT-14 answer) is kept verbatim as source_operator_quote_1.",
+  "source_operator_quote_1": "I recommend yes, because separate rows shift every later line and break line citations. - yes",
+  "decisions": [
+    {
+      "id": "CHAT-15",
+      "subject": "Cutover ruling 1: enrich_coa_zoning coa_row_count_zero renders every run",
+      "decision": "approve",
+      "quote_ref": "operator_quote_2",
+      "recommendation": "Approve. A count that's always shown is easier to watch, and nothing reads its absence."
+    },
+    {
+      "id": "CHAT-16",
+      "subject": "Cutover ruling 2: enrich_coa_zoning 16 information_schema probes -> database.min_migration floor",
+      "decision": "approve",
+      "quote_ref": "operator_quote_2",
+      "recommendation": "Approve. It's the standard form every converted step uses, and it catches the same thing."
+    },
+    {
+      "id": "CHAT-17",
+      "subject": "Cutover ruling 3: enrich_coa_zoning pipeline_runs recency via the runner's producer reader",
+      "decision": "approve",
+      "quote_ref": "operator_quote_2",
+      "recommendation": "Approve. It's one shared reader instead of a copy, and the answer is identical."
+    },
+    {
+      "id": "CHAT-18",
+      "subject": "Cutover ruling 4: link_coa_to_parcels tier_1a_type_confirmed / tier_1a_type_tolerant counters",
+      "decision": "approve",
+      "quote_ref": "operator_quote_2",
+      "recommendation": "Restore both counters in the new step. They measure how the CoA-to-parcel match is doing. (The R-EG amendment draft that said the legacy shell still emits them is stale and is withdrawn.)"
+    },
+    {
+      "id": "CHAT-19",
+      "subject": "Cutover ruling 5: coa $9/$10 timestamptz[] into DATE columns (COA-D3)",
+      "decision": "approve",
+      "quote_ref": "operator_quote_2",
+      "recommendation": "Approve. It fixes a bug, and the stored values are identical at day precision."
+    },
+    {
+      "id": "CHAT-20",
+      "subject": "Cutover ruling 6: coa avg_latency_ms / api_errors audit rows and records_meta.api_health",
+      "decision": "approve",
+      "quote_ref": "operator_quote_2",
+      "recommendation": "Decide on usage: if a consumer search shows zero readers, approve dropping them under legacy-row-or-query-retired (a retired row must show zero readers); if anything reads them, restore them."
+    },
+    {
+      "id": "CHAT-22",
+      "subject": "V3 condition-9 families not saved on the page: library-audit-table-form, audit-phase-is-chain-phase-index, conversion-draft-correction, config-and-limit-form-gaps, count-semantics-discrepancy, rule9-grandfather-guard-none, ledger-declared-deviation, stale-entry-retires-on-bundled-night",
+      "decision": "approve",
+      "quote_ref": "operator_quote_2",
+      "recommendation": "Approve each as recommended on the V3 Exception Rulings page (exact recommendation texts in scratchpad/v3-cite/proposed-rulings.json)."
+    }
+  ]
+}
