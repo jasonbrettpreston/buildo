@@ -1,0 +1,31 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "fee52003",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-7 / M-251 (RD 70 (B) on the residential building with its storey increment), run on the working tree at fee52003 with the F-SC-7 describe added, before the vocab, evaluator and M-75 changes.",
+ "counts": {
+  "pass": 1,
+  "red": 3
+ },
+ "cases": [
+  {
+   "name": "F-SC-7 / M-251 — exception RD 70 side yard: the residential building only, with the storey increment the text carries the increment (ch900_3.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-7 / M-251 — exception RD 70 side yard: the residential building only, with the storey increment (B) keys 1.8 m + 0.6 m per additional storey on the proposed storeys (a scenario input)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]"
+  },
+  {
+   "name": "F-SC-7 / M-251 — exception RD 70 side yard: the residential building only, with the storey increment a house: 1.8 m at one storey, 3.0 m at three; OWED (missing_input:proposed_storeys) until the scenario supplies storeys",
+   "at_base": "red",
+   "reason": "AssertionError: expected { status: 'value', value: 1.8, …(8) } to match object { status: 'value', value: 3, …(1) }"
+  },
+  {
+   "name": "F-SC-7 / M-251 — exception RD 70 side yard: the residential building only, with the storey increment an ancillary building never takes (B): the pavilion (3.78 m high, 1.8 m or more from the house) answers half its height, 1.89 m, from 10.5.60.20(3)",
+   "at_base": "red",
+   "reason": "AssertionError: expected '900.3.10(70)#(70)[SSP](B)' not to be '900.3.10(70)#(70)[SSP](B)' // Object.is equality"
+  }
+ ]
+}
