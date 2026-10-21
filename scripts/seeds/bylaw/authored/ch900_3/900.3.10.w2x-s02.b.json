@@ -1,0 +1,171 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2x-s02",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "lawfully existing detached house"}],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "lawfully existing detached house"}],
+        "uses": []
+      },
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type", "lawfully_existing_status"], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6", "reason": "threshold_used_in_application", "clause_path": "(1434)[SSP](B)"},
+        {"literal": "0.69", "reason": "limit_not_modelled", "clause_path": "(1434)[SSP](B)(i)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house erected"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["enlargement permission on a lot whose permitted maximum floor space index is 0.6 and which holds a detached house erected before October 15, 1953 (rule 27: conditions of 'may be enlarged' are UNUSUAL)"]}
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6", "reason": "threshold_used_in_application", "clause_path": "(1434)[SSP](B)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house erected"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["finished floor levels of the addition compared to the uppermost floor level in the existing building"]}
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6", "reason": "threshold_used_in_application", "clause_path": "(1434)[SSP](B)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house erected"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["addition must be no closer to the nearest side lot line than the shortest distance between the existing side main wall and the side lot line (as-built measurement)"]}
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6", "reason": "threshold_used_in_application", "clause_path": "(1434)[SSP](B)"},
+        {"literal": "5", "reason": "limit_not_modelled", "clause_path": "(1434)[SSP](B)(iv)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house erected"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["a prior addition at least 5 years old: an age fact with no target"]}
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "the first floor of the building"}],
+        "lot_conditions": [],
+        "uses": [{"token": "deck_or_platform", "evidence": "a platform with a floor higher"}]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](D)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [
+        {"literal": "7.6", "reason": "threshold_used_in_application", "clause_path": "(1434)[SSP](D)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "residential building is not permitted"}],
+        "lot_conditions": [],
+        "uses": [{"token": "private_garage", "evidence": "vehicle entrance through the front wall"}]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "Section 12(2) 262 of former City of Toronto By-law 438-86"},
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "gaps": []}
+    }
+  ]
+}

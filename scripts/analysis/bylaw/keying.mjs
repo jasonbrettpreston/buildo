@@ -88,6 +88,9 @@ export const OVERLAY_BATCHES = Object.freeze([
   { id: 'W1', label: 'Phase 2 wave 1 (P2-5): the top 220 exceptions by INCLUDE-closed residential lots at leaf grain; shard 0 = the E-5 30 re-keyed' },
   // W2 = phase2-plan-v2 P2-7 (operator 2026-10-14: tooling now, keying after W1 lands); planned by planWave, never planBatch.
   { id: 'W2', label: 'Phase 2 wave 2 (P2-7): the INCLUDE-closed ranks after the top 220 with closed lots ≥ census.min_direct_lots, at leaf grain; no shard 0' },
+  // W2X = fix round 4D lane A (operator 2026-10-21, CHAT-38.F-4D-10 / F-4D-16): named exceptions BELOW the W2 floor that the operator
+  // approved for keying; same leaf grain and shard size as W2, own `.w2x-sNN` keys so a later full W2 never collides; planned by planWave.
+  { id: 'W2X', label: 'Wave 2 supplement (fix round 4D lane A): named exceptions below the census floor that the operator approved for keying, at leaf grain; no shard 0' },
 ]);
 /** Spec 69a M-78: the Ch.900 exception pages — Phase 2 work, excluded from a Phase 1 batch plan when asked. */
 export const PHASE2_PAGES = Object.freeze(['ch900_2', 'ch900_3', 'ch900_4', 'ch900_5', 'ch900_6']);
@@ -305,7 +308,10 @@ export const W1_SHARD_UNITS = 25;
 export const WAVES = Object.freeze({
   W1: Object.freeze({ suffix: 'w1', shard0: true, prior: null }),
   W2: Object.freeze({ suffix: 'w2', shard0: false, prior: 'W1' }),
+  W2X: Object.freeze({ suffix: 'w2x', shard0: false, prior: 'W1' }),
 });
+/** W2X members (CHAT-38.F-4D-10: 1434; F-4D-16: 117, 258, 528): below census.min_direct_lots, so W2 never plans them. */
+export const W2X_MEMBERS = Object.freeze(['900.3.10(1434)', '900.3.10(117)', '900.3.10(258)', '900.3.10(528)']);
 /**
  * Wave-2 rows HELD out of keying (operator 2026-10-14 Q-W2d = a; proposed Spec 69a "amended, pending"): each has an
  * unconsolidated amendment in a pinned enacting by-law the slicer does not yet slice (slice.mjs SLICED_ENACTING; the
@@ -670,7 +676,8 @@ export function wave1Seed({ plan, ranking, adoptionId, census, groups = [] }) {
 
 export const W2_SHARDS_REL = 'scripts/seeds/bylaw/w2-shards.json';
 /** The seed paths of the wave batches (`keying-cli plan --batch W1|W2 [--check]`). */
-export const WAVE_SHARDS_REL = Object.freeze({ W1: W1_SHARDS_REL, W2: W2_SHARDS_REL });
+export const W2X_SHARDS_REL = 'scripts/seeds/bylaw/w2x-shards.json';
+export const WAVE_SHARDS_REL = Object.freeze({ W1: W1_SHARDS_REL, W2: W2_SHARDS_REL, W2X: W2X_SHARDS_REL });
 /**
  * The committed shard plan of a wave batch: W1 = wave1Seed (unchanged); W2 = the same record plus `held` (the rows
  * held out with their reason) and the prior-wave INCLUDE satisfaction in `include`; `members` = the planned members

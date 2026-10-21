@@ -1,0 +1,292 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2x-s02",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "first storey", "clause": "(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "detached_house": "lawfully existing detached house",
+          "lawfully_existing": "lawfully existing detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must meet the zone's minimum building setbacks. The obligation depends on the existing building and the proposed addition, which the lot data does not hold.",
+        "gaps": "Existing building facts and the location of the addition above the first storey are not in the lot data.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type", "lawfully_existing_status"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.69 ratio @(B)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "0.6", "clause": "(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "detached_house": "has a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "The overall floor space index including a rear addition may not exceed 0.69 where the lot's permitted maximum is 0.6 and the detached house was erected before October 15, 1953. The age of the house and the existence of an addition are not in the lot data.",
+        "gaps": "Date the house was erected and whether a rear addition is proposed.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "detached_house": "detached house may be enlarged"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "A condition on enlarging an existing detached house by a rear addition: finished floor levels in the addition may be no higher than the uppermost floor level of the existing building.",
+        "gaps": "Relative floor levels of the addition and the existing building are not in the lot data.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "This condition compares the floor levels of a proposed addition with those of the existing building. It is not modelled and must be checked against the building drawings.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "detached_house": "detached house may be enlarged"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "A condition on enlarging an existing detached house by a rear addition: no part of the addition may be closer to the nearest side lot line than the existing side main wall.",
+        "gaps": "The position of the existing side main wall and of the addition is not in the lot data.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "This condition depends on the position of the existing side main wall relative to the side lot line. It is not modelled and must be checked against a survey.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "5 years", "clause": "(B)(iv)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "detached_house": "detached house may be enlarged"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "A condition on enlarging an existing detached house by a rear addition: any prior addition must be at least 5 years old.",
+        "gaps": "The age of any prior addition is not in the lot data.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "This condition depends on the age of any prior addition to the house. It is not modelled and must be confirmed from permit records.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "first floor", "clause": "(C)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "any": "front yard or rear yard",
+          "deck_or_platform": "a platform with a floor"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Despite 10.5.40.60(1), a platform whose floor is higher than the building's first floor may not encroach into the required front or rear yard setback.",
+        "gaps": "The height of a platform floor against the first floor of the building is a design fact, not in the lot data.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](D)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m ≤ 7.6 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "any": "residential building",
+          "frontage_band": "lot frontage of"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Where the lot frontage is 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(2) 262 of former City of Toronto By-law 438-86",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1434",
+          "any": "Prevailing Sections"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "An alternate compliance path under Section 12(2) 262 of former City of Toronto By-law 438-86. It is not evaluated.",
+        "gaps": "The former by-law section is not held.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.3.10(1434)": {
+      "explanation": "Exception RD 1434 sets site-specific rules for the lands it covers. An addition above the first storey of a lawfully existing detached house must meet the minimum building setbacks. A detached house built before October 15, 1953 on a lot with a permitted floor space index of 0.6 may be enlarged by a rear addition up to an overall index of 0.69, if the addition's floors are no higher than the existing top floor, it is no closer to the side lot line than the existing side main wall, and any prior addition is at least 5 years old. A platform with a floor higher than the first floor may not encroach into a required front or rear yard setback. On a lot with 7.6 metres of frontage or less, a vehicle entrance through the front wall of a residential building is not permitted. Section 12(2) 262 of former City of Toronto By-law 438-86 is a prevailing section and is not evaluated here.",
+      "code_refs": "none"
+    }
+  }
+}

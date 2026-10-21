@@ -841,11 +841,11 @@ function staticSets(candidates, target) {
 }
 /**
  * Spec 68 §7.5 rule 2 (operator 2026-10-19 Q1, validation defect D2): a "Despite …" clause that only PERMITS an optional
- * variation — no value of its own (no target), a PERMIT or UNUSUAL, its trigger governing a permissive "may" sentence
- * (xref.mjs optional_variation, generated from the wording) — never drops the limit it names: the base limit stays and the
+ * variation — no value of its own (no target), a PERMIT, UNUSUAL or DEFINE, its trigger governing a permissive "may" sentence
+ * or wording that restates the displaced regulation as still applying (M-266: vocab keeps_limit_phrases; xref.mjs optional_variation, generated from the wording) — never drops the limit it names: the base limit stays and the
  * variation is disclosed. A DISAPPLY ("does not apply"), a PROHIBIT, a PREVAILING and every unit with a value still displace.
  */
-const optionalVariation = (d) => d.displaces_optional === true && !hasTarget(d) && (d.archetype === 'PERMIT' || d.archetype === 'UNUSUAL');
+const optionalVariation = (d) => d.displaces_optional === true && !hasTarget(d) && (d.archetype === 'PERMIT' || d.archetype === 'UNUSUAL' || d.archetype === 'DEFINE');
 const tryRef = (ref, id) => { try { return { m: refMatch(ref, id) }; } catch (err) { return { err }; } };
 /**
  * resolveSet's rule-3 and rule-2 loops visit (unit, ref, unit) triples in a fixed order and keep those whose both units

@@ -1,0 +1,102 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s15",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(1437)#(1437)[PBS](I)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "81-79 and 535-81",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 11-17 NANTON AVE"
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1437",
+          "any": "Site Specific Provisions"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a former by-law on named addresses; not evaluated.",
+        "gaps": "Prevailing former by-law provisions are not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On the named addresses the former by-law 81-79 and 535-81 prevails; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1437)#(1437)[PBS](J)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "81-79",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 21-53 NANTON AVE",
+          "odd numbered addresses of 3-9 NANTON AVE",
+          "even numbered addresses of 18-50 NANTON AVE"
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1437",
+          "any": "Site Specific Provisions"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a former by-law on named addresses; not evaluated.",
+        "gaps": "Prevailing former by-law provisions are not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On the named addresses the former by-law 81-79 prevails; it is not evaluated here.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {}
+}

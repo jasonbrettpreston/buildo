@@ -1,0 +1,91 @@
+{
+  "source": "operator rulings page 2026-10-21 https://claude.ai/artifact/LMgW4aaequHWXWZyAeqGCA (db collection decisions)",
+  "operator_quote": "completed teh rulings - proceed",
+  "context": "Next by-law fix round (CHAT-38): F-4D-1..21, Scarborough exceptions, Layer 2 prerequisites, data and tooling items. Each decision is the operator click on the page; operator_note is the operator text verbatim.",
+  "decisions": [
+    {
+      "id": "CHAT-38.F-4D-2",
+      "subject": "Scarborough exception 1462 floor-space tiers lose to the base-zone \"no limit\"",
+      "decision": "approve",
+      "recommendation": "Approve; one precedence ruling.",
+      "decided_at": "2026-10-21T19:35:38.273Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-6",
+      "subject": "Exception RD 21 (B) drops the 19 m depth rule without stating a value",
+      "decision": "approve",
+      "recommendation": "Approve.",
+      "decided_at": "2026-10-21T19:36:36.389Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-10",
+      "subject": "More Toronto exceptions are not authored (1437, 1389, 1434)",
+      "decision": "approve",
+      "recommendation": "Approve; queue behind F-SC-1.",
+      "decided_at": "2026-10-21T19:38:04.097Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-155",
+      "subject": "Exception 155 side-yard setback leaks onto the garden suite",
+      "decision": "approve",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decided_at": "2026-10-21T19:43:37.130Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-199",
+      "subject": "Exception 199 is not authored",
+      "decision": "approve",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decided_at": "2026-10-21T19:43:44.037Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-245",
+      "subject": "Exception 245 is not authored",
+      "decision": "approve",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decided_at": "2026-10-21T19:43:46.699Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-252",
+      "subject": "Exception 252 only partly applied",
+      "decision": "approve",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decided_at": "2026-10-21T19:43:50.172Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-256",
+      "subject": "Exception 256 is not authored",
+      "decision": "approve",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decided_at": "2026-10-21T19:43:52.849Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-340",
+      "subject": "Exception 340 side-yard setback leaks onto the garden suite",
+      "decision": "approve",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decided_at": "2026-10-21T19:43:56.117Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-SC-1462",
+      "subject": "Exception 1462 floor-space tiers are not keyed",
+      "decision": "approve",
+      "recommendation": "Approve; Scarborough exceptions are the weakest committee (40 percent accurate).",
+      "decided_at": "2026-10-21T19:43:59.170Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-16",
+      "subject": "Six more exceptions are not authored (Scarborough 117, 317, 258, 287, 528; Toronto 1436)",
+      "decision": "approve",
+      "recommendation": "Approve; batch with F-4D-10 and F-SC-1.",
+      "decided_at": "2026-10-21T19:41:49.007Z"
+    },
+    {
+      "id": "CHAT-38.F-4D-18",
+      "subject": "Exception tiers lose to a \"no limit\" statement again (exceptions 336 and 1397)",
+      "decision": "approve",
+      "recommendation": "Approve.",
+      "decided_at": "2026-10-21T19:42:11.735Z"
+    }
+  ]
+}
