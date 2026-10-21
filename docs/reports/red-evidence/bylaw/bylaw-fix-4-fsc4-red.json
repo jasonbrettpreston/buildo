@@ -1,0 +1,35 @@
+{
+ "suite": "src/tests/bylaw-fix-4.logic.test.ts",
+ "base": "d7dd39c0",
+ "run_on": "2026-10-21",
+ "note": "Lane wf1/bylaw-fix-4, F-SC-4 / M-249 (RM 10.80.40.70(4)(D) in the parallel form), run on the working tree at d7dd39c0 with the F-SC-4 describe added, before the M-75 corrections.",
+ "counts": {
+  "pass": 2,
+  "red": 3
+ },
+ "cases": [
+  {
+   "name": "F-SC-4 / M-249 — RM apartment side yard on a major street keyed like its R / RD / RS / RT twins the text names the three arms (ch10_80.txt)",
+   "at_base": "pass"
+  },
+  {
+   "name": "F-SC-4 / M-249 — RM apartment side yard on a major street keyed like its R / RD / RS / RT twins (4)(D) keys (i) on side_setback_m, (iii) on deep_side_setback_m and (iv) on the street side; no max() over the arms",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(2) ] to deeply equal [ …(3) ]"
+  },
+  {
+   "name": "F-SC-4 / M-249 — RM apartment side yard on a major street keyed like its R / RD / RS / RT twins the (ii) primary-window arm is disclosed, never bound (M-197 form)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Only the 2.4 m base is expressed; the…' to match /5\\.5 m/"
+  },
+  {
+   "name": "F-SC-4 / M-249 — RM apartment side yard on a major street keyed like its R / RD / RS / RT twins 1785 Keele St: side_setback_m 2.4 m (the City figure), deep_side_setback_m 7.5 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 7.5, …(1) ] to deeply equal [ 'value', 2.4, …(1) ]"
+  },
+  {
+   "name": "F-SC-4 / M-249 — RM apartment side yard on a major street keyed like its R / RD / RS / RT twins the twins key (i) alone on side_setback_m (rule by provision family)",
+   "at_base": "pass"
+  }
+ ]
+}
