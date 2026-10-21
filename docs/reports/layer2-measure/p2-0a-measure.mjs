@@ -1,3 +1,6 @@
+// RECORD OF THE RUN BEHIND plan §9, tied to commit 06a840b9: it calls the two-argument cellKey of that commit (one key per lot,
+// the union of every target's reads). At later tips cellKey needs a {structure, target} scope (R-IN, CHAT-41) and this script
+// throws; it is kept as the record, not as a runnable tool. Step ② does not copy its read-path handling (plan PIN L2-KEY-READPATHS).
 // Read-only P2-0 (a)/(b) split measurement for Spec 134 §9. One BEGIN READ ONLY transaction, rolled back.
 // Usage: DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r dotenv/config p2-0a-measure.mjs <repoRoot> <out.json> [limit]
 import fs from 'node:fs'; import path from 'node:path'; import { createRequire } from 'node:module'; import { pathToFileURL } from 'node:url';
