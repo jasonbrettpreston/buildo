@@ -84019,6 +84019,133 @@
         "gfa_m2 = min(125 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(38)[SSP](A)",
         "fsi = 0.5 ratio @(38)[SSP](A)"
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(21)#(21)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(21)#(21)[SSP](C)(i)",
+      "value": [
+        "fsi = 0.5 ratio @(21)[SSP](C)",
+        "gfa_m2 = min(135 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(21)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(28)#(28)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(165 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(28)[SSP](C)",
+        "fsi = 0.5 ratio @(28)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(35)#(35)[SSP](A)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(35)#(35)[SSP](A)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(35)#(35)[SSP](A)/numeric_expression",
+      "unit": "900.3.10(35)#(35)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(35)[SSP](A)",
+        "fsi = 0.5 ratio @(35)[SSP](A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(37)#(37)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": [
+        "gfa_m2 = min(150 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(37)[SSP](C)",
+        "fsi = 0.5 ratio @(37)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(38)#(38)[SSP](A)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(38)#(38)[SSP](A)/numeric_expression (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the F-SC-6 family extension (\"Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42)\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-30; Spec 69a M-250 dated note 2026-10-21 #CHAT-30); Spec 69a M-250; M-75",
+      "supersedes": "COR-900.3.10(38)#(38)[SSP](A)/numeric_expression",
+      "unit": "900.3.10(38)#(38)[SSP](A)",
+      "value": [
+        "gfa_m2 = min(125 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(38)[SSP](A)",
+        "fsi = 0.5 ratio @(38)[SSP](A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.uses",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(28)#(28)[SSP](C)(i)/application.evidence",
+      "unit": "900.3.10(28)#(28)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 28"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.uses",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Authority recorded (value unchanged). COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence (2026-10-21, lane wf1/bylaw-fix-4) was stamped adjudicator \"operator\" before any operator ruling covered it; the operator approved the private_garage use dropped on 900.3.10(28) and (37) (C)(i) (\"Drop the private_garage use on the x28 and x37 (C)(i) cap units ... matching x21; the cap then binds the house\") in chat on 2026-10-21, \"1-5 y ensure.\". This record carries the same value with that ruling as its authority (M-75 supersede; the earlier record stays byte-identical).",
+      "rule": "Operator approved in chat, 2026-10-21 (2026-10-21-chat-batch-h#CHAT-31; Spec 69a M-250 dated note 2026-10-21 #CHAT-31); M-175; M-171; M-75",
+      "supersedes": "COR-900.3.10(37)#(37)[SSP](C)(i)/application.evidence",
+      "unit": "900.3.10(37)#(37)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 37"
+      }
     }
   ]
 }

@@ -1,0 +1,76 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-h/2026-10-21-batch-h.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-h",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1-5 y ensure.",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-h/2026-10-21-batch-h.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-30": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-250"
+    },
+    "CHAT-31": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-250"
+    },
+    "CHAT-32": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-247"
+    },
+    "CHAT-33": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-259"
+    },
+    "CHAT-34": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-257"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-30",
+      "question": "F-SC-6 family extension: gfa_m2 = min(base + 25 pct x lot_area_m2; 0.5 ratio x lot_area_m2) for RD 21, 28, 35, 37, 38 (the shared cap phrase 'plus 25% of the lot area, up to a maximum floor space index of 0.5')",
+      "recommendation": "Apply the RD 42 cap form to RD 21, 28, 35, 37 and 38 by provision family; this supersedes the 2026-10-14 W1 answers Q-W1-1bc0a62a (x21) and Q-W1-9b5518ca (x42) that called the min() form a conversion. RD 27 (D) shares the cap text but has no units: PIN for keying.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-31",
+      "question": "private_garage use dropped on 900.3.10(28) and (37) (C)(i)",
+      "recommendation": "Drop the private_garage use on the x28 and x37 (C)(i) cap units (keyer took it from the garage-floor-area inclusion line), matching x21; the cap then binds the house (x37 FSI 0.5, the City figure on four 2017 notices).",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-32",
+      "question": "M-247 scope",
+      "recommendation": "F-SC-1 covers x14 and the historical top-three correction (8 measurement-only DEFINE units in x18/x21/x37 take target none); keying the no-unit exceptions (x40, x225, x478, x863, x559, x14) stays owed through keyer A/B.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-33",
+      "question": "F-SC-5: the 0.45 m blank-wall side-yard reduction gets a condition",
+      "recommendation": "Give 10.10.40.70(4) ('may be reduced to 0.45 metres if there are no windows or doors in that side of the building') a condition token blank_side_wall (default true per M-205(2)), so a design with openings takes 0.9 m and a platform never takes the reduction; amends the M-205(2) dated note, not the ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    },
+    {
+      "id": "CHAT-34",
+      "question": "F-SH-12 / F-SH-13 drafted rulings R-SH-12 and R-SH-13",
+      "recommendation": "Keep the by-law text: the RD side-yard band follows the required minimum lot frontage (10.20.40.70(3), 10.20.30.20(1)); rear-yard soft landscaping on lots 6.0 m wide or less is 25 % (10.5.50.10(3)(B)). Record the City's contrary 2017 figures as examiner practice; no code change.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}
