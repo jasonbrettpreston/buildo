@@ -5450,6 +5450,34 @@
       "status_reason": "PARKED, not in force (CHAT-47): the compute change makes the four coa captures stale, so it lands with the next CoA capture night; until then no lock enforces it (the decision-log test only locks that the register row exists). Listed `historical` (the closest existing status: not in force, kept so citations resolve) so the handbook counts do not include it; it flips to active/lock when the patch lands."
     },
     {
+      "id": "R-JK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ledger-status-form.logic.test.ts"
+      },
+      "statement": "The neighbourhoods insert-without-geom arm (ledger N-D1) is a deliberate, permanent retirement: it never ran (158/158 rows dated 2026-02-20, none with a blank shape) and a new row is flagged by the check boundary_rows_inserted; the ledger row takes the R-GR closed form (operator CHAT-52).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JL",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "The three chain gates that hold R-EY condition (8) (EP-PIN-D17, LDG-10, CHAIN-TOOLING) are measured read-only before any is built; the measurement is a committed note (operator CHAT-53).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",

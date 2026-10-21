@@ -437,9 +437,16 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(141); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50); the number decision-log --check prints
+    expect(r.decisions).toBe(144); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53; the number decision-log --check prints
     expect(r.owed).toBe(0);
-    expect(r.no_ruling).toBe(3);
+    expect(r.no_ruling).toBe(4); // CHAT-26, CHAT-43-era rows and CHAT-51 (restart lane, rests on R-EY)
+  });
+
+  it('chat batch Q (CHAT-52, CHAT-53, v3-restart-1): CHAT-52 routes to R-JK (N-D1 retirement), CHAT-53 to R-JL (read-only gate measurement)', () => {
+    const q = byStem.get('2026-10-21-chat-batch-q-52') as { routing: Record<string, { row?: string }>; decisions: Array<{ id: string; decision: string }> };
+    expect(q.decisions.map((d) => [d.id, d.decision])).toEqual([['CHAT-52', 'approve'], ['CHAT-53', 'approve']]);
+    expect(q.routing['CHAT-52']!.row).toBe('R-JK');
+    expect(q.routing['CHAT-53']!.row).toBe('R-JL');
   });
 
   it('chat batch K (CHAT-37, integrate-18): imported alone, routed to R-IK in 124a\'s live register', () => {

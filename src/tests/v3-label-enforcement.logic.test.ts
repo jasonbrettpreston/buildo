@@ -105,10 +105,10 @@ describe('R-EY E1 — the V3 ratchet only grows, through its generator', () => {
     expect(sv.overlayRowsFor(targets, { all: true, step: null, v3Json: '/f.json' })).toEqual(targets);
   });
 
-  it('R-IK: the committed ratchet lists no step that reads V2 as-converted (load_coa_notices retired, V3 = 27)', () => {
+  it('R-IK: the committed ratchet lists no step that reads V2 as-converted (load_coa_notices retired; neighbourhoods added by R-JK, V3 = 28)', () => {
     const r = m.loadRatchet();
     expect(r!.v3).not.toContain('load_coa_notices');
-    expect(r!.v3).toHaveLength(27);
+    expect(r!.v3).toHaveLength(28); // 27 + neighbourhoods (R-JK, CHAT-52)
   });
 
   it('the committed ratchet file is in its generator\'s shape (comment, sorted, baseline = converted[] at R-EY)', () => {
