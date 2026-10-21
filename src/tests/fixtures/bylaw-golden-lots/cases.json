@@ -105,7 +105,7 @@
   },
   "feeding_a_lineage_field": 267
  },
- "n": 1125,
+ "n": 1137,
  "cases": [
   {
    "unit_id": "10.5.40.60(4)#(4)(B)",
@@ -69992,6 +69992,1184 @@
     ],
     "regulation_ids": 0
    }
+  },
+  {
+   "unit_id": "10.5.40.60(7)(B); 10.10.40.40(1)(A)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0594/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0594/26TEY",
+   "address": "453 Durie St",
+   "reason": "the evaluator answers the City examiner's figures on 453 Durie St (A0594/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.5.40.60(7)#(7)(B)",
+     "lot": "5447457",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "eaves_encroachment_m",
+     "expect": {
+      "value": 0.9
+     },
+     "rationale": "City: roof eaves may project a maximum of 0.9 m (D-3, M-243)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.9,
+       "reason": null,
+       "winner": "10.5.40.60(7)#(7)(B)",
+       "applied": [
+        "10.5.40.60(7)#(7)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.40.60(7)#(7)(B)",
+     "lot": "5447457",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "eaves_clearance_m",
+     "expect": {
+      "value": 0.3
+     },
+     "rationale": "City: no closer than 0.3 m to a lot line (D-3, M-243)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.3,
+       "reason": null,
+       "winner": "10.5.40.60(7)#(7)(B)",
+       "applied": [
+        "10.5.40.60(7)#(7)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.40(1)#(1)(A)",
+     "lot": "5447457",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "fsi",
+     "expect": {
+      "value": 0.6
+     },
+     "rationale": "City: the maximum FSI is 0.6 times the lot area",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.6,
+       "reason": null,
+       "winner": "10.10.40.40(1)#(1)(A)",
+       "applied": [
+        "10.10.40.40(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.20.40.70(1)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0594/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "FAILS",
+   "finding": "COA-F-01",
+   "owed_field": null,
+   "coa": "A0594/26TEY",
+   "address": "453 Durie St",
+   "reason": "front yard by averaging: the neighbour estimate + allowance is not the examiner's surveyed figure (Spec 130 Q-B1 open; M-245 removed the 6.0 m floor) — 453 Durie St (A0594/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.5.40.70(1)#(1)(A)",
+     "lot": "5447457",
+     "scenario": {
+      "building_type": "detached_house",
+      "flags": {
+       "front_averaging_not_applicable": false,
+       "one_abutting_building_within_15_m": true,
+       "two_abutting_buildings_within_15_m": false
+      },
+      "vars": {
+       "abutting_front_setback_m": 2.9
+      }
+     },
+     "target": "front_setback_m",
+     "expect": {
+      "value": 3.91
+     },
+     "rationale": "City: required front yard 3.91 m; the evaluator: one qualifying neighbour, estimate 1.90 m + 1.0 m allowance = 2.90 m (M-245, no floor; was 6.0 m with the floor)",
+     "initial": {
+      "pass": false,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 2.9,
+       "reason": null,
+       "winner": "10.5.40.70(1)#(1)(A)",
+       "applied": [
+        "10.5.40.70(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.20.40.70(3)(B)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0594/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "FAILS",
+   "finding": "COA-F-02",
+   "owed_field": null,
+   "coa": "A0594/26TEY",
+   "address": "453 Durie St",
+   "reason": "side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings — 453 Durie St (A0594/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.10.40.70(3)#(3)(A)",
+     "lot": "5447457",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "side_setback_m",
+     "expect": {
+      "value": 0.9
+     },
+     "rationale": "City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))",
+     "initial": {
+      "pass": false,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.45,
+       "reason": null,
+       "winner": "10.10.40.70(4)#(4)(A)",
+       "applied": [
+        "10.10.40.70(4)#(4)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.10.60.70(1)(B); 10.5.60.50(2)(B); 10.10.60.20(1)(A); 10.5.40.60(8)(A)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0625/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0625/26TEY",
+   "address": "20 Norwood Rd",
+   "reason": "the evaluator answers the City examiner's figures on 20 Norwood Rd (A0625/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.10.60.70(1)#(1)(A)",
+     "lot": "5343399",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5,
+       "proposed_height_m": 3.5
+      }
+     },
+     "target": "ancillary_coverage_pct",
+     "expect": {
+      "value": 5
+     },
+     "rationale": "City: ancillary buildings may cover at most 5 % of the lot (N-1)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 5,
+       "reason": null,
+       "winner": "10.10.60.70(1)#(1)(A)",
+       "applied": [
+        "10.10.60.70(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.60.50(2)#(2)(B)",
+     "lot": "5343399",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5,
+       "proposed_height_m": 3.5
+      }
+     },
+     "target": "ancillary_floor_area_m2",
+     "expect": {
+      "value": 40
+     },
+     "rationale": "City: at most 40 m2 total ancillary floor area, frontage 7.63 m < 12.0 m (N-3, M-242)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 40,
+       "reason": null,
+       "winner": "10.5.60.50(2)#(2)(B)",
+       "applied": [
+        "10.5.60.50(2)#(2)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.60.20(1)#(1)(A)",
+     "lot": "5343399",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5,
+       "proposed_height_m": 3.5
+      }
+     },
+     "target": "lane_setback_m",
+     "expect": {
+      "value": 1
+     },
+     "rationale": "City: a 1.0 m side yard for the garage under 10.10.60.20(1)(A), \"a side lot line abutting a street or lane\" (N-2, M-241); which line abuts the lane is the ML-1 lot-line classification (owed), so the lane arm answers it",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 1,
+       "reason": null,
+       "winner": "10.10.60.20(1)#(1)(A)",
+       "applied": [
+        "10.10.60.20(1)#(1)(A)"
+       ],
+       "disclosures": [
+        "A garage shared with the neighbouring lot may sit on the common side lot line; not evaluated.",
+        "An optional variation under 970.10.15.10(2)#whole may adjust this limit; not applied."
+       ],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.40.60(8)#(8)(A)",
+     "lot": "5343399",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "equipment_encroachment_m",
+     "expect": {
+      "value": 0.6
+     },
+     "rationale": "City: wall mounted vents or utility equipment may encroach 0.6 m into the side yard (D-3); Article 10.5.40 binds the house, not the garage (10.5.40.1(1))",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.6,
+       "reason": null,
+       "winner": "10.5.40.60(8)#(8)(A)",
+       "applied": [
+        "10.5.40.60(8)#(8)(A)",
+        "10.5.40.60(8)#(8)(B)",
+        "10.5.40.60(8)#(8)(C)",
+        "10.5.40.60(8)#(8)(D)",
+        "10.5.40.60(8)(C)@1075-2026#(8)(C)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.40.60(8)#(8)(A)",
+     "lot": "5343399",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "equipment_clearance_m",
+     "expect": {
+      "value": 0.3
+     },
+     "rationale": "City: no closer to a lot line than 0.3 m (D-3)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.3,
+       "reason": null,
+       "winner": "10.5.40.60(8)#(8)(A)",
+       "applied": [
+        "10.5.40.60(8)#(8)(A)",
+        "10.5.40.60(8)#(8)(B)",
+        "10.5.40.60(8)#(8)(C)",
+        "10.5.40.60(8)#(8)(D)",
+        "10.5.40.60(8)#(8)(E)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.40.30.40(1)(A)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0383/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "RS",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0383/26TEY",
+   "address": "48 Queensdale Ave",
+   "reason": "the evaluator answers the City examiner's figures on 48 Queensdale Ave (A0383/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.40.30.40(1)#(1)(A)",
+     "lot": "5326193",
+     "scenario": {
+      "building_type": "semi_detached_house"
+     },
+     "target": "lot_coverage_pct",
+     "expect": {
+      "value": 35
+     },
+     "rationale": "City: maximum lot coverage 35 % (semi-detached house)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 35,
+       "reason": null,
+       "winner": "10.40.30.40(1)#(1)(A)",
+       "applied": [
+        "10.40.30.40(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.20.40.10(1)(A); 10.20.40.10(6); 10.20.30.40(1)(A)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0491/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "RD",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0491/26TEY",
+   "address": "24 Gardens Cres",
+   "reason": "the evaluator answers the City examiner's figures on 24 Gardens Cres (A0491/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.20.40.10(1)#(1)(A)",
+     "lot": "5255493",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "height_m",
+     "expect": {
+      "value": 8.5
+     },
+     "rationale": "City: maximum building height 8.5 m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 8.5,
+       "reason": null,
+       "winner": "10.20.40.10(1)#(1)(A)",
+       "applied": [
+        "10.20.40.10(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.20.40.10(6)#whole",
+     "lot": "5255493",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "entrance_height_m",
+     "expect": {
+      "value": 1.2
+     },
+     "rationale": "City: main pedestrian entrance at most 1.2 m above established grade",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 1.2,
+       "reason": null,
+       "winner": "10.20.40.10(6)#whole",
+       "applied": [
+        "10.20.40.10(6)#whole"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.20.30.40(1)#(1)(A)",
+     "lot": "5255493",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "lot_coverage_pct",
+     "expect": {
+      "value": 35
+     },
+     "rationale": "City: maximum lot coverage 35 %",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 35,
+       "reason": null,
+       "winner": "10.20.30.40(1)#(1)(A)",
+       "applied": [
+        "10.20.30.40(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.20.40.70(1)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0491/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "RD",
+   "class": "FAILS",
+   "finding": "COA-F-01",
+   "owed_field": null,
+   "coa": "A0491/26TEY",
+   "address": "24 Gardens Cres",
+   "reason": "front yard by averaging: the neighbour estimate + allowance is not the examiner's surveyed figure (Spec 130 Q-B1 open; M-245 removed the 6.0 m floor) — 24 Gardens Cres (A0491/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.5.40.70(1)#(1)(B)",
+     "lot": "5255493",
+     "scenario": {
+      "building_type": "detached_house",
+      "flags": {
+       "front_averaging_not_applicable": false,
+       "one_abutting_building_within_15_m": false,
+       "two_abutting_buildings_within_15_m": true
+      },
+      "vars": {
+       "abutting_front_setback_m": 5.07
+      }
+     },
+     "target": "front_setback_m",
+     "expect": {
+      "value": 4.86
+     },
+     "rationale": "City: required front yard 4.86 m; the evaluator: two qualifying neighbours, averaged estimate 4.07 m + 1.0 m = 5.07 m (M-245, no floor; was 6.0 m with the floor)",
+     "initial": {
+      "pass": false,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 5.07,
+       "reason": null,
+       "winner": "10.5.40.70(1)#(1)(B)",
+       "applied": [
+        "10.5.40.70(1)#(1)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.10.40.10(1); 10.10.40.40(1)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0533/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0533/26TEY",
+   "address": "23 MacKenzie Cres",
+   "reason": "the evaluator answers the City examiner's figures on 23 MacKenzie Cres (A0533/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.10.40.10(1)#(1)(A)",
+     "lot": "5473105",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "height_m",
+     "expect": {
+      "value": 11
+     },
+     "rationale": "City: maximum building height 11 m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 11,
+       "reason": null,
+       "winner": "10.10.40.10(1)#(1)(A)",
+       "applied": [
+        "10.10.40.10(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.40(1)#(1)(A)",
+     "lot": "5473105",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "fsi",
+     "expect": {
+      "value": 1
+     },
+     "rationale": "City: maximum FSI 1.0",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 1,
+       "reason": null,
+       "winner": "10.10.40.40(1)#(1)(A)",
+       "applied": [
+        "10.10.40.40(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.10.40.10(2)(B)(ii); 10.5.40.60(7)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0507/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0507/26TEY",
+   "address": "61 St Annes Rd",
+   "reason": "the evaluator answers the City examiner's figures on 61 St Annes Rd (A0507/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.10.40.10(2)#(2)(B)",
+     "lot": "5464792",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "main_wall_height_m",
+     "expect": {
+      "value": 8.5
+     },
+     "rationale": "City: front and rear main walls at most 8.5 m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 8.5,
+       "reason": null,
+       "winner": "10.10.40.10(2)#(2)(A)",
+       "applied": [
+        "10.10.40.10(2)#(2)(A)",
+        "10.10.40.10(2)#(2)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 31
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.10(2)#(2)(B)",
+     "lot": "5464792",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "main_wall_front_rear_share_pct",
+     "expect": {
+      "value": 50
+     },
+     "rationale": "City: for no less than 50 % of their width (frontage 7.67 m: tier (ii))",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 50,
+       "reason": null,
+       "winner": "10.10.40.10(2)#(2)(B)",
+       "applied": [
+        "10.10.40.10(2)#(2)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 31
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.40.60(7)#(7)(B)",
+     "lot": "5464792",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "eaves_encroachment_m",
+     "expect": {
+      "value": 0.9
+     },
+     "rationale": "City: eaves may project a maximum of 0.9 m (D-3)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.9,
+       "reason": null,
+       "winner": "10.5.40.60(7)#(7)(B)",
+       "applied": [
+        "10.5.40.60(7)#(7)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 31
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.40.60(7)#(7)(B)",
+     "lot": "5464792",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "eaves_clearance_m",
+     "expect": {
+      "value": 0.3
+     },
+     "rationale": "City: no closer than 0.3 m to a lot line (D-3)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.3,
+       "reason": null,
+       "winner": "10.5.40.60(7)#(7)(B)",
+       "applied": [
+        "10.5.40.60(7)#(7)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 31
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.10.60.20(1)(A); 10.5.60.40(2)(B); 10.5.60.40(3); 10.5.60.60(1); 10.10.40.70(2)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0510/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0510/26TEY",
+   "address": "474 Beresford Ave",
+   "reason": "the evaluator answers the City examiner's figures on 474 Beresford Ave (A0510/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.10.60.20(1)#(1)(A)",
+     "lot": "5443676",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5,
+       "proposed_height_m": 4.5
+      }
+     },
+     "target": "rear_setback_m",
+     "expect": {
+      "value": 1
+     },
+     "rationale": "City: a 1.0 m rear yard for the garage, the rear lot line abutting the lane (N-2, M-241)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 1,
+       "reason": null,
+       "winner": "10.10.60.20(1)#(1)(A)",
+       "applied": [
+        "10.10.60.20(1)#(1)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.60.40(2)#(2)(B)",
+     "lot": "5443676",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5
+      }
+     },
+     "target": "height_m",
+     "expect": {
+      "value": 4
+     },
+     "rationale": "City: ancillary building height at most 4.0 m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 4,
+       "reason": null,
+       "winner": "10.5.60.40(2)#(2)(B)",
+       "applied": [
+        "10.5.60.40(2)#(2)(B)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.60.40(3)#whole",
+     "lot": "5443676",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5
+      }
+     },
+     "target": "height_storeys",
+     "expect": {
+      "value": 1
+     },
+     "rationale": "City: one storey",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 1,
+       "reason": null,
+       "winner": "10.5.60.40(3)#whole",
+       "applied": [
+        "10.5.60.40(3)#whole"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.60.60(1)#whole",
+     "lot": "5443676",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5
+      }
+     },
+     "target": "eaves_encroachment_m",
+     "expect": {
+      "value": 0.3
+     },
+     "rationale": "City: ancillary eaves may encroach 0.3 m (D-3, M-243)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.3,
+       "reason": null,
+       "winner": "10.5.60.60(1)#whole",
+       "applied": [
+        "10.5.60.60(1)#whole"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.5.60.60(1)#whole",
+     "lot": "5443676",
+     "scenario": {
+      "building_type": "ancillary_building",
+      "flags": {
+       "ancillary_contains_parking_space": true
+      },
+      "vars": {
+       "distance_to_residential_m": 5
+      }
+     },
+     "target": "eaves_clearance_m",
+     "expect": {
+      "value": 0.15
+     },
+     "rationale": "City: no closer to a lot line than 0.15 m (D-3, M-243)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.15,
+       "reason": null,
+       "winner": "10.5.60.60(1)#whole",
+       "applied": [
+        "10.5.60.60(1)#whole"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    },
+    {
+     "kind": "value",
+     "unit": "10.10.40.70(2)#whole",
+     "lot": "5443676",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "rear_setback_m",
+     "expect": {
+      "value": 7.5
+     },
+     "rationale": "City: required rear yard 7.5 m",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 7.5,
+       "reason": null,
+       "winner": "10.10.40.70(2)#whole",
+       "applied": [
+        "10.10.40.70(2)#whole"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.10.40.70(3)(A)(i)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0510/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "R",
+   "class": "FAILS",
+   "finding": "COA-F-02",
+   "owed_field": null,
+   "coa": "A0510/26TEY",
+   "address": "474 Beresford Ave",
+   "reason": "side yard: the evaluator answers the 0.45 m blank-wall reduction (M-205(2)) as the maximum build; the examiner applied 0.9 m for a wall with openings — 474 Beresford Ave (A0510/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.10.40.70(3)#(3)(A)",
+     "lot": "5443676",
+     "scenario": {
+      "building_type": "detached_house"
+     },
+     "target": "side_setback_m",
+     "expect": {
+      "value": 0.9
+     },
+     "rationale": "City: required side yard 0.9 m; the evaluator answers the 0.45 m blank-wall reduction 10.10.40.70(4)(A) (M-205(2))",
+     "initial": {
+      "pass": false,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 0.45,
+       "reason": null,
+       "winner": "10.10.40.70(4)#(4)(A)",
+       "applied": [
+        "10.10.40.70(4)#(4)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "unit_id": "10.80.40.70(3)(A)",
+   "family": "CoA notices — City examiner figures (69a M-240..M-245)",
+   "verdict": "city_figure",
+   "disposition": "CoA A0461/26TEY",
+   "tracker_state": "coa_notice",
+   "fix_ids": [],
+   "disclosure_code": null,
+   "corrected_value": "",
+   "zone": "RM",
+   "class": "PROVEN",
+   "finding": null,
+   "owed_field": null,
+   "coa": "A0461/26TEY",
+   "address": "41 Branstone Rd",
+   "reason": "the evaluator answers the City examiner's figures on 41 Branstone Rd (A0461/26TEY)",
+   "checks": [
+    {
+     "kind": "value",
+     "unit": "10.80.40.70(3)#(3)(A)",
+     "lot": "5305360",
+     "scenario": {
+      "building_type": "detached_houseplex"
+     },
+     "target": "side_setback_m",
+     "expect": {
+      "value": 1.2
+     },
+     "rationale": "City: required side yard 1.2 m (a houseplex)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": true,
+       "why": null,
+       "status": "value",
+       "value": 1.2,
+       "reason": null,
+       "winner": "10.80.40.70(3)#(3)(A)",
+       "applied": [
+        "10.80.40.70(3)#(3)(A)"
+       ],
+       "disclosures": [],
+       "alternate_paths": 30
+      }
+     }
+    }
+   ]
   }
  ]
 }

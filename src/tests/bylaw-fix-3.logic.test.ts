@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped .mjs module surface
 const mod = async (rel: string): Promise<Json> => import(pathToFileURL(path.join(process.cwd(), rel)).href);
@@ -320,5 +321,30 @@ describe('D-3 / M-243 — encroachment targets per element; one LIMIT carries a 
       '150.7.60.60(7)#(7)(A)': 'equipment_encroachment_m', '150.8.60.60(7)#(7)(B)': 'equipment_encroachment_m',
     };
     for (const [id, t] of Object.entries(want)) expect([id, [].concat(unitOf(id).target)[0]]).toEqual([id, t]);
+  });
+});
+
+// bylaw-fix-2 PIN-1: the golden-lot snapshot (lots@1) gets a committed puller, read-only against the dev DB
+// (scripts/analysis/bylaw-validation/pull-golden-lots.cjs; --verify re-pulled all 170 existing lots with 0 differences on
+// 2026-10-20), and the eight CoA notice lots are appended after the existing ones with their notice numbers.
+describe('golden-lot puller (PIN-1) and the eight CoA notice lots', () => {
+  const PL = createRequire(import.meta.url)(path.join(process.cwd(), 'scripts/analysis/bylaw-validation/pull-golden-lots.cjs'));
+  const lots = read('src/tests/fixtures/bylaw-golden-lots/lots.json');
+  const COA: Array<[string, string]> = [['5447457', 'A0594/26TEY'], ['5343399', 'A0625/26TEY'], ['5326193', 'A0383/26TEY'], ['5255493', 'A0491/26TEY'], ['5473105', 'A0533/26TEY'], ['5464792', 'A0507/26TEY'], ['5443676', 'A0510/26TEY'], ['5305360', 'A0461/26TEY']];
+  it('the CLI has exactly one mode and refuses unknown flags; --add needs --out and <id>:<cat>[:<CoA>]', () => {
+    expect(PL.parseArgs([]).error).toMatch(/exactly one mode/);
+    expect(PL.parseArgs(['--verify', '--out', 'x']).error).toMatch(/unknown flag/);
+    expect(PL.parseArgs(['--add', '1:coa_notice']).error).toMatch(/needs --out/);
+    expect(PL.parseArgs(['--add', '5343399:coa_notice:A0625/26TEY', '--out', 'l.json']).values.specs).toEqual([{ id: '5343399', cats: ['coa_notice'], coa: 'A0625/26TEY' }]);
+  });
+  it('rowToLot reproduces the snapshot\'s lot transform (label letters, overlays, the Chapter 900 exception id, flags)', () => {
+    const g = PL.rowToLot({ parcel_id: '1', address_number: '20', linear_name_full: 'Norwood Rd', zoning_class: 'R', zoning_zn_string: 'R (d1.0) (x7)', exception_number: 7,
+      zoning_overlays: { height_overlay: { applied: true, height_max_m: 11 } }, on_policy_road: false, is_corner_lot: false, is_through_lot: false, abuts_laneway: true,
+      frontage_m: 7.63, depth_m: 34.09, lot_size_sqm: 260.07, npts: 5 }, ['coa_notice'], 'A0625/26TEY');
+    expect([g.coa, g.lot.label, g.lot.overlays, g.lot.exception, g.lot.flags.abuts_lane, 'no_rear_lot_line' in g.lot.flags]).toEqual(['A0625/26TEY', { d: 1 }, { HT: 11 }, '900.2.10(7)', true, false]);
+  });
+  it('the snapshot holds the 170 lots it had and the eight CoA lots after them, each with its notice number', () => {
+    expect([lots.schema, lots.n, lots.lots.length]).toEqual(['bylaw-golden-lots/lots@1', 178, 178]);
+    expect(lots.lots.slice(170).map((l: Json) => [l.id, l.coa])).toEqual(COA);
   });
 });

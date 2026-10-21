@@ -1,7 +1,7 @@
 {
  "schema": "bylaw-golden-lots/lots@1",
  "pulled": "2026-10-20 local dev DB, one READ ONLY transaction rolled back (lane e2e-verify-1)",
- "n": 170,
+ "n": 178,
  "lots": [
   {
    "id": "5195536",
@@ -8972,6 +8972,446 @@
     "envelope_constrained": false,
     "envelope_constraint_reason": "lot_too_large"
    }
+  },
+  {
+   "id": "5447457",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0594/26TEY",
+   "address": "453 Durie St",
+   "lot": {
+    "zone": "R",
+    "zone_label": "R (d0.6) (x737)",
+    "label": {
+     "d": 0.6
+    },
+    "overlays": {
+     "HT": 11
+    },
+    "vars": {
+     "lot_frontage_m": 7.26,
+     "lot_depth_m": 29.19,
+     "lot_area_m2": 211.81
+    },
+    "flags": {
+     "corner_lot": true,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": true,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": "900.2.10(737)",
+    "parcel_id": "5447457",
+    "address": "453 Durie St"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 5,
+    "is_irregular": false,
+    "max_buildable_gfa_sqm": 148.26,
+    "max_build_height_m": 11,
+    "max_build_stories": 2,
+    "max_build_fsi": 0.7,
+    "max_buildable_footprint_sqm": 74.13,
+    "opt_aor_gfa_sqm": 148.26,
+    "opt_suite_type": "laneway",
+    "max_garden_suite_gfa_sqm": null,
+    "max_laneway_suite_gfa_sqm": null,
+    "envelope_constrained": true,
+    "envelope_constraint_reason": "lot_too_narrow"
+   }
+  },
+  {
+   "id": "5343399",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0625/26TEY",
+   "address": "20 Norwood Rd",
+   "lot": {
+    "zone": "R",
+    "zone_label": "R (d1.0) (x7)",
+    "label": {
+     "d": 1
+    },
+    "overlays": {
+     "HT": 11
+    },
+    "vars": {
+     "lot_frontage_m": 7.63,
+     "lot_depth_m": 34.09,
+     "lot_area_m2": 260.07
+    },
+    "flags": {
+     "corner_lot": false,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": true,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": "900.2.10(7)",
+    "parcel_id": "5343399",
+    "address": "20 Norwood Rd"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 11,
+    "is_irregular": false,
+    "max_buildable_gfa_sqm": 182.04,
+    "max_build_height_m": 11,
+    "max_build_stories": 2,
+    "max_build_fsi": 0.7,
+    "max_buildable_footprint_sqm": 91.02,
+    "opt_aor_gfa_sqm": 182.04,
+    "opt_suite_type": "laneway",
+    "max_garden_suite_gfa_sqm": null,
+    "max_laneway_suite_gfa_sqm": 120,
+    "envelope_constrained": false,
+    "envelope_constraint_reason": null
+   }
+  },
+  {
+   "id": "5326193",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0383/26TEY",
+   "address": "48 Queensdale Ave",
+   "lot": {
+    "zone": "RS",
+    "zone_label": "RS (f10.5; a325; d0.75) (x312)",
+    "label": {
+     "f": 10.5,
+     "a": 325,
+     "d": 0.75
+    },
+    "overlays": {
+     "HT": 8.5,
+     "LC": 35
+    },
+    "vars": {
+     "lot_frontage_m": 6.04,
+     "lot_depth_m": 26.13,
+     "lot_area_m2": 157.88
+    },
+    "flags": {
+     "corner_lot": false,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": false,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": "900.4.10(312)",
+    "parcel_id": "5326193",
+    "address": "48 Queensdale Ave"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 8,
+    "is_irregular": false,
+    "max_buildable_gfa_sqm": 110.52,
+    "max_build_height_m": 8.5,
+    "max_build_stories": 2,
+    "max_build_fsi": 0.7,
+    "max_buildable_footprint_sqm": 55.26,
+    "opt_aor_gfa_sqm": 110.52,
+    "opt_suite_type": "garden",
+    "max_garden_suite_gfa_sqm": null,
+    "max_laneway_suite_gfa_sqm": null,
+    "envelope_constrained": false,
+    "envelope_constraint_reason": null
+   }
+  },
+  {
+   "id": "5255493",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0491/26TEY",
+   "address": "24 Gardens Cres",
+   "lot": {
+    "zone": "RD",
+    "zone_label": "RD (f12.0; a370; d0.6)",
+    "label": {
+     "f": 12,
+     "a": 370,
+     "d": 0.6
+    },
+    "overlays": {
+     "HT": 8.5,
+     "LC": 35
+    },
+    "vars": {
+     "lot_frontage_m": 10.65,
+     "lot_depth_m": 30.51,
+     "lot_area_m2": 324.97
+    },
+    "flags": {
+     "corner_lot": false,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": false,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": null,
+    "parcel_id": "5255493",
+    "address": "24 Gardens Cres"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 5,
+    "is_irregular": false,
+    "max_buildable_gfa_sqm": 227.48,
+    "max_build_height_m": 8.5,
+    "max_build_stories": 2,
+    "max_build_fsi": 0.7,
+    "max_buildable_footprint_sqm": 113.74,
+    "opt_aor_gfa_sqm": 227.48,
+    "opt_suite_type": "garden",
+    "max_garden_suite_gfa_sqm": 60,
+    "max_laneway_suite_gfa_sqm": null,
+    "envelope_constrained": false,
+    "envelope_constraint_reason": null
+   }
+  },
+  {
+   "id": "5473105",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0533/26TEY",
+   "address": "23 MacKenzie Cres",
+   "lot": {
+    "zone": "R",
+    "zone_label": "R (d1.0) (x804)",
+    "label": {
+     "d": 1
+    },
+    "overlays": {
+     "HT": 11
+    },
+    "vars": {
+     "lot_frontage_m": 6.1,
+     "lot_depth_m": 30.11,
+     "lot_area_m2": 183.67
+    },
+    "flags": {
+     "corner_lot": false,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": true,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": "900.2.10(804)",
+    "parcel_id": "5473105",
+    "address": "23 MacKenzie Cres"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 5,
+    "is_irregular": false,
+    "max_buildable_gfa_sqm": 128.56,
+    "max_build_height_m": 11,
+    "max_build_stories": 2,
+    "max_build_fsi": 0.7,
+    "max_buildable_footprint_sqm": 64.28,
+    "opt_aor_gfa_sqm": 128.56,
+    "opt_suite_type": "laneway",
+    "max_garden_suite_gfa_sqm": null,
+    "max_laneway_suite_gfa_sqm": null,
+    "envelope_constrained": false,
+    "envelope_constraint_reason": null
+   }
+  },
+  {
+   "id": "5464792",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0507/26TEY",
+   "address": "61 St Annes Rd",
+   "lot": {
+    "zone": "R",
+    "zone_label": "R (d0.6) (x729)",
+    "label": {
+     "d": 0.6
+    },
+    "overlays": {
+     "HT": 11
+    },
+    "vars": {
+     "lot_frontage_m": 7.67,
+     "lot_depth_m": 39.69,
+     "lot_area_m2": 304.28
+    },
+    "flags": {
+     "corner_lot": false,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": false,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": "900.2.10(729)",
+    "parcel_id": "5464792",
+    "address": "61 St Annes Rd"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 5,
+    "is_irregular": true,
+    "max_buildable_gfa_sqm": 213,
+    "max_build_height_m": 11,
+    "max_build_stories": 2,
+    "max_build_fsi": 0.7,
+    "max_buildable_footprint_sqm": 106.5,
+    "opt_aor_gfa_sqm": 213,
+    "opt_suite_type": "garden",
+    "max_garden_suite_gfa_sqm": 60,
+    "max_laneway_suite_gfa_sqm": null,
+    "envelope_constrained": false,
+    "envelope_constraint_reason": null
+   }
+  },
+  {
+   "id": "5443676",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0510/26TEY",
+   "address": "474 Beresford Ave",
+   "lot": {
+    "zone": "R",
+    "zone_label": "R (d0.6) (x737)",
+    "label": {
+     "d": 0.6
+    },
+    "overlays": {
+     "HT": 11
+    },
+    "vars": {
+     "lot_frontage_m": 5.56,
+     "lot_depth_m": 30.02,
+     "lot_area_m2": 166.97
+    },
+    "flags": {
+     "corner_lot": false,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": true,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": "900.2.10(737)",
+    "parcel_id": "5443676",
+    "address": "474 Beresford Ave"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 5,
+    "is_irregular": false,
+    "max_buildable_gfa_sqm": 116.88,
+    "max_build_height_m": 11,
+    "max_build_stories": 2,
+    "max_build_fsi": 0.7,
+    "max_buildable_footprint_sqm": 58.44,
+    "opt_aor_gfa_sqm": 116.88,
+    "opt_suite_type": "laneway",
+    "max_garden_suite_gfa_sqm": null,
+    "max_laneway_suite_gfa_sqm": null,
+    "envelope_constrained": false,
+    "envelope_constraint_reason": null
+   }
+  },
+  {
+   "id": "5305360",
+   "cats": [
+    "coa_notice"
+   ],
+   "coa": "A0461/26TEY",
+   "address": "41 Branstone Rd",
+   "lot": {
+    "zone": "RM",
+    "zone_label": "RM (f12.0; u4; d0.8) (x252)",
+    "label": {
+     "f": 12,
+     "u": 4,
+     "d": 0.8
+    },
+    "overlays": {
+     "HT": 11,
+     "ST": 3
+    },
+    "vars": {
+     "lot_frontage_m": 7.63,
+     "lot_depth_m": 42,
+     "lot_area_m2": 320.43
+    },
+    "flags": {
+     "corner_lot": false,
+     "through_lot": false,
+     "major_street": false,
+     "abuts_lane": false,
+     "lawfully_existing": false,
+     "heritage_property": false
+    },
+    "exception": "900.6.10(252)",
+    "parcel_id": "5305360",
+    "address": "41 Branstone Rd"
+   },
+   "stored": {
+    "in_sixplex_area": true,
+    "is_heritage_designated": false,
+    "is_in_ravine_protection_area": false,
+    "geom_npoints": 5,
+    "is_irregular": false,
+    "max_buildable_gfa_sqm": 288.39,
+    "max_build_height_m": 11,
+    "max_build_stories": 3,
+    "max_build_fsi": 0.9,
+    "max_buildable_footprint_sqm": 96.13,
+    "opt_aor_gfa_sqm": 192.26,
+    "opt_suite_type": "garden",
+    "max_garden_suite_gfa_sqm": 60,
+    "max_laneway_suite_gfa_sqm": null,
+    "envelope_constrained": false,
+    "envelope_constraint_reason": null
+   }
+  }
+ ],
+ "added": [
+  {
+   "by": "scripts/analysis/bylaw-validation/pull-golden-lots.cjs --add (one READ ONLY transaction, rolled back)",
+   "ids": [
+    "5447457",
+    "5343399",
+    "5326193",
+    "5255493",
+    "5473105",
+    "5464792",
+    "5443676",
+    "5305360"
+   ]
   }
  ]
 }
