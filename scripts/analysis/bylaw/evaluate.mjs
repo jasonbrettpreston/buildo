@@ -106,6 +106,9 @@ export function makeContext(vocab, extra = {}) {
     // M-219: an Article's own application regulation (x.40.1(1): "other than ancillary buildings or structures") — the
     // building types it excludes, by Article (3-part number).
     articleScope: vocabMap(vocab.article_application),
+    // M-251 (operator approved 2026-10-21, F-SC-7): the article_application form by unit id, for a unit whose text names no
+    // building type but which the operator scoped to the residential building (900.3.10(70)(B)).
+    unitScope: vocabMap(vocab.unit_application),
     // M-222 / M-224: a map-gated unit whose map is not held takes the literal reading (the unit is set aside, its own
     // disclosure says so), never not_evaluated:map_area_not_held on every lot.
     mapUnheldReading: vocabMap(vocab.map_area_unheld_reading),
@@ -487,6 +490,9 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     const out = scope.excluded_building_types ? scope.excluded_building_types.includes(bt) : !scope.included_building_types.includes(bt);
     if (out) return { ok: false, why: `building_type ${bt} (outside ${scope.citation})` };
   }
+  const uScope = C.unitScope && C.unitScope[u.unit_id];
+  if (uScope) reads.add('building_type');
+  if (uScope && bt && uScope.excluded_building_types.includes(bt)) return { ok: false, why: `building_type ${bt} (outside ${uScope.citation}, ${uScope.ruling})` };
   const types = app.building_types || [];
   if (types.length && !types.includes('any')) {
     reads.add('building_type');

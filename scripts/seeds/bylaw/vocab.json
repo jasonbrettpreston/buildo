@@ -269,6 +269,7 @@
     },
     "proposed_building_depth_m": { "unit": "m", "definition": "800.50(100)", "licensed_by": ["building depth"], "note": "a scenario value" },
     "proposed_building_length_m": { "unit": "m", "definition": "800.50(105)", "licensed_by": ["building length"], "note": "a scenario value" },
+    "proposed_storeys": { "unit": "storeys", "null_reason": "not_a_measurement", "licensed_by": ["additional storey", "storey building"], "note": "the number of storeys of the building the unit applies to, a count (a scenario value; Spec 69a M-251, 900.3.10(70)(B))" },
     "abutting_front_setback_m": { "unit": "m", "definition": "800.50(290)", "licensed_by": ["front yard setback of", "abutting lot", "on the adjacent lot", "adjoining lot"], "note": "front yard setback of the abutting building(s), for front-yard averaging" },
     "parking_width_m": {
       "unit": "m",
@@ -569,6 +570,10 @@
     "10.40.40": { "citation": "10.40.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
     "10.60.40": { "citation": "10.60.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
     "10.80.40": { "citation": "10.80.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
+  },
+  "unit_application": {
+    "$comment": "Spec 69a M-251 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-7): a unit whose own text names no building type but which the operator scoped to the residential building (the x.40.1(1) form of article_application, by unit id). applies() sets the unit aside for the listed building types, so an ancillary building takes its own Article 10.5.60 rule.",
+    "900.3.10(70)#(70)[SSP](B)": { "citation": "900.3.10(70)(B)", "ruling": "M-251", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
   },
   "map_area_unheld_reading": {
     "$comment": "Spec 69a M-222 / M-224: a map-gated unit whose map polygon is not held (lot.map_areas absent) takes the literal reading — the unit is set aside and its disclosure is attached — instead of not_evaluated:map_area_not_held on every lot. Listed units only; any other map-gated unit stays not_evaluated until its map is held.",

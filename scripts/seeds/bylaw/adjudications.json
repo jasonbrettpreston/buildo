@@ -82652,6 +82652,56 @@
         "fsi = 0.5 ratio @(42)[SSP](A)(i)",
         "gfa_m2 = min(118 m2 + 25 pct × lot_area_m2; 0.5 ratio × lot_area_m2) @(42)[SSP](A)(i)"
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-SC-7 (CoA scorecard, 2026-10-21). 900.3.10(70)(B): \"The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof\". Keyed side_setback_m = 1.8 m on building type any, it leaked onto the ancillary pavilion and garage of 5 Parmbelle Cres A0257/26NY, where the City applied 10.5.60.20(3)(C)(ii) (half the height, 1.89 m and 1.99 m), and the per-storey increment was not keyed. The increment is keyed on the proposed storeys (a scenario input, vocab.dsl_input.proposed_storeys); the unit is scoped to the residential building by vocab.unit_application.",
+      "rule": "Operator approved F-SC-7 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-7; Spec 69a M-251: \"(1) Scoped to the residential building ..., never an ancillary building. (2) side_setback_m = 1.8 m + 0.6 m × (height_storeys − 1), OWED on height_storeys (a scenario input). (3) An ancillary building falls to 10.5.60.20(3)(C)(ii)\"); M-75",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": [
+        "side_setback_m = 1.8 m + 0.6 m × (proposed_storeys − 1 storeys) @(70)[SSP](B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "F-SC-7 (CoA scorecard, 2026-10-21). 900.3.10(70)(B): \"The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof\". Keyed side_setback_m = 1.8 m on building type any, it leaked onto the ancillary pavilion and garage of 5 Parmbelle Cres A0257/26NY, where the City applied 10.5.60.20(3)(C)(ii) (half the height, 1.89 m and 1.99 m), and the per-storey increment was not keyed. The increment is keyed on the proposed storeys (a scenario input, vocab.dsl_input.proposed_storeys); the unit is scoped to the residential building by vocab.unit_application.",
+      "rule": "Operator approved F-SC-7 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-7; Spec 69a M-251: \"(1) Scoped to the residential building ..., never an ancillary building. (2) side_setback_m = 1.8 m + 0.6 m × (height_storeys − 1), OWED on height_storeys (a scenario input). (3) An ancillary building falls to 10.5.60.20(3)(C)(ii)\"); M-75",
+      "supersedes": "COR-900.3.10(70)#(70)[SSP](B)/literals_not_expressed",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": [
+        {
+          "clause": "(70)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-21",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-SC-7 (CoA scorecard, 2026-10-21). 900.3.10(70)(B): \"The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof\". Keyed side_setback_m = 1.8 m on building type any, it leaked onto the ancillary pavilion and garage of 5 Parmbelle Cres A0257/26NY, where the City applied 10.5.60.20(3)(C)(ii) (half the height, 1.89 m and 1.99 m), and the per-storey increment was not keyed. The increment is keyed on the proposed storeys (a scenario input, vocab.dsl_input.proposed_storeys); the unit is scoped to the residential building by vocab.unit_application.",
+      "rule": "Operator approved F-SC-7 in chat, 2026-10-21 (2026-10-21-chat-batch-g#CHAT-29.F-SC-7; Spec 69a M-251: \"(1) Scoped to the residential building ..., never an ancillary building. (2) side_setback_m = 1.8 m + 0.6 m × (height_storeys − 1), OWED on height_storeys (a scenario input). (3) An ancillary building falls to 10.5.60.20(3)(C)(ii)\"); M-75",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": {
+        "description": "On Exception RD 70 lands, the residential building's side yard setback is 1.8 m for a one-storey building plus 0.6 m for each additional storey or portion of one.",
+        "gaps": "The storey count is the proposed building's (a scenario input, proposed_storeys); until it is known the answer is owed. Scoped to the residential building (Spec 69a M-251, vocab.unit_application): an ancillary building or suite takes its own Article 10.5.60 / Chapter 150 side yard.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
     }
   ]
 }

@@ -114,3 +114,34 @@ describe('F-SC-6 / M-250 — exception RD 42 gross floor area is capped at FSI 0
     expect(big.value).toBe(368);
   });
 });
+
+// F-SC-7 / M-251 (operator approved 2026-10-21, `2026-10-21-chat-batch-g#CHAT-29.F-SC-7`): RD 70 (B) binds the residential
+// building with its storey increment; an ancillary building falls to 10.5.60.20(3)(C)(ii).
+describe('F-SC-7 / M-251 — exception RD 70 side yard: the residential building only, with the storey increment', () => {
+  const B = '900.3.10(70)#(70)[SSP](B)';
+  // 5 Parmbelle Cres: RD (f21.0; a975) (x70), HT 11.5, ST 3
+  const parm = (bt: string, vars: Json = {}): Json => lot('RD', bt, { exception: '900.3.10(70)', label: { f: 21, a: 975 }, overlays: { HT: 11.5, ST: 3 }, vars: { lot_frontage_m: 21, lot_depth_m: 46, lot_area_m2: 975, ...vars } });
+
+  it('the text carries the increment (ch900_3.txt)', () => {
+    expect(page('ch900_3')).toContain('(B) The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof');
+  });
+
+  it('(B) keys 1.8 m + 0.6 m per additional storey on the proposed storeys (a scenario input)', () => {
+    expect(unitOf(B).numeric_expression).toEqual(['side_setback_m = 1.8 m + 0.6 m × (proposed_storeys − 1 storeys) @(70)[SSP](B)']);
+    expect(I.vocab.dsl_input.proposed_storeys).toMatchObject({ unit: 'storeys' });
+  });
+
+  it('a house: 1.8 m at one storey, 3.0 m at three; OWED (missing_input:proposed_storeys) until the scenario supplies storeys', () => {
+    expect(eff(parm('detached_house', { proposed_storeys: 1 }), 'side_setback_m')).toMatchObject({ status: 'value', value: 1.8, winner: B });
+    expect(eff(parm('detached_house', { proposed_storeys: 3 }), 'side_setback_m')).toMatchObject({ status: 'value', value: 3, winner: B });
+    const owed = eff(parm('detached_house'), 'side_setback_m');
+    expect([owed.status, owed.reason]).toEqual(['not_evaluated', 'missing_input:proposed_storeys']);
+  });
+
+  it('an ancillary building never takes (B): the pavilion (3.78 m high, 1.8 m or more from the house) answers half its height, 1.89 m, from 10.5.60.20(3)', () => {
+    const r = eff(parm('ancillary_building', { proposed_height_m: 3.78, distance_to_residential_m: 5, ancillary_floor_area_m2: 20 }), 'side_setback_m');
+    expect(r.winner).not.toBe(B);
+    expect([r.status, r.value]).toEqual(['value', 1.89]);
+    expect(String(r.winner)).toMatch(/^10\.5\.60\.20\(3\)/);
+  });
+});
