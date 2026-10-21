@@ -235,10 +235,19 @@ describe('V3 condition-9 rulings — rows R-HN…R-IF govern the entries the ope
     }
   });
 
-  it('the operator ruled every class-c entry except N-D1, and the bundled-night list grew 102 -> 141', () => {
+  it('the operator ruled every class-c entry except N-D1, and the bundled-night list grew 102 -> 141 -> 143 (CHAT-24, integrate-16)', () => {
     expect(record.entries.filter((e) => e.class === 'c').map((e) => e.key)).toEqual(['N-D1']);
-    expect(record.entries.filter((e) => e.apply === 'bundled-night').length).toBe(141);
+    expect(record.entries.filter((e) => e.apply === 'bundled-night').length).toBe(143);
     expect(record.entries.filter((e) => e.class === 'd' && e.apply === 'now').map((e) => e.ref).sort()).toEqual(['g1-21', 'g1-26', 'g5-15', 'g5-17', 'g5-6']);
+  });
+
+  it('CHAT-24: enrich_permits\' twin deviations ride the night under R-IB and R-IC, and each row carries the dated note', () => {
+    const twins = record.entries.filter((e) => e.decision_log === '2026-10-20-chat-batch-d-rulings#CHAT-24');
+    expect(twins.map((e) => [e.ref, e.file, e.deviation_index, e.rule_id, e.apply])).toEqual([
+      ['i16-1', 'scripts/enrich-permits.descriptor.json', 1, 'R-IB', 'bundled-night'],
+      ['i16-2', 'scripts/enrich-permits.descriptor.json', 2, 'R-IC', 'bundled-night'],
+    ]);
+    for (const id of ['R-IB', 'R-IC']) expect(A.split('\n').find((l) => l.startsWith(`| ${id} |`)), id).toContain('**Dated note 2026-10-20 (CHAT-24, operator chat: "yes to all ensure they comply to the governing specs and are recorded as a ruling if necessary"; `2026-10-20-chat-batch-d-rulings#CHAT-24`):**');
   });
 
   it('R-HR is recorded under Spec 123 §3.1 as a dated named exception, and CCT-D10 takes the R-GR closed form', () => {

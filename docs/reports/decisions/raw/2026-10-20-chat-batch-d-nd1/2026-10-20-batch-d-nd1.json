@@ -1,0 +1,25 @@
+{
+  "source": "operator chat 2026-10-20",
+  "operator_quote": "yes to all ensure they comply to the governing specs and are recorded as a ruling if necessary",
+  "context": "Answer to the four pre-night questions (tonight's plan, Spec 08): 1 Draft B as restated in the steps-rulings-1 CoA cutover patch set; 2 enrich_permits twins; 3 R-EY-9-WHY-TEXT staged; 4 N-D1 drafted for tomorrow.",
+  "decisions": [
+    {
+      "id": "CHAT-26",
+      "subject": "N-D1 (neighbourhoods, RULING-OWED)",
+      "decision": "approve",
+      "recommendation": "Draft N-D1 as a ruling for the operator tomorrow; neighbourhoods stays V2 until it is ruled."
+    }
+  ],
+  "split": {
+    "from": "scratchpad chat-decisions/2026-10-20-batch-d.json (operator chat 2026-10-20, batch D)",
+    "kept": [
+      "CHAT-26"
+    ],
+    "left_to_other_log": [
+      "CHAT-23",
+      "CHAT-24",
+      "CHAT-25"
+    ],
+    "note": "Split by meaning (lane wf2/p4-integrate-16): CHAT-26 (N-D1 drafted for the operator tomorrow) records no new rule, so its log maps \"approve\" to no_ruling resting on R-EY; every kept field is verbatim. CHAT-23..CHAT-25 are the log 2026-10-20-chat-batch-d-rulings."
+  }
+}

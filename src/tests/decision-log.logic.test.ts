@@ -420,9 +420,25 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(54);
+    expect(r.decisions).toBe(58);
     expect(r.owed).toBe(0);
-    expect(r.no_ruling).toBe(2);
+    expect(r.no_ruling).toBe(3);
+  });
+
+  it('chat batch D (integrate-16): CHAT-23 → R-IG, CHAT-24 → notes on R-IB and R-IC, CHAT-25 → R-IH; CHAT-26 is no_ruling on R-EY', () => {
+    const A = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
+    const d = byStem.get('2026-10-20-chat-batch-d-rulings') as { source: { operator_quote: string }; decisions: Array<{ id: string }>; routing: Record<string, { register: string; row?: string }> };
+    expect(d.source.operator_quote).toBe('yes to all ensure they comply to the governing specs and are recorded as a ruling if necessary');
+    expect(d.decisions.map((x) => x.id)).toEqual(['CHAT-23', 'CHAT-24', 'CHAT-25']);
+    expect(Object.fromEntries(Object.entries(d.routing).map(([k, v]) => [k, [v.register, v.row]]))).toEqual({ 'CHAT-23': [A, 'R-IG'], 'CHAT-24': [A, undefined], 'CHAT-25': [A, 'R-IH'] });
+    const nd1 = byStem.get('2026-10-20-chat-batch-d-nd1') as { decision_vocab: Record<string, string>; decisions: Array<{ id: string }>; routing: Record<string, { register: string; rests_on?: string[] }> };
+    expect(nd1.decision_vocab).toEqual({ approve: 'no_ruling' });
+    expect(nd1.decisions.map((x) => x.id)).toEqual(['CHAT-26']);
+    expect(nd1.routing['CHAT-26']).toEqual({ register: A, rests_on: ['R-EY'] });
+    const rows = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n');
+    for (const [id, row] of [['CHAT-23', 'R-IG'], ['CHAT-24', 'R-IB'], ['CHAT-24', 'R-IC'], ['CHAT-25', 'R-IH']]) {
+      expect(rows.find((l) => l.startsWith(`| ${row} |`)), row).toContain(`\`2026-10-20-chat-batch-d-rulings#${id}\``);
+    }
   });
 
   it('the By-law Fix Rulings page (rows export) and the by-law half of chat batch C route to R-HK and M-240…M-246', () => {

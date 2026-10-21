@@ -1,0 +1,37 @@
+{
+  "source": "operator chat 2026-10-20",
+  "operator_quote": "yes to all ensure they comply to the governing specs and are recorded as a ruling if necessary",
+  "context": "Answer to the four pre-night questions (tonight's plan, Spec 08): 1 Draft B as restated in the steps-rulings-1 CoA cutover patch set; 2 enrich_permits twins; 3 R-EY-9-WHY-TEXT staged; 4 N-D1 drafted for tomorrow.",
+  "decisions": [
+    {
+      "id": "CHAT-23",
+      "subject": "Draft B extra_counters mechanism as restated in docs/reports/2026-10-20-steps-rulings-1-coa-cutover-patch-set.md (needed by R-ID counter restore)",
+      "decision": "approve",
+      "recommendation": "Confirm Draft B as restated; it rides the REFREEZE-BUNDLE-1 night as item (1) with the R-ID patch (item 8)."
+    },
+    {
+      "id": "CHAT-24",
+      "subject": "enrich_permits twin deviations: the 16 information_schema probes and the pipeline_runs recency read",
+      "decision": "approve",
+      "recommendation": "R-IB and R-IC (CHAT-16/CHAT-17) extend to enrich_permits' identical two deviations: same change, same rule; cite them on the bundled night."
+    },
+    {
+      "id": "CHAT-25",
+      "subject": "R-EY-9-WHY-TEXT: condition (9) reads a deviation's authorizing citation from adjudicated_by only",
+      "decision": "approve",
+      "recommendation": "Yes, staged so no V3 step drops (E1): stage 1 advisory line; stage 2 cite the 15 why-only entries (or route to the operator); stage 3 switch the gate with a red-first lock."
+    }
+  ],
+  "split": {
+    "from": "scratchpad chat-decisions/2026-10-20-batch-d.json (operator chat 2026-10-20, batch D)",
+    "kept": [
+      "CHAT-23",
+      "CHAT-24",
+      "CHAT-25"
+    ],
+    "left_to_other_log": [
+      "CHAT-26"
+    ],
+    "note": "Split by meaning (lane wf2/p4-integrate-16): the three decisions recorded as register rows or row notes (CHAT-23 R-IG, CHAT-24 notes on R-IB/R-IC, CHAT-25 R-IH); every kept field is verbatim. CHAT-26 (N-D1, no_ruling) is the log 2026-10-20-chat-batch-d-nd1, because decision_vocab maps a raw decision value and all four values are \"approve\"."
+  }
+}

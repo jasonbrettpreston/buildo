@@ -277,7 +277,7 @@ import { checkAdminRegistration, loadAdminRegistration, selfTest as adminRegistr
 import { checkVariableEffect, loadVariableEffect, EFFECT_REL } from './gates/variable-effect.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, standardLabel, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { tableDataRows, ledgerTableRows } from './gates/markdown-table.mjs';
-import { exceptionsSignal, loadRatchet, ratchetFindings, cutoverFindings, hardGateFindings, hardGateEnabled } from './gates/v3-label.mjs';
+import { exceptionsSignal, whyOnlySignal, whyOnlyAdvisoryLine, loadRatchet, ratchetFindings, cutoverFindings, hardGateFindings, hardGateEnabled } from './gates/v3-label.mjs';
 import { checkEstateLiterals, selfTest as estateLiteralsSelfTest } from './gates/estate-literals.mjs';
 import { selfTest as gateVariablesSelfTest } from './gates/variables.mjs';
 import { checkPrecommitBudget, selfTest as precommitBudgetSelfTest } from './precommit-budget.mjs';
@@ -6326,6 +6326,8 @@ async function main() {
   const witnessRowsBySlug = {};
   // Spec 124 R-EY: slug -> {standard, stage, label} for every evaluated row (E1/E2/E3 and --v3-json read it).
   const labelBySlug = new Map();
+  // Spec 124 R-IH stage 1: slug -> the deviations whose only resolving register id is in `why` (advisory only).
+  const whyOnlyBySlug = new Map();
 
   for (const row of targets) {
     const descriptorInfo = checkDescriptor(row);
@@ -6359,6 +6361,11 @@ async function main() {
     const standardText = standardLabel(...labelArgs);
     labelBySlug.set(row.slug, { standard: standardFor(...labelArgs), stage: row.stage, label: standardText });
     console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardText}\n\`\`\`\n`);
+    // Spec 124 R-IH stage 1 (amends R-EY (9)): advisory only — the label above already read exceptions9.
+    const whyOnly = whyOnlySignal(descriptorInfo.descriptor || null, REPO_ROOT);
+    if (whyOnly.length) whyOnlyBySlug.set(row.slug, whyOnly.length);
+    const whyOnlyLine = whyOnlyAdvisoryLine(row.slug, whyOnly);
+    if (whyOnlyLine) console.log(whyOnlyLine);
     if (exceptions9.uncited.length) console.log(`[step-validate] R-EY (9) ${row.slug}: ${exceptions9.uncited.length}/${exceptions9.total} exception entr${exceptions9.total === 1 ? 'y' : 'ies'} cite no register rule id: ${exceptions9.uncited.map((e) => `${e.source}:${e.key}`).join(' | ')}`);
     console.log(block);
 
@@ -6497,6 +6504,8 @@ async function main() {
     const e3 = hardGateFindings({ enabled: e3on, rows: targets, labels, registry });
     const v3n = [...labels.values()].filter((v) => v === 'V3').length;
     console.log(`[step-validate] R-EY: ${v3n}/${labels.size} evaluated step(s) read V3; E1 ratchet ${e1.length ? 'FAIL' : 'PASS'} (${ratchet && Array.isArray(ratchet.v3) ? ratchet.v3.length : 0} listed); E2 cutover ${e2.length ? 'FAIL' : 'PASS'}; E3 hard gate ${e3on ? 'ON' : 'OFF'}${e3.wouldFail.length ? ` — ${e3.wouldFail.length} converted step(s) read V2${e3on ? '' : ' (would fail when on)'}: ${e3.wouldFail.join(', ')}` : ''}`);
+    const whyOnlyTotal = [...whyOnlyBySlug.values()].reduce((a, b) => a + b, 0);
+    console.log(`[step-validate] R-EY (9) why-only advisory (Spec 124 R-IH stage 1; verdict unchanged): ${whyOnlyTotal} deviation(s) in ${whyOnlyBySlug.size} step(s) cite a register id only in why${whyOnlyBySlug.size ? `: ${[...whyOnlyBySlug].map(([slug, n]) => `${slug} ${n}`).join(', ')}` : ''}`);
     for (const f of [...e1, ...e2, ...e3.findings]) console.error(`[step-validate] HARD STOP: ${f}`);
     if (e1.length || e2.length || e3.findings.length) anyHardStop = true;
     if (opts.v3Json) {

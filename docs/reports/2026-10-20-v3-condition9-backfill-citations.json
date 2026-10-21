@@ -1,5 +1,5 @@
 {
-  "$comment": "V3 condition-9 backfill (lane backfill-9, operator y 2026-10-20; Spec 124 R-EY (9)). One object per exception entry that cited no register rule id at 1d16f155. class a = an existing register row governs it; b = a historical operator decision, recorded as the register row rule_id (124a §B21/§B22; §B20/§B21 on wf2/v3-backfill-9, renumbered at wf2/p4-integrate-12); c = no decision found (not cited; listed for the operator). apply: now = cited in this lane (grandfathered.json, defect-ledger.md, pending-step descriptors); bundled-night = a converted step descriptor deviations[] entry: editing it changes source_fingerprint (golden-fingerprint.infra), so it is applied on the bundled RE-FREEZE night (PIN REFREEZE-BUNDLE-1 item (6); (5) on wf2/v3-backfill-9, PIN FP-RECAPTURE) by appending append_text to deviations[deviation_index].adjudicated_by (assert_global_coverage, assert_data_bounds and assert_parcel_sanity descriptors through their generators). staleness-disposition.json spec_version.not_executed (19 entries, R-BH) is cited in this lane and not listed here. stale (when present): stale text the same night fixes: retire (a deviation whose defect is closed), correct (a ruling the entry still calls owed) or note (a cited source that does not exist). Evidence paths under docs/reports/ marked verbatim copy of untracked are tracked copies of .cursor files (operator y 2026-10-20); line numbers are unchanged. class d (added 2026-10-20, lane steps-rulings-1) = a class-c entry the operator then ruled (V3 Exception Rulings page and chat CHAT-15…CHAT-22; `decision_log` names the decision, `rule_id` the 124a row R-HN…R-IF); refs s1-* are the CoA cutover rulings' own entries (bundled night). N-D1 (g3-45) stays class c: RULING-OWED. A pending step with no POST capture (assert_coa_freshness, compute_coa_cost_estimates) is cited now; coa and load_coa_notices have POST captures and wait for the night.",
+  "$comment": "V3 condition-9 backfill (lane backfill-9, operator y 2026-10-20; Spec 124 R-EY (9)). One object per exception entry that cited no register rule id at 1d16f155. class a = an existing register row governs it; b = a historical operator decision, recorded as the register row rule_id (124a §B21/§B22; §B20/§B21 on wf2/v3-backfill-9, renumbered at wf2/p4-integrate-12); c = no decision found (not cited; listed for the operator). apply: now = cited in this lane (grandfathered.json, defect-ledger.md, pending-step descriptors); bundled-night = a converted step descriptor deviations[] entry: editing it changes source_fingerprint (golden-fingerprint.infra), so it is applied on the bundled RE-FREEZE night (PIN REFREEZE-BUNDLE-1 item (6); (5) on wf2/v3-backfill-9, PIN FP-RECAPTURE) by appending append_text to deviations[deviation_index].adjudicated_by (assert_global_coverage, assert_data_bounds and assert_parcel_sanity descriptors through their generators). staleness-disposition.json spec_version.not_executed (19 entries, R-BH) is cited in this lane and not listed here. stale (when present): stale text the same night fixes: retire (a deviation whose defect is closed), correct (a ruling the entry still calls owed) or note (a cited source that does not exist). Evidence paths under docs/reports/ marked verbatim copy of untracked are tracked copies of .cursor files (operator y 2026-10-20); line numbers are unchanged. class d (added 2026-10-20, lane steps-rulings-1) = a class-c entry the operator then ruled (V3 Exception Rulings page and chat CHAT-15…CHAT-22; `decision_log` names the decision, `rule_id` the 124a row R-HN…R-IF); refs s1-* are the CoA cutover rulings' own entries (bundled night). N-D1 (g3-45) stays class c: RULING-OWED. A pending step with no POST capture (assert_coa_freshness, compute_coa_cost_estimates) is cited now; coa and load_coa_notices have POST captures and wait for the night. refs i16-* (added 2026-10-20 at wf2/p4-integrate-16): enrich_permits deviations[1] and [2], the twins of s1-2/s1-3, which the operator ruled under R-IB and R-IC in chat CHAT-24 (`2026-10-20-chat-batch-d-rulings#CHAT-24`, \"cite them on the bundled night\"); the bundled-night list is 143.",
   "generated_at": "2026-10-20",
   "base": "1d16f155",
   "entries": [
@@ -5771,6 +5771,54 @@
       "decision_date": "2026-10-20",
       "searched": null,
       "note": "CoA cutover ruling 4; the descriptor has POST captures (source_fingerprint locked), so the citation rides the bundled night."
+    },
+    {
+      "ref": "i16-1",
+      "step": "enrich_permits",
+      "stage": "pending",
+      "source": "deviation",
+      "file": "scripts/enrich-permits.descriptor.json",
+      "key": "the 16 information_schema column / link-table probes (enrich-permits.js:163-356)",
+      "deviation_index": 1,
+      "class": "d",
+      "rule_id": "R-IB",
+      "decision_log": "2026-10-20-chat-batch-d-rulings#CHAT-24",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-IB; V3 condition-9 rulings 2026-10-20]",
+      "stale": null,
+      "evidence": [
+        {
+          "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-d-rulings/2026-10-20-batch-d-rulings.json (CHAT-24)",
+          "quote": "R-IB and R-IC (CHAT-16/CHAT-17) extend to enrich_permits' identical two deviations: same change, same rule; cite them on the bundled night."
+        }
+      ],
+      "decision_date": "2026-10-20",
+      "searched": null,
+      "note": "Twin of enrich_coa_zoning deviations[1] (R-IB, s1-2); the operator extended R-IB to enrich_permits in chat CHAT-24 (\"cite them on the bundled night\"), recorded as a dated note on the R-IB row (124a §B26, §B32). Added at wf2/p4-integrate-16; the descriptor is not edited now."
+    },
+    {
+      "ref": "i16-2",
+      "step": "enrich_permits",
+      "stage": "pending",
+      "source": "deviation",
+      "file": "scripts/enrich-permits.descriptor.json",
+      "key": "the pipeline_runs recency read inside assertCentrelineEnriched (enrich-permits.js:308-317)",
+      "deviation_index": 2,
+      "class": "d",
+      "rule_id": "R-IC",
+      "decision_log": "2026-10-20-chat-batch-d-rulings#CHAT-24",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-IC; V3 condition-9 rulings 2026-10-20]",
+      "stale": null,
+      "evidence": [
+        {
+          "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-d-rulings/2026-10-20-batch-d-rulings.json (CHAT-24)",
+          "quote": "R-IB and R-IC (CHAT-16/CHAT-17) extend to enrich_permits' identical two deviations: same change, same rule; cite them on the bundled night."
+        }
+      ],
+      "decision_date": "2026-10-20",
+      "searched": null,
+      "note": "Twin of enrich_coa_zoning deviations[2] (R-IC, s1-3); the operator extended R-IC to enrich_permits in chat CHAT-24 (\"cite them on the bundled night\"), recorded as a dated note on the R-IC row (124a §B26, §B32). Added at wf2/p4-integrate-16; the descriptor is not edited now."
     }
   ]
 }

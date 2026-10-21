@@ -1,0 +1,53 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-20-chat-batch-d-rulings/2026-10-20-batch-d-rulings.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-chat-batch-d-rulings",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "yes to all ensure they comply to the governing specs and are recorded as a ruling if necessary",
+    "record": "operator chat 2026-10-20",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-d-rulings/2026-10-20-batch-d-rulings.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-23": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IG"
+    },
+    "CHAT-24": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md"
+    },
+    "CHAT-25": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-IH"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-23",
+      "question": "Draft B extra_counters mechanism as restated in docs/reports/2026-10-20-steps-rulings-1-coa-cutover-patch-set.md (needed by R-ID counter restore)",
+      "recommendation": "Confirm Draft B as restated; it rides the REFREEZE-BUNDLE-1 night as item (1) with the R-ID patch (item 8).",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-24",
+      "question": "enrich_permits twin deviations: the 16 information_schema probes and the pipeline_runs recency read",
+      "recommendation": "R-IB and R-IC (CHAT-16/CHAT-17) extend to enrich_permits' identical two deviations: same change, same rule; cite them on the bundled night.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-25",
+      "question": "R-EY-9-WHY-TEXT: condition (9) reads a deviation's authorizing citation from adjudicated_by only",
+      "recommendation": "Yes, staged so no V3 step drops (E1): stage 1 advisory line; stage 2 cite the 15 why-only entries (or route to the operator); stage 3 switch the gate with a red-first lock.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    }
+  ]
+}

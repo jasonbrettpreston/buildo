@@ -504,7 +504,7 @@
     {
       "id": "link.2",
       "section": "link",
-      "text": "`runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`). §1 table 1a lists which step uses which.",
+      "text": "`runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`). §1 table 1a lists which step uses which. A match plan may also declare a closed `extra_counters` set, summed per batch (R-IG, from the bundled RE-FREEZE night).",
       "why": "One library path, not a copy per link step."
     },
     {
@@ -666,7 +666,7 @@
     {
       "id": "x-v3.1",
       "section": "x-v3",
-      "text": "`standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`.",
+      "text": "`standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`. R-IH stage 1: `step-validate` prints an advisory `R-EY (9) why-only` line for each step with a deviation whose only register id is in `why`, plus a run total; no verdict changes until stage 3 reads `adjudicated_by` only.",
       "why": "One list replaces the older \"five words\", \"six parts\" and \"four conditions\"; the label means the same thing everywhere."
     },
     {
@@ -678,7 +678,7 @@
     {
       "id": "x-v3.3",
       "section": "x-v3",
-      "text": "An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF. A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.",
+      "text": "An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.",
       "why": "Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry."
     },
     {
@@ -5169,6 +5169,34 @@
       }
     },
     {
+      "id": "R-IG",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "link.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "Draft B: a LINK match plan may declare a closed extra_counters set that runLinkPhase sums per batch from classifyMatches counters (operator CHAT-23); first user link_coa_to_parcels (R-ID); applied on the bundled RE-FREEZE night.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-IH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/v3-why-only-advisory.logic.test.ts"
+      },
+      "statement": "R-EY (9) reads a deviation's authorizing citation from adjudicated_by only, in three stages (operator CHAT-25): stage 1 (in force) step-validate prints an advisory why-only line per step with the verdict unchanged; stages 2 and 3 are owed.",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",
@@ -5225,7 +5253,10 @@
     {
       "id": "R-EY",
       "kind": "register-ruling",
-      "status": "active",
+      "status": "amended-by",
+      "by": [
+        "R-IH"
+      ],
       "handbook_line": "x-v3.1",
       "enforcement": {
         "kind": "lock",

@@ -107,6 +107,36 @@ export function exceptionCitationFailures(entries, registerIds) {
   return { fails, uncited: uncited.map(({ source, key }) => ({ source, key })), total: entries.length };
 }
 
+/**
+ * Spec 124 R-IH stage 1 (amends R-EY (9); operator approved 2026-10-20, `2026-10-20-chat-batch-d-rulings#CHAT-25`):
+ * a deviation's authorizing citation is the one in `adjudicated_by`; a register id only in `why` is a rule the
+ * deviation mentions. Stage 1 only REPORTS such entries (an advisory line in step-validate); condition (9) above
+ * still reads `adjudicated_by` + `why` together, so no verdict moves until stage 3. PURE.
+ * @returns {Array<{index: number, key: string, ids: string[]}>}
+ */
+export function whyOnlyDeviations(descriptor, registerIds) {
+  const devs = Array.isArray(descriptor?.deviations) ? descriptor.deviations : [];
+  const out = [];
+  devs.forEach((d, index) => {
+    if (resolvingRuleIds(textOf(d?.adjudicated_by), registerIds).length) return;
+    const ids = resolvingRuleIds(textOf(d?.why), registerIds);
+    if (ids.length) out.push({ index, key: String(d?.from || ''), ids });
+  });
+  return out;
+}
+
+/** R-IH stage 1: the advisory line for one step (null when nothing is why-only). PURE. */
+export function whyOnlyAdvisoryLine(slug, found) {
+  if (!found.length) return null;
+  const list = found.map((f) => `deviations[${f.index}] "${f.key}" (${f.ids.join(', ')})`).join(' | ');
+  return `[step-validate] R-EY (9) why-only ${slug} (advisory, Spec 124 R-IH stage 1; verdict unchanged): ${found.length} deviation${found.length === 1 ? ' cites' : 's cite'} a register id only in why: ${list}`;
+}
+
+/** R-IH stage 1 for one step over the disk sources. */
+export function whyOnlySignal(descriptor, repoRoot = REPO_ROOT) {
+  return whyOnlyDeviations(descriptor, loadExceptionSources(repoRoot).registerIds);
+}
+
 /** The defect-ledger rows (id, step, status, raw text), read through the one table-row reader (R-FA). PURE. */
 export function parseDefectRows(text) {
   const rows = [];
