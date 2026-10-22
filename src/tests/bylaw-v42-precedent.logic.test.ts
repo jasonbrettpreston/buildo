@@ -128,3 +128,16 @@ describe('CHAT-84.TWIN-1: identical text, one reading', () => {
     expect(lits(u)).toEqual(lits(ref));
   }, 120000);
 });
+
+// CHAT-86.bay-window (operator 2026-10-23): the licence pattern "bay windows may project" for window_projection_encroachment_m, added with the 144 (J) retarget (4c15c682), is confirmed (M-132, M-243)
+describe('CHAT-86.bay-window: the confirmed licence pattern', () => {
+  it('licenses the 144 (J) wording and no neighbouring one', async () => {
+    const fs = await import('node:fs');
+    const V = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/vocab.json'), 'utf8'));
+    const pats: string[] = V.dsl_target.window_projection_encroachment_m.patterns;
+    const lic = (t: string): boolean => pats.some((x) => t.toLowerCase().includes(x));
+    expect(lic('Cantilevered bay windows may project a maximum distance of 0.6 metres into all yards')).toBe(true);
+    expect(lic('A deck may project a maximum distance of 0.6 metres into all yards')).toBe(false);
+    expect(lic('Bay windows are permitted on the second storey')).toBe(false);
+  });
+});

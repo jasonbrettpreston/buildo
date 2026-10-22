@@ -68,7 +68,7 @@ describe('parseNamedRef — shapes in the corpus', () => {
   });
   it('unhappy paths are unparsed or partial with a reason, never a guessed address', () => {
     expect(NA.parseNamedRef(null)).toMatchObject({ status: 'unparsed', reasons: ['empty_ref'], addresses: [] });
-    expect(NA.parseNamedRef('Eglinton Avenue West')).toMatchObject({ status: 'unparsed', reasons: ['no_house_number'] });
+    expect(NA.parseNamedRef('the lands')).toMatchObject({ status: 'unparsed', reasons: ['no_house_number'] }); // a street with no number is now whole_street (CHAT-86), prose is not
     expect(NA.parseNamedRef('a lot fronting on Ashley Park Rd.')).toMatchObject({ status: 'unparsed', reasons: ['descriptive_lot'] });
     const part = NA.parseNamedRef('380, 382 Rosewell Ave. and part of 1451 Avenue Rd.');
     expect(part.status).toBe('partial');
@@ -110,8 +110,6 @@ describe('corpus parse rate (every named_addresses ref, committed + W1 drafts)',
     const other = res.filter((p: Json) => p.status !== 'parsed').map((p: Json) => [p.status, p.raw, p.reasons.join(',')]);
     expect(other).toEqual([
       ['partial', '380, 382, 384, 386 Rosewell Ave. and part of 1451 Avenue Rd.', 'part_of_lot'],
-      ['unparsed', 'Eglinton Avenue East', 'no_house_number'],
-      ['unparsed', 'Eglinton Avenue West', 'no_house_number'],
       ['unparsed', 'a lot fronting on Ashley Park Rd.', 'descriptive_lot'],
       ['partial', 'part of 1451 Avenue Rd.', 'part_of_lot'],
     ]);
@@ -132,6 +130,35 @@ describe('corpus parse rate (every named_addresses ref, committed + W1 drafts)',
     expect(refs.length).toBeGreaterThan(0);
     const parsed = refs.filter((r) => NA.parseNamedRef(r).status === 'parsed').length;
     expect(parsed / refs.length).toBeGreaterThanOrEqual(0.95);
+  });
+});
+
+// CHAT-86.whole-street (operator 2026-10-23): a named_addresses ref that is a street with no house number parses as whole_street and resolves by street key only
+describe('CHAT-86.whole-street: a street with no house number', () => {
+  it('parses as a whole_street address carrying the street key and no number or range', () => {
+    const p = NA.parseNamedRef('Brimley Rd.');
+    expect(p.status).toBe('parsed');
+    expect(p.addresses).toEqual([expect.objectContaining({ whole_street: true, street: 'BRIMLEY', street_type: 'RD', city_full: 'BRIMLEY RD', street_key: 'BRIMLEY' })]);
+    expect(p.addresses[0].number).toBeUndefined();
+    expect(p.addresses[0].range).toBeUndefined();
+    expect(NA.parseNamedRef('Eglinton Avenue West').addresses[0]).toMatchObject({ whole_street: true, direction: 'W' });
+    expect(NA.parseNamedRef('St. Clair Ave.').status).toBe('parsed');
+  });
+  it('does not turn words that are not a street into one', () => {
+    expect(NA.parseNamedRef('the lands').status).toBe('unparsed');
+    expect(NA.parseNamedRef('a lot fronting on Ashley Park Rd.').status).toBe('unparsed');
+    expect(NA.parseNamedRef('Warden').status).toBe('unparsed');
+  });
+  it('a numbered ref is unchanged', () => {
+    expect(NA.parseNamedRef('19 Dorval Rd.').addresses[0].whole_street).toBeUndefined();
+  });
+  it('resolves by street key only: every parcel on the street, ambiguous across streets, not_found with no parcel link', () => {
+    const w = NA.parseNamedRef('Brimley Rd.').addresses[0];
+    const pt = (id: number, num: string, parcel: number | null, street = 'Brimley Rd') => ({ address_point_id: id, linear_name_full: street, addr_num_normalized: num, parcel_id: parcel });
+    expect(NA.classifyItem(w, [pt(1, '10', 5), pt(2, '12', 6), pt(3, '12', 6)])).toMatchObject({ match_status: 'exact', parcels: [5, 6] });
+    expect(NA.classifyItem(w, [pt(1, '10', 5), pt(2, '12', 6, 'Brimley Dr')])).toMatchObject({ match_status: 'ambiguous', reasons: ['multi_street'] });
+    expect(NA.classifyItem(w, [pt(1, '10', null)])).toMatchObject({ match_status: 'not_found', reasons: ['no_parcel_link'] });
+    expect(NA.classifyItem(w, [])).toMatchObject({ match_status: 'not_found', reasons: ['no_street'] });
   });
 });
 

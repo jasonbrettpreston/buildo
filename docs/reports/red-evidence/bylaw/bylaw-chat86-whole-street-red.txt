@@ -1,0 +1,10 @@
+   × corpus parse rate (every named_addresses ref, committed + W1 drafts) > the non-parsed list is exactly the known one, each with its reason 3ms
+     → expected [ [ 'partial', …(2) ], …(4) ] to deeply equal [ [ 'partial', …(2) ], …(2) ]
+   × corpus parse rate (every named_addresses ref, committed + W1 drafts) > every committed shard ref (live scan) parses at >= 95 % 147ms
+     → expected 0.9349112426035503 to be greater than or equal to 0.95
+   × CHAT-86.whole-street: a street with no house number > parses as a whole_street address carrying the street key and no number or range 0ms
+     → expected 'unparsed' to be 'parsed' // Object.is equality
+   × CHAT-86.whole-street: a street with no house number > resolves by street key only: every parcel on the street, ambiguous across streets, not_found with no parcel link 1ms
+     → Cannot read properties of undefined (reading 'range')
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 42 passed (46)
