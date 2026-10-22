@@ -9,7 +9,7 @@ split out for Spec 69's byte budget — it carries no rule of its own beyond the
 > `M19` in `docs/specs/01-pipeline/122_split_manifest.json`, classification `REGISTER`: live rows, not history),
 > and `## 1. The register` survives in Spec 69 as a stub pointing here.
 
-**Next free id:** `M-318` (highest allocated M-317, EXC-W2-APPLY). M-261..M-264, M-269..M-279, M-292..M-294 and M-299..M-304 were reserved for fix round 4D lanes and are unused; they stay free.
+**Next free id:** `M-334` (highest allocated M-333, measured at integrate-25). M-261..M-264, M-269..M-279, M-292..M-294 and M-299..M-304 were reserved for fix round 4D lanes and are unused; they stay free.
 
 **Governance:** these rows ARE Spec 69's rulings. Cite them as before — `Spec 69 M-n` — and amend them here, by
 the protocol in Spec 69's header (add a row or a dated note, in §1a below; an id is never reused). Spec 69
