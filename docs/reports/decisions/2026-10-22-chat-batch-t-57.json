@@ -1,0 +1,47 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-chat-batch-t-57/2026-10-22-batch-t.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-chat-batch-t-57",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "pushing 1 y 2 y 3 y",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-chat-batch-t-57/2026-10-22-batch-t.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "no_ruling"
+  },
+  "routing": {
+    "CHAT-57": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-JB"
+      ]
+    },
+    "CHAT-58": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-CZ"
+      ]
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-57",
+      "question": "Run CoA Night A core",
+      "recommendation": "Run track A-core of the Night A runbook on the local DB under the dblock: ward fix + migration 281, 4 coa recaptures, neighbourhoods R-JK move + recaptures.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-58",
+      "question": "No full reconcile; fetch the 2017 decision PDFs",
+      "recommendation": "Skip the optional --full reconcile. Fetch the public sha256-pinned 2017 CoA decision PDFs (~0.4 GB) for the load_coa_notices forced-reload recapture.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

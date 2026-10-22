@@ -1,0 +1,19 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "pushing 1 y 2 y 3 y",
+  "context": "Answers to the CoA asks after COA-LOCAL-1 (trimmed to the two decisions this lane executes; CHAT-56 belongs to another lane): (2) run CoA Night A track A-core (runbook ~/Buildo-scratch/coa1/night-a-runbook.md) on the local DB under the dblock; (3) skip the optional --full CoA reconcile; approve the public re-fetch (~0.4 GB, no captcha) of the sha256-pinned 2017 CoA decision PDFs so load_coa_notices can prove its forced-reload recapture (fast invariant #38).",
+  "decisions": [
+    {
+      "id": "CHAT-57",
+      "subject": "Run CoA Night A core",
+      "decision": "approve",
+      "recommendation": "Run track A-core of the Night A runbook on the local DB under the dblock: ward fix + migration 281, 4 coa recaptures, neighbourhoods R-JK move + recaptures."
+    },
+    {
+      "id": "CHAT-58",
+      "subject": "No full reconcile; fetch the 2017 decision PDFs",
+      "decision": "approve",
+      "recommendation": "Skip the optional --full reconcile. Fetch the public sha256-pinned 2017 CoA decision PDFs (~0.4 GB) for the load_coa_notices forced-reload recapture."
+    }
+  ]
+}
