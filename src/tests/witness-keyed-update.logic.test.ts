@@ -1,3 +1,4 @@
+// R-JF (register row, rulings-rec 9307de40) names this file as its lock: the exemption is scoped to set_based_scoped + rows "compute" only.
 // SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md §core.12 (write discipline per target), §core.14 (declared equals witnessed)
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-EH (the ROWS-arm G keyed UPDATE), R-BJ; operator CHAT-73.swap4 (Night A-swap, 2026-10-22)
 //
@@ -35,6 +36,22 @@ describe('#44 (b): the key column of a G keyed-update target is exempt (CHAT-73.
       const d = load(c.desc);
       d.outputs.writes.find((w: any) => w.table === 'coa_applications').columns.push({ name: 'zzz_never_written', vocabulary: 'none', written: 'step', bind: 'value', source: 'compute' });
       expect(bRows(c.slug, d, trace)).toEqual([`FAIL:WITNESS:${c.slug}:b:coa_applications.zzz_never_written`]);
+    });
+  }
+
+// Scope guard (R-JF): the same key column on a NON-matching target still raises its (b) row. Replacing the exemption
+  // condition with `true` (every class, every rows mode) must fail these.
+  for (const c of CASES) {
+    const trace = load(`docs/reports/witness/${c.slug}/post/coa-forced.trace.json`);
+    it(`${c.slug}: the key column stays a (b) row when the target is another write class (not set_based_scoped)`, () => {
+      const d = load(c.desc);
+      d.outputs.writes.find((w: any) => w.table === 'coa_applications').write_discipline.class = 'guarded_upsert';
+      expect(bRows(c.slug, d, trace)).toContain(`FAIL:WITNESS:${c.slug}:b:coa_applications.id`);
+    });
+    it(`${c.slug}: the key column stays a (b) row when set_based_scoped has rows other than "compute"`, () => {
+      const d = load(c.desc);
+      d.outputs.writes.find((w: any) => w.table === 'coa_applications').write_discipline.rows = 'sql';
+      expect(bRows(c.slug, d, trace)).toContain(`FAIL:WITNESS:${c.slug}:b:coa_applications.id`);
     });
   }
 });
