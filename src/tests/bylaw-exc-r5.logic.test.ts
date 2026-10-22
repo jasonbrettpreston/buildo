@@ -15,10 +15,11 @@ const mod = (rel: string): Promise<Json> => import(pathToFileURL(path.join(ROOT,
 const AUTHORED = ['900.2.10(72)', '900.2.10(338)', '900.2.10(868)', '900.2.10(860)', '900.2.10(815)', '900.5.10(103)', '900.5.10(297)', '900.5.10(234)', '900.5.10(346)',
   '900.3.10(130)', '900.3.10(125)', '900.3.10(419)', '900.3.10(543)', '900.3.10(718)', '900.3.10(242)', '900.3.10(349)', '900.3.10(408)', '900.3.10(1091)', '900.3.10(559)',
   '900.6.10(70)', '900.6.10(33)'];
-const PARTIAL = ['900.3.10(1429)', '900.6.10(478)']; // one pending disagreement each, waiting for the operator; shard s06 is held back (see the lane report)
+// R5-2b, R5-2c (HELD, recommendations applied under the lane label lane-exc-r5-held): these two units are adjudicated, not agreed
+const PARTIAL = ['900.3.10(1429)', '900.6.10(478)'];
 
 describe('EXC-R5 round: double-keyed exceptions', () => {
-  it('every unit of the 21 fully agreed exceptions is agreed or adjudicated; the two held units stay pending', async () => {
+  it('every unit of the 21 fully agreed exceptions is agreed or adjudicated; the two units held on R5-2b / R5-2c are adjudicated under the lane label', async () => {
     const V = await mod('scripts/analysis/bylaw/validate.mjs');
     const AU = await mod('scripts/analysis/bylaw/authored.mjs');
     const AG = await mod('scripts/analysis/bylaw/agree.mjs');
@@ -30,7 +31,7 @@ describe('EXC-R5 round: double-keyed exceptions', () => {
       expect(s.length, reg).toBeGreaterThan(0);
       expect(s.every((x) => x === 'agreed' || x === 'adjudicated'), reg).toBe(true);
     }
-    for (const reg of PARTIAL) expect(st(reg).filter((x) => x === 'pending').length, reg).toBe(1);
+    for (const reg of PARTIAL) expect(st(reg).filter((x) => x === 'adjudicated').length, reg).toBe(1);
   }, 120000);
   it('the six mechanical M-75 corrections are recorded under the lane label', () => {
     const adj = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/adjudications.json'), 'utf8')).adjudications as Json[];

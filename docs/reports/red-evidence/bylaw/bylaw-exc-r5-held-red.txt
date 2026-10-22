@@ -1,0 +1,4 @@
+   × R5-1 (HELD): namedTypes ignores a type word that is a street name > "On 500 Duplex Ave." names no building type 5ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/bylaw-exc-r5-held.logic.test.ts > R5-1 (HELD): namedTypes ignores a type word that is a street name > "On 500 Duplex Ave." names no building type
+      Tests  1 failed | 1 passed (2)

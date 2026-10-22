@@ -1,0 +1,170 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w2-s06",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(767)#(767)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(767)#(767)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(767)#(767)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(767)#(767)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(762)#(762)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(762)#(762)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[SSP](A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[SSP](B)(i)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[SSP](B)(ii)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[SSP](B)(iii)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": [
+        "parking_spaces = 8 units @(853)[SSP](B)(iii)"
+      ]
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(853)#(853)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(738)#(738)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(738)#(738)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(738)#(738)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(738)#(738)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(892)#(892)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(892)#(892)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(892)#(892)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(892)#(892)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

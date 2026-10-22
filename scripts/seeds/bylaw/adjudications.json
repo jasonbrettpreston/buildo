@@ -88042,6 +88042,75 @@
       "rule": "Spec 133 §m.82 (M-82 / M-75 correction form): mechanical literal bookkeeping under the lane label; G-CLAUSE literal_not_in_clause shows the slicer does not treat street numbers of a named address as clause literals, so listing them is refused",
       "unit": "900.3.10(349)#(349)[PBS](C)",
       "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(853)#(853)[SSP](B)(iii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b854d7fe: answer B — HELD on R5-2a (recommendation, not operator-ruled): Spec 133 §m.105 rule 29, full [SSP] clause path.",
+      "unit": "900.2.10(853)#(853)[SSP](B)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1429)#(1429)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-175a88cc: answer B — HELD on R5-2b (recommendation, not operator-ruled): twin of 1436 (D)/1437 (D), Spec 133 §m.317 (CHAT-64.D, CHAT-67.1434A), REQUIRE.",
+      "unit": "900.3.10(1429)#(1429)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.6.10(478)#(478)[SSP](C)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-6114511a: answer A — HELD on R5-2c (recommendation, not operator-ruled): single-arm by_type, Spec 133 §m.76; precedent 22 (C), 252 (A).",
+      "unit": "900.6.10(478)#(478)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "requirement",
+      "id": "COR-900.3.10(1429)#(1429)[SSP](A)/requirement",
+      "kind": "correction",
+      "reason": "The adjudicated archetype REQUIRE needs the requirement kind of the ruled twins.",
+      "rule": "HELD on R5-2b (recommendation, not operator-ruled): Spec 133 §m.317 / §m.82 (M-75 correction form); REQUIRE needs a requirement; twin 1436 (D) carries comply_with_bylaw and no ordinal literal",
+      "unit": "900.3.10(1429)#(1429)[SSP](A)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1429)#(1429)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"first storey\" is an ordinal, not one number, and the twin 1436 (D) lists nothing.",
+      "rule": "HELD on R5-2b (recommendation, not operator-ruled): Spec 133 §m.317 / §m.82 (M-75 correction form); REQUIRE needs a requirement; twin 1436 (D) carries comply_with_bylaw and no ordinal literal",
+      "unit": "900.3.10(1429)#(1429)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.2.10(853)#(853)[SSP](B)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The street number of the named address in the lead-in is an unaccounted literal (G-CLAUSE).",
+      "rule": "Spec 133 §m.82 (M-75 correction form); mechanical literal bookkeeping, HELD with shard s06 (R5-1)",
+      "unit": "900.2.10(853)#(853)[SSP](B)(i)",
+      "value": [
+        {
+          "clause": "(853)[SSP](B)",
+          "literal": "25",
+          "reason": "cross_reference_value"
+        }
+      ]
     }
   ]
 }
