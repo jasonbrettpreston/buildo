@@ -205,6 +205,28 @@ describe('Q-KG3 — rule 7a ignores a unit whose lot condition is known false (t
   });
 });
 
+// Q-KG3 / verify-44 A4: applies() reports a known-false lot condition as a STRUCTURED field, so rule 7a never depends on the wording of `why`.
+describe('Q-KG3 A4 — applies() returns known_false_condition, and rule 7a reads that field, not the message text', () => {
+  const unit = (id: string): Json => { const u = units.find((x: Json) => x.unit_id === id); if (!u) throw new Error(`no unit ${id}`); return u; };
+  const townhouseLength = '10.80.40.20(3)#(3)(A)';
+  const ap = (flag: boolean | undefined): Json => {
+    const l = lot('RM', 'townhouse', { flags: flag === undefined ? {} : { major_street: flag } });
+    if (flag === undefined) delete l.flags.major_street;
+    return E.applies(l, unit(townhouseLength), C, () => null, new Set(), [], 'building_length_m');
+  };
+  it('a flag that is false names its token in known_false_condition; true and unknown carry no such field', () => {
+    expect(ap(false)).toMatchObject({ ok: false, known_false_condition: 'major_street' });
+    expect(ap(true).known_false_condition).toBeUndefined();
+    expect(ap(undefined).ok).toBeNull();
+    expect(ap(undefined).known_false_condition).toBeUndefined();
+  });
+  it('rule 7a does not parse the message: the evaluator source holds no comparison of a.why with a condition string', () => {
+    const src = fs.readFileSync(path.join(process.cwd(), 'scripts/analysis/bylaw/evaluate.mjs'), 'utf8');
+    expect(src).not.toMatch(/a\.why\s*===\s*`condition/);
+    expect(src).toMatch(/known_false_condition/);
+  });
+});
+
 // N-3 / M-242 (operator approved 2026-10-20, `2026-10-20-bylaw-fix-rulings#N-3`): a unit whose own text is a complement
 // phrase ("in all other cases", "in any other case", "otherwise"; vocab.complement_phrases) may carry condition.if =
 // complement(<sibling unit id>, …), the negation of each sibling's keyed condition; G-CLAUSE licenses its variables and

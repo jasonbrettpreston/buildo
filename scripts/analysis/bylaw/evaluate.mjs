@@ -618,11 +618,11 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     // M-285: abuts_named_street is joined from the lot's primary frontage street name to the street(s) this unit names
     const joined = t === 'abuts_named_street' ? namedStreetJoin(lot, u, C, reads, trace) : undefined;
     if (joined === true) continue;
-    if (joined === false) return { ok: false, why: `condition ${t}` };
+    if (joined === false) return { ok: false, why: `condition ${t}`, known_false_condition: t };
     reads.add(`flags.${t}`);
     const v = lot.flags ? lot.flags[t] : undefined;
     trace.push(`${t}=${v === true || v === false ? v : 'unknown'}`);
-    if (v === false) return { ok: false, why: `condition ${t}` };
+    if (v === false) return { ok: false, why: `condition ${t}`, known_false_condition: t }; // Q-KG3: the structured field rule 7a reads, never the message
     if (v !== true) unknown = unknown || (C.userInputs.has(t) ? `needs_user_input:${t}` : `condition_unknown:${t}`);
   }
   if (cond && cond !== 'none' && cond.if && cond.if !== 'none') {
@@ -980,7 +980,7 @@ function effCore(lot, target, candidates, C, env) {
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
     else if (a.disclosure && !disclosures.includes(a.disclosure)) disclosures.push(a.disclosure); // M-224 literal reading
     if (a.ok === false && valueSet.has(u)) condLosers.push({ unit_id: u.unit_id, dropped_by: 'condition_false', by: null });
-    if (a.ok === false && knownFalse.some((k) => a.why === `condition ${k}`)) condFalse.add(u); // Q-KG3
+    if (a.ok === false && knownFalse.includes(a.known_false_condition)) condFalse.add(u); // Q-KG3
   }
   for (const u of prevailing) {
     const a = applies(lot, u, C, resolveVariable, reads, []);
