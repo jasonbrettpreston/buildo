@@ -62,6 +62,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (const id of ['FAM-ALL', 'R9-ALL', 'R10-ALL', 'R11-1', 'R12-ALL', 'SCOPE-1', 'P3-Q11', 'CITE-1']) expect(M, id).toContain(`2026-10-23-batch-b#CHAT-81.${id}`);
     expect(read('docs/specs/01-pipeline/131_lot_configuration_policy.md')).toContain('2026-10-23-batch-b#CHAT-81.Q-D');
   });
+  it('CHAT-82 sits on R-JP; CHAT-83 on M-349 and M-350', () => {
+    expect(rowOf(A, 'R-JP')).toContain('2026-10-23-batch-c#CHAT-82.night-go');
+    expect(rowOf(M, 'M-349')).toContain('2026-10-23-batch-d#CHAT-83.W-2');
+    expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-d#CHAT-83.NAMED-1');
+    expect(rowOf(M, 'M-350')).toContain('no accuracy loss');
+  });
   it('R-IX carries the CHAT-69.Q2 confirmation as a dated note', () => {
     expect(rowOf(A, 'R-IX')).toContain('2026-10-22-batch-z6#CHAT-69.Q2');
   });

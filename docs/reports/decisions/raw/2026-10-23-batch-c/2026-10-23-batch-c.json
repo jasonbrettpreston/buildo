@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "fleet night: go",
+  "context": "Direct operator go for the fleet recapture night (NIGHT-1 / R-JP) as described in chat: ~5–6 h DB lock, migrations 283/284/285, CoA intake (691 items, 170 notices, 129 plan facts), list arm (RE-FREEZE #41), enrich_coa_zoning wording, every step re-captured (forced brackets delete/reload and restore their own rows, incl. the first plan-facts bracket), VACUUM coa_applications, public re-acquisition (~20 datasets + 301 MB City PDFs, no captcha). Not migration 282; not DB-1. Night tree ~/Buildo-wt-night (wf2/fleet-night-2210); runbook ~/Buildo-scratch/fleet-night-2210/.",
+  "decisions": [
+    {"id": "CHAT-82.night-go", "subject": "Run the fleet recapture night now", "decision": "approve", "recommendation": "Run per RUNBOOK.md and run-night.sh under the dblock; stop on first failure; report at each phase."}
+  ]
+}
