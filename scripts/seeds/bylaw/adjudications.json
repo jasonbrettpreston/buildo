@@ -104110,6 +104110,3078 @@
       "value": [
         "ancillary_coverage_pct = 5 pct @(69)[SSP](E)"
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/archetype",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/target",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/bound",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/numeric_expression",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/literals_not_expressed",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": [
+        {
+          "clause": "(325)[SSP](C)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/calculation_handling",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/disclosure",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/target",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/bound",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(1156)[SSP](C)(i)",
+          "literal": "9.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 9.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/target",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/bound",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(936)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/target",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/bound",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(1091)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/target",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/bound",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(1120)[SSP](C)(i)",
+          "literal": "9.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 9.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/target",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/bound",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(714)[SSP](C)(i)",
+          "literal": "6.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 6.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/archetype",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/target",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/bound",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/numeric_expression",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/literals_not_expressed",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": [
+        {
+          "clause": "(714)[SSP](D)(i)",
+          "literal": "4.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/calculation_handling",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/disclosure",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 4.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/archetype",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/target",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/bound",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/numeric_expression",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/literals_not_expressed",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": [
+        {
+          "clause": "(397)[SSP](B)",
+          "literal": "9.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/calculation_handling",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/disclosure",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 9.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/archetype",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/target",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/bound",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/numeric_expression",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/literals_not_expressed",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": [
+        {
+          "clause": "(975)[SSP](A)(i)",
+          "literal": "15.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/calculation_handling",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/disclosure",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 15.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/archetype",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/target",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/bound",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/numeric_expression",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/literals_not_expressed",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": [
+        {
+          "clause": "(975)[SSP](A)(ii)",
+          "literal": "18.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/calculation_handling",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/disclosure",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 18.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/archetype",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/target",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/bound",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/numeric_expression",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/literals_not_expressed",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": [
+        {
+          "clause": "(812)[SSP](D)(i)",
+          "literal": "7.5 metre",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/calculation_handling",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/disclosure",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/target",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/bound",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(1168)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/target",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/bound",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(516)[SSP](C)(i)",
+          "literal": "18.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 18.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/archetype",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/target",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/bound",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/numeric_expression",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/literals_not_expressed",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": [
+        {
+          "clause": "(516)[SSP](C)(ii)",
+          "literal": "12.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/calculation_handling",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/disclosure",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 12.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/archetype",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/target",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/bound",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/numeric_expression",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/literals_not_expressed",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": [
+        {
+          "clause": "(516)[SSP](C)(iii)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/calculation_handling",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/disclosure",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/target",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/bound",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(854)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/archetype",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/target",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/bound",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/numeric_expression",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/literals_not_expressed",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(854)[SSP](E)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/calculation_handling",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/disclosure",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/target",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/bound",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(852)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/archetype",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/target",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/bound",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/numeric_expression",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/literals_not_expressed",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(852)[SSP](E)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/calculation_handling",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/target",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/bound",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(713)[SSP](C)(i)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 1.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/archetype",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/target",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/bound",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/numeric_expression",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/literals_not_expressed",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": [
+        {
+          "clause": "(255)[SSP](D)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/calculation_handling",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/disclosure",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/archetype",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/target",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/bound",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/numeric_expression",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/literals_not_expressed",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": [
+        {
+          "clause": "(202)[SSP](D)(i)",
+          "literal": "7.5 metre",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/calculation_handling",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/disclosure",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/archetype",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/target",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/bound",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/numeric_expression",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/literals_not_expressed",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": [
+        {
+          "clause": "(202)[SSP](F)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/calculation_handling",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/disclosure",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/archetype",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/target",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/bound",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/numeric_expression",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/literals_not_expressed",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": [
+        {
+          "clause": "(295)[SSP](D)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/calculation_handling",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/disclosure",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/archetype",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/target",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/bound",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/numeric_expression",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/literals_not_expressed",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": [
+        {
+          "clause": "(284)[SSP](D)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/calculation_handling",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/disclosure",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/archetype",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/target",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/bound",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/numeric_expression",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/literals_not_expressed",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": [
+        {
+          "clause": "(81)[SSP](H)(i)",
+          "literal": "9.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/calculation_handling",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/disclosure",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 9.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/archetype",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/target",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/bound",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/numeric_expression",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/literals_not_expressed",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": [
+        {
+          "clause": "(264)[SSP](A)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/calculation_handling",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/disclosure",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/archetype",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/target",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/bound",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/numeric_expression",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/literals_not_expressed",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": [
+        {
+          "clause": "(264)[SSP](A)(ii)",
+          "literal": "6.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/calculation_handling",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/disclosure",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 6.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/archetype",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/target",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/bound",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/numeric_expression",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/literals_not_expressed",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": [
+        {
+          "clause": "(200)[SSP](A)(i)",
+          "literal": "7.5 metre",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/calculation_handling",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/disclosure",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/archetype",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/target",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/bound",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/numeric_expression",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(200)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/calculation_handling",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/disclosure",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/archetype",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/target",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/bound",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/numeric_expression",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(204)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/calculation_handling",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/disclosure",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": "Where the lot line abuts the named roads, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/archetype",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/target~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/target",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/bound",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/numeric_expression",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/literals_not_expressed",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(204)[SSP](E)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/calculation_handling",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": {
+        "description": "A setback that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "NAMED-1b: ruled, no longer held",
+      "rule": "CHAT-84.NAMED-1b (operator 2026-10-23, supersedes the held variant of CHAT-83.NAMED-1): one rule, two outcomes — where the named road is in vocab.named_street the M-285 join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is UNUSUAL and disclosed (these 32 units); Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/disclosure",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
     }
   ]
 }

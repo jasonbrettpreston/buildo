@@ -1,5 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-130, M-136; operator CHAT-81.FAM-ALL (FAM-ABUT-NAMED) and CHAT-83.NAMED-1 (2026-10-23-batch-d)
-// HELD on NAMED-1: the family is 44 older LIMIT units carrying abuts_named_street, not the ~8 of the card. FAM-ABUT-NAMED applied uniformly: UNUSUAL, disclosed.
+// CHAT-84.NAMED-1b (operator 2026-10-23) ruled this variant: the 12 table units are LIMIT, the other 32 UNUSUAL and disclosed; no longer held.
+// (was) HELD on NAMED-1: the family is 44 older LIMIT units carrying abuts_named_street, not the ~8 of the card. FAM-ABUT-NAMED applied uniformly: UNUSUAL, disclosed.
 // Red first: before the variant these units are LIMIT (partially modelled or not).
 import { describe, expect, it } from 'vitest';
 import path from 'node:path';

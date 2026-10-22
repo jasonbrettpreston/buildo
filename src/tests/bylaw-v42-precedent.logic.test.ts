@@ -79,3 +79,28 @@ describe('verify-42 item 6: older rulings applied to the later-keyed units of th
     for (const id of ['900.3.10(971)#(971)[SSP](D)', '900.3.10(70)#(70)[SSP](D)', '900.3.10(69)#(69)[SSP](E)']) expect((U.get(id) as Json).target, id).toBe('ancillary_coverage_pct');
   }, 120000);
 });
+
+// CHAT-84.NAMED-1b (operator 2026-10-23): the 12 units whose road is in vocab.named_street are LIMIT (computed by the M-285 join); the other 32 are UNUSUAL, disclosed — ruled, no longer held
+describe('CHAT-84.NAMED-1b: the 32 UNUSUAL named-road arms are ruled, not held', () => {
+  it('the 12 table units are LIMIT; each of the other 32 is UNUSUAL and its live record of every converted field cites CHAT-84.NAMED-1b', async () => {
+    const fs = await import('node:fs');
+    const U = await load();
+    const adj: Json[] = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/adjudications.json'), 'utf8')).adjudications;
+    const sup = new Set(adj.map((x) => x.supersedes).filter(Boolean));
+    const live = (unit: string, field: string): Json | undefined => adj.filter((x) => x.kind === 'correction' && x.unit === unit && x.field === field && !sup.has(x.id)).pop();
+    const twelve = ['900.3.10(309)#(309)[SSP](C)(i)', '900.3.10(303)#(303)[SSP](D)', '900.3.10(1057)#(1057)[SSP](C)(i)', '900.3.10(323)#(323)[SSP](C)', '900.3.10(316)#(316)[SSP](D)', '900.3.10(316)#(316)[SSP](H)',
+      '900.3.10(560)#(560)[SSP](C)(i)', '900.3.10(1032)#(1032)[SSP](C)(i)', '900.3.10(1170)#(1170)[SSP](A)(i)', '900.4.10(256)#(256)[SSP](D)(i)', '900.4.10(256)#(256)[SSP](D)(ii)', '900.4.10(70)#(70)[SSP](A)(i)'];
+    for (const t of twelve) expect(U.get(t)?.archetype, t).toBe('LIMIT');
+    // the 32: every unit whose live archetype record was written for NAMED-1 (the lane's HELD variant, now the ruled NAMED-1b)
+    const thirtyTwo = [...new Set(adj.filter((x) => x.kind === 'correction' && x.field === 'archetype' && /NAMED-1/.test(x.rule) && !sup.has(x.id) && x.value === 'UNUSUAL').map((x) => x.unit))];
+    expect(thirtyTwo.length).toBe(32);
+    for (const id of thirtyTwo) {
+      expect(U.get(id)?.archetype, id).toBe('UNUSUAL');
+      for (const f of ['archetype', 'target', 'bound', 'numeric_expression', 'literals_not_expressed', 'calculation_handling', 'disclosure']) {
+        const r = live(id, f) as Json;
+        expect(r?.rule, id + ' ' + f).toContain('CHAT-84.NAMED-1b');
+        expect(r.rule, id + ' ' + f).not.toMatch(/HELD/);
+      }
+    }
+  }, 120000);
+});
