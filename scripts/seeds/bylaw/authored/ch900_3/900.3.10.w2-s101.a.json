@@ -1,0 +1,869 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s101",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(1026)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot frontage equals the lot frontage that existed on the day the By-law was enacted; needs the as-built lot frontage.",
+    "gaps": "as-built lot frontage on the enactment date",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot frontage existed on the day of the enactment of By-law 569-2013, the minimum lot frontage is that existing frontage.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(1026)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot area equals the lot area that existed on the day the By-law was enacted; needs the as-built lot area.",
+    "gaps": "as-built lot area on the enactment date",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot area existed on the day of the enactment of By-law 569-2013, the minimum lot area is that existing area.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](C)(i)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "7.5 metres",
+     "clause": "(1026)[SSP](C)(i)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Building setback of 7.5 m from a lot line abutting Finch Ave., McCowan Rd. or Middlefield Rd.; a setback keyed to named roads has no target.",
+    "gaps": "setback from a lot line that abuts a named road",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "A minimum building setback of 7.5 metres applies from a lot line that abuts Finch Ave., McCowan Rd. or Middlefield Rd.; this is not evaluated by the model.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](C)(ii)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "6.0 metres",
+     "clause": "(1026)[SSP](C)(ii)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Building setback of 6.0 m from a lot line abutting any street other than the named roads of (C)(i); the scope depends on the named-road exclusion.",
+    "gaps": "applies only to streets other than the named roads of (C)(i)",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "A minimum building setback of 6.0 metres applies from a lot line that abuts any street other than Finch Ave., McCowan Rd. or Middlefield Rd.; this is not evaluated by the model.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(1026)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum building setback from a side lot line is 1.2 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](E)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 4.5 m @(1026)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum building setback from a side lot line that abuts a street is 4.5 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](F)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(1026)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "private_garage": "A garage must",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "A garage must be at least 0.3 m from a side lot line that does not abut a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](G)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "parking_in_building",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "parking_space": "required parking space",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "The required parking space must be located in the residential building.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](H)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "parking_space": "Underground parking structures",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Underground parking structures may be located in a required yard if set back from a street lot line by the stated grade-difference distance.",
+    "gaps": "parking structure floor elevation and grade at the front lot line",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[SSP](I)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Incorporates exception 900.3.10(1462).",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1026)#(1026)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1026",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[SSP](A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "duplex",
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "duplex": "in a duplex",
+     "detached_house": "detached house",
+     "dwelling_unit": "dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "A dwelling unit in a duplex, or in a detached house converted to allow two dwelling units, is permitted.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[SSP](B)(i)",
+   "archetype": "LIMIT",
+   "target": "fsi",
+   "bound": "max",
+   "numeric_expression": [
+    "fsi = 0.69 ratio @(1257)[SSP](B)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "label_value"
+    ],
+    "if": "label(d) = 0.6 ratio"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [
+     "label_value"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "detached_house": "detached house",
+     "label_value": "floor space index"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Pre-1953 detached house with permitted maximum FSI of 0.6 may be enlarged by a rear addition if the overall FSI does not exceed 0.69.",
+    "gaps": "date the detached house was erected",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If a detached house on a lot with a permitted maximum floor space index of 0.6 was erected before October 15, 1953, you may enlarge it by an addition to the rear, provided the overall floor space index including the addition does not exceed 0.69.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[SSP](B)(ii)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.6",
+     "clause": "(1257)[SSP](B)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "detached_house": "detached house"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Condition on a rear addition to a detached house erected before October 15, 1953; relative to the existing building.",
+    "gaps": "existing building history and as-built facts",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If a detached house on a lot with a permitted maximum floor space index of 0.6 was erected before October 15, 1953, you may enlarge it by an addition to the rear, provided all finished floor levels within the addition are no higher than the uppermost floor level in the existing building.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[SSP](B)(iii)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.6",
+     "clause": "(1257)[SSP](B)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "detached_house": "detached house"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Condition on a rear addition to a detached house erected before October 15, 1953; relative to the existing building.",
+    "gaps": "existing building history and as-built facts",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If a detached house on a lot with a permitted maximum floor space index of 0.6 was erected before October 15, 1953, you may enlarge it by an addition to the rear, provided no part of the addition is closer to the nearest side lot line than the shortest distance between the existing side main wall and the side lot line.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[SSP](B)(iv)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.6",
+     "clause": "(1257)[SSP](B)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "5 years",
+     "clause": "(1257)[SSP](B)(iv)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "detached_house": "detached house"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Condition on a rear addition to a detached house erected before October 15, 1953; relative to the existing building.",
+    "gaps": "existing building history and as-built facts",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If a detached house on a lot with a permitted maximum floor space index of 0.6 was erected before October 15, 1953, you may enlarge it by an addition to the rear, provided any prior addition is at least 5 years old.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[SSP](C)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "deck_or_platform": "a platform",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "A platform with a floor higher than the first floor above established grade may not encroach into the required front or rear yard setback.",
+    "gaps": "platform floor height relative to first floor",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[SSP](D)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "frontage_band"
+    ],
+    "if": "lot_frontage_m ≤ 7.6 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "frontage_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "frontage_band": "lot frontage",
+     "any": "Site Specific Provisions"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "On a lot with frontage of 7.6 m or less, a vehicle entrance through the front wall of a residential building is not permitted.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1257)#(1257)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1257",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "900.3.10(1026)": {
+   "explanation": "Exception RD 1026 sets site-specific lot, setback, garage and parking rules for these RD lands, including minimum lot frontage and area as they existed at enactment, street and side setbacks, and a requirement to comply with exception 1462.",
+   "code_refs": "none"
+  },
+  "900.3.10(1257)": {
+   "explanation": "Exception RD 1257 permits two dwelling units in a duplex or converted detached house, allows a rear addition to a pre-1953 detached house up to an FSI of 0.69 under conditions, bars higher platforms from encroaching into front or rear yard setbacks, and bars a front-wall vehicle entrance on narrow lots.",
+   "code_refs": "none"
+  }
+ }
+}

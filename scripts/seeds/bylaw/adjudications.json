@@ -95059,6 +95059,597 @@
           "reason": "cross_reference_value"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1257)#(1257)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-20); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(1257)#(1257)[SSP](A)",
+      "value": [
+        {
+          "clause": "(1257)[SSP](A)",
+          "literal": "two dwelling units",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(630)#(630)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-20); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(630)#(630)[SSP](C)",
+      "value": [
+        {
+          "clause": "(630)[SSP](C)",
+          "literal": "0.9 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(630)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-20); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": [
+        {
+          "clause": "(713)[SSP](C)(ii)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(247)#(247)[SSP](A)(vi)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-20); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.4.10(247)#(247)[SSP](A)(vi)",
+      "value": [
+        {
+          "clause": "(247)[SSP](A)(vi)",
+          "literal": "1.2 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(247)[SSP](A)(vi)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(341)#(341)[PBS]/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 341\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(341)#(341)[PBS]",
+      "value": {
+        "RD": "Exception RD 341",
+        "any": "Exception RD RD"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(341)#(341)[SSP](A)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 341\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(341)#(341)[SSP](A)",
+      "value": {
+        "RD": "Exception RD 341",
+        "any": "Exception RD RD",
+        "required_lot_frontage_m": "minimum lot frontage"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(341)#(341)[SSP](B)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 341\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(341)#(341)[SSP](B)",
+      "value": {
+        "RD": "Exception RD 341",
+        "any": "Exception RD RD",
+        "required_lot_area_m2": "minimum lot area"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(341)#(341)[SSP](C)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 341\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(341)#(341)[SSP](C)",
+      "value": {
+        "RD": "Exception RD 341",
+        "abuts_named_street": "abuts Birchmount Rd.",
+        "any": "Exception RD RD"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(341)#(341)[SSP](D)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 341\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(341)#(341)[SSP](D)",
+      "value": {
+        "RD": "Exception RD 341",
+        "any": "Exception RD RD",
+        "side_setback_m": "from a side lot line"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(341)#(341)[SSP](E)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 341\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(341)#(341)[SSP](E)",
+      "value": {
+        "RD": "Exception RD 341",
+        "any": "Exception RD RD",
+        "side_setback_street_m": "side lot line that abuts a street"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(341)#(341)[SSP](F)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 341\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(341)#(341)[SSP](F)",
+      "value": {
+        "RD": "Exception RD 341",
+        "any": "Exception RD RD",
+        "private_garage": "A garage or carport"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[PBS]/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[PBS]",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](A)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](A)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD",
+        "required_lot_frontage_m": "minimum lot frontage"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](B)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](B)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD",
+        "required_lot_area_m2": "minimum lot area"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](C)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](C)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD",
+        "side_setback_m": "from a side lot line"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](D)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](D)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD",
+        "front_setback_m": "from a front lot line"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](E)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](E)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD",
+        "street_setback_m": "lot line that abuts a street"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](G)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](G)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD",
+        "garage_entrance_faces_street": "entrance to a garage also faces the street",
+        "private_garage": "entrance to a garage"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](H)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](H)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD",
+        "parking_space": "required parking space"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(630)#(630)[SSP](I)/application.evidence",
+      "kind": "correction",
+      "reason": "evidence phrase copied from the clause header",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical evidence bookkeeping under the lane label (round 20); the zone evidence phrase must be copied from the unit text (\"Exception RD 630\"), keyer A wrote \"Exception RD RD\"",
+      "unit": "900.3.10(630)#(630)[SSP](I)",
+      "value": {
+        "RD": "Exception RD 630",
+        "any": "Exception RD RD"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-46275322: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-0b442483: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-0d7b89a3: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-031a09ee: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f4c5ed92: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP as written): the complement arm 6.0 m is the smallest sibling (7.5, 6.0), so it is a partially modelled LIMIT on street_setback_m",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-224059a8: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP as written): the complement arm 6.0 m is the smallest sibling (7.5, 6.0), so it is a partially modelled LIMIT on street_setback_m",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-65f29169: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP as written): the complement arm 6.0 m is the smallest sibling (7.5, 6.0), so it is a partially modelled LIMIT on street_setback_m",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1026)#(1026)[SSP](C)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ae706e0b: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP as written): the complement arm 6.0 m is the smallest sibling (7.5, 6.0), so it is a partially modelled LIMIT on street_setback_m",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(702)#(702)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-16c30460: answer A — HELD on R20-1 (recommendation, not operator-ruled; shard >= 85%): a garage vehicle entrance setback is garage_entrance_setback_m (agreed 586 (C), 809 (F), 355; Spec 133 §m.132 \"vehicle entrance\")",
+      "unit": "900.3.10(702)#(702)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(702)#(702)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-0e9b1d1e: answer A — HELD on R20-1 (recommendation, not operator-ruled; shard >= 85%): a garage vehicle entrance setback is garage_entrance_setback_m (agreed 586 (C), 809 (F), 355; Spec 133 §m.132 \"vehicle entrance\")",
+      "unit": "900.3.10(702)#(702)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(713)#(713)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a964c212: answer A — HELD on R20-1 (recommendation, not operator-ruled; shard >= 85%): a garage vehicle entrance setback is garage_entrance_setback_m (agreed 586 (C), 809 (F), 355; Spec 133 §m.132 \"vehicle entrance\")",
+      "unit": "900.3.10(713)#(713)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(713)#(713)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4908ef2c: answer A — HELD on R20-1 (recommendation, not operator-ruled; shard >= 85%): a garage vehicle entrance setback is garage_entrance_setback_m (agreed 586 (C), 809 (F), 355; Spec 133 §m.132 \"vehicle entrance\")",
+      "unit": "900.3.10(713)#(713)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(173)#(173)[SSP](F)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-685d7395: answer other — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type with the per-unit arm times dwelling_units",
+      "unit": "900.4.10(173)#(173)[SSP](F)(i)",
+      "value": [
+        "required_lot_frontage_m = by_type(semi_detached_house: 15.5 m; other: 7.7 m × dwelling_units) @(173)[SSP](F)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(173)#(173)[SSP](F)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b52cf0ff: answer other — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type with the per-unit arm times dwelling_units",
+      "unit": "900.4.10(173)#(173)[SSP](F)(ii)",
+      "value": [
+        "required_lot_area_m2 = by_type(semi_detached_house: 529 m2; other: 264 m2 × dwelling_units) @(173)[SSP](F)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(247)#(247)[SSP](C)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3c382207: answer A — HELD on R20-3 (recommendation, not operator-ruled; shard >= 85%): a requirement with no number (\"each dwelling unit must have a private garage\") has no licensed target or requirement kind; keep UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.4.10(247)#(247)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(115)#(115)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-38d9cc19: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.4.10(115)#(115)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(115)#(115)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-84202571: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.4.10(115)#(115)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(281)#(281)[SSP](G)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-76741812: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.4.10(281)#(281)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(281)#(281)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-35821f94: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.4.10(281)#(281)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(13)#(13)[SSP](C)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-13816c73: answer A — HELD on R20-2 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; the keyer-B rear_setback_m LIMIT fails G-CLAUSE variable_unlicensed because \"from the rear lot line\" is not a rear_setback_m wording (\"from the side lot line\" is one for the side); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(13)#(13)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(13)#(13)[SSP](C)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-66dab89f: answer A — HELD on R20-2 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; the keyer-B rear_setback_m LIMIT fails G-CLAUSE variable_unlicensed because \"from the rear lot line\" is not a rear_setback_m wording (\"from the side lot line\" is one for the side); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(13)#(13)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(13)#(13)[SSP](C)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b5ee3470: answer A — HELD on R20-2 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; the keyer-B rear_setback_m LIMIT fails G-CLAUSE variable_unlicensed because \"from the rear lot line\" is not a rear_setback_m wording (\"from the side lot line\" is one for the side); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(13)#(13)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(13)#(13)[SSP](C)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-024f51e6: answer A — HELD on R20-2 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; the keyer-B rear_setback_m LIMIT fails G-CLAUSE variable_unlicensed because \"from the rear lot line\" is not a rear_setback_m wording (\"from the side lot line\" is one for the side); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(13)#(13)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP shape",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-COMP as written); Spec 133 §m.130 and §m.82 (M-75 correction form): shape of the partial LIMIT, as 278 (C)(ii)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP shape",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-COMP as written); Spec 133 §m.130 and §m.82 (M-75 correction form): shape of the partial LIMIT, as 278 (C)(ii)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(ii)",
+      "value": {
+        "description": "The 6.0 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setback of the named-road arm in (C)(i) is not modelled; street names are not held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r20",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP shape",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-COMP as written); Spec 133 §m.130 and §m.82 (M-75 correction form): shape of the partial LIMIT, as 278 (C)(ii)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(ii)",
+      "value": "none"
     }
   ]
 }
