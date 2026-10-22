@@ -390,6 +390,15 @@
       "bylaw_max_fsi",
       "id"
     ],
+    "coa_applications_cohort_bak_20261022t1120z": [
+      "application_number",
+      "data_hash"
+    ],
+    "coa_applications_cohort_bak_20261022t1121z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
     "coa_notice_variances": [
       "application_number",
       "bound",
@@ -424,6 +433,42 @@
     "coa_notice_variances_cohort_bak_20261010t2245z": [
       "required_value",
       "variance_key"
+    ],
+    "coa_notice_variances_cohort_bak_20261022t1127z": [
+      "application_number",
+      "bound",
+      "citation_kind",
+      "cited_bylaw",
+      "decision",
+      "decision_mailed_on",
+      "decision_source",
+      "exception_ref",
+      "extractor_version",
+      "hearing_date",
+      "item_ordinal",
+      "loaded_at",
+      "parse_confidence",
+      "parse_status",
+      "proposed_unit",
+      "proposed_value",
+      "qualified",
+      "regulation_id_as_cited",
+      "required_unit",
+      "required_value",
+      "retired_at",
+      "source_family",
+      "source_page",
+      "source_sha256",
+      "target",
+      "target_status",
+      "variance_key",
+      "vocab_version",
+      "zoning_as_stated"
+    ],
+    "coa_ward_bak_20261022": [
+      "application_number",
+      "data_hash",
+      "ward"
     ],
     "cost_estimates": [
       "complexity_score",
@@ -786,6 +831,10 @@
       "nk"
     ],
     "lifecycle_status_history_cohort_bak_20261021t1333z": [
+      "dk",
+      "nk"
+    ],
+    "lifecycle_status_history_cohort_bak_20261022t1121z": [
       "dk",
       "nk"
     ],

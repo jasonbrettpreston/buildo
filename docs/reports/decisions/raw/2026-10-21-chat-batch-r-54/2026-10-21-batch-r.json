@@ -1,0 +1,13 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "as we discussed we ar enot doing the cloud work until the entire pipeline is ready on the local . pushing . can we continue with Coapipeline without it",
+  "context": "Restates R-AQ.1 (no cloud dispatch until every step is converted locally). EP-PIN-D17 (end-of-sources cloud acceptance) is deferred until the entire pipeline is ready locally. Continue the CoA pipeline locally: step 2 for the four remaining CoA steps, CoA Night A preparation (captures plus the bundled ward fix, CHAT-47), and the load_coa_notices data path. The V3 label for steps blocked by R-ED / R-EY condition 8 flips only after the cloud acceptance.",
+  "decisions": [
+    {
+      "id": "CHAT-54",
+      "subject": "No cloud until the whole pipeline is ready locally; continue CoA locally",
+      "decision": "approve",
+      "recommendation": "Defer EP-PIN-D17 until every step is ready locally (R-AQ.1). Continue CoA pipeline conversion work locally up to the cloud-gated registration."
+    }
+  ]
+}

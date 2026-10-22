@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-coa.js",
   "chain": "coa",
-  "source_fingerprint": "4b333229d492711acfd07342d7d9fde003a04107fc18de6a47d34611a50e292f",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "source_fingerprint": "f95ae7070b3d8dbf32a8f33eb7da57697329380ca0ccf96516bf2239e04531d1",
+  "git_head": "314827667e1f962af114bb19ca9211fd2f01db2f",
   "header": {
     "processes": 1,
     "calls": 31,
     "distinct": 23,
     "utility": 11,
-    "tracer_self_ms": 10.558,
-    "wall_ms": 3095
+    "tracer_self_ms": 11.391,
+    "wall_ms": 3426
   },
   "statements": [
     {
@@ -59,7 +59,7 @@
       "fingerprint": "4b8516e33bbd1e35",
       "kind": "write",
       "count": 1,
-      "rowCount": 52,
+      "rowCount": 29,
       "reads": {
         "coa_applications": [
           "data_hash"
@@ -129,7 +129,7 @@
       "fingerprint": "54dbd8fadfdf89e0",
       "kind": "write",
       "count": 1,
-      "rowCount": 2643,
+      "rowCount": 2670,
       "reads": {
         "coa_applications": [
           "application_number",
@@ -214,7 +214,7 @@
       "fingerprint": "83652c04b3894b86",
       "kind": "write",
       "count": 1,
-      "rowCount": 32,
+      "rowCount": 24,
       "reads": {
         "lifecycle_status_history": [
           "event_date"
@@ -330,7 +330,7 @@
       "fingerprint": "f36afc5158390bc1",
       "kind": "read",
       "count": 1,
-      "rowCount": 2686,
+      "rowCount": 2692,
       "reads": {
         "coa_applications": [
           "application_number",
@@ -344,7 +344,7 @@
   ],
   "transactions": [
     {
-      "client": "81575:2",
+      "client": "96051:2",
       "write_fingerprints": [
         "4b8516e33bbd1e35",
         "54dbd8fadfdf89e0",

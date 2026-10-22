@@ -437,9 +437,9 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(145); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-55; the number decision-log --check prints
+    expect(r.decisions).toBe(148); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-54 + CHAT-55 + CHAT-57, CHAT-58; the number decision-log --check prints
     expect(r.owed).toBe(0);
-    expect(r.no_ruling).toBe(4); // CHAT-26, CHAT-43-era rows and CHAT-51 (restart lane, rests on R-EY)
+    expect(r.no_ruling).toBe(7); // CHAT-57 and CHAT-58 (run Night A core, fetch 2017 PDFs; rest on R-JB, R-CZ), CHAT-26, CHAT-43-era rows, CHAT-51 (restart lane, rests on R-EY) and CHAT-54 (no cloud until local complete, rests on R-AQ.1)
   });
 
   it('chat batch Q (CHAT-52, CHAT-53, v3-restart-1): CHAT-52 routes to R-JK (N-D1 retirement), CHAT-53 to R-JL (read-only gate measurement)', () => {
@@ -519,7 +519,8 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     for (const row of ['M-305', 'M-306', 'M-307', 'M-308', 'M-309', 'M-310', 'M-311', 'M-312']) expect(reg.some((l) => l.startsWith(`| **${row}** |`)), row).toBe(true);
     const rjb = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n').find((l) => l.startsWith('| R-JB |')) as string;
     expect(rjb).toContain('`2026-10-21-page-4d-d#CHAT-38.D-WARD`');
-    expect(rjb).toContain('PARKED');
+    expect(rjb).toContain('LANDED 2026-10-22');
+    expect(rjb).not.toContain('PARKED');
   });
 
   it('R-IJ lock: every committed post witness trace has a same-name golden capture (no orphan trace; red while link_wsib cohort-entities was committed)', () => {

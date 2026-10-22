@@ -82,6 +82,16 @@ function trimToNull(v) {
 }
 
 /**
+ * COA-D17 (CHAT-38.D-WARD, operator y 2026-10-21): the ward in one fixed form, two digits ('03'), the form the notices'
+ * bracketed ward number takes. CKAN's Active and Closed resources publish '3' and '03' for the same ward. Only a one-digit
+ * number is padded; a blank is null (trimToNull) and any other text is kept as published.
+ */
+function normalizeWard(v) {
+  const t = trimToNull(v);
+  return t !== null && /^\d$/.test(t) ? '0' + t : t;
+}
+
+/**
  * A CKAN date cell → 'YYYY-MM-DD' or null (COA-D3). Active types HEARING_DATE / APPEAL_EXPIRY_DATE as
  * `date` ('YYYY-MM-DD'); Closed FINALDATE arrives 'YYYY-MM-DDT00:00:00' (assessment §1.4). The calendar
  * date is the text's own date part — never re-derived through a Date object, whose parse of a zone-less
@@ -149,7 +159,7 @@ function shapeRecord(record, seam) {
     street_num: streetNum,
     street_name: fullStreetName,
     street_name_normalized: normalizeStreetName(fullStreetName),
-    ward: trimToNull(r.WARD_NUMBER || r.WARD),
+    ward: normalizeWard(r.WARD_NUMBER || r.WARD), // COA-D17
     status: trimToNull(r.STATUSDESC),
     decision: trimToNull(r['C_OF_A_DESCISION']),
     decision_date: decisionDate,
@@ -464,6 +474,7 @@ module.exports.deriveRows = deriveRows;
 module.exports.shouldSkipDelete = shouldSkipDelete;
 // Pure domain functions (exported for the parity suite).
 module.exports.isoDate = isoDate;
+module.exports.normalizeWard = normalizeWard;
 module.exports.hashDate = hashDate;
 module.exports.computeHash = computeHash;
 module.exports.daysSince = daysSince;

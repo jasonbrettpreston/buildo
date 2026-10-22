@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-r-54/2026-10-21-batch-r.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-r-54",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "as we discussed we ar enot doing the cloud work until the entire pipeline is ready on the local . pushing . can we continue with Coapipeline without it",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-r-54/2026-10-21-batch-r.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "no_ruling"
+  },
+  "routing": {
+    "CHAT-54": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-AQ.1"
+      ]
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-54",
+      "question": "No cloud until the whole pipeline is ready locally; continue CoA locally",
+      "recommendation": "Defer EP-PIN-D17 until every step is ready locally (R-AQ.1). Continue CoA pipeline conversion work locally up to the cloud-gated registration.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}
