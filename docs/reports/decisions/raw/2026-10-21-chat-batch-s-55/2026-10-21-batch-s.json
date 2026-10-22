@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-21",
+  "operator_quote": "push complete - proceed with chain tooling - are we using teh spec 122 and 124 habdbook spec 132",
+  "context": "Flip CHAIN-TOOLING to BUILT in programme-items.json per the drafted edit (~/Buildo-scratch/v3r1/chain-tooling-flip-draft.md): verify-31 confirmed it is functionally built (R-DJ parts 1/3/4, R-EC budgets, fast invariant #52 passing: 20.41 s vs 25.3, 25.91 s vs 27.5). The R-DJ / R-EC absolute budgets supersede the R-BC (e)(2) / Spec 122:1036 '<= +10% vs chain-start baseline' wording; refresh LDG-10's evidence text (its only pending item is the EP-PIN-D17 cloud proof, deferred by CHAT-54).",
+  "decisions": [
+    {"id": "CHAT-55", "subject": "Flip CHAIN-TOOLING to BUILT", "decision": "approve", "recommendation": "Set CHAIN-TOOLING BUILT; record that the R-DJ/R-EC absolute budgets supersede the +10% chain-start baseline clause; refresh LDG-10 evidence."}
+  ]
+}

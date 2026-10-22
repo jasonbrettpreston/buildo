@@ -5478,6 +5478,20 @@
       }
     },
     {
+      "id": "R-JU",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "CHAIN-TOOLING reads BUILT: the R-DJ (2) / R-EC absolute pre-commit budgets (fast invariant #52) supersede R-BC (e)(2)'s \"<= +10% vs the chain-start baseline\"; LDG-10 and EP-PIN-D17 stay PARTIAL (operator CHAT-55).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",
