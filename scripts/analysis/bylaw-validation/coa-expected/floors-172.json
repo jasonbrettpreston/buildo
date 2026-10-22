@@ -1,0 +1,61 @@
+{
+ "$comment": "CoA accuracy floors (pending row CHAT-63.C5): floors only go up; a change is --accept --ruling=<RATIFIED id> on coa-scorecard.mjs --floors, never a hand edit. accuracy = MATCH/(MATCH+DIFFER); answered = (MATCH+DIFFER)/(MATCH+DIFFER+NO ANSWER+OWED); percent, rounded down from the measured run. Articles with >= 10 scored rows have their own floor; the rest are pooled. Grouped by article until the per-provision family map exists (Spec 68 5a row 2, OWED).",
+ "schema": "coa-floors-v1",
+ "dataset": "coa-2026-a,b,c (the 172-notice set of expected-172.json)",
+ "overall": {
+  "accuracy": 92,
+  "answered": 71
+ },
+ "articles": {
+  "10.10.40": {
+   "accuracy": 96,
+   "answered": 91
+  },
+  "10.20.30": {
+   "accuracy": 96,
+   "answered": 92
+  },
+  "10.20.40": {
+   "accuracy": 91,
+   "answered": 78
+  },
+  "10.5.40": {
+   "accuracy": 94,
+   "answered": 56
+  },
+  "10.5.50": {
+   "accuracy": 97,
+   "answered": 83
+  },
+  "10.5.60": {
+   "accuracy": 92,
+   "answered": 42
+  },
+  "10.80.40": {
+   "accuracy": 97,
+   "answered": 89
+  },
+  "150.7.60": {
+   "accuracy": 70,
+   "answered": 62
+  },
+  "900.3.10": {
+   "accuracy": 86,
+   "answered": 81
+  }
+ },
+ "pooled": {
+  "accuracy": 96,
+  "answered": 68
+ },
+ "rulings": [
+  {
+   "ruling": "2026-10-22-batch-z3#CHAT-63.C5",
+   "overall": {
+    "accuracy": 92,
+    "answered": 71
+   },
+   "note": "initial floors: overall as ruled (92/71), per article from the run at b9c43b09 after C-3; pending decision-log import"
+  }
+ ]
+}

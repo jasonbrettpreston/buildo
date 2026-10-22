@@ -6,14 +6,19 @@
 // Classes: MATCH / DIFFER / NO ANSWER / OWED / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
 // Survey dimensions in --plan-facts are preferred; a parcel row >5% off the survey is flagged (F-4D-8/9/14). Calculator survey override is drafted, not built (owed).
 // Scorer fixes marked "4D-S<n>" (S1-S7) came from the four-district run at ac78d5dd.
+// Classes also: BY-LAW CHANGED (C-3: the cited provision has an amendment tag with a VERIFIED in-force date after the hearing; in neither percentage). A tag with no verified date leaves the class and sets amendment_status 'unverified'.
 // Usage: node scripts/analysis/bylaw-validation/coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]
 //   --pin FILE: write the expected file for this run at this tree ({commit, totals, inputs}).
+//   --floors FILE: fail (exit 1) when accuracy / answered fall below the committed floors (C-5); with --accept --ruling=<RATIFIED id> the floors are re-derived from this run and rewritten (the one door, Spec 133 m.56).
+//   --prereg FILE [--baseline SCORECARD.json]: record expected against actual moves and totals (C-4); an unexpected move, a missing move, a totals difference or an uncommitted file is a FINDING (exit 1).
 //   --check: after scoring, compare the class totals with EXPECTED.json {commit, totals}; exit 1 on a mismatch when --root is at that commit,
 //            otherwise print the diff as information only (the evaluator moved on; a changed total is a finding, not a failure).
 import crypto from 'node:crypto'; import fs from 'node:fs'; import path from 'node:path'; import { pathToFileURL, fileURLToPath } from 'node:url';
 import { normClause, unitsForClause } from './coa-clausemap.mjs';
 import { execFileSync } from 'node:child_process';
 import { checkExplainedDifferences, explainRow } from './coa-explained.mjs';
+import * as RD from './coa-round.mjs';
+import { readSpec69Rulings, parseRulings } from '../bylaw/universe.mjs';
 
 const arg = (k, d = null) => { const i = process.argv.indexOf('--' + k); return i >= 0 ? process.argv[i + 1] : d; };
 const ROOT = path.resolve(arg('root', path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')));
@@ -26,6 +31,8 @@ if (EXPLAINED_BAD.length) { console.error('vocab.explained_differences is invali
 const FA = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/front-averaging.mjs')).href);
 const defaults = {}; for (const [k, v] of Object.entries((I.vocab.design_choice_disclosure || {}).default_overrides || {})) if (k !== '$comment' && v && typeof v.taken_as === 'boolean') defaults[k] = v.taken_as;
 const SCU = I.vocab.scenario_class_units || {};
+const PROV_BY = new Map(JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-provisions.json'), 'utf8')).rows.map((r) => [r.regulation_id, r]));
+const AMD_STATUSES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/amendments.json'), 'utf8')).statuses;
 const notices = JSON.parse(fs.readFileSync(NOT, 'utf8')); const parcels = JSON.parse(fs.readFileSync(PAR, 'utf8'));
 const PF_DIR = arg('plan-facts', process.env.PLAN_FACTS || null);
 // 4D-S4: openings evidence (notice text or plan facts) → take the blank_side_wall:false arm
@@ -323,7 +330,7 @@ function runNotice(n, surveyOn, rows, lots) {
     }
     const bt = clauseType(c, matched, main);
     const row = { notice: n.file_number, address: n.address, city_label: n.zoning?.label || null, our_label: p?.zoning_zn_string || null, parcel_id: p?.parcel_id || null, parcel_row_id: p?.id || null,
-      n: v.n, clause: v.clause, clause_norm: c.norm, clause_note: c.note || null, limit: v.limit, requirement: v.requirement, city_value: cityVal, city_unit: cityUnit,
+      n: v.n, clause: v.clause, clause_norm: c.norm, cited_reg: c.reg, cited_path: c.path, clause_note: c.note || null, limit: v.limit, requirement: v.requirement, city_value: cityVal, city_unit: cityUnit,
       building_type: bt, dwelling_units: SUITE_TYPES.includes(bt) ? 1 : main.units, keyed_units: matched.map((u) => `${u.unit_id}:${u.archetype}:${[].concat(u.target || []).join('+')}`), target,
       family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null };
     const oos = outOfScope(c, v);
@@ -415,6 +422,15 @@ for (const n of notices) {
   });
 }
 
+// C-3 (pending row CHAT-63.C3): a scored row whose cited provision carries an amendment tag with a verified in-force date after the hearing is BY-LAW CHANGED
+// (in neither percentage); a tag with no verified date, or no hearing date, only sets amendment_status (nothing is guessed).
+for (const r of rows) {
+  if (r.class !== 'MATCH' && r.class !== 'DIFFER') continue;
+  const st = RD.bylawStatusAtDecision((PROV_BY.get(r.cited_reg) || {}).amendments, AMD_STATUSES, lots[r.notice].hearing_date, r.cited_path);
+  if (st.state === 'changed') { r.class_before_bylaw = r.class; r.class = RD.CHANGED_CLASS; r.why = `by-law changed after the hearing (${st.bylaws.join(', ')}); was ${r.class_before_bylaw}: ${r.why}`; }
+  else if (st.state === 'unverified') r.amendment_status = 'unverified';
+}
+
 // in-flight findings (approved, being fixed in lane bylaw-fix-3)
 for (const r of rows) {
   if (/^10\.10\.60\.20\(1\)/.test(r.clause_norm || '')) r.in_flight = 'N-2';
@@ -425,7 +441,30 @@ for (const r of rows) {
 }
 fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allowance_m: FYA_ALLOWANCE, defaults, lots, rows }, null, 1));
 const by = {}; for (const r of rows) by[r.class] = (by[r.class] || 0) + 1;
-console.log('rows', rows.length, JSON.stringify(by));
+console.log('rows', rows.length, JSON.stringify(by), 'amendment status unverified', rows.filter((r) => r.amendment_status === 'unverified').length);
+// C-5 floors and C-4 pre-registration (see coa-round.mjs). Both are read-only on the data; --accept is the only writer and needs a RATIFIED ruling.
+const STATS = RD.statsOf(rows);
+if (arg('floors')) {
+  const fp = arg('floors'); const floors = JSON.parse(fs.readFileSync(fp, 'utf8'));
+  if (process.argv.includes('--accept')) {
+    const next = RD.acceptFloors(floors, STATS, (process.argv.find((a) => a.startsWith('--ruling=')) || '').slice(9), parseRulings(readSpec69Rulings(ROOT)));
+    fs.writeFileSync(fp, JSON.stringify(next, null, 1) + '\n'); console.log('FLOORS ACCEPTED ' + fp + ' ' + JSON.stringify(next.overall));
+  } else {
+    const bad = RD.checkFloors(floors, STATS);
+    if (bad.length) { console.log('FLOORS FAIL: ' + bad.join('; ')); process.exitCode = 1; } else console.log('FLOORS OK: overall ' + JSON.stringify(floors.overall) + ', ' + Object.keys(floors.articles).length + ' article floors + pooled');
+  }
+}
+if (arg('prereg')) {
+  const pp = arg('prereg'); const pre = JSON.parse(fs.readFileSync(pp, 'utf8')); const shape = RD.checkPreregShape(pre);
+  let committed = false; try { committed = execFileSync('git', ['-C', ROOT, 'show', 'HEAD:' + path.relative(ROOT, path.resolve(pp)).split(path.sep).join('/')], { encoding: 'utf8' }) === fs.readFileSync(pp, 'utf8'); } catch { /* not in HEAD */ }
+  const base = arg('baseline') ? JSON.parse(fs.readFileSync(arg('baseline'), 'utf8')).rows : null;
+  const res = RD.checkPrereg(pre, base ? RD.diffMoves(base, rows) : null, by);
+  const bad = [...shape, ...(committed ? [] : ['prereg file is not committed at HEAD (pre-registration comes before the round)'])];
+  const out = { round: pre.round, prereg: pp, committed, shape_violations: shape, ...res };
+  fs.writeFileSync(OUT.replace(/\.json$/, '') + '.prereg-result.json', JSON.stringify(out, null, 1) + '\n');
+  console.log('PREREG ' + (res.verdict === 'ok' && !bad.length ? 'OK' : 'FINDING') + ' round ' + pre.round + ': unexpected ' + res.unexpected.length + ', missing ' + res.missing.length + ', totals ' + (res.totals_diff.join('; ') || 'equal') + (res.moves_checked ? '' : ' (moves not checked: no --baseline)') + (bad.length ? ' | ' + bad.join('; ') : ''));
+  if (res.verdict !== 'ok' || bad.length) process.exitCode = 1;
+}
 // The regression lock. An expected file is {commit, notices, variances, totals, inputs?}. It is PINNED (a changed total fails, exit 1) when --root is at its commit,
 // or when its inputs key equals the tree's: the Layer 2 input table_version (every Layer 1 input hash), its evaluator_version and the sha of this scorer's three files. Otherwise the diff is information only.
 // --pin FILE writes the expected file for this run at this tree (the integrate step re-pins; a moved input is a finding to re-pin, not a silent pass).
@@ -444,6 +483,6 @@ if (CHECK) {
   const diffs = keys.filter((k) => (exp.totals[k] || 0) !== (by[k] || 0)).map((k) => k + ' expected ' + (exp.totals[k] || 0) + ' got ' + (by[k] || 0));
   const ti = treeInputs();
   const pinned = head.startsWith(exp.commit) || (!!exp.inputs && exp.inputs.table_version === ti.table_version && exp.inputs.evaluator_version === ti.evaluator_version && exp.inputs.scorer_sha === ti.scorer_sha);
-  if (diffs.length) { console.log((pinned ? 'CHECK FAIL' : 'CHECK INFO (tree moved on from ' + exp.commit + '; inputs differ)') + ': ' + diffs.join('; ')); process.exit(pinned ? 1 : 0); }
+  if (diffs.length) { console.log((pinned ? 'CHECK FAIL' : 'CHECK INFO (tree moved on from ' + exp.commit + '; inputs differ)') + ': ' + diffs.join('; ')); process.exit(pinned ? 1 : process.exitCode || 0); }
   console.log((pinned ? 'CHECK OK (pinned)' : 'CHECK OK (not pinned: inputs differ from the pin)') + ': totals equal ' + JSON.stringify(exp.totals) + ' at ' + exp.commit);
 }

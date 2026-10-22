@@ -174,6 +174,10 @@ describe('oracles: B independence, C slot, D not_run (operator 2026-10-14)', () 
     expect(same).toMatchObject({ verdict: 'not_run', reason: 'no_preregistered_threshold', counts: { n: 3, match: 1, mismatch: 1, not_comparable: 1 } });
     expect(VR.oracleC({ path: 'x.json', sha256: 's', doc: { schema: 'other' } }, pins, PREREG).reason).toBe('input_schema_mismatch');
   });
+  it('oracle C slot reads the record oracle-c-run.mjs writes, oracle-c-round-v2 (Spec 133 m.305; pending row CHAT-63.C1 fills the slot)', () => {
+    const rec = { schema: 'oracle-c-round-v2', oracle_c_version: 'oracle-c-3', inputs: { provisions: { sha256: 'aaa' } }, summary: { n: 3, by_answer: { match: 1, mismatch: 1, not_comparable: 1 } } };
+    expect(VR.oracleC({ path: 'x.json', sha256: 's', doc: rec }, { table_sha256: 'aaa' }, PREREG)).toMatchObject({ verdict: 'not_run', reason: 'no_preregistered_threshold', counts: { n: 3 } });
+  });
 });
 
 describe('staleness and the K.4 double check', () => {

@@ -1,0 +1,24 @@
+{
+  "$comment": "Pre-registration for CoA scorer round 0 (P2-0 baseline on the unified key, pending rows CHAT-63.C4 and CHAT-63.C1). Committed BEFORE the round; coa-scorecard.mjs --prereg refuses a file that is not the blob at HEAD. Form of scripts/seeds/bylaw/validation/prereg-0.json (schema id, round, plan_ref, $comment) with a small body: the rows expected to move (clause, from class, to class) and the totals expected. Round 0 is the baseline: no fix, so only the C-3 class split is expected to move a row.",
+  "schema": "coa-round-prereg-v1",
+  "round": 0,
+  "plan_ref": "docs/reports/decisions/2026-10-22-batch-z3.json CHAT-63.C4 (to be recorded); Spec 68 5a row 7 (round 0 P2-0 OWED); scripts/seeds/bylaw/validation/prereg-0.json",
+  "expected_moves": [
+    {
+      "notice": "A0573/24NY",
+      "clause": "10.20.40.30(1)",
+      "from": "MATCH",
+      "to": "BY-LAW CHANGED"
+    }
+  ],
+  "expected_totals": {
+    "BY-LAW CHANGED": 1,
+    "DATA": 21,
+    "DIFFER": 29,
+    "MATCH": 383,
+    "NO ANSWER": 56,
+    "NOT MODELLED": 96,
+    "NOT SCORABLE": 25,
+    "OWED": 87
+  }
+}

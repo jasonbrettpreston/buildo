@@ -1,0 +1,4 @@
+   × oracles: B independence, C slot, D not_run (operator 2026-10-14) > oracle C slot reads the record oracle-c-run.mjs writes, oracle-c-round-v2 (Spec 133 m.305; pending row CHAT-63.C1 fills the slot
+     → expected { verdict: 'not_run', …(2) } to match object { verdict: 'not_run', …(2) }
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 37 passed (38)

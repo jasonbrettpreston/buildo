@@ -1,0 +1,25 @@
+{
+ "schema": "coa-key-manifest-v1",
+ "batches": {
+  "coa-2017-decisions": {
+   "rows": 10098,
+   "files": 1702,
+   "sha256": "1adeff82840483292a3ec032caa6608f2c87c9d0026c482513526683f9efc4e1"
+  },
+  "coa-2026-a": {
+   "rows": 496,
+   "files": 123,
+   "sha256": "fa0934ab24ecb4f3f66aeb432eabdfe1c5770c4ef738abe1fe96307ef9ac369d"
+  },
+  "coa-2026-b": {
+   "rows": 63,
+   "files": 15,
+   "sha256": "2bfb56c595e8af0699051ec5d666edb0b7c4f4982581d3011f9b93ee90f1207f"
+  },
+  "coa-2026-c": {
+   "rows": 139,
+   "files": 34,
+   "sha256": "76b80bf4c28194a5dc0313f551948934aabf91cfd411b8d235b3ddbd9ff78b75"
+  }
+ }
+}
