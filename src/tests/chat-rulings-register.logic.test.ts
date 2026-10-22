@@ -30,6 +30,7 @@ const R_ROWS: Array<[string, string[], string]> = [
   ['R-JN', ['2026-10-22-page-eve#EVE.Q-J', '2026-10-22-page-eve#EVE.L2P-3'], 'x-rulings.4'],
   ['R-JP', ['2026-10-22-page-eve#EVE.NIGHT-1'], 'x-captures.1'],
   ['R-JQ', ['2026-10-22-page-eve#EVE.P3-Q15', '2026-10-22-page-eve#EVE.P3-Q16'], 'x-stages.2'],
+  ['R-JR', ['2026-10-23-batch-a#CHAT-80.QP'], 'x-rulings.4'],
   ['R-JO', ['2026-10-22-batch-z14#CHAT-77.freeze'], 'x-rulings.4'],
 ];
 
@@ -55,6 +56,11 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (const id of ['R5-1', 'R5-5', 'M324-G', 'L2P-1', 'P3-Q4', 'P3-Q7', 'V39-1', 'Q-KG3', 'Q-O']) expect(all, id).toContain(`2026-10-22-page-eve#EVE.${id}`);
     expect(rowOf(M, 'M-334')).toContain('2026-10-22-batch-z13#CHAT-76.R8-5');
     expect(rowOf(M, 'M-347')).toContain('2026-10-22-batch-z15#CHAT-78.R6-3');
+  });
+  it('CHAT-79..81 are recorded on Spec 69a, 131 rows', () => {
+    expect(rowOf(M, 'M-346')).toContain('2026-10-22-batch-z16#CHAT-79.KG4');
+    for (const id of ['FAM-ALL', 'R9-ALL', 'R10-ALL', 'R11-1', 'R12-ALL', 'SCOPE-1', 'P3-Q11', 'CITE-1']) expect(M, id).toContain(`2026-10-23-batch-b#CHAT-81.${id}`);
+    expect(read('docs/specs/01-pipeline/131_lot_configuration_policy.md')).toContain('2026-10-23-batch-b#CHAT-81.Q-D');
   });
   it('R-IX carries the CHAT-69.Q2 confirmation as a dated note', () => {
     expect(rowOf(A, 'R-IX')).toContain('2026-10-22-batch-z6#CHAT-69.Q2');

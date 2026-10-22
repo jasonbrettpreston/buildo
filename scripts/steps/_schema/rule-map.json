@@ -5631,6 +5631,20 @@
       }
     },
     {
+      "id": "R-JR",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "Layer 2 is stored as one row per lot with positional arrays in scope-seed order, a SQL view naming each position, losers recomputed on read and closed dictionaries; supersedes the stored form of R-JA and the table list of R-JI (operator 2026-10-23, CHAT-80.QP; amends Spec 134 section 3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-JB",
       "kind": "register-ruling",
       "status": "active",

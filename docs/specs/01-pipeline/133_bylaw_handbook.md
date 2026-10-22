@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 376** (309 M-rows, 67 LC-rows): 373 in force (73 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 384** (316 M-rows, 68 LC-rows): 381 in force (81 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -1451,6 +1451,34 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
   Rules: `M-348` (Spec 69a)
 
+- **m.349** Seven G-CLAUSE licence-pattern wordings are added (pattern growth by ruling, M-132; extends M-334).
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-349` (Spec 69a)
+
+- **m.350** The 26 pending exception units are settled by 11 family readings.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-350` (Spec 69a)
+
+- **m.351** Rounds 9 to 13 stand as applied.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-351` (Spec 69a)
+
+- **m.352** The Phase 3 shadow classifier reads only a drafted closed fact list.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-352` (Spec 69a)
+
+- **m.353** A statement cites its clause by the full unit path.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-353` (Spec 69a)
+
+- **m.354** A two-arm storey condition may be written as a conditional expression.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-354` (Spec 69a)
+
+- **m.355** Corrected rule bases from the citation review.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-355` (Spec 69a)
+
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
   Rules: `LC-1` (Spec 131)
@@ -1675,7 +1703,11 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
   Rules: `LC-67` (Spec 131)
 
-## 3. Rows with an OWED marker (73 in force)
+- **lc.68** Layer 2 design-choice flags follow the golden-lot defaults.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `LC-68` (Spec 131)
+
+## 3. Rows with an OWED marker (81 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -1720,6 +1752,13 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-346 | m.346 | RULED 2026-10-22 · OWED |
 | M-347 | m.347 | RULED 2026-10-22 · OWED |
 | M-348 | m.348 | RULED 2026-10-22 · OWED |
+| M-349 | m.349 | RULED 2026-10-23 · OWED |
+| M-350 | m.350 | RULED 2026-10-23 · OWED |
+| M-351 | m.351 | RULED 2026-10-23 · OWED |
+| M-352 | m.352 | RULED 2026-10-23 · OWED |
+| M-353 | m.353 | RULED 2026-10-23 · OWED |
+| M-354 | m.354 | RULED 2026-10-23 · OWED |
+| M-355 | m.355 | RULED 2026-10-23 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |
@@ -1754,6 +1793,7 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | LC-65 | lc.65 | RULED 2026-10-22 · OWED |
 | LC-66 | lc.66 | RULED 2026-10-22 · OWED |
 | LC-67 | lc.67 | RULED 2026-10-22 · OWED |
+| LC-68 | lc.68 | RULED 2026-10-23 · OWED |
 
 ## 4. History
 
