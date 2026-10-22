@@ -90370,6 +90370,280 @@
       "kind": "disagreement",
       "reason": "W2 queue Q-W2-9640f8f3: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
       "unit": "900.3.10(929)#(929)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "archetype",
+      "id": "COR-900.5.10(324)#(324)[SSP](C)/archetype",
+      "kind": "correction",
+      "reason": "EVE.R6-1: \"one dwelling unit\" is now a dwelling_units_max pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "target",
+      "id": "COR-900.5.10(324)#(324)[SSP](C)/target",
+      "kind": "correction",
+      "reason": "EVE.R6-1: \"one dwelling unit\" is now a dwelling_units_max pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](C)",
+      "value": "dwelling_units_max"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "bound",
+      "id": "COR-900.5.10(324)#(324)[SSP](C)/bound",
+      "kind": "correction",
+      "reason": "EVE.R6-1: \"one dwelling unit\" is now a dwelling_units_max pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](C)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(324)#(324)[SSP](C)/numeric_expression",
+      "kind": "correction",
+      "reason": "EVE.R6-1: \"one dwelling unit\" is now a dwelling_units_max pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](C)",
+      "value": [
+        "dwelling_units_max = 1 units @(324)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(324)#(324)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "EVE.R6-1: \"one dwelling unit\" is now a dwelling_units_max pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(324)#(324)[SSP](C)/calculation_handling",
+      "kind": "correction",
+      "reason": "EVE.R6-1: \"one dwelling unit\" is now a dwelling_units_max pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](C)",
+      "value": {
+        "description": "A maximum of one dwelling unit on each lot.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "disclosure",
+      "id": "COR-900.5.10(324)#(324)[SSP](C)/disclosure",
+      "kind": "correction",
+      "reason": "EVE.R6-1: \"one dwelling unit\" is now a dwelling_units_max pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "archetype",
+      "id": "COR-900.5.10(324)#(324)[SSP](D)(ii)/archetype",
+      "kind": "correction",
+      "reason": "EVE.R6-2: \"front lot line that abuts a street\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "target",
+      "id": "COR-900.5.10(324)#(324)[SSP](D)(ii)/target",
+      "kind": "correction",
+      "reason": "EVE.R6-2: \"front lot line that abuts a street\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "bound",
+      "id": "COR-900.5.10(324)#(324)[SSP](D)(ii)/bound",
+      "kind": "correction",
+      "reason": "EVE.R6-2: \"front lot line that abuts a street\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(324)#(324)[SSP](D)(ii)/numeric_expression",
+      "kind": "correction",
+      "reason": "EVE.R6-2: \"front lot line that abuts a street\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)",
+      "value": [
+        "front_setback_m = 6.0 m @(324)[SSP](D)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(324)#(324)[SSP](D)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "EVE.R6-2: \"front lot line that abuts a street\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(324)#(324)[SSP](D)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "EVE.R6-2: \"front lot line that abuts a street\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)",
+      "value": {
+        "description": "Minimum building setback of 6.0 metres from any other front lot line that abuts a street; the Kennedy Rd. lot line has the higher 7.5 metre arm in (D)(i).",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "disclosure",
+      "id": "COR-900.5.10(324)#(324)[SSP](D)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "EVE.R6-2: \"front lot line that abuts a street\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "archetype",
+      "id": "COR-900.3.10(331)#(331)[SSP](C)/archetype~s1",
+      "kind": "correction",
+      "reason": "EVE.R9-1: \"from a front line\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "supersedes": "COR-900.3.10(331)#(331)[SSP](C)/archetype",
+      "unit": "900.3.10(331)#(331)[SSP](C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "target",
+      "id": "COR-900.3.10(331)#(331)[SSP](C)/target~s1",
+      "kind": "correction",
+      "reason": "EVE.R9-1: \"from a front line\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "supersedes": "COR-900.3.10(331)#(331)[SSP](C)/target",
+      "unit": "900.3.10(331)#(331)[SSP](C)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "bound",
+      "id": "COR-900.3.10(331)#(331)[SSP](C)/bound~s1",
+      "kind": "correction",
+      "reason": "EVE.R9-1: \"from a front line\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "supersedes": "COR-900.3.10(331)#(331)[SSP](C)/bound",
+      "unit": "900.3.10(331)#(331)[SSP](C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(331)#(331)[SSP](C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "EVE.R9-1: \"from a front line\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "supersedes": "COR-900.3.10(331)#(331)[SSP](C)/numeric_expression",
+      "unit": "900.3.10(331)#(331)[SSP](C)",
+      "value": [
+        "front_setback_m = 3.0 m @(331)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(331)#(331)[SSP](C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "EVE.R9-1: \"from a front line\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "supersedes": "COR-900.3.10(331)#(331)[SSP](C)/literals_not_expressed",
+      "unit": "900.3.10(331)#(331)[SSP](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(331)#(331)[SSP](C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "EVE.R9-1: \"from a front line\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "supersedes": "COR-900.3.10(331)#(331)[SSP](C)/calculation_handling",
+      "unit": "900.3.10(331)#(331)[SSP](C)",
+      "value": {
+        "description": "Minimum front setback of 3.0 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "disclosure",
+      "id": "COR-900.3.10(331)#(331)[SSP](C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "EVE.R9-1: \"from a front line\" is now a front_setback_m pattern.",
+      "rule": "Operator EVE.R6-1 / EVE.R6-2 / EVE.R9-1 (2026-10-22-page-eve): one pattern-growth ruling, Spec 133 §m.132; the unit takes the keyer-B (324) or the keyer-A original (331 (C)) LIMIT reading now that the wording is licensed",
+      "supersedes": "COR-900.3.10(331)#(331)[SSP](C)/disclosure",
+      "unit": "900.3.10(331)#(331)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-eve",
+      "field": "archetype",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "CHAT-78.R6-3 dated-note record.",
+      "rule": "Operator CHAT-78.R6-3 (2026-10-22-batch-z15#CHAT-78.R6-3): option B, 324 (J)(i) is UNUSUAL as a whole and disclosed; re-recorded with the ruling cited, identical value (the held 36f6eb19 reading)",
+      "supersedes": "COR-900.5.10(324)#(324)[SSP](J)(i)/archetype",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": "UNUSUAL"
     }
   ]
 }

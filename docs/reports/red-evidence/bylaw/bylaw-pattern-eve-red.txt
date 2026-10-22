@@ -1,0 +1,4 @@
+   × EVE.R6-1 / R6-2 / R9-1: pattern growth > the three wordings are licensed 5ms
+   × EVE.R6-1 / R6-2 / R9-1: pattern growth > 324 (C), 324 (D)(ii) and 331 (C) resolve to LIMITs 4728ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 1 passed (3)
