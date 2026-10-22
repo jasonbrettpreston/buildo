@@ -1,0 +1,5 @@
+   × Q-F (a): a drafted shard keeps its lead-in groups and chunking as first planned (mirrors M2); both directions > under the first vocab neither row groups; each shard holds one row (two leaves) 4ms
+   × Q-F (a): a drafted shard keeps its lead-in groups and chunking as first planned (mirrors M2); both directions > vocab grows: the DRAFTED shard (s01) keeps its first-planned units; the UNDRAFTED shard (s02) picks up the new group 1ms
+   × Q-F (a): a drafted shard keeps its lead-in groups and chunking as first planned (mirrors M2); both directions > a drafted shard whose first-planned units would move is refused (w1_drafted_shard_moved), never silently re-chunked 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 23 passed (26)
