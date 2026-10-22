@@ -5,8 +5,8 @@
 //
 // The Layer 2 status map, scripts/seeds/bylaw/layer2-map.json: one file of closed tables (R-IO). Locked both ways
 // against what the evaluator exports and returns: its NOT_EVALUATED_CODES, its result status literals and its evidence
-// kinds, and against the Layer 3 vocabulary (vocab.json layer3). The static R-EMIT extraction of every emitted reason
-// string stays a Spec 134 prerequisite (134:121); this lock reads the exported codes and the status / kind literals.
+// kinds, and against the Layer 3 vocabulary (vocab.json layer3). The static R-EMIT extraction of every returned reason
+// string is emit.logic.test.ts (Spec 134:121); this lock reads the exported codes and the status / kind literals.
 //
 // RED FIRST: committed as it.fails at c038d605, before the map existed (gate K artifact
 // docs/reports/red-evidence/resolve_bylaws/rulings-j-red.json); flipped to it with the map.

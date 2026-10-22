@@ -1,0 +1,80 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA). Vitest JSON of src/tests/list-logic-variable.logic.test.ts before the loader had a list type (Spec 134:36, R-IX Q-L2-3); lane L2-PREREQ 2026-10-22, base abe4b218. Paths made repo-relative.",
+ "numTotalTestSuites": 2,
+ "numPassedTestSuites": 0,
+ "numFailedTestSuites": 2,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 3,
+ "numPassedTests": 0,
+ "numFailedTests": 3,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792692299899,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "apply-logic-variables: the list type"
+     ],
+     "fullName": "apply-logic-variables: the list type a type \"list\" entry stores sentinel 0 in variable_value and the JSON array in variable_value_json, idempotently",
+     "status": "failed",
+     "title": "a type \"list\" entry stores sentinel 0 in variable_value and the JSON array in variable_value_json, idempotently",
+     "duration": 3.2126250000000027,
+     "failureMessages": [
+      "AssertionError: expected [ Array(803) ] to have a length of 1 but got 803\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/list-logic-variable.logic.test.ts:28:19\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "apply-logic-variables: the list type"
+     ],
+     "fullName": "apply-logic-variables: the list type a list default that is not an array is refused by name",
+     "status": "failed",
+     "title": "a list default that is not an array is refused by name",
+     "duration": 8.082667,
+     "failureMessages": [
+      "Error: promise resolved \"[ { …(2) }, { …(2) }, { …(2) }, …(800) ]\" instead of rejecting\n    at _Assertion.__VITEST_REJECTS__ (file://node_modules/@vitest/expect/dist/index.js:1805:21)\n    at _Assertion.propertyGetter (file://node_modules/chai/index.js:1557:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file://node_modules/chai/index.js:1645:22)\n    at src/tests/list-logic-variable.logic.test.ts:36:86\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "apply-logic-variables: the list type"
+     ],
+     "fullName": "apply-logic-variables: the list type the number and string arms are unchanged",
+     "status": "failed",
+     "title": "the number and string arms are unchanged",
+     "duration": 0.8808750000000032,
+     "failureMessages": [
+      "AssertionError: expected [ …(3) ] to deeply equal [ 'n', 5, null ]\n    at src/tests/list-logic-variable.logic.test.ts:41:30\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792692300042,
+   "endTime": 1792692300054.8809,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/list-logic-variable.logic.test.ts"
+  }
+ ]
+}
