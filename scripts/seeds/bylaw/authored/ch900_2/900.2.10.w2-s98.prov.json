@@ -1,0 +1,44 @@
+{
+  "a_seal": {
+    "seal_id": 510,
+    "sha256": "9379a4ab7a0f9996d081a75abd4f7472172c2b243ec59ccc718dc43e132463b2"
+  },
+  "b_run": {
+    "ledger_sha256": "861d8f853f53967c05ce5a6d518c51c875cf3f8ae6e1ade390846df814a341ee",
+    "read_paths": [],
+    "run_id": "20261022T201453Z-1305a3ea",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W2",
+  "briefs": {
+    "a": "f718ce8bb2ccd2b16e79bfa817cf9125a5383ce79562959c554f706bce18c589",
+    "b": "5c0329335ade07a46ec67f156328d7e74078ccc75c83393f8789b48a64df1596"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w2-s98",
+  "unit_shas": {
+    "900.2.10(438)#(438)[PBS](A)": "1f6d0abe36a9f6e9014d132ad57cf5cf088f9a6f19ab7fd36b98cc05fd8b3fc8",
+    "900.2.10(438)#(438)[SSP](A)": "d782ae1061c2daf15e62637a3a5974648ec946d16651d44dd50cad7b4c322fac",
+    "900.2.10(846)#(846)[PBS](A)": "c8460defbdbe7d6834328393e5fe2fa9567eab20e11c897c7a37186bb2e5432d",
+    "900.2.10(846)#(846)[PBS](B)": "5e492d1ac8c9808b3740931a78d655bf02227fe74aa9b40d14a49f90755354d1",
+    "900.2.10(846)#(846)[SSP](A)": "63d3b35d2e01fa968368823904268f32a9649bb1ae31c7973df135a34777814d",
+    "900.2.10(846)#(846)[SSP](B)": "b2e496e29e06979a520b90e2619defe800f6c11bbf03e61656ad3a3e340379e9",
+    "900.2.10(927)#(927)[PBS](A)": "965218806d074f98cbd06bf80ccd3676c3acd328492d1629bf486d2e1a03f3b5",
+    "900.2.10(927)#(927)[PBS](B)": "d8b9921b4894d448aa47422c42b0a2e9170eb4deb9fb587c4f39ad5c9129c85f",
+    "900.2.10(927)#(927)[SSP]": "b840a33997f4dbdc81edab6dec944ae38ea49a93564c210aae67a7c6f9ee921b",
+    "900.2.10(928)#(928)[PBS](A)": "3f41c2180442f5f69508b36ca800fea252fa2ac813315d788d4afd87b868d4b5",
+    "900.2.10(928)#(928)[PBS](B)": "32db2ec477dc9e2766d3f50cb83bdada83524026c59b03033ebc978fad00961c",
+    "900.2.10(928)#(928)[PBS](C)": "82cd449ac626899ea00335311a171ecd90659f7379dda7f3970b2173270bb1cc",
+    "900.2.10(928)#(928)[SSP]": "f394082ee93b30def39c4bea3ab42c340adf9c8efc6b57973233ded7071b2b85"
+  }
+}

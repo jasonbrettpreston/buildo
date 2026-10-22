@@ -1,0 +1,597 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w2-s98",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.2.10(846)#(846)[SSP](A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "frontage_band"
+        ],
+        "if": "lot_frontage_m < 4.57 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [
+          "frontage_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 846",
+          "ancillary_building": "an ancillary building",
+          "frontage_band": "lot frontage of less than"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "An ancillary building or structure is not permitted where the lot frontage is under 4.57 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(846)#(846)[SSP](B)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 846",
+          "any": "must comply with"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "Incorporates exception 900.2.10(4).",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(846)#(846)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(5)(h) of former City of Toronto By-law 438-86",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 846",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "Section 12(5)(h) of former City of Toronto By-law 438-86 is a prevailing section; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(846)#(846)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-laws 566-76 and 567-76",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "34 Oxford St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 846",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On 34 Oxford St., former City of Toronto by-laws 566-76 and 567-76 prevail; they are not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(927)#(927)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 927",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "No site specific provisions apply.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(927)#(927)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(2) 303 of former City of Toronto By-law 438-86",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 927",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "Section 12(2) 303 of former City of Toronto By-law 438-86 is a prevailing section; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(927)#(927)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 96-0276",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "even numbered addresses of 170-198 Brandon Ave.",
+          "odd numbered addresses of 1111-1193 Lansdowne Ave.",
+          "1195 Lansdowne Ave.",
+          "odd numbered addresses of 1197-1201 Lansdowne Ave.",
+          "even numbered addresses of 808-920 St. Clarens Ave."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 927",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On the listed Brandon, Lansdowne and St. Clarens addresses, former City of Toronto by-law 96-0276 prevails; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(438)#(438)[SSP](A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 438",
+          "any": "must comply with"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "Incorporates exception 900.2.10(7).",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(438)#(438)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 818-87",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "720 Bathurst St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 438",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On 720 Bathurst St., former City of Toronto by-law 818-87 prevails; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(928)#(928)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 928",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "No site specific provisions apply.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(928)#(928)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(2) 313 of the former City of Toronto By-law 438-86",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 928",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "Section 12(2) 313 of the former City of Toronto By-law 438-86 is a prevailing section; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(928)#(928)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "Former City of Toronto By-law 97-229",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 928",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "Former City of Toronto By-law 97-229 prevails; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(928)#(928)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto By-law 747-98",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 928",
+          "any": "subject to the following"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under a prevailing by-law; not evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "City of Toronto By-law 747-98 prevails; it is not evaluated here.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.2.10(846)": {
+      "explanation": "Exception R 846 bars an ancillary building or structure on a lot with under 4.57 m of frontage, requires compliance with exception 900.2.10(4), and keeps Section 12(5)(h) of By-law 438-86 and, on 34 Oxford St., by-laws 566-76 and 567-76 as prevailing.",
+      "code_refs": "none"
+    },
+    "900.2.10(927)": {
+      "explanation": "Exception R 927 has no site specific provisions; Section 12(2) 303 of By-law 438-86 and, on listed Brandon, Lansdowne and St. Clarens addresses, by-law 96-0276 prevail.",
+      "code_refs": "none"
+    },
+    "900.2.10(438)": {
+      "explanation": "Exception R 438 requires compliance with exception 900.2.10(7); on 720 Bathurst St., by-law 818-87 prevails.",
+      "code_refs": "none"
+    },
+    "900.2.10(928)": {
+      "explanation": "Exception R 928 has no site specific provisions; Section 12(2) 313 of By-law 438-86, By-law 97-229 and By-law 747-98 prevail.",
+      "code_refs": "none"
+    }
+  }
+}
