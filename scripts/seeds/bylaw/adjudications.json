@@ -89649,6 +89649,193 @@
       "rule": "HELD on R9-3/R9-4; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 9)",
       "unit": "900.3.10(584)#(584)[SSP](C)",
       "value": "Where a front lot line abuts Sheppard Ave., the minimum building setback from that lot line is 9.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(516)#(516)[SSP](B)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3bfae959: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.2.10(516)#(516)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(621)#(621)[SSP](C)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-623a5ae9: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.2.10(621)#(621)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(621)#(621)[SSP](C)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-6a72fac4: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.2.10(621)#(621)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(621)#(621)[SSP](C)(iii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b2fc1fa3: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.2.10(621)#(621)[SSP](C)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(127)#(127)[SSP](A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-bbcd5c00: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(127)#(127)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(127)#(127)[SSP](B)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-952505b2: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(127)#(127)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(127)#(127)[SSP](C)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-25f14e89: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(127)#(127)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(127)#(127)[SSP](D)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-161e8181: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(127)#(127)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(127)#(127)[SSP](D)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4f66e4ce: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(127)#(127)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(127)#(127)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-d42139e2: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(127)#(127)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(127)#(127)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e15e7bb0: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(127)#(127)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1714881d: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(278)#(278)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](B)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-70e2777c: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(278)#(278)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-51a24faa: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(278)#(278)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e027834b: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(278)#(278)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8d66bb88: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(278)#(278)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](H)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e9d42179: answer B — HELD on R9-5 (recommendation, not operator-ruled): citation form only, the statement cites the unit's full [SSP] path; Spec 133 §m.105 rule 29 (keying brief defect on keyer A; the value is identical)",
+      "unit": "900.5.10(278)#(278)[SSP](H)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.2.10(621)#(621)[SSP](C)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one of the following\" in the lead-in is a count, as 418 (B)(i).",
+      "rule": "HELD on R9-5; Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label",
+      "unit": "900.2.10(621)#(621)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(621)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
     }
   ]
 }
