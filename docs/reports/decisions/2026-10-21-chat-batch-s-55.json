@@ -1,0 +1,32 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-21-chat-batch-s-55/2026-10-21-batch-s.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-21-chat-batch-s-55",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "push complete - proceed with chain tooling - are we using teh spec 122 and 124 habdbook spec 132",
+    "record": "operator chat 2026-10-21",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-21-chat-batch-s-55/2026-10-21-batch-s.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-55": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-JU"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-55",
+      "question": "Flip CHAIN-TOOLING to BUILT",
+      "recommendation": "Set CHAIN-TOOLING BUILT; record that the R-DJ/R-EC absolute budgets supersede the +10% chain-start baseline clause; refresh LDG-10 evidence.",
+      "decision": "approve",
+      "decided_at": "2026-10-21"
+    }
+  ]
+}
