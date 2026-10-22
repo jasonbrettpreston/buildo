@@ -1043,6 +1043,8 @@
       "ours": 1.5,
       "city": 0.9,
       "unit": "m",
+      "rows": ["A0255/26NY#2","A0263/21NY#1"],
+      "parcel_id": "5128608",
       "class": "DATA",
       "ruling": "M-308",
       "reading": "HELD on R5-5 (recommendation awaiting the operator): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
@@ -1053,6 +1055,8 @@
       "ours": 1.5,
       "city": 0.9,
       "unit": "m",
+      "rows": ["A0263/21NY#2"],
+      "parcel_id": "5128608",
       "class": "DATA",
       "ruling": "M-308",
       "reading": "HELD on R5-5 (recommendation awaiting the operator): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
