@@ -39,6 +39,7 @@ describe('EXC-R5 round: double-keyed exceptions', () => {
     expect(mine.length).toBe(6);
     expect(mine.every((a) => a.kind === 'correction' && a.field === 'literals_not_expressed' && /M-82/.test(a.rule))).toBe(true);
   });
+  // CHAT-85 (operator 2026-10-23, 'I dont want to do any more exceptions'): CHAT-84.S22-1 (re-key 70 and 33) is dropped; 70, 33 and 478 stay withdrawn and this lock is the decision of record.
   it('R5-6 variant (operator question, 478 held back): shard w2-s22 (exceptions 70, 33, 478) is withdrawn, so those units are not authored', async () => {
     const V = await mod('scripts/analysis/bylaw/validate.mjs');
     const AU = await mod('scripts/analysis/bylaw/authored.mjs');
