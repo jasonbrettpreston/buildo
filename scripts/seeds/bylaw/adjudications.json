@@ -92435,6 +92435,893 @@
       "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
       "unit": "900.5.10(331)#(331)[SSP](D)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(621)#(621)[SSP](B)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8c6ca942: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.2.10(621)#(621)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f6a2ca5d: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a3138bd2: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-53e04c2b: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-db2e4610: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a262a31d: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-268a6e5f: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e73e8274: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f462ab8f: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(iii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e9ba0957: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(iii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-11a4586a: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(iii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ffdff881: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1029)#(1029)[SSP](C)(iii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e75889cb: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a07b6330: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5b0b50ab: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-236a4a34: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4a683c12: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c50ca42c: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-14e0f695: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-9866aeca: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1121)#(1121)[SSP](C)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e5d8a260: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(iii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ed088600: answer B — CHAT-81.FAM-ALL (FAM-SEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(iii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-aec4e3c7: answer B — CHAT-81.FAM-ALL (FAM-SEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(iii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-2a38dec5: answer B — CHAT-81.FAM-ALL (FAM-SEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(iii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b3aaea27: answer B — CHAT-81.FAM-ALL (FAM-SEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(9)#(9)[SSP](E)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a366f80f: answer A — CHAT-81.FAM-ALL (FAM-FSI): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(9)#(9)[SSP](E)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(9)#(9)[SSP](E)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4a854fc9: answer A — CHAT-81.FAM-ALL (FAM-FSI): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(9)#(9)[SSP](E)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(971)#(971)[SSP](D)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-de5dbc08: answer B — CHAT-81.FAM-ALL (FAM-ANCCOV): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(971)#(971)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(971)#(971)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e95ee4cd: answer B — CHAT-81.FAM-ALL (FAM-ANCCOV): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(971)#(971)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](E)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7adcfc43: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](E)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](E)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-d5914965: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](E)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](E)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ff2f597e: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](E)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](E)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a7517cbb: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](E)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](E)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ded1d9e3: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](E)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](F)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7d62208c: answer A — CHAT-81.FAM-ALL (FAM-PARKLEN): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](F)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](F)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-d46f3414: answer A — CHAT-81.FAM-ALL (FAM-PARKLEN): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](F)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](F)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-d08de654: answer A — CHAT-81.FAM-ALL (FAM-PARKLEN): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](F)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(350)#(350)[SSP](F)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b3d8d4f0: answer A — CHAT-81.FAM-ALL (FAM-PARKLEN): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(350)#(350)[SSP](F)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(937)#(937)[SSP](I)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-37db87ca: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(937)#(937)[SSP](I)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(937)#(937)[SSP](I)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-cfecd0a6: answer A — CHAT-81.FAM-ALL (FAM-HIST): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(937)#(937)[SSP](I)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1401)#(1401)[SSP](B)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-65788c59: answer A — CHAT-81.FAM-ALL (FAM-PLAT): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1401)#(1401)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1401)#(1401)[SSP](C)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c59d6f6f: answer A — CHAT-81.FAM-ALL (FAM-PLAT): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(1401)#(1401)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(975)#(975)[SSP](B)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-376b993f: answer A — CHAT-81.FAM-ALL (FAM-STEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(975)#(975)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(975)#(975)[SSP](B)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-aa68e34e: answer A — CHAT-81.FAM-ALL (FAM-STEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(975)#(975)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(975)#(975)[SSP](B)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8cf6304e: answer A — CHAT-81.FAM-ALL (FAM-STEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(975)#(975)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(975)#(975)[SSP](B)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e15b8fe2: answer A — CHAT-81.FAM-ALL (FAM-STEP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(975)#(975)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(975)#(975)[SSP](D)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8a418a05: answer B — CHAT-81.FAM-ALL (FAM-ANCCOV): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(975)#(975)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(975)#(975)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-88d229b4: answer B — CHAT-81.FAM-ALL (FAM-ANCCOV): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.3.10(975)#(975)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(200)#(200)[SSP](C)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-408b7643: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.4.10(200)#(200)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(200)#(200)[SSP](C)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f3dcc7dc: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.4.10(200)#(200)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(200)#(200)[SSP](C)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-13a6d249: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.4.10(200)#(200)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(200)#(200)[SSP](C)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-46944197: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.4.10(200)#(200)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(200)#(200)[SSP](G)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-dc8bd40a: answer other — CHAT-81.FAM-ALL (FAM-ARMS): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.4.10(200)#(200)[SSP](G)(i)",
+      "value": [
+        "required_lot_frontage_m = by_type(semi_detached_house: 15.0 m; other: 7.5 m × dwelling_units) @(200)[SSP](G)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(200)#(200)[SSP](G)(iii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e2bf67fd: answer other — CHAT-81.FAM-ALL (FAM-ARMS): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.4.10(200)#(200)[SSP](G)(iii)",
+      "value": [
+        "required_lot_area_m2 = by_type(semi_detached_house: 510 m2; other: 250 m2 × dwelling_units) @(200)[SSP](G)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](C)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c605cc4d: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](C)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3ff84c07: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](C)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f762fc5d: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](C)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4dff1649: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](D)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ba70fcff: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](D)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-36002d5b: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](D)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ca5b0b9b: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(278)#(278)[SSP](D)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-478e98bd: answer B — CHAT-81.FAM-ALL (FAM-ABUT-COMP): operator approved the family reading in families-pending.json (docs/reports/bylaw/2026-10-23-families-pending.json)",
+      "unit": "900.5.10(278)#(278)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](G)(iii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the LIMIT uses its number, nothing is left unexpressed",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, the LIMIT uses its number, nothing is left unexpressed",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1121)#(1121)[SSP](C)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the LIMIT uses its number, nothing is left unexpressed",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, the LIMIT uses its number, nothing is left unexpressed",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(278)#(278)[SSP](C)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the LIMIT uses its number, nothing is left unexpressed",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, the LIMIT uses its number, nothing is left unexpressed",
+      "unit": "900.5.10(278)#(278)[SSP](C)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(278)#(278)[SSP](D)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the LIMIT uses its number, nothing is left unexpressed",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, the LIMIT uses its number, nothing is left unexpressed",
+      "unit": "900.5.10(278)#(278)[SSP](D)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(350)#(350)[SSP](E)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal 195 accounted",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, literal 195 accounted",
+      "unit": "900.3.10(350)#(350)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(350)[SSP](E)(i)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "clause": "(350)[SSP](E)(i)",
+          "literal": "99 square metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(350)[SSP](E)",
+          "literal": "195",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(350)#(350)[SSP](F)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal 46 accounted",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, literal 46 accounted",
+      "unit": "900.3.10(350)#(350)[SSP](F)(ii)",
+      "value": [
+        {
+          "clause": "(350)[SSP](F)(ii)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "clause": "(350)[SSP](F)(ii)",
+          "literal": "4.65 metres",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(350)[SSP](F)",
+          "literal": "46",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(937)#(937)[SSP](I)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literals 1988 and 2697 accounted",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, literals 1988 and 2697 accounted",
+      "unit": "900.3.10(937)#(937)[SSP](I)(i)",
+      "value": [
+        {
+          "clause": "(937)[SSP](I)",
+          "literal": "1988",
+          "reason": "illustrative_or_historic"
+        },
+        {
+          "clause": "(937)[SSP](I)",
+          "literal": "2697",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(975)#(975)[SSP](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal one accounted",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.82 (M-75 correction form): literal bookkeeping for the family reading, literal one accounted",
+      "unit": "900.3.10(975)#(975)[SSP](B)",
+      "value": [
+        {
+          "clause": "(975)[SSP](B)",
+          "literal": "1.8 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(975)[SSP](B)",
+          "literal": "0.6 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(975)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(278)#(278)[SSP](C)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP: the complement arm is a partial LIMIT",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.5.10(278)#(278)[SSP](C)(ii)",
+      "value": {
+        "description": "The 6.0 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setback of the named-road arm in (C)(i) is not modelled; street names are not held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.5.10(278)#(278)[SSP](C)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP: a partial LIMIT carries no disclosure sentence (297 (B)(ii) form)",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.5.10(278)#(278)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(278)#(278)[SSP](D)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP: the complement arm is a partial LIMIT",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.5.10(278)#(278)[SSP](D)(ii)",
+      "value": {
+        "description": "The 6.0 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setback of the named-road arm in (D)(i) is not modelled; street names are not held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.5.10(278)#(278)[SSP](D)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP: a partial LIMIT carries no disclosure sentence (297 (B)(ii) form)",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.5.10(278)#(278)[SSP](D)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1121)#(1121)[SSP](C)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP: the complement arm is a partial LIMIT",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(ii)",
+      "value": {
+        "description": "The 6.0 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setback of the 7.5 m Huntingwood Dr. arm in (C)(i) is not modelled; street names are not held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1121)#(1121)[SSP](C)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP: a partial LIMIT carries no disclosure sentence (297 (B)(ii) form)",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.3.10(1121)#(1121)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](G)(iii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-SEP: the wording is now licensed",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)",
+      "value": {
+        "description": "An ancillary building or structure must be 3.0 m from a residential building on the lot.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](G)(iii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-SEP: modelled, nothing to disclose",
+      "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)",
+      "value": "none"
     }
   ]
 }
