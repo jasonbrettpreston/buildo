@@ -38,7 +38,7 @@ describe('CHAT-81.R10-ALL / R11-1: wordings', () => {
     const want: Record<string, [string, string, number]> = {
       '900.3.10(1001)#(1001)[SSP](C)': ['side_setback_m', 'min', 1.2],
       '900.3.10(1001)#(1001)[SSP](D)': ['side_setback_street_m', 'min', 1.5],
-      '900.4.10(144)#(144)[SSP](J)': ['encroachment_m', 'max', 0.6],
+      '900.4.10(144)#(144)[SSP](J)': ['window_projection_encroachment_m', 'max', 0.6], // M-243 (verify-42 item 6)
       '900.4.10(144)#(144)[SSP](E)(i)': ['side_setback_street_m', 'min', 3.0],
       '900.3.10(1049)#(1049)[SSP](G)': ['garage_entrance_setback_m', 'min', 6.0],
       '900.3.10(357)#(357)[SSP](E)': ['garage_entrance_setback_m', 'min', 6.0],

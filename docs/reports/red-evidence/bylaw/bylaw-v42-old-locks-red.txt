@@ -1,0 +1,5 @@
+Full bylaw-*/coa-* run at accfc2e9 (before this commit): 4 files, 6 tests red:
+bylaw-fix-4 x2: 70 (B) numeric_expression 'none' (TWIN-1 made it UNUSUAL)
+bylaw-fix-4d-a: 528 (D) numeric_expression 'none' (item 5a)
+bylaw-pattern-chat81: 144 (J) target window_projection_encroachment_m (item 6)
+coa-scorecard x2: CHECK OK (not pinned: inputs differ from the pin) -- table_version moved; re-pin is the integrate step (totals equal)

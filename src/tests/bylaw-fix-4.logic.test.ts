@@ -127,16 +127,16 @@ describe('F-SC-7 / M-251 — exception RD 70 side yard: the residential building
     expect(page('ch900_3')).toContain('(B) The minimum side yard setback is 1.8 metres on each side for a one- storey building, plus 0.6 metres for each additional storey or portion thereof');
   });
 
-  it('(B) keys 1.8 m + 0.6 m per additional storey on the proposed storeys (a scenario input)', () => {
-    expect(unitOf(B).numeric_expression).toEqual(['side_setback_m = 1.8 m + 0.6 m × (proposed_storeys − 1 storeys) @(70)[SSP](B)']);
-    expect(I.vocab.dsl_input.proposed_storeys).toMatchObject({ unit: 'storeys' });
+  // CHAT-84.TWIN-1 (operator 2026-10-23, 'the newer family rulings win'): 70 (B) takes the FAM-STEP form of 975 (B); the M-251 storey-increment keying is superseded (was LIMIT 1.8 m + 0.6 m x (storeys - 1))
+  it('(B) is UNUSUAL, the FAM-STEP form of 975 (B): 1.8 m and 0.6 m are limit_not_modelled, with a disclosure', () => {
+    const u = unitOf(B);
+    expect([u.archetype, u.target, u.numeric_expression]).toEqual(['UNUSUAL', 'none', 'none']);
+    expect(u.literals_not_expressed.map((l: Json) => l.literal + ':' + l.reason).sort()).toEqual(['0.6 metres:limit_not_modelled', '1.8 metres:limit_not_modelled', 'one:count_or_ordinal_not_a_limit']);
+    expect(u.disclosure).not.toBe('none');
   });
 
-  it('a house: 1.8 m at one storey, 3.0 m at three; OWED (missing_input:proposed_storeys) until the scenario supplies storeys', () => {
-    expect(eff(parm('detached_house', { proposed_storeys: 1 }), 'side_setback_m')).toMatchObject({ status: 'value', value: 1.8, winner: B });
-    expect(eff(parm('detached_house', { proposed_storeys: 3 }), 'side_setback_m')).toMatchObject({ status: 'value', value: 3, winner: B });
-    const owed = eff(parm('detached_house'), 'side_setback_m');
-    expect([owed.status, owed.reason]).toEqual(['not_evaluated', 'missing_input:proposed_storeys']);
+  it('a house is no longer answered from (B): the side yard does not come from the storey increment', () => {
+    for (const st of [1, 3]) expect(eff(parm('detached_house', { proposed_storeys: st }), 'side_setback_m').winner).not.toBe(B);
   });
 
   it('an ancillary building never takes (B): the pavilion (3.78 m high, 1.8 m or more from the house) answers half its height, 1.89 m, from 10.5.60.20(3)', () => {
