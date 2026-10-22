@@ -89,7 +89,14 @@ describe('determinism grep lock (Spec 68 §10): generator + scripts/analysis/byl
   const walk = (rel: string): string[] =>
     fs.readdirSync(path.join(ROOT, rel), { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
       .flatMap((d) => (d.isDirectory() ? walk(`${rel}/${d.name}`) : d.name.endsWith('.mjs') ? [`${rel}/${d.name}`] : []));
-  const files = ['scripts/generate-bylaw-provisions.mjs', ...walk('scripts/analysis/bylaw')].filter((f) => f !== 'scripts/analysis/bylaw/clock.mjs');
+  // Spec 134:121 'R-DET extended to the compute module' (Spec 133 §m.117 (M-117), Layer 2 prerequisite): the resolve_bylaws compute
+  // module is held to the same ban list. It lands at commit ① (R-IX); the lock covers it from the commit it exists, and the next
+  // case fails if the extension is dropped from this list.
+  const COMPUTE_MODULES = ['scripts/lib/compute/resolve-bylaws.js'];
+  const files = ['scripts/generate-bylaw-provisions.mjs', ...walk('scripts/analysis/bylaw'), ...COMPUTE_MODULES.filter((f) => fs.existsSync(path.join(ROOT, f)))].filter((f) => f !== 'scripts/analysis/bylaw/clock.mjs');
+  it('the lock names the resolve_bylaws compute module (R-DET extension, Spec 134:121)', () => {
+    expect(COMPUTE_MODULES).toEqual(['scripts/lib/compute/resolve-bylaws.js']);
+  });
   it('the walk reaches oracle-b/ (the recursion is real)', () => {
     expect(files.filter((f) => f.startsWith('scripts/analysis/bylaw/oracle-b/')).length).toBeGreaterThanOrEqual(3);
   });

@@ -1,0 +1,100 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA). Vitest JSON of src/tests/steps/resolve_bylaws/emit.logic.test.ts (R-EMIT, Spec 134 line 59 / M-232) with a deliberate defect in evaluate.mjs (one returned code unlisted: zz_unlisted; one listed code never returned: zz_dead_code), lane L2-PREREQ 2026-10-22, base 0287394d. Defect reverted; paths made repo-relative.",
+ "numTotalTestSuites": 3,
+ "numPassedTestSuites": 1,
+ "numFailedTestSuites": 2,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 5,
+ "numPassedTests": 3,
+ "numFailedTests": 2,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792692147141,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "R-EMIT: the statically extracted returned reasons equal NOT_EVALUATED_CODES, both ways (Spec 134:59, M-232)"
+     ],
+     "fullName": "R-EMIT: the statically extracted returned reasons equal NOT_EVALUATED_CODES, both ways (Spec 134:59, M-232) the extractor catches its patterns (no vacuous regex)",
+     "status": "passed",
+     "title": "the extractor catches its patterns (no vacuous regex)",
+     "duration": 0.9789999999998145,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-EMIT: the statically extracted returned reasons equal NOT_EVALUATED_CODES, both ways (Spec 134:59, M-232)"
+     ],
+     "fullName": "R-EMIT: the statically extracted returned reasons equal NOT_EVALUATED_CODES, both ways (Spec 134:59, M-232) every code the evaluator returns is in NOT_EVALUATED_CODES",
+     "status": "failed",
+     "title": "every code the evaluator returns is in NOT_EVALUATED_CODES",
+     "duration": 3.3514580000000933,
+     "failureMessages": [
+      "AssertionError: returned but not in NOT_EVALUATED_CODES: expected [ 'zz_unlisted' ] to deeply equal []\n    at src/tests/steps/resolve_bylaws/emit.logic.test.ts:71:65\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-EMIT: the statically extracted returned reasons equal NOT_EVALUATED_CODES, both ways (Spec 134:59, M-232)"
+     ],
+     "fullName": "R-EMIT: the statically extracted returned reasons equal NOT_EVALUATED_CODES, both ways (Spec 134:59, M-232) every code in NOT_EVALUATED_CODES is returned somewhere",
+     "status": "failed",
+     "title": "every code in NOT_EVALUATED_CODES is returned somewhere",
+     "duration": 0.6172500000002401,
+     "failureMessages": [
+      "AssertionError: listed but never returned: expected [ 'zz_dead_code' ] to deeply equal []\n    at src/tests/steps/resolve_bylaws/emit.logic.test.ts:77:47\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-EMIT runtime wrapper: every reason effective() and permitted() return is a listed, statically extracted code"
+     ],
+     "fullName": "R-EMIT runtime wrapper: every reason effective() and permitted() return is a listed, statically extracted code the sweep reaches reasons at all (not vacuous)",
+     "status": "passed",
+     "title": "the sweep reaches reasons at all (not vacuous)",
+     "duration": 0.057708000000275206,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-EMIT runtime wrapper: every reason effective() and permitted() return is a listed, statically extracted code"
+     ],
+     "fullName": "R-EMIT runtime wrapper: every reason effective() and permitted() return is a listed, statically extracted code each returned reason code is listed and was found by the static extraction",
+     "status": "passed",
+     "title": "each returned reason code is listed and was found by the static extraction",
+     "duration": 0.5327500000003056,
+     "failureMessages": [],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792692149831,
+   "endTime": 1792692149836.5327,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/emit.logic.test.ts"
+  }
+ ]
+}

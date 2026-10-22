@@ -1,0 +1,828 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/{lotvector,profiles,materialize}.logic.test.ts run on the tree at bc5cd3af before scripts/lib/bylaw-resolution.js gained parseZoneLabel / buildLotVector / classLot / profileKey / packPointers / gatedCellKey / signatureId / rowSha / storageWithinBudget and before scripts/lib/bylaw-materialize.js existed (Spec 134 §2-§7; Spec 132 §x-rulings.4 (R-JA); lane L2-SLICES part A, 2026-10-22). 43 red, the other cases skipped because their suite setup (beforeAll) threw on the missing module. Absolute paths made repo-relative; nothing else edited.",
+ "numTotalTestSuites": 21,
+ "numPassedTestSuites": 0,
+ "numFailedTestSuites": 21,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 64,
+ "numPassedTests": 0,
+ "numFailedTests": 43,
+ "numPendingTests": 21,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792692153823,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204)"
+     ],
+     "fullName": "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204) parses every label shape the live R/RD/RS/RT/RM parcels carry (shapes measured 2026-10-22)",
+     "status": "failed",
+     "title": "parses every label shape the live R/RD/RS/RT/RM parcels carry (shapes measured 2026-10-22)",
+     "duration": 4.213915999999983,
+     "failureMessages": [
+      "TypeError: rb(...).parseZoneLabel is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:56:22\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204)"
+     ],
+     "fullName": "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204) H is a declared holding token, alone or as a part; it is not a label letter",
+     "status": "failed",
+     "title": "H is a declared holding token, alone or as a part; it is not a label letter",
+     "duration": 0.1709160000000054,
+     "failureMessages": [
+      "TypeError: rb(...).parseZoneLabel is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:62:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204)"
+     ],
+     "fullName": "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204) anything else is not ok (label_unparsed): an unknown letter, a repeat, a bad number, junk, empty, null",
+     "status": "failed",
+     "title": "anything else is not ok (label_unparsed): an unknown letter, a repeat, a bad number, junk, empty, null",
+     "duration": 0.18862500000000182,
+     "failureMessages": [
+      "TypeError: rb(...).parseZoneLabel is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:68:19\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204)"
+     ],
+     "fullName": "R-LABEL: the label parser is total over vocab label_letter, numbers and the H holding token (P2:204) never throws on a string and agrees with the golden-lot puller on every label it parses",
+     "status": "failed",
+     "title": "never throws on a string and agrees with the golden-lot puller on every label it parses",
+     "duration": 0.15891700000000242,
+     "failureMessages": [
+      "TypeError: rb(...).parseZoneLabel is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:76:19\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) builds the golden-lot vector shape from a parcels row (parity with pull-golden-lots rowToLot on every shared field)",
+     "status": "failed",
+     "title": "builds the golden-lot vector shape from a parcels row (parity with pull-golden-lots rowToLot on every shared field)",
+     "duration": 0.5072910000000093,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:85:51\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) the exception id is 900.<chapter>.10(<n>) from vocab data; null and the sentinel give none",
+     "status": "failed",
+     "title": "the exception id is 900.<chapter>.10(<n>) from vocab data; null and the sentinel give none",
+     "duration": 0.10275000000001455,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:93:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) R-IQ: a real exception number with no (xN), or (xN) differing from it, is label_exception_mismatch; the sentinel base-resolves",
+     "status": "failed",
+     "title": "R-IQ: a real exception number with no (xN), or (xN) differing from it, is label_exception_mismatch; the sentinel base-resolves",
+     "duration": 0.0939159999999788,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:99:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) fires each parcel-derived gate (the map lot_gate set) and never invents one",
+     "status": "failed",
+     "title": "fires each parcel-derived gate (the map lot_gate set) and never invents one",
+     "duration": 0.10704100000000949,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at g (src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:106:33)\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:107:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) a missing metric is not defaulted to 0: the vector keeps null and the gate fires",
+     "status": "failed",
+     "title": "a missing metric is not defaulted to 0: the vector keeps null and the gate fires",
+     "duration": 0.08429200000000492,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:117:33\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) map membership comes from the scope seed: in_sixplex_area true/false/null -> [ref] / [] / absent (null is unknown, never false)",
+     "status": "failed",
+     "title": "map membership comes from the scope seed: in_sixplex_area true/false/null -> [ref] / [] / absent (null is unknown, never false)",
+     "duration": 0.09987499999999727,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading 'in_sixplex_area')\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:123:33\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) heritage and no_rear_lot_line flags follow the golden-lot puller (4 vertices means no rear lot line)",
+     "status": "failed",
+     "title": "heritage and no_rear_lot_line flags follow the golden-lot puller (4 vertices means no rear lot line)",
+     "duration": 0.08420799999998962,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:131:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10)"
+     ],
+     "fullName": "R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) is pure: the same row twice gives equal vectors and the row is not mutated",
+     "status": "failed",
+     "title": "is pure: the same row twice gives equal vectors and the row is not mutated",
+     "duration": 0.07550000000000523,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:139:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6)"
+     ],
+     "fullName": "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6) layer2-scope.json declares the v1 classes (the five P5.1 classes), each a vocab scenario_class_units entry",
+     "status": "failed",
+     "title": "layer2-scope.json declares the v1 classes (the five P5.1 classes), each a vocab scenario_class_units entry",
+     "duration": 1.0550839999999937,
+     "failureMessages": [
+      "AssertionError: expected undefined to deeply equal [ 'detached_house', …(4) ]\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:147:27\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6)"
+     ],
+     "fullName": "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6) the principal structure takes the class vector: building_type, dwelling_units = house_units (evaluated_at for a range), suite flags",
+     "status": "failed",
+     "title": "the principal structure takes the class vector: building_type, dwelling_units = house_units (evaluated_at for a range), suite flags",
+     "duration": 0.0987090000000137,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at base (src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:145:33)\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:152:31\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6)"
+     ],
+     "fullName": "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6) a suite structure keeps the class context and sets its own building_type; one dwelling unit",
+     "status": "failed",
+     "title": "a suite structure keeps the class context and sets its own building_type; one dwelling unit",
+     "duration": 0.08591699999999491,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at base (src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:145:33)\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:162:31\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6)"
+     ],
+     "fullName": "R-IR / R-IS: the class lot — a structure evaluated under a class (Spec 134 §2, §6) does not mutate the base vector, and an undeclared structure throws",
+     "status": "failed",
+     "title": "does not mutate the base vector, and an undeclared structure throws",
+     "duration": 0.07824999999999704,
+     "failureMessages": [
+      "TypeError: rb(...).buildLotVector is not a function\n    at base (src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:145:33)\n    at src/tests/steps/resolve_bylaws/lotvector.logic.test.ts:168:15\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792692154043,
+   "endTime": 1792692154051.0784,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/lotvector.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair writes exactly one lot row, no retraction, and a profile keyed per R-JA",
+     "status": "skipped",
+     "title": "writes exactly one lot row, no retraction, and a profile keyed per R-JA",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair the profile holds 53 pointers in scope order, each to a cell row of this batch (I9 lineage)",
+     "status": "skipped",
+     "title": "the profile holds 53 pointers in scope order, each to a cell row of this batch (I9 lineage)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair every cell has a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "status": "skipped",
+     "title": "every cell has a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair every cell, signature, profile and lot row carries the two versions and a row_sha that recomputes (I14)",
+     "status": "skipped",
+     "title": "every cell, signature, profile and lot row carries the two versions and a row_sha that recomputes (I14)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair the signature is stored once with the candidate ids, and every computed cell points at it",
+     "status": "skipped",
+     "title": "the signature is stored once with the candidate ids, and every computed cell points at it",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair winner ids are candidates of the signature (I9), and an applies winner has evidence",
+     "status": "skipped",
+     "title": "winner ids are candidates of the signature (I9), and an applies winner has evidence",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair by_class has one entry per catalogue class except the representative: collapsed_into:<rep> or a full differing result (Q-C)",
+     "status": "skipped",
+     "title": "by_class has one entry per catalogue class except the representative: collapsed_into:<rep> or a full differing result (Q-C)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair permitted_by_class holds permitted()'s own words for every v1 class (R-IT)",
+     "status": "skipped",
+     "title": "permitted_by_class holds permitted()'s own words for every v1 class (R-IT)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "status": "skipped",
+     "title": "matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it two lots that agree on every input share the profile and every cell, with two lot rows",
+     "status": "failed",
+     "title": "two lots that agree on every input share the profile and every cell, with two lot rows",
+     "duration": 0.3677500000000009,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:145:17"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it a lot with another frontage shares the targets that do not read frontage and not the ones that do (R-IN option B)",
+     "status": "failed",
+     "title": "a lot with another frontage shares the targets that do not read frontage and not the ones that do (R-IN option B)",
+     "duration": 0.20224999999999227,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at mkEnv (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:30:42)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it batch order does not matter: the same rows come back in a canonical order",
+     "status": "failed",
+     "title": "batch order does not matter: the same rows come back in a canonical order",
+     "duration": 0.4219589999999869,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at mkEnv (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:30:42)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the lot row carries the gate and every cell is not_evaluated:exception_not_authored:<id> with no winner",
+     "status": "skipped",
+     "title": "the lot row carries the gate and every cell is not_evaluated:exception_not_authored:<id> with no winner",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator permitted_by_class is not_evaluated with the gate reason for every class",
+     "status": "skipped",
+     "title": "permitted_by_class is not_evaluated with the gate reason for every class",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator two lots with the same unauthored exception share every gated cell and one profile",
+     "status": "skipped",
+     "title": "two lots with the same unauthored exception share every gated cell and one profile",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "status": "skipped",
+     "title": "the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "status": "skipped",
+     "title": "ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "status": "skipped",
+     "title": "lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "status": "skipped",
+     "title": "label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "status": "skipped",
+     "title": "label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too the first gate in the map order is the one reported when several fire (R-IQ)",
+     "status": "skipped",
+     "title": "the first gate in the map order is the one reported when several fire (R-IQ)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "status": "skipped",
+     "title": "I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "an authored exception resolves (no gate) and keys its own cells"
+     ],
+     "fullName": "an authored exception resolves (no gate) and keys its own cells the exception moves the cell ids of every target (zone and exception are always in the key, R-IN)",
+     "status": "failed",
+     "title": "the exception moves the cell ids of every target (zone and exception are always in the key, R-IN)",
+     "duration": 0.14150000000000773,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at mkEnv (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:30:42)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a parcel whose zone is not in the list is retracted by key and writes no row",
+     "status": "failed",
+     "title": "a parcel whose zone is not in the list is retracted by key and writes no row",
+     "duration": 0.13591699999997786,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:257:17"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a narrower zone list retracts the parcels that left it",
+     "status": "failed",
+     "title": "a narrower zone list retracts the parcels that left it",
+     "duration": 0.12299999999999045,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:264:17"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "status": "failed",
+     "title": "an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "duration": 1.6505420000000015,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /empty/ but got 'Cannot find module \\'/Users/brettpres…'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:269:43\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "status": "failed",
+     "title": "the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "duration": 0.15454199999999219,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:277:15"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows a seeded shuffle of the unit order does not change a single row (I15)",
+     "status": "failed",
+     "title": "a seeded shuffle of the unit order does not change a single row (I15)",
+     "duration": 0.7044580000000167,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:288:18"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the input rows are not mutated",
+     "status": "failed",
+     "title": "the input rows are not mutated",
+     "duration": 0.12545799999998053,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:296:5"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR)"
+     ],
+     "fullName": "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR) the representative is the first class; equal classes collapse into it and a differing class is stored whole",
+     "status": "skipped",
+     "title": "the representative is the first class; equal classes collapse into it and a differing class is stored whole",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR)"
+     ],
+     "fullName": "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR) disclosures are stored sorted (R-IT); the class-vector inputs are not in the cell key but the other read inputs are",
+     "status": "skipped",
+     "title": "disclosures are stored sorted (R-IT); the class-vector inputs are not in the cell key but the other read inputs are",
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else)"
+     ],
+     "fullName": "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else) names the four tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "status": "failed",
+     "title": "names the four tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "duration": 0.11608300000000327,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-materialize.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at mz (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:21:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:334:24"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792692154060,
+   "endTime": 1792692154065.1255,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "R-JA: scopePairs — the pointer order is the scope seed order"
+     ],
+     "fullName": "R-JA: scopePairs — the pointer order is the scope seed order lists every (structure, target) of layer2-scope.json, structures first, 53 today",
+     "status": "failed",
+     "title": "lists every (structure, target) of layer2-scope.json, structures first, 53 today",
+     "duration": 3.730792000000008,
+     "failureMessages": [
+      "TypeError: rb(...).scopePairs is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:29:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes profile_id = sha256 of the sorted \"<structure>\\t<target>\\t<cell_id>\" lines, independent of entry order",
+     "status": "failed",
+     "title": "profile_id = sha256 of the sorted \"<structure>\\t<target>\\t<cell_id>\" lines, independent of entry order",
+     "duration": 0.5704999999999956,
+     "failureMessages": [
+      "TypeError: rb(...).profileKey is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:39:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes a different result for one target gives a different profile; the same lines give the same",
+     "status": "failed",
+     "title": "a different result for one target gives a different profile; the same lines give the same",
+     "duration": 0.25795800000000213,
+     "failureMessages": [
+      "TypeError: rb(...).profileKey is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:47:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes packPointers writes 32 bytes per pair in scope order (53 x 32 = 1,696 bytes) and unpack restores the entries",
+     "status": "failed",
+     "title": "packPointers writes 32 bytes per pair in scope order (53 x 32 = 1,696 bytes) and unpack restores the entries",
+     "duration": 0.17783299999999258,
+     "failureMessages": [
+      "TypeError: rb(...).packPointers is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:52:30\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes packing does not depend on the entry order; a missing, duplicate or foreign entry throws",
+     "status": "failed",
+     "title": "packing does not depend on the entry order; a missing, duplicate or foreign entry throws",
+     "duration": 0.1914589999999805,
+     "failureMessages": [
+      "TypeError: rb(...).packPointers is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:61:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes a cell_id that is not a hex sha256 is refused; unpack refuses bytes of the wrong length",
+     "status": "failed",
+     "title": "a cell_id that is not a hex sha256 is refused; unpack refuses bytes of the wrong length",
+     "duration": 1.663583000000017,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /sha256/ but got 'rb(...).packPointers is not a function'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:70:49\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate"
+     ],
+     "fullName": "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate depends on structure, target and the full status text only",
+     "status": "failed",
+     "title": "depends on structure, target and the full status text only",
+     "duration": 0.14958299999997848,
+     "failureMessages": [
+      "TypeError: rb(...).gatedCellKey is not a function\n    at k (src/tests/steps/resolve_bylaws/profiles.logic.test.ts:77:83)\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:78:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate"
+     ],
+     "fullName": "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate never collides with a computed cell key for the same structure and target (a different line set)",
+     "status": "failed",
+     "title": "never collides with a computed cell key for the same structure and target (a different line set)",
+     "duration": 0.20962500000001683,
+     "failureMessages": [
+      "TypeError: rb(...).gatedCellKey is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:87:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3: signature id — the candidate set once (R-IN: zone and exception fix it at one table_version)"
+     ],
+     "fullName": "Spec 134 §3: signature id — the candidate set once (R-IN: zone and exception fix it at one table_version) is sha256 of the sorted unit ids, one per line, independent of order and duplicates",
+     "status": "failed",
+     "title": "is sha256 of the sorted unit ids, one per line, independent of order and duplicates",
+     "duration": 0.1342909999999904,
+     "failureMessages": [
+      "TypeError: rb(...).signatureId is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:94:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns canonicalText renders null as empty, numbers by String, booleans t/f, arrays joined by U+001E, columns joined by U+001F",
+     "status": "failed",
+     "title": "canonicalText renders null as empty, numbers by String, booleans t/f, arrays joined by U+001E, columns joined by U+001F",
+     "duration": 0.1103339999999946,
+     "failureMessages": [
+      "TypeError: rb(...).canonicalText is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:106:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns rowSha is sha256 of canonicalText, ignores columns outside the list (chain_run_id, versions, timestamps are outside the guard)",
+     "status": "failed",
+     "title": "rowSha is sha256 of canonicalText, ignores columns outside the list (chain_run_id, versions, timestamps are outside the guard)",
+     "duration": 0.1104999999999734,
+     "failureMessages": [
+      "TypeError: rb(...).rowSha is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:111:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns changes when any result column changes (a direct row edit is detected, I14)",
+     "status": "failed",
+     "title": "changes when any result column changes (a direct row edit is detected, I14)",
+     "duration": 0.09991700000000492,
+     "failureMessages": [
+      "TypeError: rb(...).rowSha is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:116:23\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns a column that does not exist on the row throws (a result column is never silently absent)",
+     "status": "failed",
+     "title": "a column that does not exist on the row throws (a result column is never silently absent)",
+     "duration": 0.26474999999999227,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /zz/ but got 'rb(...).rowSha is not a function'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:121:56\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns verifyRowSha: true for a stored row_sha that matches, false after an edit",
+     "status": "failed",
+     "title": "verifyRowSha: true for a stored row_sha that matches, false after an edit",
+     "duration": 0.10087500000000205,
+     "failureMessages": [
+      "TypeError: rb(...).rowSha is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:125:41\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST)"
+     ],
+     "fullName": "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST) within the budget when measured bytes <= budget MB (MB = 1,048,576 bytes); the ratio is reported",
+     "status": "failed",
+     "title": "within the budget when measured bytes <= budget MB (MB = 1,048,576 bytes); the ratio is reported",
+     "duration": 0.09320800000000418,
+     "failureMessages": [
+      "TypeError: rb(...).storageWithinBudget is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:133:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST)"
+     ],
+     "fullName": "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST) refuses a budget that is not a positive number and bytes that are not a non-negative number (never defaulted)",
+     "status": "failed",
+     "title": "refuses a budget that is not a positive number and bytes that are not a non-negative number (never defaulted)",
+     "duration": 0.22833299999999213,
+     "failureMessages": [
+      "AssertionError: 0: expected [Function] to throw error matching /budget/ but got 'rb(...).storageWithinBudget is not a …'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:139:113\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792692154043,
+   "endTime": 1792692154051.2646,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/profiles.logic.test.ts"
+  }
+ ]
+}

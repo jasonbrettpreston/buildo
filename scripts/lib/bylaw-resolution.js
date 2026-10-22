@@ -292,6 +292,213 @@ function inPopulation(zoneList, vocabZones) {
   return (row) => set.has(row.zone);
 }
 
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Part A of the Layer 2 build (lane L2-SLICES, 2026-10-22): the lot vector (R-IV), R-LABEL, the class lot, and the form-C
+// pointer/profile/lineage functions (Spec 124 R-JA, operator CHAT-69.Q1). All pure: no fs, pg, env, clock or randomness.
+// Handbook: Spec 132 §x-rulings.4 (R-JA); Spec 132 §core.9 (R-W: compute is pure).
+// ---------------------------------------------------------------------------------------------------------------------
+
+const NUMBER_TOKEN = /^\d+(?:\.\d+)?$/;
+/**
+ * R-LABEL (P2 D7, P2:204): the zone string `ZONE (letterN; letterN) (xN)`, total over the vocab `label_letter` set, numbers and
+ * `H` as a declared holding token. Anything else is `ok: false` (the lot gate `label_unparsed`); it never throws on a
+ * string. `x` is the exception number group, alone in its parentheses; a letter repeats, or an unknown letter, is not ok.
+ */
+function parseZoneLabel(zn, labelLetters) {
+  const NO = { ok: false, zone: null, label: {}, labelX: null, holding: false };
+  if (typeof zn !== 'string' || !Array.isArray(labelLetters)) return NO;
+  const m = /^\s*([A-Z]+)((?:\s*\([^()]*\))*)\s*$/.exec(zn);
+  if (!m) return NO;
+  const label = {};
+  let labelX = null;
+  let holding = false;
+  for (const g of m[2].matchAll(/\(([^()]*)\)/g)) {
+    const parts = g[1].split(';').map((p) => p.trim());
+    for (const p of parts) {
+      const x = /^x(\d+)$/.exec(p);
+      if (x) {
+        if (parts.length !== 1 || labelX !== null) return NO;
+        labelX = Number(x[1]);
+      } else if (p === 'H') {
+        holding = true;
+      } else {
+        const l = /^([a-z]+)\s*(\S+)$/.exec(p);
+        if (!l || !labelLetters.includes(l[1]) || !NUMBER_TOKEN.test(l[2]) || Object.prototype.hasOwnProperty.call(label, l[1])) return NO;
+        label[l[1]] = Number(l[2]);
+      }
+    }
+  }
+  return { ok: true, zone: m[1], label, labelX, holding };
+}
+
+/**
+ * R-IV: the lot vector of one parcels row, the shape the golden-lot puller builds (pull-golden-lots.cjs rowToLot) so the two cannot
+ * drift. `env`: { vocabZones, labelLetters, exceptionChapter, sentinel, mapAreas, designDefaults }. Returns
+ * { lot, gates, inputs_defaulted }. `gates` are the parcel-derived lot gates that fired (a subset of layer2-map.json lot_gate);
+ * `exception_not_authored` is decided from the INCLUDE closure (M-231), never here. A missing metric stays null and fires
+ * `lot_metric_missing`; a missing map membership leaves `map_areas` absent. Nothing is defaulted, so inputs_defaulted is 0 (I10).
+ */
+function buildLotVector(row, env) {
+  if (!row || typeof row !== 'object') throw new TypeError('buildLotVector: row must be a parcels row');
+  for (const k of ['vocabZones', 'labelLetters', 'exceptionChapter', 'mapAreas']) if (env[k] === undefined || env[k] === null) throw new TypeError(`buildLotVector: env.${k} is missing`);
+  const zone = row.zoning_class;
+  const parsed = parseZoneLabel(row.zoning_zn_string, env.labelLetters);
+  const gates = [];
+  if (!zone || !env.vocabZones.includes(zone)) gates.push('no_569_2013_zone');
+  if (row.zoning_is_ambiguous === true) gates.push('ambiguous_zone');
+  if (!parsed.ok) gates.push('label_unparsed');
+  else if (exceptionMismatch(row.exception_number, parsed.labelX, env.sentinel)) gates.push('label_exception_mismatch');
+  const metric = (v) => (v === null || v === undefined ? null : Number(v));
+  const vars = { lot_frontage_m: metric(row.frontage_m), lot_depth_m: metric(row.depth_m), lot_area_m2: metric(row.lot_size_sqm) };
+  if (Object.values(vars).some((v) => v === null)) gates.push('lot_metric_missing');
+  const ov = row.zoning_overlays || {};
+  const overlays = {};
+  if (ov.height_overlay && ov.height_overlay.applied) {
+    if (ov.height_overlay.height_max_m != null) overlays.HT = Number(ov.height_overlay.height_max_m);
+    if (ov.height_overlay.stories != null) overlays.ST = Number(ov.height_overlay.stories);
+  }
+  if (ov.lot_coverage_overlay && ov.lot_coverage_overlay.applied && ov.lot_coverage_overlay.coverage_max_pct != null) overlays.LC = Number(ov.lot_coverage_overlay.coverage_max_pct);
+  const n = closureStart(row.exception_number, env.sentinel);
+  const chapter = env.exceptionChapter[zone];
+  const exception = n !== null && n > 0 && chapter !== undefined ? `900.${chapter}.10(${n})` : null;
+  // Q-D: the flags follow the golden-lot puller, including its declared lawfully_existing:false and the 4-vertex no_rear_lot_line rule
+  const flag = (v) => (typeof v === 'boolean' ? v : undefined);
+  const raw = {
+    corner_lot: flag(row.is_corner_lot), through_lot: flag(row.is_through_lot), major_street: flag(row.on_policy_road), abuts_lane: flag(row.abuts_laneway),
+    lawfully_existing: false, heritage_property: flag(row.is_heritage_designated), ...(row.geom_npoints === 4 ? { no_rear_lot_line: true } : {}),
+  };
+  const flags = { ...(env.designDefaults || {}) };
+  for (const [k, v] of Object.entries(raw)) if (v !== undefined) flags[k] = v;
+  const lot = { zone, zone_label: row.zoning_zn_string, label: parsed.ok ? parsed.label : {}, overlays, vars, flags, exception, parcel_id: row.parcel_id };
+  // Q-E: map membership is the parcels column enrich_parcels derives from bylaw_map_areas; null is unknown, not outside
+  const cols = Object.keys(env.mapAreas);
+  if (cols.every((c) => typeof row[c] === 'boolean')) lot.map_areas = cols.filter((c) => row[c] === true).map((c) => env.mapAreas[c]);
+  return { lot, gates, inputs_defaulted: 0 };
+}
+
+/** The lot inputs a class vector sets (so they are not lot inputs): left out of cell_id and inputs_used (Q-C). */
+const CLASS_INPUT_PATHS = Object.freeze(['building_type', 'flags.has_garden_suite', 'flags.has_laneway_suite', 'flags.has_secondary_suite', 'vars.ancillary_units', 'vars.dwelling_units', 'vars.house_units']);
+/**
+ * Lot inputs effective() reports as read that this step never sets, so every lot has the same (absent) value: `uses` (the specific uses
+ * on a lot, a scenario value). cell-cache.mjs inputValue cannot value `uses` (PIN: a gap in that file, owned by the by-law lane), and a
+ * constant adds nothing to a key, so these paths are left out of cell_id and the cell cache key, and listed in inputs_used as read.
+ */
+const UNSET_LOT_INPUTS = Object.freeze(['uses']);
+const STRUCTURE_BUILDING_TYPE = Object.freeze({ garden_suite: 'garden_suite', laneway_suite: 'laneway_suite' });
+/**
+ * Spec 134 §2 (the class catalogue): the base lot vector evaluated for one structure under one class. The principal takes
+ * the class's building type and house units (evaluated_at for a range); a suite structure keeps the class context and takes
+ * its own building type and one dwelling unit (the golden-lot helper's UNITS_OF). Q-C: the suite's unit counts are the plain
+ * reading of the vocab fields, not a ruling.
+ */
+function classLot(base, { structure, classKey, vector }) {
+  if (structure !== 'principal' && !Object.prototype.hasOwnProperty.call(STRUCTURE_BUILDING_TYPE, structure)) throw new Error(`classLot: structure ${JSON.stringify(structure)} is not a v1 structure`);
+  if (!vector || typeof vector.building_type !== 'string') throw new TypeError(`classLot: class ${classKey} has no vector`);
+  const house = typeof vector.house_units === 'number' ? vector.house_units : vector.house_units && vector.house_units.evaluated_at;
+  if (typeof house !== 'number') throw new TypeError(`classLot: class ${classKey} has no house_units`);
+  const principal = structure === 'principal';
+  return {
+    ...base,
+    building_type: principal ? vector.building_type : STRUCTURE_BUILDING_TYPE[structure],
+    vars: { ...base.vars, dwelling_units: principal ? house : 1, house_units: house, ancillary_units: principal ? vector.ancillary_units : 1 },
+    flags: { ...base.flags, has_secondary_suite: vector.has_secondary_suite, has_garden_suite: vector.has_garden_suite, has_laneway_suite: vector.has_laneway_suite },
+  };
+}
+
+/** Spec 134 §5: a gated result is shared by every lot with the same gate: its key is the structure, target and full status text. */
+function gatedCellKey(scope, statusTextValue) {
+  if (!scope || typeof scope.structure !== 'string' || typeof scope.target !== 'string') throw new TypeError('gatedCellKey: scope must be {structure, target}');
+  if (typeof statusTextValue !== 'string' || !statusTextValue.startsWith(NOT_EVALUATED_PREFIX)) throw new TypeError('gatedCellKey: a gated key is made from a not_evaluated:<code> status');
+  return { cell_id: sha256Hex(`gated\nstructure\t${scope.structure}\ntarget\t${scope.target}\nstatus\t${statusTextValue}`) };
+}
+
+/** Spec 134 §3: the candidate set once; sha256 of the sorted unique unit ids, one per line. */
+function signatureId(unitIds) {
+  if (!Array.isArray(unitIds)) throw new TypeError('signatureId: unitIds must be an array');
+  return sha256Hex([...new Set(unitIds)].sort().join('\n'));
+}
+
+/** R-JA: the pointer order, the (structure, target) pairs of layer2-scope.json in file order. */
+function scopePairs(scope) {
+  if (!scope || !Array.isArray(scope.structures) || !scope.targets) throw new TypeError('scopePairs: scope must be layer2-scope.json');
+  return scope.structures.flatMap((structure) => {
+    if (!Array.isArray(scope.targets[structure])) throw new Error(`scopePairs: no targets for structure ${structure}`);
+    return scope.targets[structure].map((target) => ({ structure, target }));
+  });
+}
+
+/** R-JA: profile_id = sha256 of the sorted `<structure>\t<target>\t<cell_id>` lines of the lot, independent of entry order. */
+function profileKey(entries) {
+  if (!Array.isArray(entries)) throw new TypeError('profileKey: entries must be [{structure, target, cell_id}]');
+  return sha256Hex(entries.map((e) => `${e.structure}\t${e.target}\t${e.cell_id}`).sort().join('\n'));
+}
+
+/** R-JA: the pointers column: one 32-byte sha256 digest per scope pair, in scope order. Every pair exactly once. */
+function packPointers(pairs, entries) {
+  const byKey = new Map();
+  for (const e of entries) {
+    if (!e || typeof e.cell_id !== 'string' || !SHA256_HEX.test(e.cell_id)) throw new TypeError(`packPointers: cell_id ${JSON.stringify(e && e.cell_id)} is not a hex sha256`);
+    const k = `${e.structure}\t${e.target}`;
+    if (byKey.has(k)) throw new Error(`packPointers: duplicate entry ${k}`);
+    byKey.set(k, e.cell_id);
+  }
+  const known = new Set(pairs.map((p) => `${p.structure}\t${p.target}`));
+  for (const k of byKey.keys()) if (!known.has(k)) throw new Error(`packPointers: entry ${k} is not in scope`);
+  const parts = pairs.map((p) => {
+    const id = byKey.get(`${p.structure}\t${p.target}`);
+    if (id === undefined) throw new Error(`packPointers: missing entry ${p.structure}\t${p.target}`);
+    return Buffer.from(id, 'hex');
+  });
+  return Buffer.concat(parts);
+}
+
+/** R-JA: the inverse of packPointers. The byte length must be exactly 32 per pair. */
+function unpackPointers(buf, pairs) {
+  if (!Buffer.isBuffer(buf) || buf.length !== 32 * pairs.length) throw new Error(`unpackPointers: length ${buf && buf.length} is not 32 x ${pairs.length}`);
+  return pairs.map((p, i) => ({ structure: p.structure, target: p.target, cell_id: buf.subarray(32 * i, 32 * (i + 1)).toString('hex') }));
+}
+
+const FIELD_SEP = '\u001f';
+const ITEM_SEP = '\u001e';
+const KEY_SEP = '\u001d';
+/** One value in the canonical text of a row (I14): null is empty, booleans t / f, bytea hex, arrays joined by U+001E, objects as sorted key:value. */
+function canonicalValue(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'boolean') return v ? 't' : 'f';
+  if (Buffer.isBuffer(v)) return v.toString('hex');
+  if (Array.isArray(v)) return v.map(canonicalValue).join(ITEM_SEP);
+  if (typeof v === 'object') return Object.keys(v).sort().map((k) => `${k}:${canonicalValue(v[k])}`).join(KEY_SEP);
+  return String(v);
+}
+/**
+ * Spec 134 §3 / I14: the exact text a row hash covers: the listed result columns in order, joined by U+001F. chain_run_id, the
+ * two versions and timestamps are outside any list (the write guard's own exclusions). The SQL recompute (part B) renders
+ * the same text. A listed column the row lacks throws: a result column is never silently absent.
+ */
+function canonicalText(row, columns) {
+  return columns.map((c) => {
+    if (!Object.prototype.hasOwnProperty.call(row, c)) throw new Error(`canonicalText: row has no column ${c}`);
+    return canonicalValue(row[c]);
+  }).join(FIELD_SEP);
+}
+function rowSha(row, columns) {
+  return sha256Hex(canonicalText(row, columns));
+}
+/** I14: the stored row_sha equals the recomputed one. */
+function verifyRowSha(row, columns) {
+  return row.row_sha === rowSha(row, columns);
+}
+
+const BYTES_PER_MB = 1048576;
+/** Spec 134 §6 / R-JA: measured bytes against `resolve_bylaws_storage_budget_mb`. Neither input is ever defaulted. */
+function storageWithinBudget(measuredBytes, budgetMb) {
+  if (typeof budgetMb !== 'number' || !Number.isFinite(budgetMb) || budgetMb <= 0) throw new TypeError(`storageWithinBudget: budget ${JSON.stringify(budgetMb)} must be a positive number of MB`);
+  if (typeof measuredBytes !== 'number' || !Number.isFinite(measuredBytes) || measuredBytes < 0) throw new TypeError(`storageWithinBudget: bytes ${JSON.stringify(measuredBytes)} must be a non-negative number`);
+  const measured = measuredBytes / BYTES_PER_MB;
+  return { ok: measuredBytes <= budgetMb * BYTES_PER_MB, measured_mb: measured, budget_mb: budgetMb, ratio: measured / budgetMb };
+}
+
 module.exports = {
   unauthoredException,
   exceptionGateStatus,
@@ -311,4 +518,19 @@ module.exports = {
   collapseClasses,
   splitPopulation,
   inPopulation,
+  parseZoneLabel,
+  buildLotVector,
+  CLASS_INPUT_PATHS,
+  UNSET_LOT_INPUTS,
+  classLot,
+  gatedCellKey,
+  signatureId,
+  scopePairs,
+  profileKey,
+  packPointers,
+  unpackPointers,
+  canonicalText,
+  rowSha,
+  verifyRowSha,
+  storageWithinBudget,
 };

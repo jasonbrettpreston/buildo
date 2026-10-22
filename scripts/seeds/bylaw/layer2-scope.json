@@ -1,10 +1,20 @@
 {
-  "$comment": "Spec 134 v1 scope (Spec 124 R-IS, operator chat batch J 2026-10-21-chat-batch-j#CHAT-36.OQ8; Spec 69a M-233 structures, M-234 scope: more targets join by a pin change, i.e. an edit of this file). Each list is the Layer 2 targets the lineage registry docs/reference/maxbld-field-lineage.json keys for that structure: principal = targets keyed by a field that is not a suite_ field; garden_suite and laneway_suite = targets keyed by a suite_ field. A lineage target left out of every list is listed in deferred with its reason. Locked both ways by src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts; every target is a vocab.json dsl_target.",
+  "$comment": "Spec 134 v1 scope (Spec 124 R-IS, operator chat batch J 2026-10-21-chat-batch-j#CHAT-36.OQ8; Spec 69a M-233 structures, M-234 scope: more targets join by a pin change, i.e. an edit of this file). Each list is the Layer 2 targets the lineage registry docs/reference/maxbld-field-lineage.json keys for that structure: principal = targets keyed by a field that is not a suite_ field; garden_suite and laneway_suite = targets keyed by a suite_ field. A lineage target left out of every list is listed in deferred with its reason. Locked both ways by src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts; every target is a vocab.json dsl_target. Added for the part-A library (lane L2-SLICES, Spec 134 §2 'The class catalogue' and 'the lot vector'): `classes` = the v1 classes in catalogue order (the five Spec 78 P5.1 classes, Spec 69a M-298; the first is the representative a cell row stores, the rest are by_class entries) and `map_areas` = parcels column -> the by-law map ref it stands for (parcels.in_sixplex_area, set by enrich_parcels from bylaw_map_areas, is the Sixplex Overlay Map). Both are drafted for ruling (Q-C classes in by_class, Q-E map membership) and implemented here in the plain Spec 134 reading.",
   "structures": [
     "principal",
     "garden_suite",
     "laneway_suite"
   ],
+  "classes": [
+    "detached_house",
+    "detached_houseplex",
+    "semi_detached_houseplex",
+    "semi_detached_house",
+    "house_with_secondary_suite"
+  ],
+  "map_areas": {
+    "in_sixplex_area": "Sixplex Overlay Map"
+  },
   "targets": {
     "principal": [
       "attic_counted_clearance_m",

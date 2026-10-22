@@ -1,0 +1,758 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA). Vitest JSON of src/tests/bylaw-provisions.infra.test.ts (R-DET extension, Spec 134:121 / Spec 133 §m.117) with a stub scripts/lib/compute/resolve-bylaws.js containing Date.now(); lane L2-PREREQ 2026-10-22, base dee45971. Stub removed; paths made repo-relative.",
+ "numTotalTestSuites": 4,
+ "numPassedTestSuites": 2,
+ "numFailedTestSuites": 2,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 65,
+ "numPassedTests": 64,
+ "numFailedTests": 1,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792692223474,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "G-PROV page-sha lock on the committed snapshot"
+     ],
+     "fullName": "G-PROV page-sha lock on the committed snapshot every pinned page matches the manifest shas, reproduces under the current normalizer, and equals the latest adoption",
+     "status": "passed",
+     "title": "every pinned page matches the manifest shas, reproduces under the current normalizer, and equals the latest adoption",
+     "duration": 58.244834,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "G-PROV page-sha lock on the committed snapshot"
+     ],
+     "fullName": "G-PROV page-sha lock on the committed snapshot the manifest records url, fetch_id -> fetched_at and the normalizer version; never an mtime",
+     "status": "passed",
+     "title": "the manifest records url, fetch_id -> fetched_at and the normalizer version; never an mtime",
+     "duration": 2.11616699999999,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "G-PROV page-sha lock on the committed snapshot"
+     ],
+     "fullName": "G-PROV page-sha lock on the committed snapshot seed JSON is LF, newline-terminated and sorted-key stable",
+     "status": "passed",
+     "title": "seed JSON is LF, newline-terminated and sorted-key stable",
+     "duration": 0.9156669999999849,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37, M-47, M-15)"
+     ],
+     "fullName": "pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37, M-47, M-15) one page per TOC section, at the section URL; exactly one TOC root page",
+     "status": "passed",
+     "title": "one page per TOC section, at the section URL; exactly one TOC root page",
+     "duration": 0.4102499999999907,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37, M-47, M-15)"
+     ],
+     "fullName": "pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37, M-47, M-15) M-37 and every M-47 section and carve-in clause page is pinned; the Ch.900 exception pages are pinned by Q-K7a (M-15 note 2026-10-07)",
+     "status": "passed",
+     "title": "M-37 and every M-47 section and carve-in clause page is pinned; the Ch.900 exception pages are pinned by Q-K7a (M-15 note 2026-10-07)",
+     "duration": 0.4947080000000028,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt the lock names the resolve_bylaws compute module (R-DET extension, Spec 134:121)",
+     "status": "passed",
+     "title": "the lock names the resolve_bylaws compute module (R-DET extension, Spec 134:121)",
+     "duration": 0.05333299999998076,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt the walk reaches oracle-b/ (the recursion is real)",
+     "status": "passed",
+     "title": "the walk reaches oracle-b/ (the recursion is real)",
+     "duration": 0.0554170000000056,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt each new ban catches its pattern (no vacuous regex)",
+     "status": "passed",
+     "title": "each new ban catches its pattern (no vacuous regex)",
+     "duration": 0.4235830000000078,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/generate-bylaw-provisions.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/generate-bylaw-provisions.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.43362500000000637,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/agree.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/agree.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.2632080000000201,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/amendments.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/amendments.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.22833400000001802,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/audit-fixtures.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/audit-fixtures.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.2320839999999862,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/audit.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/audit.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.3530420000000163,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/authored-fixtures.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/authored-fixtures.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.4004579999999862,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/authored.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/authored.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.28404199999999946,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/bylaw-register.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/bylaw-register.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.16949999999999932,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/cell-cache.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/cell-cache.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.15791600000000017,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/census.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/census.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.2569159999999897,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/change.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/change.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.16687500000000455,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/clause.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/clause.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.27329199999999787,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/code-link.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/code-link.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.3937919999999906,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/definitions.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/definitions.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.19616600000000517,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/dsl.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/dsl.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.282416000000012,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/enacting.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/enacting.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.21658299999998576,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/eval-parallel.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/eval-parallel.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.15945899999999824,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/evaluate.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/evaluate.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 2.2915419999999926,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/exc-lit.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/exc-lit.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.3694580000000087,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/external.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/external.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.21995799999999122,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/front-averaging.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/front-averaging.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.11841699999999378,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/generate-answer-tracker.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/generate-answer-tracker.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.2002909999999929,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/generate-maxbld-lineage.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/generate-maxbld-lineage.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.14008400000000165,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/git-witness.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/git-witness.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.11545799999998962,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/html.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/html.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.11870800000002646,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/k7.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/k7.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.17312499999999886,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/keyer-b.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/keyer-b.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.1450839999999971,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/keyer-prov.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/keyer-prov.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.14308299999999008,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/keying-cli.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/keying-cli.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.2652920000000165,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/keying.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/keying.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.5318340000000035,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/legacy.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/legacy.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.3096249999999827,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/map-seed.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/map-seed.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.21224999999998317,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/maxbld-trace-lib.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/maxbld-trace-lib.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.15354200000001583,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/named-addresses-run.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/named-addresses-run.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.2022500000000207,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/named-addresses.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/named-addresses.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.183667000000014,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/observable.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/observable.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.21812499999998636,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/oracle-b/compare.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/oracle-b/compare.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.20024999999998272,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/oracle-b/expr.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/oracle-b/expr.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.15458399999999983,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/oracle-b/pairwise.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/oracle-b/pairwise.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.09983300000001805,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/oracle-b/resolve.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/oracle-b/resolve.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.25158299999998235,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/oracle-c-run.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/oracle-c-run.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.20145899999999983,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/oracle-c.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/oracle-c.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.33899999999999864,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/render.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/render.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.14962499999998613,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/shape.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/shape.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.21658299999998576,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/slice.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/slice.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.32987499999998704,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/snapshot.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/snapshot.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.20904100000001336,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/stale-arm.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/stale-arm.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.22191700000001902,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/standardized.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/standardized.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.16116599999998016,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/text.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/text.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.15887499999999477,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/twins.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/twins.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.12095800000000168,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/unconsolidated.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/unconsolidated.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.09862499999999841,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/universe.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/universe.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.2528340000000071,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/validate-round.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/validate-round.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.275209000000018,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/validate.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/validate.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.27299999999999613,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/vocab.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/vocab.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.20862499999998363,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/analysis/bylaw/xref.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "passed",
+     "title": "scripts/analysis/bylaw/xref.mjs has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 0.23433299999999235,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt"
+     ],
+     "fullName": "determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt scripts/lib/compute/resolve-bylaws.js has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "status": "failed",
+     "title": "scripts/lib/compute/resolve-bylaws.js has no clock, entropy, host, locale, mtime, process.exit or empty catch",
+     "duration": 2.7067499999999995,
+     "failureMessages": [
+      "AssertionError: expected { …(3) } to deeply equal { …(3) }\n    at src/tests/bylaw-provisions.infra.test.ts:131:92\n    at file://node_modules/@vitest/runner/dist/index.js:633:57\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792692223672,
+   "endTime": 1792692223752.7068,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/bylaw-provisions.infra.test.ts"
+  }
+ ]
+}
