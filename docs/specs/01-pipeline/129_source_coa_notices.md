@@ -10,14 +10,14 @@
 
 | # | Slug | Script | Purpose | Writes |
 |---|------|--------|---------|--------|
-| 1 | `load_coa_notices` | `load-coa-notices.js` | Pinned decision-notice PDFs → parsed variance values (no text, no names) | `coa_notice_variances` |
+| 1 | `load_coa_notices` | `load-coa-notices.js` | Pinned decision-notice PDFs and pinned values-only AIC batches (§2b) → parsed variance values (no text, no names) | `coa_notice_variances` |
 
 <requirements>
 ## 1. Goal
 
 McBylaw Phase 2 needs an independent oracle: what the City's own zoning examiners said the by-law required on a real lot, on a real date. Toronto's Committee of Adjustment publishes a "Notice of Decision" for every minor-variance application. Each requested variance reads "To permit X, whereas the By-law requires Y" and cites a by-law chapter or section. `coa_applications` (Spec 51) stores none of this: it has no variance list, no required/proposed values, no citation and no decision text.
 
-`load_coa_notices` reads a **pinned, sha256-verified manifest** of decision-notice PDFs (2017 first). It parses each variance item into one row of `coa_notice_variances` and stores **values only**: no PDF, no notice text and no names. The table is oracle C of McBylaw Phase 2 (`.cursor/mcbylaw/phase2-plan-DRAFT.md` §V-2 row C, D6, P2-12). The SC-5 comparison harness (Spec 72) consumes it.
+`load_coa_notices` reads a **pinned, sha256-verified manifest** of decision-notice PDFs (2017 first). It parses each variance item into one row of `coa_notice_variances` and stores **values only**: no PDF, no notice text and no names. Since 2026-10-22 (operator CHAT-71.2) the same step also reads **values-only batches** of the 2026 Application Information Centre notices (decision, hearing, zoning; §2b), into the same table, so consumers beyond the scorer's calculation comparison can use them. The table is oracle C of McBylaw Phase 2 (`.cursor/mcbylaw/phase2-plan-DRAFT.md` §V-2 row C, D6, P2-12). The SC-5 comparison harness (Spec 72) consumes it.
 </requirements>
 
 ---
@@ -35,6 +35,24 @@ McBylaw Phase 2 needs an independent oracle: what the City's own zoning examiner
   * `--verify` re-GETs every document and reports `{match, sha_changed, http_error}`; any non-match sets a non-zero exit code.
   * `--measure` runs the P0 measurements: per document, pages, notices, items and the mailed-lag days. It outputs numbers and ids only.
 * **The 8 dead URLs** (HTTP 404 at pin) go to `excluded[]` (Q5 recommendation adopted). **Delegated decisions** are kept and flagged `decision_source = delegated` (Q11). `--exclude-delegated` moves them to `excluded[]` if the operator rules otherwise after P0.6.
+
+## 2b. The values-only batch family `aic_values_batch` (amendment 2026-10-22, operator CHAT-71.2, scope expansion by ruling per CHAT-68.scope)
+
+**Landing status (2026-10-22):** the contract library `aic-values.js`, the offline tool and their tests are committed. The arm half (`scripts/lib/step/**`, RE-FREEZE #39), the compute seam, the descriptor, migration 284, vocab `coa-vocab-4` and the pinned batch files are built and held for the fleet recapture night: each moves `lib_fingerprint` or the step capture fingerprint, so the V3 ratchet (E1, #39, #44) refuses them until the recapture is taken. Nothing below is live until then.
+
+*Handbook: Spec 132 ingestor.3 (a source form gets one library path), ingestor.2 (skip only over a non-empty target), core.6/core.11 (observable), core.8 (no number in code), x-captures.1. Design record: the lane's DESIGN.md (not committed); this section is the contract.*
+
+* **Why a second acquisition form and not a second step.** The AIC notices are behind a captcha and arrive as operator drops (C-6), so they cannot be fetched, only committed as values. A second step on the same table is refused by §11's own analysis: the library refuses two primaries on one table (B3) and the `departed_mark` MARK is table-wide (§9), so each step would retire the other's rows. The one primary therefore gains an optional second manifest (RE-FREEZE #39, Spec 122 §8): one run, one reconcile, one key set, one soft retire.
+* **Manifest** `scripts/seeds/coa-notices/manifest-aic-values.json` = `{schema: "coa-values-manifest-1", source_family: "aic_values_batch", batches:[{batch_id, path, sha256, notices, items, captured_on}], excluded:[{application_number, batch_id, reason}]}`. Closed sets in `scripts/lib/coa-notices/aic-values.js` `VALUES_CONTRACT` / `validateValuesManifest`: batch id `coa-YYYY-<letter>`; path = `scripts/seeds/coa-notices/aic-values/<batch_id>.json`; excluded reason ∈ {hearing_date_unread, in_pdf_allotment, operator_excluded}. Fail closed, like §2.
+* **Batch file** `{schema: "coa-values-batch-1", batch_id, parser_version, vocab_version, target_map_version, notices:[{application_number, doc_type, hearing_date, zoning_as_stated, decision, items:[{item_ordinal, cited_bylaw, citation_kind, regulation_id_as_cited, exception_ref, target, target_status, bound, required_value, required_unit, proposed_value, proposed_unit, parse_status, parse_confidence, qualified, decision}]}]}`. **Values only (§3 holds):** `validateBatch` refuses any other key, any string outside a closed set or identifier pattern, a zone label over `segmentation.zone_label_max_chars` or outside label characters, a negative value, a pair without both values and units. The notice text, owner/agent lines, names, emails, phones and drawings never enter a batch.
+* **Offline tool** `scripts/analysis/coa-notices/build-values-batch.mjs` (not a step; `--build <notices.json> --batch-id <id> [--exclude APP=reason]`, `--verify`). Input is a file a lane extracted from an operator drop (never past the captcha). The requirement sentence is read in memory only to call `mapTarget`; citation uses `parseCitation`, so the batch family shares §5/§6's closed sets. A notice with no readable hearing date is excluded (`hearing_date_unread`; `hearing_date` stays NOT NULL, §8 compares at the hearing date); a file already in the 2017 allotment is excluded `in_pdf_allotment` (the pinned PDF stays the source of record).
+* **Column mapping.** `variance_key = aic_values_batch|<application_number>|<item_ordinal>`; `hearing_date` = the notice's; `decision` per item (refused result wins, else the notice outcome; pending for a hearing notice; the ORACLE-C rule); `decision_source = 'unknown'` (the drop does not say committee or delegated); `decision_mailed_on` NULL (counted as unmeasured lag by C7a); `source_sha256` = the batch file's sha256; `source_page` NULL; `extractor_version` = the batch's `parser_version` (`coa-parse/1`); `doc_type` ∈ {decision_notice, hearing_notice}; `source_batch` = the batch id (PDF rows: `coa-<hearing year>-decisions`).
+* **Identity and dedupe.** Keys carry the family, so the families never overwrite each other. Within the batch family `reconcileNotices` dedupes per application number as §5 does, with one added first key: a `decision_notice` supersedes a `hearing_notice`; equal stage and date with differing item lists is still `duplicate_same_date_conflict`. P4 `active_dup_items` counts any item that ever appears in both families.
+* **Zoning notices and plan facts.** Only the zone label survives, as `zoning_as_stated`. Plan facts (lot dimensions, proposed floor areas, setbacks) have no column here and no consumer in this spec; they are not ingested (drafted for ruling in the lane report).
+* **Staleness.** The values manifest's sha256 joins the content hash (`<pdf manifest sha>:<values manifest sha>:<logic_version>`) only when declared, so a new batch is a reviewed manifest commit and an unchanged pair skips with no batch read. `fingerprint_inputs` gains `aic-values.js`.
+* **A batch has no extractor to regress**, so C3 `pair_rate_569` and C15 `doc_pair_rate_floor` judge the PDF family only; the batch family reports `items_by_family` and `batch_pair_rates` (no new threshold until the operator rules one, core.8). `batch_target_map_stale` (WARN, `viol == 0`) counts batches built under another `target-map.json` version: their stored targets are never silently remapped.
+* **Statuses.** A batch is a document with `doc_status` `parsed`, `sha_mismatch` (C1 FAIL) or `extract_error` (a missing, unparseable or invalid batch; C2 FAIL), so a bad batch writes nothing (§9 write order).
+* **Migration 284** (CHECK widening: `source_family` + `aic_values_batch`, `decision` + `pending`, `decision_source` + `unknown`; `source_page` NULL-able under a family-coherence CHECK; new NOT NULL columns `doc_type`, `source_batch` back-filled for the 2017 rows). Vocab `coa-vocab-4`. `logic_version` and `EXTRACTOR_VERSION` stay `coa-extractor-3`: no PDF answer changes (the new columns are derived, the closed sets only widen).
 
 ## 3. PII contract (D3)
 
@@ -119,7 +137,7 @@ The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cite
 ## 10. Observability (D10)
 
 * **Counters:** inserted + updated + retired on `coa_notice_variances` only.
-* **Emits** (typed; object maps carry skeletons; `consumers: []` until Spec 72's harness exists): `docs_total`, `docs_by_status`, `docs_excluded`, `bytes_fetched`, `notices_by_status`, `items_total`, `items_by_parse_status`, `items_by_target_status`, `items_by_confidence`, `pair_rate_569`, `doc_pair_rates`, `citation_multi`, `consent_items_skipped`, `qualified_items`, `manifest_sha256`, `extractor_version`, `vocab_version` (`buildLoadMeta`).
+* **Emits** (typed; object maps carry skeletons; `consumers: []` until Spec 72's harness exists): `docs_total`, `docs_by_status`, `docs_excluded`, `bytes_fetched`, `notices_by_status`, `items_total`, `items_by_parse_status`, `items_by_target_status`, `items_by_confidence`, `items_by_family` (§2b), `pair_rate_569`, `doc_pair_rates`, `citation_multi`, `consent_items_skipped`, `qualified_items`, `manifest_sha256`, `extractor_version`, `vocab_version` (`buildLoadMeta`).
 * **Checks** (one compute function each, `fn.name === id`; T-CHECKS trips each one):
 
 | id | when | measure | severity / limit |
@@ -132,6 +150,7 @@ The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cite
 | `reason_totality` (C9) | pre_write | Σ by-status ≠ total at doc, notice and item level | FAIL `viol == 0` |
 | `unit_target_mismatch` (C13) | pre_write | `pair` + `mapped` rows whose unit family ≠ the target's | FAIL `viol <=` `coa_notices_unit_target_viol_max` (0; P0.3 spike 0; 70-PDF re-measure 234 → 0 after WF3 2026-10-09, §6) |
 | `target_unit_mismatch_items` | pre_write | items stored as `target_unit_mismatch` (a pair whose unit family ≠ its mapped target's; ruling 2026-10-09) | WARN `viol == 0` (no skip_write; 9 on the 2017 corpus) |
+| `batch_target_map_stale` | pre_write | values batches whose `target_map_version` differs from `target-map.json`'s (§2b) | WARN `viol == 0` (no skip_write; a rebuild from the intake drop, never a silent remap) |
 | `doc_pair_rate_floor` (C15) | pre_write | docs with ≥ `coa_notices_doc_pair_rate_min_items` items of By-law 569-2013 and a pair rate < `coa_notices_doc_pair_rate_floor` | WARN `viol == 0`, `on_warn: skip_write` |
 | `docs_no_notices` (C16) | pre_write | docs `no_notices_found` | FAIL `viol == 0` |
 | `items_total_floor` (C17) | pre_write | `items_total` | FAIL `value_min` from `coa_notices_items_min` |
@@ -155,7 +174,7 @@ The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cite
   6. After all documents, `compute.reconcileNotices` → rows → the shared tail, with `rows_read` = items and drops counted as `shaped_skipped` reasons. `acquired.document_set` and `acquired.reconcile` carry the counts the checks read. The `else`-throw stays and its list gains `pdf_document_set`.
 * **Line-reconstruction contract** (`extractPdfText`, T-PDF-2…4): text runs sorted by y descending then x ascending; a new line whenever |y − the line's first y| > `lineYTolerance`; runs within a line joined left-to-right with one space; whitespace collapsed.
 * **Extractor (Q3):** `pdfjs-dist` (in-process, no host binary, no temp file, cloud-portable). `npm audit --omit=dev` was unchanged by the dependency (54 before and after, none in pdfjs-dist or @napi-rs/canvas; measured 2026-10-07). P0.2 parity against `pdftotext -layout` runs with the first fetch (§12).
-* **Second source (a City bulk export):** the table, the closed sets, the parser contracts and the consumer path need no rework (`source_family` is a column). The **step** does: the library refuses two primaries targeting one table (B3) and filesystem/xlsx primaries (B9), and the `departed_mark` MARK is table-wide. So family 2 is a future WF: its own step writing its own table, or a scoped-`departed_mark` extension to `write.js` (its own RE-FREEZE) (Q13).
+* **Second source (the AIC values batches): see §2b — a second acquisition form of the one primary (RE-FREEZE #39), not a second step.** **Second source (a City bulk export):** the table, the closed sets, the parser contracts and the consumer path need no rework (`source_family` is a column). The **step** does: the library refuses two primaries targeting one table (B3) and filesystem/xlsx primaries (B9), and the `departed_mark` MARK is table-wide. So family 2 is a future WF: its own step writing its own table, or a scoped-`departed_mark` extension to `write.js` (its own RE-FREEZE) (Q13).
 
 ## 12. Chain, runtime, sequencing (D12, D13)
 
@@ -202,6 +221,7 @@ The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cite
 <!-- TEST_INJECT_START -->
 - **Logic (commit A):** `src/tests/steps/load_coa_notices/parse-values.logic.test.ts` (T-PARSE-a,b,c,d,e,g,i, T-BOUND, T-SIDE, T-MAPFN, T-PII-3), `parse-compound.logic.test.ts` (fold LCN-D4: T-CMP-1…17 + 13b, T-CMP-N1…N7), `target-map.logic.test.ts` (T-MAP-1/2), `manifest.logic.test.ts` (T-MAN), `src/tests/pdf-text.logic.test.ts` (T-PDF-1…10).
 - **Logic (commit B, with the compute):** `parse.logic.test.ts` (T-PARSE-f,g-wrap,j,k, signature page, dedup, T-PII-text), `checks.logic.test.ts` (T-CHECKS), `src/tests/property/coa-notice-parse.property.test.ts` (T-PROP-1…4), `src/tests/ingest-prereq-pdf-acquire.logic.test.ts` (T-ACQ), `violations.test.ts` (C-1…C-14).
+- **Values batches (amendment 2026-10-22, §2b):** `values-batch.logic.test.ts` (T-VAL-1…6: manifest and batch contracts fail closed, builder mapping, committed manifest integrity, one reconcile for both families), `src/tests/ingest-prereq-values-batch.logic.test.ts` (T-ACQ-VAL: the offline arm half). Red baselines `COA_VALUES_IMPL=permissive`, `COA_VALUES_ARM=absent`.
 - **Infra:** `vocab-check-parity.infra.test.ts` (T-VOCAB), `library-shape.infra.test.ts` (T-SHAPE) in commit A; `pii.infra.test.ts` (T-PII-1, T-PII-4) and `independence.infra.test.ts` (T-IND) in commit B; `src/tests/db/coa-notice-variances.db.test.ts` (T-DB, `npm run test:db`).
 - **Red evidence:** `docs/reports/red-evidence/load_coa_notices/*.json` (vitest JSON). Each red run selects the baseline by env: `COA_PARSE_IMPL=spike`, `COA_TARGET_MAP=naive`, `COA_CHECKS_IMPL=inert`, `COA_MANIFEST_IMPL=permissive`.
 <!-- TEST_INJECT_END -->
@@ -227,11 +247,14 @@ The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cite
 ### Target Files
 - `migrations/252_coa_notice_variances.sql`
 - `migrations/256_coa_notice_target_unit_mismatch.sql`
+- `migrations/284_coa_notice_values_batch_family.sql` (§2b; written, applied in the dev-DB writer slot)
+- `scripts/lib/coa-notices/aic-values.js`, `scripts/analysis/coa-notices/build-values-batch.mjs`, `scripts/seeds/coa-notices/manifest-aic-values.json`, `scripts/seeds/coa-notices/aic-values/`
 - `scripts/lib/compute/load-coa-notices.js`
 - `scripts/lib/coa-notices/parse-values.js`, `scripts/lib/coa-notices/vocab.json`, `scripts/lib/coa-notices/target-map.json`, `scripts/lib/coa-notices/manifest.js`
 - `scripts/lib/pdf-text.js`
 - `scripts/analysis/coa-notices/build-manifest.mjs`
 - `scripts/seeds/coa-notices/` (manifest, precision and link-precision samples — after §12 steps 3/5)
+- §2b (RE-FREEZE #39): the `values_manifest` arm half in `scripts/lib/step/acquire.js`, its seam in `scripts/lib/step/index.js`, `scripts/steps/_schema/step.schema.json`
 - commit B: `scripts/load-coa-notices.js`, `scripts/load-coa-notices.descriptor.json`, `scripts/load-coa-notices.notes.json`, the `pdf_document_set` arm in `scripts/lib/step/acquire.js` and its dispatch in `scripts/lib/step/index.js`
 - tests listed in §15; `src/tests/fixtures/coa-notices/`
 
