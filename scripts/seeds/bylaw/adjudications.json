@@ -88413,6 +88413,721 @@
           "reason": "self_reference"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.2.10(591)#(591)[SSP](D)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "A count word is not a limit.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 8); G-CLAUSE named the exact literals",
+      "unit": "900.2.10(591)#(591)[SSP](D)(i)",
+      "value": [
+        {
+          "clause": "(591)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "A count word is not a limit.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 8); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": [
+        {
+          "clause": "(807)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(807)#(807)[SSP](H)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "A count word is not a limit.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 8); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(807)#(807)[SSP](H)(i)",
+      "value": [
+        {
+          "clause": "(807)[SSP](H)",
+          "literal": "two",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(807)#(807)[SSP](H)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "A count word is not a limit.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 8); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(807)#(807)[SSP](H)(ii)",
+      "value": [
+        {
+          "clause": "(807)[SSP](H)(ii)",
+          "literal": "two",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(128)#(128)[SSP](C)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street numbers of a named address are separate literals (G-CLAUSE refuses a range or a list in one entry), as 731 (A) and 160 (F).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 8); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(128)#(128)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(128)[SSP](C)(i)",
+          "literal": "44",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(128)[SSP](C)(i)",
+          "literal": "56",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(315)#(315)[SSP](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street numbers of a named address are separate literals (G-CLAUSE refuses a range or a list in one entry), as 731 (A) and 160 (F).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 8); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(315)#(315)[SSP](F)",
+      "value": [
+        {
+          "clause": "(315)[SSP](F)",
+          "literal": "1",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(315)[SSP](F)",
+          "literal": "2",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(315)[SSP](F)",
+          "literal": "65",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(315)[SSP](F)",
+          "literal": "117",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(951)#(951)[SSP](C)/not_an_override",
+      "kind": "correction",
+      "reason": "\"Despite (B)\" points at a clause of the same exception (951), not at a by-law regulation; nothing is displaced.",
+      "rule": "Spec 133 §m.82 (M-75 correction form); HELD on R7-2: same family and same reading as 958 (C) (Despite a sibling clause of the same exception = self_reference)",
+      "unit": "900.2.10(951)#(951)[SSP](C)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "self_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(591)#(591)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-229e5527: answer B — HELD on R8-1 (recommendation, not operator-ruled): twin of 1436 (D)/1437 (D)/1434 (A)/1429 (A): REQUIRE on the rule-31 route, Spec 133 §m.317 (CHAT-64.D, CHAT-67.1434A)",
+      "unit": "900.2.10(591)#(591)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(910)#(910)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-76ee6b1b: answer B — HELD on R8-1 (recommendation, not operator-ruled): twin of 1436 (D)/1437 (D)/1434 (A)/1429 (A): REQUIRE on the rule-31 route, Spec 133 §m.317 (CHAT-64.D, CHAT-67.1434A)",
+      "unit": "900.2.10(910)#(910)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(951)#(951)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b44f53ed: answer A — HELD on R7-1 (recommendation, not operator-ruled): same family as 958 (D)/(E): a use permission tied to a building-history date stays UNUSUAL on the rule-31 route, Spec 133 §m.317",
+      "unit": "900.2.10(951)#(951)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(951)#(951)[SSP](E)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1e4b7e55: answer A — HELD on R7-1 (recommendation, not operator-ruled): same family as 958 (D)/(E): a use permission tied to a building-history date stays UNUSUAL on the rule-31 route, Spec 133 §m.317",
+      "unit": "900.2.10(951)#(951)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(951)#(951)[SSP](F)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-d69d6d5a: answer A — HELD on R8-3 (recommendation, not operator-ruled): a minimum floor area of the building as a condition of a permission is LIMIT interior_floor_area_m2 min, as the agreed 1436 (B)(ii) 110 m2 (Spec 133 §m.317 family)",
+      "unit": "900.2.10(951)#(951)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.2.10(951)#(951)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1b125062: answer A — HELD on R8-3 (recommendation, not operator-ruled): a minimum floor area of the building as a condition of a permission is LIMIT interior_floor_area_m2 min, as the agreed 1436 (B)(ii) 110 m2 (Spec 133 §m.317 family)",
+      "unit": "900.2.10(951)#(951)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.2.10(951)#(951)[SSP](F)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f2956235: answer A — HELD on R8-3 (recommendation, not operator-ruled): a minimum floor area of the building as a condition of a permission is LIMIT interior_floor_area_m2 min, as the agreed 1436 (B)(ii) 110 m2 (Spec 133 §m.317 family)",
+      "unit": "900.2.10(951)#(951)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(951)#(951)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3bdc2b0d: answer A — HELD on R8-3 (recommendation, not operator-ruled): a minimum floor area of the building as a condition of a permission is LIMIT interior_floor_area_m2 min, as the agreed 1436 (B)(ii) 110 m2 (Spec 133 §m.317 family)",
+      "unit": "900.2.10(951)#(951)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(418)#(418)[SSP](B)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-9eccff23: answer B — HELD on R5-2a (recommendation, not operator-ruled): statement cites the full [SSP] clause path (Spec 133 §m.105 rule 29); values already agree",
+      "unit": "900.2.10(418)#(418)[SSP](B)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(418)#(418)[SSP](B)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-16ae6fe5: answer B — HELD on R5-2a (recommendation, not operator-ruled): statement cites the full [SSP] clause path (Spec 133 §m.105 rule 29); values already agree",
+      "unit": "900.2.10(418)#(418)[SSP](B)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(418)#(418)[SSP](B)(iii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-50693c2d: answer B — HELD on R5-2a (recommendation, not operator-ruled): statement cites the full [SSP] clause path (Spec 133 §m.105 rule 29); values already agree",
+      "unit": "900.2.10(418)#(418)[SSP](B)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(418)#(418)[SSP](B)(iv)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-285f2c2b: answer B — HELD on R5-2a (recommendation, not operator-ruled): statement cites the full [SSP] clause path (Spec 133 §m.105 rule 29); values already agree",
+      "unit": "900.2.10(418)#(418)[SSP](B)(iv)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.2.10(418)#(418)[SSP](B)(v)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-81fbaf1e: answer B — HELD on R5-2a (recommendation, not operator-ruled): statement cites the full [SSP] clause path (Spec 133 §m.105 rule 29); values already agree",
+      "unit": "900.2.10(418)#(418)[SSP](B)(v)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7cbf6979: answer B — HELD on R8-5 (recommendation, not operator-ruled): a setback from a lot line that abuts a lot on a named street has no target: UNUSUAL (Spec 133 §m.136, rule 24)",
+      "unit": "900.3.10(120)#(120)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](D)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ad95abaa: answer B — HELD on R8-5 (recommendation, not operator-ruled): a setback from a lot line that abuts a lot on a named street has no target: UNUSUAL (Spec 133 §m.136, rule 24)",
+      "unit": "900.3.10(120)#(120)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](D)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ab1c3b89: answer B — HELD on R8-5 (recommendation, not operator-ruled): a setback from a lot line that abuts a lot on a named street has no target: UNUSUAL (Spec 133 §m.136, rule 24)",
+      "unit": "900.3.10(120)#(120)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c30a7d27: answer B — HELD on R8-5 (recommendation, not operator-ruled): a setback from a lot line that abuts a lot on a named street has no target: UNUSUAL (Spec 133 §m.136, rule 24)",
+      "unit": "900.3.10(120)#(120)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(269)#(269)[SSP](E)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-941a6079: answer A — HELD on R8-6 (recommendation, not operator-ruled): a requirement scoped to a lot line abutting a named highway keeps UNUSUAL (Spec 133 §m.136, rule 24 named-road scope)",
+      "unit": "900.3.10(269)#(269)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(45)#(45)[SSP](D)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-29bd7184: answer A — HELD on R8-9 (recommendation, not operator-ruled): lesser of a GFA and an FSI limit is one LIMIT on the list of targets, one statement per target (Spec 133 §m.76, M-76 A10)",
+      "unit": "900.3.10(45)#(45)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(45)#(45)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-6c1ba48d: answer A — HELD on R8-9 (recommendation, not operator-ruled): lesser of a GFA and an FSI limit is one LIMIT on the list of targets, one statement per target (Spec 133 §m.76, M-76 A10)",
+      "unit": "900.3.10(45)#(45)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(45)#(45)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8664a1e1: answer A — HELD on R8-9 (recommendation, not operator-ruled): B min(1.5; 2.4) always returns 1.5 and loses the 2-storey case; A keeps it as a conditional (Spec 133 §m.76 / rule 26)",
+      "unit": "900.3.10(45)#(45)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(45)#(45)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8e02a635: answer A — HELD on R8-9 (recommendation, not operator-ruled): per-0.3 m height increment is a stepped schedule with no expressible form (Spec 133 §m.102, M-102); B drops the aggregate target",
+      "unit": "900.3.10(45)#(45)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(45)#(45)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-666b8f89: answer A — HELD on R8-9 (recommendation, not operator-ruled): per-0.3 m height increment is a stepped schedule with no expressible form (Spec 133 §m.102, M-102); B drops the aggregate target",
+      "unit": "900.3.10(45)#(45)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(315)#(315)[SSP](E)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-635673d9: answer A — HELD on R8-7 (recommendation, not operator-ruled): garage side setback 0.3 m: LIMIT side_setback_m min, as agreed 100 (G), 245 (F), 562 (D) and the 117 (D) ruling",
+      "unit": "900.3.10(315)#(315)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(315)#(315)[SSP](E)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-10193361: answer A — HELD on R8-7 (recommendation, not operator-ruled): garage side setback 0.3 m: LIMIT side_setback_m min, as agreed 100 (G), 245 (F), 562 (D) and the 117 (D) ruling",
+      "unit": "900.3.10(315)#(315)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(315)#(315)[SSP](E)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-819b1a69: answer A — HELD on R8-7 (recommendation, not operator-ruled): garage side setback 0.3 m: LIMIT side_setback_m min, as agreed 100 (G), 245 (F), 562 (D) and the 117 (D) ruling",
+      "unit": "900.3.10(315)#(315)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(315)#(315)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-0e3e0165: answer A — HELD on R8-7 (recommendation, not operator-ruled): garage side setback 0.3 m: LIMIT side_setback_m min, as agreed 100 (G), 245 (F), 562 (D) and the 117 (D) ruling",
+      "unit": "900.3.10(315)#(315)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f5fa304f: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5ceb0bd6: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-234945f1: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-28152b42: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-32110e7c: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-6316f559: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-aa8d2aec: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(267)#(267)[SSP](D)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3096d9f1: answer A — HELD on R8-8 (recommendation, not operator-ruled): setback from a lot line abutting named streets is UNUSUAL (Spec 133 §m.136); (ii) \"any other street\" is its complement and follows (i), as 324 (D)(ii) (R6-2)",
+      "unit": "900.4.10(267)#(267)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-01417586: answer A — HELD on R8-5 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT required_lot_frontage_m) fails G-CLAUSE variable_unlicensed because \"minimum frontage\" is not a required_lot_frontage_m pattern; a licence pattern is a new ruling (Spec 133 §m.132), drafted as R8-5",
+      "unit": "900.3.10(120)#(120)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](A)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3ecdd682: answer A — HELD on R8-5 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT required_lot_frontage_m) fails G-CLAUSE variable_unlicensed because \"minimum frontage\" is not a required_lot_frontage_m pattern; a licence pattern is a new ruling (Spec 133 §m.132), drafted as R8-5",
+      "unit": "900.3.10(120)#(120)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](A)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3d287373: answer A — HELD on R8-5 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT required_lot_frontage_m) fails G-CLAUSE variable_unlicensed because \"minimum frontage\" is not a required_lot_frontage_m pattern; a licence pattern is a new ruling (Spec 133 §m.132), drafted as R8-5",
+      "unit": "900.3.10(120)#(120)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(120)#(120)[SSP](A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3e963f07: answer A — HELD on R8-5 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT required_lot_frontage_m) fails G-CLAUSE variable_unlicensed because \"minimum frontage\" is not a required_lot_frontage_m pattern; a licence pattern is a new ruling (Spec 133 §m.132), drafted as R8-5",
+      "unit": "900.3.10(120)#(120)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "requirement",
+      "id": "COR-900.2.10(591)#(591)[SSP](A)/requirement",
+      "kind": "correction",
+      "reason": "HELD on R8-1: the adjudicated REQUIRE needs the requirement kind of the ruled twins (1436 (D), 1429 (A)).",
+      "rule": "HELD on R8-1; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.2.10(591)#(591)[SSP](A)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.2.10(591)#(591)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"first storey\" is an ordinal, not one number; the twin 1436 (D) lists nothing.",
+      "rule": "HELD on R8-1; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.2.10(591)#(591)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "requirement",
+      "id": "COR-900.2.10(910)#(910)[SSP](A)/requirement",
+      "kind": "correction",
+      "reason": "HELD on R8-1: the adjudicated REQUIRE needs the requirement kind of the ruled twins (1436 (D), 1429 (A)).",
+      "rule": "HELD on R8-1; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.2.10(910)#(910)[SSP](A)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.2.10(910)#(910)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"first storey\" is an ordinal, not one number; the twin 1436 (D) lists nothing.",
+      "rule": "HELD on R8-1; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.2.10(910)#(910)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.2.10(418)#(418)[SSP](B)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one of the following\" is a count in the lead-in.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.2.10(418)#(418)[SSP](B)(i)",
+      "value": [
+        {
+          "clause": "(418)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(120)#(120)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The adjudicated UNUSUAL carries the 22.5 m limit as limit_not_modelled (Spec 133 §m.102).",
+      "rule": "HELD on R8-5; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.3.10(120)#(120)[SSP](D)",
+      "value": [
+        {
+          "clause": "(120)[SSP](D)",
+          "literal": "22.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "disclosure",
+      "id": "COR-900.3.10(120)#(120)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "The adjudicated UNUSUAL needs a disclosure; wording follows 324 (D)(i).",
+      "rule": "HELD on R8-5; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.3.10(120)#(120)[SSP](D)",
+      "value": "Where a rear lot line abuts a lot on Guildcrest Drive, the minimum building setback from that lot line is 22.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(269)#(269)[SSP](E)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The highway number is a name, not a limit.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.3.10(269)#(269)[SSP](E)",
+      "value": [
+        {
+          "clause": "(269)[SSP](E)",
+          "literal": "3.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(269)[SSP](E)",
+          "literal": "401",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(45)#(45)[SSP](E)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The second 6.0 m (the arm threshold) is not modelled; the aggregate 6.0 m is.",
+      "rule": "HELD on R8-9; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.3.10(45)#(45)[SSP](E)",
+      "value": [
+        {
+          "clause": "(45)[SSP](E)",
+          "literal": "6.0 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(45)#(45)[SSP](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The second 6.0 m (the arm threshold) is not modelled; the aggregate 6.0 m is.",
+      "rule": "HELD on R8-9; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.3.10(45)#(45)[SSP](F)",
+      "value": [
+        {
+          "clause": "(45)[SSP](F)",
+          "literal": "0.3 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(45)[SSP](F)",
+          "literal": "0.3 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(45)[SSP](F)",
+          "literal": "6.0 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(951)#(951)[SSP](D)/not_an_override",
+      "kind": "correction",
+      "reason": "\"Despite (B) and (C)\" points at clauses of the same exception (951); nothing is displaced.",
+      "rule": "HELD on R7-2; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.2.10(951)#(951)[SSP](D)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "self_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(951)#(951)[SSP](E)/not_an_override",
+      "kind": "correction",
+      "reason": "\"Despite (B) and (C)\" points at clauses of the same exception (951); nothing is displaced.",
+      "rule": "HELD on R7-2; Spec 133 §m.82 (M-75 correction form): mechanical shape/literal bookkeeping under the lane label (round 8) for a held adjudication",
+      "unit": "900.2.10(951)#(951)[SSP](E)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "self_reference"
+        }
+      ]
     }
   ]
 }
