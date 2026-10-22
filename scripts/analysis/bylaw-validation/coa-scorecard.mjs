@@ -28,7 +28,7 @@ const defaults = {}; for (const [k, v] of Object.entries((I.vocab.design_choice_
 const SCU = I.vocab.scenario_class_units || {};
 const notices = JSON.parse(fs.readFileSync(NOT, 'utf8')); const parcels = JSON.parse(fs.readFileSync(PAR, 'utf8'));
 const PF_DIR = arg('plan-facts', process.env.PLAN_FACTS || null);
-// 4D-S4: openings evidence (notice text or plan facts) → take the blank_side_wall:false arm
+// 4D-S4: openings evidence (notice text or plan facts) → take the blank_side_wall:false arm; R5-7 (HELD): also the suite_wall_openings:true arm on suite setback rows
 const OPEN_RE = /\b(windows?|openings?|doors?)\s+(in|on)\s+(the\s+)?(\w+\s+)?(side|main)\s+walls?|(?<!no\s)openings to dwelling units|side wall (has|with) (windows|openings)/i;
 function openingsEvidence(n) {
   const txt = [n.purpose, ...n.variances.flatMap((v) => [v.requirement, v.proposal])].join(' ');
@@ -362,6 +362,8 @@ function runNotice(n, surveyOn, rows, lots) {
     // 4D-S4c (A0385): a notice that cites the 11 m townhouse arm 10.10.40.80(1)(C) is itself evidence that each facing main wall has an opening (design tokens main_wall_openings / main_wall_openings_each, M-282)
     if (target === 'separation_m' && /^10\.10\.40\.80\(1\)\(C\)/.test(c.norm)) { const arm = evalTarget({ ...lot, flags: { ...lot.flags, main_wall_openings: true, main_wall_openings_each: true } }, target, only); if (arm.status === 'value') { row.openings_taken = 'notice cites 10.10.40.80(1)(C)'; row.scorer_fix = '4D-S4c'; r = arm; } }
     if (['garden_suite', 'laneway_suite'].includes(bt) && /setback/.test(target)) row.ours_arm = { flags: { suite_wall_openings: true }, ...evalTarget({ ...lot, flags: { ...lot.flags, suite_wall_openings: true } }, target, only) };
+    // R5-7 (HELD, recommendation awaiting the operator): plan-facts openings evidence (4D-S4; notice text may describe the main building, A0245/26NY #6 over-fired) also takes the suite_wall_openings arm on a garden / laneway suite setback row
+    if (row.ours_arm && openings === 'plan facts' && row.ours_arm.status === 'value') { row.suite_openings_taken = openings; row.scorer_fix = '4D-S4d'; r = row.ours_arm; }
     if (target === 'gfa_m2') { const fr = evalTarget(lot, 'fsi'); row.ours_fsi = fr; if (typeof fr.value === 'number') row.ours_fsi_cap_m2 = Math.round(fr.value * base.vars.lot_area_m2 * 100) / 100; }
     row.ours = r; row.ours_flat = flat; row.ours_pitched = pitched; row.only_clause_units = !!only;
 
@@ -394,7 +396,7 @@ function runNotice(n, surveyOn, rows, lots) {
     } else if (r.status === 'not_evaluated') {
       row.class = owedOrNoAnswer(r.reason); row.why = r.reason;
     } else { row.class = 'NO ANSWER'; row.why = `${r.status}: ${r.reason || ''}`; }
-    { const ex = row.class === 'DIFFER' ? explainRow(I.vocab, c.norm, target, r.value, cityVal) : null; if (ex) { row.explained_by = ex.ruling; row.explained_note = ex.reading; } } // M-287: the table is validated at load (coa-explained.mjs)
+    { const ex = row.class === 'DIFFER' ? explainRow(I.vocab, c.norm, target, r.value, cityVal) : null; if (ex) { row.explained_by = ex.ruling; row.explained_note = ex.reading; if (ex.class === 'DATA') { row.class = 'DATA'; row.why = `explained data flag (R5-5 HELD, ${ex.ruling}): ${ex.reading}`; } } } // M-287: the table is validated at load (coa-explained.mjs)
     rows.push(row);
   }
 }

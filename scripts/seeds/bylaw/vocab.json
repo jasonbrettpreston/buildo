@@ -1037,6 +1037,26 @@
   },
   "explained_differences": {
     "$comment": "Spec 69a M-287 (operator chose reading B 2026-10-21, 2026-10-21-page-4d-b#CHAT-38.F-4D-12): a City figure that differs from ours by a recorded operator ruling. The CoA scorecard reads this table and reports the row as an explained difference, not a miss.",
+    "900.3.10(559)(A)": {
+      "notice": "A0255/26NY",
+      "target": "side_setback_m",
+      "ours": 1.5,
+      "city": 0.9,
+      "unit": "m",
+      "class": "DATA",
+      "ruling": "M-308",
+      "reading": "HELD on R5-5 (recommendation awaiting the operator): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
+    },
+    "10.5.40.50(2)": {
+      "notice": "A0255/26NY",
+      "target": "platform_side_setback_m",
+      "ours": 1.5,
+      "city": 0.9,
+      "unit": "m",
+      "class": "DATA",
+      "ruling": "M-308",
+      "reading": "HELD on R5-5 (recommendation awaiting the operator): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
+    },
     "10.5.60.70(1)(B)": {
       "notice": "A0180/26TEY",
       "target": "ancillary_coverage_pct",

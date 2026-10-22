@@ -1,0 +1,6 @@
+   × R5-5 (HELD): 63 Johnston Ave explained data flag > the three 559 / platform rows on A0255/26NY and A0263/21NY are DATA, not DIFFER, and name M-308 6115ms
+   × R5-7 (HELD): openings evidence sets suite_wall_openings > A0215/26EYK #1 (garden suite, windows in the side wall per the plan facts) takes the 150.7.60.20(5)(A) arm and matches the City 1.5 m 6204ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: A0255/26NY 2: expected 'DIFFER' to be 'DATA' // Object.is equality
+AssertionError: expected 'DIFFER' to be 'MATCH' // Object.is equality
+      Tests  2 failed (2)

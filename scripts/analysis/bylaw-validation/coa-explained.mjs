@@ -21,6 +21,7 @@ export function checkExplainedDifferences(vocab, registerRowIds) {
     if (!Object.prototype.hasOwnProperty.call(targets, e.target)) v.push(`${clause}: target ${e.target} is not a dsl_target`);
     if (!isNum(e.ours) || !isNum(e.city)) v.push(`${clause}: ours and city must be numbers`);
     else if (e.ours === e.city) v.push(`${clause}: ours equals city, so there is nothing to explain`);
+    if (e.class !== undefined && e.class !== 'DATA') v.push(`${clause}: class must be DATA when present (R5-5 HELD: an explained data flag, M-308)`);
     if (typeof e.reading !== 'string' || e.reading.length < 20) v.push(`${clause}: reading is missing`);
     if (typeof e.ruling !== 'string' || !/^M-\d+$/.test(e.ruling)) v.push(`${clause}: ruling must be a register row id (M-n)`);
     else if (registerRowIds && !registerRowIds.has(e.ruling)) v.push(`${clause}: ruling ${e.ruling} has no register row`);
