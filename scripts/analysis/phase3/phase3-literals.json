@@ -85,8 +85,9 @@
       "unit_ids": [
         "800.50(181)#(181)(D)"
       ],
-      "note": "two units: implied by \"multiple\" and (181)(D); no numeric literal carries 2",
-      "source": null
+      "note": "two units: implied by \"multiple\" and (181)(D); no numeric literal carries 2 (proposed_value 2 is what the compute module passes until Q-min is ruled)",
+      "source": null,
+      "proposed_value": 2
     },
     {
       "id": "P3L-07",

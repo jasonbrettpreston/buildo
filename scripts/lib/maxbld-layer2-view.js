@@ -31,9 +31,14 @@ const COLLAPSED = 'collapsed_into:';
 
 const keyOf = (cls, structure, target) => `${cls}\u0000${structure}\u0000${target}`;
 
-function pick(row) {
+function pick(row, disclosureSets) {
   const out = {};
   for (const f of LOGICAL_RESULT_FIELDS) out[f] = row[f] === undefined ? null : row[f];
+  // Q-H (Spec 134): a stored cell holds the id of its disclosure set; the lookup table gives the strings.
+  if (out.disclosures === null && row.disclosure_set_id && disclosureSets) {
+    if (!Object.prototype.hasOwnProperty.call(disclosureSets, row.disclosure_set_id)) throw new Error(`maxbld-layer2-view: disclosure set ${row.disclosure_set_id} is not in the lookup; a missing input is never defaulted`);
+    out.disclosures = disclosureSets[row.disclosure_set_id];
+  }
   if (!STATUSES.includes(out.status)) throw new TypeError(`maxbld-layer2-view: status ${JSON.stringify(out.status)} is not a Layer 2 stored status`);
   return Object.freeze(out);
 }
@@ -83,11 +88,21 @@ function fromCellRows(src) { // P3-Q1
         if (!b.startsWith(COLLAPSED) || depth > classes.length) throw new Error(`maxbld-layer2-view: bad by_class entry ${JSON.stringify(b)} for ${cls}`);
         return resolve(b.slice(COLLAPSED.length), depth + 1);
       }
-      return { ...cell, ...b, inputs_used: cell.inputs_used };
+      return { ...cell, ...b, inputs_used: cell.inputs_used, disclosure_set_id: b.disclosure_set_id === undefined ? null : b.disclosure_set_id, disclosures: b.disclosures === undefined ? null : b.disclosures };
     };
-    for (const cls of classes) table.set(keyOf(cls, e.structure, e.target), pick(resolve(cls, 0)));
+    for (const cls of classes) table.set(keyOf(cls, e.structure, e.target), pick(resolve(cls, 0), src.disclosureSets));
   }
   return makeView(src.lot.lot_gate === undefined ? null : src.lot.lot_gate, src.lot.permitted_by_class, table);
 }
 
-module.exports = { LOGICAL_RESULT_FIELDS, STATUSES, fromLogicalRows, fromCellRows };
+/**
+ * The profile pointer hex (32 bytes = 64 hex characters per scope pair, in layer2-scope.json order: structures first, each structure's
+ * targets in file order; R-JA) as the lot's entries [{structure, target, cell_id}]. The only code that knows the pointer layout. P3-Q1.
+ */
+function entriesFromPointers(pointersHex, scope) { // P3-Q1
+  const pairs = scope.structures.flatMap((structure) => scope.targets[structure].map((target) => ({ structure, target })));
+  if (typeof pointersHex !== 'string' || pointersHex.length !== 64 * pairs.length) throw new Error(`maxbld-layer2-view: pointer width ${pointersHex && pointersHex.length} is not 64 x ${pairs.length} hex characters`);
+  return pairs.map((p, i) => ({ structure: p.structure, target: p.target, cell_id: pointersHex.slice(64 * i, 64 * (i + 1)) }));
+}
+
+module.exports = { LOGICAL_RESULT_FIELDS, STATUSES, fromLogicalRows, fromCellRows, entriesFromPointers };

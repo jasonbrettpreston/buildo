@@ -110,6 +110,23 @@ describe('P3-Q1: the one accessor (scripts/lib/maxbld-layer2-view.js)', () => {
     expect(v.result('semi_detached_houseplex', 'principal', 'height_m').value).toBe(12);
   });
 
+  it('entriesFromPointers unpacks the profile pointer hex into (structure, target, cell_id) in layer2-scope.json order (R-JA: 32 bytes per pair)', () => {
+    const scope = { structures: ['principal', 'garden_suite'], targets: { principal: ['fsi', 'height_m'], garden_suite: ['gfa_m2'] } };
+    const hex = ['a', 'b', 'c'].map((c) => c.repeat(64)).join('');
+    expect(req(VIEW).entriesFromPointers(hex, scope)).toEqual([
+      { structure: 'principal', target: 'fsi', cell_id: 'a'.repeat(64) },
+      { structure: 'principal', target: 'height_m', cell_id: 'b'.repeat(64) },
+      { structure: 'garden_suite', target: 'gfa_m2', cell_id: 'c'.repeat(64) },
+    ]);
+    expect(() => req(VIEW).entriesFromPointers(hex.slice(0, 128), scope)).toThrow(/width/);
+  });
+
+  it('fromCellRows resolves a disclosure_set_id through the disclosure sets lookup into disclosures', () => {
+    const cell: Json = { cell_id: 'c1', structure: 'principal', target: 'height_m', status: 'applies', value: 10, value_kind: 'number', disclosure_set_id: 's1', inputs_used: [], by_class: {} };
+    const v = req(VIEW).fromCellRows({ lot: { lot_gate: null, permitted_by_class: PERMITTED }, classes: ['detached_house'], entries: [{ structure: 'principal', target: 'height_m', cell_id: 'c1' }], cellsById: { c1: cell }, disclosureSets: { s1: ['a note', 'b note'] } });
+    expect(v.result('detached_house', 'principal', 'height_m').disclosures).toEqual(['a note', 'b note']);
+  });
+
   it('the seams are marked // P3-Q1 and no consumer module knows the physical form', () => {
     expect(src(VIEW).match(/\/\/ P3-Q1/g)!.length).toBeGreaterThanOrEqual(2);
     for (const rel of [STATUS, MAIN, UNITS]) {
