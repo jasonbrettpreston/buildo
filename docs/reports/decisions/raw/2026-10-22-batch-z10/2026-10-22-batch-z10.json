@@ -1,0 +1,10 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "That was like a nano second and eveything comes to a halt.  Swap3 and Swap 4 - we need to keep working on it",
+  "context": "Evening Rulings cards SWAP-3 and SWAP-4 (https://claude.ai/artifact/6ypnNKE5dkjkAV4HbPuokq), read as approval of the recommendations so the swap commit proceeds: SWAP-3 option B (reviewed one-line removal of coa_applications.last_seen_at from link_coa's row in scripts/seeds/lineage-meta-snapshot.json citing R-JM; next refresh converges); SWAP-4 gate option (#44 arm (b) exempts writeSpec.key columns of a set_based_scoped rows-compute target; gate script only, red fixture test). Also a standing instruction: work must not halt while rulings are pending.",
+  "decisions": [
+    {"id": "CHAT-73.swap3", "subject": "Lineage snapshot corrected by reviewed edit citing R-JM", "decision": "approve", "recommendation": "Option B: remove last_seen_at from link_coa.writes.coa_applications in the lineage snapshot by a reviewed edit citing R-JM and scripts/link-coa.js:915-920; the next refresh converges."},
+    {"id": "CHAT-73.swap4", "subject": "#44 (b) does not require a set_based_scoped key column in SET", "decision": "approve", "recommendation": "Exempt writeSpec.key columns in witness.mjs arm (b) for set_based_scoped rows-compute targets; red fixture test; no lib/step change."},
+    {"id": "CHAT-73.nohalt", "subject": "Work never halts on pending rulings", "decision": "approve", "recommendation": "While rulings are pending, lanes keep building on the recommended reading (held uncommitted, marked by question id) and run every task that needs no ruling."}
+  ]
+}

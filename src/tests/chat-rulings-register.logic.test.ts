@@ -21,6 +21,8 @@ const R_ROWS: Array<[string, string[], string]> = [
   ['R-JA', ['2026-10-22-batch-z6#CHAT-69.Q1'], 'x-rulings.4'],
   ['R-JC', ['2026-10-22-batch-z7#CHAT-70.2'], 'x-v3.1'],
   ['R-JD', ['2026-10-22-batch-z7#CHAT-70.3'], 'x-validate.2'],
+  ['R-JE', ['2026-10-22-batch-z10#CHAT-73.swap3'], 'x-v3.3'],
+  ['R-JF', ['2026-10-22-batch-z10#CHAT-73.swap4'], 'core.14'],
 ];
 
 describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register row on a handbook line', () => {
@@ -34,6 +36,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
       expect(map.lines.some((l) => l.id === line)).toBe(true);
     });
   }
+  it('R-IZ carries the CHAT-73.nohalt note; M-322 the CHAT-72 floor; M-332 and M-333 the CHAT-74 intake', () => {
+    expect(rowOf(A, 'R-IZ')).toContain('2026-10-22-batch-z10#CHAT-73.nohalt');
+    expect(rowOf(M, 'M-322')).toContain('2026-10-22-batch-z9#CHAT-72.floor1');
+    for (const n of ['IN1', 'IN2', 'IN3', 'IN5']) expect(rowOf(M, 'M-332')).toContain(`CHAT-74.${n}`);
+    expect(rowOf(M, 'M-333')).toContain('CHAT-74.IN4');
+  });
   it('R-IX carries the CHAT-69.Q2 confirmation as a dated note', () => {
     expect(rowOf(A, 'R-IX')).toContain('2026-10-22-batch-z6#CHAT-69.Q2');
   });

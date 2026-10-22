@@ -1,0 +1,55 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-z11/2026-10-22-batch-z11.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-z11",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y to your recommendation I recommend yes on IN-1 to IN-4 and \"report only\" on IN-5.",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-z11/2026-10-22-batch-z11.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-74.IN1",
+      "question": "RE-FREEZE #39 (externals[].values_manifest) and the fleet recapture night it forces",
+      "recommendation": "Land the values-batch library field with one fleet recapture night (plus migration 284 and the first ingest); one library path per source form (Spec 132 §ingestor.3).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-74.IN2",
+      "question": "coa_notice_variances gains doc_type and source_batch",
+      "recommendation": "Every row carries doc_type and source_batch.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-74.IN3",
+      "question": "Closed-value widening in migration 284",
+      "recommendation": "decision + pending; decision_source + unknown; source_family + aic_values_batch; source_page NULL for batch rows under a family-coherence CHECK.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-74.IN4",
+      "question": "Plan facts ingested into a new values-only table coa_plan_facts (scope expansion by ruling, CHAT-68.scope)",
+      "recommendation": "Plan facts from the C-6 intake routine are ingested as values into a table keyed by application number, through the pinned values-batch form of Spec 129 §2b; no drawings, no names; second write target on load_coa_notices with its own RE-FREEZE review.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-74.IN5",
+      "question": "Batch pair-rate: report only",
+      "recommendation": "Report only until two more batches exist.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

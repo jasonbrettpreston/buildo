@@ -5491,6 +5491,34 @@
       }
     },
     {
+      "id": "R-JE",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The lineage snapshot is corrected by a reviewed edit citing R-JM: last_seen_at leaves link_coa.writes.coa_applications (operator 2026-10-22, CHAT-73.swap3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JF",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "#44 arm (b) exempts writeSpec.key columns of a set_based_scoped rows-compute target from the SET requirement; gate script only, red fixture test (operator 2026-10-22, CHAT-73.swap4).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-JB",
       "kind": "register-ruling",
       "status": "active",

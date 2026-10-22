@@ -1360,6 +1360,10 @@
       "section": "fam-general"
     },
     {
+      "id": "m.333",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -4830,6 +4834,17 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-332**"
+      }
+    },
+    {
+      "id": "M-333",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.333",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-333**"
       }
     },
     {

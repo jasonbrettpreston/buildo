@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "FLOOR 1 approved",
+  "context": "Evening Rulings card FLOOR-1 (oracle C floors, add47b13 coa-expected/floors-172.json): option (a) recommended — accept the 900.3.10 article accuracy floor of 86 (card proposed 90; the b9c43b09 complement fix moved it to m19 d3) and keep the overall floors at the ruled 92 / 71; raising overall to 93/74 is a separate later ruling.",
+  "decisions": [
+    {"id": "CHAT-72.floor1", "subject": "900.3.10 accuracy floor 86; overall floors stay 92 / 71", "decision": "approve", "recommendation": "Option (a): accept 86 for 900.3.10 and 92/71 overall; a raise of the overall floors is its own later ruling (M-322 floors only go up)."}
+  ]
+}
