@@ -1,0 +1,6 @@
+   × verify-40 fixes on the resolved units > finding 2: "Despite (X)" naming a sibling clause of the same exception is subordinate_reference (R5-Q7b-464) 3ms
+   × verify-40 fixes on the resolved units > finding 3: 324 (J)(i) is UNUSUAL (the clause applies only to below-grade parking structures) 0ms
+   × verify-40 fixes on the resolved units > finding 4: 1429 (A), 591 (A) and 910 (A) are keyed like the ruled twin 1436 (D) 0ms
+   × verify-40 fixes on the resolved units > finding 7: 45 (E) carries an arm-not-modelled literal, so it is partially_modelled with gaps (M-130) 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed (4)

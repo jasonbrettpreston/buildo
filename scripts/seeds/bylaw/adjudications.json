@@ -89921,6 +89921,385 @@
       "rule": "Operator CHAT-76.R8-5 (2026-10-22-batch-z13#CHAT-76.R8-5): \"minimum frontage\" is a required_lot_frontage_m licence pattern and 120 (A) takes the keyer-B reading; Spec 133 §m.132 (pattern growth) and §m.82 (M-75 correction form, the record replaces the held UNUSUAL adjudication of R8-5)",
       "unit": "900.3.10(120)#(120)[SSP](A)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1429)#(1429)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "verify-40 finding 4: the twin form is the ruled 1436 (D) / 1437 (D) / 1434 (A) form.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R5-2b/R6-5/R8-1: twin of 1436 (D), keyed to its exact form (needs_user_input, no disclosure, building_type in user_inputs); Spec 133 §m.317 dated note 2 (operator CHAT-67.1434A, twin form fixed, newer than rule 31)",
+      "unit": "900.3.10(1429)#(1429)[SSP](A)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1429)#(1429)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "verify-40 finding 4: the ruled twin form carries no disclosure sentence.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R5-2b/R6-5/R8-1: twin of 1436 (D), keyed to its exact form (needs_user_input, no disclosure, building_type in user_inputs); Spec 133 §m.317 dated note 2 (operator CHAT-67.1434A, twin form fixed, newer than rule 31)",
+      "unit": "900.3.10(1429)#(1429)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "calculation_handling",
+      "id": "COR-900.2.10(591)#(591)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "verify-40 finding 4: the twin form is the ruled 1436 (D) / 1437 (D) / 1434 (A) form.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R5-2b/R6-5/R8-1: twin of 1436 (D), keyed to its exact form (needs_user_input, no disclosure, building_type in user_inputs); Spec 133 §m.317 dated note 2 (operator CHAT-67.1434A, twin form fixed, newer than rule 31)",
+      "unit": "900.2.10(591)#(591)[SSP](A)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "disclosure",
+      "id": "COR-900.2.10(591)#(591)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "verify-40 finding 4: the ruled twin form carries no disclosure sentence.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R5-2b/R6-5/R8-1: twin of 1436 (D), keyed to its exact form (needs_user_input, no disclosure, building_type in user_inputs); Spec 133 §m.317 dated note 2 (operator CHAT-67.1434A, twin form fixed, newer than rule 31)",
+      "unit": "900.2.10(591)#(591)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "calculation_handling",
+      "id": "COR-900.2.10(910)#(910)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "verify-40 finding 4: the twin form is the ruled 1436 (D) / 1437 (D) / 1434 (A) form.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R5-2b/R6-5/R8-1: twin of 1436 (D), keyed to its exact form (needs_user_input, no disclosure, building_type in user_inputs); Spec 133 §m.317 dated note 2 (operator CHAT-67.1434A, twin form fixed, newer than rule 31)",
+      "unit": "900.2.10(910)#(910)[SSP](A)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "disclosure",
+      "id": "COR-900.2.10(910)#(910)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "verify-40 finding 4: the ruled twin form carries no disclosure sentence.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R5-2b/R6-5/R8-1: twin of 1436 (D), keyed to its exact form (needs_user_input, no disclosure, building_type in user_inputs); Spec 133 §m.317 dated note 2 (operator CHAT-67.1434A, twin form fixed, newer than rule 31)",
+      "unit": "900.2.10(910)#(910)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "archetype",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/archetype",
+      "kind": "correction",
+      "reason": "verify-40 finding 3.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R6-3 option B: 324 (J) applies only to below-grade parking structures, an unconditional LIMIT breaks the M-130 necessary-bound rule (Spec 133 §m.130) on every lot; whole clause UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "target",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/target",
+      "kind": "correction",
+      "reason": "verify-40 finding 3.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R6-3 option B: 324 (J) applies only to below-grade parking structures, an unconditional LIMIT breaks the M-130 necessary-bound rule (Spec 133 §m.130) on every lot; whole clause UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "bound",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/bound",
+      "kind": "correction",
+      "reason": "verify-40 finding 3.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R6-3 option B: 324 (J) applies only to below-grade parking structures, an unconditional LIMIT breaks the M-130 necessary-bound rule (Spec 133 §m.130) on every lot; whole clause UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "verify-40 finding 3.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R6-3 option B: 324 (J) applies only to below-grade parking structures, an unconditional LIMIT breaks the M-130 necessary-bound rule (Spec 133 §m.130) on every lot; whole clause UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "verify-40 finding 3.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R6-3 option B: 324 (J) applies only to below-grade parking structures, an unconditional LIMIT breaks the M-130 necessary-bound rule (Spec 133 §m.130) on every lot; whole clause UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": [
+        {
+          "clause": "(324)[SSP](J)(i)",
+          "literal": "3.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/calculation_handling",
+      "kind": "correction",
+      "reason": "verify-40 finding 3.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R6-3 option B: 324 (J) applies only to below-grade parking structures, an unconditional LIMIT breaks the M-130 necessary-bound rule (Spec 133 §m.130) on every lot; whole clause UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": {
+        "description": "Minimum building setback from a lot line for a below grade parking structure is the greater of 3.0 metres and the distance in (J)(ii); the below grade parking structure scope has no token, so neither arm is modelled.",
+        "gaps": "No lot condition names a below grade parking structure.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "disclosure",
+      "id": "COR-900.5.10(324)#(324)[SSP](J)(i)/disclosure",
+      "kind": "correction",
+      "reason": "verify-40 finding 3.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R6-3 option B: 324 (J) applies only to below-grade parking structures, an unconditional LIMIT breaks the M-130 necessary-bound rule (Spec 133 §m.130) on every lot; whole clause UNUSUAL (Spec 133 §m.102)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)",
+      "value": "For a below grade parking structure, the minimum building setback from a lot line is the greater of 3.0 metres and the distance in the next item; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(958)#(958)[SSP](C)/not_an_override~s2",
+      "kind": "correction",
+      "reason": "verify-40 finding 2: self_reference contradicted the ruled reason.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R7-2 corrected: operator ruling R5-Q7b-464 (2026-10-14): \"Despite (X)\" naming a sibling clause of the same exception is subordinate_reference (vocab.json displacement_triggers.not_an_override; precedent 735 (E)/(G))",
+      "supersedes": "COR-900.2.10(958)#(958)[SSP](C)/not_an_override~s1",
+      "unit": "900.2.10(958)#(958)[SSP](C)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "subordinate_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(958)#(958)[SSP](D)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "verify-40 finding 2: self_reference contradicted the ruled reason.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R7-2 corrected: operator ruling R5-Q7b-464 (2026-10-14): \"Despite (X)\" naming a sibling clause of the same exception is subordinate_reference (vocab.json displacement_triggers.not_an_override; precedent 735 (E)/(G))",
+      "supersedes": "COR-900.2.10(958)#(958)[SSP](D)/not_an_override",
+      "unit": "900.2.10(958)#(958)[SSP](D)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "subordinate_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(958)#(958)[SSP](E)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "verify-40 finding 2: self_reference contradicted the ruled reason.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R7-2 corrected: operator ruling R5-Q7b-464 (2026-10-14): \"Despite (X)\" naming a sibling clause of the same exception is subordinate_reference (vocab.json displacement_triggers.not_an_override; precedent 735 (E)/(G))",
+      "supersedes": "COR-900.2.10(958)#(958)[SSP](E)/not_an_override",
+      "unit": "900.2.10(958)#(958)[SSP](E)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "subordinate_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(951)#(951)[SSP](C)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "verify-40 finding 2: self_reference contradicted the ruled reason.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R7-2 corrected: operator ruling R5-Q7b-464 (2026-10-14): \"Despite (X)\" naming a sibling clause of the same exception is subordinate_reference (vocab.json displacement_triggers.not_an_override; precedent 735 (E)/(G))",
+      "supersedes": "COR-900.2.10(951)#(951)[SSP](C)/not_an_override",
+      "unit": "900.2.10(951)#(951)[SSP](C)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "subordinate_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(951)#(951)[SSP](D)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "verify-40 finding 2: self_reference contradicted the ruled reason.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R7-2 corrected: operator ruling R5-Q7b-464 (2026-10-14): \"Despite (X)\" naming a sibling clause of the same exception is subordinate_reference (vocab.json displacement_triggers.not_an_override; precedent 735 (E)/(G))",
+      "supersedes": "COR-900.2.10(951)#(951)[SSP](D)/not_an_override",
+      "unit": "900.2.10(951)#(951)[SSP](D)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "subordinate_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(951)#(951)[SSP](E)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "verify-40 finding 2: self_reference contradicted the ruled reason.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R7-2 corrected: operator ruling R5-Q7b-464 (2026-10-14): \"Despite (X)\" naming a sibling clause of the same exception is subordinate_reference (vocab.json displacement_triggers.not_an_override; precedent 735 (E)/(G))",
+      "supersedes": "COR-900.2.10(951)#(951)[SSP](E)/not_an_override",
+      "unit": "900.2.10(951)#(951)[SSP](E)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "subordinate_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(45)#(45)[SSP](E)/calculation_handling",
+      "kind": "correction",
+      "reason": "verify-40 finding 7: a modelled unit with gaps none cannot carry an arm-not-modelled literal.",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R8-9 relabel; Spec 133 §m.130 (a unit with an arm-not-modelled literal is partially_modelled)",
+      "unit": "900.3.10(45)#(45)[SSP](E)",
+      "value": {
+        "description": "Detached house side yard setback 1.5 m (2.4 m for a 2 storey house); aggregate of both side yards 6.0 m.",
+        "gaps": "The 2-storey arm restates the same 6.0 metre aggregate; it is expressed once. The side yard difference is expressed by the conditional.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(45)#(45)[SSP](E)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "re-recorded under the held label, identical value",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R8-9 relabel; Spec 133 §m.130 (a unit with an arm-not-modelled literal is partially_modelled)",
+      "supersedes": "COR-900.3.10(45)#(45)[SSP](E)/literals_not_expressed",
+      "unit": "900.3.10(45)#(45)[SSP](E)",
+      "value": [
+        {
+          "clause": "(45)[SSP](E)",
+          "literal": "6.0 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(45)#(45)[SSP](F)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "re-recorded under the held label with the corrected citation, identical value",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R8-9: per-0.3 m height increment is limit_arm_not_modelled, Spec 133 §m.130 (not §m.102)",
+      "supersedes": "COR-900.3.10(45)#(45)[SSP](F)/literals_not_expressed",
+      "unit": "900.3.10(45)#(45)[SSP](F)",
+      "value": [
+        {
+          "clause": "(45)[SSP](F)",
+          "literal": "0.3 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(45)[SSP](F)",
+          "literal": "0.3 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(45)[SSP](F)",
+          "literal": "6.0 metres",
+          "reason": "limit_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "disclosure",
+      "id": "COR-900.3.10(120)#(120)[SSP](D)/disclosure~s1",
+      "kind": "correction",
+      "reason": "re-recorded under the held label, identical value",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R8-5: lane-authored buyer-facing disclosure prose",
+      "supersedes": "COR-900.3.10(120)#(120)[SSP](D)/disclosure",
+      "unit": "900.3.10(120)#(120)[SSP](D)",
+      "value": "Where a rear lot line abuts a lot on Guildcrest Drive, the minimum building setback from that lot line is 22.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v40-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(120)#(120)[SSP](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "re-recorded under the held label, identical value",
+      "rule": "HELD (verify-40, not operator-ruled; not mechanical bookkeeping: a value choice awaiting the operator); R8-5: lane-authored buyer-facing disclosure prose",
+      "supersedes": "COR-900.3.10(120)#(120)[SSP](D)/literals_not_expressed",
+      "unit": "900.3.10(120)#(120)[SSP](D)",
+      "value": [
+        {
+          "clause": "(120)[SSP](D)",
+          "literal": "22.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
     }
   ]
 }

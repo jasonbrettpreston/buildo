@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §7.5, §7.6; docs/specs/01-pipeline/69a_mcbylaw_register.md M-308 (explained data flag), M-197 (suite_wall_openings default), M-287 (explained_differences)
-// HELD on R5-7 (recommendation awaiting the operator): 4D-S4 extension, openings evidence (notice text or plan facts) also sets suite_wall_openings on garden / laneway suite setback rows.
+// R5-7 REVERTED (verify-40 finding 5): the only evidence was a plan-facts note quoting the City decision itself (circular). A structured plan-facts openings field is a NEW RULING NEEDED (see the operator page).
 // The data are values-only JSON kept OUTSIDE git (default ~/Buildo-scratch/coa-data, override COA_DATA); without them the test skips.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
@@ -15,10 +15,10 @@ const score = (): any => { // eslint-disable-line @typescript-eslint/no-explicit
   return JSON.parse(fs.readFileSync(out, 'utf8'));
 };
 const row = (sc: any, notice: string, n: number): any => sc.rows.find((r: any) => r.notice === notice && r.n === n); // eslint-disable-line @typescript-eslint/no-explicit-any -- scorer JSON
-describe.skipIf(!have)('R5-7 (HELD): openings evidence sets suite_wall_openings', () => {
-  it('A0215/26EYK #1 (garden suite, windows in the side wall per the plan facts) takes the 150.7.60.20(5)(A) arm and matches the City 1.5 m', () => {
-    const r = row(score(), 'A0215/26EYK', 1);
-    expect(r.class).toBe('MATCH');
-    expect(r.scorer_fix).toBe('4D-S4d');
+describe.skipIf(!have)('R5-7 reverted (verify-40 finding 5): the openings evidence stays circular, so it is not used for the suite arm', () => {
+  it('A0215/26EYK #1 is DIFFER again (the plan-facts note quotes the City decision) and no row carries scorer_fix 4D-S4d', () => {
+    const sc = score();
+    expect(row(sc, 'A0215/26EYK', 1).class).toBe('DIFFER');
+    expect(sc.rows.filter((r: any) => r.scorer_fix === '4D-S4d').length).toBe(0); // eslint-disable-line @typescript-eslint/no-explicit-any -- scorer JSON
   }, 180000);
 });

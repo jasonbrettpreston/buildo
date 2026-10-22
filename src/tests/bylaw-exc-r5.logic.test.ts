@@ -33,9 +33,10 @@ describe('EXC-R5 round: double-keyed exceptions', () => {
     }
     for (const reg of PARTIAL) expect(st(reg).filter((x) => x === 'adjudicated').length, reg).toBe(1);
   }, 120000);
-  it('the six mechanical M-75 corrections are recorded under the lane label', () => {
+  it('the six round-5 mechanical M-75 corrections are recorded under the lane label (scoped to their six units: later rounds reused the label, verify-40 finding 1; each later round now has its own label lane-exc-r<N>)', () => {
     const adj = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/adjudications.json'), 'utf8')).adjudications as Json[];
-    const mine = adj.filter((a) => a.adjudicator === 'lane-exc-r5');
+    const R5_UNITS = new Set(['900.3.10(559)#(559)[SSP](A)(i)', '900.5.10(297)#(297)[SSP](B)(i)', '900.5.10(297)#(297)[SSP](B)(ii)', '900.3.10(349)#(349)[PBS](A)', '900.3.10(349)#(349)[PBS](B)', '900.3.10(349)#(349)[PBS](C)']);
+    const mine = adj.filter((a) => a.adjudicator === 'lane-exc-r5' && R5_UNITS.has(a.unit) && a.field === 'literals_not_expressed' && !a.supersedes);
     expect(mine.length).toBe(6);
     expect(mine.every((a) => a.kind === 'correction' && a.field === 'literals_not_expressed' && /M-82/.test(a.rule))).toBe(true);
   });

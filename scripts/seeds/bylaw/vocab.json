@@ -1047,10 +1047,10 @@
       "parcel_id": "5128608",
       "class": "DATA",
       "ruling": "M-308",
-      "reading": "HELD on R5-5 (recommendation awaiting the operator): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
+      "reading": "NEW RULING NEEDED (HELD on R5-5, verify-40 finding 6: M-308 covers a survey that disagrees with the parcel row and no survey is held here, so it is only the nearest door): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
     },
     "10.5.40.50(2)": {
-      "notice": "A0255/26NY",
+      "notice": "A0263/21NY",
       "target": "platform_side_setback_m",
       "ours": 1.5,
       "city": 0.9,
@@ -1059,7 +1059,7 @@
       "parcel_id": "5128608",
       "class": "DATA",
       "ruling": "M-308",
-      "reading": "HELD on R5-5 (recommendation awaiting the operator): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
+      "reading": "NEW RULING NEEDED (HELD on R5-5, verify-40 finding 6: M-308 covers a survey that disagrees with the parcel row and no survey is held here, so it is only the nearest door): the parcel row for 63 Johnston Ave carries the merged Plan 1743 Lots 190 and 191 (15.2 m; neighbours 59 and 67 are also 15.2 m); the notices (A0255/26NY, A0263/21NY with consent B0016/21NY) apply the under-15.0 m arm of 559 (A) to one severed lot. Parcel-layer defect, no by-law change"
     },
     "10.5.60.70(1)(B)": {
       "notice": "A0180/26TEY",
