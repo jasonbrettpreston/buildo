@@ -17,7 +17,7 @@ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-ex
 const ROOT = path.resolve(__dirname, '../../../../');
 const read = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const PREFIX = 'compute_maxbld_scenarios_';
-const MIGRATION = 'migrations/282_compute_maxbld_scenarios_logic_variables.sql';
+const MIGRATION = 'migrations/283_compute_maxbld_scenarios_logic_variables.sql';
 const SPEC = read('docs/specs/01-pipeline/78_optimal_lot_configuration.md');
 
 /** The P5.9 table rows: suffix(es) -> default(s) and bounds, parsed from the spec text (never retyped here). */

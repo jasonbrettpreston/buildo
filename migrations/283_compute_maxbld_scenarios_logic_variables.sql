@@ -1,4 +1,4 @@
--- 282: compute_maxbld_scenarios (Layer 3, Spec 78 Phase 5) — the 22 P5.9 logic variables, seeded at step commit ① (P3-1).
+-- 283: compute_maxbld_scenarios (Layer 3, Spec 78 Phase 5) — the 22 P5.9 logic variables, seeded at step commit ① (P3-1).
 --
 -- McDonald's Airtight V3 (Spec 124 R-DF EXTERNALIZED; Spec 132 core.8 (R-CV): every number a step uses is a registered
 -- `<slug>_<name>` logic variable, seeded by migration with its default carried). Names, defaults and bounds are the Spec 78

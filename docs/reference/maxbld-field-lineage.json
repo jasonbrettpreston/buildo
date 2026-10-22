@@ -28,112 +28,112 @@
   {
    "name": "storey_height_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "roof_pitch",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "roof_assembly_depth_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "basement_livable_share",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "circulation_share",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "unit_min_interior_sqm",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "suite_weight",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "depth_search_step_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "suite_gfa_strict_margin_sqm",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "min_dimension_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lot_min_sqm",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lot_max_sqm",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "existing_confidence_min",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "existing_shared_footprint_penalty",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "batch_size",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "not_evaluated_max_pct",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "first_floor_elevation_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lane_buffer_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "triangle_simplify_tol_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lot_viability_margin_m",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "coxwell_generous_reading",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "trust_high_min_pass_pct",
    "status": "SEEDED",
-   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
+   "migration": "migrations/283_compute_maxbld_scenarios_logic_variables.sql"
   }
  ],
  "invariants": [
