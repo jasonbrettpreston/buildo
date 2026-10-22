@@ -1,0 +1,41 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-e/2026-10-23-batch-e.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-e",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "proceed with your recommendations NAMED-1b (changed): one rule, two outcomes. Compute the setback where the road is in our street table (12 units) and disclose it where we can't tell which road (32 units). I recommend this over disclosing all 44. - TWIN-1 (new): your rulings disagree on identical clause text in two places. FAM-HIST 621 (B) conflicts with 1335 (A) and 1332 (A), and FAM-STEP 975 (B) conflicts with 70 (B). I recommend the newer family rulings win. - S22-1 (new): withdrawing 478 also pulled out exceptions 70 and 33 (413 lots), because they were keyed in the same batch. I recommend re-keying 70 and 33 on their own, so only 478 stays held, which is what you ruled.",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-e/2026-10-23-batch-e.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-84.NAMED-1b",
+      "question": "Named-road setbacks: one rule, two outcomes",
+      "recommendation": "Where the named road is in vocab.named_street the M-285 street-name join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is disclosed (UNUSUAL, 32 units). Supersedes the all-disclose reading of CHAT-83.NAMED-1.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-84.TWIN-1",
+      "question": "Newer family rulings win over older unit rulings on identical text",
+      "recommendation": "FAM-HIST (621 (B)) governs 1335 (A) and 1332 (A); FAM-STEP (975 (B)) governs 70 (B); re-key the older units to match.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-84.S22-1",
+      "question": "Re-key exceptions 70 and 33 separately; only 478 stays held",
+      "recommendation": "Re-key 70 and 33 with two independent keyers as their own batch so they land; 478 stays withdrawn per R5-6.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}
