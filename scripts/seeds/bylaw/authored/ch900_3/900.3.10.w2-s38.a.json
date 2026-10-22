@@ -1,0 +1,574 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s38",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 9.14 m @(971)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "lot_list", "refs": ["Registered Plan M-809"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 971", "detached_house": "a detached house"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": ["building_type"],
+        "description": "Minimum front yard setback of 9.14 metres for a detached house on lands on Registered Plan M-809; applies only to the lots of that plan, which are not held as a lot list.",
+        "gaps": "Registered Plan M-809 lot list is not held."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 9.5 m @(971)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "1.0 vertical units", "clause": "(971)[SSP](B)", "reason": "lot_condition_arm_not_modelled"},
+        {"literal": "4.0 horizontal units", "clause": "(971)[SSP](B)", "reason": "lot_condition_arm_not_modelled"},
+        {"literal": "50%", "clause": "(971)[SSP](B)", "reason": "lot_condition_arm_not_modelled"},
+        {"literal": "3 storeys", "clause": "(971)[SSP](B)", "reason": "lot_condition_arm_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 971", "detached_house": "a detached house"}
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type", "roof_type"],
+        "description": "Maximum building height of 9.5 metres for a detached house whose roof slopes less than 1.0 in 4.0 over more than 50% of the roof area, where 3 storeys is permitted; otherwise regulation 10.20.40.10(4) applies.",
+        "gaps": "The roof slope (1.0 in 4.0), the 50% roof-area share and the test that 3 storeys is permitted on the lot are not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](C)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "Exception RD 971", "deck_or_platform": "A balcony, porch or sundeck"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "A balcony, porch or sundeck at or above the second storey is exempt from regulation 10.20.40.50 (1) if set back from a lot line the greater of the required building setback from that lot line (this leaf) or 6.0 metres (leaf (ii)). The balcony's own setback is not a lot-data fact.",
+        "gaps": "Balcony, porch or sundeck setback from the lot line is not known."
+      },
+      "disclosure": "A balcony, porch or sundeck at or above the second storey, or reached from the second storey, is not subject to regulation 10.20.40.50 (1) if it is set back from a lot line by at least the greater of the required building setback from that lot line or 6.0 metres. This exemption is not evaluated.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](C)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "6.0 metres", "clause": "(971)[SSP](C)(ii)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "Exception RD 971", "deck_or_platform": "A balcony, porch or sundeck"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "The 6.0 metre alternative of the greater-of test that exempts a balcony, porch or sundeck at or above the second storey from regulation 10.20.40.50 (1). The balcony's own setback is not a lot-data fact.",
+        "gaps": "Balcony, porch or sundeck setback from the lot line is not known."
+      },
+      "disclosure": "A balcony, porch or sundeck at or above the second storey, or reached from the second storey, is not subject to regulation 10.20.40.50 (1) if it is set back from a lot line by at least the greater of the required building setback from that lot line or 6.0 metres. This exemption is not evaluated.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 5 pct @(971)[SSP](D)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 971", "ancillary_building": "ancillary buildings"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Maximum lot coverage for ancillary buildings is 5% of the lot area.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "ancillary_floor_area_m2",
+      "bound": "max",
+      "numeric_expression": ["ancillary_floor_area_m2 = 100 m2 @(971)[SSP](E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 971", "ancillary_building": "ancillary buildings"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Maximum total floor area for ancillary buildings is 100 square metres.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 971"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or prevailing sections apply to exception RD 971.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 28 pct @(9)[SSP](A)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 ≤ 510 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9", "lot_area_band": "the lot area is 510 square metres or less"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Maximum lot coverage, excluding a garage, is 28% where the lot area is 510 square metres or less.",
+        "gaps": "The exclusion of a garage from the coverage is not subtracted."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 25 pct @(9)[SSP](A)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9", "lot_area_band": "all other cases"}
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Maximum lot coverage, excluding a garage, is 25% in all other cases, that is where the lot area exceeds the 510 square metres of the sibling clause.",
+        "gaps": "The lot-area threshold sits in the sibling clause (A)(i) and is not restated here; the garage exclusion is not subtracted."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = 38 m2 @(9)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["private_garage"],
+        "evidence": {"RD": "Exception RD 9", "private_garage": "a garage attached"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Maximum gross floor area of a garage attached to a residential building is 38 square metres.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.33 ratio @(9)[SSP](C)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 ≤ 510 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9", "detached_house": "of a detached house", "lot_area_band": "the lot area is 510 square metres or less"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Maximum floor space index of a detached house is 0.33 where the lot area is 510 square metres or less.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](C)(ii)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.30 ratio @(9)[SSP](C)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9", "detached_house": "of a detached house", "lot_area_band": "all other cases"}
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Maximum floor space index of a detached house is 0.30 in all other cases, that is where the lot area exceeds the 510 square metres of the sibling clause.",
+        "gaps": "The lot-area threshold sits in the sibling clause (C)(i) and is not restated here."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "aggregate_side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.0 m @(9)[SSP](D)(i)",
+        "aggregate_side_setback_m = 2.4 m @(9)[SSP](D)(i)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m ≤ 15.2 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9", "frontage_band": "the lot frontage is 15.2 metres or less"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum side yard setback of 1.0 metre and minimum aggregate of both side yard setbacks of 2.4 metres where the lot frontage is 15.2 metres or less.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](D)(ii)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "aggregate_side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(9)[SSP](D)(ii)",
+        "aggregate_side_setback_m = 3.0 m @(9)[SSP](D)(ii)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9", "frontage_band": "all other cases"}
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum side yard setback of 1.2 metres and minimum aggregate of both side yard setbacks of 3.0 metres in all other cases, that is where the lot frontage exceeds the 15.2 metres of the sibling clause.",
+        "gaps": "The lot-frontage threshold sits in the sibling clause (D)(i) and is not restated here."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](D)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9", "detached_house": "a detached house"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "description": "For an addition to a detached house that existed on the date of the enactment of By-law 569-2013, the minimum side yard setback is the lesser of the side yard setback existing on that date or the minimum requirements of this exception. Needs the as-built side yard setback.",
+        "gaps": "The side yard setback existing on the date of enactment is not held."
+      },
+      "disclosure": "If a detached house existed on the date of the enactment of By-law 569-2013 (May 9, 2013), you may add to it, provided the minimum side yard setback for the addition is the lesser of the side yard setback existing on that date or the minimum requirements of this exception. A new build is answered as if this does not apply.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](E)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.33 ratio @(9)[SSP](E)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["19 Barker Ave."]},
+      "literals_not_expressed": [
+        {"literal": "19", "clause": "(9)[SSP](E)(i)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": [],
+        "description": "Maximum floor space index of the building on the lot known as 19 Barker Ave. is 0.33.",
+        "gaps": "Applies to one named address only."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](E)(ii)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.34 ratio @(9)[SSP](E)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["37 Gibson Ave."]},
+      "literals_not_expressed": [
+        {"literal": "37", "clause": "(9)[SSP](E)(ii)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": [],
+        "description": "Maximum floor space index of the building on the lot known as 37 Gibson Ave. is 0.34.",
+        "gaps": "Applies to one named address only."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 9"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or prevailing sections apply to exception RD 9.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.3.10(971)": {
+      "explanation": "Exception RD 971 sets site-specific rules for the RD zone: a 9.14 metre minimum front yard setback for a detached house on Registered Plan M-809, a 9.5 metre height cap for detached houses with a low-slope roof where 3 storeys is permitted, an exemption for upper-storey balconies, porches and sundecks set back the greater of the required setback or 6.0 metres, a 5% lot coverage cap and a 100 square metre floor area cap for ancillary buildings. No prevailing by-laws apply.",
+      "code_refs": "none"
+    },
+    "900.3.10(9)": {
+      "explanation": "Exception RD 9 sets site-specific rules for the RD zone: lot coverage of 28% (lot area 510 square metres or less) or 25% otherwise, excluding a garage; a 38 square metre cap on an attached garage; a detached house floor space index of 0.33 or 0.30 by lot area; side yard setbacks of 1.0 metre (2.4 metres aggregate) for lots 15.2 metres wide or less and 1.2 metres (3.0 metres aggregate) otherwise, with a special rule for additions to houses existing at enactment; and floor space index caps of 0.33 for 19 Barker Ave. and 0.34 for 37 Gibson Ave. No prevailing by-laws apply.",
+      "code_refs": "none"
+    }
+  }
+}

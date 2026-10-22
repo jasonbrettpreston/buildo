@@ -91822,6 +91822,17 @@
           "reason": "cross_reference_value"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r14",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(198)#(198)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street numbers of a named address list are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 14); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(198)#(198)[PBS](A)",
+      "value": []
     }
   ]
 }
