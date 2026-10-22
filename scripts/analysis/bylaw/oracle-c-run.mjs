@@ -11,10 +11,18 @@
 //     [--table-root <dir>]                   read the table files from another tree (read-only), e.g. a pre-landing table
 //     [--exclude-shards <regex>]             drop authored shard keys matching it (W1 drafts: '\.w1-s')
 //     [--mode exception]                     the later-round exception mode (refused until its round is pre-registered)
+// One answer key (pending row CHAT-63.C1; src scripts/analysis/bylaw-validation/coa-key.mjs), two named comparisons:
+//     [--compare table]   (default) the Phase 1 table vs the REQUIRED figure; oracle-c.mjs unchanged and independent
+//         [--key]                 read the items from the committed key (batch coa-2017-decisions) instead of the SQL rows; link/lot still read-only from the DB
+//     --compare calc      the calculation comparison = the scorer (coa-scorecard.mjs), which takes --notices --parcels --plan-facts [--check|--pin|--floors|--prereg|--baseline ...] after --;
+//                         first checks that the key holds exactly the rows of the named --batch(es) built from --notices (one answer key)
+//     --build-key <batch> [--notices F [--only-files F] [--exclude-files F,F]]   write the key batch (no --notices: the 2017 allotment, read-only from the DB); needs no round
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
+import { KEY_DIR_REL, BATCH_2017, keyRowFromDb, keyRowsFromNotices, writeBatch, readKey, dbShapeFromKey, serialize } from '../bylaw-validation/coa-key.mjs';
 import {
   RULES, REASONS, EXCEPTION_REASONS, PROPOSED_REASONS, REASONS_NOT_RUN, ADJ_KINDS, TOLERANCE, BAND_MARGIN, LOT_INPUTS_UNAVAILABLE,
   buildTable, compareItem, compareExceptionItem, inExceptionMode, summarize, endTagCensus,
@@ -34,6 +42,10 @@ const LABEL_TEXT = arg('--label-text', LABEL);
 const TABLE_ROOT = path.resolve(ROOT, arg('--table-root', '.'));
 const EXCLUDE = arg('--exclude-shards', null);
 const MODE = arg('--mode', 'citation');
+const COMPARE = arg('--compare', 'table');
+const USE_KEY = args.includes('--key');
+const BUILD_KEY = arg('--build-key', null);
+if (!['table', 'calc'].includes(COMPARE)) throw new Error(`oracle-c: --compare ${COMPARE} is not table | calc`);
 const RULESET = RULES[ROUND];
 if (!RULESET) throw new Error(`oracle-c: no rule set for round ${ROUND} (known: ${Object.keys(RULES).join(', ')})`);
 if (!['citation', 'exception'].includes(MODE)) throw new Error(`oracle-c: --mode ${MODE} is not citation | exception`);
@@ -83,13 +95,13 @@ WHERE c.application_number = ANY($1) GROUP BY c.application_number ORDER BY c.ap
 const SQL_PARCEL = `SELECT id, frontage_m::float8 AS frontage_m, depth_m::float8 AS depth_m, lot_size_sqm::float8 AS lot_size_sqm,
   is_corner_lot, zoning_zn_string FROM parcels WHERE id = ANY($1) ORDER BY id`;
 
-async function readDb() {
+async function readDb(keyRows = null) {
   const pool = createResolvedPool({ label: 'oracle-c' });
   const client = await pool.connect();
   try {
     await client.query('BEGIN READ ONLY');
     const db = (await client.query('SELECT current_database() AS db')).rows[0].db;
-    const rows = (await client.query(SQL)).rows;
+    const rows = keyRows ? keyRows.map(dbShapeFromKey).sort((a, b) => cmpStr(a.variance_key, b.variance_key)) : (await client.query(SQL)).rows;
     const apps = [...new Set(rows.map((r) => r.application_number))].sort(cmpStr);
     const links = (await client.query(SQL_LINK, [apps])).rows;
     const ids = links.filter((l) => l.n === 1).map((l) => l.parcel_id);
@@ -100,6 +112,47 @@ async function readDb() {
     client.release();
     await pool.end();
   }
+}
+
+const SQL_EXPORT = `SELECT variance_key, application_number, item_ordinal, hearing_date::text AS hearing_date, decision, cited_bylaw, citation_kind,
+  regulation_id_as_cited, exception_ref, zoning_as_stated, target, target_status, bound, required_value::float8 AS required_value, required_unit,
+  proposed_value::float8 AS proposed_value, proposed_unit, parse_status, parse_confidence, qualified, extractor_version, vocab_version
+FROM coa_notice_variances WHERE retired_at IS NULL ORDER BY variance_key`;
+
+/** --build-key: the 2017 allotment (read-only DB export) or a parser-shaped notices file becomes one key batch. */
+async function buildKey(batch) {
+  let rows;
+  const nf = arg('--notices', null);
+  if (nf) {
+    const skip = new Set();
+    for (const f of String(arg('--exclude-files', '')).split(',').filter(Boolean)) for (const n of JSON.parse(fs.readFileSync(f, 'utf8'))) skip.add(n.file_number);
+    const only = arg('--only-files', null) ? new Set(JSON.parse(fs.readFileSync(arg('--only-files'), 'utf8')).map((n) => n.file_number)) : null;
+    rows = keyRowsFromNotices(JSON.parse(fs.readFileSync(nf, 'utf8')).filter((n) => !skip.has(n.file_number) && (!only || only.has(n.file_number))), batch);
+  } else {
+    const pool = createResolvedPool({ label: 'oracle-c-key' });
+    const client = await pool.connect();
+    try { await client.query('BEGIN READ ONLY'); rows = (await client.query(SQL_EXPORT)).rows.map(keyRowFromDb).map((r) => ({ ...r, source_batch: batch })); await client.query('COMMIT'); } finally { client.release(); await pool.end(); }
+  }
+  const m = writeBatch(ROOT, batch, rows);
+  console.log(`coa-key: ${batch} rows=${m.rows} files=${m.files} sha256=${m.sha256} -> ${KEY_DIR_REL}`);
+}
+
+/** --compare calc: one answer key. The key must equal the rows built from --notices for the named batches; then the scorer runs. */
+function runCalc() {
+  const i = args.indexOf('--');
+  const pass = i < 0 ? [] : args.slice(i + 1);
+  const nf = pass[pass.indexOf('--notices') + 1];
+  const batches = String(arg('--batch', '')).split(',').filter(Boolean);
+  if (!nf || !batches.length) throw new Error('oracle-c: --compare calc needs --batch <ids> and -- --notices <file> ...');
+  const { rows } = readKey(ROOT, batches);
+  const fromKey = new Set(rows.map((r) => r.file_number));
+  const notices = JSON.parse(fs.readFileSync(nf, 'utf8')).filter((n) => fromKey.has(n.file_number));
+  const want = serialize(keyRowsFromNotices(notices, batches[0]).map((r) => ({ ...r, source_batch: rows.find((k) => k.file_number === r.file_number).source_batch })));
+  if (want !== serialize(rows)) throw new Error('oracle-c: the key differs from the rows built from --notices (rebuild the key with --build-key, or fix the notices)');
+  console.log(`oracle C calc: key == notices for ${batches.join(',')} (${rows.length} rows, ${fromKey.size} notices)`);
+  const r = spawnSync('node', [path.join(ROOT, 'scripts/analysis/bylaw-validation/coa-scorecard.mjs'), ...pass], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
+  process.stdout.write(r.stdout); // a floors / prereg / pin failure is the scorer's exit status, passed through
+  process.exitCode = r.status === null ? 1 : r.status;
 }
 
 const pct = (x) => (x == null ? 'n/a' : `${(x * 100).toFixed(1)} %`);
@@ -200,6 +253,8 @@ function render(rec) {
 }
 
 async function main() {
+  if (BUILD_KEY) return buildKey(BUILD_KEY);
+  if (COMPARE === 'calc') return runCalc();
   let prereg = null;
   const reg = PREREG[PREREG_KEY];
   if (!reg && (Number(ROUND) >= 3 || MODE === 'exception')) throw new Error(`oracle-c: round ${PREREG_KEY} has no registered pre-registration; register it before it runs`);
@@ -214,7 +269,8 @@ async function main() {
   const voc = readJson('scripts/seeds/bylaw/vocab.json');
   const authored = loadShards();
   const table = buildTable({ provisions: prov.json, shards: authored.shards, adjudications: adj.json.adjudications, targets: voc.json.dsl_target });
-  const { db, rows, links, parcels } = await readDb();
+  const keyRows = USE_KEY ? readKey(ROOT, [BATCH_2017]).rows : null;
+  const { db, rows, links, parcels } = await readDb(keyRows);
   const linkBy = new Map(links.map((l) => [l.application_number, l]));
   const parcelBy = new Map(parcels.map((p) => [p.id, p]));
   const statusOf = (l) => (!l || l.n === 0 ? 'unlinked' : l.n === 1 ? 'linked_unique' : 'ambiguous');

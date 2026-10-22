@@ -206,12 +206,12 @@ export function oracleD(prereg) {
   return d.available ? notRun('input_absent') : { verdict: 'not_run', reason: 'oracle_unavailable', basis: d.basis };
 }
 
-/** Oracle C slot (lane I's oracle-c-round-v1 record). input = {path, sha256, doc} | null. Report-only in Phase 2. PURE. */
+/** Oracle C slot (the record oracle-c-run.mjs writes: oracle-c-round-v2; v1 stays accepted because the committed prereg-0 contract names it). input = {path, sha256, doc} | null. Report-only in Phase 2. PURE. */
 export function oracleC(input, pins, prereg) {
   if (!input) return notRun('input_absent');
   const d = input.doc || {};
   const ba = d.summary && d.summary.by_answer;
-  const ok = d.schema === 'oracle-c-round-v1' && typeof d.oracle_c_version === 'string' && d.inputs && d.inputs.provisions && typeof d.inputs.provisions.sha256 === 'string'
+  const ok = ['oracle-c-round-v1', 'oracle-c-round-v2'].includes(d.schema) && typeof d.oracle_c_version === 'string' && d.inputs && d.inputs.provisions && typeof d.inputs.provisions.sha256 === 'string'
     && ba && ['match', 'mismatch', 'not_comparable'].every((k) => Number.isInteger(ba[k])) && Number.isInteger(d.summary.n);
   if (!ok) return notRun('input_schema_mismatch', { source: { path: input.path, sha256: input.sha256 } });
   const source = { path: input.path, sha256: input.sha256, oracle_c_version: d.oracle_c_version, table_sha256: d.inputs.provisions.sha256 };
