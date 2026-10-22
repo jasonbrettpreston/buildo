@@ -100989,6 +100989,1156 @@
       "rule": "HELD on NAMED-1 (CHAT-83.NAMED-1 approved only if the CoA rescore shows no accuracy loss; the family is 43 units, not the ~8 of the card): CHAT-81.FAM-ALL FAM-ABUT-NAMED applied uniformly, a setback arm that applies only on named roads is UNUSUAL; Spec 133 §m.136, §m.130, §m.82 (M-75 correction form)",
       "unit": "900.5.10(204)#(204)[SSP](E)(i)",
       "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/target",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/bound",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": [
+        "front_setback_m = 9.0 m @(309)[SSP](C)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": {
+        "description": "A building must be set back at least 9.0 m from a front lot line abutting Birchmount Rd.",
+        "gaps": "Which lot line abuts Birchmount Rd. needs street-name matching of the lot lines.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/archetype",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/target",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/bound",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/numeric_expression",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": [
+        "front_setback_m = 9.0 m @(303)[SSP](D)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/literals_not_expressed",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/calculation_handling",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": {
+        "description": "A 9.0 m minimum building setback from a front lot line abutting Pharmacy Ave.",
+        "gaps": "Whether the front lot line abuts Pharmacy Ave. is not held as a lot attribute.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/disclosure",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": "Applies only where the front lot line abuts Pharmacy Ave.; we cannot yet confirm which lots abut it."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/target",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/bound",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": [
+        "street_setback_m = 7.5 m @(1057)[SSP](C)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum building setback of 7.5 m from a lot line that abuts Huntingwood Dr. or Chartland Blvd. S.",
+        "gaps": "Whether a lot line abuts one of the two named streets is not held as a lot fact.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/archetype",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/target",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/bound",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/numeric_expression",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": [
+        "front_setback_m = 7.5 m @(323)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/literals_not_expressed~s1",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/calculation_handling",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": {
+        "description": "Minimum building setback of 7.5 m from a front lot line that abuts Huntingwood Dr.",
+        "gaps": "No vocab front-setback pattern ('front yard setback') occurs in the text ('front lot line'); the named-street condition is not identified in lot data.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/disclosure",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": "Where the front lot line abuts Huntingwood Dr., buildings must be set back at least 7.5 m from it; this is not yet evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/archetype",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/target",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/bound",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/numeric_expression",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": [
+        "front_setback_m = 9.0 m @(316)[SSP](D)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/literals_not_expressed",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/calculation_handling",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": {
+        "description": "Minimum front setback of 9.0 m where the front lot line abuts Pharmacy Ave.",
+        "gaps": "Whether the front lot line abuts Pharmacy Ave. is not a held lot condition.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/disclosure",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(316)#(316)[SSP](H)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](H)/archetype",
+      "unit": "900.3.10(316)#(316)[SSP](H)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(316)#(316)[SSP](H)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](H)/target",
+      "unit": "900.3.10(316)#(316)[SSP](H)",
+      "value": "lot_line_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(316)#(316)[SSP](H)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](H)/bound",
+      "unit": "900.3.10(316)#(316)[SSP](H)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(316)#(316)[SSP](H)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](H)/numeric_expression",
+      "unit": "900.3.10(316)#(316)[SSP](H)",
+      "value": [
+        "lot_line_setback_m = 3.6 m @(316)[SSP](H)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(316)#(316)[SSP](H)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](H)/literals_not_expressed",
+      "unit": "900.3.10(316)#(316)[SSP](H)",
+      "value": [
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "3165",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "3175",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "3177",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "3179",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "3181",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "3183",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "3185",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "5",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(316)[SSP](H)",
+          "literal": "6",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(316)#(316)[SSP](H)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](H)/calculation_handling",
+      "unit": "900.3.10(316)#(316)[SSP](H)",
+      "value": {
+        "description": "On the named Sheppard Ave. E. and Abbottsfield Gate lots, a building or structure must be at least 3.6 m from a lot line abutting Abbottsfield Lane.",
+        "gaps": "Applies to named addresses only; the address list is not held as a lot set.",
+        "not_modelled_reason": "named_lots_only",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(316)#(316)[SSP](H)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](H)/disclosure",
+      "unit": "900.3.10(316)#(316)[SSP](H)",
+      "value": "On 3165-3185 Sheppard Ave. E. and 5 and 6 Abbottsfield Gate, buildings must be at least 3.6 m from the lot line abutting Abbottsfield Lane; this named-address rule is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/target",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/bound",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": [
+        "front_setback_m = 7.5 m @(560)[SSP](C)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/literals_not_expressed",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum front setback of 7.5 m where the front lot line abuts Warden Avenue.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/disclosure",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/archetype",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/target",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/bound",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/numeric_expression",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": [
+        "street_setback_m = 7.5 m @(1032)[SSP](C)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/literals_not_expressed~s1",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/calculation_handling~s1",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": {
+        "description": "A minimum 7.5 m building setback from a lot line abutting McCowan Rd., Brimley Rd. or Brimwood Blvd.",
+        "gaps": "Which lot line abuts McCowan Rd., Brimley Rd. or Brimwood Blvd. is not held; on a lot that abuts one of them the 7.5 m is applied to every street lot line (rule 4a), which overstates it on a second street.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/disclosure~s2",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/disclosure~s1",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": "Buildings must be set back at least 7.5 m from a lot line on McCowan Rd., Brimley Rd. or Brimwood Blvd.; we apply 7.5 m to every street lot line of such a lot, because we do not yet know which line abuts the named road."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/archetype",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/target",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/bound",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/numeric_expression",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": [
+        "front_setback_m = 7.5 m @(1170)[SSP](A)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/literals_not_expressed",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/calculation_handling",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": {
+        "description": "Minimum front yard setback of 7.5 m where the front lot line abuts Conference Boulevard.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/disclosure",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/archetype",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/target",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/bound",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/numeric_expression",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": [
+        "street_setback_m = 7.5 m @(256)[SSP](D)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/literals_not_expressed",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/calculation_handling",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": {
+        "description": "Minimum 7.5 m building setback from a lot line abutting Finch Ave., Brimley Rd. or Midland Ave.",
+        "gaps": "Which named street a lot line abuts is not held as a lot condition.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/disclosure",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/archetype",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/target",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/bound",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/numeric_expression",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": [
+        "street_setback_m = 6.0 m @(256)[SSP](D)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/literals_not_expressed",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/calculation_handling",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": {
+        "description": "Minimum 6.0 m building setback from a lot line abutting Alexmuir Blvd., Cleadon Rd. or South Shields Ave.",
+        "gaps": "Which named street a lot line abuts is not held as a lot condition.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/disclosure",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/archetype",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/target~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/target",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/bound",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/numeric_expression",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": [
+        "front_setback_m = 9.0 m @(70)[SSP](A)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/literals_not_expressed",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/calculation_handling",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": {
+        "description": "Where the front lot line abuts Birchmount Rd., the minimum building setback from it is 9.0 m.",
+        "gaps": "Whether the lot's front lot line abuts Birchmount Rd. is not held in the lot data.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "restore the pre-NAMED-1 value (M-285 join unit)",
+      "rule": "Verify-42 item 2: CHAT-83.NAMED-1 does not apply to a unit in vocab.named_street, because the M-285 street-name join (operator CHAT-38.F-4D-7, validated against A0096/26SC) gives it correct values; this record restores the value it had before the NAMED-1 variant; Spec 133 §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/disclosure",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": "Applies only where the front lot line abuts Birchmount Rd.; we cannot confirm which street a lot abuts automatically."
     }
   ]
 }
