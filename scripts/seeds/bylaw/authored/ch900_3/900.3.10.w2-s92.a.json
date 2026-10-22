@@ -1,0 +1,1009 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s92",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(266)#(266)[SSP](A)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "22.0 metres",
+     "clause": "(266)[SSP](A)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 266",
+     "any": "building setback from a front lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Setback measured from a road centreline has no target; not evaluated.",
+    "gaps": "setback measured from the original centreline of Brimley Rd.",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "The minimum building setback of 22.0 metres is measured from the original centreline of Brimley Rd. for a front lot line that abuts Brimley Rd.; this centreline measurement is not evaluated.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(266)#(266)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(266)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 266",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum side yard setback 1.2 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(266)#(266)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 5.7 m @(266)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 266",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum setback 5.7 m from a side lot line abutting a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(266)#(266)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 266",
+     "any": "Prevailing By-laws and Prevailing Sections"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply; no effect on evaluation.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(370)#(370)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.9 m @(370)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 370",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum side yard setback 0.9 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(370)#(370)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 3.6 m @(370)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 370",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum setback 3.6 m from a side lot line abutting a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(370)#(370)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 370",
+     "any": "Prevailing By-laws and Prevailing Sections"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply; no effect on evaluation.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(324)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "minimum lot frontage"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot frontage is the lawfully existing frontage on the enactment date (May 9, 2013).",
+    "gaps": "none",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot existed on the day of the enactment of By-law 569-2013 (May 9, 2013), you may use the lot frontage that existed on that day as the minimum.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(324)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "minimum lot area"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot area is the lawfully existing area on the enactment date (May 9, 2013).",
+    "gaps": "none",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot existed on the day of the enactment of By-law 569-2013 (May 9, 2013), you may use the lot area that existed on that day as the minimum.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "front_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "front_setback_m = 5.7 m @(324)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "main wall of the building",
+     "parking_space": "required parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Main wall with access to the required parking space set back 5.7 m from a front lot line or a side lot line abutting a street.",
+    "gaps": "disjunctive scope: a front lot line or a side lot line that abuts a street; applies only to the part of main wall with access to the required parking space",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(324)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum side yard setback 1.2 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[SSP](E)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(324)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "attached or detached garage",
+     "private_garage": "attached or detached garage"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Attached or detached garage set back 0.3 m from a side lot line that does not abut a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[SSP](F)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 4.5 m @(324)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum setback 4.5 m from a side lot line abutting a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[SSP](G)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "numeric_expression": [
+    "lot_coverage_pct = 40 pct @(324)[SSP](G)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "maximum lot coverage"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Maximum lot coverage 40 percent.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(324)#(324)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 324",
+     "any": "Prevailing By-laws and Prevailing Sections"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply; no effect on evaluation.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(472)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "minimum lot frontage"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot frontage is the lawfully existing frontage on the enactment date (May 9, 2013).",
+    "gaps": "none",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot existed on the day of the enactment of By-law 569-2013 (May 9, 2013), you may use the lot frontage that existed on that day as the minimum.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(472)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "minimum lot area"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot area is the lawfully existing area on the enactment date (May 9, 2013).",
+    "gaps": "none",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot existed on the day of the enactment of By-law 569-2013 (May 9, 2013), you may use the lot area that existed on that day as the minimum.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 15.0 m @(472)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "corner_lot"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "corner_lot"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "minimum lot frontage",
+     "corner_lot": "On a corner lot"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum lot frontage 15.0 m on a corner lot.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(472)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum side yard setback 1.2 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[SSP](E)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 4.5 m @(472)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum setback 4.5 m from a side lot line abutting a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[SSP](F)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(472)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "attached or detached garage",
+     "private_garage": "attached or detached garage"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Attached or detached garage set back 0.3 m from a side lot line that does not abut a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[SSP](G)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "These lands must comply"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Incorporates exception 900.3.10(1462).",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(472)#(472)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 472",
+     "any": "Prevailing By-laws and Prevailing Sections"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply; no effect on evaluation.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "900.3.10(266)": {
+   "explanation": "Site-specific setbacks for these RD lands: side yards 1.2 m, flanking street side 5.7 m, and a front setback measured from the Brimley Rd. centreline.",
+   "code_refs": "none"
+  },
+  "900.3.10(370)": {
+   "explanation": "Site-specific side yard setbacks for these RD lands: 0.9 m, and 3.6 m on a side lot line abutting a street.",
+   "code_refs": "none"
+  },
+  "900.3.10(324)": {
+   "explanation": "Site-specific rules for these RD lands: existing lot frontage and area, parking wall setback 5.7 m, side setbacks 1.2 m and 4.5 m (street side), garage 0.3 m, and 40% lot coverage.",
+   "code_refs": "none"
+  },
+  "900.3.10(472)": {
+   "explanation": "Site-specific rules for these RD lands: existing lot frontage and area, 15.0 m frontage on a corner lot, side setbacks 1.2 m and 4.5 m (street side), garage 0.3 m, and compliance with exception 900.3.10(1462).",
+   "code_refs": "none"
+  }
+ }
+}

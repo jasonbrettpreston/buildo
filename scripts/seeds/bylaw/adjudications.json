@@ -91172,6 +91172,295 @@
       "rule": "Operator EVE.R6-5 (2026-10-22-page-eve#EVE.R6-5) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1427 (A) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
       "unit": "900.3.10(1427)#(1427)[SSP](A)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1247)#(1247)[PBS](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street and schedule numbers of a named address are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 12); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(1247)#(1247)[PBS](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1247)#(1247)[PBS](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street and schedule numbers of a named address are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 12); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(1247)#(1247)[PBS](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(339)#(339)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street and schedule numbers of a named address are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 12); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(339)#(339)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 12); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": [
+        {
+          "clause": "(1031)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 12); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": [
+        {
+          "clause": "(553)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(936)#(936)[SSP](I)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c4d12c13: answer B — HELD on R12-1 (recommendation, not operator-ruled; shard agreement >= 85%): a clause conditioned on a detached house existing on the enactment date is a building-history clause: UNUSUAL on the existing-building route (keying rule 31, Spec 133 §m.317)",
+      "unit": "900.3.10(936)#(936)[SSP](I)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(936)#(936)[SSP](I)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-bd4ad63e: answer B — HELD on R12-1 (recommendation, not operator-ruled; shard agreement >= 85%): a clause conditioned on a detached house existing on the enactment date is a building-history clause: UNUSUAL on the existing-building route (keying rule 31, Spec 133 §m.317)",
+      "unit": "900.3.10(936)#(936)[SSP](I)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(936)#(936)[SSP](I)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c47eb306: answer B — HELD on R12-1 (recommendation, not operator-ruled; shard agreement >= 85%): a clause conditioned on a detached house existing on the enactment date is a building-history clause: UNUSUAL on the existing-building route (keying rule 31, Spec 133 §m.317)",
+      "unit": "900.3.10(936)#(936)[SSP](I)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(936)#(936)[SSP](I)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f16f5319: answer B — HELD on R12-1 (recommendation, not operator-ruled; shard agreement >= 85%): a clause conditioned on a detached house existing on the enactment date is a building-history clause: UNUSUAL on the existing-building route (keying rule 31, Spec 133 §m.317)",
+      "unit": "900.3.10(936)#(936)[SSP](I)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1031)#(1031)[SSP](C)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-eebe1b37: answer A — HELD on R12-2 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL: \"line that abuts a street\" is not a street_setback_m licence pattern (Spec 133 §m.132)",
+      "unit": "900.3.10(1031)#(1031)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1031)#(1031)[SSP](C)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-006a7093: answer A — HELD on R12-2 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL: \"line that abuts a street\" is not a street_setback_m licence pattern (Spec 133 §m.132)",
+      "unit": "900.3.10(1031)#(1031)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1031)#(1031)[SSP](C)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-97f93ff2: answer A — HELD on R12-2 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL: \"line that abuts a street\" is not a street_setback_m licence pattern (Spec 133 §m.132)",
+      "unit": "900.3.10(1031)#(1031)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1031)#(1031)[SSP](C)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-55a4bf3f: answer A — HELD on R12-2 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL: \"line that abuts a street\" is not a street_setback_m licence pattern (Spec 133 §m.132)",
+      "unit": "900.3.10(1031)#(1031)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1031)#(1031)[SSP](G)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3c2429e1: answer A — HELD on R12-3 (recommendation, not operator-ruled; shard agreement >= 85%): a lot line abutting a street is street_setback_m, not the front yard (EVE.M324-G, the named yard decides the target)",
+      "unit": "900.3.10(1031)#(1031)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1031)#(1031)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-074972d7: answer A — HELD on R12-3 (recommendation, not operator-ruled; shard agreement >= 85%): a lot line abutting a street is street_setback_m, not the front yard (EVE.M324-G, the named yard decides the target)",
+      "unit": "900.3.10(1031)#(1031)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(331)#(331)[SSP](A)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8c662e01: answer B — HELD on R12-4 (recommendation, not operator-ruled; shard agreement >= 85%): \"X for a semi-detached house and Y for each dwelling unit\" is per-subject arms, by_type with the per-unit arm times dwelling_units (keying rule 30 and brief rule P7, Spec 133 §m.105 note)",
+      "unit": "900.5.10(331)#(331)[SSP](A)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(331)#(331)[SSP](B)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e45a21db: answer B — HELD on R12-4 (recommendation, not operator-ruled; shard agreement >= 85%): \"X for a semi-detached house and Y for each dwelling unit\" is per-subject arms, by_type with the per-unit arm times dwelling_units (keying rule 30 and brief rule P7, Spec 133 §m.105 note)",
+      "unit": "900.5.10(331)#(331)[SSP](B)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(331)#(331)[SSP](E)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-150f3116: answer A — HELD on R12-5 (recommendation, not operator-ruled; shard agreement >= 85%): 1.2 m on one side and 0.6 m on the other keeps the LIMIT on the smaller per-side bound (keying rule 30, as 297 (B)(i)); B min() is the forbidden combined form",
+      "unit": "900.5.10(331)#(331)[SSP](E)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(936)#(936)[SSP](I)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "UNUSUAL carries the limit as limit_not_modelled.",
+      "rule": "HELD on R12-1; Spec 133 §m.82 (M-75 correction form) under the lane label: shape and literal bookkeeping for the held UNUSUAL adjudication (limit_not_modelled, not limit_arm_not_modelled, on an UNUSUAL unit; Spec 133 §m.102)",
+      "unit": "900.3.10(936)#(936)[SSP](I)",
+      "value": [
+        {
+          "clause": "(936)[SSP](I)",
+          "literal": "35",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(936)[SSP](I)",
+          "literal": "4.68 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(331)#(331)[SSP](E)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one side\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 12)",
+      "unit": "900.5.10(331)#(331)[SSP](E)(ii)",
+      "value": [
+        {
+          "clause": "(331)[SSP](E)(ii)",
+          "literal": "1.2 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(331)[SSP](E)(ii)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(936)#(936)[SSP](I)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "second pass: all three numbers of the clause are accounted (35 name, 4.68 and 1.35 limits not modelled)",
+      "rule": "HELD on R12-1; Spec 133 §m.82 (M-75 correction form) under the lane label: shape and literal bookkeeping for the held UNUSUAL adjudication (limit_not_modelled, not limit_arm_not_modelled, on an UNUSUAL unit; Spec 133 §m.102)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](I)/literals_not_expressed",
+      "unit": "900.3.10(936)#(936)[SSP](I)",
+      "value": [
+        {
+          "clause": "(936)[SSP](I)",
+          "literal": "35",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(936)[SSP](I)",
+          "literal": "4.68 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(936)[SSP](I)",
+          "literal": "1.35 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r12-held",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(936)#(936)[SSP](I)/calculation_handling",
+      "kind": "correction",
+      "reason": "UNUSUAL carries status not_modelled (keying rule 31, Spec 133 §m.317)",
+      "rule": "HELD on R12-1; Spec 133 §m.82 (M-75 correction form) under the lane label: shape and literal bookkeeping for the held UNUSUAL adjudication (limit_not_modelled, not limit_arm_not_modelled, on an UNUSUAL unit; Spec 133 §m.102)",
+      "unit": "900.3.10(936)#(936)[SSP](I)",
+      "value": {
+        "description": "On 35 Tamora Ct., if a detached house existed on the enactment date, the front setback is 4.68 m and the westerly lot line setback 1.35 m; the clause is a building-history clause on the existing-building route, so neither limit is evaluated.",
+        "gaps": "Needs whether a detached house existed on the enactment date; the westerly lot line has no target.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ]
+      }
     }
   ]
 }

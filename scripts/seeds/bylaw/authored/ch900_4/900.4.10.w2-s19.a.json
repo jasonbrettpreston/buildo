@@ -1,0 +1,944 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_4/900.4.10.w2-s19",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](A)(i)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "22 metres",
+     "clause": "(190)[SSP](A)(i)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "disclosure": "On lots whose front lot line abuts Birchmount Rd., St. Clair Ave., Danforth Rd. or Kennedy Rd., the minimum building setback is 22 metres measured from the original centreline of the street. This is not evaluated here.",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "abuts_named_street": "that abuts Birchmount Rd.",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "The setback is measured from the original centreline of the named street; no centreline setback target exists for a street.",
+    "gaps": "setback measured from a street centreline, not a lot line"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](A)(ii)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 1.5 m @(190)[SSP](A)(ii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum 1.5 m setback from a side lot line that abuts a street.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](B)(i)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 7.5 m @(190)[SSP](B)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_house": "has a detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum lot frontage 7.5 m for a detached house.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](B)(ii)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = 260 m2 @(190)[SSP](B)(ii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_house": "has a detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum lot area 260 m2 for a detached house.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](B)(iii)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.45 m @(190)[SSP](B)(iii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_house": "has a detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum side setback 0.45 m for a detached house.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](C)(i)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 15.0 m @(190)[SSP](C)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "semi_detached_house": "has a semi-detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum lot frontage 15.0 m for a semi-detached house.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](C)(ii)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = 483 m2 @(190)[SSP](C)(ii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "semi_detached_house": "has a semi-detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum lot area 483 m2 for a semi-detached house.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](C)(iii)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.9 m @(190)[SSP](C)(iii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "semi_detached_house": "has a semi-detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum side setback 0.9 m for a semi-detached house.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](D)(i)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 7.5 m @(190)[SSP](D)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "semi_detached_house": "has a semi-detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum lot frontage 7.5 m for each part of a semi-detached house with a dwelling unit.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[SSP](D)(ii)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = 240 m2 @(190)[SSP](D)(ii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "semi_detached_house": "has a semi-detached house",
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum lot area 240 m2 for each part of a semi-detached house with a dwelling unit.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(190)#(190)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 190"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "No prevailing by-laws or sections apply.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "buildings_on_lot",
+   "bound": "max",
+   "numeric_expression": [
+    "buildings_on_lot = 1 units @(175)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "semi_detached_house": "one semi-detached house",
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "At most one semi-detached house on a lot shown on the registered plan.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(175)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "If the lot existed on the day of the enactment of this By-law (May 9, 2013), you may use the lot frontage that existed on that day as the minimum lot frontage, provided the lot frontage was lawfully existing. A new build is answered as if this does not apply.",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "lawfully_existing": "which existed",
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Minimum lot frontage is the frontage that existed on the day of enactment.",
+    "gaps": "depends on the lot as it existed on the enactment date of By-law 569-2013"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(175)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "If the lot existed on the day of the enactment of this By-law (May 9, 2013), you may use the lot area that existed on that day as the minimum lot area, provided the lot area was lawfully existing. A new build is answered as if this does not apply.",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "lawfully_existing": "which existed",
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Minimum lot area is the area that existed on the day of enactment.",
+    "gaps": "depends on the lot as it existed on the enactment date of By-law 569-2013"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(175)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum side setback 1.2 m.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](E)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 4.5 m @(175)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum setback 4.5 m from a side lot line that abuts a street.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](F)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "numeric_expression": [
+    "lot_coverage_pct = 40 pct @(175)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Maximum lot coverage 40 percent.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](G)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(175)[SSP](G)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "private_garage": "attached garage",
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Attached garage set back at least 0.3 m from a side lot line that does not abut a street.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](H)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "parking_in_building",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "parking_space": "required parking space",
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "The required parking space must be located in the residential building.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[SSP](I)",
+   "archetype": "LIMIT",
+   "target": "garage_entrance_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "garage_entrance_setback_m = 6.0 m @(175)[SSP](I)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "garage_entrance_faces_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "garage_entrance_faces_street"
+    ],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "garage_entrance_faces_street": "also faces the street",
+     "private_garage": "entrance to a garage",
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Where a garage vehicle entrance faces the street, it is set back at least 6.0 m from a lot line that abuts a street.",
+    "gaps": "none"
+   }
+  },
+  {
+   "unit_id": "900.4.10(175)#(175)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 175"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "No prevailing by-laws or sections apply.",
+    "gaps": "none"
+   }
+  }
+ ],
+ "rows": {
+  "900.4.10(190)": {
+   "explanation": "Exception RS 190 sets site-specific minimum lot frontage, lot area and side setbacks for detached and semi-detached houses, a 1.5 m side setback from a street, and a 22 m setback (from the street centreline) on named streets.",
+   "code_refs": "none"
+  },
+  "900.4.10(175)": {
+   "explanation": "Exception RS 175 allows one semi-detached house per lot, keeps the lot frontage and area that existed on the enactment date, sets side setbacks of 1.2 m and 4.5 m (street side), a 40 percent lot coverage cap, and garage and parking location rules.",
+   "code_refs": "none"
+  }
+ }
+}

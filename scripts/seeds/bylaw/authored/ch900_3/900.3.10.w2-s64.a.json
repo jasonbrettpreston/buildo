@@ -1,0 +1,787 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s64",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(339)#(339)[SSP](A)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "22 metres",
+     "clause": "(339)[SSP](A)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "not_an_override": [],
+   "disclosure": "The minimum building setback from the front lot line along Midland Ave. is 22 metres, measured from the original centreline of the street; this is not evaluated.",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 339",
+     "abuts_named_street": "abuts Midland Ave."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "A front setback measured from the original centreline of the street has no target.",
+    "gaps": "setback measured from a street centreline",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(339)#(339)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(339)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 339"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum side lot line setback of 1.2 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(339)#(339)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 5.7 m @(339)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 339"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum setback of 5.7 m from a side lot line that abuts a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(339)#(339)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(339)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 339",
+     "private_garage": "garage must be set back"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Garage minimum setback of 0.3 m from a side lot line not abutting a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(339)#(339)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "Schedule \"C\" Exception 12, of former City of Scarborough by-law 9276",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "766 and 768 Midland Ave."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "766",
+     "clause": "(339)[PBS](A)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "768",
+     "clause": "(339)[PBS](A)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "12",
+     "clause": "(339)[PBS](A)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "not_an_override": [],
+   "disclosure": "On the lands at 766 and 768 Midland Ave., Schedule \"C\" Exception 12 of former City of Scarborough by-law 9276 applies; this is not evaluated.",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 339"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law; not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(379)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 379"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot frontage is the lot frontage that existed on the day of enactment of By-law 569-2013; needs the as-built value.",
+    "gaps": "none",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(379)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 379"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum lot area is the lot area that existed on the day of enactment of By-law 569-2013; needs the as-built value.",
+    "gaps": "none",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "front_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "front_setback_m = 7.5 m @(379)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 379"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum front lot line setback of 7.5 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[SSP](D)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "22.0 metres",
+     "clause": "(379)[SSP](D)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "not_an_override": [],
+   "disclosure": "The minimum building setback from the front lot line along the named roads is 22.0 metres, measured from the original centreline of the street; this is not evaluated.",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 379",
+     "abuts_named_street": "abuts Bellamy Rd., Brimley Rd., McCowan Rd., Midland Ave. or Danforth Rd."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "A front setback measured from the original centreline of the street has no target.",
+    "gaps": "setback measured from a street centreline",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[SSP](E)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(379)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 379"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum side lot line setback of 1.2 m.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[SSP](F)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 5.7 m @(379)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 379"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum setback of 5.7 m from a side lot line that abuts a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[SSP](G)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(379)[SSP](G)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 379",
+     "private_garage": "garage must be set back"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Garage minimum setback of 0.3 m from a side lot line not abutting a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(379)#(379)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "none",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 379"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(1247)#(1247)[SSP](A)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "In a front yard or rear yard, a platform whose floor is higher than the first floor of the building above established grade may not encroach into the required yard setback.",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1247",
+     "deck_or_platform": "a platform with"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "A platform floor higher than the first floor may not encroach into the required front or rear yard setback.",
+    "gaps": "platform floor height relative to the first floor",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(1247)#(1247)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(2) 66 of former City of Toronto By-law 438-86",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "disclosure": "Section 12(2) 66 of former City of Toronto By-law 438-86 is a prevailing section; it is not evaluated.",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1247"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law or section; not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(1247)#(1247)[PBS](B)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto By-law 220-92 as amended",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "50 Poplar Plains Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "50",
+     "clause": "(1247)[PBS](B)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "not_an_override": [],
+   "disclosure": "On 50 Poplar Plains Rd., former City of Toronto By-law 220-92 as amended applies; this is not evaluated.",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1247"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law or section; not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "unit_id": "900.3.10(1247)#(1247)[PBS](C)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "City of Toronto by-law 1184-2010(OMB)",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "70-200 Russell Hill Road"
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "70-200",
+     "clause": "(1247)[PBS](C)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "not_an_override": [],
+   "disclosure": "On 70-200 Russell Hill Road, City of Toronto by-law 1184-2010(OMB) applies; this is not evaluated.",
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1247"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law or section; not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  }
+ ],
+ "rows": {
+  "900.3.10(339)": {
+   "explanation": "Exception RD 339 sets side setbacks of 1.2 m and 5.7 m from a side street, a 0.3 m garage setback, a centreline-based front setback on Midland Ave., and a prevailing Scarborough by-law at 766 and 768 Midland Ave.",
+   "code_refs": "none"
+  },
+  "900.3.10(379)": {
+   "explanation": "Exception RD 379 keeps the lot frontage and lot area that existed when By-law 569-2013 was enacted and sets a 7.5 m front setback, 1.2 m and 5.7 m side setbacks, a 0.3 m garage side setback, and a centreline-based front setback on named roads.",
+   "code_refs": "none"
+  },
+  "900.3.10(1247)": {
+   "explanation": "Exception RD 1247 bars a platform floored above the first floor from encroaching into the required front or rear yard setback and lists prevailing former City of Toronto provisions.",
+   "code_refs": "none"
+  }
+ }
+}
