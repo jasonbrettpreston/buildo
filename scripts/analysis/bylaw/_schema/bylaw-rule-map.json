@@ -1300,6 +1300,70 @@
       "section": "fam-general"
     },
     {
+      "id": "m.318",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.319",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.320",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.321",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.322",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.323",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.324",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.325",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.326",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.327",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.328",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.329",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.330",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.331",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.332",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.333",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -4605,6 +4669,182 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-317**"
+      }
+    },
+    {
+      "id": "M-318",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.318",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-318**"
+      }
+    },
+    {
+      "id": "M-319",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.319",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-319**"
+      }
+    },
+    {
+      "id": "M-320",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.320",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-320**"
+      }
+    },
+    {
+      "id": "M-321",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.321",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-321**"
+      }
+    },
+    {
+      "id": "M-322",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.322",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-322**"
+      }
+    },
+    {
+      "id": "M-323",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.323",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-323**"
+      }
+    },
+    {
+      "id": "M-324",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.324",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-324**"
+      }
+    },
+    {
+      "id": "M-325",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.325",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-325**"
+      }
+    },
+    {
+      "id": "M-326",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.326",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-326**"
+      }
+    },
+    {
+      "id": "M-327",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.327",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-327**"
+      }
+    },
+    {
+      "id": "M-328",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.328",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-328**"
+      }
+    },
+    {
+      "id": "M-329",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.329",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-329**"
+      }
+    },
+    {
+      "id": "M-330",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.330",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-330**"
+      }
+    },
+    {
+      "id": "M-331",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.331",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-331**"
+      }
+    },
+    {
+      "id": "M-332",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.332",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-332**"
+      }
+    },
+    {
+      "id": "M-333",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.333",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-333**"
       }
     },
     {

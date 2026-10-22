@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-z4/2026-10-22-batch-z4.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-z4",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "the lense for all these remaining steps is standardized, observable, scalable, accurate and understandable simple without scope creep.  When it comes the step Airght V3 and Bylaws you need to show me the ruling or create a new one - eveything using the handbook process.  Please validate this.",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-z4/2026-10-22-batch-z4.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-68.lens",
+      "question": "Five words + no scope creep is the lens for all remaining work",
+      "recommendation": "Record as one register row applying R-BA, adding 'no scope growth: a change adds no tool, field or rule its card or ruling did not name'; Spec 68 applies it to by-laws via an M-row so Spec 133 shows it.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-68.handbook",
+      "question": "Every V3-step and by-law decision shows its ruling via the handbook or creates a new one",
+      "recommendation": "Each decision cites `Spec 132 §<line id> (R-xx)` or `Spec 133 §<line id> (M-xx / LC-xx)` (resolved by spec-split-check arm iii-b); a decision no line covers is drafted as a new register row, approved by the operator, imported via decision-log, and appears in the regenerated handbook.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "y to your recommendation I recommend yes on IN-1 to IN-4 and \"report only\" on IN-5.",
+  "context": "Evening Rulings cards IN-1..IN-5 (CoA notice intake, CHAT-71.2; lane COA-INTAKE wf1/coa-intake, held work ~/Buildo-scratch/coaintake/landing/).",
+  "decisions": [
+    {"id": "CHAT-74.IN1", "subject": "RE-FREEZE #39 (externals[].values_manifest) and the fleet recapture night it forces", "decision": "approve", "recommendation": "Land the values-batch library field with one fleet recapture night (plus migration 284 and the first ingest); one library path per source form (Spec 132 §ingestor.3)."},
+    {"id": "CHAT-74.IN2", "subject": "coa_notice_variances gains doc_type and source_batch", "decision": "approve", "recommendation": "Every row carries doc_type and source_batch."},
+    {"id": "CHAT-74.IN3", "subject": "Closed-value widening in migration 284", "decision": "approve", "recommendation": "decision + pending; decision_source + unknown; source_family + aic_values_batch; source_page NULL for batch rows under a family-coherence CHECK."},
+    {"id": "CHAT-74.IN4", "subject": "Plan facts ingested into a new values-only table coa_plan_facts (scope expansion by ruling, CHAT-68.scope)", "decision": "approve", "recommendation": "Plan facts from the C-6 intake routine are ingested as values into a table keyed by application number, through the pinned values-batch form of Spec 129 §2b; no drawings, no names; second write target on load_coa_notices with its own RE-FREEZE review."},
+    {"id": "CHAT-74.IN5", "subject": "Batch pair-rate: report only", "decision": "approve", "recommendation": "Report only until two more batches exist."}
+  ]
+}

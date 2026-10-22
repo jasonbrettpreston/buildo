@@ -1,0 +1,73 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "y C-1...C-10 - on the ocndition that it meets the overall goal standardized approach, observable, accurate, scalable and understandable ie simple and doesnt expand scope as best as possible. All rules needs to meet that standard hence the McBylaw policy.",
+  "context": "Evidence rulings page https://claude.ai/artifact/4WhtHTaSEKHr8nv6oUP5pT (source ~/Buildo-scratch/evidence-rulings/data.json), cards C-1..C-10, approved as recommended under the stated condition: every rule recorded from them must be standardized, observable, accurate, scalable and understandable (simple), and must not expand scope; this is the McBylaw policy standard for all rules.",
+  "decisions": [
+    {
+      "id": "CHAT-63.condition",
+      "subject": "Condition on C-1..C-10 and on all rules",
+      "decision": "approve",
+      "recommendation": "Each recorded row passes the five words and adds no scope beyond its card; any part that fails is trimmed or returned to the operator rather than recorded."
+    },
+    {
+      "id": "CHAT-63.C1",
+      "subject": "One answer key (oracle C) from every CoA source",
+      "decision": "approve",
+      "recommendation": "Approve. Make one values-only answer key: one row per variance item (file number, clause, required and proposed figure with unit, decision, hearing or decision date, document type, source batch, lot reference). Load the 2017 rows from the database export and the new notices from the parser files into it, and add every later batch the same way. One runner reads the key and offers two named comparisons: the table comparison (keeps oracle-c.mjs unchanged and independent, so bylaw-oracle-c.logic.test.ts still holds) and the calculation comparison (the scorer). What is shared is the key and the runner shell, not the comparison code. The 2017 rows have no plan facts, so they feed the table comparison only."
+    },
+    {
+      "id": "CHAT-63.C2",
+      "subject": "Commit the values-only oracle C fixtures to the repo",
+      "decision": "approve",
+      "recommendation": "Approve. Commit a fixtures folder that holds only what the comparison needs: clause, City required figure and unit, proposed figure, decision, decision date, document type, source batch and a lot reference (file number). No purpose text, since it can carry removed-name markers. A test then checks the fixtures against the lock on every machine. Raw downloads and drawings stay out, as M-305 says."
+    },
+    {
+      "id": "CHAT-63.C3",
+      "subject": "Score each City figure against the by-law in force on its decision date",
+      "decision": "approve",
+      "recommendation": "Approve. Add a new scorer class 'BY-LAW CHANGED', counted in neither percentage and listed beside DATA. A row takes it when the cited provision carries an amendment tag whose verified date is after the decision date. A row whose tag has no verified date takes 'amendment status unverified' (the existing oracle C reason), so nothing is guessed. Filling in the missing dates should be the first intake task for the 2017 set. Recent decisions (2026) are mostly after the last amendments, so this chiefly protects the 2017 allotment."
+    },
+    {
+      "id": "CHAT-63.C4",
+      "subject": "Pre-registered validation rounds",
+      "decision": "approve",
+      "recommendation": "Approve. Each CoA fix round commits, before the fixes, a short file listing the rows it expects to move (clause, from class, to class) and the totals it expects. After the round, the runner records expected against actual; an unexpected move is a finding, not a pass. Round 0 runs first, on the unified key from C-1, to set the baseline the floors in C-5 start from."
+    },
+    {
+      "id": "CHAT-63.C5",
+      "subject": "Accuracy floors that only go up",
+      "decision": "approve",
+      "recommendation": "Approve. Set the overall floors at 92 percent accuracy and 71 percent answered (today's figures rounded down). Set a floor per article for every article with at least 10 scored rows, at its measured accuracy rounded down; pool the smaller ones. A floor rises when a round beats it by a ruling that cites its row, and never falls without an --accept --ruling entry, the same door as the Phase 1 pins. The table on this card shows the proposed floors. Families are grouped by article here (10.20.40, 10.10.40 and so on); once the per-provision family map is built (§5a row 2, OWED) the floors move to it."
+    },
+    {
+      "id": "CHAT-63.C6",
+      "subject": "Ongoing intake of CoA files",
+      "decision": "approve",
+      "recommendation": "Approve. The routine: you drop files in Drive COA_PLANS_MAXBLD; a lane extracts values only (never past the captcha, no drawings kept); the values join the answer key (C-1); the scorer reruns; a findings page lists every row that moved. After each batch the values-only corpus is copied to Drive as a backup. The bulk request to the City stays recorded, not started."
+    },
+    {
+      "id": "CHAT-63.C7",
+      "subject": "Family-first adjudication",
+      "decision": "approve",
+      "recommendation": "Approve. Every CoA finding page opens with one card per provision family (all zone copies named), and a single-clause card appears only for what a family ruling leaves open. The family map in §5a row 2 is still OWED; until it exists the findings lane groups by article and the 10.x0.40 mirror (10.10, 10.20, 10.40, 10.60, 10.80)."
+    },
+    {
+      "id": "CHAT-63.C8",
+      "subject": "Phase 3 uses oracle C",
+      "decision": "approve",
+      "recommendation": "Approve. Two separate sets of floors: rule floors (does our by-law limit equal the City's figure) and calculation floors (does our as-of-right build equal the by-law, and our approved build equal as-of-right plus the variance granted; cases from C-10). P-5 says the CoA-to-parcel link needs its own gate first, so a link gate (the share of notices linked to exactly one parcel) is a prerequisite and reports beside the floors. Each calculated value is checked with its cited_clauses once that field exists, so the check can say which clause was wrong."
+    },
+    {
+      "id": "CHAT-63.C9",
+      "subject": "Role of each document type",
+      "decision": "approve",
+      "recommendation": "Approve the table below. On M-312: the survey is used as a lot fact in oracle C when held (straight fronts only, M-313), and in the calculator only as a correction the user supplies, never as pipeline data. That settles M-312 and follows O-12. Note the id: O-12 is Spec 78 line 706 (also LC-34 in Spec 131), not a Spec 69 row."
+    },
+    {
+      "id": "CHAT-63.C10",
+      "subject": "Operator-keyed Phase 3 golden cases, on one generated form",
+      "decision": "approve",
+      "recommendation": "Approve the form and the shortlist below. The form has six sections: case, lot facts (checks our lot data and the M-308 survey preference), existing building (optional), proposed build from the plan statistics table (checks Layer 3 calculations once they exist), one row per limit sought (checks that our as-of-right value equals the by-law limit the plan says it exceeds, and that approved equals as-of-right plus the granted variance), and keyer confidence. Rules: every number has a unit and an 'as printed' text box; blank means not shown, never zero; values only. Key the shortlist in the order shown. Gaps in the corpus: no houseplex 4 case at all, 2 new semi cases, 1 RT case (an outbuilding), 4 RS cases; those cells need new notices from the next intake."
+    }
+  ]
+}

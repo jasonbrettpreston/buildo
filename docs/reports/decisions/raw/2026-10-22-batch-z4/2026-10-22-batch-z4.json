@@ -1,0 +1,9 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "the lense for all these remaining steps is standardized, observable, scalable, accurate and understandable simple without scope creep.  When it comes the step Airght V3 and Bylaws you need to show me the ruling or create a new one - eveything using the handbook process.  Please validate this.",
+  "context": "Standing rule for all remaining work (CoA pipeline V3, McBylaw P2/P3). Existing coverage: Spec 124 R-BA (McDonald's Airtight: five words, every rule a mechanical gate; gate V = five words) listed at Spec 132 §x-v3.1; Spec 68:29 applies R-BA to by-laws. Not yet in any register: 'no scope creep', and 'every step/by-law decision cites its handbook line (Spec 132 §<line> (R-xx) / Spec 133 §<line> (M-xx|LC-xx)) or adds a new register row through decision-log and the generated handbook'.",
+  "decisions": [
+    {"id": "CHAT-68.lens", "subject": "Five words + no scope creep is the lens for all remaining work", "decision": "approve", "recommendation": "Record as one register row applying R-BA, adding 'no scope growth: a change adds no tool, field or rule its card or ruling did not name'; Spec 68 applies it to by-laws via an M-row so Spec 133 shows it."},
+    {"id": "CHAT-68.handbook", "subject": "Every V3-step and by-law decision shows its ruling via the handbook or creates a new one", "decision": "approve", "recommendation": "Each decision cites `Spec 132 §<line id> (R-xx)` or `Spec 133 §<line id> (M-xx / LC-xx)` (resolved by spec-split-check arm iii-b); a decision no line covers is drafted as a new register row, approved by the operator, imported via decision-log, and appears in the regenerated handbook."}
+  ]
+}

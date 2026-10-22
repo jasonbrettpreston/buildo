@@ -1,0 +1,41 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-z10/2026-10-22-batch-z10.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-z10",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "That was like a nano second and eveything comes to a halt.  Swap3 and Swap 4 - we need to keep working on it",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-z10/2026-10-22-batch-z10.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-73.swap3",
+      "question": "Lineage snapshot corrected by reviewed edit citing R-JM",
+      "recommendation": "Option B: remove last_seen_at from link_coa.writes.coa_applications in the lineage snapshot by a reviewed edit citing R-JM and scripts/link-coa.js:915-920; the next refresh converges.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-73.swap4",
+      "question": "#44 (b) does not require a set_based_scoped key column in SET",
+      "recommendation": "Exempt writeSpec.key columns in witness.mjs arm (b) for set_based_scoped rows-compute targets; red fixture test; no lib/step change.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-73.nohalt",
+      "question": "Work never halts on pending rulings",
+      "recommendation": "While rulings are pending, lanes keep building on the recommended reading (held uncommitted, marked by question id) and run every task that needs no ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

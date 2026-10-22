@@ -1,0 +1,11 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "1-4 y - leaving for 3 hours",
+  "context": "The four open questions as listed in the session summary: (1) item 4 new P5.12 code building_history_permission_undated (verify-38 finding 2); (2) CoA Q1 and (3) CoA Q2 from ~/Buildo-scratch/v3coa/COA-V3-GAP.md section 4; (4) Phase 3 plan Q1–Q9 from ~/Buildo-scratch/p3plan/PLAN.md, each as recommended.",
+  "decisions": [
+    {"id": "CHAT-70.1", "subject": "Approve P5.12 code building_history_permission_undated", "decision": "approve", "recommendation": "Keep the second code for the undated (D) sentence; the dated template keeps 4 phrases (verify-38: simplest faithful form)."},
+    {"id": "CHAT-70.2", "subject": "CoA 'V3 locally' = every R-EY condition except (8)", "decision": "approve", "recommendation": "Locally complete means all R-EY conditions pass except (8) (LDG-10 / EP-PIN-D17 cloud halves, CHAT-54); the V3 label and ③ wait for the cloud halves; proposed row text in COA-V3-GAP.md §4."},
+    {"id": "CHAT-70.3", "subject": "CoA ledger row flips to CLOSED · ② when its ② lock is green", "decision": "approve", "recommendation": "Status becomes `CLOSED · ② (<lock test>)` (ECZ-D2 precedent)."},
+    {"id": "CHAT-70.4", "subject": "Phase 3 plan operator questions Q1–Q9", "decision": "approve", "recommendation": "As recommended in ~/Buildo-scratch/p3plan/PLAN.md: link gate report-first then rising floor blocking only the Phase 3 switch; calculation floors after round 0 per scenario family (>=10 rows, else pooled); P2/P3 closed definitions per the checklist; G-CODE (iv) via the existing pin door; decision-log transfer before P3-11; floors by article until the family map exists; key the 25 available golden cases first; headline+totals storage fallback only if the kill line is exceeded; handbook transfer check for Q-1..Q-11, R-HL, R-HD."}
+  ]
+}

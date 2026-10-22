@@ -1,0 +1,9 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "sometimes it is necessary especially when we ar ebuilding phase 3 to expand scope but you need a ruling to do so - with this condition - y chat 68",
+  "context": "Approval of CHAT-68 (~/Buildo-scratch/chat-decisions/2026-10-22-batch-z4.json) with an amendment to the no-scope-growth clause: scope may grow (notably while building McBylaw Phase 3) only through a ruling — the expansion is proposed as a new register row with its five-words check, approved by the operator, imported via decision-log and shown in the regenerated handbook before the work starts.",
+  "decisions": [
+    {"id": "CHAT-68.approve", "subject": "Record the lens + handbook rule (CHAT-68.lens, CHAT-68.handbook) as register rows", "decision": "approve", "recommendation": "One Spec 124a R-row applying R-BA (five words; every decision cites its Spec 132/133 handbook line or adds a new row via decision-log) and one Spec 69a M-row applying it to by-laws so Spec 133 shows it."},
+    {"id": "CHAT-68.scope", "subject": "Scope may expand only by a ruling", "decision": "approve", "recommendation": "No change adds a tool, field or rule its card or ruling did not name, UNLESS a ruling authorises the expansion: the lane drafts the expansion as a new register row (what, why, five-words check, evidence), the operator approves it, it is imported via decision-log and appears in the regenerated handbook, and only then is it built. Expected most in Phase 3."}
+  ]
+}

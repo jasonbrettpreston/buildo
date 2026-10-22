@@ -1,0 +1,9 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "y Two questions for you:\n  - Q1: approve form C (new 124a row).\n  - Q2: confirm b–d still land as one commit (R-IX), which is what the plan already says.",
+  "context": "Layer 2 resolve_bylaws (Spec 134) link-row form, lane L2-SLICES report ~/Buildo-scratch/l2slices/REPORT.md lines 21-26 (measured read-only on the local DB: form C 0.38 GB vs ~1.1 GB room under the whole-layer line Spec 133 §m.112 (k3_a) / §m.233).",
+  "decisions": [
+    {"id": "CHAT-69.Q1", "subject": "Layer 2 lot link row = form C (profile rows), new Spec 124a row amending Spec 134 §3/§11", "decision": "approve", "recommendation": "The lot link row points at its per-target results through ONE profile key: profile_id = sha256 of the sorted (structure, target, result cell_id) lines of the lot; bylaw_resolution_profiles(profile_id, pointers bytea 53x32 in scope order) holds each distinct pointer set once. Link tables together are bounded by a logic variable resolve_bylaws_storage_budget_mb (Spec 134 §6) checked at POST; the whole-layer bound stays k3_a."},
+    {"id": "CHAT-69.Q2", "subject": "Slices b–d land as one commit ① (R-IX)", "decision": "approve", "recommendation": "Keep R-IX: (b) census/pending/admin/descriptor/red suite, (c) migration, (d) shell/compute/checks land together as one ① commit; nothing registered earlier."}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "2, what want the pipeline to ingest them now or as soon as possible because they are valuable for things beyond the calculation field and we will be adding more. 1 y 3. y",
+  "context": "Oracle C lane questions (~/Buildo-scratch/oraclec/REPORT.md): (1) rows whose amendment tag has no verified date keep their scored class with amendment_status: unverified (21 rows, all MATCH) rather than leaving the percentages; (2) the new-notice batches (2026 AIC decision/zoning notices and plan facts, values only, ~/Buildo-scratch/coa-data) have no loader parse columns and today feed only the calculation comparison; (3) the 4.6 MB values-only 2017 fixture file is committed (C-2).",
+  "decisions": [
+    {"id": "CHAT-71.1", "subject": "Unverified-amendment rows stay scored", "decision": "approve", "recommendation": "Keep the class; label amendment_status: unverified; floors stand as measured."},
+    {"id": "CHAT-71.2", "subject": "The pipeline ingests the new CoA notice batches as soon as possible", "decision": "approve", "recommendation": "Scope expansion by ruling (CHAT-68.scope): the coa_notices chain (load_coa_notices, Spec 129) ingests the values-only new-notice batches (decision, hearing, zoning notices and plan facts from the C-6 intake routine) into the same tables as the 2017 allotment, so they serve consumers beyond the calculation comparison; every later batch arrives the same way. Never past the AIC captcha; values only."},
+    {"id": "CHAT-71.3", "subject": "4.6 MB values-only 2017 fixture committed", "decision": "approve", "recommendation": "Accept the fixture size under C-2."}
+  ]
+}

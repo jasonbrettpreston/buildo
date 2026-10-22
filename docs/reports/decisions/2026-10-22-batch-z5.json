@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-z5/2026-10-22-batch-z5.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-z5",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "sometimes it is necessary especially when we ar ebuilding phase 3 to expand scope but you need a ruling to do so - with this condition - y chat 68",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-z5/2026-10-22-batch-z5.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-68.approve",
+      "question": "Record the lens + handbook rule (CHAT-68.lens, CHAT-68.handbook) as register rows",
+      "recommendation": "One Spec 124a R-row applying R-BA (five words; every decision cites its Spec 132/133 handbook line or adds a new row via decision-log) and one Spec 69a M-row applying it to by-laws so Spec 133 shows it.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-68.scope",
+      "question": "Scope may expand only by a ruling",
+      "recommendation": "No change adds a tool, field or rule its card or ruling did not name, UNLESS a ruling authorises the expansion: the lane drafts the expansion as a new register row (what, why, five-words check, evidence), the operator approves it, it is imported via decision-log and appears in the regenerated handbook, and only then is it built. Expected most in Phase 3.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}
