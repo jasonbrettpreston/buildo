@@ -1,0 +1,140 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_4/900.4.10.w2-s96",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.4.10(230)#(230)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "buildings_on_lot",
+      "bound": "max",
+      "numeric_expression": ["buildings_on_lot = 1 units @(230)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.4.10(230)#(230)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(230)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.4.10(230)#(230)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(230)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.4.10(230)#(230)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(230)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.4.10(230)#(230)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 5.7 m @(230)[SSP](E)"]
+    },
+    {
+      "unit_id": "900.4.10(230)#(230)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.3 m @(230)[SSP](F)"]
+    },
+    {
+      "unit_id": "900.4.10(230)#(230)[SSP](G)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.4.10(230)#(230)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "buildings_on_lot",
+      "bound": "max",
+      "numeric_expression": ["buildings_on_lot = 1 units @(163)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(163)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(163)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(163)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 4.5 m @(163)[SSP](E)"]
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.3 m @(163)[SSP](F)"]
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[SSP](G)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.4.10(163)#(163)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.4.10(191)#(191)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.4.10(191)#(191)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.4.10(191)#(191)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

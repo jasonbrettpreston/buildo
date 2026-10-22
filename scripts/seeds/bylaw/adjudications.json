@@ -93322,6 +93322,394 @@
       "rule": "CHAT-81.FAM-ALL (2026-10-23-batch-b); Spec 133 §m.130 (a LIMIT whose arm is partly modelled is partially_modelled) and §m.82 (M-75 correction form): shape of the approved family reading",
       "unit": "900.3.10(1120)#(1120)[SSP](G)(iii)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](E)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a83db491: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](E)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-eea6f8f0: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](E)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c8993a57: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-2866cee5: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](F)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-eeed990d: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-0fd27f64: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](F)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-cb8b5cdf: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1209)#(1209)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-fd24de36: answer A — HELD on R15-1 (recommendation, not operator-ruled; shard >= 85%: a storey-to-storey area ratio and an existing-at-enactment area have no licensed gfa pattern/unit form; keep UNUSUAL (Spec 133 §m.102))",
+      "unit": "900.3.10(1209)#(1209)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(200)#(200)[SSP](G)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ffe1d2bf: answer A — HELD on R15-2 (recommendation, not operator-ruled; shard >= 85%: \"only one detached house\" is not a dwelling_units_max wording (keyer B borrowed the target); keep UNUSUAL (Spec 133 §m.132); 142 (A) keyed the same count as buildings_on_lot)",
+      "unit": "900.3.10(200)#(200)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(200)#(200)[SSP](G)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-539b37d1: answer A — HELD on R15-2 (recommendation, not operator-ruled; shard >= 85%: \"only one detached house\" is not a dwelling_units_max wording (keyer B borrowed the target); keep UNUSUAL (Spec 133 §m.132); 142 (A) keyed the same count as buildings_on_lot)",
+      "unit": "900.3.10(200)#(200)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(200)#(200)[SSP](G)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a03376b2: answer A — HELD on R15-2 (recommendation, not operator-ruled; shard >= 85%: \"only one detached house\" is not a dwelling_units_max wording (keyer B borrowed the target); keep UNUSUAL (Spec 133 §m.132); 142 (A) keyed the same count as buildings_on_lot)",
+      "unit": "900.3.10(200)#(200)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(200)#(200)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c6210d4f: answer A — HELD on R15-2 (recommendation, not operator-ruled; shard >= 85%: \"only one detached house\" is not a dwelling_units_max wording (keyer B borrowed the target); keep UNUSUAL (Spec 133 §m.132); 142 (A) keyed the same count as buildings_on_lot)",
+      "unit": "900.3.10(200)#(200)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(808)#(808)[SSP](D)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-fd96fc7b: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(808)#(808)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(808)#(808)[SSP](D)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b4670dbe: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(808)#(808)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(808)#(808)[SSP](D)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f8f28ac8: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(808)#(808)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(808)#(808)[SSP](D)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ca832ceb: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(808)#(808)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1169)#(1169)[SSP](C)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-969c81a3: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1169)#(1169)[SSP](C)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4848a1c8: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1169)#(1169)[SSP](C)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7cd49b41: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1169)#(1169)[SSP](C)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7341867b: answer A — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1169)#(1169)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5e121ce9: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(1169)#(1169)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1169)#(1169)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-931a90a7: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(1169)#(1169)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(305)#(305)[SSP](E)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-6288f96a: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(305)#(305)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(305)#(305)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c2a91ab9: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(305)#(305)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(478)#(478)[SSP](E)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-62be6721: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(478)#(478)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(478)#(478)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7b4fce10: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(478)#(478)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(145)#(145)[SSP](H)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-91c25d57: answer A — HELD on R15-3 (recommendation, not operator-ruled; shard >= 85%: the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130))",
+      "unit": "900.4.10(145)#(145)[SSP](H)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(145)#(145)[SSP](H)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8f025738: answer A — HELD on R15-3 (recommendation, not operator-ruled; shard >= 85%: the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130))",
+      "unit": "900.4.10(145)#(145)[SSP](H)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(145)#(145)[SSP](H)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7b9c6c03: answer A — HELD on R15-3 (recommendation, not operator-ruled; shard >= 85%: the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130))",
+      "unit": "900.4.10(145)#(145)[SSP](H)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(145)#(145)[SSP](H)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-6681271a: answer A — HELD on R15-3 (recommendation, not operator-ruled; shard >= 85%: the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130))",
+      "unit": "900.4.10(145)#(145)[SSP](H)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(154)#(154)[SSP](I)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-cf5b771a: answer other — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type with the per-unit arm times dwelling_units",
+      "unit": "900.5.10(154)#(154)[SSP](I)(i)",
+      "value": [
+        "required_lot_frontage_m = by_type(semi_detached_house: 14.0 m; other: 7.0 m × dwelling_units) @(154)[SSP](I)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(154)#(154)[SSP](I)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3b7e6158: answer A — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type; the extra target lot_area_per_unit_min_m2 is dropped (one target)",
+      "unit": "900.5.10(154)#(154)[SSP](I)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15-held",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(154)#(154)[SSP](I)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-20d9d57a: answer other — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type; the extra target lot_area_per_unit_min_m2 is dropped (one target)",
+      "unit": "900.5.10(154)#(154)[SSP](I)(ii)",
+      "value": [
+        "required_lot_area_m2 = by_type(semi_detached_house: 310 m2; other: 155 m2 × dwelling_units) @(154)[SSP](I)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r15",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(200)#(200)[SSP](G)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The year, the street numbers and the count word of the named-address clause are accounted.",
+      "rule": "HELD on R15-2; Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 15)",
+      "unit": "900.3.10(200)#(200)[SSP](G)",
+      "value": [
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "only one detached house",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "2010",
+          "reason": "illustrative_or_historic"
+        },
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "5",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "23",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "3",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "10",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(200)[SSP](G)",
+          "literal": "95",
+          "reason": "cross_reference_value"
+        }
+      ]
     }
   ]
 }
