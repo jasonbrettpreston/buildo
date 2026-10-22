@@ -368,7 +368,20 @@
       "scripts/lib/coa-trade-classifier.js"
     ],
     "logic_version": "none",
-    "on_fingerprint_change": "run"
+    "on_fingerprint_change": "run",
+    "pins": [
+      {
+        "step": "classify_coa_scope",
+        "stamp": "coa_applications.scope_classified_at",
+        "why": {
+          "text": "The pending cursor compares trade_classified_at with classify_coa_scope's run_at watermark scope_classified_at (scripts/lib/compute/classify-coa-trades.js PENDING_WHERE, legacy classify-coa-trades.js:271-273, pinned L4): a bare watermark pin, the producer-edge declaration of Spec 124 R-BL (i), which #44 (h) requires for a run_at watermark read once the producer leaves its copy window (R-DI as amended 2026-10-17; R-ES: h:owed becomes h:undeclared at the R-EQ swap, Night A-swap 2026-10-22).",
+          "liveness": {
+            "kind": "column",
+            "ref": "coa_applications.scope_classified_at"
+          }
+        }
+      }
+    ]
   },
   "guards": {
     "requires": [
@@ -604,7 +617,15 @@
           "kind": "file",
           "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
         }
-      }
+      },
+      "reads": [
+        {
+          "table": "trades",
+          "columns": [
+            "kind"
+          ]
+        }
+      ]
     },
     {
       "id": "product_vocab_coverage",

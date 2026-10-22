@@ -8,12 +8,14 @@
  * silent regression mechanism can re-occur in the CoA path — symmetric defense.
  */
 
+// RE-HOMED (R-EQ shell swap, Spec 124 P4-SWAP): the shipped script is now the frozen pipeline.step() shell (Spec 122 §5.1); these legacy pins read the
+// verbatim legacy text kept as the red suite's oracle (src/tests/steps/compute_coa_cost_estimates/fixtures/legacy-*.js.txt). The converted behaviour is pinned by that step's violations.test.ts.
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const coaMuscle = readFileSync(
-  resolve(__dirname, '../../scripts/compute-coa-cost-estimates.js'),
+  resolve(__dirname, './steps/compute_coa_cost_estimates/fixtures/legacy-compute-coa-cost-estimates.js.txt'),
   'utf8',
 );
 

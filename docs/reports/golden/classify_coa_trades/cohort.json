@@ -1,0 +1,20 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "lead_trades",
+      "capture": "coa-forced.json",
+      "why": "POST docs/reports/golden/classify_coa_trades/post/coa-forced.json (Night A-swap 2026-10-22, Spec 124 R-CZ bracket in recapture.json): trade_classified_at set NULL on 50 settled CoAs; the converted step reclassifies them, rewriting this target (unguarded upsert or per-lead replace, counted in records_updated), then the original stamps are restored."
+    },
+    {
+      "table": "lead_products",
+      "capture": "coa-forced.json",
+      "why": "POST docs/reports/golden/classify_coa_trades/post/coa-forced.json (Night A-swap 2026-10-22, Spec 124 R-CZ bracket in recapture.json): trade_classified_at set NULL on 50 settled CoAs; the converted step reclassifies them, rewriting this target (unguarded upsert or per-lead replace, counted in records_updated), then the original stamps are restored."
+    },
+    {
+      "table": "coa_applications",
+      "capture": "coa-forced.json",
+      "why": "POST docs/reports/golden/classify_coa_trades/post/coa-forced.json (Night A-swap 2026-10-22, Spec 124 R-CZ bracket in recapture.json): trade_classified_at set NULL on 50 settled CoAs; the converted step reclassifies them, rewriting this target (unguarded upsert or per-lead replace, counted in records_updated), then the original stamps are restored."
+    }
+  ]
+}

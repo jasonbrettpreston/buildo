@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/compute-coa-cost-estimates.js",
   "chain": "coa",
-  "source_fingerprint": null,
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "2e0515128b43c3d36b3eb07517d8b799e3f23d3fa607f2f1bfadb88e9fa5e9fb",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
   "header": {
     "processes": 1,
-    "calls": 149,
+    "calls": 29,
     "distinct": 16,
-    "utility": 73,
-    "tracer_self_ms": 52.137,
-    "wall_ms": 4735
+    "utility": 13,
+    "tracer_self_ms": 21.937,
+    "wall_ms": 1089
   },
   "statements": [
     {
@@ -48,8 +48,8 @@
     {
       "fingerprint": "464c9cc54e1f3274",
       "kind": "write",
-      "count": 33,
-      "rowCount": 32100,
+      "count": 3,
+      "rowCount": 2355,
       "reads": {
         "coa_applications": [
           "id"
@@ -70,7 +70,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -91,7 +91,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 34,
+      "count": 4,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -111,8 +111,8 @@
     {
       "fingerprint": "9a3b910e4c2788ae",
       "kind": "write",
-      "count": 33,
-      "rowCount": 3668,
+      "count": 3,
+      "rowCount": 45,
       "reads": {
         "cost_estimates": [
           "complexity_score",
@@ -245,7 +245,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 34,
+      "count": 4,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -326,231 +326,21 @@
   ],
   "transactions": [
     {
-      "client": "77148:3",
+      "client": "2850:3",
       "write_fingerprints": [
         "464c9cc54e1f3274",
         "9a3b910e4c2788ae"
       ]
     },
     {
-      "client": "77148:3",
+      "client": "2850:3",
       "write_fingerprints": [
         "464c9cc54e1f3274",
         "9a3b910e4c2788ae"
       ]
     },
     {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:3",
-      "write_fingerprints": [
-        "464c9cc54e1f3274",
-        "9a3b910e4c2788ae"
-      ]
-    },
-    {
-      "client": "77148:4",
+      "client": "2850:4",
       "write_fingerprints": [
         "464c9cc54e1f3274",
         "9a3b910e4c2788ae"

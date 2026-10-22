@@ -57,6 +57,38 @@ function bump(obj, key) {
 }
 
 /**
+ * The additive counters at zero. The runner sums `matched` over the batches it streamed, so an EMPTY cursor (a settled
+ * rerun, R-EX) hands finalizeMatched `{}`; every counter a declared check reports must still read 0 there (legacy parity,
+ * pinned L16: an empty cursor reads 0, never N/A).
+ */
+function zeroMatched() {
+  return {
+    processed: 0,
+    coa_with_trades: 0,
+    coa_zero_trades: 0,
+    residential_count: 0,
+    realtor_append_count: 0,
+    realtor_unavailable: 0,
+    coa_trades_strong_signal: 0,
+    coa_trades_inference: 0,
+    slug_resolution_miss_count: 0,
+    slug_resolution_miss_slugs: [],
+    coa_with_active_trades: 0,
+    active_trade_rows_total: 0,
+    active_trades_hist: {},
+    coa_with_evidence_trades: 0,
+    evidence_trade_rows_total: 0,
+    evidence_trades_hist: {},
+    coa_with_products: 0,
+    lead_products_written: 0,
+    product_slug_miss_count: 0,
+    trade_slug_distribution: {},
+    product_slug_distribution: {},
+    coa_trades_per_lead_histogram: {},
+  };
+}
+
+/**
  * One batch: source rows → target rows (ruling §2 (c)). Pure.
  *
  * Targets (descriptor `outputs.writes[]` order):
@@ -84,30 +116,7 @@ function materializeRows(sourceRows, { config, lookups }) {
   const e2 = [];
   const e3 = [];
   const e4 = [];
-  const m = {
-    processed: 0,
-    coa_with_trades: 0,
-    coa_zero_trades: 0,
-    residential_count: 0,
-    realtor_append_count: 0,
-    realtor_unavailable: realtorId === undefined ? 1 : 0,
-    coa_trades_strong_signal: 0,
-    coa_trades_inference: 0,
-    slug_resolution_miss_count: 0,
-    slug_resolution_miss_slugs: [],
-    coa_with_active_trades: 0,
-    active_trade_rows_total: 0,
-    active_trades_hist: {},
-    coa_with_evidence_trades: 0,
-    evidence_trade_rows_total: 0,
-    evidence_trades_hist: {},
-    coa_with_products: 0,
-    lead_products_written: 0,
-    product_slug_miss_count: 0,
-    trade_slug_distribution: {},
-    product_slug_distribution: {},
-    coa_trades_per_lead_histogram: {},
-  };
+  const m = { ...zeroMatched(), realtor_unavailable: realtorId === undefined ? 1 : 0 };
 
   for (const row of sourceRows) {
     m.processed += 1;
@@ -181,7 +190,8 @@ function histMedian(hist, denominator) {
  * The run-level derivations, once, over the runner-summed `matched` (pure). Every value a declared
  * check reads is a measurement; the bound lives in the check (`limit_from_config`, G7).
  */
-function finalizeMatched(m, { config, post }) {
+function finalizeMatched(summed, { config, post }) {
+  const m = { ...zeroMatched(), ...summed };
   const pct = (num, den) => (den ? (100 * num) / den : null); // percent, the estate form (assert_parcel_sanity)
   const ratio = (num, den) => (den ? num / den : null);
   const misses = [...new Set(m.slug_resolution_miss_slugs)].slice(0, config.classify_coa_trades_max_detail_keys).sort();

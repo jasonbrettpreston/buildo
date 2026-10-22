@@ -1,0 +1,34 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/coa-forced.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "{sql}",
+          "CREATE TABLE coa_trade_cohort_bak_{ts} AS SELECT id, trade_classified_at FROM coa_applications WHERE lead_id LIKE 'coa:%' AND scope_tags IS NOT NULL AND scope_classified_at IS NOT NULL AND trade_classified_at >= scope_classified_at ORDER BY id LIMIT 50"
+        ],
+        [
+          "{sql}",
+          "UPDATE coa_applications SET trade_classified_at = NULL WHERE id IN (SELECT id FROM coa_trade_cohort_bak_{ts})"
+        ],
+        [
+          "{harness}"
+        ],
+        [
+          "{sql}",
+          "SELECT 1 / ((count(*) = 50 AND count(*) FILTER (WHERE c.trade_classified_at IS NULL) = 0)::int) FROM coa_applications c JOIN coa_trade_cohort_bak_{ts} b ON b.id = c.id"
+        ],
+        [
+          "{sql}",
+          "UPDATE coa_applications c SET trade_classified_at = b.trade_classified_at FROM coa_trade_cohort_bak_{ts} b WHERE c.id = b.id"
+        ],
+        [
+          "{sql}",
+          "DROP TABLE coa_trade_cohort_bak_{ts}"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, Night A-swap 2026-10-22): the three write targets lead_trades (unguarded upsert), lead_products (per-lead replace and upsert) and coa_applications (trade_classified_at watermark) all rewrite when a CoA re-arms, so the bracket copies 50 settled CoAs (id, trade_classified_at) to coa_trade_cohort_bak_{ts}, sets trade_classified_at NULL (descriptor recovery.reset form, scoped to 50), runs the converted step (it reclassifies the 50 and re-stamps them), verifies all 50 are stamped, restores the original stamps so compute_coa_cost_estimates stays settled, then drops the backup. Retake order: run it right after the classify_coa_scope bracket in chain order, because the ledger gate (no_upstream_changes) skips a chain run while no upstream scope run completed with changes since this step's own last completed run."
+    }
+  }
+}

@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-coa-freshness.js",
   "chain": "none",
-  "source_fingerprint": null,
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "349f5f28f9cbf329b95b7a5570ff16b58dd531eb467e14c65666c2ccb534d78b",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
   "header": {
     "processes": 1,
     "calls": 8,
     "distinct": 7,
     "utility": 5,
-    "tracer_self_ms": 0.537,
-    "wall_ms": 107
+    "tracer_self_ms": 0.547,
+    "wall_ms": 124
   },
   "statements": [
     {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [

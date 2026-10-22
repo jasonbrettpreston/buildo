@@ -10,12 +10,14 @@
 // coa_freshness_* names (first two describes, unchanged). The converted descriptor reads the step-owned
 // assert_coa_freshness_* copies (migration 270, values carried; last describe). At ③ the frozen shell lands,
 // the legacy names retire, and the legacy half is deleted.
+// RE-HOMED (R-EQ shell swap, Spec 124 P4-SWAP): the shipped script is now the frozen pipeline.step() shell (Spec 122 §5.1); these legacy pins read the
+// verbatim legacy text kept as the red suite's oracle (src/tests/steps/assert_coa_freshness/fixtures/legacy-*.js.txt). The converted behaviour is pinned by that step's violations.test.ts.
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 
 const SRC = fs.readFileSync(
-  path.resolve(__dirname, '../../scripts/quality/assert-coa-freshness.js'),
+  path.resolve(__dirname, './steps/assert_coa_freshness/fixtures/legacy-assert-coa-freshness.js.txt'),
   'utf-8'
 );
 const SEED = JSON.parse(

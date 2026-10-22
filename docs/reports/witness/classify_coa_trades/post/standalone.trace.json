@@ -1,0 +1,353 @@
+{
+  "trace_version": 1,
+  "step": "scripts/classify-coa-trades.js",
+  "chain": "none",
+  "source_fingerprint": "9989ffbcae3ae7b3156f46ee315602e22195c6cbccf982ad19cdcbcfb7ea2c90",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "header": {
+    "processes": 1,
+    "calls": 25,
+    "distinct": 20,
+    "utility": 5,
+    "tracer_self_ms": 1.484,
+    "wall_ms": 567
+  },
+  "statements": [
+    {
+      "fingerprint": "09647d963a6395a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last AS (\n       SELECT started_at, completed_at, records_meta\n         FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[])\n          AND status IN ('completed', 'completed_with_warnings')\n          AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n        ORDER BY completed_at DESC, id DESC\n        LIMIT 1\n     ),\n     -- 'skipped' rows ⇒ RUN, deliberately: ANY status other than 'completed'\n     -- in the upstream window counts toward non_completed, including a\n     -- literal status='skipped' row (a lock-contention self-skip, or a\n     -- legacy pre-DS4 skip that never re-stamped 'completed'). We cannot\n     -- positively confirm such a row changed nothing, so the fail-safe is\n     -- RUN — \"the first post-scoped-run never skips\" (header item 6).\n     upstream_since AS (\n       SELECT\n         COUNT(*) FILTER (WHERE p.status <> 'completed')                                            AS non_completed,\n         COUNT(*) FILTER (WHERE p.status = 'completed'\n                             AND (COALESCE(p.records_new, 0) + COALESCE(p.records_updated, 0)) > 0)  AS completed_with_changes,\n         -- Commit E (B3 output-panel remediation) — defence-in-depth VISIBILITY\n         -- only (chain-concurrency.js:36's 12h TTL convention, same class of\n         -- staleness): an upstream 'running' row whose started_at is already\n         -- past the TTL is almost certainly an orphan (a crashed/killed\n         -- producer that never reached its finalize step — the load-wsib.js\n         -- E#1 defect this commit also fixes). It STILL counts toward\n         -- non_completed above (E-R2: a stranded running row must keep\n         -- forcing RUN — fail-safe, pinned so a future \"optimization\" cannot\n         -- quietly start treating a stale running row as safe-to-skip-past).\n         -- This count exists ONLY so a caller/operator can tell \"genuinely\n         -- busy upstream\" apart from \"an orphaned row nobody ever finalized\"\n         -- without changing the skip/run decision itself.\n         COUNT(*) FILTER (WHERE p.status = 'running'\n                             AND p.started_at <= NOW() - INTERVAL '12 hours')                        AS stale_running\n         FROM pipeline_runs p\n         CROSS JOIN own_last o\n        WHERE p.pipeline = ANY($2::text[])\n          AND COALESCE(p.completed_at, 'infinity'::timestamptz) > o.started_at\n     )\n     SELECT\n       (SELECT started_at    FROM own_last)              AS own_started,\n       (SELECT completed_at  FROM own_last)               AS own_completed,\n       (SELECT records_meta  FROM own_last)               AS own_last_records_meta,\n       (SELECT non_completed FROM upstream_since)          AS non_completed,\n       (SELECT completed_with_changes FROM upstream_since) AS completed_with_changes,\n       (SELECT stale_running FROM upstream_since)          AS stale_running",
+      "params": [
+        [
+          [
+            "coa:classify_coa_trades",
+            "classify_coa_trades",
+            "classify-coa-trades"
+          ],
+          [
+            "coa:classify_coa_scope",
+            "classify_coa_scope",
+            "classify-coa-scope"
+          ]
+        ]
+      ]
+    },
+    {
+      "fingerprint": "0c187c75d411c371",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 27,
+      "reads": {
+        "product_groups": [
+          "id",
+          "slug"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed_with_warnings",
+          360,
+          null,
+          3939,
+          0,
+          0,
+          0,
+          "{\"coa_with_trades\":0,\"coa_zero_trades\":0,\"residential_count\":0,\"realtor_append_count\":0,\"coa_trades_strong_signal\":0,\"coa_trades_inference\":0,\"inference_layer_enabled\":1,\"coa_with_active_trades\":0,\"median_active_trades_per_lead_nonzero\":null,\"avg_evidence_trades_per_lead\":null,\"median_evidence_trades_per_lead_nonzero\":null,\"realtor_inclusion_pct\":null,\"coa_with_products\":0,\"lead_products_written\":0,\"slug_resolution_misses\":[],\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"coa:classify_coa_trades\",\"classify_coa_trades\",\"classify-coa-trades\"],\"upstream_slugs\":[\"coa:classify_coa_scope\",\"classify_coa_scope\",\"classify-coa-scope\"],\"own_last_completed_at\":\"2026-10-22T18:09:44.236Z\",\"upstream_non_completed\":4,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":0},\"config\":{\"classify_coa_trades_batch_size\":1000,\"classify_coa_trades_max_detail_keys\":50,\"classify_coa_trades_tier\":3,\"classify_coa_trades_lead_score_scale\":100,\"classify_coa_trades_realtor_confidence\":0.7,\"classify_coa_trades_unmapped_threshold_pct\":20,\"classify_coa_trades_active_trades_warn_max\":18,\"classify_coa_trades_eligible_min_count\":1,\"p16_inference_layer_enabled\":1,\"vocab_coverage_pass_pct\":90,\"vocab_coverage_warn_pct\":70},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"coa_eligible: 0\"],\"audit_table\":{\"phase\":7,\"name\":\"Classify CoA Trades\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_eligible\",\"value\":0,\"threshold\":\"value_min 1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_scope_pct\",\"value\":0,\"threshold\":\"pct <= 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"avg_active_trades_per_lead\",\"value\":\"N/A\",\"threshold\":\"value_max 18\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"slug_resolution_miss_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"product_slug_miss_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"realtor_unavailable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"trade_vocab_coverage\",\"value\":\"35/35 (100%)\",\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 70\",\"observed\":\"after_write\"},{\"metric\":\"product_vocab_coverage\",\"value\":\"27/27 (100%)\",\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 70\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":357,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 824,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 3,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "classify_coa_trades",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "701ff97236c0dd20",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "lead_products": [
+          "lead_id",
+          "product_id"
+        ],
+        "lead_trades": [
+          "lead_id",
+          "trade_id"
+        ],
+        "product_groups": [
+          "id"
+        ],
+        "trades": [
+          "id",
+          "kind"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "76a2b383506363c8",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 36,
+      "reads": {
+        "trades": [
+          "id",
+          "slug"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 22,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b651fc2017e5c19b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_applications": [
+          "coa_type_class",
+          "id",
+          "lead_id",
+          "project_type",
+          "scope_classified_at",
+          "scope_tags",
+          "structure_type",
+          "trade_classified_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "dc2155bbf3d02d8f",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 3,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ef7805210a83ab6a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "scope_classified_at",
+          "scope_tags",
+          "trade_classified_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "coa_applications": [
+        "coa_type_class",
+        "id",
+        "lead_id",
+        "project_type",
+        "scope_classified_at",
+        "scope_tags",
+        "structure_type",
+        "trade_classified_at"
+      ],
+      "lead_products": [
+        "lead_id",
+        "product_id"
+      ],
+      "lead_trades": [
+        "lead_id",
+        "trade_id"
+      ],
+      "product_groups": [
+        "id",
+        "slug"
+      ],
+      "trades": [
+        "id",
+        "kind",
+        "slug"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

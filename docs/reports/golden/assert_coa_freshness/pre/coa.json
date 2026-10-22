@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-coa-freshness.js",
   "chain": "coa",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": null,
     "records_updated": null,
     "records_meta": {
-      "duration_ms": 194,
+      "duration_ms": 379,
       "audit_table": {
         "phase": 3,
         "name": "Source Freshness",
@@ -19,19 +19,19 @@
         "rows": [
           {
             "metric": "total_records",
-            "value": 33949,
+            "value": 33982,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "last_ingestion",
-            "value": "2026-10-16",
+            "value": "2026-10-22",
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "ingestion_days_ago",
-            "value": 3,
+            "value": 0,
             "threshold": ">= 45d WARN / >= 135d FAIL — CKAN feed likely frozen; check the scraper",
             "status": "PASS"
           },
@@ -43,7 +43,7 @@
           },
           {
             "metric": "max_hearing_date",
-            "value": "2027-10-08T04:00:00.000Z",
+            "value": "2027-12-31T05:00:00.000Z",
             "threshold": null,
             "status": "INFO"
           },
@@ -55,7 +55,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 202,
+            "value": 392,
             "threshold": null,
             "status": "INFO"
           }
@@ -79,10 +79,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Loaded 760 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Checking CoA source data freshness...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Freshness check complete\",\"context\":{\"total_records\":33949,\"last_ingestion\":\"2026-10-16T13:57:28.258Z\",\"ingestion_days_ago\":3,\"max_decision_date\":\"2026-12-21T05:00:00.000Z\",\"max_hearing_date\":\"2027-10-08T04:00:00.000Z\",\"stale\":false,\"fail\":false}}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"duration_ms\":194,\"audit_table\":{\"phase\":3,\"name\":\"Source Freshness\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"total_records\",\"value\":33949,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"last_ingestion\",\"value\":\"2026-10-16\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"ingestion_days_ago\",\"value\":3,\"threshold\":\">= 45d WARN / >= 135d FAIL — CKAN feed likely frozen; check the scraper\",\"status\":\"PASS\"},{\"metric\":\"max_decision_date\",\"value\":\"2026-12-21T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"max_hearing_date\",\"value\":\"2027-10-08T04:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":202,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"last_seen_at\",\"hearing_date\",\"decision_date\"]},\"writes\":{}}\n\n[assert-coa-freshness] completed in 0.2s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Loaded 805 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Checking CoA source data freshness...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"Freshness check complete\",\"context\":{\"total_records\":33982,\"last_ingestion\":\"2026-10-22T11:21:28.404Z\",\"ingestion_days_ago\":0,\"max_decision_date\":\"2026-12-21T05:00:00.000Z\",\"max_hearing_date\":\"2027-12-31T05:00:00.000Z\",\"stale\":false,\"fail\":false}}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"duration_ms\":379,\"audit_table\":{\"phase\":3,\"name\":\"Source Freshness\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"total_records\",\"value\":33982,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"last_ingestion\",\"value\":\"2026-10-22\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"ingestion_days_ago\",\"value\":0,\"threshold\":\">= 45d WARN / >= 135d FAIL — CKAN feed likely frozen; check the scraper\",\"status\":\"PASS\"},{\"metric\":\"max_decision_date\",\"value\":\"2026-12-21T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"max_hearing_date\",\"value\":\"2027-12-31T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":392,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"last_seen_at\",\"hearing_date\",\"decision_date\"]},\"writes\":{}}\n\n[assert-coa-freshness] completed in 0.4s\n",
   "stderr": "{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-coa-freshness]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3404,
+  "pipeline_runs_max_id_before": 3879,
   "table_state": [],
   "tables_source": "trace",
   "table_row_ceiling": 100000,
@@ -114,19 +114,19 @@
               "metric": "total_records",
               "status": "INFO",
               "threshold": null,
-              "value": 33949
+              "value": 33982
             },
             {
               "metric": "last_ingestion",
               "status": "INFO",
               "threshold": null,
-              "value": "2026-10-16"
+              "value": "2026-10-22"
             },
             {
               "metric": "ingestion_days_ago",
               "status": "PASS",
               "threshold": ">= 45d WARN / >= 135d FAIL — CKAN feed likely frozen; check the scraper",
-              "value": 3
+              "value": 0
             },
             {
               "metric": "max_decision_date",
@@ -165,9 +165,9 @@
     "pipeline_runs": [],
     "stdout_lines": [
       "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[assert-coa-freshness]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Loaded 760 logic variables from control panel\",\"tag\":\"[assert-coa-freshness]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 805 logic variables from control panel\",\"tag\":\"[assert-coa-freshness]\"}",
       "{\"level\":\"INFO\",\"msg\":\"Checking CoA source data freshness...\",\"tag\":\"[assert-coa-freshness]\"}",
-      "{\"context\":{\"fail\":false,\"ingestion_days_ago\":3,\"last_ingestion\":\"<TS>\",\"max_decision_date\":\"<TS>\",\"max_hearing_date\":\"<TS>\",\"stale\":false,\"total_records\":33949},\"level\":\"INFO\",\"msg\":\"Freshness check complete\",\"tag\":\"[assert-coa-freshness]\"}",
+      "{\"context\":{\"fail\":false,\"ingestion_days_ago\":0,\"last_ingestion\":\"<TS>\",\"max_decision_date\":\"<TS>\",\"max_hearing_date\":\"<TS>\",\"stale\":false,\"total_records\":33982},\"level\":\"INFO\",\"msg\":\"Freshness check complete\",\"tag\":\"[assert-coa-freshness]\"}",
       "[assert-coa-freshness] completed in <DUR>"
     ],
     "table_state": [],
@@ -175,12 +175,16 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3405,
+      "id": 3880,
       "recorded_by": "harness"
     }
   ],
-  "source_fingerprint": null,
-  "fingerprint_files": [],
-  "fingerprint_skipped_reason": "no_descriptor_yet",
-  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
+  "source_fingerprint": "349f5f28f9cbf329b95b7a5570ff16b58dd531eb467e14c65666c2ccb534d78b",
+  "fingerprint_files": [
+    "scripts/lib/compute/assert-coa-freshness.js",
+    "scripts/quality/assert-coa-freshness.descriptor.json",
+    "scripts/quality/assert-coa-freshness.js",
+    "scripts/quality/assert-coa-freshness.notes.json"
+  ],
+  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
 }

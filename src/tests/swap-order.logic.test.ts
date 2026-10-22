@@ -36,6 +36,15 @@ function withStage(input: Input, file: string, stage: string): Input {
   return { ...input, pending: input.pending.map((p) => (p.file === file ? { ...p, stage } : p)) };
 }
 
+/** A descriptorOf that re-adds the pre-R-JM link_coa upstream to the named shells' reads.steps (a projection, nothing written). */
+function withLinkCoa(input: Input, rels: string[]): Input['descriptorOf'] {
+  return (rel: string) => {
+    const d = structuredClone(input.descriptorOf(rel)) as { inputs?: { reads?: { steps?: Array<{ step: string }> } } } | null;
+    if (rels.includes(rel) && d?.inputs?.reads?.steps && !d.inputs.reads.steps.some((x) => x.step === 'link_coa')) d.inputs.reads.steps.push({ step: 'link_coa' });
+    return d;
+  };
+}
+
 describe('R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams', () => {
   it('the subject stages are the shell-swapped ones of the closed R-K vocabulary', async () => {
     const { SWAPPED_STAGES } = await loadSwap();
@@ -54,7 +63,8 @@ describe('R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams', () => {
     const base = loadSwapOrderInput(ROOT);
     const swapped = withStage(withStage(base, 'scripts/classify-coa-trades.js', 'runner_wired'), 'scripts/classify-coa-scope.js', 'red_suite');
     const r = checkSwapOrder(swapped, stageAwaitsCaptures);
-    expect(r.blockedSlugs).toEqual(['classify_coa_trades']);
+    // Night A-swap 2026-10-22: the four CoA shells are runner_wired in the tree; compute_coa_cost_estimates also declares classify_coa_scope as an upstream, so it is blocked with trades.
+    expect(r.blockedSlugs).toEqual(['classify_coa_trades', 'compute_coa_cost_estimates']);
     expect(r.violations.join('\n')).toContain('classify_coa_trades (runner_wired) ← classify_coa_scope: pending at red_suite');
   });
 
@@ -63,7 +73,7 @@ describe('R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams', () => {
     const { stageAwaitsCaptures } = await loadSv();
     const base = withStage(loadSwapOrderInput(ROOT), 'scripts/classify-coa-trades.js', 'runner_wired');
     const copy = checkSwapOrder(withStage(base, 'scripts/classify-coa-scope.js', 'compute_ported'), stageAwaitsCaptures);
-    expect(copy.blockedSlugs).toEqual(['classify_coa_trades']);
+    expect(copy.blockedSlugs).toEqual(['classify_coa_trades', 'compute_coa_cost_estimates']);
     const both = checkSwapOrder(withStage(base, 'scripts/classify-coa-scope.js', 'runner_wired'), stageAwaitsCaptures);
     expect(both.blockedSlugs).not.toContain('classify_coa_trades');
   });
@@ -72,30 +82,25 @@ describe('R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams', () => {
   it('RED: an upstream that is neither converted nor pending (unconverted legacy) has neither swapped nor been captured', async () => {
     const { checkSwapOrder, loadSwapOrderInput } = await loadSwap();
     const { stageAwaitsCaptures } = await loadSv();
-    // assert_coa_freshness declares link_coa (scripts/link-coa.js), which is in neither list.
-    const r = checkSwapOrder(withStage(loadSwapOrderInput(ROOT), 'scripts/quality/assert-coa-freshness.js', 'runner_wired'), stageAwaitsCaptures);
+    // R-JM landed (the descriptor no longer declares link_coa), so the pre-R-JM descriptor is projected in memory: assert_coa_freshness declaring link_coa (scripts/link-coa.js), which is in neither list.
+    const base = loadSwapOrderInput(ROOT);
+    const r = checkSwapOrder({ ...base, descriptorOf: withLinkCoa(base, ['scripts/quality/assert-coa-freshness.js']) }, stageAwaitsCaptures);
     expect(r.violations.join('\n')).toContain('assert_coa_freshness (runner_wired) ← link_coa: unconverted, not in pending[]');
   });
 
-  it('R-JM: with the owed descriptor edit (link_coa dropped from the two reads.steps), the four CoA shells swapped together have zero violations; without it exactly the two link_coa violations remain', async () => {
+  it('R-JM (landed with the Night A-swap, 2026-10-22): the four CoA shells are swapped with zero violations; re-adding link_coa to the two reads.steps in memory restores exactly the two link_coa violations', async () => {
     const { checkSwapOrder, loadSwapOrderInput } = await loadSwap();
     const { stageAwaitsCaptures } = await loadSv();
-    let swapped = loadSwapOrderInput(ROOT);
+    const swapped = loadSwapOrderInput(ROOT);
     for (const f of ['scripts/quality/assert-coa-freshness.js', 'scripts/classify-coa-scope.js', 'scripts/classify-coa-trades.js', 'scripts/compute-coa-cost-estimates.js']) {
-      swapped = withStage(swapped, f, 'runner_wired');
+      expect(swapped.pending.find((p) => p.file === f)?.stage).toBe('runner_wired');
     }
-    // The descriptor edit moves source_fingerprint, so it lands with the swap night's recaptures (R-JM OWED-NIGHT,
-    // ~/Buildo-scratch/linkcoa/rjm-descriptors.patch); here it is applied in memory.
-    const dropLink = (rel: string) => {
-      const d = swapped.descriptorOf(rel) as { inputs?: { reads?: { steps?: Array<{ step: string }> } } } | null;
-      if (d?.inputs?.reads?.steps) d.inputs.reads.steps = d.inputs.reads.steps.filter((x) => x.step !== 'link_coa');
-      return d;
-    };
-    const before = checkSwapOrder(swapped, stageAwaitsCaptures);
-    expect(before.violations.map((v) => v.replace(/:.*/, ''))).toEqual(['assert_coa_freshness (runner_wired) ← link_coa', 'classify_coa_scope (runner_wired) ← link_coa']);
-    const after = checkSwapOrder({ ...swapped, descriptorOf: dropLink }, stageAwaitsCaptures);
+    const after = checkSwapOrder(swapped, stageAwaitsCaptures);
     expect(after.violations).toEqual([]);
     expect(after.pass).toBe(true);
+    // Without the descriptor edit (rjm-descriptors.patch, now applied) exactly the two link_coa violations would remain.
+    const before = checkSwapOrder({ ...swapped, descriptorOf: withLinkCoa(swapped, ['scripts/quality/assert-coa-freshness.js', 'scripts/classify-coa-scope.js']) }, stageAwaitsCaptures);
+    expect(before.violations.map((v) => v.replace(/:.*/, ''))).toEqual(['assert_coa_freshness (runner_wired) ← link_coa', 'classify_coa_scope (runner_wired) ← link_coa']);
   });
 
   it('the module self-test passes', async () => {

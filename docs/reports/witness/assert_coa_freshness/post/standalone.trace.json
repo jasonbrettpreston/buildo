@@ -1,0 +1,191 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-coa-freshness.js",
+  "chain": "none",
+  "source_fingerprint": "87ef4c17453f623f34cc546d19e501006504ea9fc181f88b12a502d1fb9afc36",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "header": {
+    "processes": 1,
+    "calls": 13,
+    "distinct": 12,
+    "utility": 5,
+    "tracer_self_ms": 0.798,
+    "wall_ms": 264
+  },
+  "statements": [
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed",
+          79,
+          null,
+          3889,
+          null,
+          null,
+          null,
+          "{\"config\":{\"assert_coa_freshness_warn_max_days\":45,\"assert_coa_freshness_fail_max_days\":135},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Source Freshness\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"total_records_present\",\"value\":\"33982 coa_applications rows\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ingestion_days_ago\",\"value\":0,\"threshold\":\"value_max 45\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_max 135\",\"observed\":\"before_write\"},{\"source\":\"context\",\"metric\":\"total_records\",\"value\":33982,\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"last_ingestion\",\"value\":\"2026-10-22\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_decision_date\",\"value\":\"2026-12-21T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_hearing_date\",\"value\":\"2027-12-31T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":78,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 824,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "assert_coa_freshness",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 13,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "8f013116e8519887",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "decision_date",
+          "hearing_date",
+          "last_seen_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "coa_applications": [
+        "decision_date",
+        "hearing_date",
+        "last_seen_at"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

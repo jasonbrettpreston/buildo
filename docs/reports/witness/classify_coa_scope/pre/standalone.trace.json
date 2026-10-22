@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/classify-coa-scope.js",
   "chain": "none",
-  "source_fingerprint": null,
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "9245fa0d5b84a3e83ce75a43fde9b27f1cd52673e4c66b306ee86bf85abfbc87",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
   "header": {
     "processes": 1,
     "calls": 9,
     "distinct": 8,
     "utility": 5,
-    "tracer_self_ms": 0.664,
-    "wall_ms": 130
+    "tracer_self_ms": 0.633,
+    "wall_ms": 116
   },
   "statements": [
     {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [

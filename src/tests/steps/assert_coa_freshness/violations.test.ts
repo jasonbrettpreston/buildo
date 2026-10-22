@@ -198,7 +198,8 @@ describe('assert_coa_freshness — converted claims (D1/D2a/D3–D5 GREEN at ②
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
   });
 
-  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run(); lock constant; cites owner spec 42 only (flips at ③)', () => {
+  // FLIPPED at the shell swap (Spec 124 R-EQ, P4-SWAP: a step whose ② landed at compute_ported moves to runner_wired in its swap commit); the legacy-name retirement and converted[] registration stay at ③.
+  it('D1b — frozen shell: pipeline.step(), not pipeline.run(); lock constant; cites owner spec 42 only (flipped at the R-EQ shell swap)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');

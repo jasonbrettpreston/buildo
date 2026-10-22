@@ -13,13 +13,15 @@
 //   - audit_table emits scope_classified_pct, unmapped_scope_count,
 //     project_type_distribution, coa_type_class_distribution
 
+// RE-HOMED (R-EQ shell swap, Spec 124 P4-SWAP): the shipped script is now the frozen pipeline.step() shell (Spec 122 §5.1); these legacy pins read the
+// verbatim legacy text kept as the red suite's oracle (src/tests/steps/classify_coa_scope/fixtures/legacy-*.js.txt). The converted behaviour is pinned by that step's violations.test.ts.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
 describe('classify-coa-scope.js — Spec 47 §R1-R12 + R5.3 contract', () => {
   const src = fs.readFileSync(
-    path.resolve(__dirname, '../../scripts/classify-coa-scope.js'),
+    path.resolve(__dirname, './steps/classify_coa_scope/fixtures/legacy-classify-coa-scope.js.txt'),
     'utf-8',
   );
 

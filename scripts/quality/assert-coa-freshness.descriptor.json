@@ -23,9 +23,6 @@
       "steps": [
         {
           "step": "coa"
-        },
-        {
-          "step": "link_coa"
         }
       ],
       "tables": [

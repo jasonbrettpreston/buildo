@@ -1,0 +1,248 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-coa-freshness.js",
+  "chain": "coa",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": null,
+    "records_new": null,
+    "records_updated": null,
+    "records_meta": {
+      "config": {
+        "assert_coa_freshness_warn_max_days": 45,
+        "assert_coa_freshness_fail_max_days": 135
+      },
+      "terminal": "all_checks_passed",
+      "ledger_row": "chain_owned",
+      "chain_run_id": null,
+      "code_sha": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+      "pool_errors": 0,
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
+      "audit_table": {
+        "phase": 3,
+        "name": "Source Freshness",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "total_records_present",
+            "value": "33982 coa_applications rows",
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "before_write"
+          },
+          {
+            "metric": "ingestion_days_ago",
+            "value": 0,
+            "threshold": "value_max 45",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "value_max 135",
+            "observed": "before_write"
+          },
+          {
+            "source": "context",
+            "metric": "total_records",
+            "value": 33982,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "source": "context",
+            "metric": "last_ingestion",
+            "value": "2026-10-22",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "source": "context",
+            "metric": "max_decision_date",
+            "value": "2026-12-21T05:00:00.000Z",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "source": "context",
+            "metric": "max_hearing_date",
+            "value": "2027-12-31T05:00:00.000Z",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 77,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "coa_applications": [
+          "decision_date",
+          "hearing_date",
+          "last_seen_at"
+        ]
+      },
+      "writes": {}
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_coa_freshness]\",\"msg\":\"[assert_coa_freshness] target: assert_coa_freshness (descriptor.database) → database=postgres user=postgres migrations=272 (floor 261)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_coa_freshness_warn_max_days\":45,\"assert_coa_freshness_fail_max_days\":135},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Source Freshness\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"total_records_present\",\"value\":\"33982 coa_applications rows\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ingestion_days_ago\",\"value\":0,\"threshold\":\"value_max 45\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_max 135\",\"observed\":\"before_write\"},{\"source\":\"context\",\"metric\":\"total_records\",\"value\":33982,\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"last_ingestion\",\"value\":\"2026-10-22\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_decision_date\",\"value\":\"2026-12-21T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_hearing_date\",\"value\":\"2027-12-31T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":77,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"decision_date\",\"hearing_date\",\"last_seen_at\"]},\"writes\":{}}\n\n[assert_coa_freshness] completed in 0.1s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 3887,
+  "table_state": [],
+  "tables_source": "trace",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
+    "pattern:duration_literal",
+    "pattern:iso_timestamp",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-coa-freshness.js",
+    "chain": "coa",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Source Freshness",
+          "phase": 3,
+          "rows": [
+            {
+              "metric": "total_records_present",
+              "observed": "before_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": "33982 coa_applications rows"
+            },
+            {
+              "metric": "ingestion_days_ago",
+              "observed": "before_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_max 45",
+              "value": 0,
+              "warn_threshold": "value_max 135"
+            },
+            {
+              "metric": "total_records",
+              "source": "context",
+              "status": "INFO",
+              "threshold": null,
+              "value": 33982
+            },
+            {
+              "metric": "last_ingestion",
+              "source": "context",
+              "status": "INFO",
+              "threshold": null,
+              "value": "2026-10-22"
+            },
+            {
+              "metric": "max_decision_date",
+              "source": "context",
+              "status": "INFO",
+              "threshold": null,
+              "value": "<TS>"
+            },
+            {
+              "metric": "max_hearing_date",
+              "source": "context",
+              "status": "INFO",
+              "threshold": null,
+              "value": "<TS>"
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "config": {
+          "assert_coa_freshness_fail_max_days": 135,
+          "assert_coa_freshness_warn_max_days": 45
+        },
+        "errors": [],
+        "ledger_row": "chain_owned",
+        "pool_errors": 0,
+        "terminal": "all_checks_passed",
+        "warnings": []
+      },
+      "records_new": null,
+      "records_total": null,
+      "records_updated": null
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "coa_applications": [
+            "decision_date",
+            "hearing_date",
+            "last_seen_at"
+          ]
+        },
+        "writes": {}
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[assert_coa_freshness] target: assert_coa_freshness (descriptor.database) → database=postgres user=postgres migrations=272 (floor 261)\",\"tag\":\"[assert_coa_freshness]\"}",
+      "[assert_coa_freshness] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "rerun_proof": {
+    "answer": "NOT_APPLICABLE",
+    "rows": [],
+    "reason": "no zero_writes target"
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 3888,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": "87ef4c17453f623f34cc546d19e501006504ea9fc181f88b12a502d1fb9afc36",
+  "fingerprint_files": [
+    "scripts/lib/compute/assert-coa-freshness.js",
+    "scripts/quality/assert-coa-freshness.descriptor.json",
+    "scripts/quality/assert-coa-freshness.js",
+    "scripts/quality/assert-coa-freshness.notes.json"
+  ],
+  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+}

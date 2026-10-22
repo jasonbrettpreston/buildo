@@ -1,0 +1,10 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "coa_applications",
+      "capture": "coa-forced.json",
+      "why": "POST docs/reports/golden/classify_coa_scope/post/coa-forced.json (Night A-swap 2026-10-22, Spec 124 R-CZ bracket in recapture.json): scope_classified_at set NULL on 50 settled CoAs; the converted step re-classifies them (records_updated 50), the five classified columns verified equal to the backup, stamps restored."
+    }
+  ]
+}

@@ -94,14 +94,14 @@
       "registers_at": "commit ③ cutover, compressed form R-PACE-1 (phase-4 wave 4)",
       "reason": "Phase-4 wave 4 (assert_coa_freshness, ASSERT: one aggregate SELECT over coa_applications -> a three-tier portal-rot verdict on MAX(last_seen_at), no write; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, all 15 recommendations operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md + red suite (L1-L13 legacy oracle pins executing the verbatim legacy text, D1-D7 it.fails) + gate-K red evidence + ACF-D1..ACF-D7; ② the descriptor/compute/notes + migration 270 (the two bounds copied into assert_coa_freshness_*, values carried; inclusive ceiling per R-DC; the legacy coa_freshness_* rows stay because the legacy shell reads them until ③) + admin text, landing at compute_ported (W4A-R6, operator y 2026-10-18; R-EF; the a9011b83 enrich ② and lane-C 274/275 form); the frozen shell and the retirement of the legacy names at ③; PRE on the ① tree (night P3, trap 7) and POST at night P4; ③ registers, per Spec 124 R-K. Consumes R-DW (the coa root's last_seen_at touch for every fed key) unchanged.",
       "declared": "2026-10-18",
-      "stage": "compute_ported"
+      "stage": "runner_wired"
     },
     {
       "file": "scripts/classify-coa-scope.js",
       "registers_at": "commit ③ cutover, compressed form R-PACE-1 (phase-4 wave 4)",
       "reason": "Phase-4 wave 4 (classify_coa_scope, ENRICHER: a per-row JS classifier over the coa_applications pending cursor (scope_classified_at IS NULL OR < last_seen_at) -> six derived columns on its own input table, one VALUES UPDATE per 1000-row batch; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-CT rls_bypass_or_policy, R-DL admin visibility; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, all 15 recommendations operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md + red suite (L1-L13 legacy oracle pins executing the verbatim legacy text with the real classifier, D1-D9 it.fails) + gate-K red evidence + CCS-D1..CCS-D7; ② the descriptor/compute/shell/notes (ctx.stream / ctx.flushBatch seams, the compute_parcel_cost_estimates form) + migration 271 (classify_coa_scope_unmapped_max_pct renamed from coa_scope_unmapped_threshold_pct, classify_coa_scope_batch_size 1000) + PIPELINE_TABLE_MAP + manifest supports_full; PRE on the ① tree (night P3, trap 7), POST + forced NULL-scope_classified_at bracket at night P4; ③ registers, per Spec 124 R-K. Consumes R-DW (the coa root's last_seen_at touch for every fed key) unchanged: parity re-classifies every fed key per run. ② LANDED 2026-10-19 (wf2/p4-w4-rulings-5) at stage compute_ported (W4A-R6, R-EF; the ffec8296 assert_coa_freshness form): descriptor + compute (one post_commit phase over ctx.stream / ctx.flushBatch; W4A-R4 watermark pin on coa.last_seen_at, whose own by:\"pin\" invalidates row #44 (i) resolves by Spec 124 R-ER arm (ii); the legacy unguarded UPDATE byte-for-byte, guard \"none\" grandfathered under Rule 9 / V7 in the Q-CE2 / Q-W4G-1 form, so every streamed row advances; the drafted LG-9-hatch guard not admitted, 124a §B14) + notes + migration 271 COPY form (the legacy name stays until ③) + PIPELINE_TABLE_MAP + manifest supports_full false; the legacy shell stays live (only its stale last_seen_at comment corrected, CCS-D1, recommendation 15).",
       "declared": "2026-10-18",
-      "stage": "compute_ported"
+      "stage": "runner_wired"
     },
     {
       "file": "scripts/link-coa-to-parcels.js",
@@ -129,14 +129,14 @@
       "registers_at": "commit 9 cutover, full form (Spec 123 §7; R-PACE-1 ineligible: 1 converted MATERIALIZER; operator Q5 y 2026-10-19)",
       "reason": "Phase 4 wave 4 (classify_coa_trades, MATERIALIZER: derived per-lead rows coa_applications(scope_tags) -> lead_trades (unguarded upsert, no retraction) + lead_products (per-lead delete-and-reinsert) + the coa_applications.trade_classified_at watermark; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 on all 15). ① lands the assessment docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle, D1-D9 it.fails) + gate-K red evidence + CCT-D1..CCT-D9; full form (Spec 123 §7, operator Q5 y 2026-10-19): row 7 descriptor + compute (R-EH rows form, RE-FREEZE #37) + notes + migration 274 seeds at stage compute_ported (W4A-R6, R-EF), the legacy shell live; PRE golden at N1 (dedb7e90); the row-8 peel differentials and the POST at night P4; ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-18",
-      "stage": "compute_ported"
+      "stage": "runner_wired"
     },
     {
       "file": "scripts/compute-coa-cost-estimates.js",
       "registers_at": "commit 9 cutover, full form (Spec 123 §7; R-PACE-1 ineligible: 1 converted MATERIALIZER; operator Q5 y 2026-10-19)",
       "reason": "Phase 4 wave 4 (compute_coa_cost_estimates, MATERIALIZER: one derived cost row per priced CoA -> cost_estimates (guarded upsert ON CONFLICT (lead_id), coa: scope) + the coa_applications cost columns and cost_classified_at watermark; the archetype ladder T2-or-T4 over cost-model-shared; reads the enrich_parcels max-build family on coa_applications unchanged (Spec 78 O-11 consumer); McDonald's Airtight V3 from ①; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle with the real Brain, D1-D9 it.fails) + gate-K red evidence + CCCE-D1..CCCE-D10; full form (Spec 123 §7, operator Q5 y 2026-10-19): row 7 descriptor + compute (R-EH rows form, RE-FREEZE #37) + notes + migration 275 seeds at stage compute_ported (W4A-R6, R-EF), the legacy shell live; PRE golden at N1 (dedb7e90); the row-8 peel differentials and the POST at night P4; ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-18",
-      "stage": "compute_ported"
+      "stage": "runner_wired"
     },
     {
       "file": "scripts/quality/assert-entity-tracing.js",

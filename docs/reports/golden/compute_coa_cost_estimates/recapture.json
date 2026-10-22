@@ -1,0 +1,54 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/coa-forced.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "{sql}",
+          "CREATE TABLE coa_cost_cohort_bak_{ts} AS SELECT ca.id, ca.lead_id, ca.cost_classified_at FROM coa_applications ca JOIN cost_estimates ce ON ce.lead_id = ca.lead_id WHERE ca.lead_id LIKE 'coa:%' AND ca.trade_classified_at IS NOT NULL AND ca.cost_classified_at >= ca.trade_classified_at AND ce.estimated_cost IS NOT NULL AND ca.modeled_gfa_sqm IS NOT NULL ORDER BY ca.id LIMIT 50"
+        ],
+        [
+          "{sql}",
+          "UPDATE coa_applications SET cost_classified_at = NULL WHERE id IN (SELECT id FROM coa_cost_cohort_bak_{ts})"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=cost_estimates",
+          "--key=lead_id",
+          "--column=estimated_cost",
+          "--op=add_number:1",
+          "--count=50",
+          "--where=t.lead_id IN (SELECT lead_id FROM coa_cost_cohort_bak_{ts})",
+          "--order=t.lead_id",
+          "--backup-table=cost_estimates_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=cost_estimates",
+          "--key=lead_id",
+          "--column=estimated_cost",
+          "--op=add_number:1",
+          "--count=50",
+          "--where=t.lead_id IN (SELECT lead_id FROM coa_cost_cohort_bak_{ts})",
+          "--order=t.lead_id",
+          "--backup-table=cost_estimates_cohort_bak_{ts}",
+          "--step=scripts/compute-coa-cost-estimates.js",
+          "--chain=coa",
+          "--out=docs/reports/golden/compute_coa_cost_estimates/post/coa-forced.json"
+        ],
+        [
+          "{sql}",
+          "UPDATE coa_applications c SET cost_classified_at = b.cost_classified_at FROM coa_cost_cohort_bak_{ts} b WHERE c.id = b.id"
+        ],
+        [
+          "{sql}",
+          "DROP TABLE coa_cost_cohort_bak_{ts}"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ add_number, Night A-swap 2026-10-22): cost_estimates is a guarded upsert (is_distinct_from over estimated_cost and eleven more columns) that only sees CoAs on the pending cursor, so the bracket copies 50 settled CoAs (id, lead_id, cost_classified_at) to coa_cost_cohort_bak_{ts}, sets cost_classified_at NULL for them (only CoAs with a modeled_gfa_sqm: the step cannot re-price a CoA with no GFA, 2 of the first 50 stale July rows in the first attempt did not heal), then ingestor-forced-cohort adds 1 to their numeric estimated_cost guard column, runs the converted step (it re-prices the 50, the guard fires, estimated_cost heals; records_updated for cost_estimates and the cost_classified_at watermark on coa_applications) and restores the cohort; the SQL steps restore the original cost_classified_at stamps and drop the backup. Retake order: run it right after the classify_coa_trades bracket in chain order (the ledger gate skips a chain run while no upstream trades run completed with changes since this step's own last completed run)."
+    }
+  }
+}

@@ -306,7 +306,8 @@ describe('compute_coa_cost_estimates ① — converted claims (RED at ①; flip 
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
   });
 
-  it.fails('D1b — frozen shell: pipeline.step() (flips at the cutover)', () => {
+  // FLIPPED at the shell swap (Spec 124 R-EQ, P4-SWAP: a step whose ② landed at compute_ported moves to runner_wired in its swap commit); the legacy-name retirement and converted[] registration stay at ③.
+  it('D1b — frozen shell: pipeline.step() (flipped at the R-EQ shell swap)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
@@ -331,7 +332,8 @@ describe('compute_coa_cost_estimates ① — converted claims (RED at ①; flip 
     expect(d.execution.batch_size_from_config).toBe('compute_coa_cost_estimates_batch_size');
   });
 
-  it.fails('D4b — the shell reads no argv / env knob (--full is override.force_full; --dry-run / --limit / ARCHETYPE_COST_DISABLED retired) (flips at the cutover)', () => {
+  // FLIPPED at the shell swap (Spec 124 R-EQ, P4-SWAP: a step whose ② landed at compute_ported moves to runner_wired in its swap commit); the legacy-name retirement and converted[] registration stay at ③.
+  it('D4b — the shell reads no argv / env knob (--full is override.force_full; --dry-run / --limit / ARCHETYPE_COST_DISABLED retired) (flipped at the R-EQ shell swap)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).not.toMatch(/process\.argv|process\.env/);
   });

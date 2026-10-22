@@ -897,7 +897,6 @@
         "coa_applications": [
           "linked_permit_num",
           "linked_confidence",
-          "last_seen_at",
           "latitude",
           "longitude",
           "ward"
