@@ -111,11 +111,13 @@ describe('CHAT-84.TWIN-1: identical text, one reading', () => {
     const U = await load();
     const ref = U.get('900.2.10(621)#(621)[SSP](B)') as Json;
     expect(ref.archetype).toBe('UNUSUAL');
-    for (const id of ['900.3.10(1335)#(1335)[SSP](A)', '900.3.10(1332)#(1332)[SSP](A)']) {
+    for (const id of ['900.3.10(1335)#(1335)[SSP](A)', '900.3.10(1332)#(1332)[SSP](A)', '900.3.10(1329)#(1329)[SSP](A)']) { // 1329 (A): found by the precedent sweep (identical text, same ruling)
       const u = U.get(id) as Json;
       expect([id, u.archetype, u.target, u.numeric_expression, u.condition]).toEqual([id, ref.archetype, ref.target, ref.numeric_expression, ref.condition]);
       expect(u.disclosure, id).not.toBe('none');
     }
+    // 1419 (A): already UNUSUAL, but keyed with no lawfully_existing condition (reported in the verify-42 handback, not changed)
+    expect((U.get('900.3.10(1419)#(1419)[SSP](A)') as Json).archetype).toBe('UNUSUAL');
   }, 120000);
   it('900.3.10(70) (B) takes the FAM-STEP form of 975 (B) (per-storey side yard: UNUSUAL, 1.8 and 0.6 limit_not_modelled)', async () => {
     const U = await load();
