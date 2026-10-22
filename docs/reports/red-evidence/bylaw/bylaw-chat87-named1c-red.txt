@@ -1,0 +1,14 @@
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > each of the 44 is in vocab.named_street and is a LIMIT with a target and a minimum 5ms
+     → expected [ '900.3.10(325)#(325)[SSP](C)', …(2) ] to deeply equal [ '900.3.10(325)#(325)[SSP](C)', …(2) ]
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > no other unit carrying abuts_named_street is a LIMIT (the card is the 44, no unit beyond it) 1ms
+     → expected [ …(12) ] to deeply equal [ …(44) ]
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > identical clause text reads one way: 323 (C) = 325 (C), 1170 (A)(i) = 1168 (C)(i), 256 (D) = 264 (A) 0ms
+     → expected [ '900.3.10(325)#(325)[SSP](C)', …(4) ] to deeply equal [ '900.3.10(325)#(325)[SSP](C)', …(4) ]
+   × CHAT-87.NAMED-1c: the M-285 join computes 325 (C) and 1168 (C)(i) > a parcel on Huntingwood Dr. in exception 325 takes the 7.5 m front setback of 325 (C); a parcel on Ravencliff Cres. does not 8ms
+     → expected { status: 'value', value: 6, …(10) } to match object { status: 'value', value: 7.5, …(1) }
+   × CHAT-87.NAMED-1c: the M-285 join computes 325 (C) and 1168 (C)(i) > a parcel on Conference Boulevard in exception 1168 takes the 7.5 m front setback of 1168 (C)(i) 2ms
+     → expected { status: 'value', value: 6, …(10) } to match object { status: 'value', value: 7.5, …(1) }
+   × CHAT-87.NAMED-1c: the 32 named-road arms of NAMED-1b are computed > the 12 table units are LIMIT; each of the other 32 is LIMIT again and its live record of every converted field cites CHAT-87.NAMED-1c 1351ms
+     → expected +0 to be 32 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  6 failed | 10 passed (16)
