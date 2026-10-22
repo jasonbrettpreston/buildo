@@ -1,0 +1,10 @@
+   × link-coa.js — R-JM: coa root owns coa_applications.last_seen_at; permit bump driven by RETURNING > no coa_applications statement written by link_coa sets last_seen_at 65ms
+     → expected 'UPDATE coa_applications ca\n         …' not to match /last_seen_at\s*=/
+   × link-coa.js — R-JM: coa root owns coa_applications.last_seen_at; permit bump driven by RETURNING > the tier UPDATEs return linked_permit_num 52ms
+     → expected 'UPDATE coa_applications ca\n         …' to match /RETURNING\s+ca\.linked_permit_num/
+   × link-coa.js — R-JM: coa root owns coa_applications.last_seen_at; permit bump driven by RETURNING > newly linked permits still get permits.last_seen_at bumped, from the RETURNING set 52ms
+     → expected 'UPDATE permits\n            SET last_…' not to match /FROM coa_applications/
+   × link-coa.js — R-JM: coa root owns coa_applications.last_seen_at; permit bump driven by RETURNING > source: the only last_seen_at assignment left is the permits bump 3ms
+     → expected [ 'last_seen_at = $1', …(2) ] to have a length of 1 but got 3
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed (4)

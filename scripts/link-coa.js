@@ -85,12 +85,14 @@ pipeline.run('link-coa', async (pool) => {
     pipeline.emitMeta(
       { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num", "linked_confidence", "latitude", "longitude"],
         "permits": ["permit_num", "revision_num", "street_num", "street_name_normalized", "ward", "issued_date", "application_date", "description", "latitude", "longitude"] },
-      { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at", "latitude", "longitude", "ward"] }
+      { "coa_applications": ["linked_permit_num", "linked_confidence", "latitude", "longitude", "ward"] }
     );
     return;
   }
 
   let tier1a = 0, tier1b = 0, tier1c = 0;
+  // R-JM (CHAT-56/59): the permits linked by this run's tier UPDATEs (RETURNING), which drive the permit bump below.
+  const linkedPermitNums = new Set();
   let tier2a = 0, tier2b = 0;
   let desc = 0, descErrors = 0, tier3Skipped = 0;
   let crossWardCleaned = 0;
@@ -238,8 +240,7 @@ pipeline.run('link-coa', async (pool) => {
         const result = await client.query(
           `UPDATE coa_applications ca
           SET linked_permit_num = matched.permit_num,
-              linked_confidence = ${confidence},
-              last_seen_at = $1::timestamptz
+              linked_confidence = ${confidence}
           FROM (
             SELECT DISTINCT ON (ca2.id) ca2.id, p.permit_num
             FROM coa_applications ca2
@@ -247,9 +248,10 @@ pipeline.run('link-coa', async (pool) => {
             WHERE ${filterWhere}
             ORDER BY ca2.id, COALESCE(p.issued_date, p.application_date) DESC NULLS LAST, p.permit_num DESC
           ) matched
-          WHERE ca.id = matched.id`,
-          [RUN_AT]
+          WHERE ca.id = matched.id
+          RETURNING ca.linked_permit_num`
         );
+        for (const r of result.rows) linkedPermitNums.add(r.linked_permit_num);
         return result.rowCount || 0;
       });
     } else {
@@ -328,8 +330,7 @@ pipeline.run('link-coa', async (pool) => {
             )
             UPDATE coa_applications ca
             SET linked_permit_num = matched.permit_num,
-                linked_confidence = matched.conf,
-                last_seen_at = $4::timestamptz
+                linked_confidence = matched.conf
             FROM (
               SELECT DISTINCT ON (c.coa_id) c.coa_id, lat.permit_num,
                 CASE
@@ -357,7 +358,9 @@ pipeline.run('link-coa', async (pool) => {
               ORDER BY c.coa_id
             ) matched
             WHERE ca.id = matched.coa_id
-          `, [ids, wards, queries, RUN_AT]);
+            RETURNING ca.linked_permit_num
+          `, [ids, wards, queries]);
+          for (const r of result.rows) linkedPermitNums.add(r.linked_permit_num);
           desc += result.rowCount || 0;
         });
       } catch (err) {
@@ -415,8 +418,9 @@ pipeline.run('link-coa', async (pool) => {
   // lifecycle re-classification.
   //
   // Scope: permits whose linked_permit_num was set during this run.
-  // We detect them via coa_applications.last_seen_at >= startTime
-  // since each tier UPDATE sets last_seen_at = NOW() on the CoA row.
+  // We take them from the tier UPDATEs' RETURNING linked_permit_num (R-JM,
+  // CHAT-59): link_coa no longer stamps coa_applications.last_seen_at, which
+  // the coa root owns (R-DZ, R-FF).
   // Idempotency guard: don't bump a permit whose last_seen_at is
   // already within the last 1 second (avoids redundant writes when
   // the linker is re-run quickly).
@@ -436,23 +440,14 @@ pipeline.run('link-coa', async (pool) => {
   // SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §2.7
   let permitsBumped = 0;
   if (!dryRun) {
-    // Use RUN_AT (DB-sourced timestamp) for the window start so this query uses
-    // the same clock source as the linking tier UPDATEs. A JS Date.now() bumpStart
-    // can be ahead of the DB clock, causing the subquery to miss newly-linked CoAs.
-    const bumpStart = RUN_AT.toISOString();
     permitsBumped = await pipeline.withTransaction(pool, async (client) => {
       const bumpResult = await client.query(
         `UPDATE permits
             SET last_seen_at = $2::timestamptz
-          WHERE permit_num IN (
-            SELECT DISTINCT linked_permit_num
-              FROM coa_applications
-             WHERE linked_permit_num IS NOT NULL
-               AND last_seen_at >= $1::timestamptz
-          )
+          WHERE permit_num = ANY($1::text[])
             AND last_seen_at < NOW() - INTERVAL '1 second'
             AND (lifecycle_phase IS NULL OR lifecycle_phase NOT IN ${SKIP_PHASES_SQL})`,
-        [bumpStart, RUN_AT],
+        [[...linkedPermitNums], RUN_AT],
       );
       return bumpResult.rowCount || 0;
     });
@@ -920,7 +915,7 @@ pipeline.run('link-coa', async (pool) => {
   pipeline.emitMeta(
     { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num", "linked_confidence", "latitude", "longitude"],
       "permits": ["permit_num", "revision_num", "street_num", "street_name_normalized", "ward", "issued_date", "application_date", "description", "latitude", "longitude"] },
-    { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at", "latitude", "longitude", "ward"],
+    { "coa_applications": ["linked_permit_num", "linked_confidence", "latitude", "longitude", "ward"],
       "permits": ["last_seen_at", "linked_coa_application_number"] }
   );
   });

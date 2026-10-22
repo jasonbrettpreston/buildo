@@ -77,6 +77,27 @@ describe('R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams', () => {
     expect(r.violations.join('\n')).toContain('assert_coa_freshness (runner_wired) ← link_coa: unconverted, not in pending[]');
   });
 
+  it('R-JM: with the owed descriptor edit (link_coa dropped from the two reads.steps), the four CoA shells swapped together have zero violations; without it exactly the two link_coa violations remain', async () => {
+    const { checkSwapOrder, loadSwapOrderInput } = await loadSwap();
+    const { stageAwaitsCaptures } = await loadSv();
+    let swapped = loadSwapOrderInput(ROOT);
+    for (const f of ['scripts/quality/assert-coa-freshness.js', 'scripts/classify-coa-scope.js', 'scripts/classify-coa-trades.js', 'scripts/compute-coa-cost-estimates.js']) {
+      swapped = withStage(swapped, f, 'runner_wired');
+    }
+    // The descriptor edit moves source_fingerprint, so it lands with the swap night's recaptures (R-JM OWED-NIGHT,
+    // ~/Buildo-scratch/linkcoa/rjm-descriptors.patch); here it is applied in memory.
+    const dropLink = (rel: string) => {
+      const d = swapped.descriptorOf(rel) as { inputs?: { reads?: { steps?: Array<{ step: string }> } } } | null;
+      if (d?.inputs?.reads?.steps) d.inputs.reads.steps = d.inputs.reads.steps.filter((x) => x.step !== 'link_coa');
+      return d;
+    };
+    const before = checkSwapOrder(swapped, stageAwaitsCaptures);
+    expect(before.violations.map((v) => v.replace(/:.*/, ''))).toEqual(['assert_coa_freshness (runner_wired) ← link_coa', 'classify_coa_scope (runner_wired) ← link_coa']);
+    const after = checkSwapOrder({ ...swapped, descriptorOf: dropLink }, stageAwaitsCaptures);
+    expect(after.violations).toEqual([]);
+    expect(after.pass).toBe(true);
+  });
+
   it('the module self-test passes', async () => {
     const { selfTest } = await loadSwap();
     expect(selfTest().ok).toBe(true);
