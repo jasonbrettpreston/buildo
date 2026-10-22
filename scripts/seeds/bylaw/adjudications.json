@@ -103662,6 +103662,454 @@
         "status": "modelled",
         "user_inputs": []
       }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/target~s1",
+      "kind": "correction",
+      "reason": "M-243 window projection target",
+      "rule": "verify-42 item 6: M-243: a bay or box window projection is window_projection_encroachment_m, not encroachment_m; Spec 133 §m.243, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](J)/target",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": "window_projection_encroachment_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "M-243 window projection target",
+      "rule": "verify-42 item 6: M-243: a bay or box window projection is window_projection_encroachment_m, not encroachment_m; Spec 133 §m.243, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](J)/numeric_expression",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": [
+        "window_projection_encroachment_m = 0.6 m @(144)[SSP](J)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(237)#(237)[SSP](A)(iv)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP partial form",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: the complement arm that is the smallest of its siblings is a true minimum, partially_modelled, named-road siblings UNUSUAL (as 1029 (C)(iii)); Spec 133 §m.136, §m.130, §m.82",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iv)",
+      "value": {
+        "description": "The 6.0 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setbacks of the named-road arms are not modelled except where the street table computes them; street names are not otherwise held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP partial form",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: the complement arm that is the smallest of its siblings is a true minimum, partially_modelled, named-road siblings UNUSUAL (as 1029 (C)(iii)); Spec 133 §m.136, §m.130, §m.82",
+      "unit": "900.4.10(284)#(284)[SSP](D)(ii)",
+      "value": {
+        "description": "The 6.0 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setbacks of the named-road arms are not modelled except where the street table computes them; street names are not otherwise held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP partial form",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: the complement arm that is the smallest of its siblings is a true minimum, partially_modelled, named-road siblings UNUSUAL (as 1029 (C)(iii)); Spec 133 §m.136, §m.130, §m.82",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(ii)",
+      "value": {
+        "description": "The 6.0 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setbacks of the named-road arms are not modelled except where the street table computes them; street names are not otherwise held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(iii)/archetype",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.3.10(812)#(812)[SSP](D)(iii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(iii)/target",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.3.10(812)#(812)[SSP](D)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(iii)/bound",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.3.10(812)#(812)[SSP](D)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(iii)/numeric_expression",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.3.10(812)#(812)[SSP](D)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(iii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.3.10(812)#(812)[SSP](D)(iii)",
+      "value": [
+        {
+          "clause": "(812)[SSP](D)(iii)",
+          "literal": "6.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(iii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.3.10(812)#(812)[SSP](D)(iii)",
+      "value": {
+        "description": "The 6.0 m front setback applies in all other cases than the named-road and named-lot arms; a sibling arm sets a smaller figure, so it is not a true minimum.",
+        "gaps": "Which sibling arm governs a lot (the named roads and the named lots) is not held, and a sibling arm is smaller than 6.0 m.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(iii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.3.10(812)#(812)[SSP](D)(iii)",
+      "value": "In all other cases the minimum front setback is 6.0 metres, but a sibling arm for named lots sets a smaller figure, so this is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(iii)/archetype",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.4.10(202)#(202)[SSP](D)(iii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(iii)/target",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.4.10(202)#(202)[SSP](D)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(iii)/bound",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.4.10(202)#(202)[SSP](D)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(iii)/numeric_expression",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.4.10(202)#(202)[SSP](D)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(iii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.4.10(202)#(202)[SSP](D)(iii)",
+      "value": [
+        {
+          "clause": "(202)[SSP](D)(iii)",
+          "literal": "6.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(iii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.4.10(202)#(202)[SSP](D)(iii)",
+      "value": {
+        "description": "The 6.0 m front setback applies in all other cases than the named-road and named-lot arms; a sibling arm sets a smaller figure, so it is not a true minimum.",
+        "gaps": "Which sibling arm governs a lot (the named roads and the named lots) is not held, and a sibling arm is smaller than 6.0 m.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(iii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.4.10(202)#(202)[SSP](D)(iii)",
+      "value": "In all other cases the minimum front setback is 6.0 metres, but a sibling arm for named lots sets a smaller figure, so this is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(iii)/archetype",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.5.10(200)#(200)[SSP](A)(iii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(iii)/target",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.5.10(200)#(200)[SSP](A)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(iii)/bound",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.5.10(200)#(200)[SSP](A)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(iii)/numeric_expression",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.5.10(200)#(200)[SSP](A)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(iii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.5.10(200)#(200)[SSP](A)(iii)",
+      "value": [
+        {
+          "clause": "(200)[SSP](A)(iii)",
+          "literal": "6.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(iii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.5.10(200)#(200)[SSP](A)(iii)",
+      "value": {
+        "description": "The 6.0 m front setback applies in all other cases than the named-road and named-lot arms; a sibling arm sets a smaller figure, so it is not a true minimum.",
+        "gaps": "Which sibling arm governs a lot (the named roads and the named lots) is not held, and a sibling arm is smaller than 6.0 m.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(iii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP not smallest",
+      "rule": "verify-42 item 6: CHAT-81.FAM-ALL FAM-ABUT-COMP: a complement arm that is not the smallest of its siblings (arm (ii) is 4.5 m) is UNUSUAL, disclosed; Spec 133 §m.136, §m.102, §m.82",
+      "unit": "900.5.10(200)#(200)[SSP](A)(iii)",
+      "value": "In all other cases the minimum front setback is 6.0 metres, but a sibling arm for named lots sets a smaller figure, so this is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1435)#(1435)[SSP](D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "exact 1436 (D) form",
+      "rule": "verify-42 item 6: CHAT-64/CHAT-67.1434A twin rulings: the lawfully-existing-house clause is the exact 1436 (D) form, application.lot_conditions lawfully_existing; Spec 133 §m.317, §m.82",
+      "unit": "900.3.10(1435)#(1435)[SSP](D)",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1435)#(1435)[SSP](D)/application.evidence",
+      "kind": "correction",
+      "reason": "exact 1436 (D) form",
+      "rule": "verify-42 item 6: CHAT-64/CHAT-67.1434A twin rulings: the lawfully-existing-house clause is the exact 1436 (D) form, application.lot_conditions lawfully_existing; Spec 133 §m.317, §m.82",
+      "unit": "900.3.10(1435)#(1435)[SSP](D)",
+      "value": {
+        "RD": "Exception RD 1435",
+        "detached_house": "lawfully existing detached house",
+        "lawfully_existing": "lawfully existing detached"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1438)#(1438)[SSP](D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "exact 1436 (D) form",
+      "rule": "verify-42 item 6: CHAT-64/CHAT-67.1434A twin rulings: the lawfully-existing-house clause is the exact 1436 (D) form, application.lot_conditions lawfully_existing; Spec 133 §m.317, §m.82",
+      "unit": "900.3.10(1438)#(1438)[SSP](D)",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1438)#(1438)[SSP](D)/application.evidence",
+      "kind": "correction",
+      "reason": "exact 1436 (D) form",
+      "rule": "verify-42 item 6: CHAT-64/CHAT-67.1434A twin rulings: the lawfully-existing-house clause is the exact 1436 (D) form, application.lot_conditions lawfully_existing; Spec 133 §m.317, §m.82",
+      "unit": "900.3.10(1438)#(1438)[SSP](D)",
+      "value": {
+        "RD": "Exception RD 1438",
+        "detached_house": "lawfully existing detached house",
+        "lawfully_existing": "lawfully existing detached"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(70)#(70)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "FAM-ANCCOV",
+      "rule": "verify-42 item 6: FAM-ANCCOV (CHAT-81.FAM-ALL): the coverage of ancillary buildings is ancillary_coverage_pct; Spec 133 §m.130, §m.82",
+      "unit": "900.3.10(70)#(70)[SSP](D)",
+      "value": "ancillary_coverage_pct"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(70)#(70)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "FAM-ANCCOV",
+      "rule": "verify-42 item 6: FAM-ANCCOV (CHAT-81.FAM-ALL): the coverage of ancillary buildings is ancillary_coverage_pct; Spec 133 §m.130, §m.82",
+      "unit": "900.3.10(70)#(70)[SSP](D)",
+      "value": [
+        "ancillary_coverage_pct = 5 pct @(70)[SSP](D)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(69)#(69)[SSP](E)/target",
+      "kind": "correction",
+      "reason": "FAM-ANCCOV",
+      "rule": "verify-42 item 6: FAM-ANCCOV (CHAT-81.FAM-ALL): the coverage of ancillary buildings is ancillary_coverage_pct; Spec 133 §m.130, §m.82",
+      "unit": "900.3.10(69)#(69)[SSP](E)",
+      "value": "ancillary_coverage_pct"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(69)#(69)[SSP](E)/numeric_expression",
+      "kind": "correction",
+      "reason": "FAM-ANCCOV",
+      "rule": "verify-42 item 6: FAM-ANCCOV (CHAT-81.FAM-ALL): the coverage of ancillary buildings is ancillary_coverage_pct; Spec 133 §m.130, §m.82",
+      "unit": "900.3.10(69)#(69)[SSP](E)",
+      "value": [
+        "ancillary_coverage_pct = 5 pct @(69)[SSP](E)"
+      ]
     }
   ]
 }

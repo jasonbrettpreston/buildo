@@ -44,3 +44,38 @@ describe('verify-42 item 5b: 1461 (F) is PERMIT as 1460 (F); 1031 (G) is garage_
     }
   }, 120000);
 });
+
+// item 6: smaller precedent fixes
+describe('verify-42 item 6: older rulings applied to the later-keyed units of the same wording', () => {
+  it('144 (J) bay window projection is window_projection_encroachment_m (M-243)', async () => {
+    const u = (await load()).get('900.4.10(144)#(144)[SSP](J)') as Json;
+    expect([u.archetype, u.target, u.bound]).toEqual(['LIMIT', 'window_projection_encroachment_m', 'max']);
+  }, 120000);
+  it('the complement arms that are the smallest sibling (237 (A)(iv), 284 (D)(ii), 1057 (C)(ii)) are the partial form, as 1029 (C)(iii)', async () => {
+    const U = await load();
+    for (const id of ['900.3.10(1029)#(1029)[SSP](C)(iii)', '900.5.10(237)#(237)[SSP](A)(iv)', '900.4.10(284)#(284)[SSP](D)(ii)', '900.3.10(1057)#(1057)[SSP](C)(ii)']) {
+      const u = U.get(id) as Json;
+      expect([id, u.archetype, u.target, u.calculation_handling.status]).toEqual([id, 'LIMIT', 'street_setback_m', 'partially_modelled']);
+    }
+  }, 120000);
+  it('the complement arms that are not the smallest sibling (812 (D)(iii), 202 (D)(iii), 900.5.10 200 (A)(iii)) are UNUSUAL', async () => {
+    const U = await load();
+    for (const id of ['900.3.10(812)#(812)[SSP](D)(iii)', '900.4.10(202)#(202)[SSP](D)(iii)', '900.5.10(200)#(200)[SSP](A)(iii)']) {
+      const u = U.get(id) as Json;
+      expect(u.archetype, id).toBe('UNUSUAL');
+      expect(u.literals_not_expressed.some((l: Json) => l.literal === '6.0 metres' && l.reason === 'limit_not_modelled'), id).toBe(true);
+    }
+  }, 120000);
+  it('1435 (D) and 1438 (D) are the exact 1436 (D) form: lot_conditions lawfully_existing', async () => {
+    const U = await load();
+    for (const id of ['900.3.10(1436)#(1436)[SSP](D)', '900.3.10(1435)#(1435)[SSP](D)', '900.3.10(1438)#(1438)[SSP](D)']) {
+      const u = U.get(id) as Json;
+      expect([id, u.application.lot_conditions]).toEqual([id, ['lawfully_existing']]);
+      expect(u.application.evidence.lawfully_existing, id).toBeTruthy();
+    }
+  }, 120000);
+  it('70 (D) and 69 (E) ancillary-building coverage is ancillary_coverage_pct (FAM-ANCCOV)', async () => {
+    const U = await load();
+    for (const id of ['900.3.10(971)#(971)[SSP](D)', '900.3.10(70)#(70)[SSP](D)', '900.3.10(69)#(69)[SSP](E)']) expect((U.get(id) as Json).target, id).toBe('ancillary_coverage_pct');
+  }, 120000);
+});

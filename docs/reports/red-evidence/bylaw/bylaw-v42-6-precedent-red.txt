@@ -1,0 +1,12 @@
+   × verify-42 item 6: older rulings applied to the later-keyed units of the same wording > 144 (J) bay window projection is window_projection_encroachment_m (M-243) 1282ms
+     → expected [ 'LIMIT', 'encroachment_m', 'max' ] to deeply equal [ 'LIMIT', …(2) ]
+   × verify-42 item 6: older rulings applied to the later-keyed units of the same wording > the complement arms that are the smallest sibling (237 (A)(iv), 284 (D)(ii), 1057 (C)(ii)) are the partial form, as 1029 (C)(iii) 1270ms
+     → expected [ …(4) ] to deeply equal [ …(4) ]
+   × verify-42 item 6: older rulings applied to the later-keyed units of the same wording > the complement arms that are not the smallest sibling (812 (D)(iii), 202 (D)(iii), 900.5.10 200 (A)(iii)) are UNUSUAL 1231ms
+     → 900.3.10(812)#(812)[SSP](D)(iii): expected 'LIMIT' to be 'UNUSUAL' // Object.is equality
+   × verify-42 item 6: older rulings applied to the later-keyed units of the same wording > 1435 (D) and 1438 (D) are the exact 1436 (D) form: lot_conditions lawfully_existing 1222ms
+     → expected [ '900.3.10(1435)#(1435)[SSP](D)', [] ] to deeply equal [ …(2) ]
+   × verify-42 item 6: older rulings applied to the later-keyed units of the same wording > 70 (D) and 69 (E) ancillary-building coverage is ancillary_coverage_pct (FAM-ANCCOV) 1229ms
+     → 900.3.10(70)#(70)[SSP](D): expected 'lot_coverage_pct' to be 'ancillary_coverage_pct' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  5 failed | 2 passed (7)

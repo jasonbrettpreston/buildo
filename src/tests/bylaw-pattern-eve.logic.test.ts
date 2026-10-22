@@ -21,6 +21,9 @@ describe('EVE.R6-1 / R6-2 / R9-1: pattern growth', () => {
   it('they do not license neighbouring wordings', () => {
     expect(lic('front_setback_m', 'the front lot line that abuts a lane is the rear line')).toBe(false);
     expect(lic('front_setback_m', 'the average elevation of the ground along the front line')).toBe(false);
+    // verify-42 item 6: the dwelling-unit wording licenses dwelling_units_max only, and one dwelling alone is not a count of units
+    expect(lic('lot_coverage_pct', 'There is a maximum of one dwelling unit on each lot;')).toBe(false);
+    expect(lic('dwelling_units_max', 'one dwelling and one accessory structure are permitted on each lot;')).toBe(false);
   });
   it('324 (C), 324 (D)(ii) and 331 (C) resolve to LIMITs', async () => {
     const V = await mod('scripts/analysis/bylaw/validate.mjs');
