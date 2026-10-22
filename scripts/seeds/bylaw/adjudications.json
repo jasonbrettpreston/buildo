@@ -94451,6 +94451,133 @@
       "rule": "HELD on R16-5; Spec 133 §m.82 (M-75 correction form) under the lane label: the adjudicated LIMIT uses its number",
       "unit": "900.5.10(264)#(264)[SSP](E)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-17); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": [
+        {
+          "clause": "(515)[SSP](E)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(136)#(136)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-17); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.4.10(136)#(136)[SSP](A)",
+      "value": [
+        {
+          "clause": "(136)[SSP](A)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-17); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.5.10(200)#(200)[SSP](A)(ii)",
+      "value": [
+        {
+          "clause": "(200)[SSP](A)(ii)",
+          "literal": "6.0 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(200)[SSP](A)(ii)",
+          "literal": "55",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(200)[SSP](A)(ii)",
+          "literal": "95",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17-held",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(125)#(125)[SSP](D)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a4662c9b: answer other — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type with the per-unit arm times dwelling_units",
+      "unit": "900.4.10(125)#(125)[SSP](D)(i)",
+      "value": [
+        "required_lot_frontage_m = by_type(semi_detached_house: 18.0 m; other: 9.0 m × dwelling_units) @(125)[SSP](D)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17-held",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(125)#(125)[SSP](D)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5072dd14: answer other — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type with the per-unit arm times dwelling_units",
+      "unit": "900.4.10(125)#(125)[SSP](D)(ii)",
+      "value": [
+        "required_lot_area_m2 = by_type(semi_detached_house: 610 m2; other: 305 m2 × dwelling_units) @(125)[SSP](D)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(136)#(136)[SSP](E)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-997cf2f3: answer A — HELD on R17-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130), same as 145 (H) in R15-3",
+      "unit": "900.4.10(136)#(136)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(136)#(136)[SSP](E)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b42c2505: answer A — HELD on R17-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130), same as 145 (H) in R15-3",
+      "unit": "900.4.10(136)#(136)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(136)#(136)[SSP](E)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-49711598: answer A — HELD on R17-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130), same as 145 (H) in R15-3",
+      "unit": "900.4.10(136)#(136)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r17-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(136)#(136)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-cb64b22a: answer A — HELD on R17-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130), same as 145 (H) in R15-3",
+      "unit": "900.4.10(136)#(136)[SSP](E)"
     }
   ]
 }
