@@ -179,7 +179,7 @@ describe('coa ② compute — the declared changes', () => {
 
 // COA-D17 (D-WARD, CHAT-38.D-WARD, operator y 2026-10-21): coa_applications.ward is one fixed form, two digits ('03').
 // CKAN's Active and Closed resources carry '3' and '03' for the same ward; grouping by ward split one ward in two.
-describe('coa ② compute — COA-D17 ward is two digits', () => {
+describe('coa ② compute — COA-D17 (R-JB) ward is two digits', () => {
   it('a one-digit ward (WARD or WARD_NUMBER) is zero-padded; a two-digit ward is unchanged', () => {
     expect(shape(rec({ WARD: '3' })).ward).toBe('03');
     expect(shape(rec({ WARD: undefined, WARD_NUMBER: '7' })).ward).toBe('07');
