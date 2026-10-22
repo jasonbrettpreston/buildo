@@ -1,0 +1,32 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-chat-batch-t-56/2026-10-22-batch-t.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-chat-batch-t-56",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "pushing 1 y 2 y 3 y",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-chat-batch-t-56/2026-10-22-batch-t.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-56": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "row": "R-JM"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-56",
+      "question": "LINKCOA-ORDER: option B",
+      "recommendation": "link_coa stops stamping coa_applications.last_seen_at; measure the five other readers read-only first; no R-EQ exception.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

@@ -5477,6 +5477,20 @@
       }
     },
     {
+      "id": "R-JM",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/link-coa-last-seen.logic.test.ts"
+      },
+      "statement": "link_coa stops stamping coa_applications.last_seen_at (the coa root owns it) and drives its permit bump from the tier UPDATEs' RETURNING linked_permit_num, so assert_coa_freshness and classify_coa_scope no longer read the unconverted link_coa and R-EQ #54 passes with no exception (operator CHAT-56 + CHAT-59).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-JU",
       "kind": "register-ruling",
       "status": "one-off",

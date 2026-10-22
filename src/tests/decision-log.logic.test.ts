@@ -437,7 +437,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(148); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-54 + CHAT-55 + CHAT-57, CHAT-58; the number decision-log --check prints
+    expect(r.decisions).toBe(150); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-54 + CHAT-55 + CHAT-56 + CHAT-57, CHAT-58 + CHAT-59; the number decision-log --check prints
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(7); // CHAT-57 and CHAT-58 (run Night A core, fetch 2017 PDFs; rest on R-JB, R-CZ), CHAT-26, CHAT-43-era rows, CHAT-51 (restart lane, rests on R-EY) and CHAT-54 (no cloud until local complete, rests on R-AQ.1)
   });
@@ -447,6 +447,14 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     expect(q.decisions.map((d) => [d.id, d.decision])).toEqual([['CHAT-52', 'approve'], ['CHAT-53', 'approve']]);
     expect(q.routing['CHAT-52']!.row).toBe('R-JK');
     expect(q.routing['CHAT-53']!.row).toBe('R-JL');
+  });
+
+  it('chat batches T and U (CHAT-56, CHAT-59, LINKCOA-ORDER option B-plus): both route to R-JM', () => {
+    for (const [stem, id] of [['2026-10-22-chat-batch-t-56', 'CHAT-56'], ['2026-10-22-chat-batch-u-59', 'CHAT-59']] as const) {
+      const l = byStem.get(stem) as { routing: Record<string, { row?: string }>; decisions: Array<{ id: string; decision: string }> };
+      expect(l.decisions.map((d) => [d.id, d.decision])).toEqual([[id, 'approve']]);
+      expect(l.routing[id]!.row).toBe('R-JM');
+    }
   });
 
   it('chat batch S (CHAT-55, chain-tooling-flip): routes to R-JU; CHAIN-TOOLING reads BUILT, LDG-10 and EP-PIN-D17 stay PARTIAL; the +10% clause carries the dated SUPERSEDED note in Spec 122', () => {

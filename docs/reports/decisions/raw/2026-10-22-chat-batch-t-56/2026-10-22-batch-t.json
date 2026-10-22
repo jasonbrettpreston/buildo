@@ -1,0 +1,13 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "pushing 1 y 2 y 3 y",
+  "context": "LINKCOA-ORDER ruling option B: link_coa stops stamping coa_applications.last_seen_at so assert_coa_freshness and classify_coa_scope no longer read the unconverted link_coa (R-EQ #54, Q-R-EQ-1 no exceptions kept); measure the other readers of last_seen_at read-only first.",
+  "decisions": [
+    {
+      "id": "CHAT-56",
+      "subject": "LINKCOA-ORDER: option B",
+      "decision": "approve",
+      "recommendation": "link_coa stops stamping coa_applications.last_seen_at; measure the five other readers read-only first; no R-EQ exception."
+    }
+  ]
+}

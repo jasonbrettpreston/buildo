@@ -1,0 +1,3 @@
+HEAD descriptors, four CoA steps runner_wired: pass=false
+assert_coa_freshness (runner_wired) ← link_coa: unconverted, not in pending[] (neither swapped nor captured)
+classify_coa_scope (runner_wired) ← link_coa: unconverted, not in pending[] (neither swapped nor captured)

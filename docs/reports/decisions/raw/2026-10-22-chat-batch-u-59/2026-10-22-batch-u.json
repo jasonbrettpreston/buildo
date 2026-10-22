@@ -1,0 +1,13 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "push complete - y decision B-plus",
+  "context": "Amends CHAT-56 after the LINKCOA-B read-only measurement (~/Buildo-scratch/linkcoa/readers-measure.md): removing link_coa's two coa_applications.last_seen_at stamps (link-coa.js:242, :332) alone would silently break link_coa's own permit bump (link-coa.js:409-455), which selects this run's newly linked CoAs by last_seen_at >= bumpStart. B-plus: remove the two stamps AND have the tier UPDATEs RETURNING linked_permit_num feed the permit bump, so newly linked permits are still bumped. Keeps R-EQ #54 and Q-R-EQ-1 'no exceptions'.",
+  "decisions": [
+    {
+      "id": "CHAT-59",
+      "subject": "LINKCOA-ORDER: option B-plus",
+      "decision": "approve",
+      "recommendation": "Remove link_coa's two last_seen_at stamps; drive the permit bump from the tier UPDATEs' RETURNING linked_permit_num; COA-D defect row for the portal-rot masking; red-first; assert_coa_freshness and classify_coa_scope recapture at the swap night."
+    }
+  ]
+}
