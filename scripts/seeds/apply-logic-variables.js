@@ -44,10 +44,11 @@ const SEEDS = require('./logic_variables.json');
  * Existing rows (including operator-tuned values) are preserved.
  *
  * @param {import('pg').Pool | import('pg').PoolClient} pool
+ * @param {Record<string, object>} [seeds] test seam; defaults to logic_variables.json
  * @returns {Promise<void>}
  */
-async function applyLogicVariables(pool) {
-  const entries = Object.entries(SEEDS);
+async function applyLogicVariables(pool, seeds = SEEDS) {
+  const entries = Object.entries(seeds);
   let inserted = 0;
 
   for (const [key, meta] of entries) {
@@ -55,7 +56,19 @@ async function applyLogicVariables(pool) {
     // take the same storage shape as JSON-typed vars: sentinel 0 in variable_value,
     // the value itself in variable_value_json (migration 219). Every other entry
     // keeps the numeric statement byte-identical.
-    const result = meta.type === 'string'
+    // List-typed variables (seed `type: "list"`, Spec 134 §2 resolve_bylaws_population_zone_classes) store the same way:
+    // sentinel 0, the JSON array in variable_value_json.
+    if (meta.type === 'list' && !Array.isArray(meta.default)) {
+      throw new Error(`logic_variables seed ${key}: type "list" needs an array default`);
+    }
+    const result = meta.type === 'list'
+      ? await pool.query(
+        `INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description)
+         VALUES ($1, 0, $2::jsonb, $3)
+         ON CONFLICT (variable_key) DO NOTHING`,
+        [key, JSON.stringify(meta.default), meta.description ?? null],
+      )
+      : meta.type === 'string'
       ? await pool.query(
         `INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description)
          VALUES ($1, 0, to_jsonb($2::text), $3)
