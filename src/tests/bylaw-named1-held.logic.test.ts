@@ -14,6 +14,9 @@ const mod = (rel: string): Promise<Json> => import(pathToFileURL(path.join(ROOT,
 const NAMED = ["900.3.10(325)#(325)[SSP](C)","900.3.10(1156)#(1156)[SSP](C)(i)","900.3.10(936)#(936)[SSP](C)(i)","900.3.10(1091)#(1091)[SSP](C)(i)","900.3.10(1120)#(1120)[SSP](C)(i)","900.3.10(714)#(714)[SSP](C)(i)","900.3.10(714)#(714)[SSP](D)(i)","900.3.10(397)#(397)[SSP](B)","900.3.10(975)#(975)[SSP](A)(i)","900.3.10(975)#(975)[SSP](A)(ii)","900.3.10(812)#(812)[SSP](D)(i)","900.3.10(1168)#(1168)[SSP](C)(i)","900.3.10(516)#(516)[SSP](C)(i)","900.3.10(516)#(516)[SSP](C)(ii)","900.3.10(516)#(516)[SSP](C)(iii)","900.3.10(854)#(854)[SSP](C)(i)","900.3.10(854)#(854)[SSP](E)(i)","900.3.10(852)#(852)[SSP](C)(i)","900.3.10(852)#(852)[SSP](E)(i)","900.3.10(713)#(713)[SSP](C)(i)","900.4.10(255)#(255)[SSP](D)(i)","900.4.10(202)#(202)[SSP](D)(i)","900.4.10(202)#(202)[SSP](F)(i)","900.4.10(295)#(295)[SSP](D)(i)","900.4.10(284)#(284)[SSP](D)(i)","900.4.10(81)#(81)[SSP](H)(i)","900.5.10(264)#(264)[SSP](A)(i)","900.5.10(264)#(264)[SSP](A)(ii)","900.5.10(200)#(200)[SSP](A)(i)","900.5.10(200)#(200)[SSP](C)(i)","900.5.10(204)#(204)[SSP](C)(i)","900.5.10(204)#(204)[SSP](E)(i)"];
 const TABLE_UNITS = ["900.3.10(309)#(309)[SSP](C)(i)","900.3.10(303)#(303)[SSP](D)","900.3.10(1057)#(1057)[SSP](C)(i)","900.3.10(323)#(323)[SSP](C)","900.3.10(316)#(316)[SSP](D)","900.3.10(316)#(316)[SSP](H)","900.3.10(560)#(560)[SSP](C)(i)","900.3.10(1032)#(1032)[SSP](C)(i)","900.3.10(1170)#(1170)[SSP](A)(i)","900.4.10(256)#(256)[SSP](D)(i)","900.4.10(256)#(256)[SSP](D)(ii)","900.4.10(70)#(70)[SSP](A)(i)"]; // LIMIT since b10bd225
 const ALL = [...TABLE_UNITS, ...NAMED];
+// precedent sweep (preamble item 13): 1029 (C)(i),(ii) carry the token, are in the table and are word-for-word twins of 264 (A)(i),(ii) and 256 (D)(i),(ii);
+// 1026 (C)(i) is word-for-word 255 (D)(i) (it was keyed with no token; it takes the token and the 255 (D)(i) table row)
+const TWINS: [string, string][] = [["900.3.10(1026)#(1026)[SSP](C)(i)", "900.4.10(255)#(255)[SSP](D)(i)"], ["900.3.10(1029)#(1029)[SSP](C)(i)", "900.5.10(264)#(264)[SSP](A)(i)"], ["900.3.10(1029)#(1029)[SSP](C)(ii)", "900.5.10(264)#(264)[SSP](A)(ii)"]];
 // value of a numeric expression without its clause citation, to compare identical-text twins
 const val = (u: Json): string => JSON.stringify(u.numeric_expression).replace(/\s*@[^"]*/g, '');
 
@@ -35,14 +38,14 @@ describe('CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 j
     }
   });
 
-  it('no other unit carrying abuts_named_street is a LIMIT (the card is the 44, no unit beyond it)', () => {
+  it('no other unit carrying abuts_named_street is a LIMIT (the card is the 44, plus their three word-for-word twins)', () => {
     const left = [...U].filter(([id, x]) => /^900\.[2-6]\.10\(/.test(id) && x.archetype === 'LIMIT' && JSON.stringify(x.condition || '').includes('abuts_named_street'));
-    expect(left.map(([id]) => id).sort()).toEqual([...ALL].sort());
+    expect(left.map(([id]) => id).sort()).toEqual([...ALL, ...TWINS.map(([t]) => t)].sort());
   });
 
-  it('identical clause text reads one way: 323 (C) = 325 (C), 1170 (A)(i) = 1168 (C)(i), 256 (D) = 264 (A)', () => {
+  it('identical clause text reads one way: 323 (C) = 325 (C), 1170 (A)(i) = 1168 (C)(i), 256 (D) = 264 (A) = 1029 (C), 255 (D)(i) = 1026 (C)(i)', () => {
     for (const [a, b] of [['900.3.10(323)#(323)[SSP](C)', '900.3.10(325)#(325)[SSP](C)'], ['900.3.10(1170)#(1170)[SSP](A)(i)', '900.3.10(1168)#(1168)[SSP](C)(i)'],
-      ['900.4.10(256)#(256)[SSP](D)(i)', '900.5.10(264)#(264)[SSP](A)(i)'], ['900.4.10(256)#(256)[SSP](D)(ii)', '900.5.10(264)#(264)[SSP](A)(ii)']] as [string, string][]) {
+      ['900.4.10(256)#(256)[SSP](D)(i)', '900.5.10(264)#(264)[SSP](A)(i)'], ['900.4.10(256)#(256)[SSP](D)(ii)', '900.5.10(264)#(264)[SSP](A)(ii)'], ...TWINS.map(([t, r]) => [r, t])] as [string, string][]) {
       const x = U.get(a) as Json, y = U.get(b) as Json;
       expect([b, y.archetype, y.target, y.bound, val(y)]).toEqual([b, x.archetype, x.target, x.bound, val(x)]);
     }

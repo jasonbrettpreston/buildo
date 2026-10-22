@@ -93,7 +93,7 @@ describe('CHAT-87.NAMED-1c: the 32 named-road arms of NAMED-1b are computed', ()
       '900.3.10(560)#(560)[SSP](C)(i)', '900.3.10(1032)#(1032)[SSP](C)(i)', '900.3.10(1170)#(1170)[SSP](A)(i)', '900.4.10(256)#(256)[SSP](D)(i)', '900.4.10(256)#(256)[SSP](D)(ii)', '900.4.10(70)#(70)[SSP](A)(i)'];
     for (const t of twelve) expect(U.get(t)?.archetype, t).toBe('LIMIT');
     // the 32: every unit whose live archetype record was written for NAMED-1c (restoring the pre-NAMED-1 LIMIT the NAMED-1b records had replaced)
-    const thirtyTwo = [...new Set(adj.filter((x) => x.kind === 'correction' && x.field === 'archetype' && /NAMED-1c/.test(x.rule) && !sup.has(x.id)).map((x) => x.unit))];
+    const thirtyTwo = [...new Set(adj.filter((x) => x.kind === 'correction' && x.field === 'archetype' && /NAMED-1c/.test(x.rule) && /restore the pre-NAMED-1 value/.test(x.reason) && !sup.has(x.id)).map((x) => x.unit))];
     expect(thirtyTwo.length).toBe(32);
     for (const id of thirtyTwo) {
       expect(U.get(id)?.archetype, id).toBe('LIMIT');

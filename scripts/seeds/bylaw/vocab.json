@@ -948,6 +948,7 @@
       "900.3.10(101)#(101)[SSP](C)": {"streets":["Scarborough Golf Club Rd.","Orton Park Rd."],"line":"any"},
       "900.3.10(101)#(101)[SSP](D)": {"streets":["Markham Rd."],"line":"any"},
       "900.3.10(102)#(102)[SSP](C)": {"streets":["Scarborough Golf Club Rd."],"line":"any"},
+      "900.3.10(1026)#(1026)[SSP](C)(i)": {"streets":["Finch Ave.","McCowan Rd.","Middlefield Rd."],"line":"any"},
       "900.3.10(1029)#(1029)[SSP](C)(i)": {"streets":["Finch Ave.","Brimley Rd.","Midland Ave."],"line":"any"},
       "900.3.10(1029)#(1029)[SSP](C)(ii)": {"streets":["Alexmuir Blvd.","Cleadon Rd.","South Shields Ave."],"line":"any"},
       "900.3.10(1032)#(1032)[SSP](C)(i)": {"streets":["McCowan Rd.","Brimley Rd.","Brimwood Blvd."],"line":"any"},

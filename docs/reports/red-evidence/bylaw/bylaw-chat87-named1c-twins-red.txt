@@ -1,0 +1,14 @@
+   × CHAT-81.FAM-ALL FAM-ABUT-COMP: 1029 (C) > (iii) 3.6 m is a partially modelled LIMIT on street_setback_m; the named-road arms are computed (CHAT-87.NAMED-1c) 2139ms
+     → (i): expected 'UNUSUAL' to be 'LIMIT' // Object.is equality
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > no other unit carrying abuts_named_street is a LIMIT (the card is the 44, plus their two word-for-word twins) 3ms
+     → expected [ …(44) ] to deeply equal [ …(46) ]
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > identical clause text reads one way: 323 (C) = 325 (C), 1170 (A)(i) = 1168 (C)(i), 256 (D) = 264 (A) = 1029 (C) 0ms
+     → expected [ …(5) ] to deeply equal [ …(5) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 6 passed (9)
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > no other unit carrying abuts_named_street is a LIMIT (the card is the 44, plus their three word-for-word twins) 3ms
+     → expected [ …(46) ] to deeply equal [ …(47) ]
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > identical clause text reads one way: 323 (C) = 325 (C), 1170 (A)(i) = 1168 (C)(i), 256 (D) = 264 (A) = 1029 (C), 255 (D)(i) = 1026 (C)(i) 0ms
+     → expected [ …(5) ] to deeply equal [ …(5) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 3 passed (5)

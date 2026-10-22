@@ -110450,6 +110450,304 @@
       "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/disclosure~s1",
       "unit": "900.5.10(204)#(204)[SSP](E)(i)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "archetype",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/archetype",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "target",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/target",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "bound",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/bound",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": [
+        "street_setback_m = 7.5 m @(1029)[SSP](C)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/calculation_handling",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": {
+        "description": "The 7.5 m street setback applies only where the lot line abuts Finch Ave., Brimley Rd. or Midland Ave.; the abutting street name is not held in the lot data.",
+        "gaps": "which named street the lot line abuts",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/disclosure",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "archetype",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/archetype",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "target",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/target",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "bound",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/bound",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/numeric_expression",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": [
+        "street_setback_m = 6.0 m @(1029)[SSP](C)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": {
+        "description": "The 6.0 m street setback applies only where the lot line abuts Alexmuir Blvd., Cleadon Rd. or South Shields Ave.; the abutting street name is not held in the lot data.",
+        "gaps": "which named street the lot line abuts",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 264 (A) and 256 (D)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1029)(C)(i),(ii) is word-for-word the text of 900.5.10(264)(A)(i),(ii) and 900.4.10(256)(D)(i),(ii), carries abuts_named_street and is in vocab.named_street, so it takes the 264 (A) form (citation renamed) and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "archetype",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/archetype",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "target",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/target",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "bound",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/bound",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": [
+        "street_setback_m = 7.5 m @(1026)[SSP](C)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/calculation_handling",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": {
+        "description": "Applies where the lot line abuts Finch Ave., McCowan Rd. or Middlefield Rd.",
+        "gaps": "named-street abutment",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/disclosure",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "condition",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/condition",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": {
+        "tokens": [
+          "abuts_named_street"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": [
+        "abuts_named_street"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat87",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "NAMED-1c precedent sweep: word-for-word twin of 255 (D)(i)",
+      "rule": "CHAT-87.NAMED-1c precedent sweep (preamble item 13; CHAT-84.TWIN-1: the newer family ruling wins over an older reading of identical text): 900.3.10(1026)(C)(i) is word-for-word the text of 900.4.10(255)(D)(i), which NAMED-1c computes; it takes the 255 (D)(i) form (citation renamed), the abuts_named_street token and its vocab.named_street row (same streets, line any), and the M-285 join computes it; held pending CHAT-87 import; Spec 133 §m.285 (M-285), §m.317 (M-317, CHAT-84.TWIN-1 note), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 1026",
+        "abuts_named_street": "lot line abuts Finch Ave., McCowan Rd. or Middlefield Rd.",
+        "any": "Site Specific Provisions"
+      }
     }
   ]
 }

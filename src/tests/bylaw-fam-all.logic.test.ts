@@ -16,9 +16,10 @@ describe('CHAT-81.FAM-ALL family readings', async () => {
   const ag = AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab });
   const U: Map<string, Json> = AG.agreedUnits(ag);
   const arch = (id: string): string => (U.get(id) as Json)?.archetype;
+  // 1029 (C)(i),(ii) left this list: CHAT-87.NAMED-1c computes their word-for-word twins 264 (A)(i),(ii) and 256 (D)(i),(ii), so they are LIMIT (bylaw-named1-held lock)
   it('FAM-HIST, FAM-ABUT-NAMED, FAM-STEP, FAM-PLAT, FAM-PARKLEN stay UNUSUAL / no target', () => {
     for (const id of ['900.2.10(621)#(621)[SSP](B)', '900.3.10(937)#(937)[SSP](I)(i)', '900.3.10(937)#(937)[SSP](I)(ii)', '900.3.10(350)#(350)[SSP](E)(i)', '900.3.10(350)#(350)[SSP](E)(ii)',
-      '900.3.10(1029)#(1029)[SSP](C)(i)', '900.3.10(1029)#(1029)[SSP](C)(ii)', '900.3.10(1121)#(1121)[SSP](C)(i)', '900.4.10(200)#(200)[SSP](C)(i)', '900.3.10(975)#(975)[SSP](B)']) {
+      '900.3.10(1121)#(1121)[SSP](C)(i)', '900.4.10(200)#(200)[SSP](C)(i)', '900.3.10(975)#(975)[SSP](B)']) {
       expect(arch(id), id).toBe('UNUSUAL');
     }
     expect((U.get('900.3.10(1401)#(1401)[SSP](B)') as Json).target).toBe('none');
