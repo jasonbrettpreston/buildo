@@ -103560,6 +103560,108 @@
       "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
       "unit": "900.3.10(528)#(528)[SSP](D)",
       "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(1461)#(1461)[SSP](F)/archetype",
+      "kind": "correction",
+      "reason": "same wording as the ruled twin",
+      "rule": "verify-42 item 5: older ruling applied to identical wording (precedent sweep); Spec 133 §m.130, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1461)#(1461)[SSP](F)",
+      "value": "PERMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1461)#(1461)[SSP](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "same wording as the ruled twin",
+      "rule": "verify-42 item 5: older ruling applied to identical wording (precedent sweep); Spec 133 §m.130, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1461)#(1461)[SSP](F)",
+      "value": [
+        {
+          "clause": "(1461)[SSP](F)",
+          "literal": "0.45 metres",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(1461)[SSP](F)",
+          "literal": "0.45 metres",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1461)#(1461)[SSP](F)/calculation_handling",
+      "kind": "correction",
+      "reason": "same wording as the ruled twin",
+      "rule": "verify-42 item 5: older ruling applied to identical wording (precedent sweep); Spec 133 §m.130, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1461)#(1461)[SSP](F)",
+      "value": {
+        "description": "The portion of a building containing a parking space may be in a side yard if it is at least 0.45 m from the side lot line.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1461)#(1461)[SSP](F)/disclosure",
+      "kind": "correction",
+      "reason": "same wording as the ruled twin",
+      "rule": "verify-42 item 5: older ruling applied to identical wording (precedent sweep); Spec 133 §m.130, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1461)#(1461)[SSP](F)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](G)/target",
+      "kind": "correction",
+      "reason": "same wording as the ruled twin",
+      "rule": "verify-42 item 5: older ruling applied to identical wording (precedent sweep); Spec 133 §m.130, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](G)",
+      "value": "garage_entrance_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](G)/numeric_expression",
+      "kind": "correction",
+      "reason": "same wording as the ruled twin",
+      "rule": "verify-42 item 5: older ruling applied to identical wording (precedent sweep); Spec 133 §m.130, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](G)",
+      "value": [
+        "garage_entrance_setback_m = 6.0 m @(1031)[SSP](G)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](G)/calculation_handling",
+      "kind": "correction",
+      "reason": "same wording as the ruled twin",
+      "rule": "verify-42 item 5: older ruling applied to identical wording (precedent sweep); Spec 133 §m.130, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](G)",
+      "value": {
+        "description": "Main wall portion with the entrance to a parking space set back 6.0 m from a lot line abutting a street.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
     }
   ]
 }

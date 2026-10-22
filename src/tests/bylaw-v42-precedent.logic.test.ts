@@ -32,3 +32,15 @@ describe('verify-42 item 5a: a side setback minimum "on one side only" is UNUSUA
     }
   }, 120000);
 });
+
+// item 5b: identical wording, identical reading
+describe('verify-42 item 5b: 1461 (F) is PERMIT as 1460 (F); 1031 (G) is garage_entrance_setback_m as its R11-1 twins', () => {
+  it('1461 (F) PERMIT, 1031 (G) LIMIT garage_entrance_setback_m min', async () => {
+    const U = await load();
+    expect((U.get('900.3.10(1461)#(1461)[SSP](F)') as Json).archetype).toBe('PERMIT');
+    for (const id of ['900.3.10(1031)#(1031)[SSP](G)', '900.3.10(1049)#(1049)[SSP](G)', '900.3.10(357)#(357)[SSP](E)']) {
+      const u = U.get(id) as Json;
+      expect([id, u.archetype, u.target, u.bound]).toEqual([id, 'LIMIT', 'garage_entrance_setback_m', 'min']);
+    }
+  }, 120000);
+});
