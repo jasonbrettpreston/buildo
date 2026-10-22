@@ -1,0 +1,1054 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_2/900.2.10.w2-s86",
+ "keyer": "A",
+ "units": [
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(621)#(621)[SSP](A)",
+   "archetype": "INCLUDE",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 621",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Pulls in exception 900.2.10(5) for these lands.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "If a building existed as of February 28, 1977, you may replace it with a building taller than this By-law prescribes, provided the new building's height does not exceed the height of the building being replaced.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(621)#(621)[SSP](B)",
+   "archetype": "UNUSUAL",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 621",
+     "any": "any building",
+     "lawfully_existing": "building existing as of"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Depends on the height and existence of a building as of a past date; the existing-building facts are not held.",
+    "gaps": "Height of the building being replaced and its existence on February 28, 1977.",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   }
+  },
+  {
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 7.5 m @(C)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(621)#(621)[SSP](C)(i)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 621",
+     "detached_house": "detached house"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum lot frontage of 7.5 m for a detached house.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   }
+  },
+  {
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 7.5 m × dwelling_units @(C)(ii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(621)#(621)[SSP](C)(ii)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 621",
+     "semi_detached_house": "semi-detached house"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum lot frontage of 7.5 m for each dwelling unit in a semi-detached house.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   }
+  },
+  {
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 15.0 m @(C)(iii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(621)#(621)[SSP](C)(iii)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "duplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 621",
+     "duplex": "for a duplex"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum lot frontage of 15.0 m for a duplex.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "25 and 30 Thelma Ave."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "25",
+     "clause": "(D)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "30",
+     "clause": "(D)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "disclosure": "On the lands at 25 and 30 Thelma Ave., an apartment building is a permitted residential building type; this applies only to those addresses.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(621)#(621)[SSP](D)",
+   "archetype": "PERMIT",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "apartment_building"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 621",
+     "apartment_building": "an apartment building"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Applies only to named addresses.",
+    "gaps": "Named addresses 25 and 30 Thelma Ave.",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": [
+     "building_type"
+    ]
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(621)#(621)[PBS]",
+   "archetype": "PROCEDURAL",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 621",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws apply; nothing to evaluate.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(516)#(516)[SSP](A)",
+   "archetype": "INCLUDE",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 516",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Pulls in exception 900.2.10(4) for these lands.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "parking_rate",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_rate = 0.3 ratio @(B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(516)#(516)[SSP](B)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "R": "Exception R 516",
+     "any": "a building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum parking rate of 0.3 spaces per dwelling unit for assisted housing.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(1) 66 of former City of Toronto By-law 438-86",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "These lands may instead comply with Section 12(1) 66 of former City of Toronto By-law 438-86; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(516)#(516)[PBS](A)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 516",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(1) 434 of former City of Toronto By-law 438-86",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "These lands may instead comply with Section 12(1) 434 of former City of Toronto By-law 438-86; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(516)#(516)[PBS](B)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 516",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(772)#(772)[SSP]",
+   "archetype": "PROCEDURAL",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 772",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No provisions apply; nothing to evaluate.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(2) 118 of former City of Toronto By-law 438-86",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "These lands may instead comply with Section 12(2) 118 of former City of Toronto By-law 438-86; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(772)#(772)[PBS](A)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 772",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(2) 119 of former City of Toronto By-law 438-86",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "These lands may instead comply with Section 12(2) 119 of former City of Toronto By-law 438-86; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(772)#(772)[PBS](B)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 772",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 204-80",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "odd numbered addresses of 29-71 Berwick Ave."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "29-71",
+     "clause": "(C)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "disclosure": "These lands may instead comply with former City of Toronto by-law 204-80; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(772)#(772)[PBS](C)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 772",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 392-78",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "odd numbered addresses of 57-59 Hillsdale Ave. W."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "57-59",
+     "clause": "(D)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "disclosure": "These lands may instead comply with former City of Toronto by-law 392-78; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(772)#(772)[PBS](D)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 772",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(403)#(403)[SSP](A)",
+   "archetype": "INCLUDE",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 403",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Pulls in exception 900.2.10(5) for these lands.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(403)#(403)[PBS]",
+   "archetype": "PROCEDURAL",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 403",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No provisions apply; nothing to evaluate.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.2.10(784)#(784)[SSP]",
+   "archetype": "PROCEDURAL",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 784",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No provisions apply; nothing to evaluate.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "Former City of Toronto By-law 880-79",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "These lands may instead comply with Former City of Toronto By-law 880-79; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(784)#(784)[PBS](A)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 784",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "Former City of Toronto by-law 96-0279",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "These lands may instead comply with Former City of Toronto by-law 96-0279; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(784)#(784)[PBS](B)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 784",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "City of Toronto by-law 805-99",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "disclosure": "These lands may instead comply with City of Toronto by-law 805-99; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(784)#(784)[PBS](C)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 784",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "City of Toronto by-law 806-99",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "even numbered addresses of 76-150 Woodbine Ave."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "76-150",
+     "clause": "(D)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "disclosure": "These lands may instead comply with City of Toronto by-law 806-99; we do not evaluate that alternate path.",
+   "not_an_override": [],
+   "unit_id": "900.2.10(784)#(784)[PBS](D)",
+   "archetype": "PREVAILING",
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 784",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "An alternate compliance path under a former by-law; it is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": []
+   }
+  }
+ ],
+ "rows": {
+  "900.2.10(621)": {
+   "explanation": "Exception R 621 carries over exception 900.2.10(5), lets a pre-1977 building be replaced at its existing height, sets minimum lot frontages of 7.5 m (detached house), 7.5 m per dwelling unit (semi-detached house) and 15.0 m (duplex), and permits an apartment building at 25 and 30 Thelma Ave.",
+   "code_refs": "none"
+  },
+  "900.2.10(516)": {
+   "explanation": "Exception R 516 carries over exception 900.2.10(4), sets a minimum parking rate of 0.3 spaces per dwelling unit for assisted housing, and keeps two former City of Toronto By-law 438-86 sections as alternate compliance paths.",
+   "code_refs": "none"
+  },
+  "900.2.10(772)": {
+   "explanation": "Exception R 772 has no site specific provisions; it keeps four former City of Toronto by-law provisions as alternate compliance paths, two of them for named addresses.",
+   "code_refs": "none"
+  },
+  "900.2.10(403)": {
+   "explanation": "Exception R 403 carries over exception 900.2.10(5); no prevailing by-laws apply.",
+   "code_refs": "none"
+  },
+  "900.2.10(784)": {
+   "explanation": "Exception R 784 has no site specific provisions; it keeps four former City of Toronto by-laws as alternate compliance paths, one limited to named Woodbine Ave. addresses.",
+   "code_refs": "none"
+  }
+ }
+}
