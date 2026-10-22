@@ -9,7 +9,7 @@ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-ex
 const ROOT = process.cwd();
 const mod = (rel: string): Promise<Json> => import(pathToFileURL(path.join(ROOT, rel)).href);
 const OK = ["900.3.10(588)","900.3.10(241)","900.3.10(1049)","900.3.10(113)","900.3.10(377)","900.3.10(112)","900.3.10(295)","900.3.10(431)","900.3.10(616)"];
-const PENDING: Record<string, number> = {"900.3.10(1029)":3,"900.3.10(1121)":2,"900.3.10(1427)":1,"900.3.10(937)":3,"900.3.10(1401)":2,"900.3.10(975)":2};
+const PENDING: Record<string, number> = {"900.3.10(1029)":3,"900.3.10(1121)":2,"900.3.10(937)":2,"900.3.10(1401)":2,"900.3.10(975)":2};
 
 describe('EXC-R5 round 9: double-keyed exceptions', () => {
   it('the resolved exceptions are agreed or adjudicated; the split shards keep exactly their pending units', async () => {
