@@ -85,7 +85,7 @@ const REQUIRED_CONFIG = Object.freeze([
   'storey_height_m', 'roof_pitch', 'roof_assembly_depth_m', 'basement_livable_share', 'circulation_share', 'unit_min_interior_sqm',
   'first_floor_elevation_m', 'min_dimension_m', 'lot_viability_margin_m', 'existing_confidence_min', 'trust_high_min_pass_pct', 'houseplex_min_units',
 ]);
-const REQUIRED_LOT = Object.freeze(['id', 'lot_size_sqm', 'frontage_m', 'depth_m', 'zoning_class', 'rows', 'permitted', 'permitted_texts', 'layer2_table_version', 'evaluator_version']);
+const REQUIRED_LOT = Object.freeze(['id', 'lot_size_sqm', 'frontage_m', 'depth_m', 'zoning_class', 'rows', 'permitted', 'layer2_table_version', 'evaluator_version']);
 
 // ---- the clause literals, read from the registry (never typed here) ----------------------------------------------------------------------
 function literal(moduleInput, regulationId) {
@@ -116,7 +116,7 @@ const CLAUSES = Object.freeze({
 function buildSourceSql(_descriptor, _config, _opts) {
   return {
     count_sql: 'SELECT COUNT(*)::int AS parcels_scanned FROM bylaw_resolution_lots',
-    batch_sql: `SELECT l.parcel_id AS id, l.lot_gate, l.permitted, l.table_version AS layer2_table_version, l.evaluator_version,
+    batch_sql: `SELECT l.parcel_id AS id, l.lot_gate, l.permitted, l.permitted_text_ids, l.table_version AS layer2_table_version, l.evaluator_version,
        ARRAY(SELECT tx.text FROM unnest(COALESCE(l.permitted_text_ids, ARRAY[]::integer[])) WITH ORDINALITY AS k (key, i)
                LEFT JOIN bylaw_resolution_texts tx ON tx.text_key = k.key ORDER BY k.i) AS permitted_texts,
        pa.lot_size_sqm, pa.frontage_m, pa.depth_m, pa.zoning_class, pa.zoning_holding, pa.is_heritage_designated, pa.is_in_ravine_protection_area,
@@ -142,9 +142,12 @@ function decodePermitted(src, classes) {
   classes.forEach((c, i) => {
     const status = keys[src.permitted[i]];
     if (!status) throw new Error(`compute_maxbld_scenarios: lot ${src.id} permitted code ${src.permitted[i]} is not in layer2-map.json permission_image`);
-    const text = src.permitted_texts[i];
+    const id = src.permitted_text_ids ? src.permitted_text_ids[i] : null;
+    const text = src.permitted_texts ? src.permitted_texts[i] : null;
+    // a dictionary miss is a defect (L2-SLICES decodePermitted throws): the id names a row bylaw_resolution_texts does not hold
+    if (id !== null && id !== undefined && (text === null || text === undefined)) throw new Error(`compute_maxbld_scenarios: lot ${src.id} permitted_text_id ${id} has no row in bylaw_resolution_texts (dictionary text_key ${id}); a missing input is never defaulted`);
     const w = { status };
-    if (text !== null && text !== undefined) w[status === 'prohibited' ? 'clause' : 'reason'] = text;
+    if (id !== null && id !== undefined) w[status === 'prohibited' ? 'clause' : 'reason'] = text;
     out[c] = w;
   });
   return out;
@@ -162,7 +165,7 @@ const cfgNum = (config, key) => {
 function checkInputs(row, config) {
   for (const k of REQUIRED_CONFIG) cfgNum(config, k);
   for (const k of REQUIRED_LOT) if (row[k] === undefined || row[k] === null) throw new Error(`compute_maxbld_scenarios: lot ${row.id} is missing ${k}; a missing input is never defaulted`);
-  for (const k of ['lot_gate', 'zoning_holding']) if (row[k] === undefined) throw new Error(`compute_maxbld_scenarios: lot ${row.id} is missing ${k}; a missing input is never defaulted`);
+  for (const k of ['lot_gate', 'zoning_holding', 'permitted_text_ids', 'permitted_texts']) if (row[k] === undefined) throw new Error(`compute_maxbld_scenarios: lot ${row.id} is missing ${k}; a missing input is never defaulted`);
 }
 
 function tiers(code) {

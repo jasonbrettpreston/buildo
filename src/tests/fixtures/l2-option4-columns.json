@@ -1,0 +1,6 @@
+{
+  "$comment": "Column-name fixture for the compute's source SQL seam (verify-45 note f). COPIED, not read cross-tree, from the L2-SLICES option-4 migration 282_resolve_bylaws.sql (CHAT-80.QP, R-JR) at ~/Buildo-wt-l2slices2 (uncommitted at the time of copying, 2026-10-22): the CREATE TABLE bylaw_resolution_lots, CREATE TABLE bylaw_resolution_texts and CREATE OR REPLACE VIEW bylaw_resolution_results column names. Replace this file with a read of the committed migration once 282 lands on this branch's base.",
+  "bylaw_resolution_lots": ["parcel_id", "lot_gate", "codes", "numbers", "reason_ids", "winner_ids", "evidence_kinds", "evidence_ref_ids", "class_results", "permitted", "permitted_text_ids", "inputs_defaulted", "row_sha", "table_version", "evaluator_version", "chain_run_id", "resolved_at"],
+  "bylaw_resolution_texts": ["text_key", "text", "chain_run_id", "resolved_at"],
+  "bylaw_resolution_results": ["parcel_id", "lot_gate", "class", "structure", "target", "status", "value_kind", "value", "reason", "winner_unit_id", "winner_layer", "evidence_kind", "evidence_ref"]
+}

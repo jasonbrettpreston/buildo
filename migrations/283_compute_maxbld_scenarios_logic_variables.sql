@@ -3,7 +3,7 @@
 -- McDonald's Airtight V3 (Spec 124 R-DF EXTERNALIZED; Spec 132 core.8 (R-CV): every number a step uses is a registered
 -- `<slug>_<name>` logic variable, seeded by migration with its default carried). Names, defaults and bounds are the Spec 78
 -- P5.9 table, generated from it (never retyped); bounds ride in the description until the descriptor exists (P3-7) and
--- carry them as min/max. The 23rd row, houseplex_min_units, is not a P5.9 row: it is the ruled replacement (EVE.P3-Q8) of the registry's proposed 2. Law numbers are never logic variables (Spec 78 §6.7): none is seeded here.
+-- carry them as min/max. Law numbers are never logic variables (Spec 78 §6.7): none is seeded here.
 -- WRITTEN, NOT APPLIED (DB window; one writer). No consumer reads these yet (compute_maxbld_scenarios is not registered).
 --
 -- Idempotent: ON CONFLICT (variable_key) DO NOTHING preserves any operator-set value.
@@ -56,9 +56,7 @@ INSERT INTO logic_variables (variable_key, variable_value, description) VALUES
   ('compute_maxbld_scenarios_coxwell_generous_reading', 1,
    'McDonald''s Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): M-224 switch: 1 = the generous reading of 150.7.60.30(1)(C), 0 = the literal one. Default 1, bounds [0, 1]. Bound note: (integer). CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config).'),
   ('compute_maxbld_scenarios_trust_high_min_pass_pct', 100,
-   'McDonald''s Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): share of a row''s applicable invariants that must pass for `row_trust_level = high` (P5.14). Default 100, bounds [90, 100]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config).'),
-  ('compute_maxbld_scenarios_houseplex_min_units', 2,
-   'McDonald''s Airtight V3 (Spec 124 R-DE (v); EVE.P3-Q8, operator-ruled): the minimum dwelling-unit count of a houseplex (800.50(181): a detached houseplex is a building with multiple dwelling units, one above another per (181)(D)); below it the row is not_buildable:800.50(181). Default 2. Pinned min = max = 2: a definitional unit constant, not a tuning knob (R-CV). CONSUMED by compute_maxbld_scenarios (houseplex units, P5.4, via ctx.config).')
+   'McDonald''s Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): share of a row''s applicable invariants that must pass for `row_trust_level = high` (P5.14). Default 100, bounds [90, 100]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config).')
 ON CONFLICT (variable_key) DO NOTHING;
 
 -- DOWN — manual rollback only, intentionally not transactional (matches mig 159).

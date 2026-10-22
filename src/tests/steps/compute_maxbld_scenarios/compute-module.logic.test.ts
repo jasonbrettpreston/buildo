@@ -70,7 +70,7 @@ function lotRow(over: Json = {}, principal: Record<string, Json> = PRINCIPAL): J
     }
   }
   return {
-    id: 101, lot_gate: null, permitted: (SCOPE.classes as string[]).map(() => 0), permitted_texts: (SCOPE.classes as string[]).map(() => null),
+    id: 101, lot_gate: null, permitted: (SCOPE.classes as string[]).map(() => 0), permitted_text_ids: null, permitted_texts: (SCOPE.classes as string[]).map(() => null),
     layer2_table_version: 'a'.repeat(64), evaluator_version: 'b'.repeat(64),
     lot_size_sqm: 300, frontage_m: 10, depth_m: 30, zoning_class: 'RD', zoning_holding: false, semi_half: false,
     is_heritage_designated: false, is_in_ravine_protection_area: false, existing_width_m: null, existing_length_m: null, existing_confidence: null,
@@ -188,7 +188,7 @@ describe('P3-8: materializeRows over a clean permitted lot', () => {
 
 describe('P3-8: gates, holding zone and renovation', () => {
   it('a Layer 2 lot gate gives not_evaluated:<gate> on every row, no numbers, a disclosure, trust not_evaluated', () => {
-    const out = run([lotRow({ lot_gate: 'exception_not_authored', permitted: CONFIG_CLASSES().map(() => 2), permitted_texts: CONFIG_CLASSES().map(() => 'exception_not_authored') })]);
+    const out = run([lotRow({ lot_gate: 'exception_not_authored', permitted: CONFIG_CLASSES().map(() => 2), permitted_text_ids: CONFIG_CLASSES().map((_c, i) => 100 + i), permitted_texts: CONFIG_CLASSES().map(() => 'exception_not_authored') })]);
     for (const r of out.rows.e2 as Json[]) {
       expect(r.scenario_status).toBe('not_evaluated:exception_not_authored');
       expect(r.main_gfa_sqm).toBeNull();
@@ -363,8 +363,8 @@ describe('P3-Q8 (EVE.P3-Q8): the minimum houseplex unit count is a pinned logic 
     expect(e.proposed_value).toBeUndefined();
     expect(String(e.source)).toContain('compute_maxbld_scenarios_houseplex_min_units');
   });
-  it('migration 283 seeds it in the P3-1 (R-CV) form with default 2, and says it is pinned (min = max)', () => {
-    const sql = fs.readFileSync(path.join(ROOT, 'migrations/283_compute_maxbld_scenarios_logic_variables.sql'), 'utf8');
+  it('a NEW migration (286, never the applied 283) seeds it in the P3-1 (R-CV) form with default 2, and says it is pinned (min = max)', () => {
+    const sql = fs.readFileSync(path.join(ROOT, 'migrations/286_compute_maxbld_scenarios_houseplex_min_units.sql'), 'utf8');
     const m = /\('compute_maxbld_scenarios_houseplex_min_units',\s*2,\s*'([^']*(?:''[^']*)*)'\)/.exec(sql);
     expect(m, 'seed row').not.toBeNull();
     expect(m![1]).toMatch(/Pinned min = max/);
@@ -404,5 +404,41 @@ describe('P3-8 fix: gate E / purity G2 is reproducible from commits (the module 
     const src = fs.readFileSync(path.join(ROOT, REL), 'utf8').replace("'bylaw_resolution_texts', ", '');
     const sites = await scan(src);
     expect(sites.some((s) => /undeclared/.test(String(s.code)) || /undeclared/.test(String(s.rule)))).toBe(true);
+  });
+});
+
+describe('verify-45 e: a permitted text id with no dictionary row is a defect, not a silent null', () => {
+  it('throws (as L2-SLICES decodePermitted does) when permitted_text_ids names a key whose text came back null', () => {
+    const bad = lotRow({ permitted: [2, 0, 0, 0, 0], permitted_text_ids: [777, null, null, null, null], permitted_texts: [null, null, null, null, null] });
+    expect(() => run([bad])).toThrow(/text_key 777|dictionary/);
+  });
+  it('a not_evaluated or prohibited class with its text decodes into the accessor shape; a permitted class carries none', () => {
+    const ok = lotRow({ lot_gate: null, permitted: [2, 1, 0, 0, 0], permitted_text_ids: [5, 6, null, null, null], permitted_texts: ['missing_input', '10.20.20.40(1)', null, null, null] });
+    const o = byScenario(run([ok]));
+    expect(o.detached_house!.scenario_status).toBe('not_evaluated:missing_input');
+    expect(o.detached_houseplex!.scenario_status).toBe('not_permitted:10.20.20.40(1)');
+  });
+});
+
+describe('verify-45 f: the source SQL names only columns that exist in the option-4 migration 282 (lots table, texts table, view)', () => {
+  const COLS = readJson('src/tests/fixtures/l2-option4-columns.json');
+  const sql = (): string => mod().buildSourceSql({}, CONFIG, {}).batch_sql as string;
+  it('every alias-qualified column is in the fixture copied from migration 282 (l = lots, tx = texts, r = view)', () => {
+    const want: Record<string, string> = { l: 'bylaw_resolution_lots', tx: 'bylaw_resolution_texts', r: 'bylaw_resolution_results' };
+    for (const [alias, table] of Object.entries(want)) {
+      const used = [...sql().matchAll(new RegExp(`\\b${alias}\\.([a-z_]+)`, 'g'))].map((m) => m[1] as string);
+      expect(used.length, alias).toBeGreaterThan(0);
+      for (const c of new Set(used)) expect(COLS[table], `${alias}.${c}`).toContain(c);
+    }
+  });
+  it('the aliases bind the tables the SQL says they do', () => {
+    expect(sql()).toMatch(/FROM bylaw_resolution_lots l/);
+    expect(sql()).toMatch(/LEFT JOIN bylaw_resolution_texts tx ON tx\.text_key = k\.key/);
+    expect(sql()).toMatch(/FROM bylaw_resolution_results r WHERE r\.parcel_id = l\.parcel_id/);
+  });
+  it('the jsonb the SQL builds carries exactly the eleven view columns the accessor row needs (8 stored + class, structure, target)', () => {
+    const keys = [...sql().matchAll(/'([a-z_]+)', r\./g)].map((m) => m[1] as string).sort();
+    expect(keys).toEqual(['class', 'evidence_kind', 'evidence_ref', 'reason', 'status', 'structure', 'target', 'value', 'value_kind', 'winner_layer', 'winner_unit_id']);
+    for (const k of keys) expect(COLS.bylaw_resolution_results).toContain(k);
   });
 });
