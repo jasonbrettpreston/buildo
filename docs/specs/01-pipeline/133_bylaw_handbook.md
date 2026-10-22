@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 340** (278 M-rows, 62 LC-rows): 337 in force (39 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 354** (292 M-rows, 62 LC-rows): 351 in force (51 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -755,6 +755,10 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6.
   Status: OWED · Enforced by: none yet (OWED)
   Rules: `M-316` (Spec 69a)
 
+- **m.322** Accuracy floors only go up. Operator approved 2026-10-22 (chat, "y C-1...C-10 - on the ocndition that it meets the overall goal standardized approach, observable, accurate, scalable and understandable ie simple and doesnt expand scope as best as possible." evidence-rulings card C-5;…
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED: the floors file and its pin)
+  Rules: `M-322` (Spec 69a)
+
 ### General / cross-cutting
 
 Rows that cite no by-law clause: process, method and cross-cutting rulings.
@@ -1297,7 +1301,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **m.305** The CoA notice reader and scorecard tools live in scripts/analysis/bylaw-validation/coa-*; data are passed by path.
   Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts
-  Rules: `M-305` (Spec 69a)
+  Rules: `M-305` (Spec 69a) · +1 dated note
 
 - **m.307** A non-569 zone or an unmatched address is NOT SCORABLE, not a miss.
   Status: RULED 2026-10-21 · OWED · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-20 …"
@@ -1321,11 +1325,63 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **m.312** OWED: the calculator takes an optional survey override; drafted, not built.
   Status: OWED 2026-10-21 · Enforced by: none
-  Rules: `M-312` (Spec 69a)
+  Rules: `M-312` (Spec 69a) · +1 dated note
 
 - **m.317** Building-history conditions are keyed on the existing-building route (keying rule 31), and five numeric adjudications land.
   Status: RULED 2026-10-22 · OWED · Enforced by: bylaw-exc-w2-apply.logic.test.ts (red first: docs/reports/red-evidence/bylaw/bylaw-exc-w2-apply-red.txt)
   Rules: `M-317` (Spec 69a) · +3 dated notes
+
+- **m.318** One values-only answer key (oracle C) holds every CoA source.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED with the key)
+  Rules: `M-318` (Spec 69a)
+
+- **m.319** Values-only oracle C fixtures are committed to the repo; this amends M-305 clause (2).
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED: the fixtures-vs-lock test)
+  Rules: `M-319` (Spec 69a)
+
+- **m.320** Each City figure is scored against the by-law in force on its decision date.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-320` (Spec 69a)
+
+- **m.321** Each CoA fix round pre-registers the rows it expects to move.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-321` (Spec 69a)
+
+- **m.323** CoA files join the answer key through one fixed intake routine.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none (a routine)
+  Rules: `M-323` (Spec 69a)
+
+- **m.324** CoA findings pages go family first.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none (a page rule)
+  Rules: `M-324` (Spec 69a)
+
+- **m.325** Phase 3 validates against oracle C with two separate sets of floors.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-325` (Spec 69a)
+
+- **m.326** Each CoA document type has one job and an order of authority; this settles M-312.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet
+  Rules: `M-326` (Spec 69a)
+
+- **m.327** Phase 3 golden cases are keyed on one generated form.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-327` (Spec 69a)
+
+- **m.328** Every by-law rule and decision passes the five words, adds no scope, and shows its handbook ruling.
+  Status: RULED 2026-10-22 · Enforced by: spec-split-check.mjs --check arm (iii-b); decision-log.logic
+  Rules: `M-328` (Spec 69a)
+
+- **m.329** The CoA-to-parcel link gate prints beside every oracle C round and blocks only the Phase 3 switch.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED with Round 0)
+  Rules: `M-329` (Spec 69a)
+
+- **m.330** Calculation floors are set at Phase 3 Round 0 and then only rise.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-330` (Spec 69a)
+
+- **m.331** "McBylaw P2 closed" and "McBylaw P3 closed" have fixed meanings.
+  Status: RULED 2026-10-22 · Enforced by: none (a definition)
+  Rules: `M-331` (Spec 69a)
 
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
@@ -1531,7 +1587,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); app tests at N12 (OWED)
   Rules: `LC-62` (Spec 131)
 
-## 3. Rows with an OWED marker (39 in force)
+## 3. Rows with an OWED marker (51 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -1547,6 +1603,18 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-312 | m.312 | OWED 2026-10-21 |
 | M-316 | m.316 | OWED |
 | M-317 | m.317 | RULED 2026-10-22 · OWED |
+| M-318 | m.318 | RULED 2026-10-22 · OWED |
+| M-319 | m.319 | RULED 2026-10-22 · OWED |
+| M-320 | m.320 | RULED 2026-10-22 · OWED |
+| M-321 | m.321 | RULED 2026-10-22 · OWED |
+| M-322 | m.322 | RULED 2026-10-22 · OWED |
+| M-323 | m.323 | RULED 2026-10-22 · OWED |
+| M-324 | m.324 | RULED 2026-10-22 · OWED |
+| M-325 | m.325 | RULED 2026-10-22 · OWED |
+| M-326 | m.326 | RULED 2026-10-22 · OWED |
+| M-327 | m.327 | RULED 2026-10-22 · OWED |
+| M-329 | m.329 | RULED 2026-10-22 · OWED |
+| M-330 | m.330 | RULED 2026-10-22 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |

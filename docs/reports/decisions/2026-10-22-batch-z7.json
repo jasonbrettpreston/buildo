@@ -1,0 +1,48 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-z7/2026-10-22-batch-z7.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-z7",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1-4 y - leaving for 3 hours",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-z7/2026-10-22-batch-z7.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-70.1",
+      "question": "Approve P5.12 code building_history_permission_undated",
+      "recommendation": "Keep the second code for the undated (D) sentence; the dated template keeps 4 phrases (verify-38: simplest faithful form).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-70.2",
+      "question": "CoA 'V3 locally' = every R-EY condition except (8)",
+      "recommendation": "Locally complete means all R-EY conditions pass except (8) (LDG-10 / EP-PIN-D17 cloud halves, CHAT-54); the V3 label and ③ wait for the cloud halves; proposed row text in COA-V3-GAP.md §4.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-70.3",
+      "question": "CoA ledger row flips to CLOSED · ② when its ② lock is green",
+      "recommendation": "Status becomes `CLOSED · ② (<lock test>)` (ECZ-D2 precedent).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-70.4",
+      "question": "Phase 3 plan operator questions Q1–Q9",
+      "recommendation": "As recommended in ~/Buildo-scratch/p3plan/PLAN.md: link gate report-first then rising floor blocking only the Phase 3 switch; calculation floors after round 0 per scenario family (>=10 rows, else pooled); P2/P3 closed definitions per the checklist; G-CODE (iv) via the existing pin door; decision-log transfer before P3-11; floors by article until the family map exists; key the 25 available golden cases first; headline+totals storage fallback only if the kill line is exceeded; handbook transfer check for Q-1..Q-11, R-HL, R-HD.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}
