@@ -21,7 +21,11 @@
  */
 'use strict';
 
-/** Spec 134 §3 / R-JA: the logical result columns a consumer may read (identity columns excluded). */
+/**
+ * Spec 134 §3 / R-JA: the logical result columns a consumer may read (identity columns excluded). FROZEN by CHAT-77.freeze (operator
+ * 2026-10-22): any change to this list needs a new ruling; the physical form (Q-P) may change behind this accessor without touching Phase 3.
+ * frozen-row.logic.test.ts pins it from both constructors.
+ */
 const LOGICAL_RESULT_FIELDS = Object.freeze([
   'status', 'reason', 'value', 'value_kind', 'winner_unit_id', 'winner_layer', 'evidence_kind', 'evidence_ref', 'inputs_used', 'losers', 'disclosures',
 ]);
@@ -105,4 +109,4 @@ function entriesFromPointers(pointersHex, scope) { // P3-Q1
   return pairs.map((p, i) => ({ structure: p.structure, target: p.target, cell_id: pointersHex.slice(64 * i, 64 * (i + 1)) }));
 }
 
-module.exports = { LOGICAL_RESULT_FIELDS, STATUSES, fromLogicalRows, fromCellRows, entriesFromPointers };
+module.exports = { LOGICAL_RESULT_FIELDS, FROZEN_RESULT_FIELDS: LOGICAL_RESULT_FIELDS, STATUSES, fromLogicalRows, fromCellRows, entriesFromPointers };
