@@ -9,7 +9,7 @@
 - named units (derived from the raw refs / citation, never hand-edited): 779 · refs 828 · citations 653
 - rows 4356 · in scope 4123 · out of scope 233 · awaiting a ruling 0 · unscoped 0 · clause units 27964 · source defects disclosed 161
 - row states (in scope): complete 1543 · pending 2580 (stale 0) · failed 0
-- feeds (Spec 69 M-52), over 2592 agreed LIMIT/PERMIT/PROHIBIT unit(s): ancillary/envelope 39 · ancillary/use_permission 22 · any/envelope 1013 · any/landscaping 6 · any/lot 360 · any/parking_access 181 · any/use_permission 240 · principal/envelope 248 · principal/landscaping 7 · principal/lot 154 · principal/parking_access 37 · principal/use_permission 173 · suite/envelope 82 · suite/landscaping 4 · suite/parking_access 4 · suite/use_permission 47
+- feeds (Spec 69 M-52), over 2593 agreed LIMIT/PERMIT/PROHIBIT unit(s): ancillary/envelope 39 · ancillary/use_permission 22 · any/envelope 1014 · any/landscaping 6 · any/lot 360 · any/parking_access 181 · any/use_permission 240 · principal/envelope 248 · principal/landscaping 7 · principal/lot 154 · principal/parking_access 37 · principal/use_permission 173 · suite/envelope 82 · suite/landscaping 4 · suite/parking_access 4 · suite/use_permission 47
 - amending by-laws 287: in_force 9 · not_verified 277 · partially_in_force 1 (each row lists its by-laws with their status; a status other than in_force is a notice, Spec 69 P-1, and never changes a row's state)
 
 ## Pages

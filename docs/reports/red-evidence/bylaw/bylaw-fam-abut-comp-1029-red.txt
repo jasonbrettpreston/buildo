@@ -1,0 +1,3 @@
+   × CHAT-81.FAM-ALL FAM-ABUT-COMP: 1029 (C) > (iii) 3.6 m is a partially modelled LIMIT on street_setback_m; the named-road arms stay UNUSUAL 2435ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed (1)

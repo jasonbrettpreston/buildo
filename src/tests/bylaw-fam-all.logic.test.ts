@@ -18,7 +18,7 @@ describe('CHAT-81.FAM-ALL family readings', async () => {
   const arch = (id: string): string => (U.get(id) as Json)?.archetype;
   it('FAM-HIST, FAM-ABUT-NAMED, FAM-STEP, FAM-PLAT, FAM-PARKLEN stay UNUSUAL / no target', () => {
     for (const id of ['900.2.10(621)#(621)[SSP](B)', '900.3.10(937)#(937)[SSP](I)(i)', '900.3.10(937)#(937)[SSP](I)(ii)', '900.3.10(350)#(350)[SSP](E)(i)', '900.3.10(350)#(350)[SSP](E)(ii)',
-      '900.3.10(1029)#(1029)[SSP](C)(i)', '900.3.10(1029)#(1029)[SSP](C)(ii)', '900.3.10(1029)#(1029)[SSP](C)(iii)', '900.3.10(1121)#(1121)[SSP](C)(i)', '900.4.10(200)#(200)[SSP](C)(i)', '900.3.10(975)#(975)[SSP](B)']) {
+      '900.3.10(1029)#(1029)[SSP](C)(i)', '900.3.10(1029)#(1029)[SSP](C)(ii)', '900.3.10(1121)#(1121)[SSP](C)(i)', '900.4.10(200)#(200)[SSP](C)(i)', '900.3.10(975)#(975)[SSP](B)']) {
       expect(arch(id), id).toBe('UNUSUAL');
     }
     expect((U.get('900.3.10(1401)#(1401)[SSP](B)') as Json).target).toBe('none');
@@ -26,7 +26,7 @@ describe('CHAT-81.FAM-ALL family readings', async () => {
     expect(arch('900.3.10(350)#(350)[SSP](F)(ii)')).toBe('PERMIT');
   });
   it('FAM-ABUT-COMP, FAM-FSI, FAM-ANCCOV, FAM-SEP, FAM-ARMS take the approved LIMITs', () => {
-    for (const id of ['900.5.10(278)#(278)[SSP](C)(ii)', '900.5.10(278)#(278)[SSP](D)(ii)', '900.3.10(1121)#(1121)[SSP](C)(ii)']) expect((U.get(id) as Json).target, id).toBe('street_setback_m');
+    for (const id of ['900.5.10(278)#(278)[SSP](C)(ii)', '900.5.10(278)#(278)[SSP](D)(ii)', '900.3.10(1121)#(1121)[SSP](C)(ii)', '900.3.10(1029)#(1029)[SSP](C)(iii)']) expect((U.get(id) as Json).target, id).toBe('street_setback_m');
     expect((U.get('900.3.10(9)#(9)[SSP](E)(i)') as Json).bound).toBe('max');
     expect((U.get('900.3.10(9)#(9)[SSP](E)(ii)') as Json).bound).toBe('max');
     for (const id of ['900.3.10(971)#(971)[SSP](D)', '900.3.10(975)#(975)[SSP](D)']) expect((U.get(id) as Json).target, id).toBe('ancillary_coverage_pct');

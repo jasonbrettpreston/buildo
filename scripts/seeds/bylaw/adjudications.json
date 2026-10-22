@@ -93710,6 +93710,91 @@
           "reason": "cross_reference_value"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(iii)/archetype",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP applied to 1029 (C)(iii).",
+      "rule": "Operator CHAT-81.FAM-ALL (2026-10-23-batch-b), FAM-ABUT-COMP as written: a complement arm is a LIMIT when it is the smallest sibling (3.6 m < 6.0 m < 7.5 m); Spec 133 §m.130 (necessary bound, partially modelled) and §m.82 (M-75 correction form); the card filed (ii) as the complement by mistake, (ii) names roads and stays UNUSUAL",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(iii)/target",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP applied to 1029 (C)(iii).",
+      "rule": "Operator CHAT-81.FAM-ALL (2026-10-23-batch-b), FAM-ABUT-COMP as written: a complement arm is a LIMIT when it is the smallest sibling (3.6 m < 6.0 m < 7.5 m); Spec 133 §m.130 (necessary bound, partially modelled) and §m.82 (M-75 correction form); the card filed (ii) as the complement by mistake, (ii) names roads and stays UNUSUAL",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)",
+      "value": "street_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(iii)/bound",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP applied to 1029 (C)(iii).",
+      "rule": "Operator CHAT-81.FAM-ALL (2026-10-23-batch-b), FAM-ABUT-COMP as written: a complement arm is a LIMIT when it is the smallest sibling (3.6 m < 6.0 m < 7.5 m); Spec 133 §m.130 (necessary bound, partially modelled) and §m.82 (M-75 correction form); the card filed (ii) as the complement by mistake, (ii) names roads and stays UNUSUAL",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(iii)/numeric_expression",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP applied to 1029 (C)(iii).",
+      "rule": "Operator CHAT-81.FAM-ALL (2026-10-23-batch-b), FAM-ABUT-COMP as written: a complement arm is a LIMIT when it is the smallest sibling (3.6 m < 6.0 m < 7.5 m); Spec 133 §m.130 (necessary bound, partially modelled) and §m.82 (M-75 correction form); the card filed (ii) as the complement by mistake, (ii) names roads and stays UNUSUAL",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)",
+      "value": [
+        "street_setback_m = 3.6 m @(1029)[SSP](C)(iii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(iii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP applied to 1029 (C)(iii).",
+      "rule": "Operator CHAT-81.FAM-ALL (2026-10-23-batch-b), FAM-ABUT-COMP as written: a complement arm is a LIMIT when it is the smallest sibling (3.6 m < 6.0 m < 7.5 m); Spec 133 §m.130 (necessary bound, partially modelled) and §m.82 (M-75 correction form); the card filed (ii) as the complement by mistake, (ii) names roads and stays UNUSUAL",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(iii)/calculation_handling",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP applied to 1029 (C)(iii).",
+      "rule": "Operator CHAT-81.FAM-ALL (2026-10-23-batch-b), FAM-ABUT-COMP as written: a complement arm is a LIMIT when it is the smallest sibling (3.6 m < 6.0 m < 7.5 m); Spec 133 §m.130 (necessary bound, partially modelled) and §m.82 (M-75 correction form); the card filed (ii) as the complement by mistake, (ii) names roads and stays UNUSUAL",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)",
+      "value": {
+        "description": "The 3.6 m complement arm is the smallest of its sibling arms, so it is a true minimum on every lot line abutting a street.",
+        "gaps": "The higher setbacks of the named-road arms (i) and (ii) are not modelled; street names are not held.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(iii)/disclosure",
+      "kind": "correction",
+      "reason": "FAM-ABUT-COMP applied to 1029 (C)(iii).",
+      "rule": "Operator CHAT-81.FAM-ALL (2026-10-23-batch-b), FAM-ABUT-COMP as written: a complement arm is a LIMIT when it is the smallest sibling (3.6 m < 6.0 m < 7.5 m); Spec 133 §m.130 (necessary bound, partially modelled) and §m.82 (M-75 correction form); the card filed (ii) as the complement by mistake, (ii) names roads and stays UNUSUAL",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(iii)",
+      "value": "none"
     }
   ]
 }
