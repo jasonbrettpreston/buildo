@@ -80,7 +80,7 @@
       "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least", "minimum required lot frontage", "minimum frontage"]
     },
     "lot_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage, percent of the lot area, of the buildings the unit applies to", "patterns": ["lot coverage"] },
-    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined", "covered by ancillary buildings and structures", "covered by all ancillary buildings and structures"] },
+    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined", "covered by ancillary buildings and structures", "covered by all ancillary buildings and structures", "lot coverage for ancillary buildings"] },
     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
     "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area", "area of the ancillary"] },
@@ -188,7 +188,7 @@
       "unit": "m",
       "aspect": "envelope",
       "concept": "minimum separation distance between buildings (or main walls) on the same lot",
-      "patterns": ["separation distance", "from the residential building", "separation", "closer to a residential building", "from the main wall of the residential building"]
+      "patterns": ["separation distance", "from the residential building", "separation", "closer to a residential building", "from the main wall of the residential building", "from a residential building"]
     },
     "encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a building element may encroach into a required setback, for a clause that names no element (Spec 69a M-243: an element's own target otherwise; bound declared, amends M-106)", "patterns": ["may encroach", "permitted to project", "may project"] },
     "encroachment_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance an encroaching element must keep from a lot line, for a clause that names no element (Spec 69a M-243; bound declared, amends M-106)", "patterns": ["no closer than", "from the lot line", "no closer to a lot line than", "no closer to a side lot line than", "no closer to the side lot line than"] },

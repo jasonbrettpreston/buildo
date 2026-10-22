@@ -1,0 +1,4 @@
+   × CHAT-81.FAM-ALL wordings > "lot coverage for ancillary buildings" licenses ancillary_coverage_pct and nothing wider 2ms
+   × CHAT-81.FAM-ALL wordings > "from a residential building" licenses separation_m and nothing wider 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed (2)
