@@ -437,7 +437,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(145); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-54; the number decision-log --check prints
+    expect(r.decisions).toBe(146); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-54 + CHAT-55; the number decision-log --check prints
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(5); // CHAT-26, CHAT-43-era rows, CHAT-51 (restart lane, rests on R-EY) and CHAT-54 (no cloud until local complete, rests on R-AQ.1)
   });
@@ -447,6 +447,20 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     expect(q.decisions.map((d) => [d.id, d.decision])).toEqual([['CHAT-52', 'approve'], ['CHAT-53', 'approve']]);
     expect(q.routing['CHAT-52']!.row).toBe('R-JK');
     expect(q.routing['CHAT-53']!.row).toBe('R-JL');
+  });
+
+  it('chat batch S (CHAT-55, chain-tooling-flip): routes to R-JU; CHAIN-TOOLING reads BUILT, LDG-10 and EP-PIN-D17 stay PARTIAL; the +10% clause carries the dated SUPERSEDED note in Spec 122', () => {
+    const s = byStem.get('2026-10-21-chat-batch-s-55') as { routing: Record<string, { row?: string }>; decisions: Array<{ id: string; decision: string }> };
+    expect(s.decisions.map((d) => [d.id, d.decision])).toEqual([['CHAT-55', 'approve']]);
+    expect(s.routing['CHAT-55']!.row).toBe('R-JU');
+    const items = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/programme-items.json'), 'utf8')) as { items: Array<{ id: string; status: string; evidence: string }> }).items;
+    const st = (id: string) => items.find((i) => i.id === id)!;
+    expect(st('CHAIN-TOOLING').status).toBe('BUILT');
+    for (const needle of ['R-DJ', 'R-EC', 'fast invariant #52', '20.41 s', '25.91 s']) expect(st('CHAIN-TOOLING').evidence).toContain(needle);
+    expect(st('LDG-10').status).toBe('PARTIAL');
+    expect(st('EP-PIN-D17').status).toBe('PARTIAL');
+    const spec122 = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/01-pipeline/122_pipeline_step_optimization.md'), 'utf8');
+    expect(spec122).toMatch(/chain-start baseline, measured before\/after\); \*\*\[SUPERSEDED 2026-10-21 by R-DJ \(2\) and R-EC \(R-JU;/);
   });
 
   it('chat batch K (CHAT-37, integrate-18): imported alone, routed to R-IK in 124a\'s live register', () => {

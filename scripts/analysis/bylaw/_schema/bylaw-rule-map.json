@@ -4573,7 +4573,7 @@
     {
       "id": "M-315",
       "kind": "m-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "m.315",
       "source": {
         "register": true,
