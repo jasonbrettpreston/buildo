@@ -1325,7 +1325,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **m.317** Building-history conditions are keyed on the existing-building route (keying rule 31), and five numeric adjudications land.
   Status: RULED 2026-10-22 · OWED · Enforced by: bylaw-exc-w2-apply.logic.test.ts (red first: docs/reports/red-evidence/bylaw/bylaw-exc-w2-apply-red.txt)
-  Rules: `M-317` (Spec 69a) · +2 dated notes
+  Rules: `M-317` (Spec 69a) · +3 dated notes
 
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
@@ -1505,7 +1505,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **lc.52** Disclosure wording is plain. Each P5.12 code has one template of at most 45 words in a homeowner's words.
   Status: RULED 2026-10-18 · Enforced by: bylaw-maxbld-trace.infra.test.ts (template lint)
-  Rules: `LC-52` (Spec 131)
+  Rules: `LC-52` (Spec 131) · +1 dated note
 
 - **lc.53** Verified by named lock; no partial green.
   Status: RULED 2026-10-19 · Enforced by: INV-25; verifyLock + red arms in bylaw-maxbld-trace.infra

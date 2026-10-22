@@ -1,0 +1,31 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "1. 1 y 2. y 3. y 4. y",
+  "context": "The four verify-37 items on wf1/exc-w2-apply @ e1d94b9e (~/Buildo-scratch/verify-37/verify-37.md §2b, §2c, §6). (1) 900.3.10(1434)(A) keyed like 1436 (D)/1437 (D): REQUIRE comply_with_bylaw, lawfully_existing, needs_user_input, disclosure none (twin principle, Spec 68 §5a row 2; M-317, CHAT-64.D). (2) Drop the lawfully_existing token from 900.3.10(258)(D) by a lane-labelled correction (the 528 / CHAT-50 / M-315 form: 144 of 145 existed-on-enactment units carry none). (3) Amend LC-52 (Spec 131): the 45-word cap and plain-term check apply to each shown alternative sentence of a template with a slash-alternative slot (the per-alternative lint reading in maxbld-trace-lib.mjs). (4) P5.12 building_history_permission (D) is undated: (D) emits the undated phrase 'If you are adding to an existing house, additions above the first storey must stay within the required setbacks'.",
+  "decisions": [
+    {
+      "id": "CHAT-67.1434A",
+      "subject": "1434 (A) keyed like the (D) twins",
+      "decision": "approve",
+      "recommendation": "Keep the lane correction: REQUIRE comply_with_bylaw + lawfully_existing, needs_user_input, disclosure none."
+    },
+    {
+      "id": "CHAT-67.258D",
+      "subject": "Drop lawfully_existing on 258 (D)",
+      "decision": "approve",
+      "recommendation": "Lane-labelled correction dropping the token, matching the 144-unit family convention."
+    },
+    {
+      "id": "CHAT-67.LC52",
+      "subject": "LC-52 judged per shown alternative sentence",
+      "decision": "approve",
+      "recommendation": "Amend the LC-52 row: the 45-word cap and plain-term check apply to each alternative sentence the homeowner sees."
+    },
+    {
+      "id": "CHAT-67.Dphrase",
+      "subject": "Undated (D) building-history phrase",
+      "decision": "approve",
+      "recommendation": "(D) emits: 'If you are adding to an existing house, additions above the first storey must stay within the required setbacks'."
+    }
+  ]
+}

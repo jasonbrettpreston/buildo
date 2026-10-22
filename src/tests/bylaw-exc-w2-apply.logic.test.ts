@@ -107,6 +107,37 @@ describe('exception 528 (M-315): the assembled units carry no lawfully_existing 
   });
 });
 
+describe('CHAT-67 (2026-10-22-batch-z2): 1434 (A) provenance and 258 (D) token', () => {
+  it('1434 (A): the live correction on each of the four fields is a lane-labelled record citing CHAT-67.1434A; the values are unchanged', async () => {
+    const live = (field: string): Json | undefined => {
+      const rows = ADJ.filter((a) => a.kind === 'correction' && a.unit === '900.3.10(1434)#(1434)[SSP](A)' && a.field === field);
+      const superseded = new Set(rows.map((a) => a.supersedes).filter(Boolean));
+      return rows.find((a) => !superseded.has(a.id));
+    };
+    for (const f of ['archetype', 'requirement', 'calculation_handling', 'disclosure']) {
+      const r = live(f);
+      expect(r, f).toBeDefined();
+      expect(r?.adjudicator).toBe('lane-exc-w2-apply');
+      expect(r?.rule).toContain('CHAT-67.1434A');
+    }
+    const x = (await assembled()).get('900.3.10(1434)#(1434)[SSP](A)') as Json;
+    expect([x.archetype, x.requirement, x.disclosure, x.calculation_handling.not_modelled_reason]).toEqual(['REQUIRE', 'comply_with_bylaw', 'none', 'needs_user_input']);
+    expect(x.application.lot_conditions).toContain('lawfully_existing');
+  });
+  it('258 (D): no lawfully_existing token on the assembled unit (the 528 form, CHAT-67.258D); the user input name stays; the LIMIT is unchanged', async () => {
+    const x = (await assembled()).get('900.3.10(258)#(258)[SSP](D)') as Json;
+    expect(x).toBeDefined();
+    expect(x.condition).toBe('none');
+    expect(x.application.lot_conditions ?? []).not.toContain('lawfully_existing');
+    expect(JSON.stringify([x.condition, x.application])).not.toContain('lawfully_existing');
+    expect(x.calculation_handling.user_inputs).toEqual(['lawfully_existing_status']);
+    expect([x.archetype, x.target ?? null]).toEqual(['LIMIT', 'required_lot_area_m2']);
+    const live = ADJ.filter((a) => a.kind === 'correction' && a.unit === '900.3.10(258)#(258)[SSP](D)' && a.adjudicator === 'lane-exc-w2-apply');
+    expect(live.length).toBe(3);
+    for (const a of live) expect(a.rule).toContain('CHAT-67.258D');
+  });
+});
+
 describe('keying-cli rekey on a wave batch (EXC-W2-APPLY)', () => {
   it('rekey --batch W2 reaches the unit check (rekey_unit_unknown), not the planBatch refusal', async () => {
     const { spawnSync } = await import('node:child_process');
@@ -126,18 +157,43 @@ describe('P5.12 building_history_permission — closed phrase set (operator CHAT
   ];
   const spec = fs.readFileSync(path.join(ROOT, 'docs/specs/01-pipeline/78_optimal_lot_configuration.md'), 'utf8');
   const row = spec.split('\n').find((l) => l.startsWith('| `building_history_permission` |')) ?? '';
-  it('the Spec 78 row holds exactly the five operator phrases as the closed {permission} alternatives, mapped per clause group, with no DRAFT mark', () => {
+  it('the Spec 78 row holds the four dated operator phrases as the closed {permission} alternatives, mapped per clause group, with no DRAFT mark ((D) moved to the undated code, CHAT-67.Dphrase)', () => {
     expect(row).not.toBe('');
-    for (const p of PHRASES) expect(row).toContain(p);
+    for (const p of PHRASES.slice(0, 4)) expect(row).toContain(p);
     expect(row).not.toContain('DRAFT');
-    for (const m of ['(A) keep', '(B) add more', '(C) divide', '(E) build a rear', '(D) add above']) expect(row).toContain(m);
+    for (const m of ['(A) keep', '(B) add more', '(C) divide', '(E) build a rear']) expect(row).toContain(m);
   });
   it('the generated report schema carries the template with the closed alternatives and only the date slot besides', async () => {
     const schema = read('docs/reference/maxbld-report-v2.schema.json');
     const t = JSON.stringify(schema).includes('building_history_permission') ? JSON.stringify(schema) : '';
     expect(t).toContain('building_history_permission');
-    for (const p of PHRASES) expect(t).toContain(p);
+    for (const p of PHRASES.slice(0, 4)) expect(t).toContain(p);
     expect(t).not.toContain('{permission}');
+  });
+});
+
+describe('P5.12 building_history_permission_undated — (D) is undated (operator CHAT-67.Dphrase)', () => {
+  const UNDATED = 'If you are adding to an existing house, additions above the first storey must stay within the required setbacks';
+  const spec = fs.readFileSync(path.join(ROOT, 'docs/specs/01-pipeline/78_optimal_lot_configuration.md'), 'utf8');
+  const dated = spec.split('\n').find((l) => l.startsWith('| `building_history_permission` |')) ?? '';
+  const undated = spec.split('\n').find((l) => l.startsWith('| `building_history_permission_undated` |')) ?? '';
+  it('Spec 78 has a second P5.12 code whose template is exactly the operator phrase, no slots; the dated template no longer offers the (D) alternative', () => {
+    expect(undated).toContain(`"${UNDATED}."`);
+    expect(undated).toContain('CHAT-67.Dphrase');
+    expect(undated).not.toMatch(/"[^"]*\{[^"]*"/);
+    expect(dated).not.toContain('add above the first storey');
+  });
+  it('the generated report schema carries both codes; the undated template is the exact phrase', () => {
+    const schema = read('docs/reference/maxbld-report-v2.schema.json');
+    const t = schema['x-disclosure-templates'];
+    expect(t.building_history_permission_undated.template).toBe(`${UNDATED}.`);
+    expect(t.building_history_permission_undated.slots).toEqual([]);
+    expect(JSON.stringify(t.building_history_permission)).not.toContain('above the first storey');
+    expect(schema.$defs.disclosure_code.enum).toContain('building_history_permission_undated');
+  });
+  it('LC-52 lint passes the undated template (18 words, no plain-term glossary entry)', async () => {
+    const LIB = await mod('scripts/analysis/bylaw/maxbld-trace-lib.mjs');
+    expect(LIB.lintDisclosureTemplates(spec)).toEqual([]);
   });
 });
 

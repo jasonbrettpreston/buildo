@@ -87856,6 +87856,98 @@
         "any": "portion of a building",
         "parking_space": "a parking space"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "archetype",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/archetype~s1",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-67.1434A, 2026-10-22-batch-z2#CHAT-67.1434A, \"1 y\"; twin principle Spec 68 §5a row 2; CHAT-64.D-1436 / D-1437); M-75 correction re-recorded under the lane label with the operator ruling it lacked, identical value; supersedes the record that cited only CHAT-64",
+      "supersedes": "COR-900.3.10(1434)#(1434)[SSP](A)/archetype",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": "REQUIRE"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "requirement",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/requirement~s1",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-67.1434A, 2026-10-22-batch-z2#CHAT-67.1434A, \"1 y\"; twin principle Spec 68 §5a row 2; CHAT-64.D-1436 / D-1437); M-75 correction re-recorded under the lane label with the operator ruling it lacked, identical value; supersedes the record that cited only CHAT-64",
+      "supersedes": "COR-900.3.10(1434)#(1434)[SSP](A)/requirement",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-67.1434A, 2026-10-22-batch-z2#CHAT-67.1434A, \"1 y\"; twin principle Spec 68 §5a row 2; CHAT-64.D-1436 / D-1437); M-75 correction re-recorded under the lane label with the operator ruling it lacked, identical value; supersedes the record that cited only CHAT-64",
+      "supersedes": "COR-900.3.10(1434)#(1434)[SSP](A)/calculation_handling",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-67.1434A, 2026-10-22-batch-z2#CHAT-67.1434A, \"1 y\"; twin principle Spec 68 §5a row 2; CHAT-64.D-1436 / D-1437); M-75 correction re-recorded under the lane label with the operator ruling it lacked, identical value; supersedes the record that cited only CHAT-64",
+      "supersedes": "COR-900.3.10(1434)#(1434)[SSP](A)/disclosure",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(258)#(258)[SSP](D)/condition",
+      "kind": "correction",
+      "reason": "The token matters only where the lot-condition changes a LIMIT that is applied; 258 (D) is not_modelled (existing(lot_area_m2; enacted(569-2013))), the history rides in the existing_building_facts route and the lawfully_existing_status input.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-67.258D, 2026-10-22-batch-z2#CHAT-67.258D, \"2 y\"); M-75 correction on the lane label: drops the lawfully_existing token, as exception 528 (M-315 / CHAT-50: 144 of the 145 existed-on-enactment family units carry none)",
+      "unit": "900.3.10(258)#(258)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(258)#(258)[SSP](D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "The token matters only where the lot-condition changes a LIMIT that is applied; 258 (D) is not_modelled (existing(lot_area_m2; enacted(569-2013))), the history rides in the existing_building_facts route and the lawfully_existing_status input.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-67.258D, 2026-10-22-batch-z2#CHAT-67.258D, \"2 y\"); M-75 correction on the lane label: drops the lawfully_existing token, as exception 528 (M-315 / CHAT-50: 144 of the 145 existed-on-enactment family units carry none)",
+      "unit": "900.3.10(258)#(258)[SSP](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(258)#(258)[SSP](D)/application.evidence",
+      "kind": "correction",
+      "reason": "The token matters only where the lot-condition changes a LIMIT that is applied; 258 (D) is not_modelled (existing(lot_area_m2; enacted(569-2013))), the history rides in the existing_building_facts route and the lawfully_existing_status input.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-67.258D, 2026-10-22-batch-z2#CHAT-67.258D, \"2 y\"); M-75 correction on the lane label: drops the lawfully_existing token, as exception 528 (M-315 / CHAT-50: 144 of the 145 existed-on-enactment family units carry none)",
+      "unit": "900.3.10(258)#(258)[SSP](D)",
+      "value": {
+        "RD": "Exception RD 258"
+      }
     }
   ]
 }

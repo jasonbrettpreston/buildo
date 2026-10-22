@@ -49,3 +49,14 @@ Received: "{"unit_id":"900.3.10(528)#(528)[SSP](A)","archetype":"LIMIT","target"
    × CoA scorecard 4D fixes (172 notices) > complement share (EXC-W2-APPLY, verify-37 7): 10.20.40.10(2)(A) is "at least 70%" and the City quotes "a maximum of 30% may be higher"; the scorer compares the complement, so ours 70 MATCHES City 30 (A0120/26SC x2, A0354/26TEY) 1ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
       Tests  1 failed | 18 skipped (19)
+
+# CHAT-67 (EXC-W2-APPLY-4, 2026-10-22-batch-z2) red run, adjudications.json at HEAD, Spec 78 / schema before the change:
+   × CHAT-67 (2026-10-22-batch-z2): 1434 (A) provenance and 258 (D) token > 1434 (A): the live correction on each of the four fields is a lane-labelled record citing CHAT-67.1434A; the values are unchanged 3ms
+     → expected 'Spec 69a M-317 dated note (operator C…' to contain 'CHAT-67.1434A'
+   × CHAT-67 (2026-10-22-batch-z2): 1434 (A) provenance and 258 (D) token > 258 (D): no lawfully_existing token on the assembled unit (the 528 form, CHAT-67.258D); the user input name stays; the LIMIT is unchanged 1212ms
+     → expected { tokens: [ 'lawfully_existing' ] } to be 'none' // Object.is equality
+   × P5.12 building_history_permission_undated — (D) is undated (operator CHAT-67.Dphrase) > Spec 78 has a second P5.12 code whose template is exactly the operator phrase, no slots; the dated template no longer offers the (D) alternative 0ms
+     → expected '' to contain '"If you are adding to an existing hou…'
+   × P5.12 building_history_permission_undated — (D) is undated (operator CHAT-67.Dphrase) > the generated report schema carries both codes; the undated template is the exact phrase 0ms
+     → Cannot read properties of undefined (reading 'template')
+      Tests  4 failed | 16 passed (20)

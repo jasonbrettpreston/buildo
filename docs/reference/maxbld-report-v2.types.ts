@@ -13,6 +13,7 @@ export type DisclosureCode =
   | "bedroom_cap"
   | "blank_side_wall"
   | "building_history_permission"
+  | "building_history_permission_undated"
   | "buildings_on_same_lot"
   | "coa_calibrated_not_law"
   | "conversion_within_building"

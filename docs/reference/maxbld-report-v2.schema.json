@@ -2149,6 +2149,7 @@
         "bedroom_cap",
         "blank_side_wall",
         "building_history_permission",
+        "building_history_permission_undated",
         "buildings_on_same_lot",
         "coa_calibrated_not_law",
         "conversion_within_building",
@@ -2282,11 +2283,17 @@
       "mandatory": false
     },
     "building_history_permission": {
-      "template": "If your house existed before {date}, you may also {keep or rebuild a semi-detached house or duplex / add more than one secondary suite / divide the house into a semi-detached pair / build a rear addition up to FSI 0.69 (allowed floor area (FSI)) / add above the first storey only within the required setbacks}.",
+      "template": "If your house existed before {date}, you may also {keep or rebuild a semi-detached house or duplex / add more than one secondary suite / divide the house into a semi-detached pair / build a rear addition up to FSI 0.69 (allowed floor area (FSI))}.",
       "slots": [
         "date",
-        "keep or rebuild a semi-detached house or duplex / add more than one secondary suite / divide the house into a semi-detached pair / build a rear addition up to FSI 0.69 (allowed floor area (FSI)) / add above the first storey only within the required setbacks"
+        "keep or rebuild a semi-detached house or duplex / add more than one secondary suite / divide the house into a semi-detached pair / build a rear addition up to FSI 0.69 (allowed floor area (FSI))"
       ],
+      "importance": "normal",
+      "mandatory": false
+    },
+    "building_history_permission_undated": {
+      "template": "If you are adding to an existing house, additions above the first storey must stay within the required setbacks.",
+      "slots": [],
       "importance": "normal",
       "mandatory": false
     },
