@@ -94919,6 +94919,146 @@
           "reason": "count_or_ordinal_not_a_limit"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(596)#(596)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1748edad: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(596)#(596)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(596)#(596)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7e877d55: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(596)#(596)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(627)#(627)[SSP](G)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ae0bf227: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(627)#(627)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(627)#(627)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4b51edd1: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(627)#(627)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(1)#(1)[SSP](F)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-11b7338c: answer A — HELD on R19-1 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; \"side lot line that abuts a road\" is not a side_setback_street_m wording (only street/abut-a-street forms are patterns); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(1)#(1)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(1)#(1)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f0a17181: answer A — HELD on R19-1 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; \"side lot line that abuts a road\" is not a side_setback_street_m wording (only street/abut-a-street forms are patterns); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(1)#(1)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(1)#(1)[SSP](F)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4f0f1acd: answer A — HELD on R19-1 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; \"side lot line that abuts a road\" is not a side_setback_street_m wording (only street/abut-a-street forms are patterns); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(1)#(1)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(1)#(1)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1d04bde8: answer A — HELD on R19-1 (recommendation, not operator-ruled; shard >= 85%): keep UNUSUAL; \"side lot line that abuts a road\" is not a side_setback_street_m wording (only street/abut-a-street forms are patterns); a wording is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(1)#(1)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(62)#(62)[SSP](G)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-9d0bd961: answer B — CHAT-81.CITE-1 (269 (E) / 120 (D) disclosed basis): a landscaping requirement tied to a lot line abutting a named highway is UNUSUAL, as 269 (E) (R8-6)",
+      "unit": "900.4.10(62)#(62)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "field": "disclosure",
+      "id": "COR-900.4.10(62)#(62)[SSP](G)/disclosure",
+      "kind": "correction",
+      "reason": "62 (G) is the 269 (E) wording; UNUSUAL needs a disclosure, a reason and its literals accounted",
+      "rule": "CHAT-81.CITE-1 (269 (E) / 120 (D) disclosed basis); Spec 133 §m.82 (M-75 correction form): shape of the adjudicated UNUSUAL, worded as 269 (E)",
+      "unit": "900.4.10(62)#(62)[SSP](G)",
+      "value": "All lands within 3.0 metres of a lot line abutting Highway 401 must be used for soft landscaping; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(62)#(62)[SSP](G)/calculation_handling",
+      "kind": "correction",
+      "reason": "62 (G) is the 269 (E) wording; UNUSUAL needs a disclosure, a reason and its literals accounted",
+      "rule": "CHAT-81.CITE-1 (269 (E) / 120 (D) disclosed basis); Spec 133 §m.82 (M-75 correction form): shape of the adjudicated UNUSUAL, worded as 269 (E)",
+      "unit": "900.4.10(62)#(62)[SSP](G)",
+      "value": {
+        "description": "A soft landscaping requirement within 3.0 metres of a lot line abutting Highway 401; the highway-abutting lot line is not held and no landscaping target covers a strip.",
+        "gaps": "Needs the lot line that abuts Highway 401.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r19-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(62)#(62)[SSP](G)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "62 (G) is the 269 (E) wording; UNUSUAL needs a disclosure, a reason and its literals accounted",
+      "rule": "CHAT-81.CITE-1 (269 (E) / 120 (D) disclosed basis); Spec 133 §m.82 (M-75 correction form): shape of the adjudicated UNUSUAL, worded as 269 (E)",
+      "unit": "900.4.10(62)#(62)[SSP](G)",
+      "value": [
+        {
+          "clause": "(62)[SSP](G)",
+          "literal": "3.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(62)[SSP](G)",
+          "literal": "401",
+          "reason": "cross_reference_value"
+        }
+      ]
     }
   ]
 }
