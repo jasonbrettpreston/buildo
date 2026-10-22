@@ -226,7 +226,11 @@
     {
       "absent_phrases": [
         "main walls for a detached houseplex",
-        "main walls of a detached houseplex"
+        "main walls of a detached houseplex",
+        "main walls for a semi-detached houseplex",
+        "main walls of a semi-detached houseplex",
+        "main walls for a townhouse",
+        "main walls of a townhouse"
       ],
       "accounted_occurrences": [
         "the main pedestrian entrance may be located in the front main wall that is closest to the lot line abutting the major street",
@@ -241,7 +245,9 @@
       ],
       "answer": "not_applicable",
       "building_types": [
-        "detached_houseplex"
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "townhouse"
       ],
       "checked_page": "ch10_80",
       "evidence_kind": "absence",
@@ -254,7 +260,7 @@
         "the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "an RM detached houseplex is outside the subject of 10.80.40.10(2) (\"the exterior portion of main walls for a detached house or a semi-detached house\") and of (6) (a detached house or semi-detached house with a flat or shallow roof); every other main-wall phrase on the page is an entrance, dormer, depth, setback, separation or parking rule (M-190: an RM houseplex has no main-wall cap; not_applicable, the M-183 form)",
+      "statement": "an RM detached houseplex, an RM semi-detached houseplex and an RM townhouse are outside the subject of 10.80.40.10(2) (\"the exterior portion of main walls for a detached house or a semi-detached house\") and of (6) (a detached house or semi-detached house with a flat or shallow roof); (2)(C) only says the limit does not apply to townhouses or apartment buildings on a lot abutting a major street, so a townhouse on a major street answers the same; every other main-wall phrase on the page is an entrance, dormer, depth, setback, separation or parking rule (M-190: an RM houseplex or townhouse has no main-wall cap; not_applicable, the M-183 form; Q-KG2)",
       "subject_clause": "10.80.40.10(2)",
       "target": "main_wall_height_m",
       "zone": "RM"
