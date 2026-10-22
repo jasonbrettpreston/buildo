@@ -87670,6 +87670,192 @@
       "rule": "Spec 69a M-317 dated note (operator CHAT-64.D-1436 / D-1437 twin check, 2026-10-22-batch-x); M-75 correction: 1434 (A) is word-for-word 1436 (D) and 1437 (D)",
       "unit": "900.3.10(1434)#(1434)[SSP](A)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(199)#(199)[SSP](A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Keyer A drafted an UNUSUAL unit whose literal 9.0 metres was listed limit_not_modelled; the operator chose Keyer B (LIMIT front_setback_m min 9.0 m) after the vocab addition \"the front line\", so the literal is expressed.",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(199)#(199)[SSP](A)/literals_not_expressed (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(199)#(199)[SSP](A)/literals_not_expressed",
+      "unit": "900.3.10(199)#(199)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(199)#(199)[SSP](A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "The LIMIT is licensed by the added pattern \"the front line\", so the unit is modelled (Keyer A drafted not_modelled / needs_data_we_lack because the pattern was absent).",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(199)#(199)[SSP](A)/calculation_handling (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(199)#(199)[SSP](A)/calculation_handling",
+      "unit": "900.3.10(199)#(199)[SSP](A)",
+      "value": {
+        "description": "A 9.0 metre minimum building setback from the front line.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "disclosure",
+      "id": "COR-900.3.10(199)#(199)[SSP](A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "A modelled LIMIT carries no authored disclosure (Keyer A wrote the UNUSUAL buyer text).",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(199)#(199)[SSP](A)/disclosure (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(199)#(199)[SSP](A)/disclosure",
+      "unit": "900.3.10(199)#(199)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(291)#(291)[SSP](G)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "The street numbers of the two named addresses are not rule values (precedent 900.2.10(736)#(736)[SSP](A)(i), literal 160, cross_reference_value); the 5.4 m literal is expressed by the adopted LIMIT.",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(291)#(291)[SSP](G)/literals_not_expressed (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(291)#(291)[SSP](G)/literals_not_expressed",
+      "unit": "900.3.10(291)#(291)[SSP](G)",
+      "value": [
+        {
+          "clause": "(291)[SSP](G)",
+          "literal": "1160",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(291)[SSP](G)",
+          "literal": "1162",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(291)#(291)[SSP](G)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Operator note: the unit carries applies_to named_addresses (Keyer A) and answers named_lots_only for every other lot; the licence gap Keyer A recorded is closed by the added pattern \"the front lot line\".",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(291)#(291)[SSP](G)/calculation_handling (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(291)#(291)[SSP](G)/calculation_handling",
+      "unit": "900.3.10(291)#(291)[SSP](G)",
+      "value": {
+        "description": "Minimum front yard setback of 5.4 m on the two named addresses 1160 and 1162 Pharmacy Ave. only.",
+        "gaps": "Applies only to named addresses; no lot list is held to match them.",
+        "not_modelled_reason": "named_lots_only",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "disclosure",
+      "id": "COR-900.3.10(291)#(291)[SSP](G)/disclosure~s1",
+      "kind": "correction",
+      "reason": "A LIMIT on named addresses carries no authored disclosure (precedent 900.2.10(736)#(736)[SSP](A)(i)); the named_lots_only handling carries the meaning.",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(291)#(291)[SSP](G)/disclosure (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(291)#(291)[SSP](G)/disclosure",
+      "unit": "900.3.10(291)#(291)[SSP](G)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "The 0.3 metres literal is expressed by the adopted LIMIT.",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(287)#(287)[SSP](E)/literals_not_expressed (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/literals_not_expressed",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/condition~s1",
+      "kind": "correction",
+      "reason": "Operator accepted the recommendation: the 0.3 m side clearance applies to \"the portion of a building with a parking space\", keyed as the lot condition ancillary_contains_parking_space (pattern \"with a parking space\" added to the token).",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(287)#(287)[SSP](E)/condition (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/condition",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "tokens": [
+          "ancillary_contains_parking_space"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/application.lot_conditions~s1",
+      "kind": "correction",
+      "reason": "The condition token is listed in application.lot_conditions (G-SHAPE application/condition agreement).",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(287)#(287)[SSP](E)/application.lot_conditions (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/application.lot_conditions",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": [
+        "ancillary_contains_parking_space"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "The LIMIT is licensed by the added pattern \"from the side lot line\"; the condition is a site fact the buyer enters (ancillary_contains_parking_space), set aside by the M-169 \"If … \" disclosure on a new principal building.",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(287)#(287)[SSP](E)/calculation_handling (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/calculation_handling",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "description": "A portion of a building with a parking space may be in a side yard if at least 0.3 metres from the side lot line.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "ancillary_contains_parking_space"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "disclosure",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/disclosure~s1",
+      "kind": "correction",
+      "reason": "A modelled LIMIT carries no authored disclosure; the M-169 undetermined-condition sentence is generated.",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(287)#(287)[SSP](E)/disclosure (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/disclosure",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "The lot condition ancillary_contains_parking_space needs its evidence phrase from the clause text (\"with a parking space\").",
+      "rule": "Spec 69a M-317 (verify-37 2a): re-recorded under the lane label, identical value; the operator ruled the disagreement records (CHAT-61), not these mechanical M-75 field corrections; supersedes COR-900.3.10(287)#(287)[SSP](E)/application.evidence (the M-315 / CHAT-50 form)",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/application.evidence",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "RD": "Exception RD 287",
+        "ancillary_contains_parking_space": "with a parking space",
+        "any": "portion of a building",
+        "parking_space": "a parking space"
+      }
     }
   ]
 }

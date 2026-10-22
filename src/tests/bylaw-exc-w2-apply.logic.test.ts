@@ -29,8 +29,20 @@ const assembled = async (): Promise<Map<string, Json>> => {
 };
 
 describe('CHAT-61 vocabulary pattern additions', () => {
-  it('"the front line" and "the front lot line" license front_setback_m (199 (A), 291 (G))', () => {
-    expect(VOCAB.dsl_target.front_setback_m.patterns).toEqual(expect.arrayContaining(['the front line', 'the front lot line']));
+  it('"setback from the front line" / "setback from the front lot line" license front_setback_m (199 (A), 291 (G)); the loose bare forms are not patterns (verify-37 item 5)', () => {
+    const p: string[] = VOCAB.dsl_target.front_setback_m.patterns;
+    expect(p).toEqual(expect.arrayContaining(['setback from the front line', 'setback from the front lot line']));
+    expect(p).not.toContain('the front line');
+    expect(p).not.toContain('the front lot line');
+  });
+  it('the new patterns license the 199 and 291 clause texts and not a height-measurement or designation sentence', () => {
+    const p: string[] = VOCAB.dsl_target.front_setback_m.patterns;
+    const lic = (t: string): boolean => p.some((x) => t.toLowerCase().includes(x));
+    expect(lic('The minimum building setback from the front line is 9.0 metres;')).toBe(true);
+    expect(lic('the minimum building setback from the front lot line is 5.4 metres.')).toBe(true);
+    expect(lic('between the average elevation of the ground along the front lot line and the highest point')).toBe(false);
+    expect(lic('any portion of a building that is farther from the front lot line')).toBe(false);
+    expect(lic('the longest of the lot lines separating the lot from a street is the front line')).toBe(false);
   });
   it('"with a parking space" licenses the lot condition ancillary_contains_parking_space (287 (E))', () => {
     expect(VOCAB.lot_condition.ancillary_contains_parking_space.patterns).toEqual(expect.arrayContaining(['containing a parking space', 'with a parking space']));

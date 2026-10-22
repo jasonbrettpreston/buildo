@@ -1325,7 +1325,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **m.317** Building-history conditions are keyed on the existing-building route (keying rule 31), and five numeric adjudications land.
   Status: RULED 2026-10-22 · OWED · Enforced by: bylaw-exc-w2-apply.logic.test.ts (red first: docs/reports/red-evidence/bylaw/bylaw-exc-w2-apply-red.txt)
-  Rules: `M-317` (Spec 69a) · +1 dated note
+  Rules: `M-317` (Spec 69a) · +2 dated notes
 
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
