@@ -3,36 +3,36 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/classify-coa-scope.js",
   "chain": "coa",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 33280,
+    "records_total": 2448,
     "records_new": 0,
-    "records_updated": 33280,
+    "records_updated": 2448,
     "records_meta": {
-      "duration_ms": 1818,
-      "coa_processed": 33280,
-      "scope_classified": 31983,
-      "unmapped_scope": 1297,
-      "no_class": 6106,
-      "no_project_type": 3236,
-      "structure_typed": 18094,
+      "duration_ms": 267,
+      "coa_processed": 2448,
+      "scope_classified": 2334,
+      "unmapped_scope": 114,
+      "no_class": 506,
+      "no_project_type": 245,
+      "structure_typed": 1165,
       "project_type_distribution": {
-        "(null)": 3236,
-        "NewConstruction": 11919,
-        "Addition": 5058,
-        "Mixed": 8336,
-        "Alteration": 2199,
-        "Severance": 2477,
-        "Demolition": 55
+        "NewConstruction": 766,
+        "Mixed": 623,
+        "Severance": 476,
+        "Alteration": 122,
+        "(null)": 245,
+        "Addition": 213,
+        "Demolition": 3
       },
       "coa_type_class_distribution": {
-        "residential": 25436,
-        "(null)": 6106,
-        "mixed": 733,
-        "commercial": 844,
-        "institutional": 161
+        "residential": 1815,
+        "(null)": 506,
+        "mixed": 64,
+        "commercial": 48,
+        "institutional": 15
       },
       "audit_table": {
         "phase": 42,
@@ -41,62 +41,62 @@
         "rows": [
           {
             "metric": "coa_processed",
-            "value": 33280,
+            "value": 2448,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "scope_classified",
-            "value": 31983,
+            "value": 2334,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "unmapped_scope_count",
-            "value": "3.9%",
+            "value": "4.7%",
             "threshold": "<= 10%",
             "status": "PASS"
           },
           {
             "metric": "scope_classified_pct",
-            "value": "96.1%",
+            "value": "95.3%",
             "threshold": ">= 90%",
             "status": "PASS"
           },
           {
             "metric": "no_class",
-            "value": 6106,
+            "value": 506,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "coa_type_class_null_pct",
-            "value": "18.3%",
+            "value": "20.7%",
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "no_project_type",
-            "value": 3236,
+            "value": 245,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "structure_type_classified_pct",
-            "value": "54.4%",
+            "value": "47.6%",
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "project_type_distribution",
             "value": {
-              "(null)": 3236,
-              "NewConstruction": 11919,
-              "Addition": 5058,
-              "Mixed": 8336,
-              "Alteration": 2199,
-              "Severance": 2477,
-              "Demolition": 55
+              "NewConstruction": 766,
+              "Mixed": 623,
+              "Severance": 476,
+              "Alteration": 122,
+              "(null)": 245,
+              "Addition": 213,
+              "Demolition": 3
             },
             "threshold": null,
             "status": "INFO"
@@ -104,24 +104,24 @@
           {
             "metric": "coa_type_class_distribution",
             "value": {
-              "residential": 25436,
-              "(null)": 6106,
-              "mixed": 733,
-              "commercial": 844,
-              "institutional": 161
+              "residential": 1815,
+              "(null)": 506,
+              "mixed": 64,
+              "commercial": 48,
+              "institutional": 15
             },
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 18225.63,
+            "value": 8774.19,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 1826,
+            "value": 279,
             "threshold": null,
             "status": "INFO"
           }
@@ -157,30 +157,34 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Loaded 760 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Processed 5,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Processed 10,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Processed 15,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Processed 20,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Processed 25,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Processed 30,000 CoAs so far\"}\nPIPELINE_SUMMARY:{\"records_total\":33280,\"records_new\":0,\"records_updated\":33280,\"records_meta\":{\"duration_ms\":1818,\"coa_processed\":33280,\"scope_classified\":31983,\"unmapped_scope\":1297,\"no_class\":6106,\"no_project_type\":3236,\"structure_typed\":18094,\"project_type_distribution\":{\"(null)\":3236,\"NewConstruction\":11919,\"Addition\":5058,\"Mixed\":8336,\"Alteration\":2199,\"Severance\":2477,\"Demolition\":55},\"coa_type_class_distribution\":{\"residential\":25436,\"(null)\":6106,\"mixed\":733,\"commercial\":844,\"institutional\":161},\"audit_table\":{\"phase\":42,\"name\":\"CoA Scope Classification\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_processed\",\"value\":33280,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"scope_classified\",\"value\":31983,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"unmapped_scope_count\",\"value\":\"3.9%\",\"threshold\":\"<= 10%\",\"status\":\"PASS\"},{\"metric\":\"scope_classified_pct\",\"value\":\"96.1%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"no_class\",\"value\":6106,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_type_class_null_pct\",\"value\":\"18.3%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"no_project_type\",\"value\":3236,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"structure_type_classified_pct\",\"value\":\"54.4%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"project_type_distribution\",\"value\":{\"(null)\":3236,\"NewConstruction\":11919,\"Addition\":5058,\"Mixed\":8336,\"Alteration\":2199,\"Severance\":2477,\"Demolition\":55},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_type_class_distribution\",\"value\":{\"residential\":25436,\"(null)\":6106,\"mixed\":733,\"commercial\":844,\"institutional\":161},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":18225.63,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1826,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"description\",\"status\",\"decision\",\"last_seen_at\",\"scope_classified_at\"]},\"writes\":{\"coa_applications\":[\"coa_type_class\",\"project_type\",\"scope_tags\",\"structure_type\",\"scope_classified_at\",\"scope_source\"]}}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Classification complete\",\"context\":{\"processed\":33280,\"scope_classified\":31983,\"unmapped_scope\":1297,\"no_class\":6106,\"no_project_type\":3236,\"duration\":\"1.8s\"}}\n\n[classify-coa-scope] completed in 1.8s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Loaded 805 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":2448,\"records_new\":0,\"records_updated\":2448,\"records_meta\":{\"duration_ms\":267,\"coa_processed\":2448,\"scope_classified\":2334,\"unmapped_scope\":114,\"no_class\":506,\"no_project_type\":245,\"structure_typed\":1165,\"project_type_distribution\":{\"NewConstruction\":766,\"Mixed\":623,\"Severance\":476,\"Alteration\":122,\"(null)\":245,\"Addition\":213,\"Demolition\":3},\"coa_type_class_distribution\":{\"residential\":1815,\"(null)\":506,\"mixed\":64,\"commercial\":48,\"institutional\":15},\"audit_table\":{\"phase\":42,\"name\":\"CoA Scope Classification\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_processed\",\"value\":2448,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"scope_classified\",\"value\":2334,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"unmapped_scope_count\",\"value\":\"4.7%\",\"threshold\":\"<= 10%\",\"status\":\"PASS\"},{\"metric\":\"scope_classified_pct\",\"value\":\"95.3%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"no_class\",\"value\":506,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_type_class_null_pct\",\"value\":\"20.7%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"no_project_type\",\"value\":245,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"structure_type_classified_pct\",\"value\":\"47.6%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"project_type_distribution\",\"value\":{\"NewConstruction\":766,\"Mixed\":623,\"Severance\":476,\"Alteration\":122,\"(null)\":245,\"Addition\":213,\"Demolition\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_type_class_distribution\",\"value\":{\"residential\":1815,\"(null)\":506,\"mixed\":64,\"commercial\":48,\"institutional\":15},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":8774.19,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":279,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"description\",\"status\",\"decision\",\"last_seen_at\",\"scope_classified_at\"]},\"writes\":{\"coa_applications\":[\"coa_type_class\",\"project_type\",\"scope_tags\",\"structure_type\",\"scope_classified_at\",\"scope_source\"]}}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Classification complete\",\"context\":{\"processed\":2448,\"scope_classified\":2334,\"unmapped_scope\":114,\"no_class\":506,\"no_project_type\":245,\"duration\":\"0.3s\"}}\n\n[classify-coa-scope] completed in 0.3s\n",
   "stderr": "{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3407,
+  "pipeline_runs_max_id_before": 3881,
   "table_state": [
     {
       "table": "coa_applications",
-      "row_count": 33949,
-      "content_hash": "890071032f8af6a963608fac93fc0438",
-      "order_by": "pk",
+      "row_count": 33982,
+      "content_hash": "f25acf92659bf9e395f53fde00cdeb9f",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
       "columns": [
         "id",
         "coa_type_class",
         "project_type",
         "scope_tags",
         "structure_type",
+        "scope_classified_at",
         "scope_source"
       ]
     }
   ],
-  "tables_source": "arg",
+  "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "coa_applications": 45
+    "coa_applications": 36
   },
   "table_specs": {
     "coa_applications": {
@@ -190,11 +194,14 @@
         "project_type",
         "scope_tags",
         "structure_type",
+        "scope_classified_at",
         "scope_source"
       ],
-      "columns_source": "arg",
-      "order": null,
-      "order_source": "none"
+      "columns_source": "descriptor",
+      "order": [
+        "id"
+      ],
+      "order_source": "descriptor"
     }
   },
   "invariants": [],
@@ -222,62 +229,62 @@
               "metric": "coa_processed",
               "status": "INFO",
               "threshold": null,
-              "value": 33280
+              "value": 2448
             },
             {
               "metric": "scope_classified",
               "status": "INFO",
               "threshold": null,
-              "value": 31983
+              "value": 2334
             },
             {
               "metric": "unmapped_scope_count",
               "status": "PASS",
               "threshold": "<= 10%",
-              "value": "3.9%"
+              "value": "4.7%"
             },
             {
               "metric": "scope_classified_pct",
               "status": "PASS",
               "threshold": ">= 90%",
-              "value": "96.1%"
+              "value": "95.3%"
             },
             {
               "metric": "no_class",
               "status": "INFO",
               "threshold": null,
-              "value": 6106
+              "value": 506
             },
             {
               "metric": "coa_type_class_null_pct",
               "status": "INFO",
               "threshold": null,
-              "value": "18.3%"
+              "value": "20.7%"
             },
             {
               "metric": "no_project_type",
               "status": "INFO",
               "threshold": null,
-              "value": 3236
+              "value": 245
             },
             {
               "metric": "structure_type_classified_pct",
               "status": "INFO",
               "threshold": null,
-              "value": "54.4%"
+              "value": "47.6%"
             },
             {
               "metric": "project_type_distribution",
               "status": "INFO",
               "threshold": null,
               "value": {
-                "(null)": 3236,
-                "Addition": 5058,
-                "Alteration": 2199,
-                "Demolition": 55,
-                "Mixed": 8336,
-                "NewConstruction": 11919,
-                "Severance": 2477
+                "(null)": 245,
+                "Addition": 213,
+                "Alteration": 122,
+                "Demolition": 3,
+                "Mixed": 623,
+                "NewConstruction": 766,
+                "Severance": 476
               }
             },
             {
@@ -285,42 +292,42 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "(null)": 6106,
-                "commercial": 844,
-                "institutional": 161,
-                "mixed": 733,
-                "residential": 25436
+                "(null)": 506,
+                "commercial": 48,
+                "institutional": 15,
+                "mixed": 64,
+                "residential": 1815
               }
             }
           ],
           "verdict": "PASS"
         },
-        "coa_processed": 33280,
+        "coa_processed": 2448,
         "coa_type_class_distribution": {
-          "(null)": 6106,
-          "commercial": 844,
-          "institutional": 161,
-          "mixed": 733,
-          "residential": 25436
+          "(null)": 506,
+          "commercial": 48,
+          "institutional": 15,
+          "mixed": 64,
+          "residential": 1815
         },
-        "no_class": 6106,
-        "no_project_type": 3236,
+        "no_class": 506,
+        "no_project_type": 245,
         "project_type_distribution": {
-          "(null)": 3236,
-          "Addition": 5058,
-          "Alteration": 2199,
-          "Demolition": 55,
-          "Mixed": 8336,
-          "NewConstruction": 11919,
-          "Severance": 2477
+          "(null)": 245,
+          "Addition": 213,
+          "Alteration": 122,
+          "Demolition": 3,
+          "Mixed": 623,
+          "NewConstruction": 766,
+          "Severance": 476
         },
-        "scope_classified": 31983,
-        "structure_typed": 18094,
-        "unmapped_scope": 1297
+        "scope_classified": 2334,
+        "structure_typed": 1165,
+        "unmapped_scope": 114
       },
       "records_new": 0,
-      "records_total": 33280,
-      "records_updated": 33280
+      "records_total": 2448,
+      "records_updated": 2448
     },
     "summary_count": 1,
     "meta": [
@@ -351,14 +358,8 @@
     "pipeline_runs": [],
     "stdout_lines": [
       "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Loaded 760 logic variables from control panel\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 5,000 CoAs so far\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 10,000 CoAs so far\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 15,000 CoAs so far\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 20,000 CoAs so far\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 25,000 CoAs so far\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 30,000 CoAs so far\",\"tag\":\"[classify-coa-scope]\"}",
-      "{\"context\":{\"duration\":\"<DUR>\",\"no_class\":6106,\"no_project_type\":3236,\"processed\":33280,\"scope_classified\":31983,\"unmapped_scope\":1297},\"level\":\"INFO\",\"msg\":\"Classification complete\",\"tag\":\"[classify-coa-scope]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 805 logic variables from control panel\",\"tag\":\"[classify-coa-scope]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"no_class\":506,\"no_project_type\":245,\"processed\":2448,\"scope_classified\":2334,\"unmapped_scope\":114},\"level\":\"INFO\",\"msg\":\"Classification complete\",\"tag\":\"[classify-coa-scope]\"}",
       "[classify-coa-scope] completed in <DUR>"
     ],
     "table_state": [
@@ -369,11 +370,15 @@
           "project_type",
           "scope_tags",
           "structure_type",
+          "scope_classified_at",
           "scope_source"
         ],
-        "content_hash": "890071032f8af6a963608fac93fc0438",
-        "order_by": "pk",
-        "row_count": 33949,
+        "content_hash": "f25acf92659bf9e395f53fde00cdeb9f",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 33982,
         "table": "coa_applications"
       }
     ],
@@ -381,12 +386,16 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3408,
+      "id": 3882,
       "recorded_by": "harness"
     }
   ],
-  "source_fingerprint": null,
-  "fingerprint_files": [],
-  "fingerprint_skipped_reason": "no_descriptor_yet",
-  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
+  "source_fingerprint": "9245fa0d5b84a3e83ce75a43fde9b27f1cd52673e4c66b306ee86bf85abfbc87",
+  "fingerprint_files": [
+    "scripts/classify-coa-scope.descriptor.json",
+    "scripts/classify-coa-scope.js",
+    "scripts/classify-coa-scope.notes.json",
+    "scripts/lib/compute/classify-coa-scope.js"
+  ],
+  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
 }

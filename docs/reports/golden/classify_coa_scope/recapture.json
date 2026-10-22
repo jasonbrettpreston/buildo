@@ -1,0 +1,34 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/coa-forced.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "{sql}",
+          "CREATE TABLE coa_scope_cohort_bak_{ts} AS SELECT id, scope_classified_at, coa_type_class, project_type, scope_tags, structure_type, scope_source FROM coa_applications WHERE description IS NOT NULL AND description <> '' AND scope_classified_at >= last_seen_at ORDER BY id LIMIT 50"
+        ],
+        [
+          "{sql}",
+          "UPDATE coa_applications SET scope_classified_at = NULL WHERE id IN (SELECT id FROM coa_scope_cohort_bak_{ts})"
+        ],
+        [
+          "{harness}"
+        ],
+        [
+          "{sql}",
+          "SELECT 1 / ((count(*) = 50 AND count(*) FILTER (WHERE c.scope_classified_at IS NULL OR c.coa_type_class IS DISTINCT FROM b.coa_type_class OR c.project_type IS DISTINCT FROM b.project_type OR c.scope_tags IS DISTINCT FROM b.scope_tags OR c.structure_type IS DISTINCT FROM b.structure_type OR c.scope_source IS DISTINCT FROM b.scope_source) = 0)::int) FROM coa_applications c JOIN coa_scope_cohort_bak_{ts} b ON b.id = c.id"
+        ],
+        [
+          "{sql}",
+          "UPDATE coa_applications c SET scope_classified_at = b.scope_classified_at FROM coa_scope_cohort_bak_{ts} b WHERE c.id = b.id"
+        ],
+        [
+          "{sql}",
+          "DROP TABLE coa_scope_cohort_bak_{ts}"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, Night A-swap 2026-10-22): the single write target coa_applications is an unguarded derived_recompute UPDATE keyed on the pending cursor, so the bracket copies 50 settled CoAs (id, scope_classified_at and the five classified columns) to coa_scope_cohort_bak_{ts}, sets scope_classified_at NULL for them (descriptor recovery.reset form, scoped to 50), runs the converted step (it re-classifies the 50: records_updated 50), verifies every classified column equals the backup (the classifier is deterministic) and restores the original stamp so downstream steps stay settled, then drops the backup."
+    }
+  }
+}

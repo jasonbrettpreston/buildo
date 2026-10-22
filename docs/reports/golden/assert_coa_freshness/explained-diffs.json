@@ -1,0 +1,91 @@
+{
+  "contract_version": 1,
+  "step": "assert_coa_freshness",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3): every entry is the measured PRE -> POST diff of docs/reports/golden/assert_coa_freshness/{pre,post}/{coa,standalone}.json (Night A-swap 2026-10-22, lane COA-ASWAP, back-to-back under the dblock: PRE retaken on the LEGACY shell, the R-EQ shell swap applied, POST taken on the converted shell), explained from the descriptor deviation, register rule, runner code or the captures' own measured values it names. table_state was identical in all four captures (the step writes no table; it writes only its run ledger row). The step is read-only: PRE and POST read the same fixed point (33,982 coa_applications rows, last_ingestion 2026-10-22).",
+  "diffs": [
+    {
+      "key": "meta[].reads.coa_applications[]",
+      "why": "PIPELINE_META is derived from the descriptor inputs.reads (Spec 122 §5.1, R-BJ): the same column set (decision_date, last_seen_at and the rest) in the descriptor order, so positions 0 and 2 swap (PRE [last_seen_at, ..., decision_date], POST [decision_date, ..., last_seen_at]). No legacy read is dropped. R-JM (CHAT-56, CHAT-59) removes link_coa from the step's declared upstream reads in the same patch: link_coa no longer stamps coa_applications.last_seen_at, so the coa root is the only writer of the column this freshness read observes."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "R-EQ shell swap: the legacy shell hand-printed JSON-log lines (\"Loaded 35 trade configs / 805 logic variables from control panel\", \"Checking CoA source data freshness...\", the result context line) and a hyphenated completion line; the runner prints its own lines (the target line \"database=postgres user=postgres migrations=<n>\", the ledger-gate line where the step gates, the PIPELINE_SUMMARY and PIPELINE_META lines and one \"[assert_coa_freshness] completed in <DUR>\" line). Log lines only: no table, counter or verdict value is read from them, and the PIPELINE_SUMMARY content is diffed separately in the summary.* keys."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "scripts/quality/assert-coa-freshness.descriptor.json deviations[1] (verdict.js buildAuditTable): the declared checks render first (total_records_present, then ingestion_days_ago) and the compute context rows (total_records, last_ingestion, max_decision_date, max_hearing_date) follow; position-only shift, every legacy metric survives. The first row is renamed total_records -> total_records_present (the declared check id) with the INFO total_records context row after it; ingestion_days_ago moves from position 2 to 1."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "Follows the position shift (deviations[1]): same-metric values are equal (total_records 33982, last_ingestion 2026-10-22, ingestion_days_ago 0, max_decision_date and max_hearing_date identical). The declared total_records_present check row renders its value as text (\"33982 coa_applications rows\"), a check row's display form; the legacy row carried the bare number."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "Follows the position shift and the declared checks: total_records_present and ingestion_days_ago are declared checks and render PASS (viol == 0, value_max 45) where the legacy printed INFO for the count and last_ingestion rows; the context rows render INFO. Verdict PASS in both."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "The appended row: the converted audit table has one more row than the legacy one (the declared total_records_present check row is prepended, deviations[1]), so the last context row (max_hearing_date) lands at an index the legacy table does not have. Row count 7 -> 8 including the two sys_ rows."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "deviations[1]: the freshness row's threshold column now shows the substituted bound (\"value_max 45\", warn \"value_max 135\") instead of the legacy prose \">= 45d WARN / >= 135d FAIL - CKAN feed likely frozen; check the scraper\"; context rows carry none."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].warn_threshold",
+      "why": "ingestion_days_ago is a two-tier check (warn_limit value_max 135, FAIL beyond; deviation ACF-D8 records that a misordered pair degrades to the stricter tier), which the library renders as warn_threshold; the legacy row had no such field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "The library stamps every declared check row with observed before_write / after_write (FLEET-2 lib #52); the legacy hand-built rows had no such field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "The library stamps every declared check row with source \"check\" and every compute context row with source \"context\" (verdict.js checkRow / contextRow); the legacy hand-built rows carried no source field."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the row-derived failed-check count. The legacy shell emitted none. Measured (coa capture): PRE absent -> POST 0."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: \"all\" when no check failed or warned, else the passed count. The legacy shell emitted none. Measured (coa capture): PRE absent -> POST \"all\"."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the row-derived warned-check count. The legacy shell emitted none. Measured (coa capture): PRE absent -> POST 0."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the resolved config.logic_variables[] values in force (the declared step-owned copies, W4A-R1 copy form). The legacy shell loaded its config inside the step and did not emit it. Here: assert_coa_freshness_warn_max_days 45 and assert_coa_freshness_fail_max_days 135."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the FAIL-check messages (an empty array when none). The legacy shell emitted none."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: \"chain_owned\" under PIPELINE_CHAIN (the chain runner writes the ledger row) and \"owned\" standalone (the runner writes it). The legacy shell emitted none. Measured (coa capture): PRE absent -> POST \"chain_owned\"."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the pool error count (0). The legacy shell emitted none. Measured (coa capture): PRE absent -> POST 0."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the terminal state the run ended in (the descriptor terminals[] vocabulary). The legacy shell emitted none. Here all_checks_passed. Measured (coa capture): PRE absent -> POST \"all_checks_passed\"."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the WARN-check messages. The legacy shell emitted none."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "The legacy shell reported records_total 0 (it counted nothing); the converted runner reports null for an assert, which writes nothing but its run row (Spec 132 §assert.1, R-EQ). Value-neutral: the audit table carries the 33,982 coa_applications row count (total_records_present). Measured (coa capture): PRE 0 -> POST null."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "Standalone capture only: the legacy shell's standalone run left no pipeline_runs row in the capture window (PRE pipeline_runs [], ledger_status []), because its run ledger row is written by the chain runner. The converted runner owns the run ledger row on a standalone run (records_meta.ledger_row \"owned\"; the chain run reads \"chain_owned\" and writes none), so POST carries one assert_coa_freshness row with status completed or completed_with_warnings (Spec 124 R-EQ, runner ledger ownership). Nothing is lost: the chain capture shows no row in either side."
+    }
+  ]
+}

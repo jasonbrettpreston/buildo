@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/classify-coa-scope.js",
   "chain": "coa",
-  "source_fingerprint": null,
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "9245fa0d5b84a3e83ce75a43fde9b27f1cd52673e4c66b306ee86bf85abfbc87",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
   "header": {
     "processes": 1,
-    "calls": 112,
+    "calls": 19,
     "distinct": 9,
-    "utility": 74,
-    "tracer_self_ms": 27.231,
-    "wall_ms": 1923
+    "utility": 12,
+    "tracer_self_ms": 4.157,
+    "wall_ms": 329
   },
   "statements": [
     {
       "fingerprint": "535b831b843e144f",
       "kind": "write",
-      "count": 34,
-      "rowCount": 33280,
+      "count": 3,
+      "rowCount": 2448,
       "reads": {
         "coa_applications": [
           "id"
@@ -40,7 +40,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -61,7 +61,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 35,
+      "count": 4,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -93,7 +93,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 35,
+      "count": 4,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -132,205 +132,19 @@
   ],
   "transactions": [
     {
-      "client": "75031:2",
+      "client": "2694:2",
       "write_fingerprints": [
         "535b831b843e144f"
       ]
     },
     {
-      "client": "75031:3",
+      "client": "2694:3",
       "write_fingerprints": [
         "535b831b843e144f"
       ]
     },
     {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
-      "write_fingerprints": [
-        "535b831b843e144f"
-      ]
-    },
-    {
-      "client": "75031:3",
+      "client": "2694:3",
       "write_fingerprints": [
         "535b831b843e144f"
       ]

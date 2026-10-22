@@ -1,0 +1,15 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "cost_estimates",
+      "capture": "coa-forced.json",
+      "why": "POST docs/reports/golden/compute_coa_cost_estimates/post/coa-forced.json (Night A-swap 2026-10-22, Spec 124 R-CZ bracket in recapture.json): cost_classified_at set NULL and estimated_cost +1 on 50 CoA cost rows; the converted step re-prices them, the is_distinct_from guard fires on this target (records_updated), and the cohort plus the stamps are restored."
+    },
+    {
+      "table": "coa_applications",
+      "capture": "coa-forced.json",
+      "why": "POST docs/reports/golden/compute_coa_cost_estimates/post/coa-forced.json (Night A-swap 2026-10-22, Spec 124 R-CZ bracket in recapture.json): cost_classified_at set NULL and estimated_cost +1 on 50 CoA cost rows; the converted step re-prices them, the is_distinct_from guard fires on this target (records_updated), and the cohort plus the stamps are restored."
+    }
+  ]
+}

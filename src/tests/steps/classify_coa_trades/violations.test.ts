@@ -336,7 +336,8 @@ describe('classify_coa_trades ① — converted claims (RED at ①; flip to `it`
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
   });
 
-  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run() (flips at the cutover)', () => {
+  // FLIPPED at the shell swap (Spec 124 R-EQ, P4-SWAP: a step whose ② landed at compute_ported moves to runner_wired in its swap commit); the legacy-name retirement and converted[] registration stay at ③.
+  it('D1b — frozen shell: pipeline.step(), not pipeline.run() (flipped at the R-EQ shell swap)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');

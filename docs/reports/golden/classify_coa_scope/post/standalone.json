@@ -1,0 +1,754 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/classify-coa-scope.js",
+  "chain": "none",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 60,
+      "coa_processed": 0,
+      "scope_classified": 0,
+      "unmapped_scope": 0,
+      "no_class": 0,
+      "no_project_type": 0,
+      "structure_typed": 0,
+      "project_type_newconstruction_count": 0,
+      "project_type_addition_count": 0,
+      "project_type_alteration_count": 0,
+      "project_type_demolition_count": 0,
+      "project_type_severance_count": 0,
+      "project_type_mixed_count": 0,
+      "project_type_null_count": 0,
+      "coa_type_class_residential_count": 0,
+      "coa_type_class_commercial_count": 0,
+      "coa_type_class_institutional_count": 0,
+      "coa_type_class_mixed_count": 0,
+      "coa_type_class_null_count": 0,
+      "config": {
+        "classify_coa_scope_unmapped_max_pct": 10,
+        "classify_coa_scope_batch_size": 1000
+      },
+      "terminal": "classified",
+      "ledger_row": "owned",
+      "chain_run_id": null,
+      "code_sha": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+      "pool_errors": 0,
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
+      "audit_table": {
+        "phase": 6,
+        "name": "CoA Scope Classification",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "coa_processed",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "scope_classified",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "unmapped_scope_pct",
+            "value": "0.0%",
+            "threshold": "pct <= 10",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "scope_classified_pct",
+            "value": "0.0%",
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "no_class",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "coa_type_class_null_pct",
+            "value": "0.0%",
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "no_project_type",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "structure_type_classified_pct",
+            "value": "0.0%",
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "project_type_distribution",
+            "value": {},
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "coa_type_class_distribution",
+            "value": {},
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 66,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "coa_applications": [
+          "id",
+          "description",
+          "status",
+          "decision",
+          "last_seen_at",
+          "scope_classified_at"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "coa_type_class",
+          "project_type",
+          "scope_tags",
+          "structure_type",
+          "scope_classified_at",
+          "scope_source"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [
+    "completed"
+  ],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[classify_coa_scope]\",\"msg\":\"[classify_coa_scope] target: classify_coa_scope (descriptor.database) → database=postgres user=postgres migrations=272 (floor 133)\"}\n{\"level\":\"INFO\",\"tag\":\"[classify_coa_scope]\",\"msg\":\"phase classify starting (post_commit, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[classify_coa_scope]\",\"msg\":\"phase classify completed in 28ms\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":60,\"coa_processed\":0,\"scope_classified\":0,\"unmapped_scope\":0,\"no_class\":0,\"no_project_type\":0,\"structure_typed\":0,\"project_type_newconstruction_count\":0,\"project_type_addition_count\":0,\"project_type_alteration_count\":0,\"project_type_demolition_count\":0,\"project_type_severance_count\":0,\"project_type_mixed_count\":0,\"project_type_null_count\":0,\"coa_type_class_residential_count\":0,\"coa_type_class_commercial_count\":0,\"coa_type_class_institutional_count\":0,\"coa_type_class_mixed_count\":0,\"coa_type_class_null_count\":0,\"config\":{\"classify_coa_scope_unmapped_max_pct\":10,\"classify_coa_scope_batch_size\":1000},\"terminal\":\"classified\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":6,\"name\":\"CoA Scope Classification\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"scope_classified\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_scope_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"scope_classified_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_class\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_type_class_null_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_project_type\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"structure_type_classified_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"project_type_distribution\",\"value\":{},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_type_class_distribution\",\"value\":{},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":66,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"description\",\"status\",\"decision\",\"last_seen_at\",\"scope_classified_at\"]},\"writes\":{\"coa_applications\":[\"coa_type_class\",\"project_type\",\"scope_tags\",\"structure_type\",\"scope_classified_at\",\"scope_source\"]}}\n\n[classify_coa_scope] completed in 0.1s\n",
+  "stderr": "",
+  "pipeline_runs": [
+    {
+      "id": 3892,
+      "pipeline": "classify_coa_scope",
+      "status": "completed",
+      "started_at": "2026-10-22T17:33:26.646Z",
+      "completed_at": "2026-10-22T17:33:26.702Z",
+      "duration_ms": 66,
+      "records_total": 0,
+      "records_new": 0,
+      "records_updated": 0,
+      "records_meta": {
+        "config": {
+          "classify_coa_scope_batch_size": 1000,
+          "classify_coa_scope_unmapped_max_pct": 10
+        },
+        "errors": [],
+        "code_sha": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+        "no_class": 0,
+        "terminal": "classified",
+        "warnings": [],
+        "ledger_row": "owned",
+        "audit_table": {
+          "name": "CoA Scope Classification",
+          "rows": [
+            {
+              "value": 0,
+              "metric": "coa_processed",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "scope_classified",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": "0.0%",
+              "metric": "unmapped_scope_pct",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "pct <= 10"
+            },
+            {
+              "value": "0.0%",
+              "metric": "scope_classified_pct",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "no_class",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": "0.0%",
+              "metric": "coa_type_class_null_pct",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "no_project_type",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": "0.0%",
+              "metric": "structure_type_classified_pct",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {},
+              "metric": "project_type_distribution",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {},
+              "metric": "coa_type_class_distribution",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 66,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 6,
+          "verdict": "PASS"
+        },
+        "duration_ms": 60,
+        "pool_errors": 0,
+        "chain_run_id": null,
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "coa_processed": 0,
+        "unmapped_scope": 0,
+        "no_project_type": 0,
+        "structure_typed": 0,
+        "scope_classified": 0,
+        "project_type_null_count": 0,
+        "project_type_mixed_count": 0,
+        "coa_type_class_null_count": 0,
+        "coa_type_class_mixed_count": 0,
+        "project_type_addition_count": 0,
+        "project_type_severance_count": 0,
+        "project_type_alteration_count": 0,
+        "project_type_demolition_count": 0,
+        "coa_type_class_commercial_count": 0,
+        "coa_type_class_residential_count": 0,
+        "coa_type_class_institutional_count": 0,
+        "project_type_newconstruction_count": 0
+      },
+      "error_message": null
+    }
+  ],
+  "pipeline_runs_max_id_before": 3891,
+  "table_state": [
+    {
+      "table": "coa_applications",
+      "row_count": 33982,
+      "content_hash": "f25acf92659bf9e395f53fde00cdeb9f",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "coa_type_class",
+        "project_type",
+        "scope_tags",
+        "structure_type",
+        "scope_classified_at",
+        "scope_source"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "coa_applications": 48
+  },
+  "table_specs": {
+    "coa_applications": {
+      "columns": [
+        "id",
+        "coa_type_class",
+        "project_type",
+        "scope_tags",
+        "structure_type",
+        "scope_classified_at",
+        "scope_source"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "id"
+      ],
+      "order_source": "descriptor"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:pipeline_runs[0].completed_at",
+    "key:pipeline_runs[0].duration_ms",
+    "key:pipeline_runs[0].id",
+    "key:pipeline_runs[0].records_meta.chain_run_id",
+    "key:pipeline_runs[0].records_meta.code_sha",
+    "key:pipeline_runs[0].records_meta.duration_ms",
+    "key:pipeline_runs[0].started_at",
+    "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/classify-coa-scope.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "CoA Scope Classification",
+          "phase": 6,
+          "rows": [
+            {
+              "metric": "coa_processed",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "scope_classified",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "unmapped_scope_pct",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 10",
+              "value": "0.0%"
+            },
+            {
+              "metric": "scope_classified_pct",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": "0.0%"
+            },
+            {
+              "metric": "no_class",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "coa_type_class_null_pct",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": "0.0%"
+            },
+            {
+              "metric": "no_project_type",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "structure_type_classified_pct",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": "0.0%"
+            },
+            {
+              "metric": "project_type_distribution",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {}
+            },
+            {
+              "metric": "coa_type_class_distribution",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {}
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "coa_processed": 0,
+        "coa_type_class_commercial_count": 0,
+        "coa_type_class_institutional_count": 0,
+        "coa_type_class_mixed_count": 0,
+        "coa_type_class_null_count": 0,
+        "coa_type_class_residential_count": 0,
+        "config": {
+          "classify_coa_scope_batch_size": 1000,
+          "classify_coa_scope_unmapped_max_pct": 10
+        },
+        "errors": [],
+        "ledger_row": "owned",
+        "no_class": 0,
+        "no_project_type": 0,
+        "pool_errors": 0,
+        "project_type_addition_count": 0,
+        "project_type_alteration_count": 0,
+        "project_type_demolition_count": 0,
+        "project_type_mixed_count": 0,
+        "project_type_newconstruction_count": 0,
+        "project_type_null_count": 0,
+        "project_type_severance_count": 0,
+        "scope_classified": 0,
+        "structure_typed": 0,
+        "terminal": "classified",
+        "unmapped_scope": 0,
+        "warnings": []
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "coa_applications": [
+            "id",
+            "description",
+            "status",
+            "decision",
+            "last_seen_at",
+            "scope_classified_at"
+          ]
+        },
+        "writes": {
+          "coa_applications": [
+            "coa_type_class",
+            "project_type",
+            "scope_tags",
+            "structure_type",
+            "scope_classified_at",
+            "scope_source"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [
+      {
+        "error_message": null,
+        "pipeline": "classify_coa_scope",
+        "records_meta": {
+          "audit_table": {
+            "name": "CoA Scope Classification",
+            "phase": 6,
+            "rows": [
+              {
+                "metric": "coa_processed",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "scope_classified",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "unmapped_scope_pct",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 10",
+                "value": "0.0%"
+              },
+              {
+                "metric": "scope_classified_pct",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": "0.0%"
+              },
+              {
+                "metric": "no_class",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "coa_type_class_null_pct",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": "0.0%"
+              },
+              {
+                "metric": "no_project_type",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "structure_type_classified_pct",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": "0.0%"
+              },
+              {
+                "metric": "project_type_distribution",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": {}
+              },
+              {
+                "metric": "coa_type_class_distribution",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": {}
+              }
+            ],
+            "verdict": "PASS"
+          },
+          "checks_failed": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
+          "coa_processed": 0,
+          "coa_type_class_commercial_count": 0,
+          "coa_type_class_institutional_count": 0,
+          "coa_type_class_mixed_count": 0,
+          "coa_type_class_null_count": 0,
+          "coa_type_class_residential_count": 0,
+          "config": {
+            "classify_coa_scope_batch_size": 1000,
+            "classify_coa_scope_unmapped_max_pct": 10
+          },
+          "errors": [],
+          "ledger_row": "owned",
+          "no_class": 0,
+          "no_project_type": 0,
+          "pool_errors": 0,
+          "project_type_addition_count": 0,
+          "project_type_alteration_count": 0,
+          "project_type_demolition_count": 0,
+          "project_type_mixed_count": 0,
+          "project_type_newconstruction_count": 0,
+          "project_type_null_count": 0,
+          "project_type_severance_count": 0,
+          "scope_classified": 0,
+          "structure_typed": 0,
+          "terminal": "classified",
+          "unmapped_scope": 0,
+          "warnings": []
+        },
+        "records_new": 0,
+        "records_total": 0,
+        "records_updated": 0,
+        "status": "completed"
+      }
+    ],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[classify_coa_scope] target: classify_coa_scope (descriptor.database) → database=postgres user=postgres migrations=272 (floor 133)\",\"tag\":\"[classify_coa_scope]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"phase classify starting (post_commit, timeout disabled (declared \\\"none\\\"))\",\"tag\":\"[classify_coa_scope]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"phase classify completed in <DUR>\",\"tag\":\"[classify_coa_scope]\"}",
+      "[classify_coa_scope] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "id",
+          "coa_type_class",
+          "project_type",
+          "scope_tags",
+          "structure_type",
+          "scope_classified_at",
+          "scope_source"
+        ],
+        "content_hash": "f25acf92659bf9e395f53fde00cdeb9f",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 33982,
+        "table": "coa_applications"
+      }
+    ],
+    "invariants": []
+  },
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "coa_applications",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 1 table(s) [coa_applications]",
+    "txid_before_run2": 528937,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "classified",
+      "audit": {
+        "coa_processed": 0,
+        "scope_classified": 0,
+        "unmapped_scope_pct": "0.0%",
+        "scope_classified_pct": "0.0%",
+        "no_class": 0,
+        "coa_type_class_null_pct": "0.0%",
+        "no_project_type": 0,
+        "structure_type_classified_pct": "0.0%",
+        "project_type_distribution": {},
+        "coa_type_class_distribution": {},
+        "sys_velocity_rows_sec": 0,
+        "sys_duration_ms": 82
+      }
+    }
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 3892,
+      "recorded_by": "step"
+    },
+    {
+      "id": 3893,
+      "recorded_by": "step"
+    }
+  ],
+  "source_fingerprint": "651a9c335faaf0a72afe20a3afe8d91fb3970b820779807d2d28caea8b42149d",
+  "fingerprint_files": [
+    "scripts/classify-coa-scope.descriptor.json",
+    "scripts/classify-coa-scope.js",
+    "scripts/classify-coa-scope.notes.json",
+    "scripts/lib/compute/classify-coa-scope.js"
+  ],
+  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+}

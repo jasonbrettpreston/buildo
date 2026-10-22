@@ -740,14 +740,6 @@
       "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
       "producer": "link_coa",
       "kind": "table",
-      "key": "coa_applications.last_seen_at",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
-      "producer": "link_coa",
-      "kind": "table",
       "key": "permits.last_seen_at",
       "value": "any",
       "source": "src_sql"
@@ -3544,14 +3536,6 @@
       "producer": "geocode_permits",
       "kind": "table",
       "key": "permits.longitude",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-detail-query.ts",
-      "producer": "link_coa",
-      "kind": "table",
-      "key": "coa_applications.last_seen_at",
       "value": "any",
       "source": "src_sql"
     },

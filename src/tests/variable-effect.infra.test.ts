@@ -22,9 +22,11 @@ describe('R-EO — admin shows whether a setting is in effect (real tree)', () =
     expect(r.pass).toBe(true);
   });
 
-  it('(a) assert_coa_freshness copy window: both step-owned bounds take effect at cutover, naming the legacy variables', () => {
-    expect(committed.entries.assert_coa_freshness_warn_max_days).toMatchObject({ badge: BADGE_CUTOVER, step: 'assert_coa_freshness', legacy_name: 'coa_freshness_warn_days' });
-    expect(committed.entries.assert_coa_freshness_fail_max_days).toMatchObject({ badge: BADGE_CUTOVER, step: 'assert_coa_freshness', legacy_name: 'coa_freshness_fail_days' });
+  // Night A-swap R-EQ shell swap (2026-10-22): assert_coa_freshness left the copy window (stage runner_wired), so its
+  // step-owned bounds are read by the live frozen shell and carry no badge.
+  it('(a) assert_coa_freshness (runner_wired) reads its own step-owned bounds, so they carry no badge', () => {
+    expect(committed.entries.assert_coa_freshness_warn_max_days).toBeUndefined();
+    expect(committed.entries.assert_coa_freshness_fail_max_days).toBeUndefined();
   });
 
   // Night P4 R-EQ shell swap (b2ea1532, 2026-10-20): enrich_coa_zoning left the copy window (stage runner_wired), so its
@@ -44,9 +46,10 @@ describe('R-EO — admin shows whether a setting is in effect (real tree)', () =
     }
   });
 
-  it('the legacy variables those steps still read are in effect, so they carry no badge', () => {
-    for (const k of ['coa_freshness_warn_days', 'coa_freshness_fail_days', 'centreline_propagation_coverage_min']) {
-      expect(committed.entries[k], k).toBeUndefined();
+  it('the legacy variables the live steps still read are in effect, so they carry no badge; the swapped assert_coa_freshness legacy pair is unread until the retirement step (3, deferred by CHAT-54)', () => {
+    expect(committed.entries.centreline_propagation_coverage_min).toBeUndefined();
+    for (const k of ['coa_freshness_warn_days', 'coa_freshness_fail_days']) {
+      expect(committed.entries[k], k).toMatchObject({ badge: BADGE_UNREAD });
     }
   });
 

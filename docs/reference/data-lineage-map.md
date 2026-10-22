@@ -385,7 +385,7 @@ Coverage: **1128** columns across **78** tables, from **66** in-chain steps.
 | `is_heritage_designated` | `enrich_coa_zoning` | — |
 | `is_in_ravine_protection_area` | `enrich_coa_zoning` | — |
 | `is_through_lot` | `enrich_coa_zoning` | — |
-| `last_seen_at` | `coa`, `link_coa` | `assert_coa_freshness`, `classify_coa_scope`, `classify_lifecycle_phase`, `update_tracked_projects` |
+| `last_seen_at` | `coa` | `assert_coa_freshness`, `classify_coa_scope`, `classify_lifecycle_phase`, `update_tracked_projects` |
 | `latitude` | `link_coa`, `link_coa_to_parcels` | `link_coa` |
 | `lead_id` | — | `classify_coa_trades`, `classify_lifecycle_phase`, `compute_coa_cost_estimates`, `compute_trade_forecasts`, `enrich_coa_zoning`, `link_coa_to_parcels`, `update_tracked_projects` |
 | `lifecycle_block` | `classify_lifecycle_phase` | — |
@@ -1557,7 +1557,7 @@ For every in-chain step, in every chain it runs in: the set of steps whose `writ
 | Step | Chain | Derived upstream producers |
 |------|-------|------------------------------|
 | `address_points` | `sources` | — |
-| `assert_coa_freshness` | `coa` | `coa`, `link_coa` |
+| `assert_coa_freshness` | `coa` | `coa` |
 | `assert_data_bounds` | `coa` | — |
 | `assert_data_bounds` | `deep_scrapes` | — |
 | `assert_data_bounds` | `permits` | — |
@@ -1581,7 +1581,7 @@ For every in-chain step, in every chain it runs in: the set of steps whose `writ
 | `assert_staleness` | `deep_scrapes` | `inspections` |
 | `backfill_realtor_permit_trades` | `permits` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `close_stale_permits`, `link_similar`, `permits` |
 | `builders` | `permits` | `permits` |
-| `classify_coa_scope` | `coa` | `coa`, `link_coa` |
+| `classify_coa_scope` | `coa` | `coa` |
 | `classify_coa_trades` | `coa` | `classify_coa_scope` |
 | `classify_inspection_status` | `deep_scrapes` | `inspections` |
 | `classify_lifecycle_phase` | `coa` | `classify_coa_scope`, `coa`, `create_pre_permits`, `link_coa`, `link_coa_to_parcels` |
@@ -1644,7 +1644,7 @@ For every in-chain step, in every chain it runs in: the set of steps whose `writ
 | `refresh_snapshot` | `deep_scrapes` | — |
 | `refresh_snapshot` | `permits` | `compute_cost_estimates`, `compute_opportunity_scores`, `compute_trade_forecasts` |
 | `refresh_snapshot` | `sources` | — |
-| `update_tracked_projects` | `permits` | `classify_lifecycle_phase`, `compute_trade_forecasts`, `link_coa`, `permits` |
+| `update_tracked_projects` | `permits` | `classify_lifecycle_phase`, `compute_trade_forecasts`, `permits` |
 
 ---
 

@@ -648,7 +648,16 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace, invocation = null,
     }
     const tracedCols = new Set(Array.isArray(touched.writes[table]) ? touched.writes[table] : []);
     const declared = declaredWrites(descriptor).find((w) => w.table === table);
+    // CHAT-73.swap4 (Spec 132 §core.12/§core.14): the ROWS-arm G keyed UPDATE (set_based_scoped, rows "compute") must declare its
+    // key as a step column (write.js buildKeyedUpdateFromRowsSql types only declared step columns) but never SETs it, so the key
+    // column is exempt from the declared-column-must-be-traced half for that class only.
+    const keyExempt = new Set();
+    for (const w of Array.isArray(descriptor && descriptor.outputs && descriptor.outputs.writes) ? descriptor.outputs.writes : []) {
+      const wd = (w && w.write_discipline) || {};
+      if (w && w.table === table && wd.class === 'set_based_scoped' && wd.rows === 'compute') for (const k of Array.isArray(w.key) ? w.key : [w.key]) keyExempt.add(k);
+    }
     for (const col of declared ? declared.cols : []) {
+      if (keyExempt.has(col)) continue;
       // db_default: NOT required in the traced write, and a traced write of it IS a
       // violation (same row grammar) — the declaration is checked both ways (WF3 C1).
       const isDbDefault = declared.dbDefault.has(col);

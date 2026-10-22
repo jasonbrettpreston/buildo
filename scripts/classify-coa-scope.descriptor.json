@@ -18,8 +18,7 @@
   "inputs": {
     "reads": {
       "steps": [
-        { "step": "coa" },
-        { "step": "link_coa" }
+        { "step": "coa" }
       ],
       "tables": [
         { "table": "coa_applications", "columns": ["id", "description", "status", "decision", "last_seen_at", "scope_classified_at"] }
@@ -70,7 +69,7 @@
       {
         "table": "coa_applications",
         "column": "scope_classified_at",
-        "when": "the coa root (scripts/load-coa.js) moves coa_applications.last_seen_at past a CoA's scope_classified_at — it touches last_seen_at for every fed key (load-coa.js:565-582; R-DZ keeps that touch), so every CoA in each feed becomes pending again; link_coa's tier UPDATEs also set last_seen_at on a CoA they link (scripts/link-coa.js:242, :332), which re-arms it the same way (#44 (e) derives link_coa as an upstream). W4A-R4 (a): the §6.3 watermark pin (staleness.pins row on coa). This is the step's OWN row, the one execution.phases[0].invalidator_ref indexes (claim #54); #44 (i) resolves it by Spec 124 R-ER arm (ii) (own column, own pin on the coa root's same-table stamp). The coa root's producer-side row (the link_massing form, resolved by this step's pin, R-DO arm (i)) is owed at the coa root's ②.",
+        "when": "the coa root (scripts/load-coa.js) moves coa_applications.last_seen_at past a CoA's scope_classified_at — it touches last_seen_at for every fed key (load-coa.js:565-582; R-DZ keeps that touch), so every CoA in each feed becomes pending again; link_coa no longer stamps last_seen_at (R-JM, CHAT-56/59), so the coa root is the only writer and the only upstream. W4A-R4 (a): the §6.3 watermark pin (staleness.pins row on coa). This is the step's OWN row, the one execution.phases[0].invalidator_ref indexes (claim #54); #44 (i) resolves it by Spec 124 R-ER arm (ii) (own column, own pin on the coa root's same-table stamp). The coa root's producer-side row (the link_massing form, resolved by this step's pin, R-DO arm (i)) is owed at the coa root's ②.",
         "by": "pin"
       }
     ],

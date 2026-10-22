@@ -3,36 +3,36 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/compute-coa-cost-estimates.js",
   "chain": "coa",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 32100,
-    "records_new": 549,
-    "records_updated": 3119,
+    "records_total": 2355,
+    "records_new": 39,
+    "records_updated": 6,
     "records_meta": {
-      "duration_ms": 4627,
-      "coa_processed": 32100,
-      "coa_with_cost": 20192,
-      "coa_without_cost": 11908,
+      "duration_ms": 1027,
+      "coa_processed": 2355,
+      "coa_with_cost": 1262,
+      "coa_without_cost": 1093,
       "coa_with_fallback": 0,
       "null_cost_reasons": {
-        "no_parcel": 3491,
-        "no_scope_tags": 113,
-        "no_active_trades": 995,
-        "no_matching_rate": 7309
+        "no_parcel": 154,
+        "no_scope_tags": 12,
+        "no_active_trades": 156,
+        "no_matching_rate": 771
       },
       "null_cost_reasons_additive": {
-        "no_parcel": 3491,
-        "no_scope_tags": 117,
-        "no_active_trades": 1420
+        "no_parcel": 154,
+        "no_scope_tags": 21,
+        "no_active_trades": 203
       },
       "cost_distribution": {
-        "p25": 1323778,
-        "p50": 2187168,
-        "p75": 3223391
+        "p25": 1421339,
+        "p50": 2089927,
+        "p75": 2472629
       },
-      "coa_applications_updated": 32100,
+      "coa_applications_updated": 2355,
       "dry_run": false,
       "row_limit": null,
       "audit_table": {
@@ -42,25 +42,25 @@
         "rows": [
           {
             "metric": "coa_eligible",
-            "value": 32100,
+            "value": 2355,
             "threshold": "> 0",
             "status": "PASS"
           },
           {
             "metric": "coa_with_cost",
-            "value": 20192,
+            "value": 1262,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "coa_without_cost",
-            "value": 11908,
+            "value": 1093,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "cost_estimate_coverage_pct",
-            "value": "62.9%",
+            "value": "53.6%",
             "threshold": ">= 65%",
             "status": "WARN"
           },
@@ -72,37 +72,37 @@
           },
           {
             "metric": "coa_corpus_priced",
-            "value": 21035,
+            "value": 21074,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "coa_corpus_total",
-            "value": 33949,
+            "value": 33982,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "null_reason_no_parcel",
-            "value": 3491,
+            "value": 154,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "null_reason_no_scope_tags",
-            "value": 113,
+            "value": 12,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "null_reason_no_active_trades",
-            "value": 995,
+            "value": 156,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "null_reason_no_matching_rate",
-            "value": 7309,
+            "value": 771,
             "threshold": null,
             "status": "INFO"
           },
@@ -114,7 +114,7 @@
           },
           {
             "metric": "cost_distribution_p25_p50_p75",
-            "value": "$1,323,778 / $2,187,168 / $3,223,391",
+            "value": "$1,421,339 / $2,089,927 / $2,472,629",
             "threshold": null,
             "status": "INFO"
           },
@@ -126,7 +126,7 @@
           },
           {
             "metric": "archetype_t2_parcel",
-            "value": 19962,
+            "value": 1254,
             "threshold": null,
             "status": "INFO"
           },
@@ -138,25 +138,25 @@
           },
           {
             "metric": "archetype_additive_pairs",
-            "value": 230,
+            "value": 8,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "archetype_coverage_pct",
-            "value": "68.6%",
+            "value": "59.5%",
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "tier_none_count",
-            "value": 693,
+            "value": 74,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "archetype_fit_blocked",
-            "value": 693,
+            "value": 74,
             "threshold": null,
             "status": "INFO"
           },
@@ -174,27 +174,27 @@
           },
           {
             "metric": "archetype_unpriceable_t4",
-            "value": 4293,
+            "value": 199,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "t4_nonresidential_count",
-            "value": 2675,
+            "value": 234,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "t4_processed",
-            "value": 11215,
+            "value": 1019,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "archetype_map_nofit_residential_pct",
-            "value": "14.4%",
+            "value": "27.6%",
             "threshold": "<= 25%",
-            "status": "PASS"
+            "status": "WARN"
           },
           {
             "metric": "phase_h_gap_active",
@@ -204,43 +204,43 @@
           },
           {
             "metric": "records_new",
-            "value": 549,
+            "value": 39,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "records_updated",
-            "value": 3119,
+            "value": 6,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "records_skipped",
-            "value": 16524,
+            "value": 1217,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "coa_applications_updated",
-            "value": 32100,
+            "value": 2355,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "total_cost_estimates_written",
-            "value": 3668,
+            "value": 45,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 6925.57,
+            "value": 2266.6,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 4635,
+            "value": 1039,
             "threshold": null,
             "status": "INFO"
           }
@@ -367,34 +367,40 @@
   "parse_errors": [],
   "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 760 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 32 trade rates + 32 scope matrix rows + 12 archetype rates\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Processed 5,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Processed 10,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Processed 15,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Processed 20,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Processed 25,000 CoAs so far\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Processed 30,000 CoAs so far\"}\nPIPELINE_SUMMARY:{\"records_total\":32100,\"records_new\":549,\"records_updated\":3119,\"records_meta\":{\"duration_ms\":4627,\"coa_processed\":32100,\"coa_with_cost\":20192,\"coa_without_cost\":11908,\"coa_with_fallback\":0,\"null_cost_reasons\":{\"no_parcel\":3491,\"no_scope_tags\":113,\"no_active_trades\":995,\"no_matching_rate\":7309},\"null_cost_reasons_additive\":{\"no_parcel\":3491,\"no_scope_tags\":117,\"no_active_trades\":1420},\"cost_distribution\":{\"p25\":1323778,\"p50\":2187168,\"p75\":3223391},\"coa_applications_updated\":32100,\"dry_run\":false,\"row_limit\":null,\"audit_table\":{\"phase\":42,\"name\":\"CoA Cost Estimation\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_eligible\",\"value\":32100,\"threshold\":\"> 0\",\"status\":\"PASS\"},{\"metric\":\"coa_with_cost\",\"value\":20192,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_without_cost\",\"value\":11908,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_estimate_coverage_pct\",\"value\":\"62.9%\",\"threshold\":\">= 65%\",\"status\":\"WARN\"},{\"metric\":\"coa_corpus_cost_coverage_pct\",\"value\":\"62.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_priced\",\"value\":21035,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_total\",\"value\":33949,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_parcel\",\"value\":3491,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_scope_tags\",\"value\":113,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_active_trades\",\"value\":995,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_matching_rate\",\"value\":7309,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_with_fallback_pct\",\"value\":\"0.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_distribution_p25_p50_p75\",\"value\":\"$1,323,778 / $2,187,168 / $3,223,391\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t1_declared_area\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t2_parcel\",\"value\":19962,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t3_rate\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_additive_pairs\",\"value\":230,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_coverage_pct\",\"value\":\"68.6%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"tier_none_count\",\"value\":693,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_fit_blocked\",\"value\":693,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_zero_total\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_tradeless_count\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_unpriceable_t4\",\"value\":4293,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"t4_nonresidential_count\",\"value\":2675,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"t4_processed\",\"value\":11215,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_map_nofit_residential_pct\",\"value\":\"14.4%\",\"threshold\":\"<= 25%\",\"status\":\"PASS\"},{\"metric\":\"phase_h_gap_active\",\"value\":true,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_new\",\"value\":549,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":3119,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_skipped\",\"value\":16524,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications_updated\",\"value\":32100,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"total_cost_estimates_written\",\"value\":3668,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":6925.57,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":4635,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"scope_tags\",\"structure_type\",\"neighbourhood_id\",\"trade_classified_at\",\"cost_classified_at\",\"project_type\",\"neighbourhood_cost_premium\",\"cost_fb_total\",\"cost_coa_total\",\"cost_addition_total\",\"cost_gut_total\",\"cost_basement_underpin_per_sqm\",\"cost_basement_per_sqm\",\"cost_garage_total\",\"cost_laneway_suite_total\",\"cost_garden_suite_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_solar_total\",\"opt_aor_gfa_sqm\",\"opt_coa_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"max_garage_gfa_sqm\",\"max_laneway_suite_gfa_sqm\",\"max_garden_suite_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_buildable_footprint_sqm\"],\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"confidence\"],\"parcels\":[\"id\",\"lot_size_sqm\",\"frontage_m\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"footprint_area_sqm\",\"estimated_stories\"],\"neighbourhoods\":[\"id\",\"avg_household_income\",\"tenure_renter_pct\"],\"lead_trades\":[\"lead_id\",\"trade_id\",\"is_active\"],\"trades\":[\"id\",\"slug\"],\"trade_sqft_rates\":[\"trade_slug\",\"base_rate_sqft\",\"structure_complexity_factor\"],\"scope_intensity_matrix\":[\"permit_type\",\"structure_type\",\"gfa_allocation_percentage\"],\"archetype_cost_rates\":[\"archetype\",\"cost_per_sqm\",\"cost_adjustment_factor\",\"escalation_index_base\"]},\"writes\":{\"cost_estimates\":[\"lead_id\",\"permit_num\",\"revision_num\",\"estimated_cost\",\"cost_source\",\"cost_tier\",\"cost_range_low\",\"cost_range_high\",\"premium_factor\",\"complexity_score\",\"model_version\",\"is_geometric_override\",\"modeled_gfa_sqm\",\"effective_area_sqm\",\"trade_contract_values\",\"computed_at\"],\"coa_applications\":[\"modeled_gfa_sqm\",\"estimated_cost\",\"cost_source\",\"cost_classified_at\"]}}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Cost estimation complete\",\"context\":{\"processed\":32100,\"coa_with_cost\":20192,\"coa_without_cost\":11908,\"records_new\":549,\"records_updated\":3119,\"coa_applications_updated\":32100,\"duration\":\"4.6s\"}}\n\n[compute-coa-cost-estimates] completed in 4.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 805 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 32 trade rates + 32 scope matrix rows + 12 archetype rates\"}\nPIPELINE_SUMMARY:{\"records_total\":2355,\"records_new\":39,\"records_updated\":6,\"records_meta\":{\"duration_ms\":1027,\"coa_processed\":2355,\"coa_with_cost\":1262,\"coa_without_cost\":1093,\"coa_with_fallback\":0,\"null_cost_reasons\":{\"no_parcel\":154,\"no_scope_tags\":12,\"no_active_trades\":156,\"no_matching_rate\":771},\"null_cost_reasons_additive\":{\"no_parcel\":154,\"no_scope_tags\":21,\"no_active_trades\":203},\"cost_distribution\":{\"p25\":1421339,\"p50\":2089927,\"p75\":2472629},\"coa_applications_updated\":2355,\"dry_run\":false,\"row_limit\":null,\"audit_table\":{\"phase\":42,\"name\":\"CoA Cost Estimation\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_eligible\",\"value\":2355,\"threshold\":\"> 0\",\"status\":\"PASS\"},{\"metric\":\"coa_with_cost\",\"value\":1262,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_without_cost\",\"value\":1093,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_estimate_coverage_pct\",\"value\":\"53.6%\",\"threshold\":\">= 65%\",\"status\":\"WARN\"},{\"metric\":\"coa_corpus_cost_coverage_pct\",\"value\":\"62.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_priced\",\"value\":21074,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_total\",\"value\":33982,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_parcel\",\"value\":154,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_scope_tags\",\"value\":12,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_active_trades\",\"value\":156,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_matching_rate\",\"value\":771,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_with_fallback_pct\",\"value\":\"0.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_distribution_p25_p50_p75\",\"value\":\"$1,421,339 / $2,089,927 / $2,472,629\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t1_declared_area\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t2_parcel\",\"value\":1254,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t3_rate\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_additive_pairs\",\"value\":8,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_coverage_pct\",\"value\":\"59.5%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"tier_none_count\",\"value\":74,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_fit_blocked\",\"value\":74,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_zero_total\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_tradeless_count\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_unpriceable_t4\",\"value\":199,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"t4_nonresidential_count\",\"value\":234,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"t4_processed\",\"value\":1019,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_map_nofit_residential_pct\",\"value\":\"27.6%\",\"threshold\":\"<= 25%\",\"status\":\"WARN\"},{\"metric\":\"phase_h_gap_active\",\"value\":true,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_new\",\"value\":39,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_skipped\",\"value\":1217,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications_updated\",\"value\":2355,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"total_cost_estimates_written\",\"value\":45,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":2266.6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1039,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"scope_tags\",\"structure_type\",\"neighbourhood_id\",\"trade_classified_at\",\"cost_classified_at\",\"project_type\",\"neighbourhood_cost_premium\",\"cost_fb_total\",\"cost_coa_total\",\"cost_addition_total\",\"cost_gut_total\",\"cost_basement_underpin_per_sqm\",\"cost_basement_per_sqm\",\"cost_garage_total\",\"cost_laneway_suite_total\",\"cost_garden_suite_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_solar_total\",\"opt_aor_gfa_sqm\",\"opt_coa_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"max_garage_gfa_sqm\",\"max_laneway_suite_gfa_sqm\",\"max_garden_suite_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_buildable_footprint_sqm\"],\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"confidence\"],\"parcels\":[\"id\",\"lot_size_sqm\",\"frontage_m\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"footprint_area_sqm\",\"estimated_stories\"],\"neighbourhoods\":[\"id\",\"avg_household_income\",\"tenure_renter_pct\"],\"lead_trades\":[\"lead_id\",\"trade_id\",\"is_active\"],\"trades\":[\"id\",\"slug\"],\"trade_sqft_rates\":[\"trade_slug\",\"base_rate_sqft\",\"structure_complexity_factor\"],\"scope_intensity_matrix\":[\"permit_type\",\"structure_type\",\"gfa_allocation_percentage\"],\"archetype_cost_rates\":[\"archetype\",\"cost_per_sqm\",\"cost_adjustment_factor\",\"escalation_index_base\"]},\"writes\":{\"cost_estimates\":[\"lead_id\",\"permit_num\",\"revision_num\",\"estimated_cost\",\"cost_source\",\"cost_tier\",\"cost_range_low\",\"cost_range_high\",\"premium_factor\",\"complexity_score\",\"model_version\",\"is_geometric_override\",\"modeled_gfa_sqm\",\"effective_area_sqm\",\"trade_contract_values\",\"computed_at\"],\"coa_applications\":[\"modeled_gfa_sqm\",\"estimated_cost\",\"cost_source\",\"cost_classified_at\"]}}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Cost estimation complete\",\"context\":{\"processed\":2355,\"coa_with_cost\":1262,\"coa_without_cost\":1093,\"records_new\":39,\"records_updated\":6,\"coa_applications_updated\":2355,\"duration\":\"1.0s\"}}\n\n[compute-coa-cost-estimates] completed in 1.0s\n",
   "stderr": "{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3409,
+  "pipeline_runs_max_id_before": 3885,
   "table_state": [
     {
       "table": "coa_applications",
-      "row_count": 33949,
-      "content_hash": "fcd5b9c31e38ff4b6134ffcaa026c085",
-      "order_by": "pk",
+      "row_count": 33982,
+      "content_hash": "95cd1e909282fb81fd9e2b9910beb177",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
       "columns": [
         "id",
         "modeled_gfa_sqm",
         "estimated_cost",
-        "cost_source"
+        "cost_source",
+        "cost_classified_at"
       ]
     },
     {
       "table": "cost_estimates",
-      "row_count": 274947,
+      "row_count": 274986,
       "ceiling_bypassed": "projected",
-      "content_hash": "729deb9f7413533d1058d8a01dd5f5b1",
+      "content_hash": "bd4d8ebc8e951ae3cffeee87b06c9717",
       "order_by": "explicit",
       "order_columns": [
         "lead_id"
       ],
       "columns": [
         "lead_id",
+        "permit_num",
+        "revision_num",
         "estimated_cost",
         "cost_source",
         "cost_tier",
@@ -406,15 +412,16 @@
         "is_geometric_override",
         "modeled_gfa_sqm",
         "effective_area_sqm",
-        "trade_contract_values"
+        "trade_contract_values",
+        "computed_at"
       ]
     }
   ],
-  "tables_source": "arg",
+  "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "coa_applications": 23,
-    "cost_estimates": 417
+    "coa_applications": 25,
+    "cost_estimates": 412
   },
   "table_specs": {
     "coa_applications": {
@@ -422,15 +429,20 @@
         "id",
         "modeled_gfa_sqm",
         "estimated_cost",
-        "cost_source"
+        "cost_source",
+        "cost_classified_at"
       ],
-      "columns_source": "arg",
-      "order": null,
-      "order_source": "none"
+      "columns_source": "descriptor",
+      "order": [
+        "id"
+      ],
+      "order_source": "descriptor"
     },
     "cost_estimates": {
       "columns": [
         "lead_id",
+        "permit_num",
+        "revision_num",
         "estimated_cost",
         "cost_source",
         "cost_tier",
@@ -442,13 +454,14 @@
         "is_geometric_override",
         "modeled_gfa_sqm",
         "effective_area_sqm",
-        "trade_contract_values"
+        "trade_contract_values",
+        "computed_at"
       ],
-      "columns_source": "arg",
+      "columns_source": "descriptor",
       "order": [
         "lead_id"
       ],
-      "order_source": "arg"
+      "order_source": "descriptor"
     }
   },
   "invariants": [],
@@ -476,25 +489,25 @@
               "metric": "coa_eligible",
               "status": "PASS",
               "threshold": "> 0",
-              "value": 32100
+              "value": 2355
             },
             {
               "metric": "coa_with_cost",
               "status": "INFO",
               "threshold": null,
-              "value": 20192
+              "value": 1262
             },
             {
               "metric": "coa_without_cost",
               "status": "INFO",
               "threshold": null,
-              "value": 11908
+              "value": 1093
             },
             {
               "metric": "cost_estimate_coverage_pct",
               "status": "WARN",
               "threshold": ">= 65%",
-              "value": "62.9%"
+              "value": "53.6%"
             },
             {
               "metric": "coa_corpus_cost_coverage_pct",
@@ -506,37 +519,37 @@
               "metric": "coa_corpus_priced",
               "status": "INFO",
               "threshold": null,
-              "value": 21035
+              "value": 21074
             },
             {
               "metric": "coa_corpus_total",
               "status": "INFO",
               "threshold": null,
-              "value": 33949
+              "value": 33982
             },
             {
               "metric": "null_reason_no_parcel",
               "status": "INFO",
               "threshold": null,
-              "value": 3491
+              "value": 154
             },
             {
               "metric": "null_reason_no_scope_tags",
               "status": "INFO",
               "threshold": null,
-              "value": 113
+              "value": 12
             },
             {
               "metric": "null_reason_no_active_trades",
               "status": "INFO",
               "threshold": null,
-              "value": 995
+              "value": 156
             },
             {
               "metric": "null_reason_no_matching_rate",
               "status": "INFO",
               "threshold": null,
-              "value": 7309
+              "value": 771
             },
             {
               "metric": "cost_with_fallback_pct",
@@ -548,7 +561,7 @@
               "metric": "cost_distribution_p25_p50_p75",
               "status": "INFO",
               "threshold": null,
-              "value": "$1,323,778 / $2,187,168 / $3,223,391"
+              "value": "$1,421,339 / $2,089,927 / $2,472,629"
             },
             {
               "metric": "archetype_t1_declared_area",
@@ -560,7 +573,7 @@
               "metric": "archetype_t2_parcel",
               "status": "INFO",
               "threshold": null,
-              "value": 19962
+              "value": 1254
             },
             {
               "metric": "archetype_t3_rate",
@@ -572,25 +585,25 @@
               "metric": "archetype_additive_pairs",
               "status": "INFO",
               "threshold": null,
-              "value": 230
+              "value": 8
             },
             {
               "metric": "archetype_coverage_pct",
               "status": "INFO",
               "threshold": null,
-              "value": "68.6%"
+              "value": "59.5%"
             },
             {
               "metric": "tier_none_count",
               "status": "INFO",
               "threshold": null,
-              "value": 693
+              "value": 74
             },
             {
               "metric": "archetype_fit_blocked",
               "status": "INFO",
               "threshold": null,
-              "value": 693
+              "value": 74
             },
             {
               "metric": "archetype_zero_total",
@@ -608,25 +621,25 @@
               "metric": "archetype_unpriceable_t4",
               "status": "INFO",
               "threshold": null,
-              "value": 4293
+              "value": 199
             },
             {
               "metric": "t4_nonresidential_count",
               "status": "INFO",
               "threshold": null,
-              "value": 2675
+              "value": 234
             },
             {
               "metric": "t4_processed",
               "status": "INFO",
               "threshold": null,
-              "value": 11215
+              "value": 1019
             },
             {
               "metric": "archetype_map_nofit_residential_pct",
-              "status": "PASS",
+              "status": "WARN",
               "threshold": "<= 25%",
-              "value": "14.4%"
+              "value": "27.6%"
             },
             {
               "metric": "phase_h_gap_active",
@@ -638,62 +651,62 @@
               "metric": "records_new",
               "status": "INFO",
               "threshold": null,
-              "value": 549
+              "value": 39
             },
             {
               "metric": "records_updated",
               "status": "INFO",
               "threshold": null,
-              "value": 3119
+              "value": 6
             },
             {
               "metric": "records_skipped",
               "status": "INFO",
               "threshold": null,
-              "value": 16524
+              "value": 1217
             },
             {
               "metric": "coa_applications_updated",
               "status": "INFO",
               "threshold": null,
-              "value": 32100
+              "value": 2355
             },
             {
               "metric": "total_cost_estimates_written",
               "status": "INFO",
               "threshold": null,
-              "value": 3668
+              "value": 45
             }
           ],
           "verdict": "WARN"
         },
-        "coa_applications_updated": 32100,
-        "coa_processed": 32100,
-        "coa_with_cost": 20192,
+        "coa_applications_updated": 2355,
+        "coa_processed": 2355,
+        "coa_with_cost": 1262,
         "coa_with_fallback": 0,
-        "coa_without_cost": 11908,
+        "coa_without_cost": 1093,
         "cost_distribution": {
-          "p25": 1323778,
-          "p50": 2187168,
-          "p75": 3223391
+          "p25": 1421339,
+          "p50": 2089927,
+          "p75": 2472629
         },
         "dry_run": false,
         "null_cost_reasons": {
-          "no_active_trades": 995,
-          "no_matching_rate": 7309,
-          "no_parcel": 3491,
-          "no_scope_tags": 113
+          "no_active_trades": 156,
+          "no_matching_rate": 771,
+          "no_parcel": 154,
+          "no_scope_tags": 12
         },
         "null_cost_reasons_additive": {
-          "no_active_trades": 1420,
-          "no_parcel": 3491,
-          "no_scope_tags": 117
+          "no_active_trades": 203,
+          "no_parcel": 154,
+          "no_scope_tags": 21
         },
         "row_limit": null
       },
-      "records_new": 549,
-      "records_total": 32100,
-      "records_updated": 3119
+      "records_new": 39,
+      "records_total": 2355,
+      "records_updated": 6
     },
     "summary_count": 1,
     "meta": [
@@ -815,15 +828,9 @@
     "pipeline_runs": [],
     "stdout_lines": [
       "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Loaded 760 logic variables from control panel\",\"tag\":\"[compute-coa-cost-estimates]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 805 logic variables from control panel\",\"tag\":\"[compute-coa-cost-estimates]\"}",
       "{\"level\":\"INFO\",\"msg\":\"Loaded 32 trade rates + 32 scope matrix rows + 12 archetype rates\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 5,000 CoAs so far\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 10,000 CoAs so far\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 15,000 CoAs so far\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 20,000 CoAs so far\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 25,000 CoAs so far\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Processed 30,000 CoAs so far\",\"tag\":\"[compute-coa-cost-estimates]\"}",
-      "{\"context\":{\"coa_applications_updated\":32100,\"coa_with_cost\":20192,\"coa_without_cost\":11908,\"duration\":\"<DUR>\",\"processed\":32100,\"records_new\":549,\"records_updated\":3119},\"level\":\"INFO\",\"msg\":\"Cost estimation complete\",\"tag\":\"[compute-coa-cost-estimates]\"}",
+      "{\"context\":{\"coa_applications_updated\":2355,\"coa_with_cost\":1262,\"coa_without_cost\":1093,\"duration\":\"<DUR>\",\"processed\":2355,\"records_new\":39,\"records_updated\":6},\"level\":\"INFO\",\"msg\":\"Cost estimation complete\",\"tag\":\"[compute-coa-cost-estimates]\"}",
       "[compute-coa-cost-estimates] completed in <DUR>"
     ],
     "table_state": [
@@ -832,17 +839,23 @@
           "id",
           "modeled_gfa_sqm",
           "estimated_cost",
-          "cost_source"
+          "cost_source",
+          "cost_classified_at"
         ],
-        "content_hash": "fcd5b9c31e38ff4b6134ffcaa026c085",
-        "order_by": "pk",
-        "row_count": 33949,
+        "content_hash": "95cd1e909282fb81fd9e2b9910beb177",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 33982,
         "table": "coa_applications"
       },
       {
         "ceiling_bypassed": "projected",
         "columns": [
           "lead_id",
+          "permit_num",
+          "revision_num",
           "estimated_cost",
           "cost_source",
           "cost_tier",
@@ -854,14 +867,15 @@
           "is_geometric_override",
           "modeled_gfa_sqm",
           "effective_area_sqm",
-          "trade_contract_values"
+          "trade_contract_values",
+          "computed_at"
         ],
-        "content_hash": "729deb9f7413533d1058d8a01dd5f5b1",
+        "content_hash": "bd4d8ebc8e951ae3cffeee87b06c9717",
         "order_by": "explicit",
         "order_columns": [
           "lead_id"
         ],
-        "row_count": 274947,
+        "row_count": 274986,
         "table": "cost_estimates"
       }
     ],
@@ -869,12 +883,16 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3410,
+      "id": 3886,
       "recorded_by": "harness"
     }
   ],
-  "source_fingerprint": null,
-  "fingerprint_files": [],
-  "fingerprint_skipped_reason": "no_descriptor_yet",
-  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
+  "source_fingerprint": "2e0515128b43c3d36b3eb07517d8b799e3f23d3fa607f2f1bfadb88e9fa5e9fb",
+  "fingerprint_files": [
+    "scripts/compute-coa-cost-estimates.descriptor.json",
+    "scripts/compute-coa-cost-estimates.js",
+    "scripts/compute-coa-cost-estimates.notes.json",
+    "scripts/lib/compute/compute-coa-cost-estimates.js"
+  ],
+  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
 }

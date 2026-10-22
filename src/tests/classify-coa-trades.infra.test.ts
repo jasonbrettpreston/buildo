@@ -17,11 +17,13 @@
 //   - Plus Spec 47 §R1-R12 conformance
 //
 
+// RE-HOMED (R-EQ shell swap, Spec 124 P4-SWAP): the shipped script is now the frozen pipeline.step() shell (Spec 122 §5.1); these legacy pins read the
+// verbatim legacy text kept as the red suite's oracle (src/tests/steps/classify_coa_trades/fixtures/legacy-*.js.txt). The converted behaviour is pinned by that step's violations.test.ts.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const SCRIPT = path.resolve(__dirname, '../../scripts/classify-coa-trades.js');
+const SCRIPT = path.resolve(__dirname, './steps/classify_coa_trades/fixtures/legacy-classify-coa-trades.js.txt');
 
 describe('classify-coa-trades.js — Spec 47 §R1-R12 skeleton', () => {
   const src = fs.readFileSync(SCRIPT, 'utf-8');
