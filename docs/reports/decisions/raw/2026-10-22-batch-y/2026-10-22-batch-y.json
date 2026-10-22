@@ -1,0 +1,19 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "1. y 2. y",
+  "context": "(1) re-pin: accept the new CoA scorecard totals from lane EXC-W2-APPLY (after CHAT-61 / CHAT-64) as the locked baseline in scripts/analysis/bylaw-validation/coa-expected/, AFTER independent verification of the branch; the lock fails on any total change by design, so an approved improvement is re-pinned. (2) phrases: the closed permission phrase set for the Spec 78 P5.12 report template building_history_permission ('If your house existed before {date}, you may also {permission}.'): 'keep or rebuild a semi-detached house or duplex'; 'add more than one secondary suite'; 'divide the house into a semi-detached pair'; 'build a rear addition up to FSI 0.69'; 'add above the first storey only within the required setbacks'.",
+  "decisions": [
+    {
+      "id": "CHAT-65.repin",
+      "subject": "Re-pin CoA scorecard lock after verification",
+      "decision": "approve",
+      "recommendation": "Re-pin coa-expected (172 and 123 sets) to the new totals once the branch passes independent verification."
+    },
+    {
+      "id": "CHAT-65.phrases",
+      "subject": "Closed phrase set for building_history_permission",
+      "decision": "approve",
+      "recommendation": "Five phrases: keep or rebuild a semi-detached house or duplex; add more than one secondary suite; divide the house into a semi-detached pair; build a rear addition up to FSI 0.69; add above the first storey only within the required setbacks."
+    }
+  ]
+}

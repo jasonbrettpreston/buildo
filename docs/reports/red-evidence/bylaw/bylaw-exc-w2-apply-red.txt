@@ -38,3 +38,7 @@ Received: "{"unit_id":"900.3.10(528)#(528)[SSP](A)","archetype":"LIMIT","target"
    Start at  09:15:54
    Duration  3.00s (transform 99ms, setup 7ms, collect 11ms, tests 2.84s, environment 0ms, prepare 23ms)
 
+   × P5.12 building_history_permission — closed phrase set (operator CHAT-65.phrases) > the Spec 78 row holds exactly the five operator phrases as the closed {permission} alternatives, mapped per clause group, with no DRAFT mark 3ms
+   × P5.12 building_history_permission — closed phrase set (operator CHAT-65.phrases) > the generated report schema carries the template with the closed alternatives and only the date slot besides 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 11 passed (13)

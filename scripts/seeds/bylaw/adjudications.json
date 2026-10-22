@@ -86671,6 +86671,1005 @@
         "detached_house": "a detached house",
         "lawfully_existing": "erected before October 15, 1953"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1436)#(1436)[SSP](B)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-04e71298: answer B — Operator CHAT-64.B-ii (2026-10-22-batch-x, \"y to all five\"): Keyer B, 110 m2 as the average interior floor area, twins alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1436)#(1436)[SSP](C)(ii)(b)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-aba36d8a: answer A — Operator CHAT-64.C-ii-b (2026-10-22-batch-x, \"y to all five\"): Keyer A, building-history If route, twin 1437 alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(ii)(b)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1436)#(1436)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-9a10d0b0: answer B — Operator CHAT-64.D-1436 (2026-10-22-batch-x, \"y to all five\"): Keyer B, REQUIRE with the lawfully_existing condition",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1437)#(1437)[SSP](B)(iii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8627b339: answer A — Operator CHAT-64.B-iii (2026-10-22-batch-x, \"y to all five\"): Keyer A, LIMIT interior_floor_area_m2 min 55 per unit, matching 1436 (B)(iii)",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1437)#(1437)[SSP](B)(iii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c89036ee: answer A — Operator CHAT-64.B-iii (2026-10-22-batch-x, \"y to all five\"): Keyer A, LIMIT interior_floor_area_m2 min 55 per unit, matching 1436 (B)(iii)",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1437)#(1437)[SSP](B)(iii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-223daf1e: answer A — Operator CHAT-64.B-iii (2026-10-22-batch-x, \"y to all five\"): Keyer A, LIMIT interior_floor_area_m2 min 55 per unit, matching 1436 (B)(iii)",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1437)#(1437)[SSP](B)(iii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-83ea1e45: answer A — Operator CHAT-64.B-iii (2026-10-22-batch-x, \"y to all five\"): Keyer A, LIMIT interior_floor_area_m2 min 55 per unit, matching 1436 (B)(iii)",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(iii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1437)#(1437)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c2425695: answer B — Operator CHAT-64.D-1437 (2026-10-22-batch-x, \"y to all five\"): Keyer B, REQUIRE with the lawfully_existing condition, identical to 1436 (D)",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "requirement",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](D)/requirement",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1436: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](D)/condition",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1436: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1436: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](D)/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1436: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "existing detached house",
+        "lawfully_existing": "lawfully existing detached"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1436: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1436: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1436: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "requirement",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/requirement",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1437: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/condition",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1437: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1437: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1437: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": {
+        "RD": "Exception RD 1437",
+        "detached_house": "lawfully existing detached house",
+        "lawfully_existing": "lawfully existing detached"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1437: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks of this By-law.",
+        "gaps": "Depends on the existing building and the proposed addition.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1437: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-64.D-1437: Keyer B REQUIRE with the lawfully_existing condition, a genuine requirement, as keyed before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(ii)/condition",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(ii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(ii)/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(ii)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "A detached house",
+        "dwelling_unit": "the dwelling unit and the secondary suites",
+        "secondary_suite": "the secondary suites combined",
+        "secondary_suite_use": "contain more than one secondary suite",
+        "semi_detached_house": "a semi-detached house permitted"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(ii)",
+      "value": {
+        "description": "Condition of the multiple-secondary-suite permission: the average interior floor area of the dwelling unit and the secondary suites combined is at least 110 square metres. Applies only on the existing-building route of (B) (original building existed on October 15, 1960); not applied to a new build by default.",
+        "gaps": "The October 15, 1960 existence condition is not in the lot data.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "archetype",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/archetype",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "target",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/target",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": "interior_floor_area_m2"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "bound",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/bound",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": [
+        "interior_floor_area_m2 = 110 m2 @(1437)[SSP](B)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": {
+        "description": "Condition of the multiple-secondary-suite permission: the average interior floor area of the dwelling unit and the secondary suites combined is at least 110 square metres. Applies only on the existing-building route of (B) (original building existed on October 15, 1960); not applied to a new build by default.",
+        "gaps": "The October 15, 1960 existence condition is not in the lot data.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.uses",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/application.uses",
+      "kind": "correction",
+      "reason": "CHAT-64.B-ii: Keyer B, 110 m2 as the AVERAGE interior floor area as written (not multiplied by dwelling units); condition of the 1960 permission on the building-history If route; twins alike. The history sits in sibling leaf (B)(i), so no lawfully_existing lot-condition token (G-CLAUSE evidence), as (B)(iii).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x, \"y to all five\"); M-75 correction of a non-double-keyed field (and, for 1437 (B)(ii), the twin of the adjudicated 1436 (B)(ii)) so the 1436/1437 twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": [
+        "dwelling_unit",
+        "secondary_suite_use"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The count \"one\" of \"more than one secondary suite\" is not a limit (as the 1437 twin).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x); M-75 correction so the 1436/1437 (B)(ii) twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(ii)",
+      "value": [
+        {
+          "clause": "(1436)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The 110 is now expressed by the adopted LIMIT (limit_not_modelled is UNUSUAL-only); the count \"one\" stays listed.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x); M-75 correction so the 1436/1437 (B)(ii) twins key alike",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": [
+        {
+          "clause": "(1437)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.uses",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/application.uses~s1",
+      "kind": "correction",
+      "reason": "Supersedes the uses correction: \"dwelling_unit\" has no evidence phrase in the 1437 clause text.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64, 2026-10-22-batch-x); M-75 correction so the 1436/1437 (B)(ii) twins key alike",
+      "supersedes": "COR-900.3.10(1437)#(1437)[SSP](B)(ii)/application.uses",
+      "unit": "900.3.10(1437)#(1437)[SSP](B)(ii)",
+      "value": [
+        "secondary_suite_use"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](A)(i)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](A)(i)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](A)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](A)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](A)(i)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "duplex": "or a duplex",
+        "semi_detached_house": "a semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](A)(ii)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](A)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](A)(ii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](A)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](A)(ii)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](A)(ii)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "duplex": "or a duplex",
+        "semi_detached_house": "a semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(i)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(i)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(i)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "A detached house",
+        "secondary_suite": "more than one secondary suite",
+        "secondary_suite_use": "contain more than one secondary suite",
+        "semi_detached_house": "a semi-detached house permitted"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(i)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(i)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(i)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "A detached house",
+        "semi_detached_house": "become a semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(ii)(a)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(ii)(a)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(ii)(a)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(ii)(a)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(ii)(a)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(ii)(a)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "A detached house",
+        "semi_detached_house": "creating a semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(ii)(b)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(ii)(b)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(ii)(b)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(ii)(b)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](C)(ii)(b)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](C)(ii)(b)",
+      "value": {
+        "RD": "in the RD zone",
+        "detached_house": "for a detached house",
+        "semi_detached_house": "creating a semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(ii)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(ii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(ii)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(ii)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "has a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(iii)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(iii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(iii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(iii)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(iii)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "has a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(iv)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(iv)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(iv)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(iv)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](E)(iv)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](E)(iv)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "has a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(ii)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(ii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(ii)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(ii)",
+      "value": {
+        "RD": "Exception RD 1434",
+        "detached_house": "has a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(iii)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(iii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(iii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(iii)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(iii)",
+      "value": {
+        "RD": "Exception RD 1434",
+        "detached_house": "has a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(iv)/condition",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(iv)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(iv)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(iv)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](B)(iv)/application.evidence",
+      "kind": "correction",
+      "reason": "Twin check: 1437 keys these non-numeric leaves with no lawfully_existing lot-condition token (as 1397 (A)(ii)/(iii)); the token matters only on a LIMIT (the FSI 0.69). The history rides in the dated If disclosure and the existing_building_facts route.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1434)#(1434)[SSP](B)(iv)",
+      "value": {
+        "RD": "Exception RD 1434",
+        "detached_house": "has a detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.uses",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(ii)/application.uses",
+      "kind": "correction",
+      "reason": "Twin check: 1437 lists only secondary_suite_use (the 1437 clause text carries no evidence phrase for dwelling_unit).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(ii)",
+      "value": [
+        "secondary_suite_use"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.uses",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(iii)/application.uses",
+      "kind": "correction",
+      "reason": "Twin check: 1437 lists only secondary_suite_use (the 1437 clause text carries no evidence phrase for dwelling_unit).",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(iii)",
+      "value": [
+        "secondary_suite_use"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Twin check: 1437 (D) is word-for-word 1436 (D); same not_modelled_reason and user inputs.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64 twin check, 2026-10-22-batch-x; keying rule 31; 1397 (A)(ii)/(iii) precedent); M-75 correction so the 1434/1436/1437 twins key alike",
+      "supersedes": "COR-900.3.10(1437)#(1437)[SSP](D)/calculation_handling",
+      "unit": "900.3.10(1437)#(1437)[SSP](D)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks of this By-law.",
+        "gaps": "Depends on the existing building and the proposed addition.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "archetype",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/archetype",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64.D-1436 / D-1437 twin check, 2026-10-22-batch-x); M-75 correction: 1434 (A) is word-for-word 1436 (D) and 1437 (D)",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": "REQUIRE"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "requirement",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/requirement",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64.D-1436 / D-1437 twin check, 2026-10-22-batch-x); M-75 correction: 1434 (A) is word-for-word 1436 (D) and 1437 (D)",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64.D-1436 / D-1437 twin check, 2026-10-22-batch-x); M-75 correction: 1434 (A) is word-for-word 1436 (D) and 1437 (D)",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1434)#(1434)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "Twin check: same clause text as 1436 (D) / 1437 (D), which the operator ruled REQUIRE with the lawfully_existing condition (a genuine requirement); 1434 (A) was REQUIRE before the re-key.",
+      "rule": "Spec 69a M-317 dated note (operator CHAT-64.D-1436 / D-1437 twin check, 2026-10-22-batch-x); M-75 correction: 1434 (A) is word-for-word 1436 (D) and 1437 (D)",
+      "unit": "900.3.10(1434)#(1434)[SSP](A)",
+      "value": "none"
     }
   ]
 }

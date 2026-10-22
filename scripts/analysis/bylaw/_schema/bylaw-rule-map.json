@@ -4599,7 +4599,7 @@
     {
       "id": "M-317",
       "kind": "m-row",
-      "status": "active",
+      "status": "owed",
       "handbook_line": "m.317",
       "source": {
         "register": true,

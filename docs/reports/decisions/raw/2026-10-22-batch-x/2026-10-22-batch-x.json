@@ -1,0 +1,37 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "y to all five",
+  "context": "Five keying disagreements left by lane EXC-W2-APPLY after the rule-31 family re-key (exceptions 1436 / 1437 are textually identical twins, so each answer binds both). Clause text from scripts/seeds/bylaw/pages/ch900_3.txt.",
+  "decisions": [
+    {
+      "id": "CHAT-64.B-ii",
+      "subject": "1436/1437 (B)(ii) average interior floor area",
+      "decision": "approve",
+      "recommendation": "Keyer B: 110 m2 as the AVERAGE interior floor area, as written ('the average interior floor area of the dwelling unit and the secondary suites combined is at least 110 square metres'); condition of the 1960 multiple-suite permission, disclosed via the building-history If… route; twins keyed alike."
+    },
+    {
+      "id": "CHAT-64.B-iii",
+      "subject": "1437 (B)(iii) per-unit floor area",
+      "decision": "approve",
+      "recommendation": "Keyer A: LIMIT interior_floor_area_m2 min 55 per unit, matching twin 1436 (B)(iii); condition of the 1960 permission, not applied by default."
+    },
+    {
+      "id": "CHAT-64.C-ii-b",
+      "subject": "1436 (C)(ii)(b) vertical-division addition compliance",
+      "decision": "approve",
+      "recommendation": "Keyer A: building-history If… route (condition of the vertical-division permission) under the approved family ruling; twin 1437 (C)(ii)(b) alike."
+    },
+    {
+      "id": "CHAT-64.D-1436",
+      "subject": "1436 (D) additions above first storey of lawfully existing house",
+      "decision": "approve",
+      "recommendation": "Keyer B: REQUIRE with the lawfully_existing condition — a genuine requirement ('must comply with the minimum building setbacks'), relevant to addition/renovation scenarios; as keyed before the re-key."
+    },
+    {
+      "id": "CHAT-64.D-1437",
+      "subject": "1437 (D) twin of 1436 (D)",
+      "decision": "approve",
+      "recommendation": "Keyer B: REQUIRE with the lawfully_existing condition, identical to 1436 (D)."
+    }
+  ]
+}

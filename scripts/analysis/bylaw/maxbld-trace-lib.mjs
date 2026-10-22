@@ -227,10 +227,16 @@ export function lintDisclosureTemplates(specText) {
     const m = /^\| `([a-z0-9_]+)` \| "([^"]*)"/.exec(line);
     if (!m) continue;
     const [, code, tpl] = m;
-    const words = tpl.split(/\s+/).filter(Boolean).length;
-    if (words > TEMPLATE_MAX_WORDS) problems.push(`${code}: ${words} words > ${TEMPLATE_MAX_WORDS}`);
-    for (const t of PLAIN_TERMS) {
-      if (t.term.test(tpl) && !tpl.includes(t.plain) && !(t.alt && t.alt.test(tpl))) problems.push(`${code}: "${t.term.source}" without "${t.plain}"`);
+    // A slot written as closed alternatives "{a / b / c}" (three or more) shows ONE alternative per sentence (Spec 78 P5.12,
+    // building_history_permission, operator CHAT-65.phrases): the cap and the plain-wording check apply to each sentence as shown.
+    const alt = /\{([^{}]*\/[^{}]*\/[^{}]*)\}/.exec(tpl);
+    const shown = alt ? alt[1].split('/').map((x) => tpl.replace(alt[0], x.trim())) : [tpl];
+    for (const one of shown) {
+      const words = one.split(/\s+/).filter(Boolean).length;
+      if (words > TEMPLATE_MAX_WORDS) problems.push(`${code}: ${words} words > ${TEMPLATE_MAX_WORDS}`);
+      for (const t of PLAIN_TERMS) {
+        if (t.term.test(one) && !one.includes(t.plain) && !(t.alt && t.alt.test(one))) problems.push(`${code}: "${t.term.source}" without "${t.plain}"`);
+      }
     }
   }
   return problems;

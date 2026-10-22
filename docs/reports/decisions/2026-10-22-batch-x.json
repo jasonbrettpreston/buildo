@@ -1,0 +1,55 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-x/2026-10-22-batch-x.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-x",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y to all five",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-x/2026-10-22-batch-x.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-64.B-ii",
+      "question": "1436/1437 (B)(ii) average interior floor area",
+      "recommendation": "Keyer B: 110 m2 as the AVERAGE interior floor area, as written ('the average interior floor area of the dwelling unit and the secondary suites combined is at least 110 square metres'); condition of the 1960 multiple-suite permission, disclosed via the building-history If… route; twins keyed alike.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-64.B-iii",
+      "question": "1437 (B)(iii) per-unit floor area",
+      "recommendation": "Keyer A: LIMIT interior_floor_area_m2 min 55 per unit, matching twin 1436 (B)(iii); condition of the 1960 permission, not applied by default.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-64.C-ii-b",
+      "question": "1436 (C)(ii)(b) vertical-division addition compliance",
+      "recommendation": "Keyer A: building-history If… route (condition of the vertical-division permission) under the approved family ruling; twin 1437 (C)(ii)(b) alike.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-64.D-1436",
+      "question": "1436 (D) additions above first storey of lawfully existing house",
+      "recommendation": "Keyer B: REQUIRE with the lawfully_existing condition — a genuine requirement ('must comply with the minimum building setbacks'), relevant to addition/renovation scenarios; as keyed before the re-key.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-64.D-1437",
+      "question": "1437 (D) twin of 1436 (D)",
+      "recommendation": "Keyer B: REQUIRE with the lawfully_existing condition, identical to 1436 (D).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

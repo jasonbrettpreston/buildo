@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-y/2026-10-22-batch-y.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-y",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1. y 2. y",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-y/2026-10-22-batch-y.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-65.repin",
+      "question": "Re-pin CoA scorecard lock after verification",
+      "recommendation": "Re-pin coa-expected (172 and 123 sets) to the new totals once the branch passes independent verification.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-65.phrases",
+      "question": "Closed phrase set for building_history_permission",
+      "recommendation": "Five phrases: keep or rebuild a semi-detached house or duplex; add more than one secondary suite; divide the house into a semi-detached pair; build a rear addition up to FSI 0.69; add above the first storey only within the required setbacks.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

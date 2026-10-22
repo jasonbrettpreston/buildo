@@ -103,3 +103,39 @@ describe('keying-cli rekey on a wave batch (EXC-W2-APPLY)', () => {
     expect(out).not.toContain('is planned by planWave');
   });
 });
+
+describe('P5.12 building_history_permission — closed phrase set (operator CHAT-65.phrases)', () => {
+  const PHRASES = [
+    'keep or rebuild a semi-detached house or duplex',
+    'add more than one secondary suite',
+    'divide the house into a semi-detached pair',
+    'build a rear addition up to FSI 0.69',
+    'add above the first storey only within the required setbacks',
+  ];
+  const spec = fs.readFileSync(path.join(ROOT, 'docs/specs/01-pipeline/78_optimal_lot_configuration.md'), 'utf8');
+  const row = spec.split('\n').find((l) => l.startsWith('| `building_history_permission` |')) ?? '';
+  it('the Spec 78 row holds exactly the five operator phrases as the closed {permission} alternatives, mapped per clause group, with no DRAFT mark', () => {
+    expect(row).not.toBe('');
+    for (const p of PHRASES) expect(row).toContain(p);
+    expect(row).not.toContain('DRAFT');
+    for (const m of ['(A) keep', '(B) add more', '(C) divide', '(E) build a rear', '(D) add above']) expect(row).toContain(m);
+  });
+  it('the generated report schema carries the template with the closed alternatives and only the date slot besides', async () => {
+    const schema = read('docs/reference/maxbld-report-v2.schema.json');
+    const t = JSON.stringify(schema).includes('building_history_permission') ? JSON.stringify(schema) : '';
+    expect(t).toContain('building_history_permission');
+    for (const p of PHRASES) expect(t).toContain(p);
+    expect(t).not.toContain('{permission}');
+  });
+});
+
+describe('P5.12 lint reads one shown alternative per sentence (EXC-W2-APPLY, CHAT-65)', () => {
+  it('a three-alternative slot is capped per shown sentence; a plain long template and an unglossed shown alternative still fail', async () => {
+    const LIB = await mod('scripts/analysis/bylaw/maxbld-trace-lib.mjs');
+    const alts = Array.from({ length: 5 }, (_, i) => `alternative ${'w '.repeat(18)}${i}`.trim()).join(' / ');
+    const wrap = (tpl: string): string => `### P5.12 Disclosures\n| \`x_alt\` | "${tpl}" | M-1 |\n### P5.13`;
+    expect(LIB.lintDisclosureTemplates(wrap(`If so, you may also {${alts}}.`))).toEqual([]);
+    expect(LIB.lintDisclosureTemplates(wrap(`${'word '.repeat(50).trim()}`)).length).toBe(1);
+    expect(LIB.lintDisclosureTemplates(wrap('If so, {keep it / add a floor / reach FSI 0.69}.')).some((p: string) => p.includes('FSI'))).toBe(true);
+  });
+});
