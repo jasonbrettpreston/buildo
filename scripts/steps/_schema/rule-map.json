@@ -5519,6 +5519,118 @@
       }
     },
     {
+      "id": "R-JG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "materializer.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "When the runner sums zero batches, finalizeMatched returns a defined value for every counter a declared check reports (additive 0, ratios null); locked per materializer (operator 2026-10-22, EVE.SWAP-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The {sql} re-arm bracket is an R-CZ #38 form for unguarded and derived_recompute targets; its backup tables are dropped after the settled rerun is verified (operator 2026-10-22, EVE.SWAP-2, EVE.DB-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JI",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "Layer 2 has four tables (signatures, cells, profiles, lots), per-class results in by_class, map membership from parcels.in_sixplex_area, permitted_by_class on the lot row, disclosure_set_id on cells, and no chain_run_id on data rows (operator 2026-10-22, EVE.Q-B/C/E/G/H/L; amends Spec 134 section 3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JJ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "Layer 2 checks: I13 is a WARN bounded by a ceiling variable; I14 recomputes row_sha for all four tables; unreferenced rows warn with a count; a sampled equivalence audit replaces the compute time budget (operator 2026-10-22, EVE.Q-F/I/M/N, CHAT-75.QN).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JN",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "A logic variable may have type list (JSON array in variable_value_json, validated by the consuming step); the zone population is one list variable (operator 2026-10-22, EVE.Q-J, EVE.L2P-3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The Spec 134 section 3 logical Layer 2 result row is frozen now behind one accessor; the physical storage stays open; a change to a logical field needs a new ruling (operator 2026-10-22, CHAT-77.freeze).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JP",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The fleet recapture night goes after integrate-25 is pushed; the lane runs it and reports numbers against the expected figures (operator 2026-10-22, EVE.NIGHT-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-stages.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The Phase 3 step draft settings and compute-module interim settings are accepted as recommended, each marked and replaced when its producer or ruling lands (operator 2026-10-22, EVE.P3-Q15, EVE.P3-Q16).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-JB",
       "kind": "register-ruling",
       "status": "active",

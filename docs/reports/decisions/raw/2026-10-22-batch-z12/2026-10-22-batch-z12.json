@@ -1,0 +1,9 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "y Q-o and Q-N",
+  "context": "Evening Rulings cards Q-O and Q-N (Layer 2 resolve_bylaws, lane L2-SLICES, held work in ~/Buildo-wt-l2slices2; https://claude.ai/artifact/6ypnNKE5dkjkAV4HbPuokq).",
+  "decisions": [
+    {"id": "CHAT-75.QO", "subject": "Layer 2 repeated payloads stored once as set ids", "decision": "approve", "recommendation": "Intern losers, by_class (if repeated) and permitted_by_class as set ids with each distinct payload stored once (the form C / Q-H pattern), then re-measure on a random sample against the 10 % line (Spec 133 §m.112); do not raise the budget without a ruling."},
+    {"id": "CHAT-75.QN", "subject": "Equivalence sample replaces the compute time budget", "decision": "approve", "recommendation": "resolve_bylaws audits every Nth lot uncached and again in reversed candidate order; run time is the runner's measure, not a compute budget (compute purity)."}
+  ]
+}

@@ -437,7 +437,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(200); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-54 + CHAT-55 + CHAT-56 + CHAT-57, CHAT-58 + CHAT-59 + CHAT-61 (six, page W2) + CHAT-64 (five) + CHAT-65 (two) + CHAT-67 (four, batch z2) + CHAT-63 (eleven, z3) + CHAT-68 (four, z4/z5) + CHAT-69 (two, z6) + CHAT-70 (four, z7) + CHAT-71 (three, z8) + CHAT-72 (one, z9) + CHAT-73 (three, z10) + CHAT-74 (five, z11); the number decision-log --check prints
+    expect(r.decisions).toBe(273); // 98 (integrate-20) + 4 C + 12 A + 11 B + 11 D + 5 (CHAT-46..50) + CHAT-51 + CHAT-52, CHAT-53 + CHAT-54 + CHAT-55 + CHAT-56 + CHAT-57, CHAT-58 + CHAT-59 + CHAT-61 (six, page W2) + CHAT-64 (five) + CHAT-65 (two) + CHAT-67 (four, batch z2) + CHAT-63 (eleven, z3) + CHAT-68 (four, z4/z5) + CHAT-69 (two, z6) + CHAT-70 (four, z7) + CHAT-71 (three, z8) + CHAT-72 (one, z9) + CHAT-73 (three, z10) + CHAT-74 (five, z11) + the Evening Rulings page (68) + CHAT-75 (two) + CHAT-76 + CHAT-77 + CHAT-78; the number decision-log --check prints
     expect(r.owed).toBe(0);
     expect(r.no_ruling).toBe(7); // CHAT-57 and CHAT-58 (run Night A core, fetch 2017 PDFs; rest on R-JB, R-CZ), CHAT-26, CHAT-43-era rows, CHAT-51 (restart lane, rests on R-EY) and CHAT-54 (no cloud until local complete, rests on R-AQ.1)
   });

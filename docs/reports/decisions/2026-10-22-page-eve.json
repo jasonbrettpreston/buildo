@@ -1,0 +1,496 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-page-eve/2026-10-22-page-eve.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-page-eve",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "62 cards answered. I just want to ensure that McBylaws will not use code - be standardized and fully observable - 3 layers, I want to make sure it is understandable and of course accurate.  We do want to keep it simple as possible.  Complexity will kill accuracy or trust. / spagetti code typo",
+    "record": "operator Evening Rulings page (https://claude.ai/artifact/6ypnNKE5dkjkAV4HbPuokq), db collection decisions, exported 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-page-eve/2026-10-22-page-eve.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "EVE.R5-1",
+      "question": "Street names that contain a building-type word",
+      "recommendation": "Yes: a type word immediately followed by a street suffix (Ave./St./Rd./Blvd.) is not a named type. — Yes. Narrow namedTypes() in scripts/analysis/bylaw/clause.mjs:112. No keyed unit changes; 767 (C) then passes; no other agreed unit has a street name with a type word.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-2a",
+      "question": "853 (B)(iii): how the clause is cited",
+      "recommendation": "Keyer B (full path)",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-2b",
+      "question": "1429 (A): building-history clause",
+      "recommendation": "Keyer B (REQUIRE)",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-2c",
+      "question": "478 (C): height limit for a detached house",
+      "recommendation": "Keyer A (detached house only)",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-3",
+      "question": "Exceptions 40, 863, 225: add a supplement?",
+      "recommendation": "No: leave them below the floor. — No — keep to the census floor (no scope growth).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-4",
+      "question": "Six literal corrections by the lane",
+      "recommendation": "Approve all six",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-5",
+      "question": "63 Johnston Ave: one parcel row, really two lots",
+      "recommendation": "Scoped DATA flag now; report the two-lots-in-one-row defect to the parcel source; remove the flag when fixed. — Scoped DATA flag now, and fix the parcel row at the source; the flag goes when the data is fixed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-6",
+      "question": "A round that exposes older wrong answers",
+      "recommendation": "Hold the 478 shard; land the rest; re-check 10.5.60 after the merge. — Hold 478 and land the rest: no floor is waived, and the openings field can be its own ruling later.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R5-7",
+      "question": "Garden-suite side yard: use the window evidence",
+      "recommendation": "Leave the DIFFER; extract independent window evidence later. — Leave it: a scorer must not read the answer to produce the answer.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R6-1",
+      "question": "Licence pattern: \"one dwelling unit\"",
+      "recommendation": "Yes: add the pattern; 324 (C) becomes a LIMIT. — Yes: matches the existing single-count limits; pattern growth by ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R6-2",
+      "question": "Licence pattern: \"front lot line that abuts a street\"",
+      "recommendation": "Yes: add the pattern. — Yes.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R6-4",
+      "question": "155 (A): units capped per registered-plan block",
+      "recommendation": "UNUSUAL (disclosed). — UNUSUAL: the buyer should see the cap disclosed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R6-5",
+      "question": "Twin variance: 1429 (A) vs 1436 (D)",
+      "recommendation": "Match the 1436 (D) / CHAT-67.1434A form. — Match the 1436 (D) form you ruled in CHAT-67.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R7-1",
+      "question": "958 (D)/(E): use permission tied to a 1978 date",
+      "recommendation": "UNUSUAL on the rule-31 building-history route. — A: rule 31 says a permission that depends on a building-history date is never a target-less PERMIT.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R7-2",
+      "question": "\"Despite (B)\" pointing at a sibling clause",
+      "recommendation": "subordinate_reference (existing). — Use the existing reason; nothing new to rule.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R8-ALL",
+      "question": "Round 8: approve the applied readings",
+      "recommendation": "Approve as applied. — Approve, after verify-40 reports (I will flag anything it disputes here).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R8-5",
+      "question": "Licence pattern: \"minimum frontage\"",
+      "recommendation": "Yes: add the pattern. — Yes.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.R9-1",
+      "question": "Licence pattern: \"from a front line\"",
+      "recommendation": "Yes: add the pattern. — Yes. (Suggest one pattern-growth ruling covering R6-1, R6-2, R8-5 and R9-1 together.)",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.M324-G",
+      "question": "Garage and ancillary setbacks: which target",
+      "recommendation": "The named yard decides the target. — The named yard decides: matches the 26 resolved units and the vocabulary definitions.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.SWAP-1",
+      "question": "Empty runs must still report every counter",
+      "recommendation": "Keep it per step. — Per-materializer lock now; a fleet lock only by a later ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.SWAP-2",
+      "question": "The {sql} re-arm bracket as a #38 form",
+      "recommendation": "Accept as an R-CZ #38 form. — Accept: it is already in use and verified in the runbook.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.LEDGER-1",
+      "question": "COA-D7 closed on a weaker lock",
+      "recommendation": "Hold it back until execution.maintenance has a test. — Hold it back until execution.maintenance has a test.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.SWAP-3",
+      "question": "Lineage snapshot still says link_coa stamps last_seen_at",
+      "recommendation": "B: a reviewed one-line removal of last_seen_at from the snapshot row, citing R-JM; the next refresh converges. — B: smallest change, matches the code, heals itself on the next refresh.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.SWAP-4",
+      "question": "Witness check and the UPDATE key column",
+      "recommendation": "Exempt the key column(s) in the witness gate (gate script only, red fixture test; no lib/step change, no fleet recapture). — Exempt the key in the gate: the key is not written, so it should not be required in SET; no fleet impact.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-B",
+      "question": "Four tables, not five",
+      "recommendation": "Approve the four-table design. — Approve as designed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-C",
+      "question": "Results per building class",
+      "recommendation": "Approve. — Approve as designed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-E",
+      "question": "Map membership source",
+      "recommendation": "Approve. — Approve as designed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-F",
+      "question": "Scenario-axis check I13",
+      "recommendation": "Approve WARN with a ceiling variable. — Approve as designed. The variable name is not set in the source.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-G",
+      "question": "permitted_by_class on the lot row",
+      "recommendation": "Approve (+0.08 GB). — Approve as designed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-H",
+      "question": "Disclosures stored once, not per cell",
+      "recommendation": "Yes: a disclosure-set id; sentences stored once. — Yes: same idea as form C (store each distinct thing once); keeps Layer 2 inside the storage line.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-I",
+      "question": "Which tables I14 rechecks in SQL",
+      "recommendation": "All four tables. — All four: a wrong signature, profile or lot row is as harmful as a wrong cell, and the canonical text is already defined for each.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-J",
+      "question": "Zone population: one list variable",
+      "recommendation": "One list variable; add the config list arm in ①. — One list variable, landed on the planned fleet night (no extra recapture).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-K",
+      "question": "Layer 2 storage budget until first measurement",
+      "recommendation": "1,300 MB interim; re-set from the first POST measurement. — Yes: it sits just inside the measured room.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-L",
+      "question": "Run id on data rows",
+      "recommendation": "Leave it empty (or drop the column). — Drop or leave empty: the run row already records it; follow the runner standard.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-M",
+      "question": "Unused Layer 2 rows after a by-law change",
+      "recommendation": "Keep until reset; WARN with a count. — Keep until reset with a WARN count: simpler and observable.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-N",
+      "question": "Equivalence check instead of a time budget",
+      "recommendation": "Yes: equivalence sample; run time measured by the runner. — Yes: it checks correctness, and the runner already times the run.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-O",
+      "question": "Layer 2 may not fit the storage line",
+      "recommendation": "Intern the repeated payloads; re-measure. — Intern them: same idea as form C and Q-H, and it keeps Layer 2 inside the line you approved.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.L2P-1",
+      "question": "R-EMIT: a fixture for every reason code?",
+      "recommendation": "Yes: add the fixture clause as its own row. — Yes, as a separate row: it proves each code can actually happen, which the static check cannot.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.L2P-2",
+      "question": "R-DET: also lock the shared library?",
+      "recommendation": "Yes: widen the lock to the library. — Yes: the library computes the hashed keys, so it needs the same guarantee.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.L2P-3",
+      "question": "Name of the list-type logic variable",
+      "recommendation": "Ratify \"list\" as built. — Ratify as built: it mirrors the string type and adds nothing else.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.DB-1",
+      "question": "Drop old backup tables",
+      "recommendation": "Yes: drop them. — Yes. The source gives the size and names only; nothing else is claimed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q2",
+      "question": "Closed list of not-applicable reasons",
+      "recommendation": "Yes: add the list by register row. — Yes, by register row.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q3",
+      "question": "No CoA u-factors seeded now",
+      "recommendation": "Confirm: seed none; absent reads as unfitted. — Confirm.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.IN-1",
+      "question": "Fleet recapture night for the intake",
+      "recommendation": "Yes: land it with one fleet recapture night (plus migration 284 and the first ingest). — Yes: one library path per source form is the standard (Spec 132 §ingestor.3); a recapture night is the established way to land a library change.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.IN-2",
+      "question": "Two new columns",
+      "recommendation": "Yes: add both. — Yes.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.IN-3",
+      "question": "Wider closed value lists",
+      "recommendation": "Yes. — Yes: each value records a fact the source really lacks; nothing is guessed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.IN-4",
+      "question": "Plan facts: a new table?",
+      "recommendation": "Yes: a new values-only table. — Yes: same form, values only, sha-pinned; you said these files are valuable beyond the scorer.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.IN-5",
+      "question": "Batch pair-rate floor",
+      "recommendation": "Report only until two more batches exist. — Report only until two more batches exist: three points are too few to set a floor.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.IN-6",
+      "question": "The other CoA document types in Drive",
+      "recommendation": "Not now: list them and revisit. — Not now: record them in the manifest; design a schema when a consumer (Phase 3 or the report) names a field it needs. This keeps scope to named uses (CHAT-68.scope).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.IN-7",
+      "question": "59 Yarrow Rd notice missing",
+      "recommendation": "Leave it excluded.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q4",
+      "question": "Main-building geometry model (attic, dormers)",
+      "recommendation": "Use the golden cases (keying page) as the check: key a few attic/dormer cases first. — Check it against your golden cases: real plans are the honest oracle; the model then gets ruled from evidence.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q5",
+      "question": "Maximum bedrooms",
+      "recommendation": "Layer 3 applies the P5.4 per-unit rule to the Layer 2 inputs. — Layer 3 applies the P5.4 rule: no new Layer 2 axis, smallest change.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q6",
+      "question": "RD flat-roof wall height 7.2 m",
+      "recommendation": "Yes: add the target by pin change. — Yes: every by-law number lives in the table, not in code.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.V39-1",
+      "question": "RULED rows and the floor-change door",
+      "recommendation": "Accept RULED as authority (change the reader). — Accept RULED in the reader: the operator approval is the authority; one reader change instead of re-labelling rows.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.V39-2",
+      "question": "Round runner reads oracle C v2",
+      "recommendation": "Yes: amend M-115 to v1 and v2. — Yes: it records what the code does.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.NIGHT-1",
+      "question": "Go for the fleet recapture night",
+      "recommendation": "Go, as soon as integrate-25 is pushed. — Go after integrate-25 is pushed; I start it, watch it, and report numbers against the expected figures.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q7",
+      "question": "Houseplex lift zones (R, RT, RM)",
+      "recommendation": "Layer 2 target. — Layer 2 target: the law lives in the table.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q8",
+      "question": "Minimum houseplex unit count (2)",
+      "recommendation": "Pinned logic variable houseplex_min_units = 2. — Pinned logic variable: visible and adjustable in admin, cited to the houseplex definition.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q9",
+      "question": "Trust level for not-permitted rows",
+      "recommendation": "Give them their own level (e.g. n/a). — Own level (n/a): \"high\" with zero checks would overstate confidence.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q10",
+      "question": "Shadow gate also blocks on Layer 2 defects",
+      "recommendation": "Yes: gate on all three. — Yes: a known Layer 2 defect should not pass silently.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q12",
+      "question": "When the hidden-number check starts blocking",
+      "recommendation": "Blocking at Phase 3 close, in step-validate. — Blocking at Phase 3 close: SC-6 says 0 open hidden constants at Phase 3 close.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q13",
+      "question": "Six non-law constants",
+      "recommendation": "Yes: register as model_heuristic. — Yes: every constant is either a law number (sourced) or a declared heuristic.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q14",
+      "question": "Tolerances for the golden-case comparison",
+      "recommendation": "Rule them with the calculation floors. — With the calculation floors: they should come from measured golden cases.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q15",
+      "question": "Settings for the Phase 3 step ① draft",
+      "recommendation": "Accept all six as recommended. — Accept as recommended; each follows the existing step pattern (Spec 132 §x-stages.1/.2).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.P3-Q16",
+      "question": "Settings in the Phase 3 compute module",
+      "recommendation": "Accept the interim settings. — Accept: each is marked and replaced when its producer or ruling lands.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-KG1",
+      "question": "Main-wall shares where height is not regulated",
+      "recommendation": "Code only: shares read only when a height limit exists. — Code only: a share of a wall height that is not limited has no meaning; no new absence entries needed.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-KG2",
+      "question": "RM townhouse and semi-detached houseplex: main-wall height",
+      "recommendation": "Extend ABS-7.3 to the two types (four absent phrases added, expert sample kept). — Extend it: the clause text names only detached and semi-detached houses; with Q-KG1 the rows then compute with the main-wall limit equal to the height.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "EVE.Q-KG3",
+      "question": "Absence when a conditional clause does not apply",
+      "recommendation": "Yes: rule 7a ignores a clause whose lot condition is known false; then add the family absence entries. — Yes, once for the family (R, RT, RM townhouse length): the text sets no limit there.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}
