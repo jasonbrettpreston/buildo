@@ -1,0 +1,6 @@
+   × CHAT-84.TWIN-1: identical text, one reading > 1335 (A) and 1332 (A) take the FAM-HIST form of 900.2.10(621)(B) (building-history replacement permit: UNUSUAL, disclosed) 1431ms
+     → expected [ …(5) ] to deeply equal [ …(5) ]
+   × CHAT-84.TWIN-1: identical text, one reading > 900.3.10(70) (B) takes the FAM-STEP form of 975 (B) (per-storey side yard: UNUSUAL, 1.8 and 0.6 limit_not_modelled) 1397ms
+     → expected [ 'LIMIT', 'side_setback_m', 'min' ] to deeply equal [ 'UNUSUAL', 'none', 'none' ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 8 passed (10)

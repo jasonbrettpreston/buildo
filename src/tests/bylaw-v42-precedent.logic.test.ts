@@ -104,3 +104,25 @@ describe('CHAT-84.NAMED-1b: the 32 UNUSUAL named-road arms are ruled, not held',
     }
   }, 120000);
 });
+
+// CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text
+describe('CHAT-84.TWIN-1: identical text, one reading', () => {
+  it('1335 (A) and 1332 (A) take the FAM-HIST form of 900.2.10(621)(B) (building-history replacement permit: UNUSUAL, disclosed)', async () => {
+    const U = await load();
+    const ref = U.get('900.2.10(621)#(621)[SSP](B)') as Json;
+    expect(ref.archetype).toBe('UNUSUAL');
+    for (const id of ['900.3.10(1335)#(1335)[SSP](A)', '900.3.10(1332)#(1332)[SSP](A)']) {
+      const u = U.get(id) as Json;
+      expect([id, u.archetype, u.target, u.numeric_expression, u.condition]).toEqual([id, ref.archetype, ref.target, ref.numeric_expression, ref.condition]);
+      expect(u.disclosure, id).not.toBe('none');
+    }
+  }, 120000);
+  it('900.3.10(70) (B) takes the FAM-STEP form of 975 (B) (per-storey side yard: UNUSUAL, 1.8 and 0.6 limit_not_modelled)', async () => {
+    const U = await load();
+    const ref = U.get('900.3.10(975)#(975)[SSP](B)') as Json;
+    const u = U.get('900.3.10(70)#(70)[SSP](B)') as Json;
+    expect([u.archetype, u.target, u.bound]).toEqual([ref.archetype, ref.target, ref.bound]);
+    const lits = (x: Json): string[] => x.literals_not_expressed.map((l: Json) => `${l.literal}:${l.reason}`).sort();
+    expect(lits(u)).toEqual(lits(ref));
+  }, 120000);
+});

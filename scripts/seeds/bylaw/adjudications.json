@@ -107182,6 +107182,256 @@
       "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/disclosure",
       "unit": "900.5.10(204)#(204)[SSP](E)(i)",
       "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(1335)#(1335)[SSP](A)/archetype",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1335)#(1335)[SSP](A)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(1335)#(1335)[SSP](A)/target",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1335)#(1335)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(1335)#(1335)[SSP](A)/bound",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1335)#(1335)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1335)#(1335)[SSP](A)/numeric_expression",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1335)#(1335)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1335)#(1335)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1335)#(1335)[SSP](A)",
+      "value": {
+        "description": "Depends on the height and existence of a building as of a past date; the existing-building facts are not held.",
+        "gaps": "Height of the building being replaced and its existence on February 28, 1977.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1335)#(1335)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1335)#(1335)[SSP](A)",
+      "value": "If a building existed as of February 28, 1977, you may replace it with a building taller than this By-law prescribes, provided the new building's height does not exceed the height of the building being replaced."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(1332)#(1332)[SSP](A)/archetype",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1332)#(1332)[SSP](A)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(1332)#(1332)[SSP](A)/target",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1332)#(1332)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(1332)#(1332)[SSP](A)/bound",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1332)#(1332)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1332)#(1332)[SSP](A)/numeric_expression",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1332)#(1332)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1332)#(1332)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1332)#(1332)[SSP](A)",
+      "value": {
+        "description": "Depends on the height and existence of a building as of a past date; the existing-building facts are not held.",
+        "gaps": "Height of the building being replaced and its existence on February 28, 1977.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1332)#(1332)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1332)#(1332)[SSP](A)",
+      "value": "If a building existed as of February 28, 1977, you may replace it with a building taller than this By-law prescribes, provided the new building's height does not exceed the height of the building being replaced."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "archetype",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/archetype",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "target",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/target",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "bound",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/bound",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(70)#(70)[SSP](B)/numeric_expression",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(70)#(70)[SSP](B)/literals_not_expressed~s1",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": [
+        {
+          "clause": "(70)[SSP](B)",
+          "literal": "1.8 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(70)[SSP](B)",
+          "literal": "0.6 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(70)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(70)#(70)[SSP](B)/calculation_handling",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": {
+        "description": "Side yard setback stepped by storey with an 'or portion thereof' increment; no expressible form.",
+        "gaps": "Per-additional-storey increment with 'or portion thereof' rounding (rule 20).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat84",
+      "field": "disclosure",
+      "id": "COR-900.3.10(70)#(70)[SSP](B)/disclosure",
+      "kind": "correction",
+      "reason": "TWIN-1 identical text one reading",
+      "rule": "CHAT-84.TWIN-1 (operator 2026-10-23): the newer family rulings win over older unit readings of identical text; FAM-HIST (900.2.10(621)(B)) governs 1335 (A) and 1332 (A), FAM-STEP (975 (B)) governs 70 (B); Spec 133 §m.317, §m.102, §m.82 (M-75 correction form)",
+      "unit": "900.3.10(70)#(70)[SSP](B)",
+      "value": "The minimum side yard setback is 1.8 metres on each side for a one-storey building, plus 0.6 metres for each additional storey or portion thereof. This stepped schedule is not evaluated; check the clause."
     }
   ]
 }
