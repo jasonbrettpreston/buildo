@@ -90644,6 +90644,360 @@
       "supersedes": "COR-900.5.10(324)#(324)[SSP](J)(i)/archetype",
       "unit": "900.5.10(324)#(324)[SSP](J)(i)",
       "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(393)#(393)[SSP](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street numbers of a named address, as 160 (F).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 10); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(393)#(393)[SSP](F)",
+      "value": [
+        {
+          "clause": "(393)[SSP](F)",
+          "literal": "58",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(393)[SSP](F)",
+          "literal": "60",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one side\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 10); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": [
+        {
+          "clause": "(858)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(893)#(893)[SSP](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one side lot line\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 10); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(893)#(893)[SSP](B)",
+      "value": [
+        {
+          "clause": "(893)[SSP](B)",
+          "literal": "4.2 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(893)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(142)#(142)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one semi-detached house or one detached house\": the second count word.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 10); G-CLAUSE named the exact literals",
+      "unit": "900.4.10(142)#(142)[SSP](A)",
+      "value": [
+        {
+          "clause": "(142)[SSP](A)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one side only\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 10); G-CLAUSE named the exact literals",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": [
+        {
+          "clause": "(144)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "field": "archetype",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/archetype",
+      "kind": "correction",
+      "reason": "Pattern gap on an agreed unit; both keyers read LIMIT side_setback_street_m.",
+      "rule": "HELD on R10-1; Spec 133 §m.82 (M-75 correction form) under the lane label: keep UNUSUAL while the licence pattern \"side lot line abuts the street\" is unruled (G-CLAUSE variable_unlicensed: only \"side lot line that abuts a street\" is a pattern); NEW RULING NEEDED, pattern growth like EVE.R6-2",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "field": "target",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/target",
+      "kind": "correction",
+      "reason": "Pattern gap on an agreed unit; both keyers read LIMIT side_setback_street_m.",
+      "rule": "HELD on R10-1; Spec 133 §m.82 (M-75 correction form) under the lane label: keep UNUSUAL while the licence pattern \"side lot line abuts the street\" is unruled (G-CLAUSE variable_unlicensed: only \"side lot line that abuts a street\" is a pattern); NEW RULING NEEDED, pattern growth like EVE.R6-2",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "field": "bound",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/bound",
+      "kind": "correction",
+      "reason": "Pattern gap on an agreed unit; both keyers read LIMIT side_setback_street_m.",
+      "rule": "HELD on R10-1; Spec 133 §m.82 (M-75 correction form) under the lane label: keep UNUSUAL while the licence pattern \"side lot line abuts the street\" is unruled (G-CLAUSE variable_unlicensed: only \"side lot line that abuts a street\" is a pattern); NEW RULING NEEDED, pattern growth like EVE.R6-2",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/numeric_expression",
+      "kind": "correction",
+      "reason": "Pattern gap on an agreed unit; both keyers read LIMIT side_setback_street_m.",
+      "rule": "HELD on R10-1; Spec 133 §m.82 (M-75 correction form) under the lane label: keep UNUSUAL while the licence pattern \"side lot line abuts the street\" is unruled (G-CLAUSE variable_unlicensed: only \"side lot line that abuts a street\" is a pattern); NEW RULING NEEDED, pattern growth like EVE.R6-2",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Pattern gap on an agreed unit; both keyers read LIMIT side_setback_street_m.",
+      "rule": "HELD on R10-1; Spec 133 §m.82 (M-75 correction form) under the lane label: keep UNUSUAL while the licence pattern \"side lot line abuts the street\" is unruled (G-CLAUSE variable_unlicensed: only \"side lot line that abuts a street\" is a pattern); NEW RULING NEEDED, pattern growth like EVE.R6-2",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(144)[SSP](E)(i)",
+          "literal": "3.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/calculation_handling",
+      "kind": "correction",
+      "reason": "Pattern gap on an agreed unit; both keyers read LIMIT side_setback_street_m.",
+      "rule": "HELD on R10-1; Spec 133 §m.82 (M-75 correction form) under the lane label: keep UNUSUAL while the licence pattern \"side lot line abuts the street\" is unruled (G-CLAUSE variable_unlicensed: only \"side lot line that abuts a street\" is a pattern); NEW RULING NEEDED, pattern growth like EVE.R6-2",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": {
+        "description": "On a corner lot the minimum building setback is 3.0 metres where the side lot line abuts the street; the wording matches no side-street setback licence pattern, so no target is borrowed.",
+        "gaps": "No target is licensed for \"side lot line abuts the street\".",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "field": "disclosure",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/disclosure",
+      "kind": "correction",
+      "reason": "Pattern gap on an agreed unit; both keyers read LIMIT side_setback_street_m.",
+      "rule": "HELD on R10-1; Spec 133 §m.82 (M-75 correction form) under the lane label: keep UNUSUAL while the licence pattern \"side lot line abuts the street\" is unruled (G-CLAUSE variable_unlicensed: only \"side lot line that abuts a street\" is a pattern); NEW RULING NEEDED, pattern growth like EVE.R6-2",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "On a corner lot, where the side lot line abuts the street, the minimum building setback from that lot line is 3.0 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(44)#(44)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3e155ac6: answer A — HELD on R10-5 (recommendation, not operator-ruled; shard agreement >= 85%): no lot may be created with a named flanking street is a subdivision restriction, no target: UNUSUAL (Spec 133 §m.136 holding state; PROHIBIT would need its own ruling)",
+      "unit": "900.3.10(44)#(44)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](C)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8b571f6b: answer A — HELD on (1001)[SSP](C) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"minimum side yard is\" is not a side_setback_m licence pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](C)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-cc6d2b5b: answer A — HELD on (1001)[SSP](C) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"minimum side yard is\" is not a side_setback_m licence pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](C)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b2c20633: answer A — HELD on (1001)[SSP](C) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"minimum side yard is\" is not a side_setback_m licence pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](C)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a310a21d: answer A — HELD on (1001)[SSP](C) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"minimum side yard is\" is not a side_setback_m licence pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c9c019e8: answer A — HELD on (1001)[SSP](D) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"side yard setback for a lot that abuts a street\" is not a side_setback_street_m pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](D)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-2b20a316: answer A — HELD on (1001)[SSP](D) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"side yard setback for a lot that abuts a street\" is not a side_setback_street_m pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](D)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ce8fe7fa: answer A — HELD on (1001)[SSP](D) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"side yard setback for a lot that abuts a street\" is not a side_setback_street_m pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1001)#(1001)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-389ce359: answer A — HELD on (1001)[SSP](D) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-2: \"side yard setback for a lot that abuts a street\" is not a side_setback_street_m pattern; a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(47)#(47)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-90823818: answer A — HELD on (47)[SSP](A) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-3: lot_depth is not a dsl_target (the vocabulary has no lot depth target); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(47)#(47)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(47)#(47)[SSP](A)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-38011d0c: answer A — HELD on (47)[SSP](A) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-3: lot_depth is not a dsl_target (the vocabulary has no lot depth target); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(47)#(47)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(47)#(47)[SSP](A)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1c29fdb5: answer A — HELD on (47)[SSP](A) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-3: lot_depth is not a dsl_target (the vocabulary has no lot depth target); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(47)#(47)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(47)#(47)[SSP](A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5fc7dd5f: answer A — HELD on (47)[SSP](A) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-3: lot_depth is not a dsl_target (the vocabulary has no lot depth target); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(47)#(47)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(144)#(144)[SSP](J)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-d5606bb7: answer A — HELD on (144)[SSP](J) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-4: \"may project\" is not an encroachment_m pattern (only \"may encroach\", \"permitted to project\"); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(144)#(144)[SSP](J)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(144)#(144)[SSP](J)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f76aca7a: answer A — HELD on (144)[SSP](J) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-4: \"may project\" is not an encroachment_m pattern (only \"may encroach\", \"permitted to project\"); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(144)#(144)[SSP](J)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(144)#(144)[SSP](J)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-629447e9: answer A — HELD on (144)[SSP](J) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-4: \"may project\" is not an encroachment_m pattern (only \"may encroach\", \"permitted to project\"); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(144)#(144)[SSP](J)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r10-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(144)#(144)[SSP](J)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a36db128: answer A — HELD on (144)[SSP](J) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-4: \"may project\" is not an encroachment_m pattern (only \"may encroach\", \"permitted to project\"); a pattern or target is a new ruling (Spec 133 §m.132)",
+      "unit": "900.4.10(144)#(144)[SSP](J)"
     }
   ]
 }
