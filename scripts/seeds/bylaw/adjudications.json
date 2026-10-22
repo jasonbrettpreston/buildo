@@ -88066,16 +88066,6 @@
     {
       "adjudicated_on": "2026-10-22",
       "adjudicator": "lane-exc-r5-held",
-      "decision": "a",
-      "field": "numeric_expression",
-      "id": "ADJ-disagreement-900.6.10(478)#(478)[SSP](C)-numeric_expression",
-      "kind": "disagreement",
-      "reason": "W2 queue Q-W2-6114511a: answer A — HELD on R5-2c (recommendation, not operator-ruled): single-arm by_type, Spec 133 §m.76; precedent 22 (C), 252 (A).",
-      "unit": "900.6.10(478)#(478)[SSP](C)"
-    },
-    {
-      "adjudicated_on": "2026-10-22",
-      "adjudicator": "lane-exc-r5-held",
       "field": "requirement",
       "id": "COR-900.3.10(1429)#(1429)[SSP](A)/requirement",
       "kind": "correction",

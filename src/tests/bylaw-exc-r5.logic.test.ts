@@ -13,10 +13,9 @@ const ROOT = process.cwd();
 const mod = (rel: string): Promise<Json> => import(pathToFileURL(path.join(ROOT, rel)).href);
 
 const AUTHORED = ['900.2.10(72)', '900.2.10(338)', '900.2.10(868)', '900.2.10(860)', '900.2.10(815)', '900.5.10(103)', '900.5.10(297)', '900.5.10(234)', '900.5.10(346)',
-  '900.3.10(130)', '900.3.10(125)', '900.3.10(419)', '900.3.10(543)', '900.3.10(718)', '900.3.10(242)', '900.3.10(349)', '900.3.10(408)', '900.3.10(1091)', '900.3.10(559)',
-  '900.6.10(70)', '900.6.10(33)'];
+  '900.3.10(130)', '900.3.10(125)', '900.3.10(419)', '900.3.10(543)', '900.3.10(718)', '900.3.10(242)', '900.3.10(349)', '900.3.10(408)', '900.3.10(1091)', '900.3.10(559)'];
 // R5-2b, R5-2c (HELD, recommendations applied under the lane label lane-exc-r5-held): these two units are adjudicated, not agreed
-const PARTIAL = ['900.3.10(1429)', '900.6.10(478)'];
+const PARTIAL = ['900.3.10(1429)'];
 
 describe('EXC-R5 round: double-keyed exceptions', () => {
   it('every unit of the 21 fully agreed exceptions is agreed or adjudicated; the two units held on R5-2b / R5-2c are adjudicated under the lane label', async () => {
@@ -40,4 +39,13 @@ describe('EXC-R5 round: double-keyed exceptions', () => {
     expect(mine.length).toBe(6);
     expect(mine.every((a) => a.kind === 'correction' && a.field === 'literals_not_expressed' && /M-82/.test(a.rule))).toBe(true);
   });
+  it('R5-6 variant (operator question, 478 held back): shard w2-s22 (exceptions 70, 33, 478) is withdrawn, so those units are not authored', async () => {
+    const V = await mod('scripts/analysis/bylaw/validate.mjs');
+    const AU = await mod('scripts/analysis/bylaw/authored.mjs');
+    const AG = await mod('scripts/analysis/bylaw/agree.mjs');
+    const I = V.loadInputs({ root: ROOT });
+    const ag = AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab });
+    const regs = new Set([...ag.units.keys()].map((id) => AU.splitUnitId(id).reg.replace(/~.*$/, '')));
+    for (const reg of ['900.6.10(70)', '900.6.10(33)', '900.6.10(478)']) expect(regs.has(reg), reg).toBe(false);
+  }, 120000);
 });

@@ -1,0 +1,4 @@
+RED run, R5-6 variant (withdrawal of shard w2-s22), before the withdrawal, on the 36f6eb19 tree:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: 900.6.10(70): expected true to be false // Object.is equality
+      Tests  1 failed | 2 passed (3)
