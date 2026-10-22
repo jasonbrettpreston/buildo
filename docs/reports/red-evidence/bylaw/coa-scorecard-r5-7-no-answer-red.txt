@@ -1,0 +1,2 @@
+FAIL src/tests/coa-scorecard-r5-7.logic.test.ts (before the edit, at c03aa135): AssertionError: expected 'NO ANSWER' to be 'DIFFER' // Object.is equality
+A0215/26EYK #1 reason: exception_not_authored:900.6.10(478) (R5-6, commit 1b4b0eb1)

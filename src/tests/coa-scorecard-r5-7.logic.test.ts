@@ -16,9 +16,12 @@ const score = (): any => { // eslint-disable-line @typescript-eslint/no-explicit
 };
 const row = (sc: any, notice: string, n: number): any => sc.rows.find((r: any) => r.notice === notice && r.n === n); // eslint-disable-line @typescript-eslint/no-explicit-any -- scorer JSON
 describe.skipIf(!have)('R5-7 reverted (verify-40 finding 5): the openings evidence stays circular, so it is not used for the suite arm', () => {
-  it('A0215/26EYK #1 is DIFFER again (the plan-facts note quotes the City decision) and no row carries scorer_fix 4D-S4d', () => {
+  // A0215/26EYK #1 is NO ANSWER, not DIFFER: R5-6 (commit 1b4b0eb1) withdrew shard w2-s22, so exception 900.6.10(478) is unauthored again and the
+  // row stops at exception_not_authored:900.6.10(478) before any suite-arm answer exists. It was DIFFER only while 478 was keyed.
+  it('A0215/26EYK #1 is NO ANSWER (exception_not_authored:900.6.10(478), R5-6 withdrew 478) and no row carries scorer_fix 4D-S4d', () => {
     const sc = score();
-    expect(row(sc, 'A0215/26EYK', 1).class).toBe('DIFFER');
+    expect(row(sc, 'A0215/26EYK', 1).class).toBe('NO ANSWER');
+    expect(row(sc, 'A0215/26EYK', 1).ours.reason).toBe('exception_not_authored:900.6.10(478)');
     expect(sc.rows.filter((r: any) => r.scorer_fix === '4D-S4d').length).toBe(0); // eslint-disable-line @typescript-eslint/no-explicit-any -- scorer JSON
   }, 180000);
 });
