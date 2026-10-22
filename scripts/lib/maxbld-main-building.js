@@ -84,8 +84,10 @@ function compute(view, cls, lot, config, clause) {
   const slopeCap = cap(read(view, cls, 'roof_slope_max'));
   const upperSetback = cap(read(view, cls, 'upper_storey_setback_m'));
   const elementPct = cap(read(view, cls, 'element_width_pct'));
-  const sideShare = cap(read(view, cls, 'main_wall_side_share_pct'));
-  const frontRearShare = cap(read(view, cls, 'main_wall_front_rear_share_pct'));
+  // Q-KG1: the share targets only matter under a numeric main-wall limit. Where the limit is unregulated or not_applicable (RT, an RM
+  // detached houseplex) the shares are no_candidate and no share-based cap applies, so they are not read and the row is not blocked.
+  const sideShare = hwR.kind === 'num' ? cap(read(view, cls, 'main_wall_side_share_pct')) : null;
+  const frontRearShare = hwR.kind === 'num' ? cap(read(view, cls, 'main_wall_front_rear_share_pct')) : null;
   const cCount = needNum(read(view, cls, 'attic_counted_clearance_m'), 'attic_counted_clearance_m');
   const cQual = needNum(read(view, cls, 'attic_qualifying_clearance_m'), 'attic_qualifying_clearance_m');
   const shareQual = needNum(read(view, cls, 'attic_qualifying_share_pct'), 'attic_qualifying_share_pct');

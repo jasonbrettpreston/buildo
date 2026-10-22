@@ -302,6 +302,22 @@ describe('P3-2: the main building (P5.2)', () => {
     expect(r.gfa_flat_sqm).toBeCloseTo(480, 9);
   });
 
+  it('Q-KG1: the two main-wall share targets are read only when main_wall_height_m is a number; otherwise the share caps do not apply and the row is not blocked', () => {
+    const noShare = { main_wall_side_share_pct: ne('detached_house', 'main_wall_side_share_pct', 'no_candidate'), main_wall_front_rear_share_pct: ne('detached_house', 'main_wall_front_rear_share_pct', 'no_candidate') };
+    // RT: Hw unregulated, shares no_candidate (ABS-2)
+    const rt = mb(rows('detached_house', { ...noShare, main_wall_height_m: unl('detached_house', 'main_wall_height_m', 'unregulated') }));
+    expect(rt.status).toBe('computed');
+    expect(rt.main_wall_limit_m).toBe(10);
+    expect(rt.main_wall_pair).toBe('none');
+    expect(rt.main_wall_pair_share_pct).toBeNull();
+    // RM detached houseplex: Hw not_applicable, shares no_candidate
+    expect(mb(rows('detached_house', { ...noShare, main_wall_height_m: na('detached_house', 'main_wall_height_m') })).status).toBe('computed');
+    // a numeric Hw still needs its shares: the not_evaluated reason propagates
+    expect(mb(rows('detached_house', noShare)).status).toBe('not_evaluated:no_candidate');
+    // Hw itself not evaluated (RM townhouse, semi houseplex): the row is blocked by the height, not by the shares
+    expect(mb(rows('detached_house', { ...noShare, main_wall_height_m: ne('detached_house', 'main_wall_height_m', 'no_candidate') })).status).toBe('not_evaluated:no_candidate');
+  });
+
   it('item 7: the storey cap applies (height_storeys) and binds', () => {
     const r = mb(rows('detached_house', { height_storeys: num('detached_house', 'height_storeys', 2) }));
     expect(r.storeys_flat).toBe(2);
