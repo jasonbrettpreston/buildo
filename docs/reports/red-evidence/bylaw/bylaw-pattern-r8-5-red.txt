@@ -1,0 +1,4 @@
+   × CHAT-76.R8-5: "minimum frontage" licenses required_lot_frontage_m > the pattern is present and licenses the 120 (A) wording 5ms
+   × CHAT-76.R8-5: "minimum frontage" licenses required_lot_frontage_m > 900.3.10(120)(A) resolves to LIMIT required_lot_frontage_m min 15.0 m under the corner_lot condition 2729ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 1 passed (3)
