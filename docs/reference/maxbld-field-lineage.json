@@ -27,113 +27,113 @@
  "logic_variables": [
   {
    "name": "storey_height_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "roof_pitch",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "roof_assembly_depth_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "basement_livable_share",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "circulation_share",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "unit_min_interior_sqm",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "suite_weight",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "depth_search_step_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "suite_gfa_strict_margin_sqm",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "min_dimension_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lot_min_sqm",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lot_max_sqm",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "existing_confidence_min",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "existing_shared_footprint_penalty",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "batch_size",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "not_evaluated_max_pct",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "first_floor_elevation_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lane_buffer_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "triangle_simplify_tol_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "lot_viability_margin_m",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "coxwell_generous_reading",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   },
   {
    "name": "trust_high_min_pass_pct",
-   "status": "OWED",
-   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+   "status": "SEEDED",
+   "migration": "migrations/282_compute_maxbld_scenarios_logic_variables.sql"
   }
  ],
  "invariants": [
@@ -2813,12 +2813,7 @@
    "keyed": {
     "units": [],
     "layer2_targets": [],
-    "owed": [
-     {
-      "what": "P5.12 codes in vocab.json",
-      "owner": "step commit ①"
-     }
-    ]
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [],
@@ -2835,12 +2830,7 @@
    "keyed": {
     "units": [],
     "layer2_targets": [],
-    "owed": [
-     {
-      "what": "P5.12 codes in vocab.json",
-      "owner": "step commit ①"
-     }
-    ]
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [],
