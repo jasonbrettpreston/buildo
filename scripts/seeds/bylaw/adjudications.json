@@ -94578,6 +94578,347 @@
       "kind": "disagreement",
       "reason": "W2 queue Q-W2-cb64b22a: answer A — HELD on R17-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound on every lot; UNUSUAL (Spec 133 §m.130), same as 145 (H) in R15-3",
       "unit": "900.4.10(136)#(136)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18",
+      "field": "literals_not_expressed",
+      "id": "COR-900.6.10(269)#(269)[SSP](G)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-18); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.6.10(269)#(269)[SSP](G)",
+      "value": [
+        {
+          "clause": "(269)[SSP](G)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18",
+      "field": "literals_not_expressed",
+      "id": "COR-900.6.10(269)#(269)[SSP](H)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-18); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.6.10(269)#(269)[SSP](H)",
+      "value": [
+        {
+          "clause": "(269)[SSP](H)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1419)#(1419)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-18); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(1419)#(1419)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1419)#(1419)[PBS](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-18); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(1419)#(1419)[PBS](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1419)#(1419)[PBS](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-18); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(1419)#(1419)[PBS](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](A)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-db73f2b3: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](A)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](A)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-bad6b3fa: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](A)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](B)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3d8dd8db: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](B)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](B)(iv)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a09f23f0: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](B)(iv)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](C)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-973d5e75: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](C)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](C)(ii)(a)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-67186e21: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](C)(ii)(a)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](C)(ii)(b)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-12f51654: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](C)(ii)(b)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b333d91d: answer B — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is REQUIRE in the 1436 (D) form",
+      "unit": "900.3.10(1438)#(1438)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](E)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-78f2d93e: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](E)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1438)#(1438)[SSP](E)(iv)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-eb0bb5ae: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317; Spec 68 §5a row 2): this clause is word for word the ruled 1436/1437 unit, which is UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1438)#(1438)[SSP](E)(iv)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "field": "requirement",
+      "id": "COR-900.3.10(1438)#(1438)[SSP](D)/requirement",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1438 (D) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
+      "unit": "900.3.10(1438)#(1438)[SSP](D)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1438)#(1438)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1438 (D) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
+      "unit": "900.3.10(1438)#(1438)[SSP](D)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1438)#(1438)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1438 (D) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
+      "unit": "900.3.10(1438)#(1438)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-twin",
+      "field": "condition",
+      "id": "COR-900.3.10(1438)#(1438)[SSP](D)/condition",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1438 (D) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
+      "unit": "900.3.10(1438)#(1438)[SSP](D)",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(97)#(97)[SSP](A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-3c400865: answer B — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type with the per-unit arm times dwelling_units; keyer A omitted the target before the expression, keyer B wrote it",
+      "unit": "900.4.10(97)#(97)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(97)#(97)[SSP](B)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-2a64fdb7: answer B — CHAT-81.FAM-ALL (FAM-ARMS): per-subject arms as by_type with the per-unit arm times dwelling_units; keyer A omitted the target before the expression, keyer B wrote it",
+      "unit": "900.4.10(97)#(97)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(284)#(284)[SSP](D)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-13777795: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): a lot line abutting a street takes street_setback_m, not front_setback_m",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(284)#(284)[SSP](D)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-fda40bf8: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): a lot line abutting a street takes street_setback_m, not front_setback_m",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(284)#(284)[SSP](D)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-35bedaa2: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): a lot line abutting a street takes street_setback_m, not front_setback_m",
+      "unit": "900.4.10(284)#(284)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(284)#(284)[SSP](D)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-647a26b2: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): a lot line abutting a street takes street_setback_m, not front_setback_m",
+      "unit": "900.4.10(284)#(284)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.4.10(81)#(81)[SSP](G)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-75787641: answer A — HELD on R18-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound; UNUSUAL (Spec 133 §m.130), as 145 (H) in R15-3",
+      "unit": "900.4.10(81)#(81)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.4.10(81)#(81)[SSP](G)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4a7c0df8: answer A — HELD on R18-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound; UNUSUAL (Spec 133 §m.130), as 145 (H) in R15-3",
+      "unit": "900.4.10(81)#(81)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.4.10(81)#(81)[SSP](G)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4fce9c31: answer A — HELD on R18-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound; UNUSUAL (Spec 133 §m.130), as 145 (H) in R15-3",
+      "unit": "900.4.10(81)#(81)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(81)#(81)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a914640d: answer A — HELD on R18-1 (recommendation, not operator-ruled; shard >= 85%): the 0.3 m has a relief arm (a semi-detached garage may stand on the common lot line), so it is not a necessary bound; UNUSUAL (Spec 133 §m.130), as 145 (H) in R15-3",
+      "unit": "900.4.10(81)#(81)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r18",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1438)#(1438)[SSP](B)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"more than one secondary suite\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 18); the lead-in count word is listed on its first leaf",
+      "unit": "900.3.10(1438)#(1438)[SSP](B)(i)",
+      "value": [
+        {
+          "clause": "(1438)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
     }
   ]
 }

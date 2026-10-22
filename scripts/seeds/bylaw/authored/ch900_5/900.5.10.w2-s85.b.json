@@ -1,0 +1,133 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_5/900.5.10.w2-s85",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "numeric_expression": ["dwelling_units_max = 1 units @(112)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(112)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(112)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(112)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 4.5 m @(112)[SSP](E)"]
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](F)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](G)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 50 pct @(112)[SSP](G)"]
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[SSP](H)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(112)#(112)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(198)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(198)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "street_setback_m",
+      "bound": "min",
+      "numeric_expression": ["street_setback_m = 3.0 m @(198)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 7.0 m @(198)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 50 pct @(198)[SSP](E)"]
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "garage_entrance_setback_m",
+      "bound": "min",
+      "numeric_expression": ["garage_entrance_setback_m = 6.0 m @(198)[SSP](F)"]
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](G)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[SSP](H)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(198)#(198)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}
