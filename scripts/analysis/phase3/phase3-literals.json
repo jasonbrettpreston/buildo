@@ -1,0 +1,362 @@
+{
+  "$comment": "Spec 133 m.11 / m.22; G-CODE (iv). The clause literals the Phase 3 compute modules RECEIVE as inputs, each with the keyed clause it must be sourced from at commit 1 (the machine form of ~/Buildo-scratch/p3build/literals.md). `source` is null until a commit reads the input from its clause (a migration key, a provisions numeric_literals read, or a Layer 2 target); the arm phase3-code-link.mjs reports a null source as unmapped. Locked against bylaw-provisions.json by phase3-code-link.logic.test.ts. HELD on P3-Q1.",
+  "literals": [
+    {
+      "id": "P3L-01",
+      "module_input": "caps.detached",
+      "module": "scripts/lib/maxbld-houseplex-units.js",
+      "kind": "numeric",
+      "value": 4,
+      "unit": "units",
+      "regulation_id": "800.50(181)",
+      "clause_path": "(181)(A)",
+      "unit_ids": [
+        "800.50(181)#(181)(A)"
+      ],
+      "note": "detached houseplex cap outside 600.60",
+      "source": null
+    },
+    {
+      "id": "P3L-02",
+      "module_input": "caps.semi",
+      "module": "scripts/lib/maxbld-houseplex-units.js",
+      "kind": "numeric",
+      "value": 4,
+      "unit": "units",
+      "regulation_id": "800.50(746)",
+      "clause_path": "(746)(A)",
+      "unit_ids": [
+        "800.50(746)#(746)(A)"
+      ],
+      "note": "semi-detached houseplex, always (M-202(1))",
+      "source": null
+    },
+    {
+      "id": "P3L-03",
+      "module_input": "caps.detached_600_60",
+      "module": "scripts/lib/maxbld-houseplex-units.js",
+      "kind": "numeric",
+      "value": 6,
+      "unit": "units",
+      "regulation_id": "600.60.40(3)",
+      "clause_path": "(3)(A)",
+      "unit_ids": [
+        "600.60.40(3)#(3)(A)"
+      ],
+      "note": "sixplex area (O-8)",
+      "source": null
+    },
+    {
+      "id": "P3L-04",
+      "module_input": "caps.lift",
+      "module": "scripts/lib/maxbld-houseplex-units.js",
+      "kind": "numeric",
+      "value": 6,
+      "unit": "units",
+      "regulation_id": "600.60.40(1)",
+      "clause_path": "(1)(A)",
+      "unit_ids": [
+        "600.60.40(1)#(1)(A)"
+      ],
+      "note": "a u below this is lifted (M-202(2))",
+      "source": null
+    },
+    {
+      "id": "P3L-05",
+      "module_input": "LIFT_ZONES",
+      "module": "scripts/lib/maxbld-houseplex-units.js",
+      "kind": "derived_list",
+      "regulation_id": "600.60.40(1)",
+      "unit_ids": [
+        "600.60.40(1)#(1)(A)",
+        "10.10.40.1(3)#(3)(A)",
+        "10.60.40.1(2)#(2)(A)",
+        "10.80.40.1(2)#(2)(A)"
+      ],
+      "note": "R, RT, RM: the zones of the three units 600.60.40(1)(A) names; not a number",
+      "source": null
+    },
+    {
+      "id": "P3L-06",
+      "module_input": "caps.minUnits",
+      "module": "scripts/lib/maxbld-houseplex-units.js",
+      "kind": "no_literal",
+      "regulation_id": "800.50(181)",
+      "unit_ids": [
+        "800.50(181)#(181)(D)"
+      ],
+      "note": "two units: implied by \"multiple\" and (181)(D); no numeric literal carries 2",
+      "source": null
+    },
+    {
+      "id": "P3L-07",
+      "module_input": "envelope.reliefFrontageMaxM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 12.2,
+      "unit": "m",
+      "regulation_id": "10.5.40.71(3)",
+      "clause_path": "(3)",
+      "unit_ids": [
+        "10.5.40.71(3)#(3)"
+      ],
+      "note": "10.5.40.71(3) relief",
+      "source": null
+    },
+    {
+      "id": "P3L-08",
+      "module_input": "config.viabilityFrontageMinM",
+      "module": "scripts/lib/maxbld-scenario-status.js",
+      "kind": "numeric",
+      "value": 6,
+      "unit": "m",
+      "regulation_id": "10.5.30.21(3)",
+      "clause_path": "(3)(A)",
+      "unit_ids": [
+        "10.5.30.21(3)#(3)(A)"
+      ],
+      "note": "M-207 vacant lawfully existing lot",
+      "source": null
+    },
+    {
+      "id": "P3L-09",
+      "module_input": "extension.extraLengthM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 2,
+      "unit": "m",
+      "regulation_id": "10.20.40.20(2)",
+      "clause_path": "(2)",
+      "unit_ids": [
+        "10.20.40.20(2)#(2)(A)",
+        "10.20.40.20(2)#(2)(B)",
+        "10.20.40.20(2)#(2)(C)"
+      ],
+      "note": "M-206 one-storey extension, RD",
+      "source": null
+    },
+    {
+      "id": "P3L-10",
+      "module_input": "extension.maxWidthShare",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 50,
+      "unit": "pct",
+      "regulation_id": "10.20.40.20(2)",
+      "clause_path": "(2)(B)",
+      "unit_ids": [
+        "10.20.40.20(2)#(2)(B)"
+      ],
+      "note": "M-206, RD; the module takes the share as a fraction",
+      "source": null
+    },
+    {
+      "id": "P3L-11",
+      "module_input": "extension.storeyHeightM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 5,
+      "unit": "m",
+      "regulation_id": "10.20.40.20(2)",
+      "clause_path": "(2)(A)",
+      "unit_ids": [
+        "10.20.40.20(2)#(2)(A)"
+      ],
+      "note": "M-206, RD; not yet an input (extension height not modelled)",
+      "source": null
+    },
+    {
+      "id": "P3L-12",
+      "module_input": "extension.sideDistanceM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 3,
+      "unit": "m",
+      "regulation_id": "10.20.40.20(2)",
+      "clause_path": "(2)(C)",
+      "unit_ids": [
+        "10.20.40.20(2)#(2)(C)"
+      ],
+      "note": "M-206, RD; not yet an input (not modelled)",
+      "source": null
+    },
+    {
+      "id": "P3L-13",
+      "module_input": "extension.extraLengthM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 2,
+      "unit": "m",
+      "regulation_id": "10.40.40.20(2)",
+      "clause_path": "(2)",
+      "unit_ids": [
+        "10.40.40.20(2)#(2)(A)",
+        "10.40.40.20(2)#(2)(B)",
+        "10.40.40.20(2)#(2)(C)"
+      ],
+      "note": "M-206 one-storey extension, RS",
+      "source": null
+    },
+    {
+      "id": "P3L-14",
+      "module_input": "extension.maxWidthShare",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 50,
+      "unit": "pct",
+      "regulation_id": "10.40.40.20(2)",
+      "clause_path": "(2)(B)",
+      "unit_ids": [
+        "10.40.40.20(2)#(2)(B)"
+      ],
+      "note": "M-206, RS; the module takes the share as a fraction",
+      "source": null
+    },
+    {
+      "id": "P3L-15",
+      "module_input": "extension.storeyHeightM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 5,
+      "unit": "m",
+      "regulation_id": "10.40.40.20(2)",
+      "clause_path": "(2)(A)",
+      "unit_ids": [
+        "10.40.40.20(2)#(2)(A)"
+      ],
+      "note": "M-206, RS; not yet an input (extension height not modelled)",
+      "source": null
+    },
+    {
+      "id": "P3L-16",
+      "module_input": "extension.sideDistanceM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 3,
+      "unit": "m",
+      "regulation_id": "10.40.40.20(2)",
+      "clause_path": "(2)(C)",
+      "unit_ids": [
+        "10.40.40.20(2)#(2)(C)"
+      ],
+      "note": "M-206, RS; not yet an input (not modelled)",
+      "source": null
+    },
+    {
+      "id": "P3L-17",
+      "module_input": "extension.extraLengthM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 2,
+      "unit": "m",
+      "regulation_id": "10.80.40.20(2)",
+      "clause_path": "(2)",
+      "unit_ids": [
+        "10.80.40.20(2)#(2)(A)",
+        "10.80.40.20(2)#(2)(B)",
+        "10.80.40.20(2)#(2)(C)"
+      ],
+      "note": "M-206 one-storey extension, RM",
+      "source": null
+    },
+    {
+      "id": "P3L-18",
+      "module_input": "extension.maxWidthShare",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 50,
+      "unit": "pct",
+      "regulation_id": "10.80.40.20(2)",
+      "clause_path": "(2)(B)",
+      "unit_ids": [
+        "10.80.40.20(2)#(2)(B)"
+      ],
+      "note": "M-206, RM; the module takes the share as a fraction",
+      "source": null
+    },
+    {
+      "id": "P3L-19",
+      "module_input": "extension.storeyHeightM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 5,
+      "unit": "m",
+      "regulation_id": "10.80.40.20(2)",
+      "clause_path": "(2)(A)",
+      "unit_ids": [
+        "10.80.40.20(2)#(2)(A)"
+      ],
+      "note": "M-206, RM; not yet an input (extension height not modelled)",
+      "source": null
+    },
+    {
+      "id": "P3L-20",
+      "module_input": "extension.sideDistanceM",
+      "module": "src/features/leads/lib/renovation-shared.js",
+      "kind": "numeric",
+      "value": 3,
+      "unit": "m",
+      "regulation_id": "10.80.40.20(2)",
+      "clause_path": "(2)(C)",
+      "unit_ids": [
+        "10.80.40.20(2)#(2)(C)"
+      ],
+      "note": "M-206, RM; not yet an input (not modelled)",
+      "source": null
+    },
+    {
+      "id": "P3L-21",
+      "module_input": "clause.mechanical.share",
+      "module": "scripts/lib/maxbld-main-building.js",
+      "kind": "numeric",
+      "value": 5,
+      "unit": "pct",
+      "regulation_id": "10.5.40.40(2)",
+      "clause_path": "(2)",
+      "unit_ids": [
+        "10.5.40.40(2)#(2)"
+      ],
+      "note": "M-229; the module takes the share as a fraction",
+      "source": null
+    },
+    {
+      "id": "P3L-22",
+      "module_input": "clause.mechanical.max_sqm",
+      "module": "scripts/lib/maxbld-main-building.js",
+      "kind": "numeric",
+      "value": 20,
+      "unit": "m2",
+      "regulation_id": "10.5.40.40(2)",
+      "clause_path": "(2)",
+      "unit_ids": [
+        "10.5.40.40(2)#(2)"
+      ],
+      "note": "M-229",
+      "source": null
+    },
+    {
+      "id": "P3L-23",
+      "module_input": "NOT_BUILDABLE clause id",
+      "module": "scripts/lib/maxbld-houseplex-units.js",
+      "kind": "identifier",
+      "regulation_id": "800.50(181)",
+      "unit_ids": [
+        "800.50(181)#(181)(D)"
+      ],
+      "note": "the string 800.50(181) in not_buildable:800.50(181)",
+      "source": null
+    },
+    {
+      "id": "P3L-24",
+      "module_input": "VIABILITY_CLAUSE",
+      "module": "scripts/lib/maxbld-scenario-status.js",
+      "kind": "identifier",
+      "regulation_id": "10.5.30.21(3)",
+      "unit_ids": [
+        "10.5.30.21(3)#(3)(A)"
+      ],
+      "note": "the string 10.5.30.21(3) in not_permitted:10.5.30.21(3)",
+      "source": null
+    }
+  ]
+}
