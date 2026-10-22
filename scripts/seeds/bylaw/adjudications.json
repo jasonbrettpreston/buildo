@@ -90998,6 +90998,108 @@
       "kind": "disagreement",
       "reason": "W2 queue Q-W2-a36db128: answer A — HELD on (144)[SSP](J) (recommendation, not operator-ruled): keep UNUSUAL; the B reading fails G-CLAUSE — R10-4: \"may project\" is not an encroachment_m pattern (only \"may encroach\", \"permitted to project\"); a pattern or target is a new ruling (Spec 133 §m.132)",
       "unit": "900.4.10(144)#(144)[SSP](J)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(295)#(295)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The slicer does not read a street number or a schedule exception number as a clause literal (G-CLAUSE refuses them), as 349 (A)-(C).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 11); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(295)#(295)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 11); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": [
+        {
+          "clause": "(1049)[SSP](E)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one\" is a count.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 11); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": [
+        {
+          "clause": "(588)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(937)#(937)[SSP](H)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street number of a named address, as 160 (F).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 11); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(937)#(937)[SSP](H)",
+      "value": [
+        {
+          "clause": "(937)[SSP](H)",
+          "literal": "2651",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1049)#(1049)[SSP](G)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ab812781: answer A — HELD on R11-1 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL; the keyer-B LIMIT garage_entrance_setback_m needs the pattern \"entrance to a parking space\" (only \"vehicle entrance\" / \"entrance to a private garage\" are patterns), a pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1049)#(1049)[SSP](G)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a480b1db: answer A — HELD on R11-1 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL; the keyer-B LIMIT garage_entrance_setback_m needs the pattern \"entrance to a parking space\" (only \"vehicle entrance\" / \"entrance to a private garage\" are patterns), a pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(1049)#(1049)[SSP](G)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5b4769dd: answer A — HELD on R11-1 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL; the keyer-B LIMIT garage_entrance_setback_m needs the pattern \"entrance to a parking space\" (only \"vehicle entrance\" / \"entrance to a private garage\" are patterns), a pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r11-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1049)#(1049)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-9f41abf4: answer A — HELD on R11-1 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL; the keyer-B LIMIT garage_entrance_setback_m needs the pattern \"entrance to a parking space\" (only \"vehicle entrance\" / \"entrance to a private garage\" are patterns), a pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)"
     }
   ]
 }

@@ -1,0 +1,849 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s84",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(295)#(295)[SSP](A)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "Warden Ave.",
+     "Pharmacy Ave."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "22.0 metres",
+     "clause": "(295)[SSP](A)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 295",
+     "any": "minimum building setback",
+     "abuts_named_street": "abuts Warden Ave."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "The setback is measured from the original centreline of a street, which has no target.",
+    "gaps": "Street centreline setback on named streets is not expressible.",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "On lots abutting Warden Ave. or Pharmacy Ave., the minimum building setback is 22.0 metres measured from the original centreline of the street. This is not modelled, so check the by-law text.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(295)#(295)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.9 m @(295)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 295",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(295)#(295)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 3.6 m @(295)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 295",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(295)#(295)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "Schedule \"C\" Exceptions 17 and 54, of former City of Scarborough by-law 9511",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "1785 Victoria Park Ave."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "1785",
+     "clause": "(295)[PBS](A)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "17",
+     "clause": "(295)[PBS](A)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "54",
+     "clause": "(295)[PBS](A)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 295",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law, never evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(112)#(112)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(112)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 112",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(112)#(112)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 4.5 m @(112)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 112",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(112)#(112)[SSP](C)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 112",
+     "any": "These lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Incorporates exception 900.3.10(1462).",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(112)#(112)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(616)#(616)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(616)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 616",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(616)#(616)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "street_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "street_setback_m = 4.5 m @(616)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 616",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(616)#(616)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(616)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 616",
+     "any": "set back",
+     "private_garage": "attached garage"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(616)#(616)[SSP](D)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "parking_in_building",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "Exception RD 616",
+     "any": "residential building",
+     "parking_space": "required parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Non-numeric obligation, not evaluated against lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(616)#(616)[SSP](E)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 616",
+     "any": "These lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Incorporates exception 900.3.10(1462).",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(616)#(616)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(431)#(431)[SSP](A)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "Bellamy Rd.",
+     "Scarborough Golf Club Rd.",
+     "Orton Park Rd.",
+     "McCowan Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "22.0 metres",
+     "clause": "(431)[SSP](A)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 431",
+     "any": "minimum building setback",
+     "abuts_named_street": "abuts Bellamy Rd."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "The setback is measured from the original centreline of a street, which has no target.",
+    "gaps": "Street centreline setback on named streets is not expressible.",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "On lots abutting Bellamy Rd. or Scarborough Golf Club Rd. or Orton Park Rd. or McCowan Rd., the minimum building setback is 22.0 metres measured from the original centreline of the street. This is not modelled, so check the by-law text.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(431)#(431)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(431)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 431",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(431)#(431)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 5.7 m @(431)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 431",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(431)#(431)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(431)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 431",
+     "any": "located a minimum",
+     "private_garage": "detached garage"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data against the stated minimum.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(431)#(431)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "900.3.10(112)": {
+   "explanation": "Lands under exception RD 112 have a 1.2 m minimum side setback and 4.5 m where the side lot line abuts a street, and must also comply with exception 900.3.10(1462).",
+   "code_refs": "none"
+  },
+  "900.3.10(295)": {
+   "explanation": "Lands under exception RD 295 have a 0.9 m minimum side setback and 3.6 m where the side lot line abuts a street. Setbacks along Warden Ave. and Pharmacy Ave. are measured from the street centreline and are not modelled. A prevailing Scarborough by-law applies at 1785 Victoria Park Ave.",
+   "code_refs": "none"
+  },
+  "900.3.10(431)": {
+   "explanation": "Lands under exception RD 431 have a 1.2 m minimum side setback, 5.7 m where the side lot line abuts a street, and a 0.3 m minimum garage distance from a side lot line. Setbacks from Bellamy Rd., Scarborough Golf Club Rd., Orton Park Rd. and McCowan Rd. are measured from the street centreline and are not modelled.",
+   "code_refs": "none"
+  },
+  "900.3.10(616)": {
+   "explanation": "Lands under exception RD 616 have a 1.2 m minimum side setback, 4.5 m from a lot line abutting a street and 0.3 m for an attached garage from a side lot line that does not abut a street. The required parking space must be in the residential building, and exception 900.3.10(1462) also applies.",
+   "code_refs": "none"
+  }
+ }
+}

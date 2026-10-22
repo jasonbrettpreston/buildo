@@ -1,0 +1,154 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s52",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(975)#(975)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 15.0 m @(975)[SSP](A)(i)"]
+    },
+    {
+      "unit_id": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 18.0 m @(975)[SSP](A)(ii)"]
+    },
+    {
+      "unit_id": "900.3.10(975)#(975)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.8 m + 0.6 m × (proposed_storeys − 1 storeys) @(975)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.3.10(975)#(975)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 9.5 m @(975)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.3.10(975)#(975)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "ancillary_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["ancillary_coverage_pct = 5 pct @(975)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.3.10(975)#(975)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "ancillary_floor_area_m2",
+      "bound": "max",
+      "numeric_expression": ["ancillary_floor_area_m2 = 100 m2 @(975)[SSP](E)"]
+    },
+    {
+      "unit_id": "900.3.10(975)#(975)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.69 ratio @(1401)[SSP](A)(i)"]
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[SSP](A)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[SSP](A)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[SSP](A)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "platform_rear_setback_m",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[SSP](C)",
+      "archetype": "PROHIBIT",
+      "target": "garage_entrance_setback_m",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1401)#(1401)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(241)#(241)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(241)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.3.10(241)#(241)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(241)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.3.10(241)#(241)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(241)[SSP](C)"]
+    },
+    {
+      "unit_id": "900.3.10(241)#(241)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 5.7 m @(241)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.3.10(241)#(241)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.3 m @(241)[SSP](F)"]
+    },
+    {
+      "unit_id": "900.3.10(241)#(241)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}
