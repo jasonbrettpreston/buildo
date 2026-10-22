@@ -1,0 +1,4 @@
+   × CHAT-83.W-2: four wording variants > each ruled wording is licensed 3ms
+   × CHAT-83.W-2: four wording variants > 929 (F), 200 (C)(ii), 317 (B)(i), 159 (B) and 1 (F) resolve to LIMITs 2188ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 1 passed (3)

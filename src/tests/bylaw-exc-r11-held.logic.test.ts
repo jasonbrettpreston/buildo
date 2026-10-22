@@ -1,6 +1,7 @@
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §10 stages 5-6; docs/specs/01-pipeline/69a_mcbylaw_register.md M-15, M-75
 // HELD on R11-1 (recommendation on shards >= 85 percent agreement applied under lane-exc-r11-held, not operator-ruled).
 // Updated after CHAT-81.FAM-ALL: the family readings settle the pending units named in docs/reports/bylaw/2026-10-23-families-pending.json.
+// Updated after CHAT-81.FAM-ALL: the family readings settle the pending units named in docs/reports/bylaw/2026-10-23-families-pending.json.
 // Lane EXC-R5 round 11: W2 shards s50 s52 s84 s16 s60 (s57 left out of the tree: its keyer-A application field is empty on 9 units). Shards s50, s52 and s16 agreed under 85 percent: their disagreements stay PENDING for the operator.
 import { describe, expect, it } from 'vitest';
 import path from 'node:path';

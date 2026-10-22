@@ -33,9 +33,9 @@ describe('CHAT-81.FAM-ALL family readings', async () => {
     expect((U.get('900.3.10(1120)#(1120)[SSP](G)(iii)') as Json).target).toBe('separation_m');
     expect((U.get('900.4.10(200)#(200)[SSP](G)(i)') as Json).numeric_expression[0]).toContain('by_type(semi_detached_house: 15.0 m; other: 7.5 m × dwelling_units)');
   });
-  it('the two stopped readings stay pending', () => {
+  it('the two stopped readings (929 (F), 200 (C)(ii)) were settled by CHAT-83.W-2 and are no longer pending', () => {
     const st = (reg: string): string[] => [...ag.units].filter(([id]) => id.startsWith(reg + '#')).map(([, r]) => r.state as string);
-    expect(st('900.3.10(929)').filter((x) => x === 'pending').length).toBe(1);
-    expect(st('900.4.10(200)').filter((x) => x === 'pending').length).toBe(1);
+    expect(st('900.3.10(929)').filter((x) => x === 'pending').length).toBe(0);
+    expect(st('900.4.10(200)').filter((x) => x === 'pending').length).toBe(0);
   });
 });
