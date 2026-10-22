@@ -91833,6 +91833,608 @@
       "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 14); G-CLAUSE named the exact literals",
       "unit": "900.3.10(198)#(198)[PBS](A)",
       "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](C)/archetype",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](C)/target",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)",
+      "value": "side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](C)/bound",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](C)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)",
+      "value": [
+        "side_setback_m = 1.2 m @(1001)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](C)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)",
+      "value": {
+        "description": "Minimum side yard of 1.2 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](C)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)",
+      "value": "side_setback_street_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)",
+      "value": [
+        "side_setback_street_m = 1.5 m @(1001)[SSP](D)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)",
+      "value": {
+        "description": "Minimum side yard setback of 1.5 m for a lot that abuts a street.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1001)#(1001)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/archetype",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/target",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": "encroachment_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/bound",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": [
+        "encroachment_m = 0.6 m @(144)[SSP](J)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": {
+        "description": "Cantilevered bay windows may project a maximum of 0.6 m into all yards.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.4.10(144)#(144)[SSP](J)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.4.10(144)#(144)[SSP](J)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/archetype~s1",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](E)(i)/archetype",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/target~s1",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](E)(i)/target",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "side_setback_street_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/bound~s1",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](E)(i)/bound",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](E)(i)/numeric_expression",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": [
+        "side_setback_street_m = 3.0 m @(144)[SSP](E)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](E)(i)/literals_not_expressed",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](E)(i)/calculation_handling",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": {
+        "description": "On a corner lot, minimum 3.0 m where the side lot line abuts the street.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.4.10(144)#(144)[SSP](E)(i)/disclosure~s1",
+      "kind": "correction",
+      "reason": "CHAT-81.R10-ALL: wording licensed.",
+      "rule": "Operator CHAT-81.R10-ALL (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](E)(i)/disclosure",
+      "unit": "900.4.10(144)#(144)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](G)/archetype",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](G)/target",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)",
+      "value": "garage_entrance_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](G)/bound",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](G)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)",
+      "value": [
+        "garage_entrance_setback_m = 6.0 m @(1049)[SSP](G)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](G)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](G)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)",
+      "value": {
+        "description": "Main wall portion with the entrance to a parking space set back 6.0 m from a lot line abutting a street.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](G)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(1049)#(1049)[SSP](G)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.3.10(357)#(357)[SSP](E)/archetype",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(357)#(357)[SSP](E)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.3.10(357)#(357)[SSP](E)/target",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(357)#(357)[SSP](E)",
+      "value": "garage_entrance_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.3.10(357)#(357)[SSP](E)/bound",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(357)#(357)[SSP](E)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(357)#(357)[SSP](E)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(357)#(357)[SSP](E)",
+      "value": [
+        "garage_entrance_setback_m = 6.0 m @(357)[SSP](E)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(357)#(357)[SSP](E)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(357)#(357)[SSP](E)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(357)#(357)[SSP](E)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(357)#(357)[SSP](E)",
+      "value": {
+        "description": "Main wall portion with the entrance to a parking space set back 6.0 m from a lot line abutting a street.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.3.10(357)#(357)[SSP](E)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.3.10(357)#(357)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "archetype",
+      "id": "COR-900.5.10(331)#(331)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.5.10(331)#(331)[SSP](D)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "target",
+      "id": "COR-900.5.10(331)#(331)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.5.10(331)#(331)[SSP](D)",
+      "value": "garage_entrance_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "bound",
+      "id": "COR-900.5.10(331)#(331)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.5.10(331)#(331)[SSP](D)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(331)#(331)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.5.10(331)#(331)[SSP](D)",
+      "value": [
+        "garage_entrance_setback_m = 6.0 m @(331)[SSP](D)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(331)#(331)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.5.10(331)#(331)[SSP](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(331)#(331)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.5.10(331)#(331)[SSP](D)",
+      "value": {
+        "description": "Main wall portion with the entrance to a parking space set back 6.0 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-chat81",
+      "field": "disclosure",
+      "id": "COR-900.5.10(331)#(331)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-81.R11-1: wording licensed.",
+      "rule": "Operator CHAT-81.R11-1 (2026-10-23-batch-b): the wording is now a licence pattern (Spec 133 §m.132) and the unit takes the keyer-B LIMIT reading; Spec 133 §m.82 (M-75 correction form) replaces the held UNUSUAL fields",
+      "unit": "900.5.10(331)#(331)[SSP](D)",
+      "value": "none"
     }
   ]
 }

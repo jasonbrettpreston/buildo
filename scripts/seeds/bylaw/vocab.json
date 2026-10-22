@@ -161,7 +161,7 @@
     "dwelling_unit_width_m": { "unit": "m", "aspect": "envelope", "concept": "minimum width of a dwelling unit (e.g. a townhouse dwelling unit) (Spec 69 M-76 B8)", "patterns": ["width of a dwelling unit", "width of each dwelling unit"] },
     "front_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum front yard setback", "patterns": ["front yard setback", "front yard or", "from a front lot line", "for a front lot line", "setback from the front line", "setback from the front lot line", "front lot line that abuts a street", "from a front line"], "reference_patterns": ["required minimum building setbacks for the zone"] },
     "rear_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum rear yard setback", "patterns": ["rear yard setback", "or rear yard", "from a rear lot line"], "reference_patterns": ["required minimum building setbacks for the zone"] },
-    "side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum side yard setback (a side lot line not abutting a street)", "patterns": ["side yard setback", "from each side lot line", "from a side lot line", "from the side lot line"], "reference_patterns": ["required minimum building setbacks for the zone"] },
+    "side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum side yard setback (a side lot line not abutting a street)", "patterns": ["side yard setback", "from each side lot line", "from a side lot line", "from the side lot line", "minimum side yard is"], "reference_patterns": ["required minimum building setbacks for the zone"] },
     "deep_side_setback_m": {
       "unit": "m",
       "aspect": "envelope",
@@ -173,7 +173,7 @@
       "unit": "m",
       "aspect": "envelope",
       "concept": "minimum setback from a side lot line abutting a street (flankage)",
-      "patterns": ["side yard abutting a street", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line", "lot that flanks on a street", "if the lot line abuts a street"]
+      "patterns": ["side yard abutting a street", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line", "lot that flanks on a street", "if the lot line abuts a street", "side lot line abuts the street", "side yard setback for a lot that abuts a street"]
     },
     "street_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from any lot line abutting a street", "patterns": ["lot line abutting a street", "lot line that abuts a street"] },
     "lane_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from a lot line abutting a lane", "patterns": ["abutting a lane", "abuts a lane", "abutting a street or lane"] },
@@ -190,7 +190,7 @@
       "concept": "minimum separation distance between buildings (or main walls) on the same lot",
       "patterns": ["separation distance", "from the residential building", "separation", "closer to a residential building", "from the main wall of the residential building"]
     },
-    "encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a building element may encroach into a required setback, for a clause that names no element (Spec 69a M-243: an element's own target otherwise; bound declared, amends M-106)", "patterns": ["may encroach", "permitted to project"] },
+    "encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance a building element may encroach into a required setback, for a clause that names no element (Spec 69a M-243: an element's own target otherwise; bound declared, amends M-106)", "patterns": ["may encroach", "permitted to project", "may project"] },
     "encroachment_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance an encroaching element must keep from a lot line, for a clause that names no element (Spec 69a M-243; bound declared, amends M-106)", "patterns": ["no closer than", "from the lot line", "no closer to a lot line than", "no closer to a side lot line than", "no closer to the side lot line than"] },
     "eaves_encroachment_m": { "unit": "m", "aspect": "envelope", "bound": "max", "concept": "maximum distance the eaves of a roof may encroach into a required setback or separation distance (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["the eaves of a roof"] },
     "eaves_clearance_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "minimum distance the eaves of a roof must keep from a lot line while it encroaches (Spec 69a M-243, D-3, operator approved 2026-10-20: one target pair per projecting element, amends M-106)", "patterns": ["if they are no closer to a lot line than", "if the eaves are no closer to a lot line than"] },
@@ -237,7 +237,7 @@
       "unit": "m",
       "aspect": "parking_access",
       "concept": "minimum setback of a vehicle entrance to a garage from a street or lane lot line",
-      "patterns": ["vehicle entrance", "entrance to a private garage"]
+      "patterns": ["vehicle entrance", "entrance to a private garage", "entrance to a parking space"]
     },
     "parking_spaces": {
       "unit": "units",
