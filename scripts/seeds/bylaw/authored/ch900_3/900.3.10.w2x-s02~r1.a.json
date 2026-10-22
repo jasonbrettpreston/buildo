@@ -1,0 +1,103 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2x-s02~r1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": ["RD"], "building_types": ["detached_house"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"RD": "Exception RD 1434", "detached_house": "lawfully existing detached house", "lawfully_existing": "a lawfully existing detached house"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status", "building_type"], "description": "Applies only to an addition or extension above the first storey of a lawfully existing detached house; such an addition must meet the minimum building setbacks this By-law requires. A new build is answered as if this clause does not apply.", "gaps": "Whether the detached house is lawfully existing is a building-history fact we do not hold; the setbacks themselves come from the zone regulations."},
+      "disclosure": "If your detached house is lawfully existing, you may add or extend above its first storey, provided the addition or extension complies with the minimum building setbacks required by Zoning By-law 569-2013 (enacted 2013-05-09).",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.69 ratio @(1434)[SSP](B)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "0.6", "clause": "(1434)[SSP](B)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": ["RD"], "building_types": ["detached_house"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"RD": "Exception RD 1434", "detached_house": "has a detached house", "lawfully_existing": "detached house erected before October 15, 1953"}},
+      "calculation_handling": {"status": "partially_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status", "building_type"], "description": "On a lot with a permitted maximum floor space index of 0.6 and a detached house erected before October 15, 1953, a rear addition may bring the lot's overall floor space index, including the addition, up to 0.69. Not applied by default: a new build is answered as if the condition does not apply.", "gaps": "Whether the house was erected before 1953-10-15 is a building-history fact we do not hold; the lot's permitted FSI of 0.6 is a precondition with no condition token."},
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge the house by a rear addition, provided the overall floor space index for the lot, including the addition, does not exceed 0.69.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "0.6", "clause": "(1434)[SSP](B)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": ["RD"], "building_types": ["detached_house"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"RD": "Exception RD 1434", "detached_house": "has a detached house", "lawfully_existing": "detached house erected before October 15, 1953"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status", "building_type"], "description": "A condition of the pre-1953 rear-addition permission: every finished floor level in the addition must be no higher than the uppermost floor level in the existing building. A new build is answered as if the condition does not apply.", "gaps": "Floor levels of the existing building and of the addition are building facts we do not hold; the erection date (before 1953-10-15) is a building-history fact."},
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge the house by a rear addition, provided all finished floor levels within the addition are no higher than the uppermost floor level in the existing building.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "0.6", "clause": "(1434)[SSP](B)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": ["RD"], "building_types": ["detached_house"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"RD": "Exception RD 1434", "detached_house": "has a detached house", "lawfully_existing": "detached house erected before October 15, 1953"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status", "building_type"], "description": "A condition of the pre-1953 rear-addition permission: no part of the addition may be closer to the nearest side lot line than the existing side main wall of the building is. A new build is answered as if the condition does not apply.", "gaps": "The existing side main wall's distance to the side lot line is an as-built fact we do not hold; the erection date (before 1953-10-15) is a building-history fact."},
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge the house by a rear addition, provided no part of the addition is closer to the nearest side lot line than the existing side main wall of the building.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1434)#(1434)[SSP](B)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "0.6", "clause": "(1434)[SSP](B)", "reason": "threshold_used_in_application"}, {"literal": "5", "clause": "(1434)[SSP](B)(iv)", "reason": "limit_not_modelled"}],
+      "application": {"zones": ["RD"], "building_types": ["detached_house"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"RD": "Exception RD 1434", "detached_house": "has a detached house", "lawfully_existing": "detached house erected before October 15, 1953"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status", "building_type"], "description": "A condition of the pre-1953 rear-addition permission: any prior addition to the house must be at least 5 years old. A new build is answered as if the condition does not apply.", "gaps": "The age of any prior addition and the erection date (before 1953-10-15) are building-history facts we do not hold."},
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge the house by a rear addition, provided any prior addition is at least 5 years old.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.3.10(1434)": {
+      "explanation": "Exception RD 1434 adds site-specific rules for some detached-zone lots. Any addition above the first storey of a lawfully existing detached house must meet the normal minimum setbacks. On a lot with a permitted floor space index of 0.6, a detached house built before October 15, 1953 may get a rear addition that raises the lot's floor space index to as much as 0.69, provided the addition's floors are no higher than the existing top floor, it is no closer to the side lot line than the existing side wall, and any earlier addition is at least 5 years old. These depend on facts about the existing house that we cannot check, so a new build is assessed under the standard rules.",
+      "code_refs": "none"
+    }
+  }
+}

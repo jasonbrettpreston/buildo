@@ -1,0 +1,40 @@
+
+ FAIL  src/tests/bylaw-exc-w2-apply.logic.test.ts > CHAT-61 five numeric adjudications > the assembled units carry the adjudicated values; 291 (G) keeps keyer A named_addresses scope
+AssertionError: expected undefined to match object { archetype: 'LIMIT', …(2) }
+
+- Expected: 
+Object {
+  "archetype": "LIMIT",
+  "bound": "min",
+  "target": "front_setback_m",
+}
+
++ Received: 
+undefined
+
+ ❯ src/tests/bylaw-exc-w2-apply.logic.test.ts:63:46
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  src/tests/bylaw-exc-w2-apply.logic.test.ts > exception 528 (M-315): the assembled units carry no lawfully_existing token > (A) and (B) have condition none and no lawfully_existing lot condition after the CHAT-50 corrections
+AssertionError: expected '{"unit_id":"900.3.10(528)#(528)[SSP](…' not to contain 'lawfully_existing'
+
+Expected: "lawfully_existing"
+Received: "{"unit_id":"900.3.10(528)#(528)[SSP](A)","archetype":"LIMIT","target":"required_lot_frontage_m","bound":"min","numeric_expression":["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(528)[SSP](A)"],"requirement":"none","instrument":"none","evaluated_by_us":"none","ranks_layers":"none","condition":"none","applies_to":{"part":"whole","refs":[]},"literals_not_expressed":[],"application":{"zones":["RD"],"building_types":["any"],"lot_conditions":[],"uses":[],"evidence":{"RD":"Exception RD 528"}},"calculation_handling":{"status":"not_modelled","description":"Minimum lot frontage is the frontage that existed on the day of enactment.","gaps":"Needs the as-built lot frontage on the day of enactment.","not_modelled_reason":"existing_building_facts","user_inputs":["lawfully_existing_status"]},"disclosure":"none","not_an_override":[]}"
+
+ ❯ src/tests/bylaw-exc-w2-apply.logic.test.ts:91:37
+     89|       expect(x.condition).toBe('none');
+     90|       expect(x.application.lot_conditions ?? []).not.toContain('lawful…
+     91|       expect(JSON.stringify(x)).not.toContain('lawfully_existing');
+       |                                     ^
+     92|     }
+     93|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 1 passed (10)
+   Start at  09:15:54
+   Duration  3.00s (transform 99ms, setup 7ms, collect 11ms, tests 2.84s, environment 0ms, prepare 23ms)
+

@@ -819,7 +819,7 @@ Rules 22–26: W1 round-3 rulings (operator 2026-10-14; the Spec 69a rows are be
    calculation_handling.gaps. Never a combined target, never one statement per arm.
 26. A condition on a fact of the building (the number of storeys, a platform's height) uses the lot_condition tokens
    storey_count_band / platform_height_band with a numeric "if" (rule 6); never a zone or building-type token.
-Rules 27–30: W1 round-4 operator precedents (operator 2026-10-15; Spec 69a M-105 dated note).
+Rules 27–31: W1 round-4 and CHAT-60 operator precedents (operator 2026-10-15; Spec 69a M-105 dated note).
 27. The conditions of "may be enlarged by an addition … if:" (relative to the existing building) are UNUSUAL, never
    REQUIRE. "(None Apply)" is PROCEDURAL.
 28. "may not encroach" / "Nothing may encroach" is PROHIBIT, never encroachment_m = 0 m.
@@ -827,7 +827,18 @@ Rules 27–30: W1 round-4 operator precedents (operator 2026-10-15; Spec 69a M-1
    deeper leaf.
 30. Rule 17 again: "X on one side and Y on the other side" keeps the LIMIT on the smaller per-side bound and lists the
    larger as limit_arm_not_modelled; "X for a semi-detached house and Y for each dwelling unit" is per-subject arms.
-   Never max(…) of the two and never an "aggregate" sum.`;
+   Never max(…) of the two and never an "aggregate" sum.
+31. Building-history conditions (operator CHAT-60, 2026-10-22; Spec 69a M-172 site facts, M-316, CHAT-50). A clause whose
+   permission or condition depends on a building's history or on a date it existed ("existed on <date>", "erected before
+   <date>", "at least N years old", "lawfully existing", "the same lot that existed on <date>"), and every leaf of such a
+   clause, is keyed on the existing-building route, never as a bare UNUSUAL with a generic "not evaluated" disclosure and
+   never as a target-less REQUIRE, PERMIT or PROHIBIT: relevance existing_building (the generated row field of Spec 68 §6,
+   never written on a unit); calculation_handling.not_modelled_reason
+   existing_building_facts (status not_modelled; partially_modelled on a LIMIT arm); user_inputs lawfully_existing_status
+   (not building_type alone); disclosure a dated sentence "If <the condition, with its date>, you may <the permission>,
+   provided <the leaf>." A new build is answered as if the condition does not apply. Where rule 27 leaves UNUSUAL as the
+   only archetype that fits, the route fields above carry the meaning. A numeric limit with a licensed target inside such
+   a clause (the pre-1953 FSI 0.69) stays LIMIT on that target, as 1397 (A)(i), and is not applied by default.`;
 
 function fieldLines(fields) {
   const lines = [];

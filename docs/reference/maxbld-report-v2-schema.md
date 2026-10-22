@@ -398,6 +398,7 @@ Every field has exactly one source: `lineage:` (docs/reference/maxbld-field-line
 | `basement_unit_grade` | normal |  |  | A basement unit may not be entirely below the ground level the City measures from (established grade). |
 | `bedroom_cap` | normal |  | {n} {u} | Bedrooms are capped at {n} for {u} units. |
 | `blank_side_wall` | normal |  | {X} | Side walls are taken without windows or doors (0.45 m side yard); with them the side yard is {X} m. |
+| `building_history_permission` | normal |  | {date} {permission} | If your house existed before {date}, you may also {permission}. |
 | `buildings_on_same_lot` | normal |  |  | Rules for two or more residential buildings on one lot do not apply to the house and its suite. |
 | `coa_calibrated_not_law` | normal |  |  | The Committee of Adjustment (CoA) figure is estimated from past approved builds of this form; it is not a by-law limit. The rear suite's CoA figure is shown separately once its builds are calibrated. |
 | `conversion_within_building` | normal |  |  | Added units must fit inside the building as it lawfully existed. |

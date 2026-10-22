@@ -462,7 +462,8 @@ async function main() {
     for (const f of [pp.a, pp.b, pp.prov]) if (!fs.existsSync(path.join(root, f))) throw new KeyingError('rekey_predecessor_incomplete', `${pred}: ${f} is missing (only a fully keyed shard is re-keyed)`);
     const supersedes = { a_sha: draftSha(fs.readFileSync(path.join(root, pp.a))), b_sha: draftSha(fs.readFileSync(path.join(root, pp.b))), prov_sha: draftSha(fs.readFileSync(path.join(root, pp.prov))) };
     const ctx = context(root);
-    const fresh = planBatch({ slice: ctx.slice, inScopeIds: ctx.inScope, batch, maxUnits: plan.max_units }).shards.find((s) => s.key === base);
+    // a wave batch (W1/W2/W2X) is planned by planWave from the census, not planBatch: its generation-0 shard is the plan's own (EXC-W2 2026-10-22)
+    const fresh = WAVES[batch] ? plan.shards.find((s) => s.key === base) : planBatch({ slice: ctx.slice, inScopeIds: ctx.inScope, batch, maxUnits: plan.max_units }).shards.find((s) => s.key === base);
     if (!fresh) throw new KeyingError('rekey_unplanned', `${base} does not re-plan from the current slice`);
     const unitIds = typeof args.units === 'string' ? args.units.split(',').map((x) => x.trim()).filter(Boolean) : null;
     const nu = rekeyShard({ shard: fresh, existingKeys: plan.shards.map((s) => s.key), unitIds, supersedes });

@@ -86205,6 +86205,472 @@
       "value": {
         "RD": "Exception RD 528"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(287)#(287)[SSP](E)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e8ea0ae4: answer B — Operator CHAT-61.W2-287-E (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator accepted the recommendation: Keyer B LIMIT side_setback_m min 0.3 m with condition ancillary_contains_parking_space",
+      "unit": "900.3.10(287)#(287)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(287)#(287)[SSP](E)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8c6d18f4: answer B — Operator CHAT-61.W2-287-E (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator accepted the recommendation: Keyer B LIMIT side_setback_m min 0.3 m with condition ancillary_contains_parking_space",
+      "unit": "900.3.10(287)#(287)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(287)#(287)[SSP](E)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-471dcaa8: answer B — Operator CHAT-61.W2-287-E (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator accepted the recommendation: Keyer B LIMIT side_setback_m min 0.3 m with condition ancillary_contains_parking_space",
+      "unit": "900.3.10(287)#(287)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(287)#(287)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ff124823: answer B — Operator CHAT-61.W2-287-E (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator accepted the recommendation: Keyer B LIMIT side_setback_m min 0.3 m with condition ancillary_contains_parking_space",
+      "unit": "900.3.10(287)#(287)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(199)#(199)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b0c70a46: answer B — Operator CHAT-61.W2-199-A (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer B: LIMIT front_setback_m min 9.0 m",
+      "unit": "900.3.10(199)#(199)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(199)#(199)[SSP](A)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-bbcb1590: answer B — Operator CHAT-61.W2-199-A (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer B: LIMIT front_setback_m min 9.0 m",
+      "unit": "900.3.10(199)#(199)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(199)#(199)[SSP](A)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1a4184f7: answer B — Operator CHAT-61.W2-199-A (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer B: LIMIT front_setback_m min 9.0 m",
+      "unit": "900.3.10(199)#(199)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(199)#(199)[SSP](A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-35689df4: answer B — Operator CHAT-61.W2-199-A (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer B: LIMIT front_setback_m min 9.0 m",
+      "unit": "900.3.10(199)#(199)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(291)#(291)[SSP](G)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-64936971: answer B — Operator CHAT-61.W2-291-G (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator: take Keyer B target/bound/value (LIMIT front_setback_m min 5.4 m) and Keyer A applies_to part named_addresses ref \"1160 and 1162 Pharmacy Ave.\" (named_lots_only elsewhere)",
+      "unit": "900.3.10(291)#(291)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(291)#(291)[SSP](G)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-9c945de9: answer B — Operator CHAT-61.W2-291-G (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator: take Keyer B target/bound/value (LIMIT front_setback_m min 5.4 m) and Keyer A applies_to part named_addresses ref \"1160 and 1162 Pharmacy Ave.\" (named_lots_only elsewhere)",
+      "unit": "900.3.10(291)#(291)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(291)#(291)[SSP](G)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-340900a5: answer B — Operator CHAT-61.W2-291-G (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator: take Keyer B target/bound/value (LIMIT front_setback_m min 5.4 m) and Keyer A applies_to part named_addresses ref \"1160 and 1162 Pharmacy Ave.\" (named_lots_only elsewhere)",
+      "unit": "900.3.10(291)#(291)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(291)#(291)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f15e8636: answer B — Operator CHAT-61.W2-291-G (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator: take Keyer B target/bound/value (LIMIT front_setback_m min 5.4 m) and Keyer A applies_to part named_addresses ref \"1160 and 1162 Pharmacy Ave.\" (named_lots_only elsewhere)",
+      "unit": "900.3.10(291)#(291)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(117)#(117)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2X queue Q-W2X-6a6ad4f1: answer A — Operator CHAT-61.W2-117-D (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer A: LIMIT side_setback_m min 0.3 m for the garage",
+      "unit": "900.3.10(117)#(117)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(117)#(117)[SSP](D)-target",
+      "kind": "disagreement",
+      "reason": "W2X queue Q-W2X-4539474f: answer A — Operator CHAT-61.W2-117-D (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer A: LIMIT side_setback_m min 0.3 m for the garage",
+      "unit": "900.3.10(117)#(117)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.3.10(117)#(117)[SSP](D)-bound",
+      "kind": "disagreement",
+      "reason": "W2X queue Q-W2X-9b496d71: answer A — Operator CHAT-61.W2-117-D (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer A: LIMIT side_setback_m min 0.3 m for the garage",
+      "unit": "900.3.10(117)#(117)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(117)#(117)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2X queue Q-W2X-b1ace163: answer A — Operator CHAT-61.W2-117-D (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator chose Keyer A: LIMIT side_setback_m min 0.3 m for the garage",
+      "unit": "900.3.10(117)#(117)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(258)#(258)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2X queue Q-W2X-74a612b0: answer A — Operator CHAT-61.W2-258-D (2026-10-22 adjudication page W2, decision log 2026-10-22-page-w2): operator accepted the recommendation: LIMIT required_lot_area_m2 min with Keyer A expression existing(lot_area_m2; enacted(569-2013))",
+      "unit": "900.3.10(258)#(258)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(199)#(199)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Keyer A drafted an UNUSUAL unit whose literal 9.0 metres was listed limit_not_modelled; the operator chose Keyer B (LIMIT front_setback_m min 9.0 m) after the vocab addition \"the front line\", so the literal is expressed.",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-199-A); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(199)#(199)[SSP](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(199)#(199)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "The LIMIT is licensed by the added pattern \"the front line\", so the unit is modelled (Keyer A drafted not_modelled / needs_data_we_lack because the pattern was absent).",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-199-A); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(199)#(199)[SSP](A)",
+      "value": {
+        "description": "A 9.0 metre minimum building setback from the front line.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(199)#(199)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "A modelled LIMIT carries no authored disclosure (Keyer A wrote the UNUSUAL buyer text).",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-199-A); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(199)#(199)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(291)#(291)[SSP](G)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The street numbers of the two named addresses are not rule values (precedent 900.2.10(736)#(736)[SSP](A)(i), literal 160, cross_reference_value); the 5.4 m literal is expressed by the adopted LIMIT.",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-291-G); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(291)#(291)[SSP](G)",
+      "value": [
+        {
+          "clause": "(291)[SSP](G)",
+          "literal": "1160",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(291)[SSP](G)",
+          "literal": "1162",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(291)#(291)[SSP](G)/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator note: the unit carries applies_to named_addresses (Keyer A) and answers named_lots_only for every other lot; the licence gap Keyer A recorded is closed by the added pattern \"the front lot line\".",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-291-G); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(291)#(291)[SSP](G)",
+      "value": {
+        "description": "Minimum front yard setback of 5.4 m on the two named addresses 1160 and 1162 Pharmacy Ave. only.",
+        "gaps": "Applies only to named addresses; no lot list is held to match them.",
+        "not_modelled_reason": "named_lots_only",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(291)#(291)[SSP](G)/disclosure",
+      "kind": "correction",
+      "reason": "A LIMIT on named addresses carries no authored disclosure (precedent 900.2.10(736)#(736)[SSP](A)(i)); the named_lots_only handling carries the meaning.",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-291-G); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(291)#(291)[SSP](G)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The 0.3 metres literal is expressed by the adopted LIMIT.",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-287-E); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/condition",
+      "kind": "correction",
+      "reason": "Operator accepted the recommendation: the 0.3 m side clearance applies to \"the portion of a building with a parking space\", keyed as the lot condition ancillary_contains_parking_space (pattern \"with a parking space\" added to the token).",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-287-E); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "tokens": [
+          "ancillary_contains_parking_space"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "The condition token is listed in application.lot_conditions (G-SHAPE application/condition agreement).",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-287-E); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": [
+        "ancillary_contains_parking_space"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/calculation_handling",
+      "kind": "correction",
+      "reason": "The LIMIT is licensed by the added pattern \"from the side lot line\"; the condition is a site fact the buyer enters (ancillary_contains_parking_space), set aside by the M-169 \"If … \" disclosure on a new principal building.",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-287-E); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "description": "A portion of a building with a parking space may be in a side yard if at least 0.3 metres from the side lot line.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "ancillary_contains_parking_space"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/disclosure",
+      "kind": "correction",
+      "reason": "A modelled LIMIT carries no authored disclosure; the M-169 undetermined-condition sentence is generated.",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-287-E); M-75 correction of a non-⧉ field so the adjudicated value assembles consistently",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/application.evidence",
+      "kind": "correction",
+      "reason": "The lot condition ancillary_contains_parking_space needs its evidence phrase from the clause text (\"with a parking space\").",
+      "rule": "Spec 69a M-317 (operator CHAT-61, 2026-10-22-page-w2#CHAT-61.W2-287-E); M-75 correction: G-CLAUSE evidence_short for the added lot condition",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "RD": "Exception RD 287",
+        "ancillary_contains_parking_space": "with a parking space",
+        "any": "portion of a building",
+        "parking_space": "a parking space"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(iii)/condition",
+      "kind": "correction",
+      "reason": "G-CLAUSE evidence_not_in_clause: the October 15, 1960 history sits in sibling leaf (B)(i), not in this leaf's own clause text, so the lawfully_existing lot-condition token cannot be evidenced here; the history rides in the dated \"If …\" disclosure and the existing_building_facts route (as 1437 (B)).",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(iii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(iii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "G-CLAUSE evidence_not_in_clause: the October 15, 1960 history sits in sibling leaf (B)(i), not in this leaf's own clause text, so the lawfully_existing lot-condition token cannot be evidenced here; the history rides in the dated \"If …\" disclosure and the existing_building_facts route (as 1437 (B)).",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(iii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(iv)/condition",
+      "kind": "correction",
+      "reason": "G-CLAUSE evidence_not_in_clause: the October 15, 1960 history sits in sibling leaf (B)(i), not in this leaf's own clause text, so the lawfully_existing lot-condition token cannot be evidenced here; the history rides in the dated \"If …\" disclosure and the existing_building_facts route (as 1437 (B)).",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(iv)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(iv)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "G-CLAUSE evidence_not_in_clause: the October 15, 1960 history sits in sibling leaf (B)(i), not in this leaf's own clause text, so the lawfully_existing lot-condition token cannot be evidenced here; the history rides in the dated \"If …\" disclosure and the existing_building_facts route (as 1437 (B)).",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(iv)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(iii)/application.evidence",
+      "kind": "correction",
+      "reason": "G-CLAUSE evidence_not_in_clause: the October 15, 1960 history sits in sibling leaf (B)(i), not in this leaf's own clause text, so the lawfully_existing lot-condition token cannot be evidenced here; the history rides in the dated \"If …\" disclosure and the existing_building_facts route (as 1437 (B)).",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(iii)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "A detached house",
+        "dwelling_unit": "each individual dwelling unit",
+        "secondary_suite": "each individual dwelling unit and secondary suite",
+        "secondary_suite_use": "contain more than one secondary suite",
+        "semi_detached_house": "a semi-detached house permitted"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1436)#(1436)[SSP](B)(iv)/application.evidence",
+      "kind": "correction",
+      "reason": "G-CLAUSE evidence_not_in_clause: the October 15, 1960 history sits in sibling leaf (B)(i), not in this leaf's own clause text, so the lawfully_existing lot-condition token cannot be evidenced here; the history rides in the dated \"If …\" disclosure and the existing_building_facts route (as 1437 (B)).",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1436)#(1436)[SSP](B)(iv)",
+      "value": {
+        "RD": "Exception RD 1436",
+        "detached_house": "the original detached house",
+        "secondary_suite": "more than one secondary suite",
+        "secondary_suite_use": "contain more than one secondary suite",
+        "semi_detached_house": "or semi-detached house"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "condition",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](E)(i)/condition",
+      "kind": "correction",
+      "reason": "Same clause as 1434 (B)(i) and 1436 (E)(i) and the 1397 precedent: the pre-1953 0.69 FSI LIMIT carries the lawfully_existing lot condition so it is not applied by default (a new build keeps the zone FSI); the 1437 draft omitted the token, which would have applied 0.69 to every lot.",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1437)#(1437)[SSP](E)(i)",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](E)(i)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Same clause as 1434 (B)(i) and 1436 (E)(i) and the 1397 precedent: the pre-1953 0.69 FSI LIMIT carries the lawfully_existing lot condition so it is not applied by default (a new build keeps the zone FSI); the 1437 draft omitted the token, which would have applied 0.69 to every lot.",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1437)#(1437)[SSP](E)(i)",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-w2-apply",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1437)#(1437)[SSP](E)(i)/application.evidence",
+      "kind": "correction",
+      "reason": "Same clause as 1434 (B)(i) and 1436 (E)(i) and the 1397 precedent: the pre-1953 0.69 FSI LIMIT carries the lawfully_existing lot condition so it is not applied by default (a new build keeps the zone FSI); the 1437 draft omitted the token, which would have applied 0.69 to every lot.",
+      "rule": "Spec 69a M-317 (operator CHAT-61.W2-FAMILY, 2026-10-22-page-w2; keying rule 31); M-75 correction of a non-⧉ field so the gates decide",
+      "unit": "900.3.10(1437)#(1437)[SSP](E)(i)",
+      "value": {
+        "RD": "Exception RD",
+        "detached_house": "a detached house",
+        "lawfully_existing": "erected before October 15, 1953"
+      }
     }
   ]
 }

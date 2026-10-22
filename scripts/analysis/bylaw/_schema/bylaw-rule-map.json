@@ -1296,6 +1296,10 @@
       "section": "fam-900"
     },
     {
+      "id": "m.317",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -4590,6 +4594,17 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-316**"
+      }
+    },
+    {
+      "id": "M-317",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.317",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-317**"
       }
     },
     {

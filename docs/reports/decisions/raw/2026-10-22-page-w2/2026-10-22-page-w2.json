@@ -1,0 +1,56 @@
+{
+  "source": "2026-10-22 operator adjudication page W2 v4 https://claude.ai/artifact/AqoAb4RnHDqKGgGJKD9Mqi (db collection decisions, R2_* docs)",
+  "operator_quote": "adjudication finished. push complete.",
+  "context": "Answers on the rebuilt W2 page (CHAT-60). page_choice is the operator click; operator_note is verbatim. 291 (G) was clicked Discuss but the operator note states acceptance of the recommendation (Keyer B value + Keyer A named-address scope), so it is recorded as approve with the note. Old U_* answers are context only, superseded by the family ruling.",
+  "decisions": [
+    {
+      "id": "CHAT-61.W2-FAMILY",
+      "subject": "Building-history conditions (1436, 1437, 1434 (B)(i); 21 clauses) keyed via the existing-building route with dated If… disclosures; new builds answered as if the condition does not apply",
+      "decision": "approve",
+      "page_choice": "approve",
+      "recommendation": "Building-history conditions (1436, 1437, 1434 (B)(i); 21 clauses) keyed via the existing-building route with dated If… disclosures; new builds answered as if the condition does not apply",
+      "decided_at": "2026-10-22T13:04:00.284Z"
+    },
+    {
+      "id": "CHAT-61.W2-199-A",
+      "subject": "199 (A)",
+      "decision": "approve",
+      "page_choice": "B",
+      "recommendation": "199 (A): Keyer B — LIMIT front_setback_m min 9.0",
+      "decided_at": "2026-10-22T13:04:46.896Z"
+    },
+    {
+      "id": "CHAT-61.W2-291-G",
+      "subject": "291 (G)",
+      "decision": "approve",
+      "page_choice": "discuss",
+      "recommendation": "291 (G): Keyer B LIMIT front_setback_m min 5.4 with Keyer A scope applies_to named_addresses 1160 and 1162 Pharmacy Ave. (named_lots_only elsewhere)",
+      "operator_note": "I accept this. Recommendation: Keyer B. Keyer B's LIMIT front_setback_m min 5.4 is right. Keyer A's scope is also right: the clause names two addresses, so the unit must carry applies_to named_addresses (1160 and 1162 Pharmacy Ave.) and answer named_lots_only for every other lot.\nFollow-up. Take B's target/bound/value and A's applies_to part named_addresses with ref \"1160 and 1162 Pharmacy Ave.\". The wording \"the front lot line\" needs the same pattern addition as 199.",
+      "decided_at": "2026-10-22T13:06:21.022Z"
+    },
+    {
+      "id": "CHAT-61.W2-117-D",
+      "subject": "117 (D)",
+      "decision": "approve",
+      "page_choice": "A",
+      "recommendation": "117 (D): Keyer A — LIMIT side_setback_m min 0.3 for private_garage",
+      "decided_at": "2026-10-22T13:07:06.734Z"
+    },
+    {
+      "id": "CHAT-61.W2-287-E",
+      "subject": "287 (E)",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "287 (E): recommendation — Keyer B LIMIT side_setback_m min 0.3 with condition ancillary_contains_parking_space",
+      "decided_at": "2026-10-22T13:07:36.574Z"
+    },
+    {
+      "id": "CHAT-61.W2-258-D",
+      "subject": "258 (D)",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "258 (D): recommendation — LIMIT required_lot_area_m2 min with Keyer A expression existing(lot_area_m2; enacted(569-2013))",
+      "decided_at": "2026-10-22T13:08:12.369Z"
+    }
+  ]
+}

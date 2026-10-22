@@ -1,0 +1,808 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s04~r1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](A)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "semi_detached_house",
+          "duplex"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "semi_detached_house": "a semi-detached house",
+          "duplex": "or a duplex",
+          "lawfully_existing": "existed on a lot on October 15, 1980"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route: a semi-detached house or duplex that existed on the lot on October 15, 1980 may be added to, enlarged, altered or replaced with the same building type if the building complies with the RD regulations for a detached house. Not applied to a new build.",
+        "gaps": "Whether the building existed on October 15, 1980 is not in the lot data."
+      },
+      "disclosure": "If a semi-detached house or a duplex existed on your lot on October 15, 1980, you may add to, enlarge, alter or replace it with the same building type, provided the building complies with the regulations for a detached house in the RD zone.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](A)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "semi_detached_house",
+          "duplex"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "semi_detached_house": "a semi-detached house",
+          "duplex": "or a duplex",
+          "lawfully_existing": "existed on a lot on October 15, 1980"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route: the semi-detached house or duplex permission of (A) holds only if the building is on the same lot that existed on October 15, 1980. Not applied to a new build.",
+        "gaps": "Whether the lot is unchanged since October 15, 1980 is not in the lot data."
+      },
+      "disclosure": "If a semi-detached house or a duplex existed on your lot on October 15, 1980, you may add to, enlarge, alter or replace it with the same building type, provided the building is on the same lot that existed on October 15, 1980.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](B)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "secondary_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "A detached house",
+          "semi_detached_house": "a semi-detached house permitted",
+          "secondary_suite": "more than one secondary suite",
+          "secondary_suite_use": "contain more than one secondary suite",
+          "lawfully_existing": "had existed on the lot on October 15, 1960"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route: a detached house, or a dwelling unit in a semi-detached house permitted under (A), may contain more than one secondary suite only if the original building existed on the lot on October 15, 1960. Not applied to a new build.",
+        "gaps": "Whether the original building existed on October 15, 1960 is not in the lot data."
+      },
+      "disclosure": "If the original building existed on your lot on October 15, 1960, you may have more than one secondary suite in a detached house (or in a dwelling unit of a semi-detached house permitted under (A)), provided the other conditions of (B) are also met.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](B)(ii)",
+      "archetype": "LIMIT",
+      "target": "interior_floor_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "interior_floor_area_m2 = 110 m2 × dwelling_units @(1436)[SSP](B)(ii)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "secondary_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "dwelling_unit",
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "A detached house",
+          "semi_detached_house": "a semi-detached house permitted",
+          "secondary_suite": "the secondary suites combined",
+          "dwelling_unit": "the dwelling unit and the secondary suites",
+          "secondary_suite_use": "contain more than one secondary suite",
+          "lawfully_existing": "had existed on the lot on October 15, 1960"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type",
+          "unit_count"
+        ],
+        "description": "An average interior floor area of at least 110 square metres across the dwelling unit and its secondary suites, written as a combined minimum of 110 m2 for each unit counted. Applies only on the existing-building route of (B) (original building existed on October 15, 1960); not applied to a new build by default.",
+        "gaps": "The October 15, 1960 existence condition is not in the lot data; dwelling_units must count the dwelling unit and every secondary suite."
+      },
+      "disclosure": "If the original building existed on your lot on October 15, 1960, you may have more than one secondary suite, provided the average interior floor area of the dwelling unit and the secondary suites combined is at least 110 square metres.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](B)(iii)",
+      "archetype": "LIMIT",
+      "target": "interior_floor_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "interior_floor_area_m2 = 55 m2 @(1436)[SSP](B)(iii)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "secondary_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "dwelling_unit",
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "A detached house",
+          "semi_detached_house": "a semi-detached house permitted",
+          "secondary_suite": "each individual dwelling unit and secondary suite",
+          "dwelling_unit": "each individual dwelling unit",
+          "secondary_suite_use": "contain more than one secondary suite",
+          "lawfully_existing": "had existed on the lot on October 15, 1960"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Each dwelling unit and each secondary suite must have an interior floor area of at least 55 square metres. Applies only on the existing-building route of (B) (original building existed on October 15, 1960); not applied to a new build by default.",
+        "gaps": "The October 15, 1960 existence condition is not in the lot data."
+      },
+      "disclosure": "If the original building existed on your lot on October 15, 1960, you may have more than one secondary suite, provided each dwelling unit and each secondary suite has an interior floor area of at least 55 square metres.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](B)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "secondary_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "the original detached house",
+          "semi_detached_house": "or semi-detached house",
+          "secondary_suite": "more than one secondary suite",
+          "secondary_suite_use": "contain more than one secondary suite",
+          "lawfully_existing": "had existed on the lot on October 15, 1960"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route of (B): no exterior addition or major exterior alteration may be made, and the building must keep its external appearance as the original detached or semi-detached house. Not applied to a new build.",
+        "gaps": "The October 15, 1960 existence condition and the building's original appearance are not in the lot data."
+      },
+      "disclosure": "If the original building existed on your lot on October 15, 1960, you may have more than one secondary suite, provided no exterior addition or major exterior alteration is made and the building's external appearance as the original detached or semi-detached house is not materially altered.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](C)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "20",
+          "clause": "(1436)[SSP](C)(i)",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "literal": "five",
+          "clause": "(1436)[SSP](C)(i)",
+          "reason": "limit_not_modelled"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "A detached house",
+          "semi_detached_house": "become a semi-detached house",
+          "lawfully_existing": "at least 20 years old"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route: a detached house may be vertically divided into a semi-detached house only if the original building is at least 20 years old and any prior addition is at least five years old. Not applied to a new build.",
+        "gaps": "Building and addition ages are not in the lot data."
+      },
+      "disclosure": "If your detached house is at least 20 years old, you may vertically divide it to become a semi-detached house, provided any addition made to it before the division is at least five years old.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](C)(ii)(a)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "A detached house",
+          "semi_detached_house": "creating a semi-detached house",
+          "lawfully_existing": "vertically divided to become"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route of (C): an addition for the vertical division may not be located at the front or sides of the building. Not applied to a new build.",
+        "gaps": "The age conditions of (C)(i) and the addition's location relative to the existing building are not in the lot data."
+      },
+      "disclosure": "If your detached house is at least 20 years old (and any prior addition at least five years old), you may vertically divide it to become a semi-detached house, provided any addition for this alteration is not located at the front or sides of the building.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](C)(ii)(b)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "in the RD zone",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "creating a semi-detached house",
+          "lawfully_existing": "vertically divided to become"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route of (C): an addition for the vertical division must comply with the RD building requirements for a detached house. Not applied to a new build.",
+        "gaps": "The age conditions of (C)(i) are not in the lot data."
+      },
+      "disclosure": "If your detached house is at least 20 years old (and any prior addition at least five years old), you may vertically divide it to become a semi-detached house, provided any addition for this alteration complies with the building requirements for a detached house in the RD zone.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](D)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "first",
+          "clause": "(1436)[SSP](D)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "lawfully existing detached house",
+          "lawfully_existing": "a lawfully existing detached"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route: any addition or extension above the first storey of a lawfully existing detached house must meet the minimum building setbacks of the By-law (no relief from setbacks for the upper addition). Not applied to a new build, which meets the setbacks anyway.",
+        "gaps": "Whether the house is lawfully existing and the location of the addition are not in the lot data."
+      },
+      "disclosure": "If your detached house is lawfully existing, you may add to or extend it above the first storey, provided the addition or extension complies with the minimum building setbacks required by the By-law.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](E)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": [
+        "fsi = 0.69 ratio @(1436)[SSP](E)(i)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "0.6",
+          "clause": "(1436)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "has a detached house",
+          "lawfully_existing": "erected before October 15, 1953"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "On a lot with a permitted maximum floor space index of 0.6 and a detached house erected before October 15, 1953, a rear addition may bring the lot's overall floor space index to at most 0.69. Not applied by default: a new build keeps the zone FSI.",
+        "gaps": "The erection date of the house is not in the lot data; the 0.6 permitted-FSI threshold is not expressed as a condition."
+      },
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge it with a rear addition, provided the overall floor space index for the lot, including the addition, does not exceed 0.69.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](E)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "0.6",
+          "clause": "(1436)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "has a detached house",
+          "lawfully_existing": "erected before October 15, 1953"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route of (E): all finished floor levels in the rear addition may be no higher than the uppermost floor level of the existing building. Not applied to a new build.",
+        "gaps": "The erection date and the existing building's floor levels are not in the lot data."
+      },
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge it with a rear addition, provided all finished floor levels within the addition are no higher than the uppermost floor level in the existing building.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](E)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "0.6",
+          "clause": "(1436)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "has a detached house",
+          "lawfully_existing": "erected before October 15, 1953"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route of (E): no part of the rear addition may be closer to the nearest side lot line than the existing side main wall of the building. Not applied to a new build.",
+        "gaps": "The erection date and the existing side main wall's distance from the side lot line are not in the lot data."
+      },
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge it with a rear addition, provided no part of the addition is closer to the nearest side lot line than the existing side main wall of the building.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1436)#(1436)[SSP](E)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "0.6",
+          "clause": "(1436)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "5",
+          "clause": "(1436)[SSP](E)(iv)",
+          "reason": "limit_not_modelled"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RD"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1436",
+          "detached_house": "has a detached house",
+          "lawfully_existing": "erected before October 15, 1953"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "building_type"
+        ],
+        "description": "Existing-building route of (E): any prior addition to the house must be at least 5 years old. Not applied to a new build.",
+        "gaps": "The erection date and the age of prior additions are not in the lot data."
+      },
+      "disclosure": "If your lot has a permitted maximum floor space index of 0.6 and your detached house was erected before October 15, 1953, you may enlarge it with a rear addition, provided any prior addition is at least 5 years old.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.3.10(1436)": {
+      "explanation": "Exception RD 1436 adds existing-building permissions in this RD area: a semi-detached house or duplex that existed on October 15, 1980 may be enlarged or replaced in kind if it meets the detached-house rules on the same lot; a house that existed on October 15, 1960 may hold more than one secondary suite (average unit size at least 110 square metres, each unit at least 55 square metres, no exterior additions); a detached house at least 20 years old may be split into a semi-detached house with a rear addition; upper-storey additions to a lawfully existing house must meet the setbacks; and on a 0.6 FSI lot a house erected before October 15, 1953 may get a rear addition up to an overall FSI of 0.69. None of these apply to a new build by default.",
+      "code_refs": "none"
+    }
+  }
+}
