@@ -1,6 +1,6 @@
 {
   "$comment": "Spec 124 R-EY (McDonald's Airtight V3, operator y 2026-10-20). E1: v3[] lists every step that has read standard=V3; a listed step that reads V2 is RED in step-validate. It only grows (a step leaves only by the generator --retire, when the strict as-converted run reads it V2; R-IK), and only through its generator: node scripts/analysis/step-validate.mjs --all --fast --v3-json=<f> then node scripts/analysis/gates/v3-label.mjs --write <f>. E2: converted_baseline[] freezes converted[] at R-EY; a converted step outside it must read V3. It is seeded once and never grows.",
-  "recorded_at": "2026-10-21",
+  "recorded_at": "2026-10-22",
   "v3": [
     "address_points",
     "assert_data_bounds",
@@ -23,6 +23,7 @@
     "link_wsib",
     "load_bylaw_map_areas",
     "load_centreline",
+    "load_coa_notices",
     "load_heritage",
     "load_ravines",
     "load_wsib",

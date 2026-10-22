@@ -27,7 +27,7 @@ Observed: exactly the two predicted textual conflicts (decision-log test pin; ge
 | verify-34 leftovers: coa_ward_bak_20261022, *_cohort_bak_* tables | Carried forward (operator cleanup). |
 | verify-35 Note A: COA-D18 row at defect-ledger.md line 2, outside the table | FIXED: moved next to COA-D16/D17; handbook regenerated so "ledger l.N" citations are right. |
 | decision-log pin | Set to what `decision-log --check` prints after the merge; both sides' assertions kept. |
-| V3 ratchet 28 vs 29 (load_coa_notices passes #38 after Night A) | See the V3 ratchet note in the integrate-24 commit log and ~/Buildo-scratch/int24/ratchet-note.md. |
+| V3 ratchet 28 vs 29 (load_coa_notices passes #38 after Night A) | FIXED: ratchet raised 28 to 29 through the generator (step-validate --all --fast --v3-json, then scripts/analysis/gates/v3-label.mjs --write); R-IK (a) + E1 cover the return, recorded as a dated note on the R-IK row in 124a; see ~/Buildo-scratch/int24/ratchet-note.md. |
 
 ## Carried forward
 
