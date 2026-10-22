@@ -88111,6 +88111,179 @@
           "reason": "cross_reference_value"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(288)#(288)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street number and schedule number of a named address are not literals of the clause (G-CLAUSE refuses them), as 349 (A)-(C).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 6); G-CLAUSE named the exact literals",
+      "unit": "900.3.10(288)#(288)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.2.10(731)#(731)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The street number and the year 1992 are unaccounted literals (G-CLAUSE).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round 6); G-CLAUSE named the exact literals",
+      "unit": "900.2.10(731)#(731)[SSP](A)",
+      "value": [
+        {
+          "clause": "(731)[SSP](A)",
+          "literal": "861",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(731)[SSP](A)",
+          "literal": "1992",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](C)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5e904e65: answer A — HELD on R6-1 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (singular \"one dwelling unit\" is not a dwelling_units_max pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](C)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f5fa73ac: answer A — HELD on R6-1 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (singular \"one dwelling unit\" is not a dwelling_units_max pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](C)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-53706647: answer A — HELD on R6-1 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (singular \"one dwelling unit\" is not a dwelling_units_max pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](C)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7f8e86d8: answer A — HELD on R6-1 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (singular \"one dwelling unit\" is not a dwelling_units_max pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](D)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-867299ff: answer A — HELD on R6-2 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (\"front lot line that abuts a street\" is not a front_setback_m pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](D)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ef672eba: answer A — HELD on R6-2 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (\"front lot line that abuts a street\" is not a front_setback_m pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](D)(ii)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c10bde2c: answer A — HELD on R6-2 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (\"front lot line that abuts a street\" is not a front_setback_m pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](D)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-1eb25e12: answer A — HELD on R6-2 (recommendation, not operator-ruled): keep UNUSUAL; the B reading (LIMIT) fails G-CLAUSE variable_unlicensed (\"front lot line that abuts a street\" is not a front_setback_m pattern); a licence pattern is a new ruling (Spec 133 §m.132)",
+      "unit": "900.5.10(324)#(324)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](J)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-061fafcc: answer A — HELD on R6-3 (recommendation, not operator-ruled): Spec 133 §m.130 (additive/partial arm): the 3.0 m arm is expressible as LIMIT lot_line_setback_m min, the inexpressible greater-of arm is not modelled",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](J)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-d371e22d: answer A — HELD on R6-3 (recommendation, not operator-ruled): Spec 133 §m.130 (additive/partial arm): the 3.0 m arm is expressible as LIMIT lot_line_setback_m min, the inexpressible greater-of arm is not modelled",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](J)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-04aba8c9: answer A — HELD on R6-3 (recommendation, not operator-ruled): Spec 133 §m.130 (additive/partial arm): the 3.0 m arm is expressible as LIMIT lot_line_setback_m min, the inexpressible greater-of arm is not modelled",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](J)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c5af5d85: answer A — HELD on R6-3 (recommendation, not operator-ruled): Spec 133 §m.130 (additive/partial arm): the 3.0 m arm is expressible as LIMIT lot_line_setback_m min, the inexpressible greater-of arm is not modelled",
+      "unit": "900.5.10(324)#(324)[SSP](J)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(324)#(324)[SSP](J)(ii)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-456afab4: answer A — HELD on R6-3 (recommendation, not operator-ruled): Spec 133 §m.102 (a real limit the DSL cannot express is UNUSUAL)",
+      "unit": "900.5.10(324)#(324)[SSP](J)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(155)#(155)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-e7bd6182: answer A — HELD on R6-4 (recommendation, not operator-ruled): Spec 133 §m.133 (UNUSUAL for now): an aggregation-scope rule (each block) ranks no layers, so PROCEDURAL does not fit",
+      "unit": "900.5.10(155)#(155)[SSP](A)"
     }
   ]
 }
