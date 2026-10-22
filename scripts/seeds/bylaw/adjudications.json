@@ -91100,6 +91100,78 @@
       "kind": "disagreement",
       "reason": "W2 queue Q-W2-9f41abf4: answer A — HELD on R11-1 (recommendation, not operator-ruled; shard agreement >= 85%): keep UNUSUAL; the keyer-B LIMIT garage_entrance_setback_m needs the pattern \"entrance to a parking space\" (only \"vehicle entrance\" / \"entrance to a private garage\" are patterns), a pattern is a new ruling (Spec 133 §m.132)",
       "unit": "900.3.10(1049)#(1049)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1427)#(1427)[SSP](A)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-adc4c642: answer B — EVE.R6-5 (operator approved 2026-10-22-page-eve): twin of 1436 (D), keyed REQUIRE in the 1436 (D) form (CHAT-67.1434A, Spec 133 §m.317 dated note 2)",
+      "unit": "900.3.10(1427)#(1427)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(937)#(937)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-5325e2eb: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(937)#(937)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(937)#(937)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-4b06bbe4: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target, side_setback_m",
+      "unit": "900.3.10(937)#(937)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "requirement",
+      "id": "COR-900.3.10(1427)#(1427)[SSP](A)/requirement",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator EVE.R6-5 (2026-10-22-page-eve#EVE.R6-5) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1427 (A) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
+      "unit": "900.3.10(1427)#(1427)[SSP](A)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1427)#(1427)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator EVE.R6-5 (2026-10-22-page-eve#EVE.R6-5) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1427 (A) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
+      "unit": "900.3.10(1427)#(1427)[SSP](A)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1427)#(1427)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator EVE.R6-5 (2026-10-22-page-eve#EVE.R6-5) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1427 (A) is keyed to the exact 1436 (D) twin form (needs_user_input, no disclosure, building_type in user_inputs)",
+      "unit": "900.3.10(1427)#(1427)[SSP](A)",
+      "value": "none"
     }
   ]
 }
