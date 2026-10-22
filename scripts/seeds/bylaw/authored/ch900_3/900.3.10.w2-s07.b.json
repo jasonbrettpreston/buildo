@@ -1,0 +1,319 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s07",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(466)#(466)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(466)[SSP](A)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(466)#(466)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(466)[SSP](B)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(466)#(466)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(466)[SSP](C)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(466)#(466)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_street_m = 4.5 m @(466)[SSP](D)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(466)#(466)[SSP](D)~repeat2",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 466"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "residential building"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": [
+          {
+            "token": "parking_space",
+            "evidence": "required parking space"
+          }
+        ]
+      },
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(466)#(466)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.3 m @(466)[SSP](E)"
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 466"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "attached or detached garage"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": [
+          {
+            "token": "private_garage",
+            "evidence": "attached or detached garage"
+          }
+        ]
+      },
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(466)#(466)[SSP](F)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "include_ref": "900.3.10(1462)",
+      "literals_not_expressed": [
+        {
+          "literal": "1462",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "unit_id": "900.3.10(466)#(466)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "ranks_layers": "none"
+    },
+    {
+      "unit_id": "900.3.10(368)#(368)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(368)[SSP](A)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(368)#(368)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(368)[SSP](B)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(368)#(368)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(368)[SSP](C)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(368)#(368)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_street_m = 3.6 m @(368)[SSP](D)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(368)#(368)[SSP](E)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "not_modelled_reason": "needs_data_we_lack",
+      "disclosure": "The minimum building setback from a front lot line abutting Bellamy Rd., Brimley Rd., McCowan Rd., Midland Ave. or Danforth Rd. is 22.0 metres measured from the original centreline of the street; a setback measured from a street centreline has no target and is not evaluated.",
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 368"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "minimum building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "22.0",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "unit_id": "900.3.10(368)#(368)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.3 m @(368)[SSP](F)"
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 368"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "attached or detached garage"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": [
+          {
+            "token": "private_garage",
+            "evidence": "attached or detached garage"
+          }
+        ]
+      },
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(368)#(368)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "ranks_layers": "none"
+    },
+    {
+      "unit_id": "900.3.10(421)#(421)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(421)[SSP](A)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(421)#(421)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(421)[SSP](B)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(421)#(421)[SSP](C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "not_modelled_reason": "needs_data_we_lack",
+      "disclosure": "The minimum building setback from a front lot line abutting Bellamy Rd., Scarborough Golf Club Rd., Orton Park Rd. or McCowan Rd. is 22.0 metres measured from the original centreline of the street; a setback measured from a street centreline has no target and is not evaluated.",
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 421"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "minimum building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "22.0",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "unit_id": "900.3.10(421)#(421)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(421)[SSP](D)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(421)#(421)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_street_m = 5.7 m @(421)[SSP](E)"
+      ],
+      "literals_not_expressed": []
+    },
+    {
+      "unit_id": "900.3.10(421)#(421)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "ranks_layers": "none"
+    }
+  ]
+}

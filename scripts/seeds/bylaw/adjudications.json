@@ -88284,6 +88284,135 @@
       "kind": "disagreement",
       "reason": "W2 queue Q-W2-e7bd6182: answer A — HELD on R6-4 (recommendation, not operator-ruled): Spec 133 §m.133 (UNUSUAL for now): an aggregation-scope rule (each block) ranks no layers, so PROCEDURAL does not fit",
       "unit": "900.5.10(155)#(155)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(160)#(160)[SSP](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The year and the street numbers of the named address are unaccounted literals (G-CLAUSE), as 731 (A).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 7); G-CLAUSE named the exact literals / trigger",
+      "unit": "900.3.10(160)#(160)[SSP](F)",
+      "value": [
+        {
+          "clause": "(160)[SSP](F)",
+          "literal": "2010",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(160)[SSP](F)",
+          "literal": "28",
+          "reason": "cross_reference_value"
+        },
+        {
+          "clause": "(160)[SSP](F)",
+          "literal": "30",
+          "reason": "cross_reference_value"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"one\" is a count, not a limit.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 7); G-CLAUSE named the exact literals / trigger",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": [
+        {
+          "clause": "(586)[SSP](A)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(958)#(958)[SSP](C)/not_an_override",
+      "kind": "correction",
+      "reason": "(B) is a sibling clause of the same exception (an INCLUDE of 900.2.10(5)); the 3-unit townhouse cap is the exception's own site-specific rule, not an override of a by-law regulation.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 7); G-CLAUSE named the exact literals / trigger; precedent 900.2.10(735)#(735)[SSP] \"Despite subsection (D) herein\" = site_specific_exception",
+      "unit": "900.2.10(958)#(958)[SSP](C)",
+      "value": [
+        {
+          "phrase": "Despite (B)",
+          "reason": "site_specific_exception"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(958)#(958)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7535d294: answer A — HELD on R7-1 (recommendation, not operator-ruled): Spec 133 §m.317 (keying rule 31): a use permission that depends on a building-history date (used for such purpose on March 13, 1978) is never a target-less PERMIT; it stays on the existing-building route as UNUSUAL.",
+      "unit": "900.2.10(958)#(958)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.2.10(958)#(958)[SSP](E)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-cfa7a5cc: answer A — HELD on R7-1 (recommendation, not operator-ruled): Spec 133 §m.317 (keying rule 31), same family as (D): building type existed on the lot on March 13, 1978.",
+      "unit": "900.2.10(958)#(958)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(958)#(958)[SSP](C)/not_an_override~s1",
+      "kind": "correction",
+      "reason": "\"Despite (B)\" points at a clause of the same exception (958), not at a by-law regulation; nothing is displaced.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical trigger bookkeeping under the lane label (round 7); HELD on R7-2 (the closed reason for a Despite that points at a sibling clause of the same exception is a drafted question)",
+      "supersedes": "COR-900.2.10(958)#(958)[SSP](C)/not_an_override",
+      "unit": "900.2.10(958)#(958)[SSP](C)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "self_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(958)#(958)[SSP](D)/not_an_override",
+      "kind": "correction",
+      "reason": "\"Despite (B)\" points at a clause of the same exception (958), not at a by-law regulation; nothing is displaced.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical trigger bookkeeping under the lane label (round 7); HELD on R7-2 (the closed reason for a Despite that points at a sibling clause of the same exception is a drafted question)",
+      "unit": "900.2.10(958)#(958)[SSP](D)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "self_reference"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5-held",
+      "field": "not_an_override",
+      "id": "COR-900.2.10(958)#(958)[SSP](E)/not_an_override",
+      "kind": "correction",
+      "reason": "\"Despite (B)\" points at a clause of the same exception (958), not at a by-law regulation; nothing is displaced.",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical trigger bookkeeping under the lane label (round 7); HELD on R7-2 (the closed reason for a Despite that points at a sibling clause of the same exception is a drafted question)",
+      "unit": "900.2.10(958)#(958)[SSP](E)",
+      "value": [
+        {
+          "phrase": "Despite",
+          "reason": "self_reference"
+        }
+      ]
     }
   ]
 }
