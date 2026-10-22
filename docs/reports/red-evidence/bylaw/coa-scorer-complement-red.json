@@ -1,0 +1,61 @@
+{
+ "what": "CoA scorer complement fix (percentage minimum quoted by the City as a maximum share): HEAD 710ae65d scorer vs working-tree scorer, 172 set",
+ "head_totals": "MATCH 381 / DIFFER 32",
+ "fixed_totals": "MATCH 384 / DIFFER 29",
+ "rows_changed": [
+  {
+   "notice": "A0354/26TEY",
+   "n": 1,
+   "clause": "10.20.40.10(2)(A)",
+   "city_value": 30,
+   "ours": {
+    "status": "value",
+    "value": 70,
+    "reason": null,
+    "winner": "10.20.40.10(2)#(2)(A)",
+    "applied": [
+     "10.20.40.10(2)#(2)(A)"
+    ]
+   },
+   "head": "DIFFER",
+   "fixed": "MATCH",
+   "complement_of": 30
+  },
+  {
+   "notice": "A0120/26SC",
+   "n": 1,
+   "clause": "10.20.40.10(2)(A)",
+   "city_value": 30,
+   "ours": {
+    "status": "value",
+    "value": 70,
+    "reason": null,
+    "winner": "10.20.40.10(2)#(2)(A)",
+    "applied": [
+     "10.20.40.10(2)#(2)(A)"
+    ]
+   },
+   "head": "DIFFER",
+   "fixed": "MATCH",
+   "complement_of": 30
+  },
+  {
+   "notice": "A0120/26SC",
+   "n": 2,
+   "clause": "10.20.40.10(2)(A)",
+   "city_value": 30,
+   "ours": {
+    "status": "value",
+    "value": 70,
+    "reason": null,
+    "winner": "10.20.40.10(2)#(2)(A)",
+    "applied": [
+     "10.20.40.10(2)#(2)(A)"
+    ]
+   },
+   "head": "DIFFER",
+   "fixed": "MATCH",
+   "complement_of": 30
+  }
+ ]
+}

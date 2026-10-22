@@ -340,6 +340,13 @@ function runNotice(n, surveyOn, rows, lots) {
       rows.push(row); continue; }
     if (cityVal == null) { row.class = 'NOT MODELLED'; row.why = 'notice states no numeric requirement'; rows.push(row); continue; }
 
+    // EXC-W2-APPLY complement (verify-37 7): a pct SHARE target keyed with one bound ("at least 70% of each side main wall", vocab bound min) that the
+    // City quotes from the other side ("a maximum of 30% may be higher") is the same fact: 100 - 30 = 70. Generic over any pct target whose vocab bound differs from the stated limit.
+    { const T = (I.vocab.dsl_target || {})[target];
+      // the direction the percentage itself is stated in: "no less than 40%" is a minimum share even when the notice's limit word is the height's "maximum"
+      const shareDirection = (req, val, lim) => { const t = String(req || ''); return new RegExp(`(no less than|not less than|at least|minimum of)\\s*${val}\\s*%`, 'i').test(t) ? 'min' : /maximum/i.test(t) ? 'max' : lim; };
+      if (T && T.unit === 'pct' && (T.bound === 'min' || T.bound === 'max') && cityUnit === '%' && typeof cityVal === 'number' && shareDirection(v.requirement, cityVal, row.limit) !== T.bound) {
+        row.complement_of = cityVal; cityVal = Math.round((100 - cityVal) * 1000) / 1000; row.scorer_fix = row.scorer_fix || 'EXC-W2-complement'; } }
     const lot = makeLot(base, bt, row.dwelling_units);
     const only = ELEMENT_TARGETS.has(target) ? new Set(matched.map((u) => u.unit_id)) : null;
     let r = evalTarget(lot, target, only);
@@ -382,6 +389,7 @@ function runNotice(n, surveyOn, rows, lots) {
         if (row.class === 'DIFFER' && row.bsw_arm && !row.bsw_taken && typeof row.bsw_arm.value === 'number' && Math.abs(row.bsw_arm.value - cityVal) <= tol(cityUnit) + 1e-9) row.arm_explains = 'blank_side_wall=false (openings) gives the City figure';
         if (row.class === 'DIFFER' && row.ours_arm && typeof row.ours_arm.value === 'number' && Math.abs(row.ours_arm.value - cityVal) <= tol(cityUnit) + 1e-9) row.arm_explains = 'suite_wall_openings=true (M-197 default false) gives the City figure';
         row.why = row.class === 'MATCH' ? (regOf(r.winner) === c.reg ? 'same value, same provision' : `same value, winner ${r.winner}`) : `ours ${r.value} vs City ${cityVal} (Δ ${d}); winner ${r.winner}`;
+        if (row.complement_of != null) row.why += ` (complement: City ${row.limit} ${row.complement_of}% = ${cityVal}% the other way)`;
       } else { row.class = 'DIFFER'; row.why = `ours ${r.value} (no numeric limit) vs City ${cityVal}; winner ${r.winner}`; }
     } else if (r.status === 'not_evaluated') {
       row.class = owedOrNoAnswer(r.reason); row.why = r.reason;
