@@ -85,9 +85,8 @@
       "unit_ids": [
         "800.50(181)#(181)(D)"
       ],
-      "note": "two units: implied by \"multiple\" and (181)(D); no numeric literal carries 2 (proposed_value 2 is what the compute module passes until Q-min is ruled)",
-      "source": null,
-      "proposed_value": 2
+      "note": "two units: implied by \"multiple\" and (181)(D); no numeric literal carries 2. Sourced as the pinned logic variable houseplex_min_units (EVE.P3-Q8, operator-ruled), not as a clause literal",
+      "source": "migrations/283_compute_maxbld_scenarios_logic_variables.sql#compute_maxbld_scenarios_houseplex_min_units"
     },
     {
       "id": "P3L-07",

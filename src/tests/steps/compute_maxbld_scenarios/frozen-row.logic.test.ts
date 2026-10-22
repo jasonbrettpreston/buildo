@@ -4,7 +4,7 @@
  *            result row is FROZEN; Phase 3 builds against it through one accessor (scripts/lib/maxbld-layer2-view.js); any change to a logical
  *            field needs a new ruling; the physical form (Q-P) may change behind the accessor without touching Phase 3.
  *
- * Pins the accessor's output fields to exactly the frozen list, from BOTH constructors (the fixture form and the stored form C), so a later
+ * Pins the accessor's output fields to exactly the frozen list, through the one constructor (fromLogicalRows; form C is gone under CHAT-80.QP / R-JR), so a later
  * storage change cannot silently add, drop, rename or reorder a field. STRICT RED FIRST: ran against the missing FROZEN_RESULT_FIELDS export
  * (~/Buildo-scratch/p3build/red-freeze.txt).
  */
@@ -41,13 +41,12 @@ describe('CHAT-77.freeze: the accessor output is exactly the frozen logical row'
     expect(Object.keys(v.result('detached_house', 'principal', 'height_m'))).toEqual(FROZEN);
   });
 
-  it('fromCellRows(...).result() returns exactly the frozen keys for the representative, a differing class and a collapsed class', () => {
-    const cell: Json = {
-      cell_id: 'c1', structure: 'principal', target: 'height_m', status: 'applies', value: 10, value_kind: 'number', physical_only: 'p', signature_id: 's', row_sha: 'r',
-      inputs_used: [], by_class: { b: { status: 'applies', value: 12, value_kind: 'number', row_sha_extra: 1 }, c: 'collapsed_into:a' },
-    };
-    const v = V.fromCellRows({ lot: { lot_gate: null, permitted_by_class: PERMITTED }, classes: ['a', 'b', 'c'], entries: [{ structure: 'principal', target: 'height_m', cell_id: 'c1' }], cellsById: { c1: cell } });
-    for (const c of ['a', 'b', 'c']) expect(Object.keys(v.result(c, 'principal', 'height_m')), c).toEqual(FROZEN);
+  it('the stored form is invisible: rows carrying the option-4 view columns plus any physical extras yield exactly the frozen keys, and fromCellRows is gone (CHAT-80.QP)', () => {
+    const row: Json = { class: 'detached_house', structure: 'principal', target: 'height_m', status: 'applies', value: 10, value_kind: 'number', winner_unit_id: 'u', winner_layer: 'base', evidence_kind: 'clause', evidence_ref: 'u', parcel_id: 1, lot_gate: null, row_sha: 'r', unit_key: 7 };
+    const v = V.fromLogicalRows({ lot_gate: null, permitted_by_class: PERMITTED, rows: [row] });
+    expect(Object.keys(v.result('detached_house', 'principal', 'height_m'))).toEqual(FROZEN);
+    expect(V.fromCellRows).toBeUndefined();
+    expect(V.entriesFromPointers).toBeUndefined();
   });
 
   it('the result is immutable, so a consumer cannot add a field either', () => {

@@ -1,16 +1,15 @@
 /**
  * SPEC LINK: docs/specs/01-pipeline/134_resolve_bylaws.md §3 (the logical row shape), §4 (status sets), §10 (consumers)
  * SPEC LINK: docs/specs/01-pipeline/78_optimal_lot_configuration.md §Phase-5 D-1 (reads only Layer 2 rows), P5.3
- * Handbook:  form C (CHAT-69.Q1; recorded at bc5cd3af, not yet on this branch), Spec 132 §core.9 (compute purity); HELD on P3-Q1 (N6a freeze, operator ruling pending)
+ * Handbook:  CHAT-77.freeze (the logical row is frozen); CHAT-80.QP option 4 / Spec 124a R-JR (one lot row, the view bylaw_resolution_results);
+ *            Spec 132 §core.9 (compute purity)
  *
- * THE ONE ACCESSOR (P3-Q1). compute_maxbld_scenarios reads Layer 2 only through this view. The view exposes the LOGICAL
- * Spec 134 §3 result for (class, structure, target) plus the lot's gate and permission; it is the only code that knows how
- * those rows are stored. Two constructors build it:
- *   fromLogicalRows(src)  the fixture form: one flat row per (class, structure, target).
- *   fromCellRows(src)     the stored form C (R-JA): the lot's entries -> cell rows, with `by_class` resolved here
- *                         (the representative class's columns, other classes as columns or `collapsed_into:<class>`).
- * The pointer unpacking of the profile bytea (packPointers / unpackPointers, L2-SLICES part A) stays outside: the caller
- * passes the lot's entries [{structure, target, cell_id}] it read. When the physical form changes, only this file changes.
+ * THE ONE ACCESSOR. compute_maxbld_scenarios reads Layer 2 only through this view, built by ONE constructor from the lot's logical rows
+ * (the shape L2-SLICES scripts/lib/bylaw-materialize.js logicalRowsOf returns, and the option-4 view bylaw_resolution_results decodes):
+ *   fromLogicalRows({ lot_gate, permitted_by_class, rows: [{class, structure, target, ...result fields}] })
+ * The view exposes the LOGICAL Spec 134 §3 result for (class, structure, target) plus the lot's gate and permission; extra physical columns
+ * on a row are dropped, so a storage change (Q-P) cannot reach a consumer. Form C (profile pointers, cells, by_class) is gone with
+ * CHAT-80.QP: there is no second constructor.
  *
  * Pure: requires nothing; no database, file, env, clock or randomness.
  *
@@ -22,32 +21,31 @@
 'use strict';
 
 /**
- * Spec 134 §3 / R-JA: the logical result columns a consumer may read (identity columns excluded). FROZEN by CHAT-77.freeze (operator
+ * Spec 134 §3: the logical result columns a consumer may read (identity columns excluded). FROZEN by CHAT-77.freeze (operator
  * 2026-10-22): any change to this list needs a new ruling; the physical form (Q-P) may change behind this accessor without touching Phase 3.
- * frozen-row.logic.test.ts pins it from both constructors.
+ * frozen-row.logic.test.ts pins it. inputs_used, losers and disclosures are recomputed on read by Layer 2 and may arrive null.
  */
 const LOGICAL_RESULT_FIELDS = Object.freeze([
   'status', 'reason', 'value', 'value_kind', 'winner_unit_id', 'winner_layer', 'evidence_kind', 'evidence_ref', 'inputs_used', 'losers', 'disclosures',
 ]);
 /** Layer 2 stored statuses (layer2-map.json `status`). */
 const STATUSES = Object.freeze(['applies', 'not_applicable', 'not_evaluated']);
-const COLLAPSED = 'collapsed_into:';
 
 const keyOf = (cls, structure, target) => `${cls}\u0000${structure}\u0000${target}`;
 
-function pick(row, disclosureSets) {
+function pick(row) {
   const out = {};
   for (const f of LOGICAL_RESULT_FIELDS) out[f] = row[f] === undefined ? null : row[f];
-  // Q-H (Spec 134): a stored cell holds the id of its disclosure set; the lookup table gives the strings.
-  if (out.disclosures === null && row.disclosure_set_id && disclosureSets) {
-    if (!Object.prototype.hasOwnProperty.call(disclosureSets, row.disclosure_set_id)) throw new Error(`maxbld-layer2-view: disclosure set ${row.disclosure_set_id} is not in the lookup; a missing input is never defaulted`);
-    out.disclosures = disclosureSets[row.disclosure_set_id];
-  }
   if (!STATUSES.includes(out.status)) throw new TypeError(`maxbld-layer2-view: status ${JSON.stringify(out.status)} is not a Layer 2 stored status`);
   return Object.freeze(out);
 }
 
-function makeView(lotGate, permitted, table) {
+/** The one constructor (// P3-Q1 seam, ruled CHAT-77.freeze): a lot's logical rows -> the view. */
+function fromLogicalRows(src) { // P3-Q1
+  const table = new Map();
+  for (const r of src.rows || []) table.set(keyOf(r.class, r.structure, r.target), pick(r));
+  const lotGate = src.lot_gate === undefined ? null : src.lot_gate;
+  const permitted = src.permitted_by_class;
   const get = (cls, structure, target) => {
     const k = keyOf(cls, structure, target);
     if (!table.has(k)) throw new Error(`maxbld-layer2-view: no Layer 2 result for ${cls}/${structure}/${target}; a missing input is never defaulted (Spec 134 I10)`);
@@ -64,49 +62,4 @@ function makeView(lotGate, permitted, table) {
   });
 }
 
-/** Fixture form: { lot_gate, permitted_by_class, rows: [{class, structure, target, ...result fields}] }. */
-function fromLogicalRows(src) { // P3-Q1
-  const table = new Map();
-  for (const r of src.rows || []) table.set(keyOf(r.class, r.structure, r.target), pick(r));
-  return makeView(src.lot_gate === undefined ? null : src.lot_gate, src.permitted_by_class, table);
-}
-
-/**
- * Stored form C: { lot: {lot_gate, permitted_by_class}, classes: [representative first], entries: [{structure, target, cell_id}],
- * cellsById: {cell_id: cell row with by_class} }. A non-representative class reads `by_class[cls]`: its own columns, or
- * `collapsed_into:<class>` -> that class's result (R-IR).
- */
-function fromCellRows(src) { // P3-Q1
-  const classes = src.classes;
-  if (!Array.isArray(classes) || classes.length === 0) throw new TypeError('maxbld-layer2-view: classes (representative first) is required');
-  const rep = classes[0];
-  const table = new Map();
-  for (const e of src.entries || []) {
-    const cell = src.cellsById[e.cell_id];
-    if (!cell) throw new Error(`maxbld-layer2-view: cell ${e.cell_id} is not in cellsById (a missing input is never defaulted)`);
-    const resolve = (cls, depth) => {
-      if (cls === rep) return cell;
-      const b = cell.by_class ? cell.by_class[cls] : undefined;
-      if (b === undefined) throw new Error(`maxbld-layer2-view: cell ${e.cell_id} has no by_class entry for ${cls}`);
-      if (typeof b === 'string') {
-        if (!b.startsWith(COLLAPSED) || depth > classes.length) throw new Error(`maxbld-layer2-view: bad by_class entry ${JSON.stringify(b)} for ${cls}`);
-        return resolve(b.slice(COLLAPSED.length), depth + 1);
-      }
-      return { ...cell, ...b, inputs_used: cell.inputs_used, disclosure_set_id: b.disclosure_set_id === undefined ? null : b.disclosure_set_id, disclosures: b.disclosures === undefined ? null : b.disclosures };
-    };
-    for (const cls of classes) table.set(keyOf(cls, e.structure, e.target), pick(resolve(cls, 0), src.disclosureSets));
-  }
-  return makeView(src.lot.lot_gate === undefined ? null : src.lot.lot_gate, src.lot.permitted_by_class, table);
-}
-
-/**
- * The profile pointer hex (32 bytes = 64 hex characters per scope pair, in layer2-scope.json order: structures first, each structure's
- * targets in file order; R-JA) as the lot's entries [{structure, target, cell_id}]. The only code that knows the pointer layout. P3-Q1.
- */
-function entriesFromPointers(pointersHex, scope) { // P3-Q1
-  const pairs = scope.structures.flatMap((structure) => scope.targets[structure].map((target) => ({ structure, target })));
-  if (typeof pointersHex !== 'string' || pointersHex.length !== 64 * pairs.length) throw new Error(`maxbld-layer2-view: pointer width ${pointersHex && pointersHex.length} is not 64 x ${pairs.length} hex characters`);
-  return pairs.map((p, i) => ({ structure: p.structure, target: p.target, cell_id: pointersHex.slice(64 * i, 64 * (i + 1)) }));
-}
-
-module.exports = { LOGICAL_RESULT_FIELDS, FROZEN_RESULT_FIELDS: LOGICAL_RESULT_FIELDS, STATUSES, fromLogicalRows, fromCellRows, entriesFromPointers };
+module.exports = { LOGICAL_RESULT_FIELDS, FROZEN_RESULT_FIELDS: LOGICAL_RESULT_FIELDS, STATUSES, fromLogicalRows };

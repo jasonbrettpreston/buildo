@@ -74,13 +74,14 @@ describe('P3-13a: the registry of clause literals the Phase 3 modules receive as
 });
 
 describe('P3-13a: the arm (report-only, m.11)', () => {
-  it('reports EVERY registry literal as unmapped until a commit sources it; pass stays true in report mode', async () => {
+  it('reports every registry literal as unmapped until a commit sources it (only caps.minUnits is sourced, P3-Q8); pass stays true in report mode', async () => {
     const m = await mod();
     const r = m.checkPhase3Linkage({ root: ROOT });
     expect(r.mode).toBe('report');
-    expect(r.literals.unmapped).toBe(registry().literals.length);
-    expect(r.literals.sourced).toBe(0);
-    expect(r.items.filter((i: Json) => i.code === 'phase3_literal_unmapped')).toHaveLength(registry().literals.length);
+    // caps.minUnits is sourced from the pinned logic variable houseplex_min_units (P3-Q8); every other literal stays unmapped
+    expect(r.literals.sourced).toBe(1);
+    expect(r.literals.unmapped).toBe(registry().literals.length - 1);
+    expect(r.items.filter((i: Json) => i.code === 'phase3_literal_unmapped')).toHaveLength(registry().literals.length - 1);
     expect(r.pass).toBe(true);
   });
 
@@ -89,8 +90,8 @@ describe('P3-13a: the arm (report-only, m.11)', () => {
     const reg = registry();
     reg.literals[0].source = 'migrations/999_example.sql#example_key';
     const r = m.checkPhase3Linkage({ root: ROOT, registry: reg });
-    expect(r.literals.sourced).toBe(1);
-    expect(r.literals.unmapped).toBe(reg.literals.length - 1);
+    expect(r.literals.sourced).toBe(2); // the example plus caps.minUnits (P3-Q8)
+    expect(r.literals.unmapped).toBe(reg.literals.length - 2);
   });
 
   it('blocking mode (the Phase 3 close switch, not wired anywhere) fails while any literal is unmapped, and passes when none is', async () => {

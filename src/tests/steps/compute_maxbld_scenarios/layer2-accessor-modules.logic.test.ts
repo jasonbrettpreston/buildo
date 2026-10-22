@@ -97,38 +97,14 @@ describe('P3-Q1: the one accessor (scripts/lib/maxbld-layer2-view.js)', () => {
     expect(() => mkView([{ ...num('detached_house', 'height_m', 10), status: 'conflict' }])).toThrow(/stored status/);
   });
 
-  it('the stored form C resolves by_class: the representative columns, own columns, and collapsed_into', () => {
-    const cell = (extra: Json): Json => ({ cell_id: 'c1', structure: 'principal', target: 'height_m', status: 'applies', value: 10, value_kind: 'number', inputs_used: [], by_class: extra });
-    const v = req(VIEW).fromCellRows({
-      lot: { lot_gate: null, permitted_by_class: PERMITTED },
-      classes: ['detached_house', 'detached_houseplex', 'semi_detached_houseplex'],
-      entries: [{ structure: 'principal', target: 'height_m', cell_id: 'c1' }],
-      cellsById: { c1: cell({ detached_houseplex: 'collapsed_into:detached_house', semi_detached_houseplex: { status: 'applies', value: 12, value_kind: 'number' } }) },
-    });
-    expect(v.result('detached_house', 'principal', 'height_m').value).toBe(10);
-    expect(v.result('detached_houseplex', 'principal', 'height_m').value).toBe(10);
-    expect(v.result('semi_detached_houseplex', 'principal', 'height_m').value).toBe(12);
-  });
-
-  it('entriesFromPointers unpacks the profile pointer hex into (structure, target, cell_id) in layer2-scope.json order (R-JA: 32 bytes per pair)', () => {
-    const scope = { structures: ['principal', 'garden_suite'], targets: { principal: ['fsi', 'height_m'], garden_suite: ['gfa_m2'] } };
-    const hex = ['a', 'b', 'c'].map((c) => c.repeat(64)).join('');
-    expect(req(VIEW).entriesFromPointers(hex, scope)).toEqual([
-      { structure: 'principal', target: 'fsi', cell_id: 'a'.repeat(64) },
-      { structure: 'principal', target: 'height_m', cell_id: 'b'.repeat(64) },
-      { structure: 'garden_suite', target: 'gfa_m2', cell_id: 'c'.repeat(64) },
-    ]);
-    expect(() => req(VIEW).entriesFromPointers(hex.slice(0, 128), scope)).toThrow(/width/);
-  });
-
-  it('fromCellRows resolves a disclosure_set_id through the disclosure sets lookup into disclosures', () => {
-    const cell: Json = { cell_id: 'c1', structure: 'principal', target: 'height_m', status: 'applies', value: 10, value_kind: 'number', disclosure_set_id: 's1', inputs_used: [], by_class: {} };
-    const v = req(VIEW).fromCellRows({ lot: { lot_gate: null, permitted_by_class: PERMITTED }, classes: ['detached_house'], entries: [{ structure: 'principal', target: 'height_m', cell_id: 'c1' }], cellsById: { c1: cell }, disclosureSets: { s1: ['a note', 'b note'] } });
-    expect(v.result('detached_house', 'principal', 'height_m').disclosures).toEqual(['a note', 'b note']);
+  it('Layer 2 is read through ONE constructor, fromLogicalRows (CHAT-80.QP option 4, R-JR): the form C readers are gone', () => {
+    const v = req(VIEW);
+    expect(Object.keys(v).sort()).toEqual(['FROZEN_RESULT_FIELDS', 'LOGICAL_RESULT_FIELDS', 'STATUSES', 'fromLogicalRows']);
+    expect(src(VIEW).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')).not.toMatch(/collapsed_into|cell_id|pointer|disclosure_set|(?<!permitted_)by_class/);
   });
 
   it('the seams are marked // P3-Q1 and no consumer module knows the physical form', () => {
-    expect(src(VIEW).match(/\/\/ P3-Q1/g)!.length).toBeGreaterThanOrEqual(2);
+    expect(src(VIEW).match(/\/\/ P3-Q1/g)!.length).toBeGreaterThanOrEqual(1);
     for (const rel of [STATUS, MAIN, UNITS]) {
       const s = src(rel);
       expect(s, rel).not.toMatch(/by_class|cell_id|profile_id|pointers|bylaw_resolution_/);

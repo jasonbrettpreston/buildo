@@ -35,10 +35,14 @@ const VOCAB = require('../../seeds/bylaw/vocab.json');
 const LINEAGE = require('../../../docs/reference/maxbld-field-lineage.json');
 const LITERALS = require('../../analysis/phase3/phase3-literals.json');
 const AMENDMENT = require('../../../docs/reference/maxbld-amendment-index.json');
+/** M-160: the unit counts of the Layer 2 classes (D = detached_house 1, 2 = house_with_secondary_suite 2). */
+const CLASS_UNITS = VOCAB.scenario_class_units;
 
 /** Bumped when the Layer 3 logic changes; the third lineage version (Spec 78 P5.10 run lineage). */
 const CODE_VERSION = 'maxbld-l3-1';
 const TABLE = 'parcel_maxbld_scenarios';
+/** The relations this module's SQL touches, declared so the purity gate (G2) can judge it from the commit alone, without the step descriptor. */
+const DECLARED = { reads: ['bylaw_resolution_lots', 'bylaw_resolution_results', 'bylaw_resolution_texts', 'parcel_maxbld_scenarios', 'parcels'], writes: ['parcel_maxbld_scenarios'] };
 const PREFIX = 'compute_maxbld_scenarios_';
 const PRINCIPAL = 'principal';
 /** The rear-suite add-on (P5.5) has no module (P3-3): reported, never faked. */
@@ -79,9 +83,9 @@ const NULL_BY_DESIGN = Object.freeze([
 
 const REQUIRED_CONFIG = Object.freeze([
   'storey_height_m', 'roof_pitch', 'roof_assembly_depth_m', 'basement_livable_share', 'circulation_share', 'unit_min_interior_sqm',
-  'first_floor_elevation_m', 'min_dimension_m', 'lot_viability_margin_m', 'existing_confidence_min', 'trust_high_min_pass_pct',
+  'first_floor_elevation_m', 'min_dimension_m', 'lot_viability_margin_m', 'existing_confidence_min', 'trust_high_min_pass_pct', 'houseplex_min_units',
 ]);
-const REQUIRED_LOT = Object.freeze(['id', 'lot_size_sqm', 'frontage_m', 'depth_m', 'zoning_class', 'pointers_hex', 'cells', 'permitted_by_class', 'layer2_table_version', 'evaluator_version']);
+const REQUIRED_LOT = Object.freeze(['id', 'lot_size_sqm', 'frontage_m', 'depth_m', 'zoning_class', 'rows', 'permitted', 'permitted_texts', 'layer2_table_version', 'evaluator_version']);
 
 // ---- the clause literals, read from the registry (never typed here) ----------------------------------------------------------------------
 function literal(moduleInput, regulationId) {
@@ -92,8 +96,8 @@ function literal(moduleInput, regulationId) {
 const CLAUSES = Object.freeze({
   caps: Object.freeze({
     detached: literal('caps.detached').value, semi: literal('caps.semi').value, detached_600_60: literal('caps.detached_600_60').value,
-    lift: literal('caps.lift').value, minUnits: literal('caps.minUnits').proposed_value,
-  }),
+    lift: literal('caps.lift').value,
+  }), // minUnits is the pinned logic variable houseplex_min_units (P3-Q8), added per batch from config
   reliefFrontageMaxM: literal('envelope.reliefFrontageMaxM').value,
   viabilityFrontageMinM: literal('config.viabilityFrontageMinM').value,
   mechanical: Object.freeze({ share: literal('clause.mechanical.share').value / 100, max_sqm: literal('clause.mechanical.max_sqm').value }),
@@ -102,31 +106,48 @@ const CLAUSES = Object.freeze({
 // ---- source statements ------------------------------------------------------------------------------------------------------------------
 
 /**
- * The source statements (R-EH (a)). Keyset paging over the Layer 2 lot link rows; each lot arrives with its lot facts, its profile pointers
- * (hex, 32 bytes per scope pair, R-JA) and the cells those pointers name, as one JSON object keyed by cell id. `semi_half` (ML-4) and
- * `existing_confidence` (P5.6) have no producer yet and arrive as NULL / FALSE: OWED, never faked in this module.
+ * The source statements (R-EH (a)). Keyset paging over the Layer 2 lot rows (CHAT-80.QP option 4, R-JR); each lot arrives with its lot facts, its
+ * gate, its positional permitted words (decoded in JS like L2-SLICES logicalRowsOf: permission_image order, texts from the dictionary) and its
+ * decoded results, one JSON array of rows from the view bylaw_resolution_results (class, structure, target, the eight stored fields). losers,
+ * inputs_used and disclosures are not stored and arrive null (Layer 2 recomputes them on read; this step reads none of them for a decision).
+ * `semi_half` (ML-4) and `existing_confidence` (P5.6) have no producer yet and arrive as FALSE / NULL: OWED, never faked in this module.
  * @returns {{count_sql: string, batch_sql: string, batch_binds: string[]}}
  */
 function buildSourceSql(_descriptor, _config, _opts) {
   return {
     count_sql: 'SELECT COUNT(*)::int AS parcels_scanned FROM bylaw_resolution_lots',
-    batch_sql: `SELECT l.parcel_id AS id, l.lot_gate, l.permitted_by_class, l.table_version AS layer2_table_version, l.evaluator_version,
+    batch_sql: `SELECT l.parcel_id AS id, l.lot_gate, l.permitted, l.table_version AS layer2_table_version, l.evaluator_version,
+       ARRAY(SELECT tx.text FROM unnest(COALESCE(l.permitted_text_ids, ARRAY[]::integer[])) WITH ORDINALITY AS k (key, i)
+               LEFT JOIN bylaw_resolution_texts tx ON tx.text_key = k.key ORDER BY k.i) AS permitted_texts,
        pa.lot_size_sqm, pa.frontage_m, pa.depth_m, pa.zoning_class, pa.zoning_holding, pa.is_heritage_designated, pa.is_in_ravine_protection_area,
        pa.in_sixplex_area, pa.existing_width_m, pa.existing_length_m,
        FALSE AS semi_half, NULL::numeric AS existing_confidence,
-       encode(pr.pointers, 'hex') AS pointers_hex,
-       (SELECT jsonb_object_agg(c.cell_id, to_jsonb(c))
-          FROM bylaw_resolution_cells c
-         WHERE c.cell_id IN (SELECT encode(substring(pr.pointers FROM i * 32 + 1 FOR 32), 'hex')
-                               FROM generate_series(0, octet_length(pr.pointers) / 32 - 1) AS i)) AS cells
+       (SELECT jsonb_agg(jsonb_build_object('class', r.class, 'structure', r.structure, 'target', r.target, 'status', r.status, 'value_kind', r.value_kind,
+                                            'value', r.value, 'reason', r.reason, 'winner_unit_id', r.winner_unit_id, 'winner_layer', r.winner_layer,
+                                            'evidence_kind', r.evidence_kind, 'evidence_ref', r.evidence_ref))
+          FROM bylaw_resolution_results r WHERE r.parcel_id = l.parcel_id) AS rows
   FROM bylaw_resolution_lots l
   JOIN parcels pa ON pa.id = l.parcel_id
-  JOIN bylaw_resolution_profiles pr ON pr.profile_id = l.profile_id
  WHERE l.parcel_id > $1
  ORDER BY l.parcel_id ASC
  LIMIT $2`,
     batch_binds: ['last_key', 'batch_size'],
   };
+}
+
+/** The positional permitted words back into the accessor's permission shape (L2-SLICES decodePermitted: permission_image order, class order). */
+function decodePermitted(src, classes) {
+  const keys = Object.keys(MAP.permission_image);
+  const out = {};
+  classes.forEach((c, i) => {
+    const status = keys[src.permitted[i]];
+    if (!status) throw new Error(`compute_maxbld_scenarios: lot ${src.id} permitted code ${src.permitted[i]} is not in layer2-map.json permission_image`);
+    const text = src.permitted_texts[i];
+    const w = { status };
+    if (text !== null && text !== undefined) w[status === 'prohibited' ? 'clause' : 'reason'] = text;
+    out[c] = w;
+  });
+  return out;
 }
 
 // ---- one batch ---------------------------------------------------------------------------------------------------------------------------
@@ -172,6 +193,7 @@ function buildScenarioRow({ src, code, name, view, cls, flags, config, run_at, c
   const circ = cfgNum(config, 'circulation_share');
   const unitMin = cfgNum(config, 'unit_min_interior_sqm');
   const isReno = code.startsWith('R');
+  const caps = { ...CLAUSES.caps, minUnits: cfgNum(config, 'houseplex_min_units') }; // P3-Q8: a pinned logic variable
   const row = emptyRow();
   Object.assign(row, {
     parcel_id: src.id, scenario: name, building_class: cls, first_floor_elevation_m: config5.firstFloorElevationM,
@@ -205,7 +227,7 @@ function buildScenarioRow({ src, code, name, view, cls, flags, config, run_at, c
   }
   if (status === 'permitted' && (code === 'H' || code === 'S')) {
     units = HU.houseplexUnits({
-      view, cls, main, config: { basementLivableShare: share, circulationShare: circ, unitMinInteriorSqm: unitMin }, caps: CLAUSES.caps,
+      view, cls, main, config: { basementLivableShare: share, circulationShare: circ, unitMinInteriorSqm: unitMin }, caps,
       lot: { semi: code === 'S', in600_60: src.in_sixplex_area === true, zoneFamily: src.zoning_class },
     });
     if (units.status !== 'computed') { status = units.status; units = null; }
@@ -227,8 +249,8 @@ function buildScenarioRow({ src, code, name, view, cls, flags, config, run_at, c
       totalGfa = m.main_gfa_sqm;
       disclosures.push(...m.disclosures);
       Object.assign(params, m.disclosure_params);
-      if (code === 'D') row.dwelling_units = 1;
-      if (code === '2') row.dwelling_units = 2;
+      // D and 2 carry the class definition's unit count (M-160: vocab scenario_class_units house_units), never a typed number
+      if (code === 'D' || code === '2') row.dwelling_units = CLASS_UNITS[cls].house_units;
       if (units) {
         Object.assign(row, { dwelling_units: units.dwelling_units, unit_breakdown: units.unit_breakdown, avg_unit_gfa_sqm: units.avg_unit_gfa_sqm });
         disclosures.push(...units.disclosures);
@@ -249,7 +271,7 @@ function buildScenarioRow({ src, code, name, view, cls, flags, config, run_at, c
         footprintSqm: m.main_footprint_sqm, gfaSqm: m.main_gfa_sqm, storeys: m.main_storeys, frontageM: lot.frontageM, reliefFrontageMaxM: CLAUSES.reliefFrontageMaxM,
         rearAdditionStoreyCap: src.zoning_class === 'R', fsiCapSqm: fsi === null ? null : fsi * lot.areaSqm, depthCapM: depthCap, lengthCapM: lengthCap, extension: null,
         attic: { Hw: m.main_wall_limit_m, H: m.main_height_m, pitch: m.roof_pitch, ad: config5.roofAssemblyDepthM, c: read('attic_counted_clearance_m'), q: read('attic_qualifying_clearance_m'), shareMin: read('attic_qualifying_share_pct') / 100, areaMin: read('attic_qualifying_area_m2'), storeyHeightM: config5.storeyHeightM },
-        units: { uCap: num(u), houseplexCap: cls.startsWith('semi') ? CLAUSES.caps.semi : CLAUSES.caps.detached, minUnits: CLAUSES.caps.minUnits },
+        units: { uCap: num(u), houseplexCap: cls.startsWith('semi') ? caps.semi : caps.detached, minUnits: caps.minUnits },
       };
       reno = RS.renovationResults(envelope, { widthM: w, depthM: d, storeys: null, basement: null, basementHeightM: null, confidence, source: 'estimated' }, { basementLivableShare: share, circulationShare: circ, unitMinInteriorSqm: unitMin, existingConfidenceMin: cfgNum(config, 'existing_confidence_min') });
       Object.assign(row, {
@@ -294,7 +316,7 @@ function buildScenarioRow({ src, code, name, view, cls, flags, config, run_at, c
   const plateSum = main ? main.main_footprint_sqm * (main.main_storeys + (share > 0 ? share : 0)) : 0;
   const lineage = LN.assembleLineage({
     row: { scenario: code, scenario_status: status, main, units, suite_gfa_sqm: 0, total_gfa_sqm: totalGfa, renovation: isReno && reno ? reno : null, coa, gate_flags: row.gate_flags, disclosures: row.disclosures, cited_clauses: LN.citedClauses(used), existing_storeys: null, existing_source: row.existing_source },
-    ctx: { lotAreaSqm: Number(src.lot_size_sqm), layer2: l2, provisionUnits: new Set(Object.keys(AMENDMENT.index)), caps: { minUnits: CLAUSES.caps.minUnits, houseplexCap: cls.startsWith('semi') ? CLAUSES.caps.semi : CLAUSES.caps.detached }, circulationShare: circ, plateSumSqm: plateSum, tableVersion: src.layer2_table_version, currentTableVersion },
+    ctx: { lotAreaSqm: Number(src.lot_size_sqm), layer2: l2, provisionUnits: new Set(Object.keys(AMENDMENT.index)), caps: { minUnits: caps.minUnits, houseplexCap: cls.startsWith('semi') ? caps.semi : caps.detached }, circulationShare: circ, plateSumSqm: plateSum, tableVersion: src.layer2_table_version, currentTableVersion },
     view, cls, lineage: LINEAGE, fields: populated, amendment: AMENDMENT.index, usedResults: used, codes: row.disclosures, carried: [], registered: REGISTERED_CODES,
     estimateInputs: [], totalGfaTiers: tiers(code), config: { trustHighMinPassPct: cfgNum(config, 'trust_high_min_pass_pct') },
   });
@@ -321,7 +343,7 @@ function markHeadlines(rows, codeOf) {
 /**
  * One batch: lot rows -> the target rows (R-EH (c)). Pure. `replace_keys.e1` are the batch's parcel ids (their scenario rows are cleared first).
  * @param {object[]} sourceRows
- * @param {{config: object, run_at: string, scope?: object, lookups?: object, currentTableVersion?: string}} ctx
+ * @param {{config: object, run_at: string, scope?: object, currentTableVersion?: string}} ctx
  */
 function materializeRows(sourceRows, ctx) {
   const { config, run_at: runAt } = ctx;
@@ -329,16 +351,12 @@ function materializeRows(sourceRows, ctx) {
   const scope = ctx.scope || SCOPE;
   if (!Array.isArray(scope.classes) || scope.classes.length === 0) throw new Error('compute_maxbld_scenarios: layer2-scope.json declares no classes (the Layer 2 class list is a prerequisite)');
   const current = ctx.currentTableVersion || AMENDMENT.layer2_table_version;
-  const disclosureSets = ctx.lookups && ctx.lookups.disclosure_sets ? ctx.lookups.disclosure_sets : undefined;
   const sorted = [...sourceRows].sort((a, b) => a.id - b.id);
   const rows = [];
   const matched = { parcels: 0, rows: 0, rows_not_evaluated: 0, rows_retracted: sorted.length, not_evaluated_by_reason: {}, scenarios_scanned: 0, violations: {} };
   for (const src of sorted) {
     checkInputs(src, config);
-    const view = LV.fromCellRows({
-      lot: { lot_gate: src.lot_gate, permitted_by_class: src.permitted_by_class }, classes: scope.classes,
-      entries: LV.entriesFromPointers(src.pointers_hex, scope), cellsById: src.cells, disclosureSets,
-    });
+    const view = LV.fromLogicalRows({ lot_gate: src.lot_gate, permitted_by_class: decodePermitted(src, scope.classes), rows: src.rows });
     const flags = {
       semiHalf: src.semi_half === true, holdingZone: src.zoning_holding === true, existingHouse: Number.isFinite(Number(src.existing_width_m)) && src.existing_width_m !== null && Number.isFinite(Number(src.existing_length_m)) && src.existing_length_m !== null,
       existingBasement: null, frontageM: Number(src.frontage_m), lawfullyExistingBelowZoneMin: false,
@@ -473,3 +491,4 @@ module.exports.NOT_POPULATED = NOT_POPULATED;
 module.exports.NULL_BY_DESIGN = NULL_BY_DESIGN;
 module.exports.REAR_SUITE = REAR_SUITE;
 module.exports.CLAUSES = CLAUSES;
+module.exports.DECLARED = DECLARED;

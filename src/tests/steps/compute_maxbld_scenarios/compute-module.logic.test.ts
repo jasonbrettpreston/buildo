@@ -4,16 +4,18 @@
  * Handbook:  Spec 132 §materializer.1 (R-EH), §core.9 (R-W compute purity), §x-stages.2 (R-EQ: commit 2 = compute + runner); HELD on P3-Q1 / P3-Q15
  *
  * P3-8 step commit 2 (DRAFT, HELD on P3-Q1 / P3-Q15): scripts/lib/compute/compute-maxbld-scenarios.js orchestrates the pure Phase 3
- * modules over a batch of parcels: Layer 2 lots, profiles and cells through the ONE accessor, P5.2 main building, P5.4 houseplex units,
+ * modules over a batch of parcels: the Layer 2 option-4 lot rows (CHAT-80.QP, R-JR; view bylaw_resolution_results) through the ONE accessor (fromLogicalRows), P5.2 main building, P5.4 houseplex units,
  * the P5.10a CoA tier, the P5.6/P5.7 renovation results, the P5.1 scenario status and the P3-6 lineage. The rear suite (P5.5, P3-3)
  * has no module yet and is NOT built here: its columns stay NULL and are named in NOT_POPULATED.
- * Fixtures are shaped like the L2-SLICES materialize output read back by the source statement (lot row, profile pointers, cells).
+ * Fixtures are shaped like the source statement's rows: the lot, its permitted words (positional, decoded here like logicalRowsOf) and the decoded
+ * view rows (one per class x structure x target; losers, inputs_used and disclosures are recomputed on read by Layer 2 and arrive null).
  * STRICT RED FIRST: ran against the missing module (~/Buildo-scratch/p3build/red-p3-8.txt).
  */
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import os from 'node:os';
 import { pathToFileURL } from 'node:url';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped CJS surface
@@ -59,20 +61,20 @@ const PRINCIPAL: Record<string, Json> = {
   attic_qualifying_share_pct: appv(80, 'attic_qualifying_share_pct'), attic_qualifying_area_m2: appv(10, 'attic_qualifying_area_m2'), dwelling_units_max: unl('10.20.40.1(3)'),
 };
 function lotRow(over: Json = {}, principal: Record<string, Json> = PRINCIPAL): Json {
-  const cells: Json = {};
-  const hexes: string[] = [];
-  PAIRS.forEach((p, i) => {
-    const id = hex(i);
-    hexes.push(id);
-    const base = p.structure === 'principal' && principal[p.target] ? principal[p.target] : na(`${p.target}#na`);
-    cells[id] = { cell_id: id, structure: p.structure, target: p.target, ...base, by_class: Object.fromEntries((SCOPE.classes as string[]).slice(1).map((c) => [c, 'collapsed_into:detached_house'])) };
-  });
+  const rows: Json[] = [];
+  for (const cls of SCOPE.classes as string[]) {
+    for (const p of PAIRS) {
+      const base: Json = (p.structure === 'principal' && principal[p.target]) || na(`${p.target}#na`);
+      const { inputs_used: _i, losers: _l, disclosure_set_id: _d, ...cols } = base; // the view carries the eight stored fields only
+      rows.push({ class: cls, structure: p.structure, target: p.target, reason: null, value: null, value_kind: null, winner_unit_id: null, winner_layer: null, evidence_kind: null, evidence_ref: null, ...cols });
+    }
+  }
   return {
-    id: 101, lot_gate: null, permitted_by_class: Object.fromEntries((SCOPE.classes as string[]).map((c) => [c, { status: 'permitted' }])),
+    id: 101, lot_gate: null, permitted: (SCOPE.classes as string[]).map(() => 0), permitted_texts: (SCOPE.classes as string[]).map(() => null),
     layer2_table_version: 'a'.repeat(64), evaluator_version: 'b'.repeat(64),
     lot_size_sqm: 300, frontage_m: 10, depth_m: 30, zoning_class: 'RD', zoning_holding: false, semi_half: false,
     is_heritage_designated: false, is_in_ravine_protection_area: false, existing_width_m: null, existing_length_m: null, existing_confidence: null,
-    pointers_hex: hexes.join(''), cells,
+    rows,
     ...over,
   };
 }
@@ -81,22 +83,28 @@ const CONFIG: Json = {
   compute_maxbld_scenarios_basement_livable_share: 1, compute_maxbld_scenarios_circulation_share: 0.1, compute_maxbld_scenarios_unit_min_interior_sqm: 30,
   compute_maxbld_scenarios_first_floor_elevation_m: 0, compute_maxbld_scenarios_min_dimension_m: 3, compute_maxbld_scenarios_lot_viability_margin_m: 0.5,
   compute_maxbld_scenarios_existing_confidence_min: 0.6, compute_maxbld_scenarios_trust_high_min_pass_pct: 100,
-  compute_maxbld_scenarios_not_evaluated_max_pct: 100, compute_maxbld_scenarios_batch_size: 500,
+  compute_maxbld_scenarios_not_evaluated_max_pct: 100, compute_maxbld_scenarios_batch_size: 500, compute_maxbld_scenarios_houseplex_min_units: 2,
 };
 const RUN_AT = '2026-10-22T12:00:00.000Z';
 const run = (rows: Json[], config: Json = CONFIG): Json => mod().materializeRows(rows, { config, run_at: RUN_AT, scope: SCOPE, currentTableVersion: 'a'.repeat(64) });
 const byScenario = (out: Json, parcel = 101): Record<string, Json> => Object.fromEntries((out.rows.e2 as Json[]).filter((r) => r.parcel_id === parcel).map((r) => [r.scenario, r]));
 
 describe('P3-8: the source statement (R-EH (a))', () => {
-  it('pages the Layer 2 lots by parcel id, joins the profile pointers and the cells, and only reads', () => {
+  it('pages the Layer 2 lots by parcel id and reads their decoded results from the option-4 view (CHAT-80.QP, R-JR), and only reads', () => {
     const s = mod().buildSourceSql({}, CONFIG, {});
     expect(s.batch_sql).toMatch(/FROM bylaw_resolution_lots/);
-    expect(s.batch_sql).toMatch(/bylaw_resolution_profiles/);
-    expect(s.batch_sql).toMatch(/bylaw_resolution_cells/);
+    expect(s.batch_sql).toMatch(/bylaw_resolution_results/);
+    expect(s.batch_sql).not.toMatch(/bylaw_resolution_(profiles|cells|signatures|disclosure_sets)/); // form C is gone
+    expect(s.batch_sql).not.toMatch(/pointers|generate_series|substring/i);
     expect(s.batch_sql).toMatch(/ORDER BY[^;]*parcel_id/);
     expect(s.batch_sql).toMatch(/LIMIT \$2/);
     expect(s.batch_binds).toEqual(['last_key', 'batch_size']);
     expect(`${s.count_sql} ${s.batch_sql}`).not.toMatch(/\b(INSERT|UPDATE|DELETE|TRUNCATE|DROP|ALTER)\b/i);
+  });
+  it('the compute knows no stored form: no form C name appears in its code, and no profile or cell table in its declared relations', () => {
+    const s = fs.readFileSync(path.join(ROOT, REL), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(s).not.toMatch(/fromCellRows|entriesFromPointers|pointers_hex|cellsById|disclosureSets|collapsed_into|(?<!permitted_)by_class/);
+    expect(JSON.stringify(mod().DECLARED)).not.toMatch(/profiles|cells/);
   });
 });
 
@@ -180,7 +188,7 @@ describe('P3-8: materializeRows over a clean permitted lot', () => {
 
 describe('P3-8: gates, holding zone and renovation', () => {
   it('a Layer 2 lot gate gives not_evaluated:<gate> on every row, no numbers, a disclosure, trust not_evaluated', () => {
-    const out = run([lotRow({ lot_gate: 'exception_not_authored', permitted_by_class: Object.fromEntries(CONFIG_CLASSES().map((c) => [c, { status: 'not_evaluated', reason: 'exception_not_authored' }])) })]);
+    const out = run([lotRow({ lot_gate: 'exception_not_authored', permitted: CONFIG_CLASSES().map(() => 2), permitted_texts: CONFIG_CLASSES().map(() => 'exception_not_authored') })]);
     for (const r of out.rows.e2 as Json[]) {
       expect(r.scenario_status).toBe('not_evaluated:exception_not_authored');
       expect(r.main_gfa_sqm).toBeNull();
@@ -336,13 +344,65 @@ describe('P3-8: the compute gates see this module clean (Spec 124 R-BZ/R-CA gate
     expect(JSON.stringify(c.modules)).toContain('maxbld-main-building.js'); // the entry's dependencies (the entry itself is not listed)
     expect(m.verdict(c)).toBe('PASS');
   });
-  it('G1..G4 purity: no ledger, undeclared relation, catalog or DDL site in the module (relations declared by its descriptor)', async () => {
-    const m = await gate('scripts/analysis/gates/compute-purity.mjs');
-    const sites = (await m.scanPurity({ repoRoot: ROOT, files: [REL] })) as Json[];
-    expect(sites.map((s) => `${s.code}@${s.line}`)).toEqual([]);
-  });
   it('gate E (compute-literals): no hard-coded tunable or shape violation in this module', () => {
     const out = execFileSync('node', ['scripts/analysis/gates/compute-literals.mjs', '--list'], { cwd: ROOT, encoding: 'utf8' });
     expect(out).not.toContain('compute-maxbld-scenarios');
+  });
+});
+
+describe('P3-Q8 (EVE.P3-Q8): the minimum houseplex unit count is a pinned logic variable, not a registry proposal', () => {
+  it('reads compute_maxbld_scenarios_houseplex_min_units; a missing variable throws; a higher floor makes a houseplex not_buildable:800.50(181)', () => {
+    expect(() => run([lotRow()], { ...CONFIG, compute_maxbld_scenarios_houseplex_min_units: undefined })).toThrow(/houseplex_min_units/);
+    const o = byScenario(run([lotRow()], { ...CONFIG, compute_maxbld_scenarios_houseplex_min_units: 5 }));
+    expect(o.detached_houseplex!.scenario_status).toBe('not_buildable:800.50(181)'); // 4 units < 5
+    expect(byScenario(run([lotRow()])).detached_houseplex!.dwelling_units).toBe(4); // floor 2: the 4 units stand
+  });
+  it('the registry no longer carries a proposed value for it; the arm reports it sourced from the seed migration', () => {
+    const reg = readJson('scripts/analysis/phase3/phase3-literals.json');
+    const e = (reg.literals as Json[]).find((l) => l.module_input === 'caps.minUnits')!;
+    expect(e.proposed_value).toBeUndefined();
+    expect(String(e.source)).toContain('compute_maxbld_scenarios_houseplex_min_units');
+  });
+  it('migration 283 seeds it in the P3-1 (R-CV) form with default 2, and says it is pinned (min = max)', () => {
+    const sql = fs.readFileSync(path.join(ROOT, 'migrations/283_compute_maxbld_scenarios_logic_variables.sql'), 'utf8');
+    const m = /\('compute_maxbld_scenarios_houseplex_min_units',\s*2,\s*'([^']*(?:''[^']*)*)'\)/.exec(sql);
+    expect(m, 'seed row').not.toBeNull();
+    expect(m![1]).toMatch(/Pinned min = max/);
+    expect(m![1]).toMatch(/800\.50\(181\)/);
+  });
+});
+
+describe('P3-8 fix: dwelling_units for the new-build scenarios D and 2 come from the scenario class definition (vocab scenario_class_units, M-160)', () => {
+  it('D and 2 carry house_units of detached_house and house_with_secondary_suite, and no count is typed in the module', () => {
+    const units = readJson('scripts/seeds/bylaw/vocab.json').scenario_class_units as Json;
+    const o = byScenario(run([lotRow()]));
+    expect(o.detached_house!.dwelling_units).toBe(units.detached_house.house_units);
+    expect(o.house_with_secondary_suite!.dwelling_units).toBe(units.house_with_secondary_suite.house_units);
+    const s = fs.readFileSync(path.join(ROOT, REL), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(s).not.toMatch(/dwelling_units\s*=\s*[0-9]/);
+    expect(s).toContain('scenario_class_units');
+  });
+});
+
+describe('P3-8 fix: gate E / purity G2 is reproducible from commits (the module declares its own relations)', () => {
+  const scan = async (src: string): Promise<Json[]> => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cmpurity-'));
+    fs.mkdirSync(path.join(tmp, 'scripts/lib/compute'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, REL), src);
+    const m = (await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/gates/compute-purity.mjs')).href)) as Json;
+    return (await m.scanPurity({ repoRoot: tmp, files: [REL] })) as Json[];
+  };
+  it('exports a DECLARED {reads, writes} literal naming exactly the relations its SQL touches', () => {
+    const d = mod().DECLARED as Json;
+    expect([...d.reads].sort()).toEqual(['bylaw_resolution_lots', 'bylaw_resolution_results', 'bylaw_resolution_texts', 'parcel_maxbld_scenarios', 'parcels']);
+    expect(d.writes).toEqual(['parcel_maxbld_scenarios']);
+  });
+  it('with NO sibling descriptor, G1..G4 report zero sites over the module as committed (the descriptor draft is not needed)', async () => {
+    expect((await scan(fs.readFileSync(path.join(ROOT, REL), 'utf8'))).map((s) => `${s.code}@${s.line}`)).toEqual([]);
+  });
+  it('and G2 actually runs on it: dropping a relation from DECLARED yields a compute-undeclared-relation site', async () => {
+    const src = fs.readFileSync(path.join(ROOT, REL), 'utf8').replace("'bylaw_resolution_texts', ", '');
+    const sites = await scan(src);
+    expect(sites.some((s) => /undeclared/.test(String(s.code)) || /undeclared/.test(String(s.rule)))).toBe(true);
   });
 });

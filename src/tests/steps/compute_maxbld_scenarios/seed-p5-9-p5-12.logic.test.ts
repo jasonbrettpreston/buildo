@@ -57,8 +57,9 @@ describe('P3-1: the 22 P5.9 logic variables (Spec 132 core.8, R-CV)', () => {
     expect(sql.split('\n').filter((l) => /^\s*(DELETE|DROP|TRUNCATE|UPDATE)\b/i.test(l))).toEqual([]);
   });
 
-  it('seeds exactly the 22 names, each default equal to the Spec 78 table', () => {
+  it('seeds exactly the 22 names plus the ruled houseplex_min_units (P3-Q8, pinned 2), each default equal to the Spec 78 table', () => {
     const want = new Map(p59().map((v) => [PREFIX + v.name, v.def]));
+    want.set(PREFIX + 'houseplex_min_units', 2); // EVE.P3-Q8: not a P5.9 row; pinned min = max = 2 (800.50(181) 'multiple dwelling units')
     expect([...seeded().keys()].sort()).toEqual([...want.keys()].sort());
     for (const [k, v] of want) expect(seeded().get(k), k).toBe(v);
   });
