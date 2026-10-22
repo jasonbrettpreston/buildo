@@ -4,7 +4,7 @@
 -- Closed resources published '3' and '03' for the same ward, so grouping by ward split one ward in two. This backfills the
 -- rows already stored (measured read-only 2026-10-21: 12,998 rows hold '1'..'9'; 36 other forms are already two digits).
 --
--- STAGED, NOT APPLIED: the operator applies it (npm run migrate). Data-only, idempotent (a second run matches 0 rows),
+-- APPLIED 2026-10-22 (Night A; npm run migrate). Data-only, idempotent (a second run matches 0 rows),
 -- no DDL. data_hash is deliberately NOT written (JS-computed over the mapped record): the next load recomputes the hash
 -- with the padded ward and rewrites each of those rows once (the measured re-upsert of Spec 132 ingestor.6; the Closed
 -- resource rows only on a --full run).
