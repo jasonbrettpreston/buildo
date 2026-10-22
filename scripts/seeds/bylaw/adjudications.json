@@ -90290,6 +90290,86 @@
           "reason": "limit_not_modelled"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](F)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-55e3c4df: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(1120)#(1120)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-0ea92920: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(1120)#(1120)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-90b9f3f3: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f21cf707: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(ii)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-a0bf94ea: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(1120)#(1120)[SSP](G)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-43771404: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(1120)#(1120)[SSP](G)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.3.10(929)#(929)[SSP](D)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-02af4532: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(929)#(929)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.3.10(929)#(929)[SSP](D)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-9640f8f3: answer A — EVE.M324-G (operator approved 2026-10-22-page-eve): the named yard decides the target (side_setback_m / rear_setback_m), the garage or ancillary structure is the subject in application.uses",
+      "unit": "900.3.10(929)#(929)[SSP](D)"
     }
   ]
 }
