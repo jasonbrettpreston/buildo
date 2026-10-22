@@ -1,0 +1,935 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_2/900.2.10.w2-s44",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.2.10(855)#(855)[SSP](A)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "The lands must comply with exception 900.2.10(4); that exception is incorporated and keyed on its own units.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 515-76",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](B)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 576-76",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](C)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 677-76",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](D)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 24-77",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](E)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 614-77",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](F)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 391-78",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](G)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 478-78",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](H)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 664-78",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](I)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 812-78",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](J)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 889-78",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](K)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 373-79",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](L)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 615-79",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](M)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 884-79",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](N)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 61-80",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](O)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 879-80",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](P)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 116-82",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](Q)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 145-83",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](R)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 92-85",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](S)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 514-86",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "900.2.10(855)#(855)[PBS](T)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-laws 606-87 and 65-90",
+    "municipality": "Former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "3 Berkeley St."
+    ]
+   },
+   "literals_not_expressed": [],
+   "not_an_override": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 855",
+     "any": "The lands"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Prevailing former by-law; an alternate compliance path that is not evaluated.",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "none"
+  }
+ ],
+ "rows": {
+  "900.2.10(855)": {
+   "explanation": "Exception R 855 requires the lands to comply with exception 900.2.10(4) and lists former City of Toronto by-laws that prevail on the lands (on 3 Berkeley St., by-laws 606-87 and 65-90). The prevailing by-laws are alternate compliance paths and are not evaluated here.",
+   "code_refs": "none"
+  }
+ }
+}

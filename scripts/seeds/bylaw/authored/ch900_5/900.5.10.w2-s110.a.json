@@ -1,0 +1,466 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_5/900.5.10.w2-s110",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "street_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "street_setback_m = 7.5 m @(237)[SSP](A)(i)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "abuts_named_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "Setback applies only where the lot line abuts the named street; the named-street abutment is not held in the lot data.",
+        "gaps": "abuts_named_street: which named street a lot line abuts is not held"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions",
+          "abuts_named_street": "lot line abuts Finch Ave"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "abuts_named_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "36.0 metres",
+          "clause": "(237)[SSP](A)(ii)",
+          "reason": "limit_not_modelled"
+        }
+      ],
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "A setback measured from the centreline of the original road allowance has no modelled target.",
+        "gaps": "setback measured from a road centreline"
+      },
+      "disclosure": "The minimum building setback where the lot line abuts Sheppard Ave. is 36.0 metres measured from the centreline of the original road allowance; this is not evaluated.",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions",
+          "abuts_named_street": "lot line abuts Sheppard Ave"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(iii)(a)",
+      "archetype": "LIMIT",
+      "target": "street_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "street_setback_m = 7.5 m @(237)[SSP](A)(iii)(a)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "abuts_named_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "Only the 7.5 metre arm from the lot line is modelled; the setback is the greater of this and the 36.0 metre centreline arm in (b), which is not modelled, and it applies only where the lot line abuts Kennedy Rd.",
+        "gaps": "abuts_named_street not held; greater-of arm (b) from the centreline not modelled"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions",
+          "abuts_named_street": "abuts Kennedy Rd"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(iii)(b)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "abuts_named_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "36.0 metres",
+          "clause": "(237)[SSP](A)(iii)(b)",
+          "reason": "limit_not_modelled"
+        }
+      ],
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "A setback measured from the centreline of the original road allowance has no modelled target.",
+        "gaps": "setback measured from a road centreline"
+      },
+      "disclosure": "Where the lot line abuts Kennedy Rd., the setback is the greater of 7.5 metres from the lot line and 36.0 metres from the centreline of the original road allowance; the centreline arm is not evaluated.",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions",
+          "abuts_named_street": "abuts Kennedy Rd"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(iv)",
+      "archetype": "LIMIT",
+      "target": "street_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "street_setback_m = 6.0 m @(237)[SSP](A)(iv)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "6.0 metres applies to a lot line abutting a street other than Finch Ave., Sheppard Ave. and Kennedy Rd.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.5 m @(237)[SSP](B)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Minimum building setback from a side lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = 50 pct @(237)[SSP](C)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Maximum lot coverage.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](D)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Where the required parking space is located is a design choice, not evaluated from lot data.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "parking_space"
+        ],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions",
+          "parking_space": "required parking space"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](E)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Incorporates exception 900.5.10(352).",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions"
+        }
+      }
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "No prevailing by-laws or sections apply.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "Exception RT 237",
+          "any": "Site Specific Provisions"
+        }
+      }
+    }
+  ],
+  "rows": {
+    "900.5.10(237)": {
+      "explanation": "Exception RT 237 sets site-specific building setbacks from street lot lines (7.5 m from Finch Ave., a greater-of rule for Kennedy Rd., 6.0 m otherwise; Sheppard Ave. and Kennedy Rd. also use a road-centreline measure), a 1.5 m side lot line setback, 50% maximum lot coverage, requires the parking space to be in the residential building and requires compliance with exception 900.5.10(352).",
+      "code_refs": "none"
+    }
+  }
+}

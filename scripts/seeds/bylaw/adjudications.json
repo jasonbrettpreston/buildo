@@ -96050,6 +96050,980 @@
       "rule": "Operator CHAT-83.W-2 (2026-10-23-batch-d) with CHAT-81.FAM-ALL; Spec 133 §m.82 (M-75 correction form): shape of the re-keyed unit",
       "unit": "900.4.10(200)#(200)[SSP](C)(ii)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](A)",
+      "value": [
+        {
+          "clause": "(392)[PBS](A)",
+          "literal": "1",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "clause": "(392)[PBS](A)",
+          "literal": "3",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](B)",
+      "value": [
+        {
+          "clause": "(392)[PBS](B)",
+          "literal": "6",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](C)",
+      "value": [
+        {
+          "clause": "(392)[PBS](C)",
+          "literal": "3",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](D)",
+      "value": [
+        {
+          "clause": "(392)[PBS](D)",
+          "literal": "22",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](E)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](E)",
+      "value": [
+        {
+          "clause": "(392)[PBS](E)",
+          "literal": "24",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](F)",
+      "value": [
+        {
+          "clause": "(392)[PBS](F)",
+          "literal": "24",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](H)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](H)",
+      "value": [
+        {
+          "clause": "(392)[PBS](H)",
+          "literal": "19",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "clause": "(392)[PBS](H)",
+          "literal": "21",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](I)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](I)",
+      "value": [
+        {
+          "clause": "(392)[PBS](I)",
+          "literal": "27",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](J)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](J)",
+      "value": [
+        {
+          "clause": "(392)[PBS](J)",
+          "literal": "29",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](K)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](K)",
+      "value": [
+        {
+          "clause": "(392)[PBS](K)",
+          "literal": "31",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](L)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](L)",
+      "value": [
+        {
+          "clause": "(392)[PBS](L)",
+          "literal": "33",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](M)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](M)",
+      "value": [
+        {
+          "clause": "(392)[PBS](M)",
+          "literal": "26",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](N)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](N)",
+      "value": [
+        {
+          "clause": "(392)[PBS](N)",
+          "literal": "8",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](O)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](O)",
+      "value": [
+        {
+          "clause": "(392)[PBS](O)",
+          "literal": "5",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](P)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](P)",
+      "value": [
+        {
+          "clause": "(392)[PBS](P)",
+          "literal": "7",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](Q)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](Q)",
+      "value": [
+        {
+          "clause": "(392)[PBS](Q)",
+          "literal": "9",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](R)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](R)",
+      "value": [
+        {
+          "clause": "(392)[PBS](R)",
+          "literal": "31",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](S)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](S)",
+      "value": [
+        {
+          "clause": "(392)[PBS](S)",
+          "literal": "1",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](T)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](T)",
+      "value": [
+        {
+          "clause": "(392)[PBS](T)",
+          "literal": "12",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](U)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "literal bookkeeping",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical literal bookkeeping under the lane label (round-21); G-CLAUSE named the exact literals; address ranges are listed number by number (338 (B), 128 (C)(i))",
+      "unit": "900.3.10(392)#(392)[PBS](U)",
+      "value": [
+        {
+          "clause": "(392)[PBS](U)",
+          "literal": "16",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1435)#(1435)[SSP](B)(iv)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-64d4c2ca: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437; Spec 133 §m.317): word for word the ruled 1436/1437 unit, UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1435)#(1435)[SSP](B)(iv)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1435)#(1435)[SSP](C)(ii)(a)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-db968083: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437; Spec 133 §m.317): word for word the ruled 1436/1437 unit, UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1435)#(1435)[SSP](C)(ii)(a)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "a",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1435)#(1435)[SSP](C)(ii)(b)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ba90e881: answer A — Operator-ruled twin (CHAT-64 family rulings on 1436/1437; Spec 133 §m.317): word for word the ruled 1436/1437 unit, UNUSUAL on the rule-31 route",
+      "unit": "900.3.10(1435)#(1435)[SSP](C)(ii)(b)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.3.10(1435)#(1435)[SSP](D)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c145cdc9: answer B — Operator-ruled twin (CHAT-64 family rulings on 1436/1437, CHAT-67.1434A; Spec 133 §m.317): word for word the 1436 (D) REQUIRE form",
+      "unit": "900.3.10(1435)#(1435)[SSP](D)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-2538ab6f: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](A)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](B)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-f36d0472: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](B)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](C)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-7f4ace70: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](C)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](D)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-cd125e3b: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](D)(ii)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-82b8f482: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](D)(ii)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](E)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-88ca5b47: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](E)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](F)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-06c1eeb6: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](F)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.4.10(255)#(255)[SSP](G)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-de9826ad: answer B — CHAT-81.CITE-1 (operator approved 2026-10-23-batch-b): the full clause-path citation convention; the statement cites the unit path and the value is identical (keyer A wrote the full unit id after the @)",
+      "unit": "900.4.10(255)#(255)[SSP](G)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(i)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-b0d388db: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(i)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-2483f05e: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(i)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-17a2cae6: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(i)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-013f057f: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(i)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "archetype",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(iii)(a)-archetype",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-fb230122: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iii)(a)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(iii)(a)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-8080fbc2: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iii)(a)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(iii)(a)-bound",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-ef9863a4: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iii)(a)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(iii)(a)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-539301ab: answer B — CHAT-81.FAM-ALL (FAM-ABUT-NAMED): a setback arm that applies only on named roads is UNUSUAL",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iii)(a)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(iv)-target",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-c807791f: answer A — CHAT-81.FAM-ALL (FAM-ABUT-COMP) with EVE.M324-G: the complement arm 6.0 m is the smallest sibling; a lot line abutting a street takes street_setback_m",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iv)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21-ruled",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-900.5.10(237)#(237)[SSP](A)(iv)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "W2 queue Q-W2-441abf60: answer A — CHAT-81.FAM-ALL (FAM-ABUT-COMP) with EVE.M324-G: the complement arm 6.0 m is the smallest sibling; a lot line abutting a street takes street_setback_m",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iv)"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](A)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](B)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](B)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](C)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](D)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](D)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](E)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](E)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](E)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](F)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](F)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](F)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](H)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](H)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](H)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](I)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](I)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](I)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](J)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](J)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](J)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](K)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](K)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](K)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](L)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](L)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](L)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](M)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](M)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](M)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](N)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](N)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](N)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](O)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](O)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](O)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](P)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](P)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](P)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](Q)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](Q)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](Q)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](R)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](R)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](R)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](S)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](S)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](S)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](T)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](T)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](T)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(392)#(392)[PBS](U)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Street, schedule and exception numbers of a prevailing-by-law reference are not clause literals for G-CLAUSE (349 (A)-(C)).",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "supersedes": "COR-900.3.10(392)#(392)[PBS](U)/literals_not_expressed",
+      "unit": "900.3.10(392)#(392)[PBS](U)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "requirement",
+      "id": "COR-900.3.10(1435)#(1435)[SSP](D)/requirement",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1435 (D) is keyed to the exact 1436 (D) twin form",
+      "unit": "900.3.10(1435)#(1435)[SSP](D)",
+      "value": "comply_with_bylaw"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1435)#(1435)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1435 (D) is keyed to the exact 1436 (D) twin form",
+      "unit": "900.3.10(1435)#(1435)[SSP](D)",
+      "value": {
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must comply with the minimum building setbacks required by the By-law. The setbacks themselves are modelled by their own units.",
+        "gaps": "none",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "condition",
+      "id": "COR-900.3.10(1435)#(1435)[SSP](D)/condition",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1435 (D) is keyed to the exact 1436 (D) twin form",
+      "unit": "900.3.10(1435)#(1435)[SSP](D)",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1435)#(1435)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "twin of 1436 (D)",
+      "rule": "Operator CHAT-64 family rulings (1436/1437 twins) with CHAT-67.1434A and Spec 133 §m.317 dated note 2: 1435 (D) is keyed to the exact 1436 (D) twin form",
+      "unit": "900.3.10(1435)#(1435)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1435)#(1435)[SSP](B)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"more than one secondary suite\" is a count",
+      "rule": "Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "unit": "900.3.10(1435)#(1435)[SSP](B)(i)",
+      "value": [
+        {
+          "clause": "(1435)[SSP](B)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(237)#(237)[SSP](A)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "UNUSUAL carries the limit as limit_not_modelled",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-NAMED); Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "unit": "900.5.10(237)#(237)[SSP](A)(i)",
+      "value": [
+        {
+          "clause": "(237)[SSP](A)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(237)#(237)[SSP](A)(i)/calculation_handling",
+      "kind": "correction",
+      "reason": "UNUSUAL shape",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-NAMED); Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "unit": "900.5.10(237)#(237)[SSP](A)(i)",
+      "value": {
+        "description": "A setback of 7.5 metres that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "disclosure",
+      "id": "COR-900.5.10(237)#(237)[SSP](A)(i)/disclosure",
+      "kind": "correction",
+      "reason": "UNUSUAL needs a disclosure (wording as 324 (D)(i))",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-NAMED); Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "unit": "900.5.10(237)#(237)[SSP](A)(i)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(237)#(237)[SSP](A)(iii)(a)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "UNUSUAL carries the limit as limit_not_modelled",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-NAMED); Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iii)(a)",
+      "value": [
+        {
+          "clause": "(237)[SSP](A)(iii)(a)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(237)#(237)[SSP](A)(iii)(a)/calculation_handling",
+      "kind": "correction",
+      "reason": "UNUSUAL shape",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-NAMED); Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iii)(a)",
+      "value": {
+        "description": "A setback of 7.5 metres that applies only where the lot line abuts the named road; street names are not held.",
+        "gaps": "The road a lot line abuts is not held.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r21",
+      "field": "disclosure",
+      "id": "COR-900.5.10(237)#(237)[SSP](A)(iii)(a)/disclosure",
+      "kind": "correction",
+      "reason": "UNUSUAL needs a disclosure (wording as 324 (D)(i))",
+      "rule": "CHAT-81.FAM-ALL (FAM-ABUT-NAMED); Spec 133 §m.82 (M-75 correction form): mechanical bookkeeping under the lane label (round 21)",
+      "unit": "900.5.10(237)#(237)[SSP](A)(iii)(a)",
+      "value": "Where the lot line abuts the named road, the minimum building setback is 7.5 metres; this is not evaluated by the tool."
     }
   ]
 }
