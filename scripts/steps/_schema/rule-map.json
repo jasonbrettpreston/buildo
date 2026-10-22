@@ -5457,7 +5457,7 @@
         "kind": "lock",
         "ref": "src/tests/chat-rulings-register.logic.test.ts"
       },
-      "statement": "The Layer 2 storage budget is bounded by resolve_bylaws_storage_budget_mb at POST (interim 1,300 MB until the first measurement) and repeated payloads are interned as set ids; the stored form originally ruled here (profile key, form C) is superseded by R-JR (one row per lot, positional arrays; operator 2026-10-23, CHAT-80.QP). Operator 2026-10-22, CHAT-69.Q1, CHAT-75.QO; amends Spec 134 sections 3 and 11.",
+      "statement": "The Layer 2 storage budget is bounded by resolve_bylaws_storage_budget_mb at POST (interim 1,300 MB until the first measurement; operator 2026-10-22, CHAT-69.Q1, EVE.Q-K). Everything about the stored form (profile key, interned set ids) is superseded by R-JR (one row per lot, positional arrays, two dictionaries; operator 2026-10-23, CHAT-80.QP).",
       "source": {
         "register": true
       }
