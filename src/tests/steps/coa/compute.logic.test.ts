@@ -176,3 +176,30 @@ describe('coa ② compute — the declared changes', () => {
 // The observers over the runner result (ctx.acquired / ctx.written) are locked in ./dispatch.logic.test.ts against the
 // context the REAL ingestPrimaries dispatch builds (Spec 124 R-EW, COA-D13): a hand-built ctx here fed the flat
 // runIngestPhase shape and missed the zero counters the Night P4 swap measured (2026-10-20).
+
+// COA-D17 (D-WARD, CHAT-38.D-WARD, operator y 2026-10-21): coa_applications.ward is one fixed form, two digits ('03').
+// CKAN's Active and Closed resources carry '3' and '03' for the same ward; grouping by ward split one ward in two.
+describe('coa ② compute — COA-D17 ward is two digits', () => {
+  it('a one-digit ward (WARD or WARD_NUMBER) is zero-padded; a two-digit ward is unchanged', () => {
+    expect(shape(rec({ WARD: '3' })).ward).toBe('03');
+    expect(shape(rec({ WARD: undefined, WARD_NUMBER: '7' })).ward).toBe('07');
+    expect(shape(rec({ WARD: ' 9 ' })).ward).toBe('09');
+    expect(shape(rec({ WARD: '03' })).ward).toBe('03');
+    expect(shape(rec({ WARD: '10' })).ward).toBe('10');
+  });
+  it('a blank ward stays null and a non-numeric ward is kept as published (no invented value)', () => {
+    expect(shape(rec({ WARD: '  ' })).ward).toBeNull();
+    expect(shape(rec({ WARD: 'N/A' })).ward).toBe('N/A');
+  });
+  it('the row hash covers the normalised ward, so "3" and "03" are the same row (no flip-flop between resources)', () => {
+    expect(shape(rec({ WARD: '3' })).data_hash).toBe(shape(rec({ WARD: '03' })).data_hash);
+  });
+  it('the backfill migration is a staged data-only UPDATE of one-digit wards: idempotent, no DDL, no hash write', () => {
+    const fs = req('fs') as typeof import('fs');
+    const sql = fs.readFileSync(path.join(REPO_ROOT, 'migrations/281_coa_ward_two_digits.sql'), 'utf8');
+    const live = sql.split('\n').filter((l) => !/^\s*--/.test(l)).join('\n');
+    expect(live).toMatch(/UPDATE\s+coa_applications\s+SET\s+ward\s*=\s*lpad\(ward,\s*2,\s*'0'\)\s+WHERE\s+ward\s*~\s*'\^\[0-9\]\$'/i);
+    expect(live).not.toMatch(/\b(ALTER|DROP|CREATE|DELETE|TRUNCATE)\b/i);
+    expect(live).not.toMatch(/data_hash/i);
+  });
+});

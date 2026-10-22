@@ -519,7 +519,7 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     for (const row of ['M-305', 'M-306', 'M-307', 'M-308', 'M-309', 'M-310', 'M-311', 'M-312']) expect(reg.some((l) => l.startsWith(`| **${row}** |`)), row).toBe(true);
     const rjb = fs.readFileSync(path.join(REPO_ROOT, A), 'utf8').split('\n').find((l) => l.startsWith('| R-JB |')) as string;
     expect(rjb).toContain('`2026-10-21-page-4d-d#CHAT-38.D-WARD`');
-    expect(rjb).toContain('STAGED FOR NIGHT A');
+    expect(rjb).toContain('LANDED 2026-10-22');
     expect(rjb).not.toContain('PARKED');
   });
 

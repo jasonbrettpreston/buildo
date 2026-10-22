@@ -740,10 +740,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T15:26:51.703Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 61,
-        "sample_n": 9,
+        "at": "2026-10-22T11:36:15.065Z",
+        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
+        "cost_ms": 19,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -770,10 +770,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 8,
-        "at": "2026-10-21T15:26:51.703Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 137,
-        "sample_n": 9,
+        "at": "2026-10-22T11:36:15.065Z",
+        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
+        "cost_ms": 219,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -800,10 +800,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T15:26:51.703Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 132,
-        "sample_n": 9,
+        "at": "2026-10-22T11:36:15.065Z",
+        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
+        "cost_ms": 217,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -830,10 +830,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T15:26:51.703Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 19,
-        "sample_n": 9,
+        "at": "2026-10-22T11:36:15.065Z",
+        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
+        "cost_ms": 10,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",

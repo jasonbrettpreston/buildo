@@ -5437,17 +5437,16 @@
     {
       "id": "R-JB",
       "kind": "register-ruling",
-      "status": "historical",
+      "status": "active",
       "handbook_line": "ingestor.6",
       "enforcement": {
-        "kind": "none",
-        "ref": null
+        "kind": "lock",
+        "ref": "src/tests/steps/coa/compute.logic.test.ts"
       },
-      "statement": "coa_applications.ward is two digits (03): the load pads a one-digit ward and a staged migration (281_coa_ward_two_digits.sql, unapplied) backfills the rows. STAGED FOR NIGHT A: the red evidence is in the tree; the compute, lock (COA-D17) and migration 281 land in the Night A recapture commit; the migration is applied and the four coa captures retaken at the CoA capture night (operator, 4D page CHAT-38.D-WARD and 2026-10-21-batch-o#CHAT-47; no cloud, CHAT-54). Flips to active/lock when Night A lands.",
+      "statement": "coa_applications.ward is two digits (03): the load step pads a one-digit ward (normalizeWard) and migration 281_coa_ward_two_digits.sql backfilled the stored rows (applied to the local database 2026-10-22, operator 2026-10-22-chat-batch-t-57#CHAT-57; the 4D page CHAT-38.D-WARD and 2026-10-21-batch-o#CHAT-47 approved the rule). In force; locked by the COA-D17 tests.",
       "source": {
         "register": true
-      },
-      "status_reason": "STAGED FOR NIGHT A, not yet in force (CHAT-47, CHAT-54): the compute change, its lock and migration 281 (unapplied) land in the Night A recapture commit (the four coa captures would read stale before it, and the migration count moves every generated scorecard); listed `historical` (the closest existing status: not in force, kept so citations resolve) so the handbook counts do not include it; it flips to active/lock when Night A lands."
+      }
     },
     {
       "id": "R-JK",

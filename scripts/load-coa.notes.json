@@ -31,6 +31,9 @@
     },
     {
       "what": "The data_hash covers the MAPPED record (sorted keys), never the raw CKAN row, whose _id / _full_text / rank change between fetches (8bcbee18). Dedup keeps the record with the later decision_date; the union acquires Active before Closed, so a tie keeps the Active row. Closed is acquired in full mode only (externals[].modes, R-DX (iv))."
+    },
+    {
+      "what": "ward is stored as two digits ('03'), the form the notices' bracketed number takes (COA-D17, operator y 2026-10-21). CKAN's Active and Closed resources publish '3' and '03' for the same ward; only a one-digit ward is padded, a blank is null and other text is kept. The row hash covers the padded ward, so the first load after the staged backfill (migrations/281_coa_ward_two_digits.sql) rewrites each backfilled row once; Closed rows only on --full."
     }
   ],
   "how_to_investigate": [

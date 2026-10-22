@@ -7,6 +7,34 @@
         "COA_NOTICES_FORCE_RELOAD": "1"
       },
       "why": "the descriptor's force_run env bypasses the content-hash skip (V3 fleet night 2026-10-16 night.log)."
+    },
+    "post/coa_notices.nonzero.json": {
+      "via": "bracket",
+      "env": {
+        "COA_NOTICES_FORCE_RELOAD": "1"
+      },
+      "steps": [
+        [
+          "{sql}",
+          "CREATE TABLE coa_notice_variances_cohort_bak_{ts} AS SELECT * FROM coa_notice_variances WHERE variance_key IN (SELECT variance_key FROM coa_notice_variances WHERE retired_at IS NULL ORDER BY variance_key LIMIT 50)"
+        ],
+        [
+          "{sql}",
+          "DELETE FROM coa_notice_variances WHERE variance_key IN (SELECT variance_key FROM coa_notice_variances_cohort_bak_{ts})"
+        ],
+        [
+          "{harness}"
+        ],
+        [
+          "{sql}",
+          "SELECT 1/(CASE WHEN (SELECT count(*) FROM coa_notice_variances m JOIN coa_notice_variances_cohort_bak_{ts} b USING (variance_key) WHERE (to_jsonb(m) - $$loaded_at$$) = (to_jsonb(b) - $$loaded_at$$)) = (SELECT count(*) FROM coa_notice_variances_cohort_bak_{ts}) AND (SELECT count(*) FROM coa_notice_variances_cohort_bak_{ts}) = 50 THEN 1 ELSE 0 END)"
+        ],
+        [
+          "{sql}",
+          "DROP TABLE coa_notice_variances_cohort_bak_{ts}"
+        ]
+      ],
+      "why": "#38 nonzero evidence (CHAT-58, 2026-10-22): delete the first 50 live variance_key rows after copying them to a before-image, run the forced reload so the pinned 2017 decision PDFs are re-fetched (sha256-checked, public) and the 50 rows are re-inserted (records_new 50), verify the 50 returned rows equal the before-image except loaded_at, drop the before-image. If the harness step fails, restore with INSERT INTO coa_notice_variances SELECT * FROM the before-image ON CONFLICT DO NOTHING."
     }
   }
 }
