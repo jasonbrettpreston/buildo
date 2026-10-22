@@ -164,6 +164,8 @@
     {
       "absent_phrases": [
         "building length for a detached houseplex",
+        "building length for a semi-detached houseplex",
+        "building length of a semi-detached houseplex",
         "10.80.40.20(4)"
       ],
       "accounted_occurrences": [
@@ -176,7 +178,8 @@
       ],
       "answer": "not_applicable",
       "building_types": [
-        "detached_houseplex"
+        "detached_houseplex",
+        "semi_detached_houseplex"
       ],
       "checked_page": "ch10_80",
       "evidence_kind": "absence",
@@ -189,7 +192,7 @@
         "the permitted maximum building length for a detached house or a semi-detached house is 17.0 metres"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "an RM detached houseplex is outside the subject of 10.80.40.20: (1) and its (2) extension name \"a detached house or a semi-detached house\", (3) a townhouse or apartment building on a major street; the other building-length phrase is a side-yard rule (M-190, M-204(2): not_applicable, the M-183 form)",
+      "statement": "an RM detached houseplex is outside the subject of 10.80.40.20: (1) and its (2) extension name \"a detached house or a semi-detached house\", (3) a townhouse or apartment building on a major street; the other building-length phrase is a side-yard rule (M-190, M-204(2): not_applicable, the M-183 form); likewise an RM semi-detached houseplex (Q-KG2: no clause of 10.80.40.20 names it)",
       "subject_clause": "10.80.40.20(1)",
       "target": "building_length_m",
       "zone": "RM"
@@ -197,6 +200,10 @@
     {
       "absent_phrases": [
         "building depth for a detached houseplex",
+        "building depth for a semi-detached houseplex",
+        "building depth of a semi-detached houseplex",
+        "building depth for a townhouse",
+        "building depth of a townhouse",
         "10.80.40.30(2)"
       ],
       "accounted_occurrences": [
@@ -205,7 +212,9 @@
       ],
       "answer": "not_applicable",
       "building_types": [
-        "detached_houseplex"
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "townhouse"
       ],
       "checked_page": "ch10_80",
       "evidence_kind": "absence",
@@ -218,7 +227,7 @@
         "the rear main wall of a detached house or semi-detached house"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "an RM detached houseplex is outside the subject of 10.80.40.30(1), which binds \"the rear main wall of a detached house or semi-detached house\" (M-204(2): not_applicable, the M-183 form)",
+      "statement": "an RM detached houseplex, semi-detached houseplex and townhouse are outside the subject of 10.80.40.30(1), which binds \"the rear main wall of a detached house or semi-detached house\" (M-204(2): not_applicable, the M-183 form; Q-KG2)",
       "subject_clause": "10.80.40.30(1)",
       "target": "building_depth_m",
       "zone": "RM"
