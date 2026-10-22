@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "I dont want to do any more exceptions",
+  "context": "After the planned exception rounds finished (blocked lots 84,815 → 39,236, 8.9 %) and SCOPE-1 reached its decision point (lower the census floor / supplement round, both adding scope). Answers SCOPE-1's follow-up: no further exception keying. Work already approved and in flight (verify-42 fixes, CHAT-84 NAMED-1b / TWIN-1 / S22-1) is finishing, not new scope.",
+  "decisions": [
+    {"id": "CHAT-85.no-more-exceptions", "subject": "No further exception keying (no census-floor lowering, no supplement)", "decision": "approve", "recommendation": "Stop new exception rounds; lots under an unauthored exception keep the existing not-authored disclosure; finish only the approved fixes in flight."}
+  ]
+}

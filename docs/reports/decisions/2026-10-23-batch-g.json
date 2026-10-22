@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-g/2026-10-23-batch-g.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-g",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y1 y2",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-g/2026-10-23-batch-g.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-86.whole-street",
+      "question": "Whole-street named-address references count as parsed",
+      "recommendation": "A named_addresses ref with a street but no house number parses as whole_street and is resolved by street key only.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-86.bay-window",
+      "question": "Wording \"bay windows may project\" for window_projection_encroachment_m",
+      "recommendation": "Confirm the pattern added for 144 (J).",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}
