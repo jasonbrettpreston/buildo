@@ -22,7 +22,7 @@
  */
 'use strict';
 
-const { mechanicalAtticExclusion } = require('../../src/features/leads/lib/renovation-shared.js');
+const { mechanicalAtticExclusion, atticFloor } = require('../../src/features/leads/lib/renovation-shared.js');
 
 const PRINCIPAL = 'principal';
 const OWED = Object.freeze(['front_averaging', 'lane_centreline', 'triangular_lot', 'deep_side_yard', 'flat_roof_wall_limit', 'free_share_union']);
@@ -52,20 +52,6 @@ const needNum = (x, name) => {
 };
 /** An optional cap: null when the law sets none (not_applicable, unlimited, unregulated). */
 const cap = (x) => (need(x).kind === 'num' ? x.v : null);
-
-function atticFor(p, dims, sh) {
-  // p: {nw, Hw, H, pitch, ad, c, q, shareMin, areaMin, e}; dims: {D (slope direction), E (along the wall)}
-  const base = p.Hw - p.nw * sh; // wall height above the last full plate
-  const top = p.H - p.nw * sh - p.ad; // clearance where the roof meets the height limit
-  const reach = (cl) => (cl < top ? Math.max((cl + p.ad - base) / p.pitch, 0) : null);
-  const area = (cl) => { const x = reach(cl); return x === null ? 0 : Math.max(dims.D - 2 * x, 0) * dims.E; };
-  const xc = reach(p.c);
-  const dormer = (cl) => (reach(cl) === null || xc === null ? 0 : 2 * p.e * dims.E * Math.min(xc, dims.D / 2));
-  const total = area(p.c) + dormer(p.c);
-  const qualifying = area(p.q) + dormer(p.q);
-  const counted = total > 0 && total >= p.areaMin && qualifying >= p.shareMin * total;
-  return { total, counted };
-}
 
 function mainBuilding({ view, cls, lot, config, clause }) {
   try {
@@ -145,9 +131,9 @@ function compute(view, cls, lot, config, clause) {
   for (const pair of PAIRS) {
     const dims = pair === 'side' ? { D: Wd, E: Lp } : { D: Lp, E: Wd };
     const a = atticAllowed
-      ? atticFor({ nw, Hw, H, pitch, ad: config.roofAssemblyDepthM, c: cCount, q: cQual, shareMin: shareQual / 100, areaMin: areaQual, e }, dims, sh)
+      ? atticFloor({ nw, Hw, H, pitch, ad: config.roofAssemblyDepthM, c: cCount, q: cQual, shareMin: shareQual / 100, areaMin: areaQual, e }, dims, sh)
       : { total: 0, counted: false };
-    if (best === null || (a.counted ? a.total : 0) > (best.a.counted ? best.a.total : 0)) best = { pair, a };
+    if (best === null || (a.counted === best.a.counted ? a.total > best.a.total : a.counted)) best = { pair, a };
   }
   let floorB = nw * F + (best.a.counted ? best.a.total : 0);
   let gfaB = capGfa(floorB);

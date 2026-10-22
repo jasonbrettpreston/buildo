@@ -15,6 +15,8 @@
  */
 'use strict';
 
+const { unitsFor } = require('../../src/features/leads/lib/renovation-shared.js');
+
 const NOT_BUILDABLE = 'not_buildable:800.50(181)';
 /** M-202(2): the lift of a 'u' below 6 inside 600.60 applies in R, RT and RM only. */
 const LIFT_ZONES = Object.freeze(['R', 'RT', 'RM']);
@@ -38,26 +40,17 @@ function houseplexUnits({ view, cls, main, config, caps, lot }) {
   const floorAreas = [];
   for (let i = 0; i < main.main_storeys; i += 1) floorAreas.push({ floor: i + 1, area: main.main_footprint_sqm, in_gfa: true });
   if (hasBasement) floorAreas.push({ floor: 0, area: main.main_footprint_sqm * config.basementLivableShare, in_gfa: false });
-  const floors = floorAreas.length;
   const houseplexCap = lot.semi ? caps.semi : lot.in600_60 ? caps.detached_600_60 : caps.detached;
-  const bound = [houseplexCap, floors, ...(u.cap === null ? [] : [u.cap])];
-  let count = Math.min(...bound);
-
-  const breakdown = floorAreas
-    .map((f) => ({ floor: f.floor, interior_area_sqm: f.area * (1 - config.circulationShare), in_gfa: f.in_gfa }))
-    .sort((a, b) => b.floor - a.floor);
-  const perUnit = (n) => breakdown.reduce((t, f) => t + f.interior_area_sqm, 0) / n;
+  const r = unitsFor({ floors: floorAreas, uCap: u.cap, houseplexCap, circulationShare: config.circulationShare, unitMinInteriorSqm: config.unitMinInteriorSqm, minUnits: caps.minUnits });
+  if (r.status !== 'computed') return { status: NOT_BUILDABLE };
   const disclosures = [];
   const params = {};
-  const start = count;
-  while (count >= caps.minUnits && perUnit(count) < config.unitMinInteriorSqm) count -= 1;
-  if (count < caps.minUnits) return { status: NOT_BUILDABLE };
-  if (count < start) { disclosures.push('unit_count_reduced'); params.unit_count_reduced = { n: count, m: config.unitMinInteriorSqm }; }
+  if (r.reduced) { disclosures.push('unit_count_reduced'); params.unit_count_reduced = { n: r.count, m: config.unitMinInteriorSqm }; }
   return {
     status: 'computed',
-    dwelling_units: count,
-    unit_breakdown: breakdown,
-    avg_unit_gfa_sqm: perUnit(count),
+    dwelling_units: r.count,
+    unit_breakdown: r.breakdown,
+    avg_unit_gfa_sqm: r.avg,
     disclosures,
     disclosure_params: params,
   };

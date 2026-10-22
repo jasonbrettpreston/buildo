@@ -243,7 +243,7 @@ describe('P3-2: the main building (P5.2)', () => {
   it('a failing attic is livable but outside GFA (M-203) and the flat form then heads', () => {
     const r = mb(rows('detached_house', { attic_qualifying_share_pct: num('detached_house', 'attic_qualifying_share_pct', 95) }));
     expect(r.roof_form_headline).toBe('flat_setback');
-    expect(r.attic_outside_gfa_sqm).toBeCloseTo(155.2, 9);
+    expect(r.attic_outside_gfa_sqm).toBeCloseTo(158.08, 9); // the larger pair
     expect(r.gfa_pitched_sqm).toBeCloseTo(320, 9);
     expect(r.disclosures).toContain('attic_outside_gfa');
     expect(r.main_gfa_sqm).toBeCloseTo(457.6, 9);
