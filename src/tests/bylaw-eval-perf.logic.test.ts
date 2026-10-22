@@ -146,6 +146,12 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-21 (F-4D-1 / M-281, bylaw fix lane 6): two new dsl_targets (energy_device_front_setback_m,
     // energy_device_side_clearance_m); their 280 cells are not_evaluated:no_candidate (the fixture units predate the keying). With the two
     // left out the hash is the previous pin 3815ff0a…296d exactly, so no existing cell moved (M-280, M-282..M-286 moved none either).
-    expect(h.digest('hex')).toBe('751d494ca36e891a2d0236c77950f9cec324493ad9289dbc0ef49e3b75e375bc');
+    // re-pinned 2026-10-22 (Q-KG3, HELD; rule 7a ignores a unit whose lot condition is known false: vocab.absence_ignore.known_false_lot_conditions
+    // [major_street]; ABS-7.4, RM townhouse length): a per-cell diff against 751d494c…75bc moves building_length_m cells ONLY (39 of 13,860): 23
+    // top-level, not_evaluated:no_candidate → unregulated by absence (RT apartment, detached and townhouse and null-type lots with major_street false
+    // under ABS-3 / ABS-4; the RM townhouse fixture lots under ABS-7.4, whose fixture units carry no 10.80.40.20(3) unit at all), 14 M-50 per_type
+    // entries of null-type cells, 2 trace lines. No other target and no permitted() cell moved. The real-tree grid (75,330 cells) moves 45, all
+    // townhouse / apartment building_length_m with major_street false.
+    expect(h.digest('hex')).toBe('3440a2845f40f4eb658e9b6eb84eb2bf61c0374b5f094d6d9b261a4343fe3770');
   }, 60_000);
 });

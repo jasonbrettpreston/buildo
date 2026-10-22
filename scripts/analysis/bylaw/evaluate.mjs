@@ -463,9 +463,12 @@ function absenceIgnored(u, C) {
 // building type, target). Besides absenceIgnored, rule 7a does not count a DEFINE unit with no statement for the target
 // (it says how a measure is taken; vocab.absence_ignore.define_without_statement) nor a unit whose building_types exclude
 // the lot's type and its parent (vocab.absence_ignore.other_building_types) — the same fields applies() reads.
-function absenceCounts(u, lot, target, C, reads) {
+function absenceCounts(u, lot, target, C, reads, condFalse = null) {
   if (absenceIgnored(u, C)) return false;
   const ig = C.absenceIgnore || {};
+  // Q-KG3 (HELD): a unit whose lot condition is KNOWN FALSE for this lot (vocab.absence_ignore.known_false_lot_conditions; applies() found
+  // the flag false) carries no limit for it; an UNKNOWN condition never lands here, it keeps the lot undecided
+  if (condFalse && condFalse.has(u)) return false;
   if (ig.define_without_statement === true && u.archetype === 'DEFINE' && !parsedFor(u, target).length) return false;
   if (ig.other_building_types === true) {
     const types = ((u.application || {}).building_types || []).map((x) => (x && typeof x === 'object' ? x.token : x));
@@ -967,6 +970,8 @@ function effCore(lot, target, candidates, C, env) {
   // applicability (rule 1's condition filter, run here because conditions read effective targets and the scenario type);
   // every condition input read is recorded (reads → result.inputs; the values → the trace)
   const A = new Set(); const unknown = []; const condLosers = [];
+  const knownFalse = (C.absenceIgnore && C.absenceIgnore.known_false_lot_conditions) || []; // Q-KG3
+  const condFalse = new Set();
   for (const u of consideredOrdered) {
     const t = [];
     const a = applies(lot, u, C, resolveVariable, reads, t, target);
@@ -975,6 +980,7 @@ function effCore(lot, target, candidates, C, env) {
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
     else if (a.disclosure && !disclosures.includes(a.disclosure)) disclosures.push(a.disclosure); // M-224 literal reading
     if (a.ok === false && valueSet.has(u)) condLosers.push({ unit_id: u.unit_id, dropped_by: 'condition_false', by: null });
+    if (a.ok === false && knownFalse.some((k) => a.why === `condition ${k}`)) condFalse.add(u); // Q-KG3
   }
   for (const u of prevailing) {
     const a = applies(lot, u, C, resolveVariable, reads, []);
@@ -983,7 +989,7 @@ function effCore(lot, target, candidates, C, env) {
   }
   // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
   const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
-  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive, condLosers };
+  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive, condLosers, condFalse };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -1053,7 +1059,7 @@ function commonLosers(lists) {
   const key = (l) => `${l.unit_id}\u0000${l.dropped_by}\u0000${l.by}\u0000${l.arg ?? ''}`;
   return ls[0].filter((l) => ls.every((o) => o.some((m) => key(m) === key(l))));
 }
-function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [] }, A, trace, disclosures) {
+function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [], condFalse = null }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const losers = [...condLosers]; // L2-LOSERS: structured beside the trace; DROPPED_BY names the reasons
   const lose = (u, dropped_by, by, extra = {}) => { if (!losers.some((l) => l.unit_id === u && l.dropped_by === dropped_by && l.by === by && l.arg === extra.arg)) losers.push({ unit_id: u, dropped_by, by, ...extra }); };
@@ -1137,7 +1143,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
     // any layer carries the target, keyed or pending.
     const abs = absenceRulingFor(lot, target, C, reads);
     if (abs) {
-      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length) && absenceCounts(u, lot, target, C, reads));
+      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length) && absenceCounts(u, lot, target, C, reads, condFalse));
       if (!any.length && abs.answer === 'not_applicable') {
         // M-240 (3): the lot's type is outside the subject of the zone's clause → not_applicable:<that clause>
         return { status: 'not_applicable', value: null, reason: `not_applicable:${abs.subject_clause}`, unit: C.units.target[target] ?? null, bound: null, winner: null,

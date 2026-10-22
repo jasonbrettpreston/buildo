@@ -629,12 +629,13 @@
     "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }
   },
   "absence_ignore": {
-    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building. Rule 7a v2 (operator approved 2026-10-20, Spec 69a M-240): absence is decided per (zone, building type, target): a DEFINE unit with no statement for the target (define_without_statement) and a unit whose building_types exclude the lot's type and its parent (other_building_types) do not count either.",
+    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building. Rule 7a v2 (operator approved 2026-10-20, Spec 69a M-240): absence is decided per (zone, building type, target): a DEFINE unit with no statement for the target (define_without_statement) and a unit whose building_types exclude the lot's type and its parent (other_building_types) do not count either. Q-KG3 (HELD): a unit whose lot condition is KNOWN FALSE for the lot (a token in known_false_lot_conditions whose flag is false) does not count either, so a townhouse off a major street, whose only building-length unit is the major-street one, is unregulated by absence; an UNKNOWN condition still blocks (condition_unknown).",
     "lot_conditions": ["lawfully_existing"],
     "building_types": ["ancillary_building", "garden_suite", "laneway_suite"],
     "accessory_structure_uses": true,
     "define_without_statement": true,
-    "other_building_types": true
+    "other_building_types": true,
+    "known_false_lot_conditions": ["major_street"]
   },
   "complement_phrases": {
     "$comment": "Spec 69a M-242 (N-3, operator approved 2026-10-20): a unit whose own text holds one of these phrases may carry condition.if = complement(<sibling unit id>, …), the negation of each sibling arm's keyed condition; G-CLAUSE licenses its variables and literals from the sibling's clause (clause.mjs), the evaluator reads the sibling conditions resolved over the agreed units (agree.mjs resolveComplements).",
