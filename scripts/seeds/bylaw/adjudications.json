@@ -102139,6 +102139,1427 @@
       "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/disclosure",
       "unit": "900.4.10(70)#(70)[SSP](A)(i)",
       "value": "Applies only where the front lot line abuts Birchmount Rd.; we cannot confirm which street a lot abuts automatically."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(515)#(515)[SSP](E)/literals_not_expressed",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": [
+        {
+          "clause": "(515)[SSP](E)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(515)[SSP](E)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(515)#(515)[SSP](E)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(515)#(515)[SSP](E)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(541)#(541)[SSP](F)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(541)#(541)[SSP](F)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(541)#(541)[SSP](F)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(541)#(541)[SSP](F)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(541)#(541)[SSP](F)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(541)#(541)[SSP](F)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(541)#(541)[SSP](F)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(541)#(541)[SSP](F)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(541)#(541)[SSP](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(541)#(541)[SSP](F)",
+      "value": [
+        {
+          "clause": "(541)[SSP](F)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(541)[SSP](F)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(541)#(541)[SSP](F)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(541)#(541)[SSP](F)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(541)#(541)[SSP](F)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(541)#(541)[SSP](F)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(858)#(858)[SSP](C)/literals_not_expressed",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": [
+        {
+          "clause": "(858)[SSP](C)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(858)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only. It also bars encroachment into that yard.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(858)#(858)[SSP](C)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(858)#(858)[SSP](C)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated. It also bars encroachment into that yard."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(588)#(588)[SSP](C)/literals_not_expressed",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": [
+        {
+          "clause": "(588)[SSP](C)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(588)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only. It also bars encroachment into that yard.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(588)#(588)[SSP](C)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(588)#(588)[SSP](C)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated. It also bars encroachment into that yard."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1049)#(1049)[SSP](E)/literals_not_expressed",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": [
+        {
+          "clause": "(1049)[SSP](E)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1049)[SSP](E)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1049)#(1049)[SSP](E)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1049)#(1049)[SSP](E)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(553)#(553)[SSP](D)/literals_not_expressed",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": [
+        {
+          "clause": "(553)[SSP](D)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(553)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(553)#(553)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(553)#(553)[SSP](D)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1031)#(1031)[SSP](D)/literals_not_expressed",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": [
+        {
+          "clause": "(1031)[SSP](D)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1031)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1031)#(1031)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(1031)#(1031)[SSP](D)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(357)#(357)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(357)#(357)[SSP](D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(357)#(357)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(357)#(357)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(357)#(357)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(357)#(357)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(357)#(357)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(357)#(357)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(357)#(357)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(357)#(357)[SSP](D)",
+      "value": [
+        {
+          "clause": "(357)[SSP](D)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(357)[SSP](D)",
+          "literal": "one side only",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(357)#(357)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(357)#(357)[SSP](D)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(357)#(357)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(357)#(357)[SSP](D)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(546)#(546)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(546)#(546)[SSP](D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(546)#(546)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(546)#(546)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(546)#(546)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(546)#(546)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(546)#(546)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(546)#(546)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(546)#(546)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(546)#(546)[SSP](D)",
+      "value": [
+        {
+          "clause": "(546)[SSP](D)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(546)[SSP](D)",
+          "literal": "one side only",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(546)#(546)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(546)#(546)[SSP](D)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(546)#(546)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(546)#(546)[SSP](D)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(ii)/literals_not_expressed",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": [
+        {
+          "clause": "(713)[SSP](C)(ii)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(713)[SSP](C)(ii)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(713)#(713)[SSP](C)(ii)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(144)#(144)[SSP](D)/literals_not_expressed",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": [
+        {
+          "clause": "(144)[SSP](D)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(144)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.4.10(144)#(144)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.4.10(144)#(144)[SSP](D)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(586)#(586)[SSP](A)/literals_not_expressed",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": [
+        {
+          "clause": "(586)[SSP](A)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(586)[SSP](A)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(586)#(586)[SSP](A)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(586)#(586)[SSP](A)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(807)#(807)[SSP](C)/literals_not_expressed",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": [
+        {
+          "clause": "(807)[SSP](C)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(807)[SSP](C)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(807)#(807)[SSP](C)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(807)#(807)[SSP](C)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(584)#(584)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(584)#(584)[SSP](D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(584)#(584)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(584)#(584)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(584)#(584)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(584)#(584)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(584)#(584)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(584)#(584)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(584)#(584)[SSP](D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(584)#(584)[SSP](D)/literals_not_expressed",
+      "unit": "900.3.10(584)#(584)[SSP](D)",
+      "value": [
+        {
+          "clause": "(584)[SSP](D)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(584)[SSP](D)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(584)#(584)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(584)#(584)[SSP](D)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only. It also bars encroachment into that yard.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(584)#(584)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(584)#(584)[SSP](D)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated. It also bars encroachment into that yard."
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "archetype",
+      "id": "COR-900.3.10(528)#(528)[SSP](D)/archetype",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(528)#(528)[SSP](D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "target",
+      "id": "COR-900.3.10(528)#(528)[SSP](D)/target",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(528)#(528)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "bound",
+      "id": "COR-900.3.10(528)#(528)[SSP](D)/bound",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(528)#(528)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(528)#(528)[SSP](D)/numeric_expression",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(528)#(528)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(528)#(528)[SSP](D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(528)#(528)[SSP](D)",
+      "value": [
+        {
+          "clause": "(528)[SSP](D)",
+          "literal": "1.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(528)[SSP](D)",
+          "literal": "one side only",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(528)#(528)[SSP](D)/calculation_handling",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(528)#(528)[SSP](D)",
+      "value": {
+        "description": "A minimum side lot line setback of 1.0 m that applies on one side only.",
+        "gaps": "The DSL has no per-side form for a minimum that applies to one side only; the other side's requirement is not stated.",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-v42",
+      "field": "disclosure",
+      "id": "COR-900.3.10(528)#(528)[SSP](D)/disclosure",
+      "kind": "correction",
+      "reason": "one side only = UNUSUAL (806 (C) / 540 (F) precedent)",
+      "rule": "verify-42 item 5: operator rulings 806 (C) / 540 (F): a side setback minimum that applies on one side only has no expressible per-side form, so the unit is UNUSUAL with the 1.0 metres as limit_not_modelled and \"one\" as count_or_ordinal_not_a_limit; Spec 133 §m.102 (M-102), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(528)#(528)[SSP](D)",
+      "value": "This exception sets a 1.0 m minimum building setback from a side lot line on one side only; a one-side-only rule cannot be expressed in our model, so it is not evaluated."
     }
   ]
 }
