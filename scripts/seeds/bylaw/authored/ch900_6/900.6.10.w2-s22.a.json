@@ -1,0 +1,309 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10.w2-s22",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.6.10(70)#(70)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = 550 m2 @(70)[SSP](A)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 70", "detached_house": "A detached house"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum lot area of 550 square metres for a detached house on these lands.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(70)#(70)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = 15.0 m @(70)[SSP](A)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 70", "detached_house": "A detached house"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum lot frontage of 15.0 metres for a detached house on these lands.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(70)#(70)[SSP](A)(iii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.8 m @(70)[SSP](A)(iii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 70", "detached_house": "A detached house"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum side yard setback of 1.8 metres for a detached house on these lands.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(70)#(70)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "schedule_map", "citation": "Schedule 'D' Airport Hazard Map from City of North York zoning by-law 7625", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["Schedule 'D' Airport Hazard Map"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 70", "any": "Prevailing By-laws and Prevailing Sections"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "An alternate compliance path under a former by-law schedule; it is not evaluated.", "gaps": "none", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": []},
+      "disclosure": "These lands are also subject to Schedule 'D' Airport Hazard Map from City of North York zoning by-law 7625. That schedule is not evaluated here; check it directly.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(33)#(33)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 33", "any": "Site Specific Provisions"}
+      },
+      "calculation_handling": {"status": "informational", "description": "No site specific provisions apply to these lands.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(33)#(33)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "former City of North York by-laws 27686, 27696, 27695", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 33", "any": "On these lands"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "An alternate compliance path under former by-laws; it is not evaluated.", "gaps": "none", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": []},
+      "disclosure": "These lands are also subject to former City of North York by-laws 27686, 27696 and 27695. Those by-laws are not evaluated here; check them directly.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(478)#(478)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = by_type(detached_house: 325 m2; semi_detached_house: 555 m2; duplex: 370 m2; triplex: 465 m2) @(478)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 478", "detached_house": "for a detached house", "semi_detached_house": "for a semi-detached house", "duplex": "for a duplex", "triplex": "for a triplex"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum lot area by building type: 325, 555, 370 and 465 square metres.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(478)#(478)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = by_type(detached_house: 10.5 m; semi_detached_house: 18.0 m; duplex: 12.0 m; triplex: 15.0 m; fourplex: 22.5 m; apartment_building: 22.5 m) @(478)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex", "fourplex", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 478", "detached_house": "for a detached house", "semi_detached_house": "for a semi-detached house", "duplex": "for a duplex", "triplex": "for a triplex", "fourplex": "for a fourplex", "apartment_building": "or apartment building"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum lot frontage by building type, from 10.5 to 22.5 metres.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(478)#(478)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = by_type(detached_house: 9.5 m) @(478)[SSP](C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 478", "detached_house": "for a detached house"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Maximum building height of 9.5 metres for a detached house.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(478)#(478)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(478)[SSP](D)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 478", "detached_house": "for a detached house", "semi_detached_house": "semi-detached house, duplex", "duplex": "semi-detached house, duplex", "triplex": "duplex, or triplex"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum side yard setback of 0.9 metres for a detached house, semi-detached house, duplex or triplex.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(478)#(478)[SSP](D)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.6 ratio × proposed_height_m @(478)[SSP](D)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["fourplex", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 478", "fourplex": "for a fourplex", "apartment_building": "or apartment building"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum side yard setback of 0.6 times the height of the building for a fourplex or apartment building.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(478)#(478)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 478", "any": "Prevailing By-laws and Prevailing Sections"}
+      },
+      "calculation_handling": {"status": "informational", "description": "No prevailing by-laws or sections apply to these lands.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.6.10(70)": {
+      "explanation": "On the lands under Exception RM 70, a detached house is permitted only if the lot area is at least 550 square metres, the lot frontage is at least 15.0 metres and the side yard setback is at least 1.8 metres. The lands are also subject to Schedule 'D' Airport Hazard Map from former City of North York zoning by-law 7625.",
+      "code_refs": "none"
+    },
+    "900.6.10(33)": {
+      "explanation": "Exception RM 33 adds no site specific provisions. The lands are instead subject to former City of North York by-laws 27686, 27696 and 27695, which are not evaluated here.",
+      "code_refs": "none"
+    },
+    "900.6.10(478)": {
+      "explanation": "On the lands under Exception RM 478, the minimum lot area, minimum lot frontage and minimum side yard setback depend on the building type. The maximum building height is 9.5 metres for a detached house. For a fourplex or apartment building the side yard setback is 0.6 times the building height. No prevailing by-laws or sections apply.",
+      "code_refs": "none"
+    }
+  }
+}

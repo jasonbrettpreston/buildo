@@ -1,0 +1,54 @@
+{
+  "a_seal": {
+    "seal_id": 460,
+    "sha256": "801a5e8db78fc94f6b310ab66c9d20275c17658f7a8f0cdb89c6f1aeb89d1853"
+  },
+  "b_run": {
+    "ledger_sha256": "e454705579474d9790d07c5211334b7e9fd40210645f1be459f23a747507c053",
+    "read_paths": [],
+    "run_id": "20261022T175007Z-770a4add",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W2",
+  "briefs": {
+    "a": "4aca06c1e6978c0f4c09bf2cd18f20e339df4638c29c4ecdd42301274e00f0c7",
+    "b": "5cf14af23d3e0c865e8a6c9b1145453ef9b2300a62c35191d33bc0434efd6238"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w2-s25",
+  "unit_shas": {
+    "900.2.10(338)#(338)[PBS](A)": "74de7099ba063612b9d963b44f4eebf0ae1acdaabc6b98fbd157fd8fb3c11f1e",
+    "900.2.10(338)#(338)[PBS](B)": "a763143098555342a52f0f12b1500a517b80cba48d1efe6391b0ee9f7ff3601b",
+    "900.2.10(338)#(338)[SSP]": "22f6804381740b748ab8b4d107cfca14596db106cdee4b17db46fd0b440eebe4",
+    "900.2.10(72)#(72)[PBS](A)": "65ab8daaa70330078087212d993cdff68a4e9b7209f164a4168a57f10231d132",
+    "900.2.10(72)#(72)[PBS](B)": "b282ea9c05065fe12cdd66576bfb1aa89b4c2ce5ce6bac35406473d67272b154",
+    "900.2.10(72)#(72)[SSP](A)": "4af7285bb7c89ae7bf2de4be503823059e30d1dee6653beebd16e68ccdbd607e",
+    "900.2.10(72)#(72)[SSP](B)": "ac9e38a262ef28bf0dcbf9b83675b72d808802a0ac083db11f070f8d4ed97193",
+    "900.2.10(815)#(815)[PBS](A)": "12c8b70f9d8715e85911e4ba9b1b7155a876ab76b9266c35a22203fdd6b59385",
+    "900.2.10(815)#(815)[PBS](B)": "b020cc1922f5d6584753a04dcf68ababd2dd4bca1fdcde38d66a796a1a7bd60c",
+    "900.2.10(815)#(815)[SSP](A)": "9f80f5b528296487b6c3b091beebf539e11e97a4bc510ff44a21c43fc76ee045",
+    "900.2.10(860)#(860)[PBS](A)": "6421c184d655604a926ef9bfda410bb82eec5ba0d9bf2c42aa47d0071e309f2e",
+    "900.2.10(860)#(860)[PBS](B)": "0d1d58350c8aad72fcfab7213931fb14847e7ac113eb7410aea6aa9aa7ee1946",
+    "900.2.10(860)#(860)[PBS](C)": "6d124d0a9f04e388ce5ca1163b47b453411545aeed22da75164ae72f2da932ee",
+    "900.2.10(860)#(860)[PBS](D)": "6f94ae4846593bf340ca7b329af75b0b4f83a5c1ddd20c4cf7eadb3ebd9f53d9",
+    "900.2.10(860)#(860)[PBS](E)": "cef9242e71600bb9a61b73629939dbf15ac78a428628f2422007a92fc18e06db",
+    "900.2.10(860)#(860)[PBS](F)": "33a5dc2b7d52dec605b3c1a47f777318087d1a94cb43fd478f4a4ac594033a00",
+    "900.2.10(860)#(860)[PBS](G)": "12635046bcb28285308169e8413203d284b83431ab4969a81aec95488e64c40f",
+    "900.2.10(860)#(860)[PBS](H)": "bd02e7308103fdafd7487188e241002062eac270a657c0ea5bda3f4e7a7e5af7",
+    "900.2.10(860)#(860)[PBS](I)": "d73faf3746f15c87610900bb4022a2037d7162048c27a7138961075951c3b941",
+    "900.2.10(860)#(860)[SSP](A)": "aaa1c8c5e30ebc1194196fcfb2be3ca32442084c9b10d4a2bcc272ea5b4c3127",
+    "900.2.10(868)#(868)[PBS](A)": "b21506b975544227b2509d7625695585bc49ff9e5188a147670fb9ec39d0d1df",
+    "900.2.10(868)#(868)[PBS](B)": "d66dd033304cc604079faa56c38af3d268bb1a9149f896f5a319df29db8044e5",
+    "900.2.10(868)#(868)[SSP](A)": "e1c6c88263bec1a6548acda2a924a7236a96cb980ef7e3b31b88ed898e78f70b"
+  }
+}

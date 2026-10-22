@@ -1,0 +1,43 @@
+{
+  "a_seal": {
+    "seal_id": 465,
+    "sha256": "8024cb4f0dee1bf0cc845ca81e3b8a17a80ac985eb0ba9e16a71c7bdaf2bbb94"
+  },
+  "b_run": {
+    "ledger_sha256": "09b56a0f38afe3d29b622175c81095fc2af635fbaad3bf38da3614bf496367ae",
+    "read_paths": [],
+    "run_id": "20261022T175015Z-0a9f522e",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W2",
+  "briefs": {
+    "a": "19d63800a7965f9100d9530594a3801500520fe73673c14184aa06fbf26550d7",
+    "b": "e4e134e1688420ee00ca4e3a1725e57c8ed6f4ed58789f2bbe19a809692c3732"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10.w2-s22",
+  "unit_shas": {
+    "900.6.10(33)#(33)[PBS](A)": "8188d8df853a5d2ea6818b38e6dad795e832619c706b5660afa29560ac1058eb",
+    "900.6.10(33)#(33)[SSP]": "8cf0efd31523fec47bdc6583936480f801f736198a331362f4a549a14c6c0f27",
+    "900.6.10(478)#(478)[PBS]": "806f1b04abb5b4d940251fcbc18a37ff7f575c63ca3367bf1c4ddb508b1ab420",
+    "900.6.10(478)#(478)[SSP](A)": "83deff6fdb47718f8523e383e7dbb91cf3d9435d9dd97f1c552a33994991953e",
+    "900.6.10(478)#(478)[SSP](B)": "150ceab2f009a33bd8745b028e7b698c1a3d8cc60f770a2596b4786fe557588e",
+    "900.6.10(478)#(478)[SSP](C)": "5f0ddd0850bc24d4c58918a5efa0ac142e13f10c4ac4305ce29af20560069124",
+    "900.6.10(478)#(478)[SSP](D)(i)": "58b881ec9741e865ab9911cfc5471895d616869fc6cfdcad9a453451817ee7c5",
+    "900.6.10(478)#(478)[SSP](D)(ii)": "52999e333d1c41983ba8e44d64e8153c61e5a656521afb0513c9dc9324e5d44b",
+    "900.6.10(70)#(70)[PBS](A)": "7090d8006cba13a921dbc47d0897a91553d87fa0302338e5782453c9ef4473af",
+    "900.6.10(70)#(70)[SSP](A)(i)": "bbdc3ca2fa2fc049cdc3c757dc698c029b365d7562a7591a93671f1c29786291",
+    "900.6.10(70)#(70)[SSP](A)(ii)": "c2829d9e697c6418a745a84619dc7fdc7c31c0e8834deac54cbb3b407b821c0c",
+    "900.6.10(70)#(70)[SSP](A)(iii)": "6b947a0827e2a22db13858b7607369c9dc9a3c3b529f0c4565e9b294bc3bb607"
+  }
+}

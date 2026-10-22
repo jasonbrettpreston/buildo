@@ -87948,6 +87948,100 @@
       "value": {
         "RD": "Exception RD 258"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(559)#(559)[SSP](A)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The word \"one\" in \"one side yard\" / \"on one side\" is a count, not a limit; G-CLAUSE literal_unaccounted.",
+      "rule": "Spec 133 §m.82 (M-82 / M-75 correction form): mechanical literal bookkeeping under the lane label (precedent 900.3.10(37)#(37)[SSP](B), (70)#(70)[SSP](B): \"one\" = count_or_ordinal_not_a_limit); no change of meaning",
+      "unit": "900.3.10(559)#(559)[SSP](A)(i)",
+      "value": [
+        {
+          "clause": "(559)[SSP](A)(i)",
+          "literal": "1.2 metres",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(559)[SSP](A)(i)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(297)#(297)[SSP](B)(i)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The word \"one\" in \"one side yard\" / \"on one side\" is a count, not a limit; G-CLAUSE literal_unaccounted.",
+      "rule": "Spec 133 §m.82 (M-82 / M-75 correction form): mechanical literal bookkeeping under the lane label (precedent 900.3.10(37)#(37)[SSP](B), (70)#(70)[SSP](B): \"one\" = count_or_ordinal_not_a_limit); no change of meaning",
+      "unit": "900.5.10(297)#(297)[SSP](B)(i)",
+      "value": [
+        {
+          "clause": "(297)[SSP](B)(i)",
+          "literal": "0.9",
+          "reason": "limit_arm_not_modelled"
+        },
+        {
+          "clause": "(297)[SSP](B)(i)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(297)#(297)[SSP](B)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "The word \"one\" in \"one side yard\" / \"on one side\" is a count, not a limit; G-CLAUSE literal_unaccounted.",
+      "rule": "Spec 133 §m.82 (M-82 / M-75 correction form): mechanical literal bookkeeping under the lane label (precedent 900.3.10(37)#(37)[SSP](B), (70)#(70)[SSP](B): \"one\" = count_or_ordinal_not_a_limit); no change of meaning",
+      "unit": "900.5.10(297)#(297)[SSP](B)(ii)",
+      "value": [
+        {
+          "clause": "(297)[SSP](B)(ii)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(349)#(349)[PBS](A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street numbers of a named address are not literals of the clause (G-CLAUSE refuses them); nothing else in the clause is unaccounted.",
+      "rule": "Spec 133 §m.82 (M-82 / M-75 correction form): mechanical literal bookkeeping under the lane label; G-CLAUSE literal_not_in_clause shows the slicer does not treat street numbers of a named address as clause literals, so listing them is refused",
+      "unit": "900.3.10(349)#(349)[PBS](A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(349)#(349)[PBS](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street numbers of a named address are not literals of the clause (G-CLAUSE refuses them); nothing else in the clause is unaccounted.",
+      "rule": "Spec 133 §m.82 (M-82 / M-75 correction form): mechanical literal bookkeeping under the lane label; G-CLAUSE literal_not_in_clause shows the slicer does not treat street numbers of a named address as clause literals, so listing them is refused",
+      "unit": "900.3.10(349)#(349)[PBS](B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-22",
+      "adjudicator": "lane-exc-r5",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(349)#(349)[PBS](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Street numbers of a named address are not literals of the clause (G-CLAUSE refuses them); nothing else in the clause is unaccounted.",
+      "rule": "Spec 133 §m.82 (M-82 / M-75 correction form): mechanical literal bookkeeping under the lane label; G-CLAUSE literal_not_in_clause shows the slicer does not treat street numbers of a named address as clause literals, so listing them is refused",
+      "unit": "900.3.10(349)#(349)[PBS](C)",
+      "value": []
     }
   ]
 }
