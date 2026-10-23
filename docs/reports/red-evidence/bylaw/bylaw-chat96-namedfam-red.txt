@@ -1,0 +1,21 @@
+# CHAT-96 NAMED-FAM red run at 04a796c2 (bylaw-named1-held + bylaw-v42-precedent, tests written before the fix), 2026-10-23
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > each of the 44 is in vocab.named_street and is a LIMIT with a target and a minimum 4ms
+     → 900.3.10(854)#(854)[SSP](E)(i): expected 'LIMIT' to be 'UNUSUAL' // Object.is equality
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > no other unit carrying abuts_named_street is a LIMIT (the card is the 44, plus their three word-for-word twins) 2ms
+     → expected [ …(46) ] to deeply equal [ …(41) ]
+   × CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front > B-2: the 7 computed units have disclosure none; 316 (H) (CHAT-93.E-1) and the side-lot-line arms (CHAT-95.X-4, CHAT-96) disclose; no other of the 44 does 0ms
+     → expected 'Applies only where the lot line abuts…' to match /^Where a side lot line abuts Brimley …/
+   × CHAT-95 X-1..X-5: named-road keying defects fixed; each unit reads what it does > X-2: 852 (C)(i) and 713 (C)(i) apply to the whole exception, as 204 (C)(i) does (852 (E)(i) too since CHAT-96) 0ms
+     → expected 'named_addresses' to be 'whole' // Object.is equality
+   × CHAT-95 X-1..X-5: named-road keying defects fixed; each unit reads what it does > X-1 / X-2 / X-3 / X-5: the computed arms read partially_modelled / needs_data_we_lack and say how the street test is read 0ms
+     → expected [ …(4) ] to deeply equal [ …(4) ]
+   × CHAT-96 NAMED-FAM: the named-road family reads by its wording > F and L: LIMIT, partially_modelled / needs_data_we_lack, F rows line front, L rows line any, no stale street-test text, disclosure none 0ms
+     → 900.3.10(309)#(309)[SSP](C)(i): expected 'Which lot line abuts Birchmount Rd. n…' to match /M-285 street-name join/
+   × CHAT-96 NAMED-FAM: the named-road family reads by its wording > S: every side-lot-line arm is UNUSUAL and says the side street is not held 0ms
+     → expected [ …(5) ] to deeply equal [ …(5) ]
+   × CHAT-96 NAMED-FAM: the named-road family reads by its wording > production path: each computed arm wins on its named frontage street; no side arm wins; 1169 (C)(ii) wins 7.5 m on Conference Blvd. 39ms
+     → 900.3.10(854)#(854)[SSP](E)(i): expected '900.3.10(854)#(854)[SSP](E)(i)' not to be '900.3.10(854)#(854)[SSP](E)(i)' // Object.is equality
+   × CHAT-87.NAMED-1c: the 32 named-road arms of NAMED-1b are computed > the 12 table units are LIMIT; each of the other 32 is LIMIT again and its live record of every converted field cites CHAT-87.NAMED-1c 1284ms
+     → expected 31 to be 25 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  9 failed | 22 passed (31)

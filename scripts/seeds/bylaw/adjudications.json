@@ -111226,6 +111226,1318 @@
       "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/disclosure~s3",
       "unit": "900.3.10(714)#(714)[SSP](D)(i)",
       "value": "Where a side lot line abuts Ellesmere Rd., Conlins Rd., Morrish Rd., Meadowvale Rd., Scarboro Ave., Zaph Ave., Euclid Ave. or Willowlea Dr., the minimum building setback from it is 4.5 metres; this is not evaluated, because which street a side lot line abuts is not held (only the lot's frontage street is)."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(309)#(309)[SSP](C)(i)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(309)#(309)[SSP](C)(i)/calculation_handling~s1",
+      "unit": "900.3.10(309)#(309)[SSP](C)(i)",
+      "value": {
+        "description": "A building must be set back at least 9.0 m from a front lot line abutting Birchmount Rd.",
+        "gaps": "Whether the front lot line abuts Birchmount Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1057)#(1057)[SSP](C)(i)/calculation_handling~s1",
+      "unit": "900.3.10(1057)#(1057)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum building setback of 7.5 m from a lot line that abuts Huntingwood Dr. or Chartland Blvd. S.",
+        "gaps": "Whether a lot line abuts Huntingwood Dr. or Chartland Blvd. S. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(316)#(316)[SSP](D)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(316)#(316)[SSP](D)/calculation_handling~s1",
+      "unit": "900.3.10(316)#(316)[SSP](D)",
+      "value": {
+        "description": "Minimum front setback of 9.0 m where the front lot line abuts Pharmacy Ave.",
+        "gaps": "Whether the front lot line abuts Pharmacy Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(560)#(560)[SSP](C)(i)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(560)#(560)[SSP](C)(i)/calculation_handling~s1",
+      "unit": "900.3.10(560)#(560)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum front setback of 7.5 m where the front lot line abuts Warden Avenue.",
+        "gaps": "Whether the front lot line abuts Warden Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1170)#(1170)[SSP](A)(i)/calculation_handling~s1",
+      "unit": "900.3.10(1170)#(1170)[SSP](A)(i)",
+      "value": {
+        "description": "Minimum front yard setback of 7.5 m where the front lot line abuts Conference Boulevard.",
+        "gaps": "Whether the front lot line abuts Conference Boulevard is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(i)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(i)/calculation_handling~s1",
+      "unit": "900.4.10(256)#(256)[SSP](D)(i)",
+      "value": {
+        "description": "Minimum 7.5 m building setback from a lot line abutting Finch Ave., Brimley Rd. or Midland Ave.",
+        "gaps": "Whether a lot line abuts Finch Ave., Brimley Rd. or Midland Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(256)#(256)[SSP](D)(ii)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(256)#(256)[SSP](D)(ii)/calculation_handling~s1",
+      "unit": "900.4.10(256)#(256)[SSP](D)(ii)",
+      "value": {
+        "description": "Minimum 6.0 m building setback from a lot line abutting Alexmuir Blvd., Cleadon Rd. or South Shields Ave.",
+        "gaps": "Whether a lot line abuts Alexmuir Blvd., Cleadon Rd. or South Shields Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(325)#(325)[SSP](C)/calculation_handling~s4",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(325)#(325)[SSP](C)/calculation_handling~s3",
+      "unit": "900.3.10(325)#(325)[SSP](C)",
+      "value": {
+        "description": "Minimum front setback of 7.5 metres where the front lot line abuts Huntingwood Dr..",
+        "gaps": "Whether the front lot line abuts Huntingwood Dr. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1156)#(1156)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(1156)#(1156)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum front setback of 9.0 m where the lot line abuts Lawson Rd. or Centennial Rd.",
+        "gaps": "Whether the front lot line abuts Lawson Rd. or Centennial Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(936)#(936)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(936)#(936)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(936)#(936)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum front setback of 7.5 m where the lot line abuts Huntingwood Dr.",
+        "gaps": "Whether the front lot line abuts Huntingwood Dr. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1091)#(1091)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "value": {
+        "description": "Evaluated from the lot data.",
+        "gaps": "Whether the front lot line abuts Corinthian Boulevard is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1120)#(1120)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(1120)#(1120)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum building setback from a lot line that abuts a street is 9.0 m where the lot line abuts Kennedy Rd. or Finch Ave.",
+        "gaps": "Whether a lot line abuts Kennedy Rd. or Finch Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(397)#(397)[SSP](B)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(397)#(397)[SSP](B)/calculation_handling~s2",
+      "unit": "900.3.10(397)#(397)[SSP](B)",
+      "value": {
+        "description": "Minimum building setback of 9.0 m from a front lot line that abuts Mason Rd.",
+        "gaps": "Whether the front lot line abuts Mason Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(i)/calculation_handling~s2",
+      "unit": "900.3.10(975)#(975)[SSP](A)(i)",
+      "value": {
+        "description": "Minimum front yard setback of 15.0 metres where the front lot line is on Fifeshire Rd.",
+        "gaps": "Whether the front lot line abuts Fifeshire Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(975)#(975)[SSP](A)(ii)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(975)#(975)[SSP](A)(ii)/calculation_handling~s2",
+      "unit": "900.3.10(975)#(975)[SSP](A)(ii)",
+      "value": {
+        "description": "Minimum front yard setback of 18.0 metres where the front lot line is on Bayview Ave.",
+        "gaps": "Whether the front lot line abuts Bayview Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(812)#(812)[SSP](D)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(812)#(812)[SSP](D)(i)/calculation_handling~s2",
+      "unit": "900.3.10(812)#(812)[SSP](D)(i)",
+      "value": {
+        "description": "Minimum front setback is 7.5 m where the front lot line abuts Middlefield Rd. or McNicoll Ave.",
+        "gaps": "Whether the front lot line abuts Middlefield Rd. or McNicoll Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1168)#(1168)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(1168)#(1168)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum front setback of 7.5 metres where the lot line abuts Conference Boulevard.",
+        "gaps": "Whether the front lot line abuts Conference Boulevard is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(516)#(516)[SSP](C)(i)",
+      "value": {
+        "description": "The 18.0 metre front setback applies where the front lot line abuts Sheppard Ave., Morningside Ave. or Neilson Rd.",
+        "gaps": "Whether the front lot line abuts Sheppard Ave., Morningside Ave. or Neilson Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(ii)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(ii)/calculation_handling~s2",
+      "unit": "900.3.10(516)#(516)[SSP](C)(ii)",
+      "value": {
+        "description": "The 12.0 metre front setback applies where the front lot line abuts Milner Ave. or Breckon Gate.",
+        "gaps": "Whether the front lot line abuts Milner Ave. or Breckon Gate is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(516)#(516)[SSP](C)(iii)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(516)#(516)[SSP](C)(iii)/calculation_handling~s2",
+      "unit": "900.3.10(516)#(516)[SSP](C)(iii)",
+      "value": {
+        "description": "The 7.5 metre front setback applies where the front lot line abuts Murison Blvd.",
+        "gaps": "Whether the front lot line abuts Murison Blvd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(854)#(854)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(854)#(854)[SSP](C)(i)",
+      "value": {
+        "description": "Applies where the lot line abuts Middlefield Rd. or McNicoll Ave.",
+        "gaps": "Whether the front lot line abuts Middlefield Rd. or McNicoll Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/calculation_handling~s4",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/calculation_handling~s3",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": {
+        "description": "A 1.0 m minimum side setback on both sides where the lot fronts on one of eight named streets.",
+        "gaps": "Whether the lot fronts on a named street is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(255)#(255)[SSP](D)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(255)#(255)[SSP](D)(i)/calculation_handling~s2",
+      "unit": "900.4.10(255)#(255)[SSP](D)(i)",
+      "value": {
+        "description": "Applies where the lot line abuts Finch Ave., McCowan Rd. or Middlefield Rd.",
+        "gaps": "Whether a lot line abuts Finch Ave., McCowan Rd. or Middlefield Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(202)#(202)[SSP](D)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](D)(i)/calculation_handling~s2",
+      "unit": "900.4.10(202)#(202)[SSP](D)(i)",
+      "value": {
+        "description": "Applies where the front lot line abuts Middlefield Rd. or McNicoll Ave.",
+        "gaps": "Whether the front lot line abuts Middlefield Rd. or McNicoll Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(295)#(295)[SSP](D)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(295)#(295)[SSP](D)(i)/calculation_handling~s2",
+      "unit": "900.4.10(295)#(295)[SSP](D)(i)",
+      "value": {
+        "description": "Applies where the lot line abuts Corinthian Boulevard.",
+        "gaps": "Whether a lot line abuts Corinthian Boulevard is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(284)#(284)[SSP](D)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(284)#(284)[SSP](D)(i)/calculation_handling~s2",
+      "unit": "900.4.10(284)#(284)[SSP](D)(i)",
+      "value": {
+        "description": "Applies only where the lot line abuts Birchmount Rd., Brookmill Blvd. or LaPeer Blvd.",
+        "gaps": "Whether a lot line abuts Birchmount Rd., Brookmill Blvd. or LaPeer Blvd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(i)/calculation_handling~s2",
+      "unit": "900.5.10(264)#(264)[SSP](A)(i)",
+      "value": {
+        "description": "The 7.5 m street setback applies only where the lot line abuts Finch Ave., Brimley Rd. or Midland Ave..",
+        "gaps": "Whether a lot line abuts Finch Ave., Brimley Rd. or Midland Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(264)#(264)[SSP](A)(ii)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(264)#(264)[SSP](A)(ii)/calculation_handling~s2",
+      "unit": "900.5.10(264)#(264)[SSP](A)(ii)",
+      "value": {
+        "description": "The 6.0 m street setback applies only where the lot line abuts Alexmuir Blvd., Cleadon Rd. or South Shields Ave..",
+        "gaps": "Whether a lot line abuts Alexmuir Blvd., Cleadon Rd. or South Shields Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(200)#(200)[SSP](A)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](A)(i)/calculation_handling~s2",
+      "unit": "900.5.10(200)#(200)[SSP](A)(i)",
+      "value": {
+        "description": "Minimum front yard setback of 7.5 m where the front lot line abuts Middlefield Rd. or McNicoll Ave.",
+        "gaps": "Whether the front lot line abuts Middlefield Rd. or McNicoll Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(204)#(204)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.5.10(204)#(204)[SSP](C)(i)",
+      "value": {
+        "description": "Minimum front yard setback of 7.5 m where the front lot line abuts Brimley Rd. or Midland Ave.",
+        "gaps": "Whether the front lot line abuts Brimley Rd. or Midland Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1029)#(1029)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(i)",
+      "value": {
+        "description": "The 7.5 m street setback applies only where the lot line abuts Finch Ave., Brimley Rd. or Midland Ave..",
+        "gaps": "Whether a lot line abuts Finch Ave., Brimley Rd. or Midland Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1029)#(1029)[SSP](C)(ii)/calculation_handling",
+      "unit": "900.3.10(1029)#(1029)[SSP](C)(ii)",
+      "value": {
+        "description": "The 6.0 m street setback applies only where the lot line abuts Alexmuir Blvd., Cleadon Rd. or South Shields Ave..",
+        "gaps": "Whether a lot line abuts Alexmuir Blvd., Cleadon Rd. or South Shields Ave. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "NAMED-FAM (3): the unit computes through the M-285 join (production path), so it reads partially_modelled / needs_data_we_lack and its gaps / description say how the street test is read",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1026)#(1026)[SSP](C)(i)/calculation_handling",
+      "unit": "900.3.10(1026)#(1026)[SSP](C)(i)",
+      "value": {
+        "description": "Applies where the lot line abuts Finch Ave., McCowan Rd. or Middlefield Rd.",
+        "gaps": "Whether a lot line abuts Finch Ave., McCowan Rd. or Middlefield Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line any): a match applies the setback to every street lot line (rule 4a); another frontage street leaves it undecided.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "archetype",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/archetype~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/archetype~s2",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "target",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/target~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/target~s2",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "bound",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/bound~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/bound~s2",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/numeric_expression~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/numeric_expression~s2",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/literals_not_expressed~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/literals_not_expressed~s2",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(854)[SSP](E)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/calculation_handling~s2",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": {
+        "description": "A 7.5 m minimum setback from a side lot line that abuts a street, where that side lot line abuts Middlefield Rd. or McNicoll Ave..",
+        "gaps": "Which street a side lot line abuts is not held: the M-285 street-name join reads the lot's primary frontage street only.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "disclosure",
+      "id": "COR-900.3.10(854)#(854)[SSP](E)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(854)#(854)[SSP](E)(i)/disclosure~s2",
+      "unit": "900.3.10(854)#(854)[SSP](E)(i)",
+      "value": "Where a side lot line abuts Middlefield Rd. or McNicoll Ave., the minimum building setback from it is 7.5 metres; this is not evaluated, because which street a side lot line abuts is not held (only the lot's frontage street is)."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "archetype",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/archetype~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/archetype~s2",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "target",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/target~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/target~s2",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "bound",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/bound~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/bound~s2",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/numeric_expression~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/numeric_expression~s2",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/literals_not_expressed~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/literals_not_expressed~s2",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(852)[SSP](E)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/calculation_handling~s2",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": {
+        "description": "A 7.5 m minimum setback from a side lot line that abuts a street, where that side lot line abuts Brimley Rd. or Midland Ave..",
+        "gaps": "Which street a side lot line abuts is not held: the M-285 street-name join reads the lot's primary frontage street only.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "disclosure",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s5",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s4",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "Where a side lot line abuts Brimley Rd. or Midland Ave., the minimum building setback from it is 7.5 metres; this is not evaluated, because which street a side lot line abuts is not held (only the lot's frontage street is)."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "applies_to",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/applies_to",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": {
+        "part": "whole",
+        "refs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "archetype",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/archetype~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/archetype~s2",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "target",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/target~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/target~s2",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "bound",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/bound~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/bound~s2",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/numeric_expression~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/numeric_expression~s2",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/literals_not_expressed~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/literals_not_expressed~s2",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": [
+        {
+          "clause": "(202)[SSP](F)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/calculation_handling~s2",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": {
+        "description": "A 7.5 m minimum setback from a side lot line that abuts a street, where that side lot line abuts Middlefield Rd. or McNicoll Ave..",
+        "gaps": "Which street a side lot line abuts is not held: the M-285 street-name join reads the lot's primary frontage street only.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "disclosure",
+      "id": "COR-900.4.10(202)#(202)[SSP](F)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(202)#(202)[SSP](F)(i)/disclosure~s2",
+      "unit": "900.4.10(202)#(202)[SSP](F)(i)",
+      "value": "Where a side lot line abuts Middlefield Rd. or McNicoll Ave., the minimum building setback from it is 7.5 metres; this is not evaluated, because which street a side lot line abuts is not held (only the lot's frontage street is)."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "archetype",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/archetype~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/archetype~s2",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "target",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/target~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/target~s2",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "bound",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/bound~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/bound~s2",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "numeric_expression",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/numeric_expression~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/numeric_expression~s2",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "literals_not_expressed",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/literals_not_expressed~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/literals_not_expressed~s2",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": [
+        {
+          "clause": "(81)[SSP](H)(i)",
+          "literal": "9.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/calculation_handling~s2",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": {
+        "description": "A 9.0 m minimum setback from a side lot line that abuts a street, where that side lot line abuts Bellamy Rd. or Invergordon Avenue.",
+        "gaps": "Which street a side lot line abuts is not held: the M-285 street-name join reads the lot's primary frontage street only.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "disclosure",
+      "id": "COR-900.4.10(81)#(81)[SSP](H)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(81)#(81)[SSP](H)(i)/disclosure~s2",
+      "unit": "900.4.10(81)#(81)[SSP](H)(i)",
+      "value": "Where a side lot line abuts Bellamy Rd. or Invergordon Avenue, the minimum building setback from it is 9.0 metres; this is not evaluated, because which street a side lot line abuts is not held (only the lot's frontage street is)."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "archetype",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/archetype~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/archetype~s2",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "target",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/target~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/target~s2",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "bound",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/bound~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/bound~s2",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/numeric_expression~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/numeric_expression~s2",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/literals_not_expressed~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/literals_not_expressed~s2",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": [
+        {
+          "clause": "(200)[SSP](C)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": {
+        "description": "A 7.5 m minimum setback from a side lot line that abuts a street, where that side lot line abuts Middlefield Rd. or McNicoll Ave..",
+        "gaps": "Which street a side lot line abuts is not held: the M-285 street-name join reads the lot's primary frontage street only.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "disclosure",
+      "id": "COR-900.5.10(200)#(200)[SSP](C)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(200)#(200)[SSP](C)(i)/disclosure~s2",
+      "unit": "900.5.10(200)#(200)[SSP](C)(i)",
+      "value": "Where a side lot line abuts Middlefield Rd. or McNicoll Ave., the minimum building setback from it is 7.5 metres; this is not evaluated, because which street a side lot line abuts is not held (only the lot's frontage street is)."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "archetype",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/archetype~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/archetype~s2",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "target",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/target~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/target~s2",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "bound",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/bound~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/bound~s2",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "numeric_expression",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/numeric_expression~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/numeric_expression~s2",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "literals_not_expressed",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/literals_not_expressed~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/literals_not_expressed~s2",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": [
+        {
+          "clause": "(204)[SSP](E)(i)",
+          "literal": "7.5 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/calculation_handling~s2",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": {
+        "description": "A 7.5 m minimum setback from a side lot line that abuts a street, where that side lot line abuts Brimley Rd. or Midland Ave..",
+        "gaps": "Which street a side lot line abuts is not held: the M-285 street-name join reads the lot's primary frontage street only.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "disclosure",
+      "id": "COR-900.5.10(204)#(204)[SSP](E)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "NAMED-FAM (2): side-lot-line wording; the M-285 join reads the lot's frontage street only, so which street the side lot line abuts cannot be determined: UNUSUAL, disclosed (X-4 form)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.5.10(204)#(204)[SSP](E)(i)/disclosure~s2",
+      "unit": "900.5.10(204)#(204)[SSP](E)(i)",
+      "value": "Where a side lot line abuts Brimley Rd. or Midland Ave., the minimum building setback from it is 7.5 metres; this is not evaluated, because which street a side lot line abuts is not held (only the lot's frontage street is)."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "archetype",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/archetype",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "target",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/target",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": "front_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "bound",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/bound",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/numeric_expression",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": [
+        "front_setback_m = 7.5 m @(1169)[SSP](C)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "condition",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/condition",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": {
+        "tokens": [
+          "abuts_named_street"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": [
+        "abuts_named_street"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/application.evidence",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": {
+        "RD": "Exception RD 1169",
+        "abuts_named_street": "abuts Conference Boulevard",
+        "any": "Site Specific Provisions"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/calculation_handling",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": {
+        "description": "Minimum front setback of 7.5 metres where the lot line abuts Conference Boulevard.",
+        "gaps": "Whether the front lot line abuts Conference Boulevard is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat96",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1169)#(1169)[SSP](C)(ii)/disclosure",
+      "kind": "correction",
+      "reason": "NAMED-FAM word-for-word twin: 1169 (C)(ii) is the text of 1168 (C)(i) / 1170 (A)(i); it takes the 1168 (C)(i) form (citation renamed), the abuts_named_street token and a vocab.named_street row (Conference Boulevard, line front)",
+      "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
+      "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
+      "value": "none"
     }
   ]
 }

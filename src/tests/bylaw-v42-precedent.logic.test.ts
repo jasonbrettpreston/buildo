@@ -94,15 +94,15 @@ describe('CHAT-87.NAMED-1c: the 32 named-road arms of NAMED-1b are computed', ()
     for (const t of twelve) expect(U.get(t)?.archetype, t).toBe('LIMIT');
     // the 32: every unit whose live archetype record was written for NAMED-1c (restoring the pre-NAMED-1 LIMIT the NAMED-1b records had replaced)
     const thirtyTwo = [...new Set(adj.filter((x) => x.kind === 'correction' && x.field === 'archetype' && /NAMED-1c/.test(x.rule) && /restore the pre-NAMED-1 value/.test(x.reason) && !sup.has(x.id)).map((x) => x.unit))];
-    // CHAT-95.X-4 (held pending CHAT-95 import, newer ruling): 714 (D)(i) is UNUSUAL again (side-lot-line arm), so 31 stay LIMIT
-    expect(thirtyTwo.length).toBe(31);
-    expect(adj.find((x) => x.unit === '900.3.10(714)#(714)[SSP](D)(i)' && x.field === 'archetype' && !sup.has(x.id))?.rule).toMatch(/^CHAT-95\.X-4/);
+    // CHAT-95.X-4 / CHAT-96 NAMED-FAM (held pending import, newer rulings): the 7 side-lot-line arms are UNUSUAL again, so 25 stay LIMIT
+    expect(thirtyTwo.length).toBe(25);
+    for (const id of ["900.3.10(714)#(714)[SSP](D)(i)","900.3.10(854)#(854)[SSP](E)(i)","900.3.10(852)#(852)[SSP](E)(i)","900.4.10(202)#(202)[SSP](F)(i)","900.4.10(81)#(81)[SSP](H)(i)","900.5.10(200)#(200)[SSP](C)(i)","900.5.10(204)#(204)[SSP](E)(i)"]) expect(adj.find((x) => x.unit === id && x.field === 'archetype' && !sup.has(x.id))?.rule, id).toMatch(/^CHAT-9[56]\.(X-4|NAMED-FAM)/);
     for (const id of thirtyTwo) {
       expect(U.get(id)?.archetype, id).toBe('LIMIT');
       for (const f of ['archetype', 'target', 'bound', 'numeric_expression', 'literals_not_expressed', 'calculation_handling', 'disclosure']) {
         let r = live(id, f) as Json;
         // CHAT-91.B-2 (M-350, recorded 18aa1f7c on wf1/rulings-rec3) supersedes the NAMED-1c disclosure record of 714 (C)(i),(D)(i) (none) and of 852 (C)(i),(E)(i), 713 (C)(i) (none, then restored by the B-2 correction)
-        while (/CHAT-91\.B-2|CHAT-93\.E-2|CHAT-95\.X-/.test(r?.rule)) r = adj.find((x) => x.id === r.supersedes) as Json; // newer records (CHAT-91 B-2 and its correction, CHAT-93.E-2, CHAT-95) chain back to the NAMED-1c record
+        while (/CHAT-91\.B-2|CHAT-93\.E-2|CHAT-95\.X-|CHAT-96\.NAMED-FAM/.test(r?.rule)) r = adj.find((x) => x.id === r.supersedes) as Json; // newer records (CHAT-91 B-2 and its correction, CHAT-93.E-2, CHAT-95) chain back to the NAMED-1c record
         expect(r?.rule, id + ' ' + f).toContain('CHAT-87.NAMED-1c');
         expect(r.supersedes, id + ' ' + f).toBe(`COR-${id}/${f}~s1`); // supersedes the CHAT-84.NAMED-1b record
       }
