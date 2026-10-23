@@ -1,0 +1,55 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-l/2026-10-23-batch-l.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-l",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "B-1 to B-5 your recommendation is approved",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-l/2026-10-23-batch-l.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-91.B-1",
+      "question": "Named roads: keep the three word-for-word twin additions",
+      "recommendation": "Keep the twin additions of 4611d881: 900.3.10(1029) (C)(i),(ii) (same text as 264 (A) and 256 (D)) and 900.3.10(1026) (C)(i) (same text as 900.4.10(255) (D)(i)) take the same computed reading; 1026 (C)(i) gets the named-road condition and a copy of 255 (D)(i)'s vocab.named_street row (Finch Ave., McCowan Rd., Middlefield Rd.; line any). On identical text the newer ruling wins (CHAT-84.TWIN-1). No scored CoA row moves.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-91.B-2",
+      "question": "Named roads: clear the disclosures that are now false",
+      "recommendation": "The 10 restored named-road units whose disclosure text is now false (it says the arm is not evaluated or that we cannot confirm which street, e.g. 323 (C), 303 (D), 70 (A)(i), 714 (C)(i),(D)(i), 852 (C)(i),(E)(i), 713 (C)(i)) get M-75 correction records setting the disclosure to none: a computed arm carries no not-evaluated disclosure.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-91.B-3",
+      "question": "Named roads: front-lot-line clauses are marked line front",
+      "recommendation": "vocab.named_street rows marked line any where the clause says \"front lot line\" or \"front yard\" change to line front, per the table's own $comment rule (line front: the clause says front lot line): 1170 (A)(i), 560 (C)(i), 309 (C)(i), 70 (A)(i), 975 (A)(i),(ii). Their twin 1168 (C)(i) is already front.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-91.B-4",
+      "question": "Named roads: NAMED-1d (143 more units) is not adopted now",
+      "recommendation": "Do not adopt NAMED-1d for now: the 143 further named-road units whose roads are in the street table (e.g. 1121 (C)(i), 900.4.10(200)(C)(i)) are not re-keyed (CHAT-85 no more exceptions). Recorded as a possible later item only; adopting it needs its own ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-91.B-5",
+      "question": "integrate-26 keeps the 10 CoA rows that move",
+      "recommendation": "integrate-26 keeps the 10 CoA rows that move from the excr5c rounds 0287394d..c77b1791 (A0255/26NY #1-4, A0263/21NY #1-6), subject to verify-46 confirming that the rulings behind them are imported; a row whose ruling is not imported does not move.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}
