@@ -110748,6 +110748,114 @@
         "abuts_named_street": "lot line abuts Finch Ave., McCowan Rd. or Middlefield Rd.",
         "any": "Site Specific Provisions"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/disclosure~s2",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/disclosure~s1",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/disclosure~s2",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/disclosure~s1",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/disclosure~s2",
+      "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/disclosure~s2",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/disclosure~s1",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/disclosure~s2",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/disclosure~s2",
+      "unit": "900.3.10(714)#(714)[SSP](D)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure~s2",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s2",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure~s3",
+      "kind": "correction",
+      "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure~s2",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": "none"
     }
   ]
 }

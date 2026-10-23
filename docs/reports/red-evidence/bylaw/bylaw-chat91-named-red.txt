@@ -1,0 +1,11 @@
+# CHAT-91 B-2/B-3 red run at 4611d881 (src/tests/bylaw-named1-held.logic.test.ts, tests written before the fix), 2026-10-23
+   × CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front > B-2: the 9 computed units have disclosure none; 316 (H) keeps its named-address disclosure; of the 44 only 316 (H) discloses 2ms
+     → expected [ '900.3.10(303)#(303)[SSP](D)', …(1) ] to deeply equal [ '900.3.10(303)#(303)[SSP](D)', …(1) ]
+   × CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front > B-3: the 6 front-worded rows are line front; 1026 (C)(i) and 255 (D)(i) stay line any 0ms
+     → expected [ …(2) ] to deeply equal [ …(2) ]
+   × CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front > B-3: every computed front_setback_m unit in vocab.named_street is line front (a front setback is measured from the front lot line) 1ms
+     → expected [ …(6) ] to deeply equal []
+   × CHAT-91 B-3: 1170 (A)(i) reads as its twin 1168 (C)(i) off Conference Blvd. > on Ravencliff Cres. 1170 answers a value as 1168 does (the named arm is refuted, not undecided); on Conference Blvd. it stays 7.5 m 6ms
+     → expected [ 'not_evaluated', null ] to deeply equal [ 'value', 6 ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 5 passed (9)
