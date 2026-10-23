@@ -1,0 +1,7 @@
+RED run, R5-5 scoping (2026-10-22), before the scope fix:
+   × R5-5 (HELD): the Johnston DATA flag is scoped to its notices and parcel > the same clause and figures on another notice, another row or another parcel stay unexplained 3ms
+   × R5-5 (HELD): the Johnston DATA flag is scoped to its notices and parcel > a DATA entry without a notice list and a parcel id is refused at load 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected { notice: 'A0255/26NY', …(7) } to be null
+AssertionError: expected '' to match /rows/
+      Tests  2 failed | 1 passed (3)

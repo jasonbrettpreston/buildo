@@ -1,0 +1,26 @@
+RED run, EXC-R5 2026-10-22: shards w2-s25 s10 s26 s27 s31 s22 absent from the tree, corrections present
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-excr5
+
+ ❯ src/tests/bylaw-exc-r5.logic.test.ts (2 tests | 1 failed) 1852ms
+   × EXC-R5 round: double-keyed exceptions > every unit of the 21 fully agreed exceptions is agreed or adjudicated; the three held units stay pending 1843ms
+     → 900.2.10(72): expected 0 to be greater than 0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/bylaw-exc-r5.logic.test.ts > EXC-R5 round: double-keyed exceptions > every unit of the 21 fully agreed exceptions is agreed or adjudicated; the three held units stay pending
+AssertionError: 900.2.10(72): expected 0 to be greater than 0
+ ❯ src/tests/bylaw-exc-r5.logic.test.ts:30:29
+     28|     for (const reg of AUTHORED) {
+     29|       const s = st(reg);
+     30|       expect(s.length, reg).toBeGreaterThan(0);
+       |                             ^
+     31|       expect(s.every((x) => x === 'agreed' || x === 'adjudicated'), re…
+     32|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  13:56:10
+   Duration  2.15s (transform 135ms, setup 8ms, collect 3ms, tests 1.85s, environment 0ms, prepare 25ms)
+

@@ -117,7 +117,9 @@ export function namedTypes(text, vocab) {
   const excl = list ? new RegExp(String.raw`${lead}\s+${list}(?:\s+(?:containing|that contains|with|having)\s+${list})?`, 'g') : null;
   const t = ` ${norm(text).replace(/-/g, ' ')} `.replace(excl || /$^/, ' ');
   const out = [];
-  for (const [k, name] of names) if (new RegExp(`(?<![a-z])${name}(?![a-z])`).test(t)) out.push(k);
+  // R5-1 (HELD, recommendation awaiting the operator): a type word that is part of a street name ("500 Duplex Ave.") is not a named type
+  const streets = t.replace(new RegExp(String.raw`(?<=\d\s)(?:${alt})\s+(?:ave|avenue|st|street|rd|road|blvd|boulevard|dr|drive|cres|crescent|ct|court|lane|pl|place|way|terr|terrace|gate|trail|circle)(?![a-z])`, 'g'), ' ');
+  for (const [k, name] of names) if (new RegExp(`(?<![a-z])${name}(?![a-z])`).test(streets)) out.push(k);
   return out;
 }
 

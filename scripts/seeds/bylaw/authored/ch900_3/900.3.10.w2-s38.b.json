@@ -1,0 +1,139 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s38",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 9.14 m @(971)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 9.5 m @(971)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](C)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](C)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "ancillary_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["ancillary_coverage_pct = 5 pct @(971)[SSP](D)"]
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "ancillary_floor_area_m2",
+      "bound": "max",
+      "numeric_expression": ["ancillary_floor_area_m2 = 100 m2 @(971)[SSP](E)"]
+    },
+    {
+      "unit_id": "900.3.10(971)#(971)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 28 pct @(9)[SSP](A)(i)"]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 25 pct @(9)[SSP](A)(ii)"]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = 38 m2 @(9)[SSP](B)"]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.33 ratio @(9)[SSP](C)(i)"]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](C)(ii)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.30 ratio @(9)[SSP](C)(ii)"]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "aggregate_side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.0 m @(9)[SSP](D)(i)",
+        "aggregate_side_setback_m = 2.4 m @(9)[SSP](D)(i)"
+      ]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](D)(ii)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "aggregate_side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(9)[SSP](D)(ii)",
+        "aggregate_side_setback_m = 3.0 m @(9)[SSP](D)(ii)"
+      ]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](D)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](E)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "exact",
+      "numeric_expression": ["fsi = 0.33 ratio @(9)[SSP](E)(i)"]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[SSP](E)(ii)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "exact",
+      "numeric_expression": ["fsi = 0.34 ratio @(9)[SSP](E)(ii)"]
+    },
+    {
+      "unit_id": "900.3.10(9)#(9)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

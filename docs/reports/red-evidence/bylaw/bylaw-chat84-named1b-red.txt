@@ -1,0 +1,4 @@
+   × CHAT-84.NAMED-1b: the 32 UNUSUAL named-road arms are ruled, not held > the 12 table units are LIMIT; each of the other 32 is UNUSUAL and its live record of every converted field cites CHAT-84.NAMED-1b 1284ms
+     → 900.3.10(325)#(325)[SSP](C) archetype: expected 'HELD on NAMED-1 (CHAT-83.NAMED-1 appr…' to contain 'CHAT-84.NAMED-1b'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 7 passed (8)

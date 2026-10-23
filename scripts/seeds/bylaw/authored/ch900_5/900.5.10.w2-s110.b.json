@@ -1,0 +1,83 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_5/900.5.10.w2-s110",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(iii)(a)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(iii)(b)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](A)(iv)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "front_setback_m = 6.0 m @(237)[SSP](A)(iv)"
+      ]
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.5 m @(237)[SSP](B)"
+      ]
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = 50 pct @(237)[SSP](C)"
+      ]
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](D)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[SSP](E)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.5.10(237)#(237)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

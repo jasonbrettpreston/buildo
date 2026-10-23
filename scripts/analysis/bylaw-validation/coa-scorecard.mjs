@@ -401,7 +401,7 @@ function runNotice(n, surveyOn, rows, lots) {
     } else if (r.status === 'not_evaluated') {
       row.class = owedOrNoAnswer(r.reason); row.why = r.reason;
     } else { row.class = 'NO ANSWER'; row.why = `${r.status}: ${r.reason || ''}`; }
-    { const ex = row.class === 'DIFFER' ? explainRow(I.vocab, c.norm, target, r.value, cityVal) : null; if (ex) { row.explained_by = ex.ruling; row.explained_note = ex.reading; } } // M-287: the table is validated at load (coa-explained.mjs)
+    { const ex = row.class === 'DIFFER' ? explainRow(I.vocab, c.norm, target, r.value, cityVal, { notice: n.file_number, n: v.n, parcelId: p && p.parcel_id }) : null; if (ex) { row.explained_by = ex.ruling; row.explained_note = ex.reading; if (ex.class === 'DATA') { row.class = 'DATA'; row.why = `explained data flag (R5-5 HELD, ${ex.ruling}): ${ex.reading}`; } } } // M-287: the table is validated at load (coa-explained.mjs)
     rows.push(row);
   }
 }

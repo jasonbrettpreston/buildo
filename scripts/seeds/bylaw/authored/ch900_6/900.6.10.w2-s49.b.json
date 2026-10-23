@@ -1,0 +1,164 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10.w2-s49",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = by_type(detached_house: 8.0 m; semi_detached_house: 12.0 m; duplex: 12.0 m; triplex: 12.0 m; townhouse: 5.0 m; apartment_building: 20.0 m) @(475)[SSP](B)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": ["height_m", "height_storeys"],
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = 11.0 m @(475)[SSP](C)(i)",
+        "height_storeys = 3 storeys @(475)[SSP](C)(i)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](C)(ii)",
+      "archetype": "LIMIT",
+      "target": ["height_m", "height_storeys"],
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = 14.0 m @(475)[SSP](C)(ii)",
+        "height_storeys = 4 storeys @(475)[SSP](C)(ii)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": [
+        "fsi = by_type(detached_house: 1.0 ratio; semi_detached_house: 1.0 ratio; duplex: 1.0 ratio; triplex: 1.0 ratio; townhouse: 1.0 ratio; apartment_building: 1.5 ratio) @(475)[SSP](D)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "rear_setback_m = by_type(detached_house: 6.0 m; semi_detached_house: 6.0 m; duplex: 6.0 m; triplex: 6.0 m; townhouse: 6.0 m; apartment_building: 7.5 m) @(475)[SSP](E)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](F)(i)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.5 m @(475)[SSP](F)(i)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](F)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(475)[SSP](F)(ii)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](F)(iii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(475)[SSP](F)(iii)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](F)(iv)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.5 m @(475)[SSP](F)(iv)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](F)(v)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 2.5 m @(475)[SSP](F)(v)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](G)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[SSP](H)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(475)#(475)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(436)#(436)[SSP](A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(436)#(436)[SSP](B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(436)#(436)[SSP](C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(436)#(436)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = 30 pct @(436)[SSP](D)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(436)#(436)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

@@ -1,0 +1,501 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w2-s31",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(408)#(408)[SSP](A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "22.0",
+          "reason": "limit_not_modelled",
+          "clause_path": "(408)[SSP](A)"
+        }
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 408"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "not_modelled_reason": "needs_data_we_lack",
+      "disclosure": "The 22.0 metre front setback from Bellamy Rd., Scarborough Golf Club Rd. or Mason Rd. is measured from the original street centreline, which has no DSL target (rule 23, rule 24)."
+    },
+    {
+      "unit_id": "900.3.10(408)#(408)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(408)[SSP](B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 408"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(408)#(408)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 5.7 m @(408)[SSP](C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 408"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(408)#(408)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.3 m @(408)[SSP](D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 408"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "attached or detached garage"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": [
+          {
+            "token": "private_garage",
+            "evidence": "attached or detached garage"
+          }
+        ]
+      }
+    },
+    {
+      "unit_id": "900.3.10(408)#(408)[SSP](E)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 408"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "These lands must comply"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(408)#(408)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(1091)[SSP](A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "minimum required lot frontage"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(1091)[SSP](B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "minimum required lot area"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 7.5 m @(1091)[SSP](C)(i)"],
+      "literals_not_expressed": [],
+      "condition": {
+        "tokens": ["abuts_named_street"],
+        "if": "none"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "building setback"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "abuts_named_street",
+            "evidence": "abuts Corinthian Boulevard"
+          }
+        ],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](C)(ii)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 6.0 m @(1091)[SSP](C)(ii)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(1091)[SSP](D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 4.5 m @(1091)[SSP](E)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "building setback"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.3 m @(1091)[SSP](F)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "A garage must be"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": [
+          {
+            "token": "private_garage",
+            "evidence": "A garage must be"
+          }
+        ]
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](G)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "residential building"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": [
+          {
+            "token": "parking_space",
+            "evidence": "required parking space"
+          }
+        ]
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[SSP](H)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 1091"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "These lands must comply"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(1091)#(1091)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(559)#(559)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(559)[SSP](A)(i)"],
+      "literals_not_expressed": [
+        {
+          "literal": "15.0",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(559)[SSP](A)(i)"
+        },
+        {
+          "literal": "1.2",
+          "reason": "limit_arm_not_modelled",
+          "clause_path": "(559)[SSP](A)(i)"
+        }
+      ],
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m < 15.0 m"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 559"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "side yard setback"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "frontage_band",
+            "evidence": "lot frontage of less than 15.0 metres"
+          }
+        ],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(559)#(559)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.5 m @(559)[SSP](A)(ii)"],
+      "literals_not_expressed": [
+        {
+          "literal": "15.0",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(559)[SSP](A)(ii)"
+        }
+      ],
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m ≥ 15.0 m"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "RD",
+            "evidence": "Exception RD 559"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "side yard setback"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "frontage_band",
+            "evidence": "lot frontage of 15.0 metres and greater"
+          }
+        ],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.3.10(559)#(559)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      }
+    }
+  ]
+}

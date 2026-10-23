@@ -135,6 +135,9 @@ function segments(body) {
   return body.split(/\s*;\s*|\s*,\s*(?:and\s+)?|\s+and\s+|\s*&\s*/i).map(squash).filter(Boolean);
 }
 
+// a street name written as capitalised words ("Brimley Rd.", "St. Clair Ave.", "Eglinton Avenue West"); lower-case prose is not a street
+const WHOLE_STREET = /^(?:[A-Z][A-Za-z\u2019'.-]*)(?:\s+[A-Z][A-Za-z\u2019'.-]*)*$/;
+
 function parseSegment(seg) {
   let s = seg;
   let parity = null;
@@ -186,6 +189,11 @@ export function parseNamedRef(raw) {
   // a parity prefix on the first segment of a ref ("odd numbered addresses of 1-19 X, 2-20 Y") is per-segment only
   let bad = 0;
   for (const g of segs) {
+    // CHAT-86.whole-street (operator 2026-10-23): a capitalised street name with a street type and no house number is the whole street
+    if (g.kind === 'text' && !g.partOf && WHOLE_STREET.test(g.text)) {
+      const ws = cityStreet(g.text);
+      if (ws && ws.street_type) { out.addresses.push({ ...streetFields(ws), whole_street: true }); continue; }
+    }
     if (g.kind !== 'num') { bad += 1; out.reasons.push(/[a-z]/i.test(g.text) && !/\d/.test(g.text) ? 'no_house_number' : 'unrecognised_segment'); continue; }
     const cs = g.street ? cityStreet(g.street) : null;
     if (!g.from || (g.to === null && /\d/.test(g.street || '') && !cs)) { bad += 1; out.reasons.push('unrecognised_number'); continue; }
@@ -325,6 +333,15 @@ export function classifyItem(item, points) {
     if (streets.length > 1) return { match_status: 'ambiguous', reasons: ['multi_street'], ...res };
     if (parcels.length === 0) return { match_status: 'not_found', reasons: ['no_parcel_link'], ...res };
     if (!ends[0] || !ends[1]) return { match_status: 'range_partial', reasons: ['endpoint_missing'], ...res };
+    return { match_status: 'exact', reasons, ...res };
+  }
+  if (item.whole_street) { // CHAT-86.whole-street: every parcel on the street, by street key only
+    const streets = [...new Set(points.map((p) => p.linear_name_full))].sort();
+    const parcels = [...new Set(points.map((p) => p.parcel_id).filter((x) => x !== null && x !== undefined))].sort((a, b) => a - b);
+    const res = { parcels, streets, members_found: parcels.length };
+    if (points.length === 0) return { match_status: 'not_found', reasons: ['no_street'], ...res };
+    if (streets.length > 1) return { match_status: 'ambiguous', reasons: ['multi_street'], ...res };
+    if (parcels.length === 0) return { match_status: 'not_found', reasons: ['no_parcel_link'], ...res };
     return { match_status: 'exact', reasons, ...res };
   }
   const hits = points.filter((p) => p.addr_num_normalized === item.key);

@@ -1,0 +1,1113 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s32",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](A)(i)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "semi_detached_house",
+     "duplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "semi_detached_house": "a semi-detached house",
+     "duplex": "a duplex existed"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a semi-detached house or a duplex existed on a lot on October 15, 1980, you may add to, enlarge, alter or replace it with that same building type, provided the building complies with the regulations for a detached house in the RD zone.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](A)(ii)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "semi_detached_house",
+     "duplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "semi_detached_house": "a semi-detached house",
+     "duplex": "a duplex existed"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a semi-detached house or a duplex existed on a lot on October 15, 1980, you may add to, enlarge, alter or replace it with that same building type, provided the building is on the same lot that existed on October 15, 1980.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](B)(i)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house",
+     "secondary_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "secondary_suite_use"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "A detached house",
+     "semi_detached_house": "semi-detached house permitted",
+     "secondary_suite": "more than one secondary suite",
+     "secondary_suite_use": "one secondary suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If the original building existed on the lot on October 15, 1960, you may have more than one secondary suite in a detached house or a dwelling unit in a semi-detached house, provided the original building had existed on the lot on October 15, 1960.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](B)(ii)",
+   "archetype": "LIMIT",
+   "target": "interior_floor_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "interior_floor_area_m2 = 110 m2 @(1435)[SSP](B)(ii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house",
+     "secondary_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "secondary_suite_use"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "A detached house",
+     "semi_detached_house": "semi-detached house permitted",
+     "secondary_suite": "more than one secondary suite",
+     "secondary_suite_use": "one secondary suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "The 110 m2 average floor area is modelled; the building-history condition is not evaluated from lot data.",
+    "gaps": "Building history (original building existed on October 15, 1960) is not held."
+   },
+   "disclosure": "If the original building existed on the lot on October 15, 1960, you may have more than one secondary suite in a detached house or a dwelling unit in a semi-detached house, provided the average interior floor area of the dwelling unit and the secondary suites combined is at least 110 square metres.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](B)(iii)",
+   "archetype": "LIMIT",
+   "target": "interior_floor_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "interior_floor_area_m2 = 55 m2 @(1435)[SSP](B)(iii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house",
+     "secondary_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "secondary_suite_use"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "A detached house",
+     "semi_detached_house": "semi-detached house permitted",
+     "secondary_suite": "more than one secondary suite",
+     "secondary_suite_use": "one secondary suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "The 55 m2 minimum floor area is modelled; the building-history condition is not evaluated from lot data.",
+    "gaps": "Building history (original building existed on October 15, 1960) is not held."
+   },
+   "disclosure": "If the original building existed on the lot on October 15, 1960, you may have more than one secondary suite in a detached house or a dwelling unit in a semi-detached house, provided the interior floor area of each individual dwelling unit and secondary suite is at least 55 square metres.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](B)(iv)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house",
+     "secondary_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "secondary_suite_use"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "A detached house",
+     "semi_detached_house": "semi-detached house permitted",
+     "secondary_suite": "more than one secondary suite",
+     "secondary_suite_use": "one secondary suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If the original building existed on the lot on October 15, 1960, you may have more than one secondary suite in a detached house or a dwelling unit in a semi-detached house, provided no exterior addition to or major exterior alteration of the building is made, and its external appearance as the original detached house or semi-detached house is not materially altered.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](C)(i)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "20 years",
+     "clause": "(1435)[SSP](C)(i)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "five years",
+     "clause": "(1435)[SSP](C)(i)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "A detached house",
+     "semi_detached_house": "a semi-detached house"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a detached house exists, you may vertically divide it to become a semi-detached house, provided the original building is at least 20 years old and any addition to it, prior to the vertical division, is at least five years old.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](C)(ii)(a)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "A detached house",
+     "semi_detached_house": "a semi-detached house"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a detached house exists, you may vertically divide it to become a semi-detached house, provided any addition for this alteration is not located at the front or sides of the building.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](C)(ii)(b)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "A detached house",
+     "semi_detached_house": "a semi-detached house"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a detached house exists, you may vertically divide it to become a semi-detached house, provided any addition for this alteration complies with the building requirements for a detached house in the RD zone.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](D)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "lawfully existing detached house"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a detached house lawfully exists, any addition or extension above the first storey must comply with the minimum building setbacks required by this By-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](E)(i)",
+   "archetype": "LIMIT",
+   "target": "fsi",
+   "bound": "max",
+   "numeric_expression": [
+    "fsi = 0.69 ratio @(1435)[SSP](E)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "label_value"
+    ],
+    "if": "label(d) = 0.6 ratio"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [
+     "label_value"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "a detached house erected",
+     "label_value": "permitted maximum floor space index"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "The 0.69 floor space index limit is modelled; whether the house was erected before October 15, 1953 is not evaluated from lot data.",
+    "gaps": "Building history (erected before October 15, 1953) is not held."
+   },
+   "disclosure": "If a lot has a permitted maximum floor space index of 0.6 and a detached house erected before October 15, 1953, you may enlarge the detached house by an addition to the rear of the building, provided the overall floor space index for the lot, including the addition, does not exceed a total of 0.69.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](E)(ii)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.6",
+     "clause": "(1435)[SSP](E)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [
+     "label_value"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "a detached house erected",
+     "label_value": "permitted maximum floor space index"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a lot has a permitted maximum floor space index of 0.6 and a detached house erected before October 15, 1953, you may enlarge the detached house by an addition to the rear of the building, provided all finished floor levels within the addition are no higher than the uppermost floor level in the existing building.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](E)(iii)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.6",
+     "clause": "(1435)[SSP](E)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [
+     "label_value"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "a detached house erected",
+     "label_value": "permitted maximum floor space index"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a lot has a permitted maximum floor space index of 0.6 and a detached house erected before October 15, 1953, you may enlarge the detached house by an addition to the rear of the building, provided no part of the addition is closer to the nearest side lot line than the shortest distance between the existing side main wall of the building and the side lot line.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](E)(iv)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.6",
+     "clause": "(1435)[SSP](E)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "5 years",
+     "clause": "(1435)[SSP](E)(iv)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [
+     "label_value"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "detached_house": "a detached house erected",
+     "label_value": "permitted maximum floor space index"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status",
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "Depends on the building's history; not evaluated from lot data.",
+    "gaps": "Building history facts are not held."
+   },
+   "disclosure": "If a lot has a permitted maximum floor space index of 0.6 and a detached house erected before October 15, 1953, you may enlarge the detached house by an addition to the rear of the building, provided any prior addition is at least 5 years old.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](F)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "deck_or_platform": "a platform with a floor"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Depends on the platform's floor height relative to the first floor, which is a design input.",
+    "gaps": "Platform floor height is not held."
+   },
+   "disclosure": "In a front yard or rear yard, a platform with a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](G)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "frontage_band"
+    ],
+    "if": "lot_frontage_m ≤ 7.6 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "frontage_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "frontage_band": "a lot frontage"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Lot frontage is known, but the presence of a vehicle entrance through the front wall is a design input.",
+    "gaps": "Design of the front wall is not held."
+   },
+   "disclosure": "If the lot frontage is 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[SSP](H)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "parking_in_building",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "Exception RD 1435",
+     "parking_space": "Required parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Parking location is a design input.",
+    "gaps": "Parking location is not held."
+   },
+   "disclosure": "Required parking spaces for a dwelling unit must be located within a building or structure.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(1) 10 of former City of Toronto By-law 438-86",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law; never evaluated.",
+    "gaps": "Former by-law provisions are not evaluated."
+   },
+   "disclosure": "This property may alternatively comply with Section 12(1) 10 of former City of Toronto By-law 438-86; that path is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[PBS](B)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(2) 319 of former City of Toronto By-law 438-86",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law; never evaluated.",
+    "gaps": "Former by-law provisions are not evaluated."
+   },
+   "disclosure": "This property may alternatively comply with Section 12(2) 319 of former City of Toronto By-law 438-86; that path is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[PBS](C)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 807-78",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "the odd numbered addresses of 1-3 CORRIGAN CS",
+     "the even numbered addresses of 2-6 CORRIGAN CS"
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law; never evaluated.",
+    "gaps": "Former by-law provisions are not evaluated."
+   },
+   "disclosure": "This property may alternatively comply with former City of Toronto by-law 807-78; that path is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[PBS](D)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 325-84",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "75 CRESCENT RD"
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law; never evaluated.",
+    "gaps": "Former by-law provisions are not evaluated."
+   },
+   "disclosure": "This property may alternatively comply with former City of Toronto by-law 325-84; that path is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[PBS](E)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-laws 877-80 and 256-81",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "6 PINE HILL RD"
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law; never evaluated.",
+    "gaps": "Former by-law provisions are not evaluated."
+   },
+   "disclosure": "This property may alternatively comply with former City of Toronto by-laws 877-80 and 256-81; that path is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(1435)#(1435)[PBS](F)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 807-78",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "the odd numbered addresses of 7-51 SOUTH DR",
+     "the even numbered addresses of 30-36 SOUTH DR",
+     "the even numbered addresses of 4-14 SOUTH DR",
+     "the even numbered addresses of 48-54 SOUTH DR",
+     "58 SOUTH DR",
+     "60 SOUTH DR"
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 1435"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Alternate compliance path under a former by-law; never evaluated.",
+    "gaps": "Former by-law provisions are not evaluated."
+   },
+   "disclosure": "This property may alternatively comply with former City of Toronto by-law 807-78; that path is not evaluated here.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "900.3.10(1435)": {
+   "explanation": "Exception RD 1435 sets site specific rules for these lands: pre-1980 semi-detached houses and duplexes may be enlarged or replaced in kind, certain old houses may hold several secondary suites or be divided into semi-detached houses, and old detached houses with a 0.6 floor space index may be enlarged to 0.69. It also restricts platforms, vehicle entrances on narrow lots and parking location, and keeps former City of Toronto by-law 438-86 sections and by-laws 807-78, 325-84, 877-80 and 256-81 as prevailing paths on named addresses.",
+   "code_refs": "none"
+  }
+ }
+}

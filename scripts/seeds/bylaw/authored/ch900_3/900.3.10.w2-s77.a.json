@@ -1,0 +1,1286 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s77",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(392)#(392)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.9 m @(392)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "The lands, or a portion thereof"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum side yard setback of 0.9 m on RD 392 lands.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 5.7 m @(392)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "The lands, or a portion thereof"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Minimum setback of 5.7 m from a side lot line that abuts a street.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[SSP](C)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "36.0 metres",
+     "clause": "(392)[SSP](C)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "The lands, or a portion thereof",
+     "abuts_named_street": "abuts Kingston Rd."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "Setback is measured from the original centreline of a named street, which has no target; the front lot line abutting Kingston Rd., Eglinton Ave. or Markham Rd. is a named-road clause.",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "On lots whose front lot line abuts Kingston Rd., Eglinton Ave. or Markham Rd., the minimum building setback is 36.0 metres measured from the original centreline of the street. This tool does not model setbacks measured from a street centreline, so it does not evaluate this requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[SSP](D)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "These lands must comply"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "1 and 3 Ravine Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "1",
+     "clause": "(392)[PBS](A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "3",
+     "clause": "(392)[PBS](A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lots municipally known as 1 and 3 Ravine Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 1 and 3 Ravine Dr., Schedule \"C\" Exception 27-I of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](B)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "6 Ravine Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "6",
+     "clause": "(392)[PBS](B)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 6 Ravine Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 6 Ravine Dr., Schedule \"C\" Exception 27-III of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](C)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "3 Windy Ridge Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "3",
+     "clause": "(392)[PBS](C)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 3 Windy Ridge Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 3 Windy Ridge Dr., Schedule \"C\" Exception 27-II of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](D)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "22 Windy Ridge Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "22",
+     "clause": "(392)[PBS](D)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 22 Windy Ridge Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 22 Windy Ridge Dr., Schedule \"C\" Exception 27-IV of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](E)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "24 Windy Ridge Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "24",
+     "clause": "(392)[PBS](E)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 24 Windy Ridge Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 24 Windy Ridge Dr., Schedule \"C\" Exception 27-V of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](F)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "24 Windy Ridge Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "24",
+     "clause": "(392)[PBS](F)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 24 Windy Ridge Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 24 Windy Ridge Dr., Schedule \"C\" Exception 27-VII of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](G)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "lot_list",
+    "refs": [
+     "the lot created on Windy Ridge Dr. from the closed right-of-way formerly known as Royal Ave."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot created on Windy Ridge Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot created on Windy Ridge Dr. from the closed right-of-way formerly known as Royal Ave., Schedule \"C\" Exception 27-VI of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](H)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "19 and 21 Bellehaven Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "19",
+     "clause": "(392)[PBS](H)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "21",
+     "clause": "(392)[PBS](H)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lots municipally known as 19 and 21 Bellehaven Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 19 and 21 Bellehaven Cres., Schedule \"C\" Exception 27-VIII of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](I)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "27 Bellehaven Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "27",
+     "clause": "(392)[PBS](I)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 27 Bellehaven Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 27 Bellehaven Cres., Schedule \"C\" Exception 27-IX of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](J)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "29 Bellehaven Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "29",
+     "clause": "(392)[PBS](J)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 29 Bellehaven Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 29 Bellehaven Cres., Schedule \"C\" Exception 27-X of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](K)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "31 Bellehaven Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "31",
+     "clause": "(392)[PBS](K)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 31 Bellehaven Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 31 Bellehaven Cres., Schedule \"C\" Exception 27-XI of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](L)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "33 Bellehaven Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "33",
+     "clause": "(392)[PBS](L)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 33 Bellehaven Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 33 Bellehaven Cres., Schedule \"C\" Exception 27-XII of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](M)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "26 Parkcrest Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "26",
+     "clause": "(392)[PBS](M)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 26 Parkcrest Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 26 Parkcrest Dr., Schedule \"C\" Exception 27-XIII of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](N)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "8 Parkcrest Dr."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "8",
+     "clause": "(392)[PBS](N)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 8 Parkcrest Dr."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 8 Parkcrest Dr., Schedule \"C\" Exception 28-III of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](O)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "5 Annis Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "5",
+     "clause": "(392)[PBS](O)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 5 Annis Rd."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 5 Annis Rd., Schedule \"C\" Exception 27-XVIII of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](P)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "7 Annis Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "7",
+     "clause": "(392)[PBS](P)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 7 Annis Rd."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 7 Annis Rd., Schedule \"C\" Exception 28-I of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](Q)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "9 Annis Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "9",
+     "clause": "(392)[PBS](Q)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 9 Annis Rd."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 9 Annis Rd., Schedule \"C\" Exception 27-XV of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](R)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "31 Annis Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "31",
+     "clause": "(392)[PBS](R)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 31 Annis Rd."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 31 Annis Rd., Schedule \"C\" Exception 27-XIV of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](S)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "1 Hill Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "1",
+     "clause": "(392)[PBS](S)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 1 Hill Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 1 Hill Cres., Schedule \"C\" Exception 27-XXIV of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](T)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "12 Hill Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "12",
+     "clause": "(392)[PBS](T)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 12 Hill Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 12 Hill Cres., Schedule \"C\" Exception 27-XX of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](U)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "16 Hill Cres."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "16",
+     "clause": "(392)[PBS](U)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392",
+     "any": "On the lot municipally known as 16 Hill Cres."
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "none",
+    "gaps": "none",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": []
+   },
+   "disclosure": "For the lot(s) at 16 Hill Cres., Schedule \"C\" Exception 27-XXI of former City of Scarborough by-law 10010 prevails as an alternate compliance path. This tool does not evaluate that former by-law.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "900.3.10(392)": {
+   "explanation": "Exception RD 392 sets a 0.9 m minimum side setback, a 5.7 m minimum setback from a side lot line abutting a street, and a 36.0 m setback from the original street centreline along Kingston Rd., Eglinton Ave. and Markham Rd., and requires compliance with exception 900.3.10(1462). Named lots on Ravine Dr., Windy Ridge Dr., Bellehaven Cres., Parkcrest Dr., Annis Rd. and Hill Cres. remain subject to former City of Scarborough by-law 10010.",
+   "code_refs": "none"
+  }
+ }
+}

@@ -1,0 +1,5 @@
+   × CHAT-81.FAM-ALL family readings > FAM-HIST, FAM-ABUT-NAMED, FAM-STEP, FAM-PLAT, FAM-PARKLEN stay UNUSUAL / no target 2ms
+   × CHAT-81.FAM-ALL family readings > FAM-ABUT-COMP, FAM-FSI, FAM-ANCCOV, FAM-SEP, FAM-ARMS take the approved LIMITs 0ms
+   × CHAT-81.FAM-ALL family readings > the two stopped readings stay pending 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed (3)

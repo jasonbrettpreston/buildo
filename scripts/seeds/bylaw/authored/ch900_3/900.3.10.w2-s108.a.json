@@ -1,0 +1,16 @@
+{"schema":"bylaw-authored-v1","shard":"ch900_3/900.3.10.w2-s108","keyer":"A","units":[
+{"unit_id":"900.3.10(1392)#(1392)[SSP](A)","archetype":"PROHIBIT","target":"none","bound":"none","numeric_expression":"none",
+"requirement":"none","instrument":"none","evaluated_by_us":"none","ranks_layers":"none","condition":"none",
+"applies_to":{"part":"whole","refs":[]},"literals_not_expressed":[],
+"application":{"zones":["RD"],"building_types":["any"],"lot_conditions":[],"uses":["deck_or_platform"],"evidence":{"RD":"Exception RD 1392","any":"a platform with a floor","deck_or_platform":"a platform with a floor"}},
+"calculation_handling":{"not_modelled_reason":"needs_data_we_lack","user_inputs":[],"status":"not_modelled","description":"Whether a platform floor is higher than the first floor of the building depends on as-designed platform and first floor heights, which the lot data does not hold.","gaps":"The platform floor height relative to the first floor above established grade is not a lot-data input."},
+"disclosure":"On these lands, in a front yard or rear yard, a platform whose floor is higher than the first floor of the building above established grade may not encroach into the required yard setback. This is not evaluated automatically; check the platform floor height against the first floor.",
+"not_an_override":[]},
+{"unit_id":"900.3.10(1392)#(1392)[PBS](A)","archetype":"PREVAILING","target":"none","bound":"none","numeric_expression":"none",
+"requirement":"none","instrument":{"kind":"former_bylaw","citation":"Section 12(2) 3 of former City of Toronto By-law 438-86","municipality":"City of Toronto"},"evaluated_by_us":"no","ranks_layers":"none","condition":"none",
+"applies_to":{"part":"whole","refs":[]},"literals_not_expressed":[],
+"application":{"zones":["RD"],"building_types":["any"],"lot_conditions":[],"uses":[],"evidence":{"RD":"Exception RD 1392","any":"Prevailing By-laws"}},
+"calculation_handling":{"not_modelled_reason":"prevailing_alternate_path","user_inputs":[],"status":"not_modelled","description":"An alternate compliance path under former City of Toronto By-law 438-86; never evaluated.","gaps":"none"},
+"disclosure":"Section 12(2) 3 of former City of Toronto By-law 438-86 continues to prevail on these lands as an alternate path; it is not evaluated here.",
+"not_an_override":[]}
+],"rows":{"900.3.10(1392)":{"explanation":"Exception RD 1392: in a front yard or rear yard, a platform with a floor higher than the first floor above established grade may not encroach into the required yard setback. Section 12(2) 3 of former City of Toronto By-law 438-86 also prevails.","code_refs":"none"}}}

@@ -1,0 +1,143 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s78",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](V)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "Schedule \"C\" Exception 27-XIX, of former City of Scarborough by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "18 Hill Cres."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Alternate compliance path under a former by-law; not evaluated.",
+    "gaps": "none"
+   },
+   "disclosure": "The lot at 18 Hill Cres. is subject to a prevailing provision of former City of Scarborough by-law 10010 (Schedule \"C\" Exception 27-XIX); it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](W)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "Schedule \"C\" Exception 27-XXIII, of former City of Scarborough by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "19 Hill Cres."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Alternate compliance path under a former by-law; not evaluated.",
+    "gaps": "none"
+   },
+   "disclosure": "The lot at 19 Hill Cres. is subject to a prevailing provision of former City of Scarborough by-law 10010 (Schedule \"C\" Exception 27-XXIII); it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(392)#(392)[PBS](X)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "Schedule \"C\" Exception 28-II, of former City of Scarborough by-law 10010",
+    "municipality": "former City of Scarborough"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "20 Hill Cres."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 392"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Alternate compliance path under a former by-law; not evaluated.",
+    "gaps": "none"
+   },
+   "disclosure": "The lot at 20 Hill Cres. is subject to a prevailing provision of former City of Scarborough by-law 10010 (Schedule \"C\" Exception 28-II); it is not evaluated here.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {}
+}

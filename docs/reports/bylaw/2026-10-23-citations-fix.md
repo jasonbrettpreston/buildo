@@ -1,0 +1,16 @@
+# Citation corrections after verify-40 (finding 6). Each says what the line really supports; "NEW RULING NEEDED" means no handbook line covers it.
+
+| Card | Wrong or stretched cite | Correct basis |
+|---|---|---|
+| R5-5 Johnston DATA flag | M-308 (survey vs parcel >5 percent) | NEW RULING NEEDED: an explained DATA flag for a stale parcel row (two plan lots in one row, severance not in the parcel layer). M-308 is the nearest door; no survey is held. The vocab entries still name M-308 only because explained_differences must cite a register row, and say so in their reading. Draft: question "may a named notice row on a named parcel be scored DATA when the parcel row carries two plan lots", register Spec 69a, five-words as in the R5-5 card. |
+| R5-7 suite openings | Spec 133 §m.287 | REVERTED (verify-40 finding 5, circular evidence). Correct door for the openings default is M-197. A structured plan-facts openings field is a NEW RULING NEEDED; not built. |
+| R5-2a / R8-4 / R9-5 citation form | "§m.105 rule 29" | Rule 29 (M-105 dated note, keying.mjs:823-829) says cite the clause that holds the literal. The full [SSP] unit path is a tree convention: NEW RULING NEEDED (citation form of a statement, keyer-A brief defect). The handbook line m.105 is titled "the wave-1 shard plan is generated"; rules 27-30 live in the M-105 note. |
+| R8-6 269 (E), R8-5 120 (D) | §m.136 rule 24 | 269 (E) is a soft-landscaping requirement within 3.0 m of a lot line abutting Highway 401, 120 (D) a rear line abutting a lot on Guildcrest Dr: neither is a setback from a lot line abutting a named road. UNUSUAL is defensible as a limit the DSL cannot express (§m.102). Extending M-136 to these is a NEW RULING NEEDED. |
+| R8-8 267 (D)(i)/(ii) | §m.136, R6-2 | (i) names roads: §m.136 holds. (ii) "any other street" is not a named road and R6-2 is itself unapproved. Basis: no licensed pattern for the wording (§m.132 door); UNUSUAL is the holding state, LIMIT street_setback_m would be a pattern ruling. |
+| R6-4 155 (A) | §m.133 | §m.102 (a real limit the DSL cannot express): 155 (A) is an [SSP] block-aggregation rule, not a self-numbered [PBS] item. |
+| R8-3 951 (F) | §m.317 family | 951 (F) has no date, so rule 31 does not apply. Basis: precedent by analogy to the agreed 1436 (B)(ii) 110 m2 floor-area LIMIT. |
+| R8-9 45 (E) | rule 26 (M-142) | Reading right, form non-standard: rule 26 prescribes the storey_count_band token with a numeric if; 45 (E) uses if(height_storeys = 2 storeys; ...) inside the expression with condition none (only such unit). NEW RULING NEEDED: allow a conditional expression for a two-arm unit. |
+| R8-9 45 (F) | §m.102 | Applied form is a partial LIMIT with limit_arm_not_modelled: §m.130 (not §m.102). Re-recorded. |
+| R7-2 | self_reference, "735 precedent" | Premise false. Ruled reason is subordinate_reference (operator ruling R5-Q7b-464, vocab.json displacement_triggers). Six units re-recorded. |
+| R6-3 324 (J)(i) | §m.130 | §m.130 requires the expressible bound to be a true necessary bound on every lot; (J) applies only to below-grade parking structures. Whole clause UNUSUAL (§m.102). Re-recorded. |
+| R6-5 / R5-2b / R8-1 twins | rule 31 route | Newer ruling: CHAT-67.1434A fixed the twin form (needs_user_input, no disclosure) in the §m.317 dated note 2. 1429/591/910 re-keyed to 1436 (D). |

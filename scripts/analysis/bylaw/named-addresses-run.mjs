@@ -19,6 +19,9 @@ import {
   classifyItem, worst, drawSample,
 } from './named-addresses.mjs';
 
+// CHAT-86.whole-street: a whole-street address has neither a number nor a range
+const addrLabel = (a) => (a.whole_street ? 'whole street' : a.key ?? `${a.range.from_key}-${a.range.to_key}/${a.range.parity}`);
+
 const require = createRequire(import.meta.url);
 const { createResolvedPool } = require('../../lib/resolve-db.js');
 
@@ -182,7 +185,7 @@ async function main() {
     const i = p.items[k];
     if (i.match_status !== 'exact') continue;
     const a = p.addresses[k];
-    for (const pid of i.parcels) sampleSeedItems.push({ sample_id: `${r.exception_id}|${a.city_full}|${a.key ?? `${a.range.from_key}-${a.range.to_key}`}|${pid}`, exception_id: r.exception_id, unit_id: r.unit_id, raw: p.raw, address: a.key ? `${a.key} ${a.city_full}` : `${a.range.from_key}-${a.range.to_key} (${a.range.parity}) ${a.city_full}`, parcel_id: pid });
+    for (const pid of i.parcels) sampleSeedItems.push({ sample_id: `${r.exception_id}|${a.city_full}|${addrLabel(a)}|${pid}`, exception_id: r.exception_id, unit_id: r.unit_id, raw: p.raw, address: a.whole_street ? `${a.city_full} (whole street)` : a.key ? `${a.key} ${a.city_full}` : `${a.range.from_key}-${a.range.to_key} (${a.range.parity}) ${a.city_full}`, parcel_id: pid });
   }
   const dedup = new Map();
   for (const s of sampleSeedItems) {
@@ -298,7 +301,7 @@ function render(res, proxySame) {
       for (const [j, it] of (p.items ?? []).entries()) {
         if (it.match_status === 'not_found' || it.match_status === 'ambiguous') {
           const a = p.addresses[j];
-          L.push(`- \`${u.unit_id}\`: ${it.match_status} (${it.reasons.join(', ')}) — ${a.key ?? `${a.range.from_key}-${a.range.to_key}/${a.range.parity}`} ${a.city_full}${it.streets.length ? ` [streets: ${it.streets.join(' · ')}]` : ''}${it.match_status === 'ambiguous' ? ` parcels ${it.parcels.length}` : ''}${it.near_keys ? ` (same number, other suffix: ${it.near_keys.join(', ')})` : ''}`);
+          L.push(`- \`${u.unit_id}\`: ${it.match_status} (${it.reasons.join(', ')}) — ${addrLabel(a)} ${a.city_full}${it.streets.length ? ` [streets: ${it.streets.join(' · ')}]` : ''}${it.match_status === 'ambiguous' ? ` parcels ${it.parcels.length}` : ''}${it.near_keys ? ` (same number, other suffix: ${it.near_keys.join(', ')})` : ''}`);
         }
       }
     }

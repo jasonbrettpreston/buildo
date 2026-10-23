@@ -1,0 +1,96 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10.w2-s68",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = by_type(detached_house: 185 m2; semi_detached_house: 325 m2) @(269)[SSP](A)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = by_type(detached_house: 6.0 m; semi_detached_house: 10.5 m) @(269)[SSP](B)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = by_type(detached_house: 35 pct; semi_detached_house: 35 pct; duplex: 50 pct; triplex: 50 pct) @(269)[SSP](C)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = by_type(detached_house: 8.5 m; semi_detached_house: 8.5 m; duplex: 9.0 m; triplex: 10.7 m) @(269)[SSP](D)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": [
+        "fsi = by_type(detached_house: 0.75 ratio; semi_detached_house: 0.75 ratio; duplex: 1.25 ratio; triplex: 1.25 ratio) @(269)[SSP](E)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = by_type(detached_house: 0.6 m; semi_detached_house: 0.9 m; duplex: 2.4 m; triplex: 2.4 m) @(269)[SSP](F)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](G)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[SSP](H)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(269)#(269)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(92)#(92)[SSP](A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(92)#(92)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

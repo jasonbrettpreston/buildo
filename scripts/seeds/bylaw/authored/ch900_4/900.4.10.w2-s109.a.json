@@ -1,0 +1,753 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_4/900.4.10.w2-s109",
+ "keyer": "A",
+ "units": [
+  {
+   "target": "dwelling_units_max",
+   "bound": "max",
+   "numeric_expression": [
+    "dwelling_units_max = 2 units @(115)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(115)#(115)[SSP](A)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "RS": "Exception RS 115",
+     "any": "following Site Specific Provisions",
+     "dwelling_unit": "maximum of two dwelling units"
+    }
+   }
+  },
+  {
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(115)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "The minimum is the frontage that existed on the day of the enactment of the By-law, which needs as-built facts.",
+    "gaps": "existing frontage on the enactment date is not held",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot frontage existed on May 9, 2013 (the day of the enactment of By-law 569-2013), the minimum frontage is the frontage that existed on that day, provided the other provisions of this exception are met.",
+   "not_an_override": [],
+   "unit_id": "900.4.10(115)#(115)[SSP](B)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 115",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(115)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "The minimum is the area that existed on the day of the enactment of the By-law, which needs as-built facts.",
+    "gaps": "existing area on the enactment date is not held",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot area existed on May 9, 2013 (the day of the enactment of By-law 569-2013), the minimum area is the area that existed on that day, provided the other provisions of this exception are met.",
+   "not_an_override": [],
+   "unit_id": "900.4.10(115)#(115)[SSP](C)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 115",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 2.4 m @(115)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(115)#(115)[SSP](D)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 115",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 4.5 m @(115)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(115)#(115)[SSP](E)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 115",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(115)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(115)#(115)[SSP](F)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RS": "Exception RS 115",
+     "any": "following Site Specific Provisions",
+     "private_garage": "attached or detached garage"
+    }
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(115)#(115)[PBS]",
+   "archetype": "PROCEDURAL",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 115",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(281)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "The minimum is the frontage that existed on the day of the enactment of the By-law, which needs as-built facts.",
+    "gaps": "existing frontage on the enactment date is not held",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot frontage existed on May 9, 2013 (the day of the enactment of By-law 569-2013), the minimum frontage is the frontage that existed on that day, provided the other provisions of this exception are met.",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](A)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(281)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "The minimum is the area that existed on the day of the enactment of the By-law, which needs as-built facts.",
+    "gaps": "existing area on the enactment date is not held",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ]
+   },
+   "disclosure": "If the lot area existed on May 9, 2013 (the day of the enactment of By-law 569-2013), the minimum area is the area that existed on that day, provided the other provisions of this exception are met.",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](B)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "dwelling_units_max",
+   "bound": "max",
+   "numeric_expression": [
+    "dwelling_units_max = 2 units @(281)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](C)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions",
+     "dwelling_unit": "maximum of two dwelling units"
+    }
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "7.5 metres",
+     "clause": "(281)[SSP](D)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "A setback from the lot line abutting named roads has no target.",
+    "gaps": "setback from a lot line that abuts Pharmacy Ave. or Warden Ave.",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": []
+   },
+   "disclosure": "A minimum building setback of 7.5 metres applies from a lot line that abuts Pharmacy Ave. or Warden Ave.; this is not evaluated by the tool.",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](D)",
+   "archetype": "UNUSUAL",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions",
+     "abuts_named_street": "lot line that abuts a Pharmacy Ave."
+    }
+   }
+  },
+  {
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(281)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](E)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 4.5 m @(281)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](F)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(281)[SSP](G)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "modelled",
+    "description": "Evaluated from the lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](G)",
+   "archetype": "LIMIT",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions",
+     "private_garage": "A garage must"
+    }
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "parking_in_building",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Location of the required parking space is not evaluated from lot data.",
+    "gaps": "none",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](H)",
+   "archetype": "REQUIRE",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions",
+     "parking_space": "required parking space"
+    }
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Incorporates exception 900.4.10(336).",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[SSP](I)",
+   "archetype": "INCLUDE",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  },
+  {
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "calculation_handling": {
+    "status": "informational",
+    "description": "No prevailing by-laws or sections apply.",
+    "gaps": "none",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "unit_id": "900.4.10(281)#(281)[PBS]",
+   "archetype": "PROCEDURAL",
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RS": "Exception RS 281",
+     "any": "following Site Specific Provisions"
+    }
+   }
+  }
+ ],
+ "rows": {
+  "900.4.10(115)": {
+   "explanation": "Exception RS 115 allows at most two dwelling units per lot, keeps the lot frontage and lot area at what existed on the enactment day, and sets side setbacks of 2.4 m (4.5 m on a street side) and 0.3 m for a garage.",
+   "code_refs": "none"
+  },
+  "900.4.10(281)": {
+   "explanation": "Exception RS 281 keeps lot frontage and area at their enactment-day values, allows two dwelling units per lot, sets side setbacks of 1.2 m (4.5 m on a street side, 0.3 m for a garage), a 7.5 m setback along Pharmacy Ave. or Warden Ave., requires the parking space inside the residential building and incorporates exception 900.4.10(336).",
+   "code_refs": "none"
+  }
+ }
+}

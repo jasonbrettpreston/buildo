@@ -1,0 +1,6 @@
+   × F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names > vocab.named_street is a table unit -> streets (+ line) that covers every unit carrying abuts_named_street, or lists it as unnamed 4ms
+   × F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names > a parcel on Huntingwood Dr. takes the 7.5 m front setback; a parcel on Ravencliff Cres. does not (A0096/26SC) 3ms
+   × F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names > street names compare whole-word and without case, punctuation or suffix spelling (Huntingwood Drive = HUNTINGWOOD DR.) 1ms
+   × F-4D-7 / M-285 — abuts_named_street is joined from the parcel street name to the street the exception names > with no street name the flag decides exactly as before; with neither the answer asks for it 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 40 passed (44)

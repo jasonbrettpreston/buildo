@@ -1,0 +1,800 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_3/900.3.10.w2-s42",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "front_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "front_setback_m = 4.5 m @(350)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "any": "building setback from a front lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum front setback of 4.5 m.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](B)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "Warden Ave.",
+     "Pharmacy Ave.",
+     "Victoria Park Ave.",
+     "Danforth Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "19.0 metres",
+     "clause": "(350)[SSP](B)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "abuts_named_street": "abuts Warden Ave.",
+     "any": "minimum building setback"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "none",
+    "gaps": "Setback is measured from the original centreline of the street, which has no target (rule 23), and applies only to lots abutting the named streets."
+   },
+   "disclosure": "On a front lot line that abuts Warden Ave., Pharmacy Ave., Victoria Park Ave. or Danforth Rd., the minimum building setback is 19.0 metres measured from the original centreline of the street. This tool does not evaluate setbacks measured from a street centreline.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 0.3 m @(350)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum side setback of 0.3 m.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_street_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_street_m = 1.5 m @(350)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "any": "side lot line that abuts a street"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum setback of 1.5 m from a side lot line that abuts a street.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](E)(i)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "195 Danforth Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one",
+     "clause": "(350)[SSP](E)(i)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "99 square metres",
+     "clause": "(350)[SSP](E)(i)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "dwelling_unit": "one dwelling unit",
+     "any": "multiple family dwelling"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": [],
+    "description": "none",
+    "gaps": "Applies only to 195 Danforth Rd.; lot area per dwelling unit has no licensed target in this phrasing."
+   },
+   "disclosure": "On the lands at 195 Danforth Rd., a multiple family dwelling is permitted if there is one dwelling unit for each 99 square metres of lot area. This tool does not evaluate this site-specific condition.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](E)(ii)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "195 Danforth Rd."
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "4.5 metres",
+     "clause": "(350)[SSP](E)(ii)",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "any": "multiple family dwelling"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": [],
+    "description": "none",
+    "gaps": "Applies only to 195 Danforth Rd.; the phrasing \"set back a minimum of ... from the front lot line\" carries no front_setback_m licence pattern."
+   },
+   "disclosure": "On the lands at 195 Danforth Rd., a multiple family dwelling is permitted if the building is set back a minimum of 4.5 metres from the front lot line. This tool does not evaluate this site-specific condition.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](E)(iii)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.2 m @(350)[SSP](E)(iii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "195 Danforth Rd."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "any": "multiple family dwelling"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": [],
+    "description": "Minimum side setback of 1.2 m for a multiple family dwelling at 195 Danforth Rd.",
+    "gaps": "Applies only to 195 Danforth Rd."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](F)(i)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "numeric_expression": [
+    "lot_coverage_pct = 40 pct @(350)[SSP](F)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "46 Scotia Avenue"
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "any": "maximum lot coverage"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": [],
+    "description": "Maximum lot coverage of 40 percent at 46 Scotia Avenue.",
+    "gaps": "Applies only to 46 Scotia Avenue."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[SSP](F)(ii)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "46 Scotia Avenue"
+    ]
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one",
+     "clause": "(350)[SSP](F)(ii)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "4.65 metres",
+     "clause": "(350)[SSP](F)(ii)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "parking_space": "required parking space",
+     "any": "street yard"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "named_lots_only",
+    "user_inputs": [],
+    "description": "none",
+    "gaps": "Applies only to 46 Scotia Avenue."
+   },
+   "disclosure": "On the lands at 46 Scotia Avenue, one required parking space at least 4.65 metres long may be located in the street yard if it is beside and parallel with the driveway.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(350)#(350)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 350",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "none",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(541)#(541)[SSP](A)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(541)[SSP](A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 541",
+     "any": "minimum lot frontage"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Minimum lot frontage is the frontage that existed on the enactment date.",
+    "gaps": "Needs the lot frontage as it existed on the day of enactment of By-law 569-2013."
+   },
+   "disclosure": "If the lot had a lot frontage on the day of the enactment of this By-law (May 9, 2013), the minimum lot frontage is that existing lot frontage.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(541)#(541)[SSP](C)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "numeric_expression": [
+    "lot_coverage_pct = 50 pct @(541)[SSP](C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 541",
+     "any": "maximum lot coverage"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Maximum lot coverage of 50 percent.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(541)#(541)[SSP](D)",
+   "archetype": "LIMIT",
+   "target": "street_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "street_setback_m = 3.0 m @(541)[SSP](D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 541",
+     "any": "lot line that abuts a street"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum setback of 3.0 m from a lot line abutting a street.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(541)#(541)[SSP](E)",
+   "archetype": "LIMIT",
+   "target": "garage_entrance_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "garage_entrance_setback_m = 6.0 m @(541)[SSP](E)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "garage_entrance_faces_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "garage_entrance_faces_street"
+    ],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "RD": "Exception RD 541",
+     "garage_entrance_faces_street": "also faces the street",
+     "private_garage": "entrance to a garage",
+     "any": "vehicle entrance"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Garage vehicle entrance facing the street is set back at least 6.0 m from a lot line abutting a street.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(541)#(541)[SSP](F)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.0 m @(541)[SSP](F)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one",
+     "clause": "(541)[SSP](F)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 541",
+     "any": "building setback from a side lot line"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum side setback of 1.0 m on one side only.",
+    "gaps": "The 1.0 m applies on one side only; the other side keeps its base requirement and is not modelled separately."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(541)#(541)[SSP](H)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "parking_in_building",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "Exception RD 541",
+     "parking_space": "required parking space",
+     "any": "located in a building"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "The required parking space must be located in a building.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.3.10(541)#(541)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "Exception RD 541",
+     "any": "Prevailing By-laws"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "none",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "900.3.10(350)": {
+   "explanation": "Exception RD 350 sets site-specific setbacks (4.5 m front, 0.3 m side, 1.5 m street side; 19.0 m from the street centreline on four named streets), plus special rules for 195 Danforth Rd. and 46 Scotia Avenue. No prevailing by-laws apply.",
+   "code_refs": "none"
+  },
+  "900.3.10(541)": {
+   "explanation": "Exception RD 541 keeps the existing lot frontage as the minimum, caps lot coverage at 50 percent, sets a 3.0 m street setback, a 6.0 m setback for garage entrances facing the street, a 1.0 m side setback on one side only, and requires the parking space to be in a building. No prevailing by-laws apply.",
+   "code_refs": "none"
+  }
+ }
+}

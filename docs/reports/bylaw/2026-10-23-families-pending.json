@@ -1,0 +1,372 @@
+{
+ "families": [
+  {
+   "id": "FAM-HIST",
+   "title": "Permissions tied to building history or conditions",
+   "units": [
+    "900.2.10(621)[SSP](B)",
+    "900.3.10(937)[SSP](I)(i)",
+    "900.3.10(937)[SSP](I)(ii)",
+    "900.3.10(350)[SSP](E)(i)",
+    "900.3.10(350)[SSP](E)(ii)"
+   ],
+   "clause": "621 (B): a building existing on 28 Feb 1977 may be replaced if the new height does not exceed the old. 937 (I): an office is permitted in a detached house that existed in 1988 if (i) software production only, (ii) 1989 parking and landscaping retained. 350 (E): a multiple family dwelling is permitted on 195 Danforth Rd. if (i) one unit per 99 m2 of lot, (ii) 4.5 m from the front lot line.",
+   "keyings": {
+    "A": "UNUSUAL on the existing-building route",
+    "B": "PERMIT / REQUIRE (621 (B) PERMIT; 937 (I)(i) PERMIT, (ii) REQUIRE); LIMIT front_setback_m 4.5 (350 (E)(ii))"
+   },
+   "question": "Is a permission whose use or building depends on a date or on listed conditions kept UNUSUAL on the rule-31 route, with the conditions UNUSUAL too?",
+   "why": "Keying rule 31 (building-history clauses never a bare PERMIT/REQUIRE) and keying rule 27 (the conditions of a \"permitted if:\" clause are UNUSUAL, never REQUIRE) already say so; keyer B read the leaves as stand-alone rules. A plain LIMIT front_setback_m on 350 (E)(ii) would impose 4.5 m on every lot, but it is a condition of one named permission.",
+   "options": [
+    {
+     "k": "A",
+     "t": "Keep UNUSUAL (rule 31 and rule 27)"
+    },
+    {
+     "k": "B",
+     "t": "Take keyer B (PERMIT / REQUIRE / LIMIT)"
+    }
+   ],
+   "rec": "A",
+   "recText": "UNUSUAL, existing-building route; disclose the dated condition.",
+   "cite": "Spec 133 §m.317 (keying rule 31); §m.105 dated note, rule 27; agreed twins 1436 (B)(iv), 1437 (B)(iv) and 958/951 (D)(E).",
+   "draft": null,
+   "lots": 277,
+   "lotsNote": "621 (113) and 937 (164); 350 (179) also needs FAM-PARKLEN."
+  },
+  {
+   "id": "FAM-ABUT-NAMED",
+   "title": "Setback arm for named roads (\"where the lot line abuts Finch Ave., ...\")",
+   "units": [
+    "900.3.10(1029)[SSP](C)(i)",
+    "900.3.10(1121)[SSP](C)(i)",
+    "900.4.10(200)[SSP](C)(i)"
+   ],
+   "clause": "The minimum building setback from a lot line that abuts a street is (i) 7.5 metres where the lot line abuts <named roads>.",
+   "keyings": {
+    "A": "UNUSUAL",
+    "B": "LIMIT street_setback_m (200: side_setback_street_m) min 7.5"
+   },
+   "question": "Is a setback arm that applies only on named roads UNUSUAL?",
+   "why": "No lot data names the road a lot line abuts. A plain LIMIT would apply 7.5 m to every lot, over-restricting (Spec 133 M-130: the expressible bound must be necessary on every lot). The 267 (D)(i) and 324 (D)(i) arms are already UNUSUAL this way.",
+   "options": [
+    {
+     "k": "A",
+     "t": "UNUSUAL, limit_not_modelled"
+    },
+    {
+     "k": "B",
+     "t": "LIMIT on every lot (keyer B)"
+    }
+   ],
+   "rec": "A",
+   "recText": "UNUSUAL for every named-road arm.",
+   "cite": "Spec 133 §m.136 (setback from a lot line abutting a named road is UNUSUAL, keying rule 24); §m.130.",
+   "draft": null,
+   "lots": 0,
+   "lotsNote": "Settles with FAM-ABUT-COMP: 1029 (224), 1121 (224), 200 (182, also FAM-ARMS)."
+  },
+  {
+   "id": "FAM-ABUT-COMP",
+   "title": "\"In all other cases\" / \"any other street\" setback arms",
+   "units": [
+    "900.3.10(1029)[SSP](C)(ii)",
+    "900.3.10(1029)[SSP](C)(iii)",
+    "900.3.10(1121)[SSP](C)(ii)",
+    "900.4.10(200)[SSP](C)(ii)",
+    "900.5.10(278)[SSP](C)(ii)",
+    "900.5.10(278)[SSP](D)(ii)"
+   ],
+   "clause": "(ii) 6.0 metres where the lot line abuts any other street / 4.5 metres in all other cases where the side lot line abuts a street.",
+   "keyings": {
+    "A": "UNUSUAL (200 (C)(ii): street_setback_m)",
+    "B": "LIMIT street_setback_m min (200 (C)(ii): side_setback_street_m)"
+   },
+   "question": "May a complement arm (\"all other streets\") be a LIMIT, and which target for a side lot line?",
+   "why": "EVE.R6-2 made 324 (D)(ii) a LIMIT. A complement arm is a true necessary bound only when it is the smallest of its sibling arms (M-130); in 1029 the arms are 7.5, 6.0 and 3.6, so (ii) 6.0 would over-restrict where 3.6 applies. For 200 (C)(ii) the wording is a side lot line, so side_setback_street_m (EVE.M324-G).",
+   "options": [
+    {
+     "k": "A",
+     "t": "All complement arms UNUSUAL"
+    },
+    {
+     "k": "B",
+     "t": "LIMIT when the arm is the smallest sibling, UNUSUAL otherwise; side lot line takes side_setback_street_m"
+    }
+   ],
+   "rec": "B",
+   "recText": "LIMIT only where the complement value is the minimum of its arms (278 (C)(ii)/(D)(ii) 6.0; 200 (C)(ii) 4.5 with side_setback_street_m; 1121 (C)(ii) 6.0); UNUSUAL for 1029 (C)(ii) 6.0 and (iii) 3.6 mixed arms.",
+   "cite": "Spec 133 §m.130 (necessary bound); EVE.R6-2 (pattern door); EVE.M324-G (named yard decides). Extending M-130 to complement arms is NEW RULING NEEDED.",
+   "draft": {
+    "register": "Spec 69a, new row next to M-130",
+    "row": "An \"all other cases / any other street\" arm is keyed as a LIMIT only when its value is the minimum of its sibling arms for the same target; otherwise UNUSUAL. A side lot line arm takes side_setback_street_m.",
+    "fiveWords": "standardized (one test: smallest sibling); observable (the unit shows the value and its siblings); accurate (never over-restricts); scalable (all complement arms); understandable (one sentence); no scope creep (no new target)."
+   },
+   "lots": 179,
+   "lotsNote": "278 (179) alone; 1029 (224) and 1121 (224) also need FAM-ABUT-NAMED; 200 (182) also needs FAM-ARMS."
+  },
+  {
+   "id": "FAM-ARMS",
+   "title": "Per-subject arms (\"per semi-detached house and ... each dwelling unit\")",
+   "units": [
+    "900.4.10(200)[SSP](G)(i)",
+    "900.4.10(200)[SSP](G)(iii)"
+   ],
+   "clause": "(i) minimum lot frontage is 15.0 metres per semi-detached house and 7.5 metres for each dwelling unit; (iii) minimum lot area is 510 m2 per semi-detached house and 250 m2 for each dwelling unit.",
+   "keyings": {
+    "A": "required_lot_frontage_m = 7.5 m x dwelling_units (area: 250 x dwelling_units)",
+    "B": "required_lot_frontage_m = 15.0 m flat (area 510 flat)"
+   },
+   "question": "Which expression carries \"X per semi-detached house and Y for each dwelling unit\"?",
+   "why": "Each keyer kept one arm and dropped the other. Keying rule 30 says per-subject arms, never max() and never a sum; R12-4 keyed the same wording at 331 (A)(ii) as by_type(semi_detached_house: 18.0; other: 9.0 x dwelling_units), which neither keyer wrote here.",
+   "options": [
+    {
+     "k": "A",
+     "t": "Keyer A (per-unit arm only)"
+    },
+    {
+     "k": "B",
+     "t": "Keyer B (semi arm only)"
+    },
+    {
+     "k": "other",
+     "t": "by_type(semi_detached_house: 15.0 m; other: 7.5 m x dwelling_units) (area: 510 m2 / 250 m2 x dwelling_units)"
+    }
+   ],
+   "rec": "other",
+   "recText": "The by_type per-subject form, as 331 (A)(ii).",
+   "cite": "Keying rule 30 and brief rule P7 (Spec 133 §m.105 dated note); R12-4 precedent 331 (A)(ii), (B)(ii).",
+   "draft": null,
+   "lots": 0,
+   "lotsNote": "200 (182) also needs FAM-ABUT-NAMED and FAM-ABUT-COMP."
+  },
+  {
+   "id": "FAM-FSI",
+   "title": "FSI bound \"maximum ... is 0.33\" for a named lot",
+   "units": [
+    "900.3.10(9)[SSP](E)(i)",
+    "900.3.10(9)[SSP](E)(ii)"
+   ],
+   "clause": "The maximum floor space index of the building on the lot known as 19 Barker Ave. is 0.33 / 37 Gibson Ave. is 0.34.",
+   "keyings": {
+    "A": "bound max",
+    "B": "bound exact"
+   },
+   "question": "Bound max or exact?",
+   "why": "The brief maps \"maximum\" to max and reserves exact for a fixed value with neither word; the clause says \"maximum floor space index\".",
+   "options": [
+    {
+     "k": "A",
+     "t": "max"
+    },
+    {
+     "k": "B",
+     "t": "exact"
+    }
+   ],
+   "rec": "A",
+   "recText": "max.",
+   "cite": "Keying brief field rule 4 (bound: \"maximum\" to max); Spec 68 section 6.",
+   "draft": null,
+   "lots": 181,
+   "lotsNote": "Exception 9 has only these two pending units."
+  },
+  {
+   "id": "FAM-ANCCOV",
+   "title": "Ancillary-building lot coverage target (971 (D), 975 (D))",
+   "units": [
+    "900.3.10(971)[SSP](D)",
+    "900.3.10(975)[SSP](D)"
+   ],
+   "clause": "The maximum lot coverage for ancillary buildings is 5%.",
+   "keyings": {
+    "A": "lot_coverage_pct = 5 pct",
+    "B": "ancillary_coverage_pct = 5 pct"
+   },
+   "question": "Which target carries an ancillary-building coverage cap, and does the wording need a licence pattern?",
+   "why": "A lot_coverage_pct of 5 percent would cap the whole lot (M-179(1): ancillary coverage is \"never the lot overall coverage\"). B has the right target, but its patterns are \"ancillary buildings combined\", \"covered by ancillary buildings and structures\"; \"lot coverage for ancillary buildings\" is not one, so B would fail G-CLAUSE variable_unlicensed.",
+   "options": [
+    {
+     "k": "A",
+     "t": "lot_coverage_pct (whole lot)"
+    },
+    {
+     "k": "B",
+     "t": "ancillary_coverage_pct, with the pattern \"lot coverage for ancillary buildings\" added"
+    }
+   ],
+   "rec": "B",
+   "recText": "ancillary_coverage_pct plus one pattern.",
+   "cite": "Spec 133 §m.132 (pattern growth); M-179(1) via the vocabulary concept. Pattern addition is NEW RULING NEEDED (as EVE.R6-1).",
+   "draft": {
+    "register": "Spec 69a pattern-growth row (with R10-ALL)",
+    "row": "Add the licence pattern \"lot coverage for ancillary buildings\" to ancillary_coverage_pct; 971 (D) and 975 (D) take keyer B.",
+    "fiveWords": "standardized (the pattern door); observable (gate licenses the unit); accurate (the cap stays on ancillary buildings only); scalable (family of ancillary coverage clauses); understandable; no scope creep (one pattern)."
+   },
+   "lots": 182,
+   "lotsNote": "971 (182) alone; 975 (161) also needs FAM-STEP."
+  },
+  {
+   "id": "FAM-STEP",
+   "title": "Stepped side yard \"1.8 m ... plus 0.6 m for each additional storey or portion thereof\"",
+   "units": [
+    "900.3.10(975)[SSP](B)"
+   ],
+   "clause": "The minimum side yard setback is 1.8 metres on each side for a one-storey building, plus 0.6 metres for each additional storey or portion thereof.",
+   "keyings": {
+    "A": "UNUSUAL",
+    "B": "LIMIT side_setback_m = 1.8 m + 0.6 m x (proposed storeys - 1)"
+   },
+   "question": "May a stepped \"or portion thereof\" schedule be a formula?",
+   "why": "\"Or portion thereof\" rounds up; the DSL has no ceiling form, so a linear formula under-states the setback for a partial storey (brief rule 20, M-102).",
+   "options": [
+    {
+     "k": "A",
+     "t": "UNUSUAL, limit_not_modelled"
+    },
+    {
+     "k": "B",
+     "t": "Linear formula (keyer B)"
+    }
+   ],
+   "rec": "A",
+   "recText": "UNUSUAL.",
+   "cite": "Spec 133 §m.102 (a real limit the DSL cannot express is UNUSUAL); brief rule 20 (rounding).",
+   "draft": null,
+   "lots": 0,
+   "lotsNote": "975 (161) also needs FAM-ANCCOV."
+  },
+  {
+   "id": "FAM-NAMEDFRONT",
+   "title": "Front setback for named addresses (929 (F))",
+   "units": [
+    "900.3.10(929)[SSP](F)"
+   ],
+   "clause": "On the lots municipally known as 145 and 147 Earlton Dr., the minimum front yard building setback is 7.5 metres.",
+   "keyings": {
+    "A": "UNUSUAL",
+    "B": "LIMIT front_setback_m min 7.5, not_modelled named_lots_only"
+   },
+   "question": "LIMIT with named_lots_only, or UNUSUAL?",
+   "why": "The same wording is agreed as a LIMIT with status not_modelled / named_lots_only at 393 (F) (58 and 60 Bethune Blvd.), 160 (F) and 128 (C)(i); keyer A alone departed.",
+   "options": [
+    {
+     "k": "A",
+     "t": "UNUSUAL"
+    },
+    {
+     "k": "B",
+     "t": "LIMIT, named_lots_only"
+    }
+   ],
+   "rec": "B",
+   "recText": "LIMIT, not modelled for other lots.",
+   "cite": "Agreed precedents 393 (F), 160 (F), 128 (C)(i); Spec 133 §m.130.",
+   "draft": null,
+   "lots": 191,
+   "lotsNote": "929 alone."
+  },
+  {
+   "id": "FAM-SEP",
+   "title": "Ancillary structure set back from the residential building (1120 (G)(iii))",
+   "units": [
+    "900.3.10(1120)[SSP](G)(iii)"
+   ],
+   "clause": "An ancillary building or structure must be set back a minimum of 3.0 metres from a residential building on the lot.",
+   "keyings": {
+    "A": "UNUSUAL",
+    "B": "LIMIT separation_m min 3.0"
+   },
+   "question": "Is a set back from a building on the same lot a separation_m LIMIT?",
+   "why": "separation_m is defined as the separation between buildings on the same lot; its patterns include \"from the residential building\" but not \"from a residential building\", so B needs one pattern.",
+   "options": [
+    {
+     "k": "A",
+     "t": "UNUSUAL"
+    },
+    {
+     "k": "B",
+     "t": "LIMIT separation_m, with the pattern \"from a residential building\""
+    }
+   ],
+   "rec": "B",
+   "recText": "separation_m plus one pattern.",
+   "cite": "Spec 133 §m.132; vocabulary concept of separation_m. Pattern is NEW RULING NEEDED (with R10-ALL).",
+   "draft": {
+    "register": "Spec 69a pattern-growth row",
+    "row": "Add \"from a residential building\" to separation_m; 1120 (G)(iii) takes keyer B.",
+    "fiveWords": "standardized; observable; accurate (same-lot separation); scalable; understandable; no scope creep (one pattern)."
+   },
+   "lots": 190,
+   "lotsNote": "1120 alone."
+  },
+  {
+   "id": "FAM-PLAT",
+   "title": "Platform and front-wall entrance prohibitions (1401 (B), (C))",
+   "units": [
+    "900.3.10(1401)[SSP](B)",
+    "900.3.10(1401)[SSP](C)"
+   ],
+   "clause": "(B) a platform higher than the first floor may not encroach into the required front or rear yard; (C) if the lot frontage is 7.6 m or less, a vehicle entrance through the front wall is not permitted.",
+   "keyings": {
+    "A": "target none (PROHIBIT)",
+    "B": "(B) platform_rear_setback_m; (C) garage_entrance_setback_m"
+   },
+   "question": "Do prohibitions take a setback target?",
+   "why": "Both are prohibitions with no number: \"may not encroach\" is PROHIBIT with no target (keying rule 28); platform_rear_setback_m is a rear-only reference and (B) also covers the front yard; garage_entrance_setback_m is a setback distance, not a ban.",
+   "options": [
+    {
+     "k": "A",
+     "t": "No target (PROHIBIT)"
+    },
+    {
+     "k": "B",
+     "t": "Keyer B targets"
+    }
+   ],
+   "rec": "A",
+   "recText": "PROHIBIT, no target.",
+   "cite": "Keying rule 28 (Spec 133 §m.105 dated note); vocabulary concepts of the two targets.",
+   "draft": null,
+   "lots": 161,
+   "lotsNote": "1401 alone."
+  },
+  {
+   "id": "FAM-PARKLEN",
+   "title": "Parking space length on a named lot (350 (F)(ii))",
+   "units": [
+    "900.3.10(350)[SSP](F)(ii)"
+   ],
+   "clause": "On 46 Scotia Avenue: one required parking space having a minimum length of 4.65 metres may be located in the street yard if it is beside and parallel with the driveway.",
+   "keyings": {
+    "A": "PERMIT (no target)",
+    "B": "LIMIT parking_space_length_m min 4.65"
+   },
+   "question": "Is 4.65 m a limit or a descriptor of a permitted location?",
+   "why": "The clause permits a location; the length describes the space. A plain LIMIT would impose a 4.65 m minimum length on every lot (M-130).",
+   "options": [
+    {
+     "k": "A",
+     "t": "PERMIT / UNUSUAL, 4.65 m recorded not modelled"
+    },
+    {
+     "k": "B",
+     "t": "LIMIT parking_space_length_m"
+    }
+   ],
+   "rec": "A",
+   "recText": "PERMIT, limit not modelled.",
+   "cite": "Spec 133 §m.130 (necessary bound). Whether a descriptor length is a limit is NEW RULING NEEDED if you want B.",
+   "draft": null,
+   "lots": 0,
+   "lotsNote": "350 (179) also needs FAM-HIST."
+  }
+ ],
+ "summary": {
+  "families": 11,
+  "pending_units": 26,
+  "exceptions": 13,
+  "lots_unblocked_if_all_settled": 2331,
+  "basis": "direct census lots of the 13 exceptions whose pending units all sit in these families; an exception unblocks only when every family it needs is settled"
+ }
+}

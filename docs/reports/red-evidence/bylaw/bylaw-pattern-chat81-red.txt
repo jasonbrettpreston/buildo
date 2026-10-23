@@ -1,0 +1,4 @@
+   × CHAT-81.R10-ALL / R11-1: wordings > each ruled wording is licensed 2ms
+   × CHAT-81.R10-ALL / R11-1: wordings > the seven units resolve to the keyer-B LIMITs 1836ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 1 passed (3)

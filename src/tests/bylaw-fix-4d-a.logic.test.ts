@@ -134,7 +134,7 @@ describe('F-4D-10 / F-4D-16 / F-4D-SC-245 / F-4D-SC-256 — exceptions 1389, 528
     expect(val('900.3.10(245)#(245)[SSP](F)')).toEqual(['side_setback_m = 0.3 m @(245)[SSP](F)']);
     expect(val('900.3.10(256)#(256)[SSP](A)')).toEqual(['side_setback_m = 1.2 m @(256)[SSP](A)']);
     expect(val('900.3.10(528)#(528)[SSP](C)')).toEqual(['front_setback_m = 3.0 m @(528)[SSP](C)']);
-    expect(val('900.3.10(528)#(528)[SSP](D)')).toEqual(['side_setback_m = 1.0 m @(528)[SSP](D)']);
+    expect(val('900.3.10(528)#(528)[SSP](D)')).toBe('none'); // 1.0 m on one side only is UNUSUAL (verify-42 item 5a, operator 806 (C) / 540 (F))
     expect(lone('900.3.10(1389)').map((u) => u.unit_id)).toEqual(['900.3.10(1389)#(1389)[PBS](A)', '900.3.10(1389)#(1389)[SSP](A)']);
   });
 

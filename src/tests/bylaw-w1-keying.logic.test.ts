@@ -347,7 +347,7 @@ describe('Q-F (a): a drafted shard keeps its lead-in groups and chunking as firs
   const FR = (n: number): [string, string][] => [
     [`(${n})`, `(${n}) Exception RM ${n} The lands are subject to the following Site Specific Provisions:`],
     [`(${n})[SSP]`, 'Site Specific Provisions:'],
-    [`(${n})[SSP](A)`, '(A) The minimum frontage is:'],
+    [`(${n})[SSP](A)`, '(A) The minimum street frontage is:'],
     [`(${n})[SSP](A)(i)`, '(i) 12.0 metres for a detached house;'],
     [`(${n})[SSP](A)(ii)`, '(ii) 18.0 metres for a semi-detached house;'],
   ];
@@ -356,9 +356,9 @@ describe('Q-F (a): a drafted shard keeps its lead-in groups and chunking as firs
     { regulation_id: '900.6.10(50)', rank: 1, closed_lots: 900, includes: [] },
     { regulation_id: '900.6.10(60)', rank: 2, closed_lots: 800, includes: [] },
   ];
-  // vocab v2 adds a phrasing-variant licence (M-132 / M-134 style) that makes "(A) The minimum frontage is:" a lead-in group
+  // (CHAT-76.R8-5 made 'minimum frontage' a real licence, so the fixture uses a still-unlicensed phrase: 'minimum street frontage') vocab v2 adds a phrasing-variant licence (M-132 / M-134 style) that makes "(A) The minimum street frontage is:" a lead-in group
   const V2 = JSON.parse(JSON.stringify(VOCAB));
-  V2.dsl_target.required_lot_frontage_m.patterns = [...V2.dsl_target.required_lot_frontage_m.patterns, 'minimum frontage'];
+  V2.dsl_target.required_lot_frontage_m.patterns = [...V2.dsl_target.required_lot_frontage_m.patterns, 'minimum street frontage'];
   const firstPlan = () => {
     const s = sl();
     const groups = K.wave1Groups({ ranking, slice: s, vocab: VOCAB, priorSeed: null, hasDrafts: () => false });
