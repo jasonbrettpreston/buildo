@@ -127,7 +127,7 @@ What every step declares and does, whatever its archetype.
   *Why:* An omitted field cannot be told apart from a forgotten one; "none" is a decision someone made.
   Rules: `Rule-5` `Rule-6` · history: `R-Y` `K1`
 
-- **core.3** Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits, notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).
+- **core.3** Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits with every declared emit present on every run and an empty cursor reading 0 (CHAT-90), notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).
   *Why:* Shared names let one library, one gate and one admin page read every step the same way.
   Rules: `R-DE` `V1` (SPEC122A-V1) `V2` (SPEC122A-V2) `V3` (SPEC122A-V3) `V5` (SPEC122A-V5) `V6` (SPEC122A-V6) · history: `V4` (SPEC122A-V4)
 

@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-k/2026-10-23-batch-k.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-k",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Q-A y",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-k/2026-10-23-batch-k.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-90.Q-A",
+      "question": "Must every declared emit be present on every run, an empty cursor included?",
+      "recommendation": "Yes, as an amendment to R-DE (iv) (124a): every declared emit is present on every run; an empty cursor reads 0, never absent or N/A. Fix in compute_coa_cost_estimates red-first in its own lane, as trades did (zeroMatched); the fix moves source_fingerprint, so the cost captures need a retake. Five words: standardized (one rule, same as trades); observable (the shape no longer depends on the cursor); accurate (no NaN-nulls); scalable (every materializer); understandable (one sentence). No scope creep.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

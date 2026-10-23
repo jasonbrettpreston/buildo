@@ -366,7 +366,7 @@
     {
       "id": "core.3",
       "section": "core",
-      "text": "Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits, notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).",
+      "text": "Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits with every declared emit present on every run and an empty cursor reading 0 (CHAT-90), notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).",
       "why": "Shared names let one library, one gate and one admin page read every step the same way."
     },
     {
@@ -5527,7 +5527,7 @@
         "kind": "lock",
         "ref": "src/tests/chat-rulings-register.logic.test.ts"
       },
-      "statement": "When the runner sums zero batches, finalizeMatched returns a defined value for every counter a declared check reports (additive 0, ratios null); locked per materializer (operator 2026-10-22, EVE.SWAP-1).",
+      "statement": "When the runner sums zero batches, finalizeMatched returns a defined value for every counter a declared check reports (additive 0, ratios null); locked per materializer (operator 2026-10-22, EVE.SWAP-1). Widened 2026-10-23 (CHAT-90.Q-A, amends R-DE (iv)): every declared emit is present on every run; an empty cursor reads 0, never absent or N/A.",
       "source": {
         "register": true
       }

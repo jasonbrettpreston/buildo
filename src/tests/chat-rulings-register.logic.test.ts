@@ -84,6 +84,10 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(A, 'R-JP')).toContain('2026-10-23-batch-j#CHAT-89.Q-114a');
     expect(A).toContain('**R-DQ amended by CHAT-89.Q-114a');
   });
+  it('CHAT-90 sits on R-JG and amends R-DE (iv) in §B-AM (R-DE is in moved block §B16)', () => {
+    expect(rowOf(A, 'R-JG')).toContain('2026-10-23-batch-k#CHAT-90.Q-A');
+    expect(A).toContain('**R-DE (iv) amended by CHAT-90.Q-A');
+  });
   it('CHAT-88 (corrected) is M-356 and M-357', () => {
     expect(rowOf(M, 'M-356')).toContain('2026-10-23-batch-i2#CHAT-88.PLANFACTS-1');
     expect(rowOf(M, 'M-357')).toContain('2026-10-23-batch-i2#CHAT-88.HELDOUT-1');
