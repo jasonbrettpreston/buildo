@@ -1,0 +1,7 @@
+# CHAT-91.B-2 correction + CHAT-93.E-1 naming + verify-46b N-b2 red run at 8eaa1872 (src/tests/bylaw-named1-held.logic.test.ts, tests written before the fix), 2026-10-23
+   × CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front > B-2: the 5 computed units have disclosure none; CHAT-93.E-1 316 (H) and the 4 uncomputed units keep theirs; no other of the 44 discloses 2ms
+     → expected 'none' to match /cannot yet confirm which lots abut it/
+   × CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front > B-2 records cite the imported ruling (18aa1f7c, Spec 133 §m.350), not "held pending CHAT-91 import" 11ms
+     → expected 9 to be 13 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 9 passed (11)
