@@ -99,8 +99,10 @@ describe('CHAT-87.NAMED-1c: the 32 named-road arms of NAMED-1b are computed', ()
       expect(U.get(id)?.archetype, id).toBe('LIMIT');
       for (const f of ['archetype', 'target', 'bound', 'numeric_expression', 'literals_not_expressed', 'calculation_handling', 'disclosure']) {
         let r = live(id, f) as Json;
-        // CHAT-91.B-2 (held pending CHAT-91 import) supersedes the NAMED-1c disclosure record of 714 (C)(i),(D)(i), 852 (C)(i),(E)(i), 713 (C)(i): newer ruling wins
-        if (f === 'disclosure' && /CHAT-91\.B-2/.test(r?.rule)) { expect(r.value, id).toBe('none'); r = adj.find((x) => x.id === r.supersedes) as Json; }
+        // CHAT-91.B-2 (M-350, recorded 18aa1f7c on wf1/rulings-rec3) supersedes the NAMED-1c disclosure record of 714 (C)(i),(D)(i) (none) and of 852 (C)(i),(E)(i), 713 (C)(i) (none, then restored by the B-2 correction)
+        while (f === 'disclosure' && /CHAT-91\.B-2/.test(r?.rule)) r = adj.find((x) => x.id === r.supersedes) as Json; // the B-2 record, and its correction (restores 852, 713)
+        // CHAT-93.E-2 (held pending CHAT-93 import) supersedes the NAMED-1c calculation_handling record of 714 (C)(i) (gaps text only)
+        if (f === 'calculation_handling' && /CHAT-93\.E-2/.test(r?.rule)) r = adj.find((x) => x.id === r.supersedes) as Json;
         expect(r?.rule, id + ' ' + f).toContain('CHAT-87.NAMED-1c');
         expect(r.supersedes, id + ' ' + f).toBe(`COR-${id}/${f}~s1`); // supersedes the CHAT-84.NAMED-1b record
       }

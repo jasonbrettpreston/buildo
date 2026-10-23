@@ -142,3 +142,13 @@ The fix follows the lane V3-COA-G precedent: the module and its test `src/tests/
 - The wf1/l2-option4-land staged edit of the same test (verify-45b N2: read the committed migration 282) belongs to the held test. It is kept in the held folder as the lane's full file plus a patch. At the l2-option4-land merge, the modify/delete conflict on that file resolves to the deletion.
 
 After the hold: step-conformance.infra plus steps/compute_maxbld_scenarios give 11 files and 893 passed (§5.5 green). Every generator --check gives rc 0. The orphaned fixture `src/tests/fixtures/l2-option4-columns.json` stays in the tree, and the l2land lane deletes it.
+
+## Merge 7: wf1/excr5c @ beb769f3 (CHAT-91.B-2 correction 760440a4, CHAT-93.E-1 / E-2)
+
+- **The defect it fixes:** 8eaa1872, merged at a735a534, set the disclosure to none on 4 units that do **not** compute: 303 (D), 852 (C)(i), 852 (E)(i) and 713 (C)(i). That would have hidden real limits.
+- **What the merge changes:**
+  - 760440a4 restores those 4 disclosures.
+  - beb769f3 (CHAT-93.E-2) corrects the gaps text on 323 (C), 900.4.10(70) (A)(i) and 714 (C)(i).
+- **Net result:** int26 carries **CHAT-91 B-2 = 5 units**, not 9: 323 (C), 1032 (C)(i), 900.4.10(70) (A)(i), 714 (C)(i) and (D)(i).
+- **Conflict:** only bylaw-layer2-input.json. It was regenerated with --write (table_version 786fbe40), then the amendment index with --write.
+- **CoA:** re-scored, and 0 of 698 and 0 of 496 rows move. Both sets CHECK OK on totals. Both were re-pinned because the inputs moved. Floors OK.

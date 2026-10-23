@@ -110756,7 +110756,7 @@
       "id": "COR-900.3.10(303)#(303)[SSP](D)/disclosure~s2",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/disclosure~s1",
       "unit": "900.3.10(303)#(303)[SSP](D)",
       "value": "none"
@@ -110768,7 +110768,7 @@
       "id": "COR-900.3.10(323)#(323)[SSP](C)/disclosure~s2",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/disclosure~s1",
       "unit": "900.3.10(323)#(323)[SSP](C)",
       "value": "none"
@@ -110780,7 +110780,7 @@
       "id": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/disclosure~s3",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(1032)#(1032)[SSP](C)(i)/disclosure~s2",
       "unit": "900.3.10(1032)#(1032)[SSP](C)(i)",
       "value": "none"
@@ -110792,7 +110792,7 @@
       "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/disclosure~s2",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/disclosure~s1",
       "unit": "900.4.10(70)#(70)[SSP](A)(i)",
       "value": "none"
@@ -110804,7 +110804,7 @@
       "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/disclosure~s3",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/disclosure~s2",
       "unit": "900.3.10(714)#(714)[SSP](C)(i)",
       "value": "none"
@@ -110816,7 +110816,7 @@
       "id": "COR-900.3.10(714)#(714)[SSP](D)(i)/disclosure~s3",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(714)#(714)[SSP](D)(i)/disclosure~s2",
       "unit": "900.3.10(714)#(714)[SSP](D)(i)",
       "value": "none"
@@ -110828,7 +110828,7 @@
       "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure~s3",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure~s2",
       "unit": "900.3.10(852)#(852)[SSP](C)(i)",
       "value": "none"
@@ -110840,7 +110840,7 @@
       "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s3",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s2",
       "unit": "900.3.10(852)#(852)[SSP](E)(i)",
       "value": "none"
@@ -110852,10 +110852,112 @@
       "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure~s3",
       "kind": "correction",
       "reason": "CHAT-91 B-2: the disclosure says the named road is not evaluated / cannot be confirmed, but the M-285 join evaluates it (NAMED-1c); set none, as the word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are",
-      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; held pending CHAT-91 import): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "rule": "CHAT-91.B-2 (operator 2026-10-23 'B-1 to B-5 your recommendation is approved'; recorded 18aa1f7c on M-350): a named-road unit computed by the M-285 street-name join (CHAT-87.NAMED-1c) keeps no keyer disclosure that says the road is not evaluated; the residual (which street lot line abuts the road) stays in calculation_handling.gaps; M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
       "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure~s2",
       "unit": "900.3.10(713)#(713)[SSP](C)(i)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(303)#(303)[SSP](D)/disclosure~s3",
+      "kind": "correction",
+      "reason": "CHAT-91.B-2 correction: 303 (D)'s vocab.named_street row names 'Pharmacy Ave. Rd.', which no frontage street matches, so the join refutes it on every lot; the disclosure ('we cannot yet confirm which lots abut it') is true",
+      "rule": "CHAT-91.B-2 correction (operator 2026-10-23, recorded 18aa1f7c on M-350: the ruling covers named-road units whose disclosure is now false because the M-285 join computes them): this unit does not compute through the join, so its disclosure is true and is restored (the value before CHAT-91.B-2); premise checked on the production path (lot with address and map areas, as the CoA scorer builds it); M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(303)#(303)[SSP](D)/disclosure~s2",
+      "unit": "900.3.10(303)#(303)[SSP](D)",
+      "value": "Applies only where the front lot line abuts Pharmacy Ave.; we cannot yet confirm which lots abut it."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure~s4",
+      "kind": "correction",
+      "reason": "CHAT-91.B-2 correction: 852 (C)(i) is keyed applies_to named_addresses with the street names as refs, and no parcel address equals a street name, so it never applies; the disclosure is true",
+      "rule": "CHAT-91.B-2 correction (operator 2026-10-23, recorded 18aa1f7c on M-350: the ruling covers named-road units whose disclosure is now false because the M-285 join computes them): this unit does not compute through the join, so its disclosure is true and is restored (the value before CHAT-91.B-2); premise checked on the production path (lot with address and map areas, as the CoA scorer builds it); M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](C)(i)/disclosure~s3",
+      "unit": "900.3.10(852)#(852)[SSP](C)(i)",
+      "value": "Applies only where the front lot line abuts Brimley Rd. or Midland Ave."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s4",
+      "kind": "correction",
+      "reason": "CHAT-91.B-2 correction: 852 (E)(i) is keyed applies_to named_addresses with the street names as refs, and no parcel address equals a street name, so it never applies; the disclosure is true",
+      "rule": "CHAT-91.B-2 correction (operator 2026-10-23, recorded 18aa1f7c on M-350: the ruling covers named-road units whose disclosure is now false because the M-285 join computes them): this unit does not compute through the join, so its disclosure is true and is restored (the value before CHAT-91.B-2); premise checked on the production path (lot with address and map areas, as the CoA scorer builds it); M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(852)#(852)[SSP](E)(i)/disclosure~s3",
+      "unit": "900.3.10(852)#(852)[SSP](E)(i)",
+      "value": "Applies only where the lot line abuts Brimley Rd. or Midland Ave."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat91",
+      "field": "disclosure",
+      "id": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure~s4",
+      "kind": "correction",
+      "reason": "CHAT-91.B-2 correction: 713 (C)(i) is keyed applies_to map_area with the street names as refs, which are not map areas, so it never applies; the disclosure ('this is not checked against the lot data') is true",
+      "rule": "CHAT-91.B-2 correction (operator 2026-10-23, recorded 18aa1f7c on M-350: the ruling covers named-road units whose disclosure is now false because the M-285 join computes them): this unit does not compute through the join, so its disclosure is true and is restored (the value before CHAT-91.B-2); premise checked on the production path (lot with address and map areas, as the CoA scorer builds it); M-350 (CHAT-91.B-2 note, recorded 18aa1f7c on wf1/rulings-rec3); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(713)#(713)[SSP](C)(i)/disclosure~s3",
+      "unit": "900.3.10(713)#(713)[SSP](C)(i)",
+      "value": "On a lot that fronts on Ellesmere Rd., Conlins Rd., Morrish Rd., Meadowvale Rd., Scarboro Ave., Zaph Ave., Euclid Ave. or Willowlea Dr., the minimum side setback is 1.0 metres on both sides; this is not checked against the lot data."
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat93",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(323)#(323)[SSP](C)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "CHAT-93.E-2: the gaps text said the named-street test is not held / not identified, but the unit computes through the M-285 join (front lot line read from the lot's primary frontage street); only that text changes",
+      "rule": "CHAT-93.E-2 (operator 2026-10-23; held pending CHAT-93 import): the calculation_handling text of a unit on the CHAT-91 B-2 list is corrected only where it is now false because the unit computes through the M-285 street-name join (checked on the production path); status and not_modelled_reason unchanged; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(323)#(323)[SSP](C)/calculation_handling~s1",
+      "unit": "900.3.10(323)#(323)[SSP](C)",
+      "value": {
+        "description": "Minimum building setback of 7.5 m from a front lot line that abuts Huntingwood Dr.",
+        "gaps": "No vocab front-setback pattern ('front yard setback') occurs in the text ('front lot line'); whether the front lot line abuts Huntingwood Dr. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "ch900_backlog",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat93",
+      "field": "calculation_handling",
+      "id": "COR-900.4.10(70)#(70)[SSP](A)(i)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "CHAT-93.E-2: the gaps text said the named-street test is not held / not identified, but the unit computes through the M-285 join (front lot line read from the lot's primary frontage street); only that text changes",
+      "rule": "CHAT-93.E-2 (operator 2026-10-23; held pending CHAT-93 import): the calculation_handling text of a unit on the CHAT-91 B-2 list is corrected only where it is now false because the unit computes through the M-285 street-name join (checked on the production path); status and not_modelled_reason unchanged; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.4.10(70)#(70)[SSP](A)(i)/calculation_handling~s1",
+      "unit": "900.4.10(70)#(70)[SSP](A)(i)",
+      "value": {
+        "description": "Where the front lot line abuts Birchmount Rd., the minimum building setback from it is 9.0 m.",
+        "gaps": "Whether the lot's front lot line abuts Birchmount Rd. is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-23",
+      "adjudicator": "lane-exc-chat93",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(714)#(714)[SSP](C)(i)/calculation_handling~s3",
+      "kind": "correction",
+      "reason": "CHAT-93.E-2: the gaps text said the named-street test is not held / not identified, but the unit computes through the M-285 join (front lot line read from the lot's primary frontage street); only that text changes",
+      "rule": "CHAT-93.E-2 (operator 2026-10-23; held pending CHAT-93 import): the calculation_handling text of a unit on the CHAT-91 B-2 list is corrected only where it is now false because the unit computes through the M-285 street-name join (checked on the production path); status and not_modelled_reason unchanged; Spec 133 §m.285 (M-285), §m.82 (M-75 correction form)",
+      "supersedes": "COR-900.3.10(714)#(714)[SSP](C)(i)/calculation_handling~s2",
+      "unit": "900.3.10(714)#(714)[SSP](C)(i)",
+      "value": {
+        "description": "The 6.0 metre front setback applies where the front lot line abuts one of the named streets (Ellesmere Rd., Conlins Rd., Morrish Rd., Meadowvale Rd., Scarboro Ave., Zaph Ave., Euclid Ave., Willowlea Dr.).",
+        "gaps": "Whether the front lot line abuts a named street is read from the lot's primary frontage street (M-285 street-name join, vocab.named_street line front).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
     }
   ]
 }

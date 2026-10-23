@@ -73,15 +73,19 @@ describe('CHAT-87.NAMED-1c: the M-285 join computes 325 (C) and 1168 (C)(i)', as
   });
 });
 
-// CHAT-91 (operator 2026-10-23 "B-1 to B-5 your recommendation is approved"; held pending CHAT-91 import), cards B-2 and B-3.
-// B-2: the restored named-road units whose keyer disclosure says the road is "not evaluated" / "cannot confirm which street" are computed
-// by the M-285 join, so the disclosure is none (as their word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are).
-// 316 (H) is NOT in it: its clause is limited to named addresses (3165-3185 Sheppard Ave. E., 5 and 6 Abbottsfield Gate) that the unit
-// does not hold, so "this named-address rule is not evaluated" is still true (operator question, held on the keep reading).
+// CHAT-91 (operator 2026-10-23 "B-1 to B-5 your recommendation is approved"; recorded 18aa1f7c on wf1/rulings-rec3: B-2 on M-350, B-3 on Spec 133 §m.285 (M-285)), cards B-2 and B-3.
+// B-2: a restored named-road unit whose disclosure is now false — the M-285 join computes it — has disclosure none (as twin 325 (C) has).
+// CHAT-93.E-1 (operator 2026-10-23, held pending CHAT-93 import): 316 (H) keeps its disclosure — its clause is limited to named addresses
+// (3165-3185 Sheppard Ave. E., 5 and 6 Abbottsfield Gate) the unit does not hold, so "this named-address rule is not evaluated" is true.
+// B-2 correction (verify each premise): 4 of the 9 first set none do NOT compute through the join, so their disclosure was true and is
+// restored — 303 (D) (its table row names "Pharmacy Ave. Rd.", which no frontage street matches), 852 (C)(i),(E)(i) (applies_to
+// named_addresses with street names as refs: no parcel address equals them) and 713 (C)(i) (applies_to map_area with street names as refs).
 // B-3: a vocab.named_street row whose clause says "front lot line" / "front yard" is line front ($comment rule), as twin 1168 (C)(i) is.
 // 1026 (C)(i) and its twin 255 (D)(i) say "a lot line that abuts a street ... where the lot line abuts", so they stay line any.
 // Red first: docs/reports/red-evidence/bylaw/bylaw-chat91-named-red.txt
-const B2_NONE = ["900.3.10(303)#(303)[SSP](D)","900.3.10(323)#(323)[SSP](C)","900.3.10(1032)#(1032)[SSP](C)(i)","900.4.10(70)#(70)[SSP](A)(i)","900.3.10(714)#(714)[SSP](C)(i)","900.3.10(714)#(714)[SSP](D)(i)","900.3.10(852)#(852)[SSP](C)(i)","900.3.10(852)#(852)[SSP](E)(i)","900.3.10(713)#(713)[SSP](C)(i)"];
+const B2_NONE = ["900.3.10(323)#(323)[SSP](C)","900.3.10(1032)#(1032)[SSP](C)(i)","900.4.10(70)#(70)[SSP](A)(i)","900.3.10(714)#(714)[SSP](C)(i)","900.3.10(714)#(714)[SSP](D)(i)"];
+const B2_RESTORED = ["900.3.10(303)#(303)[SSP](D)","900.3.10(852)#(852)[SSP](C)(i)","900.3.10(852)#(852)[SSP](E)(i)","900.3.10(713)#(713)[SSP](C)(i)"];
+const B2_KEPT = ["900.3.10(316)#(316)[SSP](H)", ...B2_RESTORED]; // CHAT-93.E-1 + B-2 correction
 const B3_FRONT = ["900.3.10(1170)#(1170)[SSP](A)(i)","900.3.10(560)#(560)[SSP](C)(i)","900.3.10(309)#(309)[SSP](C)(i)","900.4.10(70)#(70)[SSP](A)(i)","900.3.10(975)#(975)[SSP](A)(i)","900.3.10(975)#(975)[SSP](A)(ii)"];
 
 describe('CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front', async () => {
@@ -91,10 +95,20 @@ describe('CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure
   const I = V.loadInputs({ root: ROOT });
   const U: Map<string, Json> = AG.agreedUnits(AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab }));
 
-  it('B-2: the 9 computed units have disclosure none; 316 (H) keeps its named-address disclosure; of the 44 only 316 (H) discloses', () => {
+  it('B-2: the 5 computed units have disclosure none; CHAT-93.E-1 316 (H) and the 4 uncomputed units keep theirs; no other of the 44 discloses', () => {
     for (const id of B2_NONE) expect([id, (U.get(id) as Json).disclosure]).toEqual([id, 'none']);
     expect((U.get('900.3.10(316)#(316)[SSP](H)') as Json).disclosure).toMatch(/named-address rule is not evaluated/);
-    expect(ALL.filter((id) => (U.get(id) as Json).disclosure !== 'none')).toEqual(['900.3.10(316)#(316)[SSP](H)']);
+    expect((U.get('900.3.10(303)#(303)[SSP](D)') as Json).disclosure).toMatch(/cannot yet confirm which lots abut it/);
+    expect((U.get('900.3.10(713)#(713)[SSP](C)(i)') as Json).disclosure).toMatch(/not checked against the lot data/);
+    expect(ALL.filter((id) => (U.get(id) as Json).disclosure !== 'none').sort()).toEqual([...B2_KEPT].sort());
+  });
+
+  it('B-2 records cite the imported ruling (M-350, recorded 18aa1f7c), not "held pending CHAT-91 import"', async () => {
+    const fs = await import('node:fs');
+    const adj: Json[] = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/adjudications.json'), 'utf8')).adjudications;
+    const mine = adj.filter((x) => /CHAT-91\.B-2/.test(x.rule));
+    expect(mine.length).toBe(13); // 9 set none + 4 restored
+    for (const x of mine) { expect(x.rule, x.id).not.toMatch(/held pending CHAT-91 import/); expect(x.rule, x.id).toContain('M-350 (CHAT-91.B-2 note, recorded 18aa1f7c'); }
   });
 
   it('B-3: the 6 front-worded rows are line front; 1026 (C)(i) and 255 (D)(i) stay line any', () => {
@@ -123,5 +137,46 @@ describe('CHAT-91 B-3: 1170 (A)(i) reads as its twin 1168 (C)(i) off Conference 
     expect(r1168.status).toBe('value');
     expect([r1170.status, r1170.value]).toEqual(['value', r1168.value]);
     expect(eff(lot('900.3.10(1170)', 'Conference Blvd'), 'front_setback_m')).toMatchObject({ status: 'value', value: 7.5, winner: '900.3.10(1170)#(1170)[SSP](A)(i)' });
+  });
+
+  it('B-2 correction: on a lot that carries its address and map areas (as the CoA scorer builds it), 323 (C) and 70 (A)(i) compute; 303 (D), 852 (C)(i),(E)(i) and 713 (C)(i) do not', () => {
+    const real = (exception: string, street: string): Json => ({ ...lot(exception, street), address: '100 ' + street, map_areas: [] });
+    const won = (exception: string, street: string, t: string, id: string): boolean => eff(real(exception, street), t).winner === id;
+    expect(won('900.3.10(323)', 'HUNTINGWOOD DR', 'front_setback_m', '900.3.10(323)#(323)[SSP](C)')).toBe(true);
+    expect(won('900.3.10(714)', 'ELLESMERE RD', 'front_setback_m', '900.3.10(714)#(714)[SSP](C)(i)')).toBe(true);
+    expect(won('900.3.10(303)', 'PHARMACY AVE', 'front_setback_m', '900.3.10(303)#(303)[SSP](D)')).toBe(false);
+    expect(won('900.3.10(852)', 'BRIMLEY RD', 'front_setback_m', '900.3.10(852)#(852)[SSP](C)(i)')).toBe(false);
+    expect(won('900.3.10(852)', 'BRIMLEY RD', 'side_setback_street_m', '900.3.10(852)#(852)[SSP](E)(i)')).toBe(false);
+    expect(won('900.3.10(713)', 'ELLESMERE RD', 'side_setback_m', '900.3.10(713)#(713)[SSP](C)(i)')).toBe(false);
+  });
+});
+
+// CHAT-93.E-2 (operator 2026-10-23, held pending CHAT-93 import): the calculation_handling gaps text of a CHAT-91.B-2 unit that says the
+// named-street test is not held / not evaluated is corrected ONLY where it is now false because the unit computes through the M-285 join
+// (premise checked on the production path above): 323 (C), 900.4.10 70 (A)(i), 714 (C)(i) — the front-line arms. 1032 (C)(i) and
+// 714 (D)(i) keep theirs (true: which lot line abuts the road is not held; the join reads only the frontage street). Status and
+// not_modelled_reason are unchanged (reported, not decided). Red first: docs/reports/red-evidence/bylaw/bylaw-chat93-e2-red.txt
+describe('CHAT-93.E-2: computed front-line named-road arms say how the street test is read', async () => {
+  const V = await mod('scripts/analysis/bylaw/validate.mjs');
+  const AU = await mod('scripts/analysis/bylaw/authored.mjs');
+  const AG = await mod('scripts/analysis/bylaw/agree.mjs');
+  const I = V.loadInputs({ root: ROOT });
+  const U: Map<string, Json> = AG.agreedUnits(AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab }));
+  const gaps = (id: string): string => (U.get(id) as Json).calculation_handling.gaps;
+
+  it('323 (C), 70 (A)(i), 714 (C)(i): gaps names the M-285 join and no longer says the street is not held / not identified', () => {
+    for (const id of ['900.3.10(323)#(323)[SSP](C)', '900.4.10(70)#(70)[SSP](A)(i)', '900.3.10(714)#(714)[SSP](C)(i)']) {
+      expect(gaps(id), id).toMatch(/read from the lot's primary frontage street \(M-285 street-name join, vocab\.named_street line front\)/);
+      expect(gaps(id), id).not.toMatch(/not held|not identified/);
+    }
+  });
+
+  it('unchanged where the text is still true: 1032 (C)(i), 714 (D)(i), the 4 uncomputed units and 316 (H)', () => {
+    expect(gaps('900.3.10(1032)#(1032)[SSP](C)(i)')).toMatch(/^Which lot line abuts McCowan Rd\., Brimley Rd\. or Brimwood Blvd\. is not held/);
+    expect(gaps('900.3.10(714)#(714)[SSP](D)(i)')).toBe('Whether the street-abutting side lot line abuts a named street is not held in the lot data.');
+    expect(gaps('900.3.10(303)#(303)[SSP](D)')).toBe('Whether the front lot line abuts Pharmacy Ave. is not held as a lot attribute.');
+    expect(gaps('900.3.10(713)#(713)[SSP](C)(i)')).toBe('The named-street frontage test is not evaluated.');
+    expect(gaps('900.3.10(852)#(852)[SSP](C)(i)')).toBe('named street abutment');
+    expect(gaps('900.3.10(316)#(316)[SSP](H)')).toBe('Applies to named addresses only; the address list is not held as a lot set.');
   });
 });
