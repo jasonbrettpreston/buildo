@@ -13,6 +13,7 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 |---|---|---|
 | 1 | `wf2/fleet-night-2210` @ `b6a39e4f` | 24aeb6ae fleet recapture captures (117/117) + b6a39e4f RE-FREEZE #39-#41 lib |
 | 2 | `wf1/rulings-rec3` @ `f7a348cf` | CHAT-92..96 register rows and dated notes (375f928f CHAT-92 RS-1 note + 00084d4b CHAT-93.RS-1 withdrawal correction on R-II) |
+| 3 | `wf1/excr5c` @ `977970fe` | 04a796c2 CHAT-95 X-1..X-5, 977970fe CHAT-96 NAMED-FAM |
 
 ## Merge 1: wf2/fleet-night-2210 @ b6a39e4f
 
@@ -44,3 +45,24 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 - **Checks:** decision-log --check clean (72 logs, 332 decisions, 203 register rows, 446 citations); spec-split-check clean (10672 citations,
   0 dangling); step and by-law handbooks up to date (386 rules); every generator --check rc 0. chat-rulings-register + decision-log tests 81 passed.
 - **CoA:** 0 of 698 and 0 of 496 rows move against merge 1; CHECK OK on the existing pins.
+
+## Merge 3: wf1/excr5c @ 977970fe (CHAT-95, CHAT-96 NAMED-FAM)
+
+- Commits taken (beb769f3..977970fe): 04a796c2 CHAT-95 X-1..X-5 named-road keying fixes; 977970fe CHAT-96 NAMED-FAM (the named-road
+  family read by the clause wording). Spec 133 §m.285 (M-285), §m.350 (M-350); red evidence docs/reports/red-evidence/bylaw/bylaw-chat95-red.txt,
+  bylaw-chat96-namedfam-red.txt (on the lane).
+- **Conflicts:** docs/reference/bylaw-layer2-input.json and docs/reference/maxbld-report-field-inventory.{json,md}, all generated:
+  `generate-bylaw-layer2-input.mjs --write` (6661 units, table_version e8ff61039c7e), then `report-fields.mjs --write` (34 rendered fields), then
+  `generate-amendment-index.mjs --write` (semantic: it embeds layer2_table_version; 6661 units). scripts/seeds/bylaw/vocab.json auto-merged.
+- **CoA row moves (rows keyed notice#n + clause; class, ours and city values compared):**
+  - beb769f3 -> 04a796c2 (CHAT-95): 0 of 698, 0 of 496.
+  - 04a796c2 -> 977970fe (CHAT-96): 0 of 698, 0 of 496.
+  - merge 2 tree -> merged tree: 0 of 698, 0 of 496. The lanes' claim of 0 moved rows holds.
+- **Re-pin:** the inputs moved (layer2 table_version), so the existing pins read "CHECK OK (not pinned: inputs differ from the pin)". Re-pinned
+  with `coa-scorecard.mjs --pin` on the merged tree (CHAT-65.repin); totals unchanged. The pins' `commit` field reads ed18cb53 (the HEAD
+  before the merge commit; cosmetic, as verify-46c N-3).
+  - 172: MATCH 387, DIFFER 29, NO ANSWER 46, OWED 88, DATA 24, NOT SCORABLE 25, NOT MODELLED 96, BY-LAW CHANGED 3: CHECK OK (pinned).
+  - 4D: MATCH 277, DIFFER 23, NO ANSWER 33, OWED 56, DATA 22, NOT SCORABLE 12, NOT MODELLED 70, BY-LAW CHANGED 3: CHECK OK (pinned).
+- **Floors (CHAT-63.C5; floors-172.json):** FLOORS OK. Measured overall accuracy 93.0 (floor 92), answered 75.6 (floor 71); 900.3.10 accuracy
+  86.4 (floor 86), answered 88.0; 9 article floors + pooled pass.
+- **Checks:** every generator --check rc 0; bylaw-named1-held, bylaw-v42-precedent and the 12 coa-* test files: 14 files, 334 passed.

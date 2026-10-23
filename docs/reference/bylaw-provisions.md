@@ -6,10 +6,10 @@
 > A `pending` row is not yet authored: never quote it to a buyer as authoritative (Spec 69 P-1).
 
 - validated_against: adoption-4 · generator bylaw-provisions-v1 · slicer slice-v4 · normalizer norm-v1 · vocab vocab-v4 · named-addr named-addr-v1
-- named units (derived from the raw refs / citation, never hand-edited): 852 · refs 896 · citations 718
+- named units (derived from the raw refs / citation, never hand-edited): 850 · refs 892 · citations 718
 - rows 4356 · in scope 4123 · out of scope 233 · awaiting a ruling 0 · unscoped 0 · clause units 27964 · source defects disclosed 161
 - row states (in scope): complete 1612 · pending 2511 (stale 0) · failed 0
-- feeds (Spec 69 M-52), over 2996 agreed LIMIT/PERMIT/PROHIBIT unit(s): ancillary/envelope 39 · ancillary/use_permission 22 · any/envelope 1203 · any/landscaping 6 · any/lot 441 · any/parking_access 190 · any/use_permission 269 · principal/envelope 290 · principal/landscaping 7 · principal/lot 194 · principal/parking_access 37 · principal/use_permission 186 · suite/envelope 86 · suite/landscaping 4 · suite/parking_access 4 · suite/use_permission 47
+- feeds (Spec 69 M-52), over 2990 agreed LIMIT/PERMIT/PROHIBIT unit(s): ancillary/envelope 39 · ancillary/use_permission 22 · any/envelope 1197 · any/landscaping 6 · any/lot 441 · any/parking_access 190 · any/use_permission 269 · principal/envelope 290 · principal/landscaping 7 · principal/lot 194 · principal/parking_access 37 · principal/use_permission 186 · suite/envelope 86 · suite/landscaping 4 · suite/parking_access 4 · suite/use_permission 47
 - amending by-laws 287: in_force 9 · not_verified 277 · partially_in_force 1 (each row lists its by-laws with their status; a status other than in_force is a notice, Spec 69 P-1, and never changes a row's state)
 
 ## Pages
