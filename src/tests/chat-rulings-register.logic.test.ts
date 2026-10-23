@@ -97,6 +97,11 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(M, 'M-336')).toContain(N + 'E-4');
     expect(JSON.stringify(map.lines.find((l) => l.id === 'x-v3.2'))).not.toContain('CHAT-92');
   });
+  it('CHAT-94 (a dated note on R-EQ) sits on R-JQ with the CHAT-93 condition, and §B-AM names it', () => {
+    expect(rowOf(A, 'R-JQ')).toContain('2026-10-23-batch-o#CHAT-94.P3-HOLD-1');
+    expect(rowOf(A, 'R-JQ')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    expect(A).toContain('R-EQ dated note CHAT-94.P3-HOLD-1');
+  });
   it('CHAT-92 sits on R-II as a dated-note exception', () => {
     expect(rowOf(A, 'R-II')).toContain('2026-10-23-batch-m#CHAT-92.RS-1');
   });
