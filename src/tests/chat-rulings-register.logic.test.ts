@@ -118,6 +118,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(map.rules.find((r) => r.id === 'R-JZ')?.handbook_line).toBe('enricher.2');
     expect(map.rules.find((r) => r.id === 'R-KA')?.handbook_line).toBe('x-captures.2');
   });
+  it('CHAT-97 (B′) sits on R-HQ beside the CHAT-96.CLP-Q2 note it supersedes', () => {
+    const r = rowOf(A, 'R-HQ');
+    expect(r).toContain('2026-10-23-batch-r#CHAT-97.CLP-Q2-B2');
+    expect(r).toContain('2026-10-23-batch-q#CHAT-96.CLP-Q2');
+    expect(r).toContain('2026-10-23-batch-n#CHAT-93.condition');
+  });
   it('CHAT-92 sits on R-II as a dated-note exception', () => {
     expect(rowOf(A, 'R-II')).toContain('2026-10-23-batch-m#CHAT-92.RS-1');
   });
