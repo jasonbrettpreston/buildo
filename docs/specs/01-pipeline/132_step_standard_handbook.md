@@ -69,10 +69,10 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 | 7 | `isBackfillStep` | `backfill` | `runBackfillPhase` via `runBackfillFullRecompute` | — | `buildBackfillSql`, `buildFullRecomputeSql`, `buildPostSql`, `buildPreSql` | compute_centroids |
 | 8 | `isRecorderStep` | `recorder` | `runRecorderPhase` | — | `buildReads`, `buildRow`, `buildWriteSql` | refresh_snapshot |
 | 9 | `isEnrichStep` | `enrich` | `runEnrichPhase` | `resolveRunMode` | `OVERLAY_LAYERS`, `passes` | classify_coa_scope, compute_parcel_cost_estimates, enrich_centreline, enrich_coa_zoning, enrich_heritage, enrich_parcels, enrich_permits (legacy shell), enrich_ravines, geocode_permits |
-| — | none matched | none | no phase: `compute(ctx)` then `runWritePlan` | — | main function only | assert_coa_freshness, assert_data_bounds, assert_engine_health, assert_global_coverage, assert_parcel_sanity, assert_schema |
+| — | none matched | none | no phase: `compute(ctx)` then `runWritePlan` | — | main function only | assert_coa_freshness, assert_data_bounds, assert_engine_health, assert_global_coverage, assert_lifecycle_phase_distribution (legacy shell), assert_parcel_sanity, assert_schema |
 | — | runner, any shape | any | `runWithPool` via `makePreWriteGate` | — | `DISTRIBUTION_SCOPE` | every step |
 
-**Table 1b: every step (generated).** 38 manifest steps with a descriptor. "Phase" is what the runner's own predicates pick for the committed descriptor. "Legacy shell runs" marks a pending step whose shell does not yet call `pipeline.step(descriptor, compute)`: its descriptor is graded, but the runner does not run it until the ② shell swap.
+**Table 1b: every step (generated).** 39 manifest steps with a descriptor. "Phase" is what the runner's own predicates pick for the committed descriptor. "Legacy shell runs" marks a pending step whose shell does not yet call `pipeline.step(descriptor, compute)`: its descriptor is graded, but the runner does not run it until the ② shell swap.
 
 | Slug | Archetype | Shape | Phase | Shell | Descriptor | Compute | Stage |
 |---|---|---|---|---|---|---|---|
@@ -81,6 +81,7 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 | assert_data_bounds | ASSERT | none | no phase | `scripts/quality/assert-data-bounds.js` | `scripts/quality/assert-data-bounds.descriptor.json` | `scripts/lib/compute/assert-data-bounds.js` | converted |
 | assert_engine_health | RECORDER | none | no phase | `scripts/quality/assert-engine-health.js` | `scripts/quality/assert-engine-health.descriptor.json` | `scripts/lib/compute/assert-engine-health.js` | converted |
 | assert_global_coverage | ASSERT | none | no phase | `scripts/quality/assert-global-coverage.js` | `scripts/quality/assert-global-coverage.descriptor.json` | `scripts/lib/compute/assert-global-coverage.js` | converted |
+| assert_lifecycle_phase_distribution | ASSERT | none | legacy shell runs; descriptor → no phase | `scripts/quality/assert-lifecycle-phase-distribution.js` | `scripts/quality/assert-lifecycle-phase-distribution.descriptor.json` | `scripts/lib/compute/assert-lifecycle-phase-distribution.js` | pending: compute_ported |
 | assert_parcel_sanity | ASSERT | none | no phase | `scripts/quality/assert-parcel-sanity.js` | `scripts/quality/assert-parcel-sanity.descriptor.json` | `scripts/lib/compute/assert-parcel-sanity.js` | converted |
 | assert_schema | ASSERT | none | no phase | `scripts/quality/assert-schema.js` | `scripts/quality/assert-schema.descriptor.json` | `scripts/lib/compute/assert-schema.js` | converted |
 | classify_coa_scope | ENRICHER | enrich | `runEnrichPhase` | `scripts/classify-coa-scope.js` | `scripts/classify-coa-scope.descriptor.json` | `scripts/lib/compute/classify-coa-scope.js` | pending: runner_wired |

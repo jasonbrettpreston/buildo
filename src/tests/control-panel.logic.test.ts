@@ -420,6 +420,21 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'lifecycle_seq_band_promote_to_fail_band_violation',
   'lifecycle_seq_band_promote_to_fail_no_band_configured',
   'lifecycle_seq_band_promote_to_fail_expected_data_missing',
+  // C6-1 ② (migration 288, R-DE (v)) — assert_lifecycle_phase_distribution's step-owned copies, values carried; the
+  // legacy lifecycle_* names above retire at its ③. 9 scalars, 110 band minima, 77 band maxima (the 33 catalog
+  // rows_count NULL/0 seqs below are unbounded: no _max, migration 148 :86) and the R-EP detail cap.
+  ...[
+    'unclassified_max', 'live_status_null_warn_count', 'seq_unclassified_max',
+    'cross_stalled_threshold', 'cross_active_inspection_threshold', 'cross_issued_threshold',
+    'seq_band_promote_to_fail_band_violation', 'seq_band_promote_to_fail_no_band_configured',
+    'seq_band_promote_to_fail_expected_data_missing', 'max_detail_keys',
+  ].map((k) => `assert_lifecycle_phase_distribution_${k}`),
+  ...Array.from({ length: 110 }, (_, i) => i + 1).flatMap((n) => [
+    `assert_lifecycle_phase_distribution_seq_band_${n}_min`,
+    ...([22, 28, 30, 34, 37, 44, 47, 48, 50, 53, 54, 55, 56, 58, 65, 66, 67, 70, 71, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 88, 91, 94, 96].includes(n)
+      ? []
+      : [`assert_lifecycle_phase_distribution_seq_band_${n}_max`]),
+  ]),
   // Phase F.1 (mig 152) — CoA forecast snowplow staleness gate + gate freshness window
   'coa_lifecycle_transition_stale_days',
   'coa_gate_calibration_window_days',

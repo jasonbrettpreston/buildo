@@ -5,6 +5,1385 @@
     "Derived from the seeds, converted.json stages, the descriptors, the live code and the copy migrations (scripts/analysis/gates/variable-effect.mjs); locked by step-validate fast invariant #53."
   ],
   "entries": {
+    "assert_lifecycle_phase_distribution_cross_active_inspection_threshold": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_cross_issued_threshold": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_cross_stalled_threshold": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_live_status_null_warn_count": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_max_detail_keys": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_100_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_100_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_101_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_101_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_102_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_102_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_103_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_103_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_104_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_104_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_105_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_105_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_106_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_106_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_107_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_107_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_108_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_108_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_109_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_109_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_10_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_10_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_110_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_110_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_11_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_11_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_12_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_12_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_13_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_13_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_14_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_14_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_15_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_15_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_16_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_16_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_17_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_17_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_18_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_18_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_19_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_19_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_1_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_1_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_20_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_20_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_21_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_21_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_22_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_23_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_23_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_24_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_24_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_25_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_25_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_26_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_26_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_27_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_27_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_28_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_29_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_29_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_2_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_2_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_30_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_31_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_31_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_32_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_32_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_33_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_33_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_34_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_35_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_35_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_36_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_36_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_37_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_38_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_38_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_39_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_39_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_3_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_3_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_40_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_40_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_41_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_41_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_42_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_42_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_43_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_43_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_44_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_45_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_45_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_46_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_46_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_47_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_48_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_49_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_49_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_4_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_4_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_50_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_51_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_51_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_52_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_52_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_53_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_54_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_55_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_56_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_57_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_57_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_58_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_59_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_59_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_5_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_5_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_60_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_60_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_61_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_61_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_62_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_62_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_63_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_63_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_64_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_64_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_65_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_66_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_67_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_68_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_68_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_69_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_69_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_6_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_6_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_70_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_71_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_72_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_72_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_73_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_73_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_74_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_75_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_76_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_77_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_78_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_79_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_7_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_7_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_80_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_81_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_82_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_83_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_84_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_84_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_85_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_85_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_86_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_86_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_87_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_87_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_88_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_89_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_89_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_8_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_8_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_90_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_90_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_91_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_92_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_92_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_93_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_93_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_94_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_95_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_95_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_96_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_97_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_97_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_98_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_98_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_99_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_99_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_9_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_9_min": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_promote_to_fail_band_violation": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_promote_to_fail_expected_data_missing": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_band_promote_to_fail_no_band_configured": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_seq_unclassified_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "assert_lifecycle_phase_distribution_unclassified_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "assert_lifecycle_phase_distribution",
+      "legacy_name": null,
+      "reason": "assert_lifecycle_phase_distribution still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
     "coa_active_trades_warn_max": {
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
