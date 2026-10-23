@@ -51,3 +51,31 @@ Row-level attribution (scored per commit, rows keyed notice#n + clause):
   2 of them, A0263/21NY #4 (10.20.40.10(6)) and #6 (10.20.40.20), from MATCH to BY-LAW CHANGED; A0573/24NY #6 was already BY-LAW CHANGED on origin.
 - Floors (`--floors floors-172.json`): FLOORS OK. Measured overall accuracy 93.0 (floor 92), answered 75.6 (floor 71); 900.3.10 accuracy 86.4
   (floor 86), answered 88.0 (floor 81); 9 article floors + pooled pass.
+
+## Commits on wf2/p4-integrate-26
+
+| sha | what |
+|---|---|
+| `6419d086` | merge 1, rulings-rec3 @ d4d96b79, clean |
+| `87e2b403` | merge 2, excr5c @ 4611d881; layer2 input + report-field inventory regenerated |
+| `efc662e5` | merge 3, p3plan @ 91c12d81; logic-variables-registry + amendment index regenerated |
+| `e91012e2` | merge 4, abs73 @ c748b78f; layer2 input, inventory and amendment index regenerated, CoA 172 / 4D re-pinned |
+| `d4234906` | M-251 dated note: CHAT-84.TWIN-1 supersedes M-251 / CHAT-29.F-SC-7 for 900.3.10(70)(B) (Spec 133 §m.350 (M-350) note); chat-rulings-register lock (red first) |
+| `63cd7c10` | coa-round C-3 lock BY-LAW CHANGED 1 -> 3 (semantic merge break, see the CoA re-pin section) |
+
+## Checks (targeted only; no DB, no full suite)
+
+- decision-log --check: 66 logs, 298 decisions, 197 register rows, 388 citations, clean. spec-split-check --check: clean. Step and by-law handbooks
+  --check: up to date (Spec 133 386 rules). golden-lots-cases --check: rc 0 (verify-45 A7). Every pre-commit generator --check: rc 0. system-map regenerated, no diff.
+- Vitest (bylaw-*, coa-*, steps/compute_maxbld_scenarios, steps/resolve_bylaws, chat-rulings-register, decision-log, seed-p5*, golden*): 149 files,
+  4320 passed, 936 todo, 0 failed (after 63cd7c10). Migration/registry infra tests (16 files): 237 passed.
+- `tsc --noEmit`: clean. `step-validate --all --fast`: exit 0, 0 HARD STOP lines.
+
+## Owed (not done here)
+
+- 29 step scorecard blocks in docs/reports/*-assessment.md are stale by one line each: `migrations count=275` is now 276, because p3plan adds migration 286.
+  `step-conformance.infra` "the generated scorecard block is not stale" fails 29 of 29 until they are regenerated. The regenerator is
+  `step-validate --all --write`. Its `--write` path opens a DB pool for descriptors that declare invariants (step-validate.mjs:5967-6022), so it was
+  not run in this no-DB lane. Run it when the DB and the full-suite slot are free, before the full `npm run test` / `test:db` of this integrate.
+  This is the same regeneration integrate-25 did in 895e326d.
+- Full `npm run test` and `npm run test:db`: not run (fleet-night slot).
