@@ -152,3 +152,14 @@ After the hold: step-conformance.infra plus steps/compute_maxbld_scenarios give 
 - **Net result:** int26 carries **CHAT-91 B-2 = 5 units**, not 9: 323 (C), 1032 (C)(i), 900.4.10(70) (A)(i), 714 (C)(i) and (D)(i).
 - **Conflict:** only bylaw-layer2-input.json. It was regenerated with --write (table_version 786fbe40), then the amendment index with --write.
 - **CoA:** re-scored, and 0 of 698 and 0 of 496 rows move. Both sets CHECK OK on totals. Both were re-pinned because the inputs moved. Floors OK.
+
+## Operator DB run 2 (tip 24bc14ee; lock held by the operator, no migrations; logs ~/Buildo-scratch/int26/db-run2/)
+
+The first operator run (2758dc63) applied migration 286 (--only). It failed 2 files:
+- admin-lead-schemas.contract failed on a worktree environment gap: mobile/node_modules was missing. It now has an APFS clone of ~/Buildo/mobile/node_modules, as the night tree has. No code changed.
+- step-conformance §5.5 failed; fixed by P3-HOLD-1.
+
+Run 2 results:
+- `step-validate --all --write`: OK. 29/43 V3, E1 PASS, no HARD STOP. It rewrote all 43 assessment blocks (29 converted + 14 pending steps). Each block's Test suite now reads `suite success=true`, "failing: none". The 5 previously held pending blocks (permits, assert_entity_tracing, assert_network_health, assert_staleness, assert_lifecycle_phase_distribution) are settled: Rule 2 is enforced-green, with no enforced-red row and no hard stop in any block. Committed as generator output.
+- `npm run test`: 889 files, 20,190 passed, 0 failed.
+- `npm run test:db`: 893 passed, 0 failed.
