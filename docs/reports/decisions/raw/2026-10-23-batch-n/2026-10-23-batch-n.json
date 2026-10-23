@@ -1,0 +1,115 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "E1-4 your recommendation is approved.  RS-1 Withdrawal - y , F1-F4-CPC-Q1 - QH1 approved provided this is the standardized approach, observable, understandable and simple and doesnt expand scope beyond what is absolutely necessary.  Most importantly sticks to the spirit of the project",
+  "clarification_quote": "they cover those as well",
+  "context": "Cards E-1..E-4 (EXCR CHAT-91 follow-ups, commit 8eaa1872 on wf1/excr5c), RS-1 withdrawal (lane J, ~/Buildo-scratch/v3coa-j/), F1-F4 (~/Buildo-scratch/v3coa/F-REPORT.md), CPC-Q1 (~/Buildo-scratch/v3coa/G-REPORT.md) and Q-H1 (~/Buildo-scratch/v3coa/H-REPORT.md). The condition in the first message applies to F1-F4, CPC-Q1 and Q-H1 and is recorded as CHAT-93.condition. The operator's clarification (\"they cover those as well\") extends the approval and the same condition to Q-CPC-2, CPC-D4/D11, Q-H4, Q-H6 and the held readings. Still OPEN (not ruled here): Q-H3 and Q-H5 (measure first, M3 and M1). E-1 and E-2 are recorded with the facts as verified on the production path by the EXCR lane after the cards were written (wf1/excr5c 760440a4, beb769f3): CHAT-91.B-2 applies to 5 units, not 9 or 10, and the E-2 text correction applies to 3 units.",
+  "decisions": [
+    {
+      "id": "CHAT-93.condition",
+      "subject": "Condition on F1-F4, CPC-Q1, Q-H1 and, by the clarification, Q-CPC-2, CPC-D4/D11, Q-H4, Q-H6 and the held readings",
+      "decision": "approve",
+      "recommendation": "Verbatim: \"provided this is the standardized approach, observable, understandable and simple and doesnt expand scope beyond what is absolutely necessary.  Most importantly sticks to the spirit of the project\". Each conditional decision is recorded only as far as it is the standardized approach, observable, understandable and simple, adds no scope beyond what is absolutely necessary and keeps the spirit of the project; any part that fails is trimmed or returned to the operator rather than recorded."
+    },
+    {
+      "id": "CHAT-93.E-1",
+      "subject": "Named roads: 316 (H) keeps its named-address disclosure; CHAT-91.B-2 applies to 5 units, not 10",
+      "decision": "approve",
+      "recommendation": "Keep 900.3.10(316) (H)'s keyed disclosure (\"this named-address rule is not evaluated\"): its clause is limited to named addresses (3165-3185 Sheppard Ave. E., 5 and 6 Abbottsfield Gate) that the unit does not check, so the disclosure is still true. CHAT-91.B-2 said 10 units; checked on the production path (a lot with its address and map areas, as the CoA scorer builds it), only 5 compute through the M-285 join and take disclosure none: 323 (C), 1032 (C)(i), 900.4.10(70) (A)(i), 714 (C)(i),(D)(i). 316 (H) and 4 more keep their disclosures because they do not compute: 303 (D) (its vocab.named_street row names \"Pharmacy Ave. Rd.\", which no frontage street matches), 852 (C)(i),(E)(i) (keyed applies_to named_addresses with street names as refs) and 713 (C)(i) (keyed applies_to map_area with street names as refs). EXCR 8eaa1872 set 9 to none; 760440a4 restored those 4 under CHAT-91's own wording (\"units whose disclosure text is now false\")."
+    },
+    {
+      "id": "CHAT-93.E-2",
+      "subject": "Named roads: correct the stale street-test text in calculation_handling where a B-2 unit now computes, by M-75 records",
+      "decision": "approve",
+      "recommendation": "Where a B-2 unit computes through the M-285 join, M-75 correction records rewrite the calculation_handling gaps text that still says the front-lot-line street test is not held or not identified in lot data, to say it is read from the lot's primary frontage street (M-285). Applied to 3 units: 323 (C), 900.4.10(70) (A)(i), 714 (C)(i) (EXCR beb769f3). Unchanged where the text is still true: 1032 (C)(i) and 714 (D)(i) (which lot line abuts the road is not held; the join reads the frontage street only), and the 4 units that do not compute (303 (D), 852 (C)(i),(E)(i), 713 (C)(i)). Gaps text only; no computed value moves."
+    },
+    {
+      "id": "CHAT-93.E-3",
+      "subject": "Named roads: no change for the other 4 line-any rows",
+      "decision": "approve",
+      "recommendation": "No change. 1142 (A)(i) and 900.4.10(98) (A)(i)(a) set a 22.0 m setback from a street's original centreline and are not computed today; they belong to NAMED-1d (CHAT-91.B-4, not adopted). 900.2.10@1018-2026 (C) says \"on a lot abutting Baldwin Street\" and (E) \"a front lot line or side lot line abutting Baldwin Street\": neither is front-only, so line any stays right under the table's $comment rule."
+    },
+    {
+      "id": "CHAT-93.E-4",
+      "subject": "Named roads: park the 1169 (C)(ii) twin conflict with NAMED-1d",
+      "decision": "approve",
+      "recommendation": "900.3.10(1169) (C)(ii) (\"if the lot line abuts Conference Boulevard\") is not computed (condition none, disclosure \"not evaluated\") while its twins 1170 (A)(i) and 1168 (C)(i) are computed (line front). The conflict is parked with NAMED-1d (CHAT-91.B-4) and noted under M-336; it is not fixed now (CHAT-85 no more exceptions)."
+    },
+    {
+      "id": "CHAT-93.RS-1",
+      "subject": "RS-1 withdrawn: CHAT-92 rested on a false premise",
+      "decision": "approve",
+      "recommendation": "Withdraw CHAT-92.RS-1. Its premise was false: refresh_snapshot already declares sync_runs (scripts/refresh-snapshot.descriptor.json:150-156, columns started_at, status), and gate G1 flags any raw access to a ledger table whatever the declaration (scripts/analysis/gates/compute-purity-sql.mjs:13-16, LEDGER_TABLES includes sync_runs; scripts/analysis/gates/compute-purity.mjs:202-209). The only fix is the runner-owned producer read (D-P1), which lands with permits ③ so last_sync_at / last_sync_status (scripts/lib/compute/refresh-snapshot.js:534-535) do not change source before their writer (load_permits, scripts/load-permits.js:725) does. A correction dated note on R-II supersedes the CHAT-92 note, which stays; the x-v3.2 line and the R-II statement return to the pre-CHAT-92 text."
+    },
+    {
+      "id": "CHAT-93.F1",
+      "subject": "assert_lifecycle_phase_distribution: ALPD-D5 counts each seq once, ratified as one entry under R-HQ",
+      "decision": "approve",
+      "recommendation": "Ratify ALPD-D5 as one entry under R-HQ: a banded seq with no data is counted as expected_data_missing only, where legacy also counted a band_violation (pinned L8). Evidence: SEQ_CLASSIFY_SQL in scripts/lib/compute/assert-lifecycle-phase-distribution.js (wf2/v3coa-f-lifecycle-assert 72505827); legacy scripts/quality/assert-lifecycle-phase-distribution.js:382-495."
+    },
+    {
+      "id": "CHAT-93.F2",
+      "subject": "assert_lifecycle_phase_distribution: the 110 per-seq rows become INFO context rows (applies R-EP)",
+      "decision": "approve",
+      "recommendation": "The 110 per-seq rows are still emitted, as INFO context rows that carry no status; which seqs violate is listed in the detail of the declared seq_bands_warn (WARN) and seq_bands_failing (FAIL, blocking) checks (R-EP). Not 220 declared checks."
+    },
+    {
+      "id": "CHAT-93.F3",
+      "subject": "NEW row: a posture flag that promotes WARN to a halting FAIL is two declared checks",
+      "decision": "approve",
+      "recommendation": "New 124a row: a check family whose severity an operator posture flag selects (WARN, or a halting FAIL) is declared as two checks, a WARN non-blocking one and a FAIL blocking one; the check SQL routes each measured violation by the flag, and compute only counts. No schema field (no severity_from_config) and no scripts/lib/step change. First user: assert_lifecycle_phase_distribution (seq_bands_warn / seq_bands_failing; flags lifecycle_seq_band_promote_to_fail_*, legacy scripts/quality/assert-lifecycle-phase-distribution.js:74-79)."
+    },
+    {
+      "id": "CHAT-93.F4",
+      "subject": "Record Q-ALPD-1 (operator y 2026-10-19) as a register row",
+      "decision": "approve",
+      "recommendation": "Record Q-ALPD-1, answered y on 2026-10-19 and so far only in docs/reports/2026-10-20-operator-queue-snapshot.md:1437: retire the 36 legacy phase-code bands lifecycle_band_p*/o*/coa_p*/p9_p17_agg (deprecated in Spec 84 on 2026-05-13, unread since 2026-05-19); keep and convert the 110 per-seq bands and their sample-size thresholds, which remain the live gate; the admin \"Lifecycle Phase Distribution Bands\" group loses the 36 dead keys; recorded as knowingly-retired, citing Spec 84 §DEPRECATED. A new register row records it before ③ (Spec 132 §x-rulings.4 (R-GY), §x-v3.2)."
+    },
+    {
+      "id": "CHAT-93.CPC-Q1",
+      "subject": "NEW row: a MATERIALIZER whole-table replace arm, execution.materialize_form \"replace\"",
+      "decision": "approve",
+      "recommendation": "New 124a row: a MATERIALIZER may declare execution.materialize_form: \"replace\". The pure compute returns its source SQL (buildSourceSql) and shapes rows (materializeRows, finalizeMatched; the R-EH (c) contract); the runner reads the source once and calls the existing write.executeStagingReplace (scripts/lib/step/write.js:2351) in one transaction on its one write target, class staging_full_replace. Zero rows leave the table untouched (the executor's empty-set guard, write.js:2396-2399). Needs one schema enum value (RE-FREEZE), one branch in runMaterializePhase (scripts/lib/step/index.js:3204), the write-class disposition update and a grandfathered.json Rule 9 entry per adopting step (reserved file, orchestrator only); no new executor. Amends §materializer.1 (R-EH) and narrows the R-FW ban for this arm only. First user compute_phase_calibration; reused by compute_storey_norms (scripts/compute-storey-norms.js:78-100). Scope added by ruling (CHAT-68.scope)."
+    },
+    {
+      "id": "CHAT-93.Q-H1",
+      "subject": "link_coa keeps the permits.last_seen_at bump as a declared deviation",
+      "decision": "approve",
+      "recommendation": "Option A: link_coa's bump of permits.last_seen_at (scripts/link-coa.js:412-448, wall-clock guard last_seen_at < NOW() - INTERVAL '1 second') stays as a declared deviation citing R-JM and Spec 132 §core.14 (R-FF), until classify_lifecycle_phase ② pins a link_coa stamp. Option B (a new stamp column) is not taken: scope growth."
+    },
+    {
+      "id": "CHAT-93.Q-CPC-2",
+      "subject": "compute_phase_calibration: retire calibration_freshness_warn_hours via config.retired[]",
+      "decision": "approve",
+      "quote_ref": "clarification_quote",
+      "recommendation": "At ②, compute_phase_calibration declares calibration_freshness_warn_hours in config.retired[] (R-A): it is Zod-validated (scripts/compute-phase-calibration.js:63) and read nowhere in the step; assert_data_bounds already retired it (ADB-D5). The live logic_variables row is not deleted (R-A). The pin that names this step as its live consumer (src/tests/steps/assert_data_bounds/violations.test.ts:255) moves with it in the same commit."
+    },
+    {
+      "id": "CHAT-93.CPC-D4-D11",
+      "subject": "compute_phase_calibration: zero buckets leave the table untouched; the replace uses DELETE, not TRUNCATE",
+      "decision": "approve",
+      "quote_ref": "clarification_quote",
+      "recommendation": "Two declared deviations under the CPC-Q1 row: with zero buckets the table stays untouched (the executor's empty-set guard) instead of being emptied, and total_buckets reports FAIL (CPC-D4); the replace uses DELETE under MVCC instead of TRUNCATE, so readers are not blocked by an ACCESS EXCLUSIVE lock (CPC-D11; legacy TRUNCATE at scripts/compute-phase-calibration.js:415 and :429). These are the executor's own semantics."
+    },
+    {
+      "id": "CHAT-93.Q-H4",
+      "subject": "Generalise runCascadePhase so link_coa can host on it",
+      "decision": "approve",
+      "quote_ref": "clarification_quote",
+      "recommendation": "runCascadePhase (scripts/lib/step/index.js:2869) is wired to wsib_registry (it selects the write target by the literal table name, index.js:2926, and counts wsib_registry, index.js:2971-2972). Generalise it so a declared cascade target (link_coa) hosts on it, with link_wsib's behaviour unchanged. A scripts/lib/step change, so it is a RE-FREEZE on the bundled runner night with CPC-Q1, and link_wsib's captures are retaken there (#39). No existing register row covers the cascade phase, so it is a new 124a row on Spec 132 §link.2."
+    },
+    {
+      "id": "CHAT-93.Q-H6",
+      "subject": "link_coa: retire the log-only stats SELECT",
+      "decision": "approve",
+      "quote_ref": "clarification_quote",
+      "recommendation": "At ②, link_coa drops its final stats SELECT (scripts/link-coa.js:773-785), which feeds only a log line (R-HR, zero readers; precedent R-GM, coa's log-only stats query). coa_match_conf_high and coa_match_conf_medium stay registered; no variable is retired. Premise check: refresh_snapshot reads coa_match_conf_medium (scripts/refresh-snapshot.descriptor.json:1147) but not coa_match_conf_high (it reads snapshot_coa_conf_high, scripts/lib/compute/refresh-snapshot.js:54), so after Q-H6 coa_match_conf_high has no step reader; that is left open, not retired here."
+    },
+    {
+      "id": "CHAT-93.held-readings",
+      "subject": "Held readings confirmed: 0/0 ratios read null; percentiles over an empty population read null, shown N/A",
+      "decision": "approve",
+      "quote_ref": "clarification_quote",
+      "recommendation": "Confirm the readings held under R-JG and CHAT-90: on an empty cursor a 0/0 ratio reads null (a defined value, not absent, and not 0, which would render a settled rerun as a 0% coverage FAIL), and a percentile over an empty population reads null, shown as 'N/A'. Dated note on R-JG with CHAT-90."
+    }
+  ]
+}

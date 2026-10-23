@@ -504,7 +504,7 @@
     {
       "id": "link.2",
       "section": "link",
-      "text": "`runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`). §1 table 1a lists which step uses which. A match plan may also declare a closed `extra_counters` set, summed per batch (R-IG, from the bundled RE-FREEZE night).",
+      "text": "`runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`), which hosts any declared cascade target, link_coa among them (R-JY, from the bundled runner night). §1 table 1a lists which step uses which. A match plan may also declare a closed `extra_counters` set, summed per batch (R-IG, from the bundled RE-FREEZE night).",
       "why": "One library path, not a copy per link step."
     },
     {
@@ -534,7 +534,7 @@
     {
       "id": "enricher.2",
       "section": "enricher",
-      "text": "`runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run.",
+      "text": "`runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night).",
       "why": "Writes stay behind the runner seam, and counters are not double-counted."
     },
     {
@@ -546,7 +546,7 @@
     {
       "id": "materializer.1",
       "section": "materializer",
-      "text": "`recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions); batch size comes from config.",
+      "text": "`recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions), or `replace` (the whole table replaced through the existing staging executor in one transaction; zero rows leave it untouched; R-JX, from the bundled runner night); batch size comes from config.",
       "why": "Rebuilds must be resumable, and JS rows must not bring their own I/O."
     },
     {
@@ -5710,6 +5710,90 @@
         "ref": "src/tests/decision-log.logic.test.ts"
       },
       "statement": "CHAIN-TOOLING reads BUILT: the R-DJ (2) / R-EC absolute pre-commit budgets (fast invariant #52) supersede R-BC (e)(2)'s \"<= +10% vs the chain-start baseline\"; LDG-10 and EP-PIN-D17 stay PARTIAL (operator CHAT-55).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JV",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "A posture flag that promotes a check family from WARN to a halting FAIL is two declared checks (WARN non-blocking, FAIL blocking) whose check SQL routes each violation by the flag; no schema field, no library change (operator 2026-10-23, CHAT-93.F3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JW",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "assert_lifecycle_phase_distribution retires the 36 legacy phase-code bands (Spec 84 deprecated) and keeps the 110 per-seq bands as the live gate (Q-ALPD-1, operator y 2026-10-19; recorded CHAT-93.F4).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JX",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "materializer.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "A MATERIALIZER may declare materialize_form replace: the runner calls the existing executeStagingReplace in one transaction on its one target; zero rows leave the table untouched (operator 2026-10-23, CHAT-93.CPC-Q1; from the bundled runner night).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JY",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "link.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "runCascadePhase hosts any declared cascade target, not only wsib_registry, with link_wsib unchanged; link_coa is the second user (operator 2026-10-23, CHAT-93.Q-H4; from the bundled runner night).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JZ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "ctx.flushBatch may run a list of statements in one per-batch transaction (SAVEPOINT per warn_row statement) and an ENRICHER may write R-DY derived rows, so history and alerts commit with their state (operator 2026-10-23, CHAT-96.CLP-Q1; from the bundled runner night).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The forced-cohort bracket tool takes a repeatable --derived-table and restores each derived table exactly (operator 2026-10-23, CHAT-96.CLP-Q4).",
       "source": {
         "register": true
       }

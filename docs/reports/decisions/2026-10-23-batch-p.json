@@ -1,0 +1,55 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-p/2026-10-23-batch-p.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-p",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "approved recos",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-p/2026-10-23-batch-p.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-95.X-1",
+      "question": "Named roads: fix the typo in 900.3.10(303) (D)'s street-table row",
+      "recommendation": "The vocab.named_street row for 900.3.10(303) (D) names \"Pharmacy Ave. Rd.\"; the clause and the unit's own text say \"Pharmacy Ave.\", the form row 316 (D) uses, and no by-law text says \"Pharmacy Ave. Rd.\". Correct the row to \"Pharmacy Ave.\" (line front unchanged). A typo fix, not a new exception; after it the unit computes through the M-285 join, so CHAT-91.B-2's disclosure none applies to it (M-75 record).",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-95.X-2",
+      "question": "Named roads: re-key 852 (C)(i),(E)(i) and 713 (C)(i) in the whole-exception named-road form",
+      "recommendation": "852 (C)(i),(E)(i) are keyed applies_to named_addresses with the street names as addresses, and 713 (C)(i) applies_to map_area with the street names as map refs, so neither can compute. Re-key them in the form 204 (C)(i),(E)(i) uses (applies_to whole, the abuts_named_street condition and the vocab.named_street row, which they already carry), so the M-285 join decides them. 852's word-for-word twins are 204 (C)(i),(E)(i) (twin principle, CHAT-84.TWIN-1 note on M-350). This corrects the keying of existing rows by M-75 records; it is not a new exception (CHAT-85).",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-95.X-3",
+      "question": "Named roads: correct the stale status and text of 323 (C) and 714 (C)(i), which now compute",
+      "recommendation": "323 (C) (status not_modelled, not_modelled_reason ch900_backlog) and 714 (C)(i) (not_modelled, needs_data_we_lack) now compute through the M-285 join, so their status and reason are corrected, and 323 (C)'s gaps text \"No vocab front-setback pattern ('front yard setback') occurs in the text ('front lot line')\" is removed, since M-134 licenses \"from a front lot line\" for front_setback_m. By M-75 records; no computed value moves.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-95.X-4",
+      "question": "Named roads: 714 (D)(i) stops computing until the side street is known; its disclosure is restored",
+      "recommendation": "714 (D)(i) sets a 4.5 m setback from a side lot line that abuts one of the named streets, but the M-285 join reads only the lot's primary frontage street (its row is line any), so a computed answer can overstate it. Accuracy first: stop computing it until the side street is known, and restore its not-evaluated disclosure (M-75 records), rather than overstate.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-95.X-5",
+      "question": "Named roads: twin 325 (C) gets the same gaps-text correction as 323 (C)",
+      "recommendation": "325 (C) is the word-for-word twin of 323 (C) and computes the same way (abuts_named_street, Huntingwood Dr., line front), but its gaps text still says \"abuts Huntingwood Dr. not evaluable from lot data\". It gets the same CHAT-93.E-2 correction (the street is read from the lot's primary frontage street, M-285) by an M-75 record; twin principle, CHAT-84.TWIN-1.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

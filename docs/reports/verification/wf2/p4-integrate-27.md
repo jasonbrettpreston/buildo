@@ -12,6 +12,7 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 | # | Branch @ tip | Notes |
 |---|---|---|
 | 1 | `wf2/fleet-night-2210` @ `b6a39e4f` | 24aeb6ae fleet recapture captures (117/117) + b6a39e4f RE-FREEZE #39-#41 lib |
+| 2 | `wf1/rulings-rec3` @ `f7a348cf` | CHAT-92..96 register rows and dated notes (375f928f CHAT-92 RS-1 note + 00084d4b CHAT-93.RS-1 withdrawal correction on R-II) |
 
 ## Merge 1: wf2/fleet-night-2210 @ b6a39e4f
 
@@ -32,3 +33,14 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
   building on the recommended reading while a ruling is pending). The ruling it waited on is R-JN, recorded before this merge.
 - **CoA:** both sets re-scored on the merged tree: 0 of 698 and 0 of 496 rows move (class, ours and city values identical to
   verify-46c's e9523e48 scores); CHECK OK on the existing pins; FLOORS OK. No re-pin (inputs unchanged).
+
+## Merge 2: wf1/rulings-rec3 @ f7a348cf (CHAT-92..96)
+
+- Commits taken (18aa1f7c..f7a348cf, all new to the integrate line): 375f928f CHAT-92 RS-1 note on R-II; 00084d4b CHAT-93 (RS-1 withdrawn on R-II
+  as a dated correction that supersedes the CHAT-92 note, which stays as the record; F1-F4, CPC-Q1, Q-H1 and the held readings); b651df89
+  CHAT-94 P3-HOLD-1 option A dated note on R-EQ; f4c57ffc CHAT-95 X-1..X-5 dated notes in 69a; f7a348cf CHAT-96 NAMED-FAM and the
+  classify_lifecycle_phase cards, new rows R-JZ, R-KA. New 124a rows R-JV..R-KA; decision logs batch-m..q (imported by decision-log.mjs on the lane).
+- **Conflict:** docs/specs/00-architecture/00_system_map.md only, regenerated with `npm run system-map` (116 specs).
+- **Checks:** decision-log --check clean (72 logs, 332 decisions, 203 register rows, 446 citations); spec-split-check clean (10672 citations,
+  0 dangling); step and by-law handbooks up to date (386 rules); every generator --check rc 0. chat-rulings-register + decision-log tests 81 passed.
+- **CoA:** 0 of 698 and 0 of 496 rows move against merge 1; CHECK OK on the existing pins.

@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "I go with your reco on P3-Hold-1 a",
+  "context": "Card P3-HOLD-1, drafted by the integrate-26 lane. A step's ② compute module built before its ① (red suite, descriptor, shell, manifest) cannot sit in scripts/lib/compute/: Spec 132 §core.1 (Rule-1) makes a step three files, and src/tests/step-conformance.infra.test.ts:673-697 pairs every compute module with a manifest step file by basename (computePairs), with no pending exemption. Option A approved, under the standing condition CHAT-93.condition (2026-10-23-batch-n).",
+  "decisions": [
+    {"id": "CHAT-94.P3-HOLD-1", "subject": "A ② compute module built before its ① is held outside the tree until ① lands", "decision": "approve", "recommendation": "Option A: a ② compute module built before its ① is held outside the tree (~/Buildo-scratch/<lane>/held/ with an APPLY.txt recipe) until ① lands, then restored in the same commit as ① (or the first commit that carries its descriptor and shell). This is the rule lane V3-COA-G already followed for compute-phase-calibration.js (~/Buildo-scratch/v3coa-g/held/). No gate is weakened and no exemption is added to computePairs. Five words: standardized (one rule for every held ②); observable (APPLY.txt and the verification index list each held module); accurate (no gate weakened); scalable (any step); understandable (② never sits in the tree before ①)."}
+  ]
+}

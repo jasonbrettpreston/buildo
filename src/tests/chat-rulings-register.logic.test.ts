@@ -84,6 +84,47 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
   it('CHAT-87 sits on M-350', () => {
     expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-h#CHAT-87.NAMED-1c');
   });
+  it('CHAT-93 (batch n): RS-1 withdrawal on R-II; F1 R-HQ; Q-H6 R-HR; held readings R-JG; Q-H1 R-JM; new rows R-JV..R-JY; E-1..E-4 on M-350, M-285, M-336; each conditional entry cites CHAT-93.condition', () => {
+    const N = '2026-10-23-batch-n#CHAT-93.';
+    expect(rowOf(A, 'R-II')).toContain(N + 'RS-1');
+    for (const [row, ids] of [['R-HQ', ['F1']], ['R-HR', ['Q-H6']], ['R-JG', ['held-readings']], ['R-JM', ['Q-H1']], ['R-JV', ['F3', 'F2']], ['R-JW', ['F4']], ['R-JX', ['CPC-Q1', 'CPC-D4-D11', 'Q-CPC-2']], ['R-JY', ['Q-H4']]] as Array<[string, string[]]>) {
+      const r = rowOf(A, row);
+      for (const id of ids) expect(r, row + ' ' + id).toContain(N + id);
+      expect(r, row + ' condition').toContain(N + 'condition');
+    }
+    for (const [row, line] of [['R-JV', 'core.6'], ['R-JW', 'core.8'], ['R-JX', 'materializer.1'], ['R-JY', 'link.2']]) {
+      expect(map.rules.find((r) => r.id === row)?.handbook_line).toBe(line);
+    }
+    expect(rowOf(M, 'M-350')).toContain(N + 'E-1');
+    expect(rowOf(M, 'M-350')).toContain(N + 'E-2');
+    expect(rowOf(M, 'M-285')).toContain(N + 'E-3');
+    expect(rowOf(M, 'M-336')).toContain(N + 'E-4');
+    expect(JSON.stringify(map.lines.find((l) => l.id === 'x-v3.2'))).not.toContain('CHAT-92');
+  });
+  it('CHAT-94 (a dated note on R-EQ) sits on R-JQ with the CHAT-93 condition, and §B-AM names it', () => {
+    expect(rowOf(A, 'R-JQ')).toContain('2026-10-23-batch-o#CHAT-94.P3-HOLD-1');
+    expect(rowOf(A, 'R-JQ')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    expect(A).toContain('R-EQ dated note CHAT-94.P3-HOLD-1');
+  });
+  it('CHAT-95 X-1 sits on M-285, X-2..X-5 on M-350, each with the CHAT-93 condition', () => {
+    expect(rowOf(M, 'M-285')).toContain('2026-10-23-batch-p#CHAT-95.X-1');
+    for (const x of ['X-2', 'X-3', 'X-4', 'X-5']) expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-p#CHAT-95.' + x);
+    expect(rowOf(M, 'M-285')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+  });
+  it('CHAT-96: NAMED-FAM on M-350; CLP-Q2 on R-HQ; CLP-Q3 on R-JQ (R-EQ carrier); new rows R-JZ (enricher.2), R-KA (x-captures.2); each cites the CHAT-93 condition', () => {
+    const N = '2026-10-23-batch-q#CHAT-96.';
+    const C = '2026-10-23-batch-n#CHAT-93.condition';
+    for (const [text, row, id] of [[M, 'M-350', 'NAMED-FAM'], [A, 'R-HQ', 'CLP-Q2'], [A, 'R-JQ', 'CLP-Q3'], [A, 'R-JZ', 'CLP-Q1'], [A, 'R-KA', 'CLP-Q4']] as Array<[string, string, string]>) {
+      expect(rowOf(text, row), row).toContain(N + id);
+      expect(rowOf(text, row), row).toContain(C);
+    }
+    expect(map.rules.find((r) => r.id === 'R-JZ')?.handbook_line).toBe('enricher.2');
+    expect(map.rules.find((r) => r.id === 'R-KA')?.handbook_line).toBe('x-captures.2');
+  });
+  it('CHAT-92 sits on R-II as a dated-note exception', () => {
+    expect(rowOf(A, 'R-II')).toContain('2026-10-23-batch-m#CHAT-92.RS-1');
+  });
   it('CHAT-91 sits on M-350 (B-1, B-2), M-285 (B-3), M-336 (B-4) and M-322 (B-5)', () => {
     expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-l#CHAT-91.B-1');
     expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-l#CHAT-91.B-2');

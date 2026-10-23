@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-m/2026-10-23-batch-m.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-m",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "RS-1 confirmed proceed",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-m/2026-10-23-batch-m.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-92.RS-1",
+      "question": "refresh_snapshot: declare its sync_runs read now, retake its own captures on the bundled RE-FREEZE night",
+      "recommendation": "Fix refresh_snapshot now rather than waiting for the permits chain ③: declare sync_runs as a read relation (clears the fleet's only compute-purity row, scripts/lib/compute/refresh-snapshot.js:250, ledger compute-ledger-sql@e230841952758fbf#1, closing_brief CP-PERMITS, and its SCALABLE \"1 deferred\") and add --invariants to its checks (trap 11). Only refresh_snapshot's own captures (its 4 chains: permits, coa, sources, deep_scrapes) are retaken, on the next bundled RE-FREEZE night (with Q-H4 / CPC-Q1). The D-P1 move to pipeline_runs still lands at permits ③.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}
