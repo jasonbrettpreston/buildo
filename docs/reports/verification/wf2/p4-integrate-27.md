@@ -107,3 +107,29 @@ non-blocking hard stop (G8 + 7 unpinned enforced-red rules; R-DU no-descriptor p
 the e9523e48 commit message carries the same claim and cannot be changed.
 
 verify-46c N-1 (the amendment-index reader comment) is recorded in ~/Buildo-scratch/p3build/held/APPLY.txt (amendment-index reader note).
+
+## Operator DB run (tip c269288f; lock held by the operator; logs ~/Buildo-scratch/int27/db-run/)
+
+- `migrate.js --dry-run`: "Would run 276_front_setback_porch_allowance.sql", "Would run 279_gate_v3_hard_gate_switch.sql" (both held for other
+  lanes, not applied); 284, 285 and 286 already applied; 0 applied. Three pre-existing WARN lines say the checksums of 254, 255 and 281 changed
+  since they were applied; integrate-27 does not touch those files (`git diff e9523e48 HEAD` on them is empty). Not a migration of this run.
+  282 is the Layer 2 night's.
+- `step-validate --all --write`: exit 0, 0 "HARD STOP" lines, "R-EY: 29/43 evaluated step(s) read V3; E1 ratchet PASS (29 listed); E2
+  cutover PASS". It rewrote all 43 assessment blocks (committed as generator output, the merge 1 owed regeneration).
+- `npm run test`: 894 files passed (1 skipped); 20,288 passed, 4 skipped, 936 todo, 0 failed.
+- `npm run test:db`: 133 files passed (1 skipped); 907 passed, 12 skipped, 0 failed.
+
+### Review of the 43 regenerated blocks (against the int26 blocks at e9523e48)
+
+- **Scores unchanged** in all 43 blocks: total /17, Enforced-green, hard-stop line and every policy-matrix row are the same as int26's.
+  The table rows that differ are only: Rule-1 `migrations count` (now that 284/285 are in), the 18 "I/O cost adjudication" measured
+  numbers (fleet-night captures), and one Phase-order detail count. No new enforced-red row and no new hard stop.
+- **The 5 pending blocks** (permits, assert_entity_tracing, assert_network_health, assert_staleness, assert_lifecycle_phase_distribution)
+  are as they were at int26: each still has 7 `| enforced-red |` rows and `**Hard stop: YES (G8, …)**` (permits also G9), Enforced-green
+  5/14. That hard stop is pre-existing and non-blocking (pending with no descriptor, Spec 124 R-DU); step-validate exits 0.
+- **Test suite section (item iii):** every block reads "3200/3229 passed (suite success=false)" and lists 29 failures. All 29 are
+  step-conformance "the generated scorecard block is not stale": the harvested suite ran against the stale blocks before the same run
+  rewrote them. With the regenerated blocks, `src/tests/step-conformance.infra.test.ts` passes 713/713 (no DB), so the 29 staleness reds
+  are cleared, but the committed item-iii text records that run's pre-write state. A second `step-validate --all --write` pass (DB) would make
+  item iii read the clean suite (3229/3229), the same way integrate-26 wrote its blocks twice (6703b83f, then e9523e48). This affects only
+  item iii's text; no score uses it (all scores above are unchanged).
