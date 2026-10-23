@@ -657,7 +657,7 @@ First clause cited: 800.50.
 
 ### Chapter 900
 
-First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6.
+First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6, 900.4.
 
 - **m.29** Expert sample audit. Exactly 50 stratified rows — ≥ 20 whose verbatim contains a numeric literal, ≥ 1 per archetype present, every external row, the 900.1.10 precedence rows (the expert explicitly confirms the implicit-override reading of 900.1.10(3)), adjudicated rows eligible — by a City of…
   Status: RATIFIED 2026-10-06 · Enforced by: G-AUDIT
@@ -759,9 +759,17 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED: the floors file and its pin)
   Rules: `M-322` (Spec 69a)
 
+- **m.336** Two scope decisions stay with named uses.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none (a scope rule)
+  Rules: `M-336` (Spec 69a)
+
 - **m.347** 900.5.10(324)(J)(i) is keyed UNUSUAL as a whole, with a disclosure (option B).
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
   Rules: `M-347` (Spec 69a)
+
+- **m.350** The 26 pending exception units are settled by 11 family readings.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+  Rules: `M-350` (Spec 69a)
 
 - **m.357** Each new CoA notice batch is scored blind first, then folded into one cumulative headline set.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED: the cumulative set and the blind-round door, built when the next batch arrives)
@@ -1407,10 +1415,6 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
   Rules: `M-335` (Spec 69a)
 
-- **m.336** Two scope decisions stay with named uses.
-  Status: RULED 2026-10-22 · OWED · Enforced by: none (a scope rule)
-  Rules: `M-336` (Spec 69a)
-
 - **m.337** 63 Johnston Ave is a scoped DATA flag until the parcel row is fixed.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
   Rules: `M-337` (Spec 69a)
@@ -1458,10 +1462,6 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **m.349** Seven G-CLAUSE licence-pattern wordings are added (pattern growth by ruling, M-132; extends M-334).
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
   Rules: `M-349` (Spec 69a)
-
-- **m.350** The 26 pending exception units are settled by 11 family readings.
-  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-350` (Spec 69a)
 
 - **m.351** Rounds 9 to 13 stand as applied.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
