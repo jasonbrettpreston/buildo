@@ -72,6 +72,10 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (const id of ['NAMED-1b', 'TWIN-1']) expect(rowOf(M, 'M-350')).toContain(`2026-10-23-batch-e#CHAT-84.${id}`);
     expect(rowOf(M, 'M-322')).toContain('2026-10-23-batch-e#CHAT-84.S22-1');
   });
+  it('CHAT-84.TWIN-1 supersedes M-251 (CHAT-29.F-SC-7) for 900.3.10(70)(B), as a dated note on M-251', () => {
+    expect(rowOf(M, 'M-251')).toContain('**Dated note 2026-10-23 (`2026-10-23-batch-e#CHAT-84.TWIN-1`):**');
+    expect(rowOf(M, 'M-251')).toContain('SUPERSEDED for 900.3.10(70)(B)');
+  });
   it('CHAT-85 sits on M-336; CHAT-86 on M-138 and M-349', () => {
     expect(rowOf(M, 'M-336')).toContain('2026-10-23-batch-f#CHAT-85.no-more-exceptions');
     expect(rowOf(M, 'M-138')).toContain('2026-10-23-batch-g#CHAT-86.whole-street');
