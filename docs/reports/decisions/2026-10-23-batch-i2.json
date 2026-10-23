@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-i2/2026-10-23-batch-i2.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-i2",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "88 y",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-i2/2026-10-23-batch-i2.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-88.HELDOUT-1",
+      "question": "Every new CoA notice batch is first scored blind, then folded into a cumulative all-notices headline set",
+      "recommendation": "No held-out round on coa-2026-a, b, c: they are the 172 set. Every NEW CoA notice batch added after 2026-10-23 is first scored in a pre-registered blind round (the oracle C pre-registration form, CHAT-63 C-4, M-321), then folded into a cumulative all-notices set that becomes the headline score, held to the same floors (92 accuracy / 71 answered, 900.3.10 = 86; M-322). The 172 and 4d sets stay frozen as reference pins. A fold-in that drops below a floor goes to the operator; no silent adjustment.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-88.PLANFACTS-1",
+      "question": "Phase 3 validation also uses the plan facts as reference values",
+      "recommendation": "Use the 129 plan facts (coa_plan_facts: heights, GFA and unit counts from the applications, values only) as reference values for Phase 3 calculation validation (queue P4), alongside the operator golden cases (M-327). They are already read by the scorer, but only for survey lot dimensions (M-308). The golden case ranks higher where the two disagree and every disagreement is listed (M-326 order of authority); plan facts are never calculator input (M-333) and set no floor by themselves (M-330).",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

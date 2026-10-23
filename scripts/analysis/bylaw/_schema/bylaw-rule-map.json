@@ -1452,6 +1452,14 @@
       "section": "fam-general"
     },
     {
+      "id": "m.356",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.357",
+      "section": "fam-900"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -5199,6 +5207,28 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-355**"
+      }
+    },
+    {
+      "id": "M-356",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.356",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-356**"
+      }
+    },
+    {
+      "id": "M-357",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.357",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-357**"
       }
     },
     {
