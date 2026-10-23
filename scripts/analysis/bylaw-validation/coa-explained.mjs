@@ -21,8 +21,8 @@ export function checkExplainedDifferences(vocab, registerRowIds) {
     if (!Object.prototype.hasOwnProperty.call(targets, e.target)) v.push(`${clause}: target ${e.target} is not a dsl_target`);
     if (!isNum(e.ours) || !isNum(e.city)) v.push(`${clause}: ours and city must be numbers`);
     else if (e.ours === e.city) v.push(`${clause}: ours equals city, so there is nothing to explain`);
-    if (e.class !== undefined && e.class !== 'DATA') v.push(`${clause}: class must be DATA when present (R5-5 HELD: an explained data flag, M-308)`);
-    if (e.class === 'DATA') { // R5-5 (HELD): a DATA flag names the notice rows and the parcel it covers
+    if (e.class !== undefined && e.class !== 'DATA') v.push(`${clause}: class must be DATA when present (R5-5 ruled: an explained data flag, M-337)`);
+    if (e.class === 'DATA') { // R5-5 (M-337): a DATA flag names the notice rows and the parcel it covers
       if (!Array.isArray(e.rows) || !e.rows.length || !e.rows.every((x) => /^A\d+\/\d+[A-Z]+#\d+$/.test(x))) v.push(`${clause}: a DATA entry needs rows: ["<file number>#<variance n>", ...]`);
       if (typeof e.parcel_id !== 'string' || !e.parcel_id) v.push(`${clause}: a DATA entry needs the parcel_id it covers`);
     }
@@ -38,7 +38,7 @@ export function explainRow(vocab, clauseNorm, target, ours, city, scope = null) 
   const e = ((vocab || {}).explained_differences || {})[clauseNorm];
   if (!isMap(e) || clauseNorm === '$comment') return null;
   if (e.target !== target || Number(e.ours) !== Number(ours) || Number(e.city) !== Number(city)) return null;
-  // R5-5 (HELD): a DATA entry applies only to its named notice rows on its parcel; the same figures anywhere else stay a DIFFER
+  // R5-5 (M-337): a DATA entry applies only to its named notice rows on its parcel; the same figures anywhere else stay a DIFFER
   if (e.class === 'DATA' && !(scope && Array.isArray(e.rows) && e.rows.includes(`${scope.notice}#${scope.n}`) && String(scope.parcelId) === e.parcel_id)) return null;
   return e;
 }

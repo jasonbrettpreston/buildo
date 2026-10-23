@@ -46,9 +46,13 @@ Row-level attribution (scored per commit, rows keyed notice#n + clause):
 - NAMED-1c (c77b1791 -> 4611d881): 0 of 698 and 0 of 496 rows move, as the lane reported.
 - abs73 (merge-base 0287394d -> c748b78f, and efc662e5 -> merged tree): 0 rows move on either set; totals identical.
 - p3plan, rulings-rec3: 0 rows move.
-- The same 10 rows move on both sets, all from excr5c's pre-NAMED-1c commits (0287394d..c77b1791: EXC-R5 rounds, R5-5 Johnston DATA flag M-308; not bisected to one commit): A0255/26NY #1-#4 and
-  A0263/21NY #1-#6 leave NO ANSWER (6 MATCH, 3 DATA, 1 OWED). On the merged tree origin's C-3 by-law-changed rule (CHAT-63.C3) then moves
-  2 of them, A0263/21NY #4 (10.20.40.10(6)) and #6 (10.20.40.20), from MATCH to BY-LAW CHANGED; A0573/24NY #6 was already BY-LAW CHANGED on origin.
+- The same 10 rows move on both sets, all from excr5c's pre-NAMED-1c commits (0287394d..c77b1791). verify-46 bisected them:
+  **77c05a26** (EXC-R5 round, keys exception 559 in shard w2-s31; the 559 literal correction is one of the six EVE.R5-4 approved) takes all 10
+  out of NO ANSWER (`exception_not_authored:900.3.10(559)`): 6 MATCH, 1 OWED, 3 DIFFER. **82575521** (R5-5, EVE.R5-5 = M-337) moves those 3 DIFFER
+  (A0255/26NY #2, A0263/21NY #1, #2) to DATA. So A0263/21NY #4 and #6 became scorable through 77c05a26 / EVE.R5-4, not R5-5 (verify-46 N1; the
+  63cd7c10 message says "R5-5 rows", which is wrong in the same way, and a commit message cannot be changed). On the merged tree origin's C-3 rule
+  (CHAT-63.C3) then moves A0263/21NY #4 (10.20.40.10(6)) and #6 (10.20.40.20) from MATCH to BY-LAW CHANGED. A0573/24NY #6 was already BY-LAW
+  CHANGED on origin.
 - Floors (`--floors floors-172.json`): FLOORS OK. Measured overall accuracy 93.0 (floor 92), answered 75.6 (floor 71); 900.3.10 accuracy 86.4
   (floor 86), answered 88.0 (floor 81); 9 article floors + pooled pass.
 
@@ -79,3 +83,38 @@ Row-level attribution (scored per commit, rows keyed notice#n + clause):
   not run in this no-DB lane. Run it when the DB and the full-suite slot are free, before the full `npm run test` / `test:db` of this integrate.
   This is the same regeneration integrate-25 did in 895e326d.
 - Full `npm run test` and `npm run test:db`: not run (fleet-night slot).
+
+## Follow-up after verify-46 (PASS-WITH-NOTES, ~/Buildo-scratch/verify-46.md)
+
+| sha | what |
+|---|---|
+| `16def4b3` | merge 5, `wf1/rulings-rec3` @ `18aa1f7c` (CHAT-91 B-1..B-5 dated notes). 375f928f (CHAT-92) is **not** taken; it is being re-ruled. Conflict: bylaw-layer2-input.json, regenerated with --write (`bylaw-rule-map.json` is a Layer 1 input, table_version f2ffa064). The amendment index was regenerated. The CoA pins were re-pinned because the inputs moved. 0 of 698 and 0 of 496 rows move. |
+| `a735a534` | merge 6, `wf1/excr5c` @ `8eaa1872` (CHAT-91 B-2: 9 units; B-3: 6 rows). Conflicts: the layer2 input and the report-field inventory .json/.md, both regenerated (table_version bade4a18). The amendment index was regenerated. CoA was re-scored: **0 of 698 and 0 of 496 rows move**, and both sets give CHECK OK on totals. They were re-pinned because the inputs moved. Floors OK. |
+| (next) | verify-46 notes N1, N2, N5, N6 (this section) |
+
+- **N1** (attribution): the coa-round.logic.test.ts:139-141 comment and the CoA section above now name 77c05a26 / EVE.R5-4 as the commit and ruling that made the rows scorable.
+- **N2** (stale ruling text): the source of truth is `scripts/seeds/bylaw/vocab.json` `explained_differences` 10.5.40.50(2) and 900.3.10(559)(A), at :1151-1152 and :1163-1164. Both entries now have `ruling` M-337, and their `reading` text drops "NEW RULING NEEDED (HELD on R5-5 … M-308 …)". It now cites `2026-10-22-page-eve#EVE.R5-5` (M-337) and M-355 (`2026-10-23-batch-b#CHAT-81.CITE-1`: "the 63 Johnston Ave DATA flag rests on M-337 (not M-308)"). Two related text changes:
+  - The scorer prefix at coa-scorecard.mjs:404 changes from "R5-5 HELD" to "R5-5".
+  - In the coa-explained.mjs:24-25 and :41 messages and comments, "HELD" becomes M-337.
+  
+  The locks coa-scorecard-r5-5 and coa-explained-r5-5 now expect `explained_by` = M-337 and the ruled wording. They were red first: 2 of 4 failed (~/Buildo-scratch/int26/red-n2.txt). The regenerated outputs are the layer2 input (table_version 5f45ea01), the report-field inventory and the amendment index. The CoA pins were re-pinned. 0 rows move, the totals are unchanged and the floors are OK.
+- **N3/N4**: cosmetic, so they were left alone. The pins are now re-taken at each merge, so each merge commit passes --check on its own pins.
+- **N5 (verify-45b carry-overs)**: these are still open.
+  - src/tests/fixtures/l2-option4-columns.json is a hand copy of the **uncommitted** ~/Buildo-wt-l2slices2/migrations/282_resolve_bylaws.sql (sha256 1bf4b72072e4016e575e7f0195111941c0d5801e102ead239228986ac4cc078c). Replace it with a read of the committed 282, or diff it against 282, at the integrate that lands 282.
+  - The P3-7 draft ~/Buildo-wt-p3plan/migrations/287_compute_maxbld_scenarios.sql is **uncommitted**. Its header (:4) says "The logic variables are migration 283", and it should say 283 + 286. Fix that when the draft becomes step commit 1.
+- **N6 (finding for the seed owner; seed data not changed here)**: scripts/seeds/bylaw/amendments.json:3303-3312 gives 474-2023 `enacted_on` 2023-05-15 but `in_force_on` 2023-05-12, three days before it was enacted (basis "S0.5 spike §2.6", verified 2026-10-07). The C-3 result does not change, because either date is after the 2021-11-04 hearing of A0263/21NY. The seed owner should re-verify the date against the primary source.
+
+## Hook warnings investigated (non-blocking; pre-existing at 9fd4ca4f; no merged branch causes them)
+
+- **"ACCURATE: FAIL" / "UNDERSTANDABLE: FAIL"** are printed by `generate-bylaw-provisions.mjs --check` (scripts/analysis/bylaw/validate.mjs:169-176 `wordVerdicts`). A word reads PASS only when every one of its pre-commit gates is `pass`. `--validate` at the tip shows that every gate of both words passes except one each, and those are `not_run`, not failing:
+  - ACCURATE: G-CODE (validate.mjs:439-444) has arm `linkage_i` not_run, because "0 authored rows carry code_refs".
+  - UNDERSTANDABLE: G-READ (validate.mjs:415-421) has arm `explanations` declared `unbuilt` (validate.mjs:158), so "not built, 1686 input(s) unchecked".
+  - The base 9fd4ca4f prints the same two FAIL lines. Only the complete/pending counts differ (1335 there, 1612 at the tip, because of the keying that landed).
+  - These are unbuilt gates, not defects in the merged work, and building them is out of scope.
+- **"gates FAIL (report-only): RF-2, RF-5, RF-6, RF-8, RF-10"** are printed by `scripts/analysis/report-fields.mjs` (:611 "gates (closed answers, report-only)"; :615, :631, :632, :653, :674). The rows in docs/reference/maxbld-report-field-inventory.md:19-27 are byte-identical to the base's:
+  - RF-2 and RF-6: S-072 `lots[].newNearbyCoaRuling` is unproduced and has no kind.
+  - RF-5: `parcel.areas.realized_fsi_p90` reads its own prior value.
+  - RF-8: the S-001 field_whitelist misses three area columns.
+  - RF-10: S-001 area fields reach the banned STAND_SET input `parcels.bylaw_standard_setback_m`.
+  
+  All five are pre-existing report-only surface findings (Spec 69 M-69 inventory) and are not touched by any merged branch.

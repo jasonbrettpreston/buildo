@@ -1,5 +1,5 @@
-// SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-308 (explained data flag), M-287 (vocab.explained_differences); docs/specs/01-pipeline/68_mcbylaw_standard.md §7.5
-// HELD on R5-5 (recommendation awaiting the operator): a DATA-class explained difference is scoped to named notice rows and a parcel id,
+// SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-337 (63 Johnston Ave scoped DATA flag; M-355: not M-308), M-287 (vocab.explained_differences); docs/specs/01-pipeline/68_mcbylaw_standard.md §7.5
+// R5-5 ruled (2026-10-22-page-eve#EVE.R5-5, M-337; basis per M-355): a DATA-class explained difference is scoped to named notice rows and a parcel id,
 // so the same clause and figures on any other notice stay DIFFER (a real error is never hidden).
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -11,7 +11,7 @@ const ROOT = process.cwd();
 const VOCAB = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/vocab.json'), 'utf8'));
 const E = (): Promise<Json> => import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw-validation/coa-explained.mjs')).href);
 
-describe('R5-5 (HELD): the Johnston DATA flag is scoped to its notices and parcel', () => {
+describe('R5-5 (M-337): the Johnston DATA flag is scoped to its notices and parcel', () => {
   it('the named rows are explained', async () => {
     const { explainRow } = await E();
     const ok = (notice: string, n: number, clause: string, target: string) =>
@@ -31,7 +31,7 @@ describe('R5-5 (HELD): the Johnston DATA flag is scoped to its notices and parce
     const { checkExplainedDifferences } = await E();
     const bad = JSON.parse(JSON.stringify(VOCAB));
     delete bad.explained_differences['900.3.10(559)(A)'].rows;
-    const ids = new Set(['M-308', 'M-287']);
+    const ids = new Set(['M-337', 'M-287']);
     expect(checkExplainedDifferences(VOCAB, ids)).toEqual([]);
     expect(checkExplainedDifferences(bad, ids).join(' ')).toMatch(/rows/);
   });
