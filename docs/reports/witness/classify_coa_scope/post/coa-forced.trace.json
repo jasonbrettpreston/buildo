@@ -3,14 +3,14 @@
   "step": "scripts/classify-coa-scope.js",
   "chain": "coa",
   "source_fingerprint": "651a9c335faaf0a72afe20a3afe8d91fb3970b820779807d2d28caea8b42149d",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 26,
     "distinct": 17,
     "utility": 14,
-    "tracer_self_ms": 1.927,
-    "wall_ms": 303
+    "tracer_self_ms": 1.77,
+    "wall_ms": 477
   },
   "statements": [
     {
@@ -67,7 +67,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -237,7 +237,7 @@
   ],
   "transactions": [
     {
-      "client": "44012:3",
+      "client": "61495:3",
       "write_fingerprints": [
         "535b831b843e144f"
       ]

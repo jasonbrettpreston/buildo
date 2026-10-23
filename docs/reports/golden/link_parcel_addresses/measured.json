@@ -3,47 +3,47 @@
     "rows": {
       "value": 526603,
       "cost_ms": 12,
-      "at": "2026-10-21T13:21:02.721Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-      "run_id": "3724",
+      "at": "2026-10-22T23:59:20.155Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+      "run_id": "4135",
       "chain": null,
-      "sample_n": 21
+      "sample_n": 25
     },
     "multi_parcel_address_count": {
       "value": 1166,
-      "cost_ms": 43,
-      "at": "2026-10-21T13:21:02.721Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-      "run_id": "3724",
+      "cost_ms": 47,
+      "at": "2026-10-22T23:59:20.155Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+      "run_id": "4135",
       "chain": null,
-      "sample_n": 21
+      "sample_n": 25
     },
     "dup_count": {
       "value": 0,
       "cost_ms": 48,
-      "at": "2026-10-21T13:21:02.721Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-      "run_id": "3724",
+      "at": "2026-10-22T23:59:20.155Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+      "run_id": "4135",
       "chain": null,
-      "sample_n": 21
+      "sample_n": 25
     },
     "fanout_max_noncondo": {
       "value": 155,
-      "cost_ms": 610,
-      "at": "2026-10-21T13:21:02.721Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-      "run_id": "3724",
+      "cost_ms": 568,
+      "at": "2026-10-22T23:59:20.155Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+      "run_id": "4135",
       "chain": null,
-      "sample_n": 21
+      "sample_n": 25
     },
     "land_entrance_count": {
       "value": 747,
-      "cost_ms": 12,
-      "at": "2026-10-21T13:21:02.721Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-      "run_id": "3724",
+      "cost_ms": 11,
+      "at": "2026-10-22T23:59:20.155Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+      "run_id": "4135",
       "chain": null,
-      "sample_n": 21
+      "sample_n": 25
     }
   }
 }

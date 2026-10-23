@@ -2,29 +2,17 @@
   "trace_version": 1,
   "step": "scripts/load-coa-notices.js",
   "chain": "coa_notices",
-  "source_fingerprint": "ef11487b727566d08300153d76a8522b7915d8ac50284fac7b395349525ff542",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "source_fingerprint": "244dd9966f45a2c806d276eeef08aabd3e1941da54f3baa55fdcdb051ee53a4e",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
-    "calls": 16,
-    "distinct": 14,
-    "utility": 5,
-    "tracer_self_ms": 0.851,
-    "wall_ms": 267
+    "calls": 41,
+    "distinct": 24,
+    "utility": 11,
+    "tracer_self_ms": 38.431,
+    "wall_ms": 319309
   },
   "statements": [
-    {
-      "fingerprint": "0aad717626cf92b5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "coa_notice_variances": []
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
     {
       "fingerprint": "107ed6b6df1704a1",
       "kind": "read",
@@ -65,10 +53,186 @@
       "error": null
     },
     {
+      "fingerprint": "21fa2e43cda219b6",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "402ceeb8a2eeeca3",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 129,
+      "reads": {
+        "coa_plan_facts": [
+          "corner_lot",
+          "established_grade",
+          "existing_coverage_m2",
+          "existing_gfa_m2",
+          "existing_height_m",
+          "existing_storeys",
+          "front_landscaped_pct",
+          "front_soft_pct",
+          "lot_area_m2",
+          "lot_depth_m",
+          "lot_frontage_m",
+          "proposed_bedrooms",
+          "proposed_coverage_m2",
+          "proposed_coverage_pct",
+          "proposed_depth_m",
+          "proposed_fsi",
+          "proposed_gfa_basement_m2",
+          "proposed_gfa_first_m2",
+          "proposed_gfa_second_m2",
+          "proposed_gfa_third_m2",
+          "proposed_gfa_total_m2",
+          "proposed_height_m",
+          "proposed_length_m",
+          "proposed_main_wall_height_m",
+          "proposed_setback_front_m",
+          "proposed_setback_rear_m",
+          "proposed_setback_side_flank_m",
+          "proposed_setback_side_left_m",
+          "proposed_setback_side_right_m",
+          "proposed_storeys",
+          "proposed_units",
+          "rear_soft_pct",
+          "source_batch",
+          "source_sha256"
+        ]
+      },
+      "writes": {
+        "coa_plan_facts": [
+          "application_number",
+          "corner_lot",
+          "established_grade",
+          "existing_coverage_m2",
+          "existing_gfa_m2",
+          "existing_height_m",
+          "existing_storeys",
+          "front_landscaped_pct",
+          "front_soft_pct",
+          "lot_area_m2",
+          "lot_depth_m",
+          "lot_frontage_m",
+          "proposed_bedrooms",
+          "proposed_coverage_m2",
+          "proposed_coverage_pct",
+          "proposed_depth_m",
+          "proposed_fsi",
+          "proposed_gfa_basement_m2",
+          "proposed_gfa_first_m2",
+          "proposed_gfa_second_m2",
+          "proposed_gfa_third_m2",
+          "proposed_gfa_total_m2",
+          "proposed_height_m",
+          "proposed_length_m",
+          "proposed_main_wall_height_m",
+          "proposed_setback_front_m",
+          "proposed_setback_rear_m",
+          "proposed_setback_side_flank_m",
+          "proposed_setback_side_left_m",
+          "proposed_setback_side_right_m",
+          "proposed_storeys",
+          "proposed_units",
+          "rear_soft_pct",
+          "source_batch",
+          "source_sha256"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "42d0a18705ff42a2",
+      "kind": "read",
+      "count": 5,
+      "rowCount": 10098,
+      "reads": {
+        "coa_notice_variances": [
+          "variance_key"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "44c04e85b23078d0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "decision"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "decision",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "471fb24dc552cf90",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "498f00c9586a03ae",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "hearing_date"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "hearing_date",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -79,8 +243,8 @@
     {
       "fingerprint": "5eebf4a9ff6d7782",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -115,7 +279,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 1,
+      "count": 2,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -159,7 +323,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 1,
+      "count": 2,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -167,13 +331,59 @@
       "error": null
     },
     {
+      "fingerprint": "b17b1d9c05d0749e",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b8a78071c7561d75",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 2,
+      "count": 6,
       "rowCount": 0,
       "reads": {},
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "dc2155bbf3d02d8f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
       "error": null
     },
     {
@@ -185,16 +395,256 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "fbcf6b28efdc36a4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_notice_variances": [
+          "application_number",
+          "item_ordinal",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fe80d914e95ad33a",
+      "kind": "write",
+      "count": 5,
+      "rowCount": 691,
+      "reads": {
+        "coa_notice_variances": [
+          "application_number",
+          "bound",
+          "citation_kind",
+          "cited_bylaw",
+          "decision",
+          "decision_mailed_on",
+          "decision_source",
+          "doc_type",
+          "exception_ref",
+          "hearing_date",
+          "item_ordinal",
+          "parse_confidence",
+          "parse_status",
+          "proposed_unit",
+          "proposed_value",
+          "qualified",
+          "regulation_id_as_cited",
+          "required_unit",
+          "required_value",
+          "source_batch",
+          "source_family",
+          "source_page",
+          "source_sha256",
+          "target",
+          "target_status",
+          "zoning_as_stated"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "application_number",
+          "bound",
+          "citation_kind",
+          "cited_bylaw",
+          "decision",
+          "decision_mailed_on",
+          "decision_source",
+          "doc_type",
+          "exception_ref",
+          "extractor_version",
+          "hearing_date",
+          "item_ordinal",
+          "parse_confidence",
+          "parse_status",
+          "proposed_unit",
+          "proposed_value",
+          "qualified",
+          "regulation_id_as_cited",
+          "required_unit",
+          "required_value",
+          "retired_at",
+          "source_batch",
+          "source_family",
+          "source_page",
+          "source_sha256",
+          "target",
+          "target_status",
+          "variance_key",
+          "vocab_version",
+          "zoning_as_stated"
+        ]
+      },
+      "excluded": [],
+      "error": null
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "client": "30925:3",
+      "write_fingerprints": [
+        "21fa2e43cda219b6",
+        "402ceeb8a2eeeca3",
+        "b17b1d9c05d0749e",
+        "fe80d914e95ad33a"
+      ]
+    }
+  ],
   "autocommit_writes": [],
   "touched": {
     "reads": {
-      "coa_applications": [],
-      "coa_notice_variances": []
+      "coa_applications": [
+        "application_number",
+        "decision",
+        "hearing_date"
+      ],
+      "coa_notice_variances": [
+        "application_number",
+        "bound",
+        "citation_kind",
+        "cited_bylaw",
+        "decision",
+        "decision_mailed_on",
+        "decision_source",
+        "doc_type",
+        "exception_ref",
+        "extractor_version",
+        "hearing_date",
+        "item_ordinal",
+        "parse_confidence",
+        "parse_status",
+        "proposed_unit",
+        "proposed_value",
+        "qualified",
+        "regulation_id_as_cited",
+        "required_unit",
+        "required_value",
+        "retired_at",
+        "source_batch",
+        "source_family",
+        "source_page",
+        "source_sha256",
+        "target",
+        "target_status",
+        "variance_key",
+        "vocab_version",
+        "zoning_as_stated"
+      ],
+      "coa_plan_facts": [
+        "application_number",
+        "corner_lot",
+        "established_grade",
+        "existing_coverage_m2",
+        "existing_gfa_m2",
+        "existing_height_m",
+        "existing_storeys",
+        "front_landscaped_pct",
+        "front_soft_pct",
+        "lot_area_m2",
+        "lot_depth_m",
+        "lot_frontage_m",
+        "proposed_bedrooms",
+        "proposed_coverage_m2",
+        "proposed_coverage_pct",
+        "proposed_depth_m",
+        "proposed_fsi",
+        "proposed_gfa_basement_m2",
+        "proposed_gfa_first_m2",
+        "proposed_gfa_second_m2",
+        "proposed_gfa_third_m2",
+        "proposed_gfa_total_m2",
+        "proposed_height_m",
+        "proposed_length_m",
+        "proposed_main_wall_height_m",
+        "proposed_setback_front_m",
+        "proposed_setback_rear_m",
+        "proposed_setback_side_flank_m",
+        "proposed_setback_side_left_m",
+        "proposed_setback_side_right_m",
+        "proposed_storeys",
+        "proposed_units",
+        "rear_soft_pct",
+        "source_batch",
+        "source_sha256"
+      ]
     },
-    "writes": {}
+    "writes": {
+      "coa_notice_variances": [
+        "application_number",
+        "bound",
+        "citation_kind",
+        "cited_bylaw",
+        "decision",
+        "decision_mailed_on",
+        "decision_source",
+        "doc_type",
+        "exception_ref",
+        "extractor_version",
+        "hearing_date",
+        "item_ordinal",
+        "parse_confidence",
+        "parse_status",
+        "proposed_unit",
+        "proposed_value",
+        "qualified",
+        "regulation_id_as_cited",
+        "required_unit",
+        "required_value",
+        "retired_at",
+        "source_batch",
+        "source_family",
+        "source_page",
+        "source_sha256",
+        "target",
+        "target_status",
+        "variance_key",
+        "vocab_version",
+        "zoning_as_stated"
+      ],
+      "coa_plan_facts": [
+        "application_number",
+        "corner_lot",
+        "established_grade",
+        "existing_coverage_m2",
+        "existing_gfa_m2",
+        "existing_height_m",
+        "existing_storeys",
+        "front_landscaped_pct",
+        "front_soft_pct",
+        "lot_area_m2",
+        "lot_depth_m",
+        "lot_frontage_m",
+        "proposed_bedrooms",
+        "proposed_coverage_m2",
+        "proposed_coverage_pct",
+        "proposed_depth_m",
+        "proposed_fsi",
+        "proposed_gfa_basement_m2",
+        "proposed_gfa_first_m2",
+        "proposed_gfa_second_m2",
+        "proposed_gfa_third_m2",
+        "proposed_gfa_total_m2",
+        "proposed_height_m",
+        "proposed_length_m",
+        "proposed_main_wall_height_m",
+        "proposed_setback_front_m",
+        "proposed_setback_rear_m",
+        "proposed_setback_side_flank_m",
+        "proposed_setback_side_left_m",
+        "proposed_setback_side_right_m",
+        "proposed_storeys",
+        "proposed_units",
+        "rear_soft_pct",
+        "source_batch",
+        "source_sha256"
+      ]
+    }
   },
   "errors": []
 }

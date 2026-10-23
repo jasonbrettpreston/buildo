@@ -279,7 +279,7 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE, because the generated batch
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 577 definition row(s) checked, 134 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 578 definition row(s) checked, 134 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |
@@ -293,7 +293,7 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE, because the generated batch
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
 | 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (5 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
-| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 25 take effect at cutover, 12 not read; admin badges current |
+| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 5 take effect at cutover, 19 not read; admin badges current |
 | 54 | (registry) | PASS | SWAP-ORDER (R-EQ): every swapped pending step's declared upstreams are converted or swapped (R-EQ) |
 
 ### Captures (item iv)
@@ -303,15 +303,25 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE, because the generated batch
 - compare ran: false · diffs found: 0 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: --fast: vitest spawn skipped
+- 3066/3072 passed (suite success=false)
+- harvested: 118 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
+- skipped (declared but not run): 0
+- failing (6):
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
+  - src/tests/steps/load_ravines/violations.test.ts > the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold B library growth > acquire.js — the ONE home for the content-hash gate (Fold B item 3) and the acquisition seam (A-2)
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — present in the converted step (acquire.js + descriptor): tier-2 content-hash gate — contentHashDecision over the streamed hash-through-to-disk (never Buffer.from(await res.arrayBuffer()), never readFileSync), tier2.skip re-emits the prior meta via buildSkipReEmitMeta
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — reversion is detectable: the patch applied to the current subject makes the lock fire (arrayBuffer()/readFileSync)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-red | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | not-run | §5.5 describe not evaluated — vitest did not run (--fast); shape scan is NOT a substitute for the §5.5 suite |
-| 3 | Tunables externalized | enforced-green | G-4: no descriptor · P4/LW-D10/R-A not evaluated (vitest did not run) |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: no descriptor · P4/LW-D10/R-A not scoped to this step |
 | 4 | Compute rule declared | enforced-green | G-2: 3 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-red |  |
 | 6 | Omission fails (20 categories) | enforced-red |  |
@@ -320,9 +330,9 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE, because the generated batch
 | 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-red |  |
 | 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no descriptor — G-3 completeness half stays open |
-| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): no descriptor · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): no descriptor · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-red | this run of step:validate IS the mechanism |
 | P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=0B notes=0B checks=0 rows records_meta=(no capture) |
 
-**Enforced-green: 4/14** · not-run: 1 · vacuous: 1
+**Enforced-green: 5/14** · not-run: 0 · vacuous: 1
 

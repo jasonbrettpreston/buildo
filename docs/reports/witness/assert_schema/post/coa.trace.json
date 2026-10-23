@@ -3,21 +3,21 @@
   "step": "scripts/quality/assert-schema.js",
   "chain": "coa",
   "source_fingerprint": "4649639c3ff944cffde753e46305fea2bcfdd62ee1cd891b75101dc854af74d8",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 9,
     "distinct": 9,
     "utility": 4,
-    "tracer_self_ms": 0.832,
-    "wall_ms": 1041
+    "tracer_self_ms": 0.867,
+    "wall_ms": 1093
   },
   "statements": [
     {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [

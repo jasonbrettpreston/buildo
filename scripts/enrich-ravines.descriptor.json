@@ -529,10 +529,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:26:27.121Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 593,
-        "sample_n": 17,
+        "at": "2026-10-23T00:43:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 505,
+        "sample_n": 21,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -558,10 +558,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:26:27.121Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 594,
-        "sample_n": 17,
+        "at": "2026-10-23T00:43:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 506,
+        "sample_n": 21,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -587,10 +587,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:26:27.121Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 598,
-        "sample_n": 17,
+        "at": "2026-10-23T00:43:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 509,
+        "sample_n": 21,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -620,10 +620,10 @@
       "retighten_when": "never — this is a PHYSICAL bound (Toronto's ravine network + parcel fabric), not a convergence target, mirroring geocode_permits' Toronto-bbox plausibility row. If the observed magnitude ever exceeds this ceiling the response is to find the parcel/ravine geometry that produced it, not to widen the bound. Measured live: the most-negative distance is -1470.30 m (magnitude 1470.30), against a declared ceiling of 2000 m, so the bound is currently vacuous and declared anyway — its value is in the CLASS of failure it catches (a mis-signed distance, or a unit/CRS error), not in a value expected to move.",
       "last_measured": {
         "value": 1470.30059243,
-        "at": "2026-10-21T13:26:27.121Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 639,
-        "sample_n": 17,
+        "at": "2026-10-23T00:43:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 558,
+        "sample_n": 21,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -651,10 +651,10 @@
       "retighten_when": "never — the mirror-image ceiling bound of ravine_distance_m_min_observed, same physical-bound reasoning. Measured live maximum 2739.69 m against a declared ceiling of 20000 m.",
       "last_measured": {
         "value": 2739.69388118,
-        "at": "2026-10-21T13:26:27.121Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 647,
-        "sample_n": 17,
+        "at": "2026-10-23T00:43:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 557,
+        "sample_n": 21,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -681,10 +681,10 @@
       "retighten_when": "never — this is an INFO visibility row, not a pass/fail gate. A converged fleet reads exactly 1; a value > 1 is not itself a defect (it is the expected transient state mid-recompute, immediately after a load_ravines version bump and before every stale parcel has been re-touched) but it is otherwise invisible anywhere else in this step's audit table, which is the whole point of F-RC1c.",
       "last_measured": {
         "value": 1,
-        "at": "2026-10-21T13:26:27.121Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 666,
-        "sample_n": 17,
+        "at": "2026-10-23T00:43:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 572,
+        "sample_n": 21,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -712,10 +712,10 @@
       "retighten_when": "never — a PHYSICAL bound, the mirror-image concern of ravine_distance_m_max_observed/_min_magnitude_observed (both value_max ceilings, which a degrees-not-metres collapse would satisfy trivially — every distance shrinking toward ~0.03 stays comfortably under either ceiling and neither would ever fire). This row catches EXACTLY that regression class: the observed MAXIMUM distance must clear a floor (100 m) far below the measured live value (2,739.69 m) but far above what a degrees-scale collapse would produce, so a unit/CRS regression that silently shrinks every distance is caught by the ONE direction the two ceiling checks cannot see.",
       "last_measured": {
         "value": 2739.69388118,
-        "at": "2026-10-21T13:26:27.121Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 653,
-        "sample_n": 17,
+        "at": "2026-10-23T00:43:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 561,
+        "sample_n": 21,
         "source_run": {
           "run_id": null,
           "chain": "sources",

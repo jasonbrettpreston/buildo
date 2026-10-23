@@ -2,48 +2,48 @@
   "entries": {
     "centreline_corner_or_through_has_frontage": {
       "value": 0,
-      "cost_ms": 677,
-      "at": "2026-10-21T13:36:56.200Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 424,
+      "at": "2026-10-23T01:10:39.308Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "centreline_corner_share_min_pct": {
       "value": 11.2582194608638,
-      "cost_ms": 636,
-      "at": "2026-10-21T13:36:56.200Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 596,
+      "at": "2026-10-23T01:10:39.308Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "centreline_corner_share_max_pct": {
       "value": 11.2582194608638,
-      "cost_ms": 633,
-      "at": "2026-10-21T13:36:56.200Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 594,
+      "at": "2026-10-23T01:10:39.308Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "centreline_through_share_min_pct": {
       "value": 1.00536719465899,
-      "cost_ms": 643,
-      "at": "2026-10-21T13:36:56.200Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 584,
+      "at": "2026-10-23T01:10:39.308Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "centreline_through_share_max_pct": {
       "value": 1.00536719465899,
-      "cost_ms": 638,
-      "at": "2026-10-21T13:36:56.200Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 584,
+      "at": "2026-10-23T01:10:39.308Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     }
   }
 }

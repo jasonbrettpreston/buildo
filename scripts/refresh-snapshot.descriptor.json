@@ -1041,7 +1041,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T15:28:21.855Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 1, "sample_n": 61, "source_run": { "run_id": "3847", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T00:05:40.302Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 1, "sample_n": 71, "source_run": { "run_id": "4155", "chain": null, "event": "golden_capture" } },
       "why": {
         "text": "INV-1 (plan's own Validator surface section). Mirrors the live UNIQUE(snapshot_date) DB constraint as a declared, observable check rather than an implicit reliance on the constraint alone (Rule 1, nothing hidden). Measured clean on all 5 commit-5 golden captures.",
         "liveness": {

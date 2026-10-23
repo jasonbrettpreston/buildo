@@ -893,10 +893,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:04:47.202Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 63,
-        "sample_n": 43,
+        "at": "2026-10-22T23:49:44.421Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 93,
+        "sample_n": 51,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -922,10 +922,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 535039,
-        "at": "2026-10-21T14:04:47.202Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 32,
-        "sample_n": 43,
+        "at": "2026-10-22T23:49:44.421Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 41,
+        "sample_n": 51,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -951,10 +951,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 494958,
-        "at": "2026-10-21T14:04:47.202Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 47,
-        "sample_n": 43,
+        "at": "2026-10-22T23:49:44.421Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 62,
+        "sample_n": 51,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -980,10 +980,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 496535,
-        "at": "2026-10-21T14:04:47.202Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 172,
-        "sample_n": 43,
+        "at": "2026-10-22T23:49:44.421Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 250,
+        "sample_n": 51,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1009,10 +1009,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 20.14,
-        "at": "2026-10-21T14:04:47.202Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 21,
-        "sample_n": 43,
+        "at": "2026-10-22T23:49:44.421Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 12,
+        "sample_n": 51,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1041,10 +1041,10 @@
       "retighten_when": "zero rows (this check is expected to already read 0 — a non-zero count is a genuine finding, not a standing residual)",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:04:47.202Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 1000,
-        "sample_n": 43,
+        "at": "2026-10-22T23:49:44.421Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 1570,
+        "sample_n": 51,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1071,10 +1071,10 @@
       "retighten_when": "zero rows — closes when the overlap-only fallback narrowing (Spec 56 §3 new subsection, slice 1) retires the disjoint nearest matches that fabricate a borrowed primary; the surviving genuinely-overlapping nearest links resolve to a real apportioned share instead.",
       "last_measured": {
         "value": 106288,
-        "at": "2026-10-21T14:04:47.202Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 51,
-        "sample_n": 43,
+        "at": "2026-10-22T23:49:44.421Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 62,
+        "sample_n": 51,
         "source_run": {
           "run_id": null,
           "chain": "sources",

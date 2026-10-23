@@ -3,15 +3,15 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/geocode-permits.js",
   "chain": "sources",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 18,
+    "records_total": 0,
     "records_new": 0,
-    "records_updated": 18,
+    "records_updated": 0,
     "records_meta": {
-      "duration_ms": 1431,
+      "duration_ms": 599,
       "code_version": "none",
       "permits_total": 254082,
       "total_geocoded": 231930,
@@ -27,7 +27,7 @@
       "terminal": "geocoded_with_warnings",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 1,
@@ -58,7 +58,7 @@
           },
           {
             "metric": "newly_geocoded",
-            "value": 18,
+            "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -98,7 +98,7 @@
           },
           {
             "metric": "backlog_remaining",
-            "value": 14474,
+            "value": 14492,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -138,31 +138,31 @@
           },
           {
             "metric": "sys_lat_xor_lng_null_count_duration_ms",
-            "value": 30,
+            "value": 38,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_geocoded_at_set_but_no_geo_id_count_duration_ms",
-            "value": 65,
+            "value": 92,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_coords_outside_toronto_bbox_count_duration_ms",
-            "value": 35,
+            "value": 39,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 11.6,
+            "value": 0,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 1552,
+            "value": 753,
             "threshold": null,
             "status": "INFO"
           }
@@ -201,10 +201,10 @@
   "parse_errors": [],
   "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=268 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode completed in 1201ms\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup completed in 122ms\"}\nPIPELINE_SUMMARY:{\"records_total\":18,\"records_new\":0,\"records_updated\":18,\"records_meta\":{\"duration_ms\":1431,\"code_version\":\"none\",\"permits_total\":254082,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"zombies_cleaned\":0,\"address_points_loaded\":525371,\"config\":{\"geocode_permits_coverage_warn_pct\":95,\"geocode_permits_heartbeat_minutes\":5,\"geocode_permits_lock_timeout_ms\":1800000},\"terminal\":\"geocoded_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"geocode_coverage: 91.28155477365574\"],\"audit_table\":{\"phase\":4,\"name\":\"Permit Geocoding\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"total_permits\",\"value\":254082,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"already_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"newly_geocoded\",\"value\":18,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"total_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geocode_coverage\",\"value\":91.28155477365574,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_geo_id\",\"value\":7660,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"zombies_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"backlog_remaining\",\"value\":14474,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"lat_xor_lng_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geocoded_at_set_but_no_geo_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"coords_outside_toronto_bbox_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"address_points\":525699},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_lat_xor_lng_null_count_duration_ms\",\"value\":30,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geocoded_at_set_but_no_geo_id_count_duration_ms\",\"value\":65,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coords_outside_toronto_bbox_count_duration_ms\",\"value\":35,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":11.6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1552,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"geo_id\",\"latitude\",\"longitude\",\"geocoded_at\"],\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"retired_at\"]},\"writes\":{\"permits\":[\"latitude\",\"longitude\",\"geocoded_at\"]}}\n\n[geocode_permits] completed in 1.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=275 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode completed in 310ms\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup completed in 169ms\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":599,\"code_version\":\"none\",\"permits_total\":254082,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"zombies_cleaned\":0,\"address_points_loaded\":525371,\"config\":{\"geocode_permits_coverage_warn_pct\":95,\"geocode_permits_heartbeat_minutes\":5,\"geocode_permits_lock_timeout_ms\":1800000},\"terminal\":\"geocoded_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"geocode_coverage: 91.28155477365574\"],\"audit_table\":{\"phase\":4,\"name\":\"Permit Geocoding\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"total_permits\",\"value\":254082,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"already_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"newly_geocoded\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"total_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geocode_coverage\",\"value\":91.28155477365574,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_geo_id\",\"value\":7660,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"zombies_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"backlog_remaining\",\"value\":14492,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"lat_xor_lng_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geocoded_at_set_but_no_geo_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"coords_outside_toronto_bbox_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"address_points\":525699},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_lat_xor_lng_null_count_duration_ms\",\"value\":38,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geocoded_at_set_but_no_geo_id_count_duration_ms\",\"value\":92,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coords_outside_toronto_bbox_count_duration_ms\",\"value\":39,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":753,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"geo_id\",\"latitude\",\"longitude\",\"geocoded_at\"],\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"retired_at\"]},\"writes\":{\"permits\":[\"latitude\",\"longitude\",\"geocoded_at\"]}}\n\n[geocode_permits] completed in 0.8s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3691,
+  "pipeline_runs_max_id_before": 4179,
   "table_state": [
     {
       "table": "permits",
@@ -227,7 +227,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "permits": 191
+    "permits": 208
   },
   "table_specs": {
     "permits": {
@@ -335,7 +335,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 18
+              "value": 0
             },
             {
               "metric": "total_geocoded",
@@ -375,7 +375,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 14474
+              "value": 14492
             },
             {
               "metric": "lat_xor_lng_null_count",
@@ -434,8 +434,8 @@
         "zombies_cleaned": 0
       },
       "records_new": 0,
-      "records_total": 18,
-      "records_updated": 18
+      "records_total": 0,
+      "records_updated": 0
     },
     "summary_count": 1,
     "meta": [
@@ -468,7 +468,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=268 (floor 18)\",\"tag\":\"[geocode_permits]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=275 (floor 18)\",\"tag\":\"[geocode_permits]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase geocode starting (shared txn, timeout disabled (declared \\\"none\\\"))\",\"tag\":\"[geocode_permits]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase geocode completed in <DUR>\",\"tag\":\"[geocode_permits]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase zombie_cleanup starting (shared txn, timeout disabled (declared \\\"none\\\"))\",\"tag\":\"[geocode_permits]\"}",
@@ -549,7 +549,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [permits]",
-    "txid_before_run2": 474156,
+    "txid_before_run2": 572511,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -569,21 +569,21 @@
         "inputs_nonempty": {
           "address_points": 525699
         },
-        "sys_lat_xor_lng_null_count_duration_ms": 33,
-        "sys_geocoded_at_set_but_no_geo_id_count_duration_ms": 70,
-        "sys_coords_outside_toronto_bbox_count_duration_ms": 29,
+        "sys_lat_xor_lng_null_count_duration_ms": 39,
+        "sys_geocoded_at_set_but_no_geo_id_count_duration_ms": 92,
+        "sys_coords_outside_toronto_bbox_count_duration_ms": 39,
         "sys_velocity_rows_sec": 0,
-        "sys_duration_ms": 603
+        "sys_duration_ms": 695
       }
     }
   },
   "capture_ledger_rows": [
     {
-      "id": 3692,
+      "id": 4180,
       "recorded_by": "harness"
     },
     {
-      "id": 3693,
+      "id": 4181,
       "recorded_by": "harness"
     }
   ],
@@ -594,5 +594,5 @@
     "scripts/geocode-permits.notes.json",
     "scripts/lib/compute/geocode-permits.js"
   ],
-  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
 }

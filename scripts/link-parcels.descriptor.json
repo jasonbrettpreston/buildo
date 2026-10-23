@@ -792,10 +792,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:25:23.164Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 28,
-        "sample_n": 41,
+        "at": "2026-10-23T00:04:49.870Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 24,
+        "sample_n": 49,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -821,10 +821,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:25:23.164Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 35,
-        "sample_n": 41,
+        "at": "2026-10-23T00:04:49.870Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 38,
+        "sample_n": 49,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -850,10 +850,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:25:23.164Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 16,
-        "sample_n": 41,
+        "at": "2026-10-23T00:04:49.870Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 20,
+        "sample_n": 49,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -882,10 +882,10 @@
       "retighten_when": "zero rows (this check is expected to already read 0 -- a non-zero count is a genuine finding, not a standing residual)",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:25:23.164Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 31,
-        "sample_n": 41,
+        "at": "2026-10-23T00:04:49.870Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 30,
+        "sample_n": 49,
         "source_run": {
           "run_id": null,
           "chain": "sources",

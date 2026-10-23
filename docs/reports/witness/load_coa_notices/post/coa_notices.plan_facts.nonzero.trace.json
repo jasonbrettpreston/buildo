@@ -1,0 +1,650 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-coa-notices.js",
+  "chain": "coa_notices",
+  "source_fingerprint": "244dd9966f45a2c806d276eeef08aabd3e1941da54f3baa55fdcdb051ee53a4e",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
+  "header": {
+    "processes": 1,
+    "calls": 41,
+    "distinct": 24,
+    "utility": 11,
+    "tracer_self_ms": 37.656,
+    "wall_ms": 305960
+  },
+  "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "coa_notices:load_coa_notices",
+            "load_coa_notices",
+            "load-coa-notices"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "21dd0ae63c63676e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "21fa2e43cda219b6",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "402ceeb8a2eeeca3",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 50,
+      "reads": {
+        "coa_plan_facts": [
+          "corner_lot",
+          "established_grade",
+          "existing_coverage_m2",
+          "existing_gfa_m2",
+          "existing_height_m",
+          "existing_storeys",
+          "front_landscaped_pct",
+          "front_soft_pct",
+          "lot_area_m2",
+          "lot_depth_m",
+          "lot_frontage_m",
+          "proposed_bedrooms",
+          "proposed_coverage_m2",
+          "proposed_coverage_pct",
+          "proposed_depth_m",
+          "proposed_fsi",
+          "proposed_gfa_basement_m2",
+          "proposed_gfa_first_m2",
+          "proposed_gfa_second_m2",
+          "proposed_gfa_third_m2",
+          "proposed_gfa_total_m2",
+          "proposed_height_m",
+          "proposed_length_m",
+          "proposed_main_wall_height_m",
+          "proposed_setback_front_m",
+          "proposed_setback_rear_m",
+          "proposed_setback_side_flank_m",
+          "proposed_setback_side_left_m",
+          "proposed_setback_side_right_m",
+          "proposed_storeys",
+          "proposed_units",
+          "rear_soft_pct",
+          "source_batch",
+          "source_sha256"
+        ]
+      },
+      "writes": {
+        "coa_plan_facts": [
+          "application_number",
+          "corner_lot",
+          "established_grade",
+          "existing_coverage_m2",
+          "existing_gfa_m2",
+          "existing_height_m",
+          "existing_storeys",
+          "front_landscaped_pct",
+          "front_soft_pct",
+          "lot_area_m2",
+          "lot_depth_m",
+          "lot_frontage_m",
+          "proposed_bedrooms",
+          "proposed_coverage_m2",
+          "proposed_coverage_pct",
+          "proposed_depth_m",
+          "proposed_fsi",
+          "proposed_gfa_basement_m2",
+          "proposed_gfa_first_m2",
+          "proposed_gfa_second_m2",
+          "proposed_gfa_third_m2",
+          "proposed_gfa_total_m2",
+          "proposed_height_m",
+          "proposed_length_m",
+          "proposed_main_wall_height_m",
+          "proposed_setback_front_m",
+          "proposed_setback_rear_m",
+          "proposed_setback_side_flank_m",
+          "proposed_setback_side_left_m",
+          "proposed_setback_side_right_m",
+          "proposed_storeys",
+          "proposed_units",
+          "rear_soft_pct",
+          "source_batch",
+          "source_sha256"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "42d0a18705ff42a2",
+      "kind": "read",
+      "count": 5,
+      "rowCount": 10789,
+      "reads": {
+        "coa_notice_variances": [
+          "variance_key"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "44c04e85b23078d0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "decision"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "decision",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "471fb24dc552cf90",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "498f00c9586a03ae",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "hearing_date"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "hearing_date",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 846,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 50,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b17b1d9c05d0749e",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b8a78071c7561d75",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 6,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "dc2155bbf3d02d8f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fbcf6b28efdc36a4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_notice_variances": [
+          "application_number",
+          "item_ordinal",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fe80d914e95ad33a",
+      "kind": "write",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {
+        "coa_notice_variances": [
+          "application_number",
+          "bound",
+          "citation_kind",
+          "cited_bylaw",
+          "decision",
+          "decision_mailed_on",
+          "decision_source",
+          "doc_type",
+          "exception_ref",
+          "hearing_date",
+          "item_ordinal",
+          "parse_confidence",
+          "parse_status",
+          "proposed_unit",
+          "proposed_value",
+          "qualified",
+          "regulation_id_as_cited",
+          "required_unit",
+          "required_value",
+          "source_batch",
+          "source_family",
+          "source_page",
+          "source_sha256",
+          "target",
+          "target_status",
+          "zoning_as_stated"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "application_number",
+          "bound",
+          "citation_kind",
+          "cited_bylaw",
+          "decision",
+          "decision_mailed_on",
+          "decision_source",
+          "doc_type",
+          "exception_ref",
+          "extractor_version",
+          "hearing_date",
+          "item_ordinal",
+          "parse_confidence",
+          "parse_status",
+          "proposed_unit",
+          "proposed_value",
+          "qualified",
+          "regulation_id_as_cited",
+          "required_unit",
+          "required_value",
+          "retired_at",
+          "source_batch",
+          "source_family",
+          "source_page",
+          "source_sha256",
+          "target",
+          "target_status",
+          "variance_key",
+          "vocab_version",
+          "zoning_as_stated"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "35356:3",
+      "write_fingerprints": [
+        "21fa2e43cda219b6",
+        "402ceeb8a2eeeca3",
+        "b17b1d9c05d0749e",
+        "fe80d914e95ad33a"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "coa_applications": [
+        "application_number",
+        "decision",
+        "hearing_date"
+      ],
+      "coa_notice_variances": [
+        "application_number",
+        "bound",
+        "citation_kind",
+        "cited_bylaw",
+        "decision",
+        "decision_mailed_on",
+        "decision_source",
+        "doc_type",
+        "exception_ref",
+        "extractor_version",
+        "hearing_date",
+        "item_ordinal",
+        "parse_confidence",
+        "parse_status",
+        "proposed_unit",
+        "proposed_value",
+        "qualified",
+        "regulation_id_as_cited",
+        "required_unit",
+        "required_value",
+        "retired_at",
+        "source_batch",
+        "source_family",
+        "source_page",
+        "source_sha256",
+        "target",
+        "target_status",
+        "variance_key",
+        "vocab_version",
+        "zoning_as_stated"
+      ],
+      "coa_plan_facts": [
+        "application_number",
+        "corner_lot",
+        "established_grade",
+        "existing_coverage_m2",
+        "existing_gfa_m2",
+        "existing_height_m",
+        "existing_storeys",
+        "front_landscaped_pct",
+        "front_soft_pct",
+        "lot_area_m2",
+        "lot_depth_m",
+        "lot_frontage_m",
+        "proposed_bedrooms",
+        "proposed_coverage_m2",
+        "proposed_coverage_pct",
+        "proposed_depth_m",
+        "proposed_fsi",
+        "proposed_gfa_basement_m2",
+        "proposed_gfa_first_m2",
+        "proposed_gfa_second_m2",
+        "proposed_gfa_third_m2",
+        "proposed_gfa_total_m2",
+        "proposed_height_m",
+        "proposed_length_m",
+        "proposed_main_wall_height_m",
+        "proposed_setback_front_m",
+        "proposed_setback_rear_m",
+        "proposed_setback_side_flank_m",
+        "proposed_setback_side_left_m",
+        "proposed_setback_side_right_m",
+        "proposed_storeys",
+        "proposed_units",
+        "rear_soft_pct",
+        "source_batch",
+        "source_sha256"
+      ]
+    },
+    "writes": {
+      "coa_notice_variances": [
+        "application_number",
+        "bound",
+        "citation_kind",
+        "cited_bylaw",
+        "decision",
+        "decision_mailed_on",
+        "decision_source",
+        "doc_type",
+        "exception_ref",
+        "extractor_version",
+        "hearing_date",
+        "item_ordinal",
+        "parse_confidence",
+        "parse_status",
+        "proposed_unit",
+        "proposed_value",
+        "qualified",
+        "regulation_id_as_cited",
+        "required_unit",
+        "required_value",
+        "retired_at",
+        "source_batch",
+        "source_family",
+        "source_page",
+        "source_sha256",
+        "target",
+        "target_status",
+        "variance_key",
+        "vocab_version",
+        "zoning_as_stated"
+      ],
+      "coa_plan_facts": [
+        "application_number",
+        "corner_lot",
+        "established_grade",
+        "existing_coverage_m2",
+        "existing_gfa_m2",
+        "existing_height_m",
+        "existing_storeys",
+        "front_landscaped_pct",
+        "front_soft_pct",
+        "lot_area_m2",
+        "lot_depth_m",
+        "lot_frontage_m",
+        "proposed_bedrooms",
+        "proposed_coverage_m2",
+        "proposed_coverage_pct",
+        "proposed_depth_m",
+        "proposed_fsi",
+        "proposed_gfa_basement_m2",
+        "proposed_gfa_first_m2",
+        "proposed_gfa_second_m2",
+        "proposed_gfa_third_m2",
+        "proposed_gfa_total_m2",
+        "proposed_height_m",
+        "proposed_length_m",
+        "proposed_main_wall_height_m",
+        "proposed_setback_front_m",
+        "proposed_setback_rear_m",
+        "proposed_setback_side_flank_m",
+        "proposed_setback_side_left_m",
+        "proposed_setback_side_right_m",
+        "proposed_storeys",
+        "proposed_units",
+        "rear_soft_pct",
+        "source_batch",
+        "source_sha256"
+      ]
+    }
+  },
+  "errors": []
+}

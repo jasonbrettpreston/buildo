@@ -3,14 +3,14 @@
   "step": "scripts/classify-coa-trades.js",
   "chain": "coa",
   "source_fingerprint": "9989ffbcae3ae7b3156f46ee315602e22195c6cbccf982ad19cdcbcfb7ea2c90",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 31,
     "distinct": 23,
     "utility": 7,
-    "tracer_self_ms": 5.2,
-    "wall_ms": 656
+    "tracer_self_ms": 5.097,
+    "wall_ms": 770
   },
   "statements": [
     {
@@ -76,7 +76,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -357,7 +357,7 @@
   ],
   "transactions": [
     {
-      "client": "45066:2",
+      "client": "62480:2",
       "write_fingerprints": [
         "3db69aca1e0f93fc",
         "64f967896dc1b1c9",

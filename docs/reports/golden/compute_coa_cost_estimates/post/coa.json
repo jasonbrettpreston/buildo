@@ -3,14 +3,24 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/compute-coa-cost-estimates.js",
   "chain": "coa",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": null,
+    "records_total": 2329,
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
+      "coa_with_cost": 1260,
+      "coa_without_cost": 1069,
+      "coa_with_fallback": 0,
+      "null_cost_reasons_no_parcel": 145,
+      "null_cost_reasons_no_scope_tags": 0,
+      "null_cost_reasons_no_active_trades": 155,
+      "null_cost_reasons_no_matching_rate": 769,
+      "null_cost_reasons_additive_no_parcel": 145,
+      "null_cost_reasons_additive_no_scope_tags": 0,
+      "null_cost_reasons_additive_no_active_trades": 181,
       "cost_distribution_p25": null,
       "cost_distribution_p50": null,
       "cost_distribution_p75": null,
@@ -18,9 +28,19 @@
       "coa_corpus_cost_coverage_pct": 62.01518450944618,
       "coa_corpus_priced": 21074,
       "coa_corpus_total": 33982,
-      "cost_with_fallback_pct": null,
-      "archetype_coverage_pct": null,
-      "tier_none_count": null,
+      "cost_with_fallback_pct": 0,
+      "archetype_t1": 0,
+      "archetype_t2": 1252,
+      "archetype_t3": 0,
+      "archetype_additive": 8,
+      "archetype_coverage_pct": 60.143198090692124,
+      "tier_none_count": 74,
+      "archetype_fit_blocked": 74,
+      "archetype_zero_total": 0,
+      "archetype_tradeless": 0,
+      "archetype_unpriceable_t4": 199,
+      "t4_nonresidential": 234,
+      "t4_processed": 995,
       "gate": {
         "reason": "upstream_activity_since_last_run",
         "gated_skip": false,
@@ -43,8 +63,8 @@
           "link_coa_to_parcels",
           "link-coa-to-parcels"
         ],
-        "own_last_completed_at": "2026-07-17T20:41:14.581Z",
-        "upstream_non_completed": 54,
+        "own_last_completed_at": "2026-10-22T17:33:57.129Z",
+        "upstream_non_completed": 57,
         "upstream_completed_with_changes": 0,
         "upstream_stale_running": 0
       },
@@ -71,47 +91,49 @@
         "archetype_t3_total_cap": 15000000,
         "cost_escalation_index": 100
       },
-      "terminal": "materialized_incremental",
+      "terminal": "materialized_with_warnings",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+      "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "pool_errors": 0,
-      "checks_passed": "all",
       "checks_failed": 0,
-      "checks_warned": 0,
+      "checks_warned": 2,
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "cost_estimate_coverage_pct: 54.1004723057106",
+        "archetype_map_nofit_residential_pct: 26.82577565632458"
+      ],
       "audit_table": {
         "phase": 8,
         "name": "Compute CoA Cost Estimates",
-        "verdict": "PASS",
+        "verdict": "WARN",
         "rows": [
           {
             "metric": "cost_estimate_coverage_pct",
-            "value": "N/A",
+            "value": 54.1004723057106,
             "threshold": "pct >= 65",
-            "status": "INFO",
+            "status": "WARN",
             "source": "check",
             "warn_threshold": "pct >= 5",
             "observed": "after_write"
           },
           {
             "metric": "archetype_map_nofit_residential_pct",
-            "value": "N/A",
+            "value": 26.82577565632458,
             "threshold": "pct <= 25",
-            "status": "INFO",
+            "status": "WARN",
             "source": "check",
             "observed": "after_write"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 0,
+            "value": 1939.22,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 145,
+            "value": 1201,
             "threshold": null,
             "status": "INFO"
           }
@@ -237,17 +259,17 @@
     }
   ],
   "parse_errors": [],
-  "verdict": "PASS",
+  "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_coa_cost_estimates]\",\"msg\":\"[compute_coa_cost_estimates] target: compute_coa_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=272 (floor 207)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_coa_cost_estimates]\",\"msg\":\"materialize gate: RUN (upstream_activity_since_last_run)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"cost_distribution_p25\":null,\"cost_distribution_p50\":null,\"cost_distribution_p75\":null,\"cost_distribution_p25_p50_p75\":\"N/A\",\"coa_corpus_cost_coverage_pct\":62.01518450944618,\"coa_corpus_priced\":21074,\"coa_corpus_total\":33982,\"cost_with_fallback_pct\":null,\"archetype_coverage_pct\":null,\"tier_none_count\":null,\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"coa:compute_coa_cost_estimates\",\"compute_coa_cost_estimates\",\"compute-coa-cost-estimates\"],\"upstream_slugs\":[\"coa:classify_coa_scope\",\"classify_coa_scope\",\"classify-coa-scope\",\"coa:classify_coa_trades\",\"classify_coa_trades\",\"classify-coa-trades\",\"coa:enrich_coa_zoning\",\"enrich_coa_zoning\",\"enrich-coa-zoning\",\"coa:link_coa_to_parcels\",\"link_coa_to_parcels\",\"link-coa-to-parcels\"],\"own_last_completed_at\":\"2026-07-17T20:41:14.581Z\",\"upstream_non_completed\":54,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":0},\"config\":{\"compute_coa_cost_estimates_batch_size\":1000,\"compute_coa_cost_estimates_distribution_p25\":0.25,\"compute_coa_cost_estimates_distribution_p50\":0.5,\"compute_coa_cost_estimates_distribution_p75\":0.75,\"compute_coa_cost_estimates_coverage_threshold_pct\":65,\"compute_coa_cost_estimates_coverage_fail_pct\":5,\"archetype_cost_enabled\":1,\"liar_gate_threshold\":0.25,\"compute_coa_cost_estimates_model_range_pct\":0.2,\"compute_coa_cost_estimates_fallback_range_pct\":0.4,\"urban_coverage_ratio\":0.7,\"suburban_coverage_ratio\":0.4,\"archetype_nofit_residential_warn_pct\":25,\"archetype_t1_fsi_min\":0.05,\"archetype_t1_fsi_max\":8,\"archetype_t1_total_cap\":25000000,\"archetype_t2_reno_line_cap\":10000000,\"archetype_t2_build_line_cap\":20000000,\"archetype_t2_build_line_min\":200000,\"archetype_t3_total_cap\":15000000,\"cost_escalation_index\":100},\"terminal\":\"materialized_incremental\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":8,\"name\":\"Compute CoA Cost Estimates\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"cost_estimate_coverage_pct\",\"value\":\"N/A\",\"threshold\":\"pct >= 65\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 5\",\"observed\":\"after_write\"},{\"metric\":\"archetype_map_nofit_residential_pct\",\"value\":\"N/A\",\"threshold\":\"pct <= 25\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":145,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"scope_tags\",\"structure_type\",\"project_type\",\"neighbourhood_id\",\"trade_classified_at\",\"cost_classified_at\",\"neighbourhood_cost_premium\",\"cost_fb_total\",\"cost_coa_total\",\"cost_addition_total\",\"cost_gut_total\",\"cost_basement_underpin_per_sqm\",\"cost_basement_per_sqm\",\"cost_garage_total\",\"cost_laneway_suite_total\",\"cost_garden_suite_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_solar_total\",\"opt_aor_gfa_sqm\",\"opt_coa_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"max_garage_gfa_sqm\",\"max_laneway_suite_gfa_sqm\",\"max_garden_suite_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_buildable_footprint_sqm\"],\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"confidence\"],\"parcels\":[\"id\",\"lot_size_sqm\",\"frontage_m\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"footprint_area_sqm\",\"estimated_stories\"],\"neighbourhoods\":[\"id\",\"avg_household_income\",\"tenure_renter_pct\"],\"lead_trades\":[\"lead_id\",\"trade_id\",\"is_active\"],\"trades\":[\"id\",\"slug\"],\"trade_sqft_rates\":[\"trade_slug\",\"base_rate_sqft\",\"structure_complexity_factor\"],\"scope_intensity_matrix\":[\"permit_type\",\"structure_type\",\"gfa_allocation_percentage\"],\"archetype_cost_rates\":[\"archetype\",\"cost_per_sqm\",\"cost_adjustment_factor\",\"escalation_index_base\"]},\"writes\":{\"cost_estimates\":[\"lead_id\",\"permit_num\",\"revision_num\",\"estimated_cost\",\"cost_source\",\"cost_tier\",\"cost_range_low\",\"cost_range_high\",\"premium_factor\",\"complexity_score\",\"model_version\",\"is_geometric_override\",\"modeled_gfa_sqm\",\"effective_area_sqm\",\"trade_contract_values\",\"computed_at\"],\"coa_applications\":[\"id\",\"modeled_gfa_sqm\",\"estimated_cost\",\"cost_source\",\"cost_classified_at\"]}}\n\n[compute_coa_cost_estimates] completed in 0.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_coa_cost_estimates]\",\"msg\":\"[compute_coa_cost_estimates] target: compute_coa_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=275 (floor 207)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_coa_cost_estimates]\",\"msg\":\"materialize gate: RUN (upstream_activity_since_last_run)\"}\nPIPELINE_SUMMARY:{\"records_total\":2329,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"coa_with_cost\":1260,\"coa_without_cost\":1069,\"coa_with_fallback\":0,\"null_cost_reasons_no_parcel\":145,\"null_cost_reasons_no_scope_tags\":0,\"null_cost_reasons_no_active_trades\":155,\"null_cost_reasons_no_matching_rate\":769,\"null_cost_reasons_additive_no_parcel\":145,\"null_cost_reasons_additive_no_scope_tags\":0,\"null_cost_reasons_additive_no_active_trades\":181,\"cost_distribution_p25\":null,\"cost_distribution_p50\":null,\"cost_distribution_p75\":null,\"cost_distribution_p25_p50_p75\":\"N/A\",\"coa_corpus_cost_coverage_pct\":62.01518450944618,\"coa_corpus_priced\":21074,\"coa_corpus_total\":33982,\"cost_with_fallback_pct\":0,\"archetype_t1\":0,\"archetype_t2\":1252,\"archetype_t3\":0,\"archetype_additive\":8,\"archetype_coverage_pct\":60.143198090692124,\"tier_none_count\":74,\"archetype_fit_blocked\":74,\"archetype_zero_total\":0,\"archetype_tradeless\":0,\"archetype_unpriceable_t4\":199,\"t4_nonresidential\":234,\"t4_processed\":995,\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"coa:compute_coa_cost_estimates\",\"compute_coa_cost_estimates\",\"compute-coa-cost-estimates\"],\"upstream_slugs\":[\"coa:classify_coa_scope\",\"classify_coa_scope\",\"classify-coa-scope\",\"coa:classify_coa_trades\",\"classify_coa_trades\",\"classify-coa-trades\",\"coa:enrich_coa_zoning\",\"enrich_coa_zoning\",\"enrich-coa-zoning\",\"coa:link_coa_to_parcels\",\"link_coa_to_parcels\",\"link-coa-to-parcels\"],\"own_last_completed_at\":\"2026-10-22T17:33:57.129Z\",\"upstream_non_completed\":57,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":0},\"config\":{\"compute_coa_cost_estimates_batch_size\":1000,\"compute_coa_cost_estimates_distribution_p25\":0.25,\"compute_coa_cost_estimates_distribution_p50\":0.5,\"compute_coa_cost_estimates_distribution_p75\":0.75,\"compute_coa_cost_estimates_coverage_threshold_pct\":65,\"compute_coa_cost_estimates_coverage_fail_pct\":5,\"archetype_cost_enabled\":1,\"liar_gate_threshold\":0.25,\"compute_coa_cost_estimates_model_range_pct\":0.2,\"compute_coa_cost_estimates_fallback_range_pct\":0.4,\"urban_coverage_ratio\":0.7,\"suburban_coverage_ratio\":0.4,\"archetype_nofit_residential_warn_pct\":25,\"archetype_t1_fsi_min\":0.05,\"archetype_t1_fsi_max\":8,\"archetype_t1_total_cap\":25000000,\"archetype_t2_reno_line_cap\":10000000,\"archetype_t2_build_line_cap\":20000000,\"archetype_t2_build_line_min\":200000,\"archetype_t3_total_cap\":15000000,\"cost_escalation_index\":100},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"cost_estimate_coverage_pct: 54.1004723057106\",\"archetype_map_nofit_residential_pct: 26.82577565632458\"],\"audit_table\":{\"phase\":8,\"name\":\"Compute CoA Cost Estimates\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"cost_estimate_coverage_pct\",\"value\":54.1004723057106,\"threshold\":\"pct >= 65\",\"status\":\"WARN\",\"source\":\"check\",\"warn_threshold\":\"pct >= 5\",\"observed\":\"after_write\"},{\"metric\":\"archetype_map_nofit_residential_pct\",\"value\":26.82577565632458,\"threshold\":\"pct <= 25\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1939.22,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1201,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"scope_tags\",\"structure_type\",\"project_type\",\"neighbourhood_id\",\"trade_classified_at\",\"cost_classified_at\",\"neighbourhood_cost_premium\",\"cost_fb_total\",\"cost_coa_total\",\"cost_addition_total\",\"cost_gut_total\",\"cost_basement_underpin_per_sqm\",\"cost_basement_per_sqm\",\"cost_garage_total\",\"cost_laneway_suite_total\",\"cost_garden_suite_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_solar_total\",\"opt_aor_gfa_sqm\",\"opt_coa_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"max_garage_gfa_sqm\",\"max_laneway_suite_gfa_sqm\",\"max_garden_suite_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_buildable_footprint_sqm\"],\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"confidence\"],\"parcels\":[\"id\",\"lot_size_sqm\",\"frontage_m\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"footprint_area_sqm\",\"estimated_stories\"],\"neighbourhoods\":[\"id\",\"avg_household_income\",\"tenure_renter_pct\"],\"lead_trades\":[\"lead_id\",\"trade_id\",\"is_active\"],\"trades\":[\"id\",\"slug\"],\"trade_sqft_rates\":[\"trade_slug\",\"base_rate_sqft\",\"structure_complexity_factor\"],\"scope_intensity_matrix\":[\"permit_type\",\"structure_type\",\"gfa_allocation_percentage\"],\"archetype_cost_rates\":[\"archetype\",\"cost_per_sqm\",\"cost_adjustment_factor\",\"escalation_index_base\"]},\"writes\":{\"cost_estimates\":[\"lead_id\",\"permit_num\",\"revision_num\",\"estimated_cost\",\"cost_source\",\"cost_tier\",\"cost_range_low\",\"cost_range_high\",\"premium_factor\",\"complexity_score\",\"model_version\",\"is_geometric_override\",\"modeled_gfa_sqm\",\"effective_area_sqm\",\"trade_contract_values\",\"computed_at\"],\"coa_applications\":[\"id\",\"modeled_gfa_sqm\",\"estimated_cost\",\"cost_source\",\"cost_classified_at\"]}}\n\n[compute_coa_cost_estimates] completed in 1.2s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3897,
+  "pipeline_runs_max_id_before": 4299,
   "table_state": [
     {
       "table": "coa_applications",
       "row_count": 33982,
-      "content_hash": "95cd1e909282fb81fd9e2b9910beb177",
+      "content_hash": "c157b9fea730e50254ac267cc7881864",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -264,7 +286,7 @@
       "table": "cost_estimates",
       "row_count": 274986,
       "ceiling_bypassed": "projected",
-      "content_hash": "bd4d8ebc8e951ae3cffeee87b06c9717",
+      "content_hash": "3f4ffc430e3f9d731d9c13d0af6806d2",
       "order_by": "explicit",
       "order_columns": [
         "lead_id"
@@ -293,7 +315,7 @@
   "table_row_ceiling": 100000,
   "table_timing": {
     "coa_applications": 26,
-    "cost_estimates": 393
+    "cost_estimates": 411
   },
   "table_specs": {
     "coa_applications": {
@@ -355,7 +377,15 @@
     "exit_code": 0,
     "summary": {
       "records_meta": {
-        "archetype_coverage_pct": null,
+        "archetype_additive": 8,
+        "archetype_coverage_pct": 60.143198090692124,
+        "archetype_fit_blocked": 74,
+        "archetype_t1": 0,
+        "archetype_t2": 1252,
+        "archetype_t3": 0,
+        "archetype_tradeless": 0,
+        "archetype_unpriceable_t4": 199,
+        "archetype_zero_total": 0,
         "audit_table": {
           "name": "Compute CoA Cost Estimates",
           "phase": 8,
@@ -364,28 +394,30 @@
               "metric": "cost_estimate_coverage_pct",
               "observed": "after_write",
               "source": "check",
-              "status": "INFO",
+              "status": "WARN",
               "threshold": "pct >= 65",
-              "value": "N/A",
+              "value": 54.1004723057106,
               "warn_threshold": "pct >= 5"
             },
             {
               "metric": "archetype_map_nofit_residential_pct",
               "observed": "after_write",
               "source": "check",
-              "status": "INFO",
+              "status": "WARN",
               "threshold": "pct <= 25",
-              "value": "N/A"
+              "value": 26.82577565632458
             }
           ],
-          "verdict": "PASS"
+          "verdict": "WARN"
         },
         "checks_failed": 0,
-        "checks_passed": "all",
-        "checks_warned": 0,
+        "checks_warned": 2,
         "coa_corpus_cost_coverage_pct": 62.01518450944618,
         "coa_corpus_priced": 21074,
         "coa_corpus_total": 33982,
+        "coa_with_cost": 1260,
+        "coa_with_fallback": 0,
+        "coa_without_cost": 1069,
         "config": {
           "archetype_cost_enabled": 1,
           "archetype_nofit_residential_warn_pct": 25,
@@ -413,7 +445,7 @@
         "cost_distribution_p25_p50_p75": "N/A",
         "cost_distribution_p50": null,
         "cost_distribution_p75": null,
-        "cost_with_fallback_pct": null,
+        "cost_with_fallback_pct": 0,
         "errors": [],
         "gate": {
           "gated_skip": false,
@@ -425,7 +457,7 @@
           ],
           "reason": "upstream_activity_since_last_run",
           "upstream_completed_with_changes": 0,
-          "upstream_non_completed": 54,
+          "upstream_non_completed": 57,
           "upstream_slugs": [
             "coa:classify_coa_scope",
             "classify_coa_scope",
@@ -443,13 +475,25 @@
           "upstream_stale_running": 0
         },
         "ledger_row": "chain_owned",
+        "null_cost_reasons_additive_no_active_trades": 181,
+        "null_cost_reasons_additive_no_parcel": 145,
+        "null_cost_reasons_additive_no_scope_tags": 0,
+        "null_cost_reasons_no_active_trades": 155,
+        "null_cost_reasons_no_matching_rate": 769,
+        "null_cost_reasons_no_parcel": 145,
+        "null_cost_reasons_no_scope_tags": 0,
         "pool_errors": 0,
-        "terminal": "materialized_incremental",
-        "tier_none_count": null,
-        "warnings": []
+        "t4_nonresidential": 234,
+        "t4_processed": 995,
+        "terminal": "materialized_with_warnings",
+        "tier_none_count": 74,
+        "warnings": [
+          "cost_estimate_coverage_pct: 54.1004723057106",
+          "archetype_map_nofit_residential_pct: 26.82577565632458"
+        ]
       },
       "records_new": 0,
-      "records_total": null,
+      "records_total": 2329,
       "records_updated": 0
     },
     "summary_count": 1,
@@ -572,7 +616,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[compute_coa_cost_estimates] target: compute_coa_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=272 (floor 207)\",\"tag\":\"[compute_coa_cost_estimates]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[compute_coa_cost_estimates] target: compute_coa_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=275 (floor 207)\",\"tag\":\"[compute_coa_cost_estimates]\"}",
       "{\"level\":\"INFO\",\"msg\":\"materialize gate: RUN (upstream_activity_since_last_run)\",\"tag\":\"[compute_coa_cost_estimates]\"}",
       "[compute_coa_cost_estimates] completed in <DUR>"
     ],
@@ -585,7 +629,7 @@
           "cost_source",
           "cost_classified_at"
         ],
-        "content_hash": "95cd1e909282fb81fd9e2b9910beb177",
+        "content_hash": "c157b9fea730e50254ac267cc7881864",
         "order_by": "explicit",
         "order_columns": [
           "id"
@@ -613,7 +657,7 @@
           "trade_contract_values",
           "computed_at"
         ],
-        "content_hash": "bd4d8ebc8e951ae3cffeee87b06c9717",
+        "content_hash": "3f4ffc430e3f9d731d9c13d0af6806d2",
         "order_by": "explicit",
         "order_columns": [
           "lead_id"
@@ -643,7 +687,7 @@
       }
     ],
     "reason": "zero writes on 2 table(s) [coa_applications,cost_estimates]",
-    "txid_before_run2": 528972,
+    "txid_before_run2": 607418,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -652,17 +696,17 @@
         "cost_estimate_coverage_pct": "N/A",
         "archetype_map_nofit_residential_pct": "N/A",
         "sys_velocity_rows_sec": 0,
-        "sys_duration_ms": 118
+        "sys_duration_ms": 132
       }
     }
   },
   "capture_ledger_rows": [
     {
-      "id": 3898,
+      "id": 4300,
       "recorded_by": "harness"
     },
     {
-      "id": 3899,
+      "id": 4301,
       "recorded_by": "harness"
     }
   ],
@@ -673,5 +717,5 @@
     "scripts/compute-coa-cost-estimates.notes.json",
     "scripts/lib/compute/compute-coa-cost-estimates.js"
   ],
-  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
 }

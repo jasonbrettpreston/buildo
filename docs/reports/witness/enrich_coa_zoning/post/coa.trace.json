@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-coa-zoning.js",
   "chain": "coa",
-  "source_fingerprint": "5d48f6e5c4a74eaeac457aab43a4ad2cd1818f958bfe4c80330846f08ee64327",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "source_fingerprint": "08bdf28034c7a38c2fcfdff6db6e5afb27a8c0fe573578d746dea07544067ab0",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 44,
     "distinct": 38,
     "utility": 10,
-    "tracer_self_ms": 2.306,
-    "wall_ms": 19102
+    "tracer_self_ms": 10.03,
+    "wall_ms": 21868
   },
   "statements": [
     {
@@ -144,7 +144,7 @@
       "fingerprint": "21cc118d1ba6f2ba",
       "kind": "read",
       "count": 1,
-      "rowCount": 31769,
+      "rowCount": 31775,
       "reads": {
         "coa_applications": [
           "id",
@@ -284,7 +284,7 @@
       "fingerprint": "4ab3f90bf8066fbe",
       "kind": "write",
       "count": 1,
-      "rowCount": 111,
+      "rowCount": 144,
       "reads": {
         "coa_applications": [
           "abuts_laneway",
@@ -652,7 +652,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -725,7 +725,7 @@
       "fingerprint": "6ec9cc7e0043600a",
       "kind": "read",
       "count": 1,
-      "rowCount": 2206,
+      "rowCount": 2207,
       "reads": {
         "coa_applications": [
           "abuts_laneway",
@@ -1094,7 +1094,7 @@
   ],
   "transactions": [
     {
-      "client": "87031:3",
+      "client": "48060:3",
       "write_fingerprints": [
         "4ab3f90bf8066fbe",
         "4f41a8b47bc53c2f"

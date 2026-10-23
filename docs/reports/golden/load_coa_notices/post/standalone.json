@@ -3,136 +3,142 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-coa-notices.js",
   "chain": "none",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": null,
-    "records_new": null,
-    "records_updated": null,
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
     "records_meta": {
       "coa_notices_load": {
         "spec_version": "1.0",
-        "content_hash": "9a98bc74f6c1cf8b56ad88f72ca4318939e5d3ca844bccf0794c71afca9af480",
+        "content_hash": "4b751f12d908b927ba47f3e970852182e79d0b2e92cbdec19ce53ad86a4c89cc",
         "source_dataset_version": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b",
-        "skipped_reason": "unchanged_content_hash",
-        "docs_total": 78,
+        "skipped_reason": null,
+        "docs_total": 81,
         "docs_by_status": {
-          "parsed": 70,
-          "timeout": 0,
-          "excluded": 8,
-          "too_large": 0,
-          "http_error": 0,
+          "parsed": 73,
           "sha_mismatch": 0,
+          "http_error": 0,
+          "timeout": 0,
+          "too_large": 0,
           "extract_error": 0,
           "no_text_layer": 0,
-          "no_notices_found": 0
+          "no_notices_found": 0,
+          "excluded": 8
         },
         "docs_excluded": 8,
         "bytes_fetched": 301402843,
         "notices_by_status": {
-          "not_minor_variance": 144,
+          "variance_section_parsed": 1884,
           "no_variance_section": 27,
-          "duplicate_superseded": 1,
-          "variance_section_parsed": 1714,
+          "not_minor_variance": 144,
           "signature_page_duplicate": 0,
+          "duplicate_superseded": 1,
           "duplicate_same_date_conflict": 0
         },
-        "items_total": 10103,
+        "items_total": 10794,
         "items_by_parse_status": {
-          "pair": 8610,
-          "no_split": 83,
-          "side_ambiguous": 0,
-          "no_proposed_value": 116,
-          "no_required_value": 792,
-          "target_unit_mismatch": 9,
+          "pair": 9115,
+          "no_required_value": 847,
+          "no_proposed_value": 128,
           "unit_family_mismatch": 49,
-          "multi_value_ambiguous": 444
+          "multi_value_ambiguous": 558,
+          "side_ambiguous": 0,
+          "no_split": 83,
+          "target_unit_mismatch": 14
         },
         "items_by_target_status": {
-          "mapped": 6202,
-          "unmapped": 3809,
-          "ambiguous": 92
+          "mapped": 6591,
+          "ambiguous": 108,
+          "unmapped": 4095
         },
         "items_by_confidence": {
-          "low": 1484,
-          "high": 2868,
-          "medium": 5751
+          "high": 3152,
+          "medium": 5972,
+          "low": 1670
         },
+        "items_by_family": {
+          "toronto_ca_decision_pdf": 10103,
+          "aic_values_batch": 691
+        },
+        "plan_facts_total": 129,
         "pair_rate_569": 0.8740652617267165,
         "doc_pair_rates": {
+          "876c-c-of-a-etobicoke-decision-may-4-2017-1": 0.8682170542635659,
+          "87b5-c-of-a-tey-decisions-july-26-2017-pm-hearing": 0.8300653594771242,
           "8de7-c-of-a-sc-decisions-july-13-2017": 0.9848484848484849,
-          "8f80-c-of-a-tey-decisions-may-30-2017": 0.8062015503875969,
-          "8fc1-c-of-a-tey-decisions-may-31-2017": 0.8819444444444444,
-          "96f5-c-of-a-tey-decisions-may-10-2017": 0.9181818181818182,
-          "8f7a-c-of-a-tey-decisions-june-28-2017": 0.8827586206896552,
-          "8f83-c-of-a-tey-decisions-june-14-2017": 0.7818181818181819,
-          "9700-c-of-a-tey-decisions-july-12-2017": 0.8636363636363636,
-          "9732-c-of-a-tey-decisions-march-1-2017": 0.839622641509434,
+          "8ee5-c-of-a-tey-decisions-february-28-2017": 0.8865979381443299,
           "8efb-c-of-a-tey-decisions-april-26-2017": 0.8703703703703703,
-          "8f63-c-of-a-tey-decisions-march-28-2017": 0.9122807017543859,
-          "8f79-c-of-a-tey-decisions-march-29-2017": 0.891566265060241,
-          "8f80-c-of-a-york-decisions-july-13-2017": 0.8469387755102041,
-          "9553-c-of-a-sc-decisions-august-10-2017": 0.8877551020408163,
-          "96e8-c-of-a-tey-decisions-april-19-2017": 0.860655737704918,
-          "8ebe-c-of-a-eyk-decisions-august-24-2017": 0.8521739130434782,
-          "904b-c-of-a-tey-decisions-august-23-2017": 0.8712121212121212,
-          "96c5-c-of-a-tey-decisions-august-16-2017": 0.8547486033519553,
           "8f41-c-of-a-tey-decisions-july-26-2017-am": 0.9387755102040817,
           "8f44-c-of-a-tey-decisions-march-8-2017-am": 0.8,
-          "8feb-c-of-a-york-decisions-august-10-2017": 0.881578947368421,
-          "9688-c-of-a-tey-decisions-january-31-2017": 0.8666666666666667,
-          "96e5-c-of-a-tey-decisions-february-1-2017": 0.868421052631579,
-          "9893-c-of-a-sc-decisions-september-7-2017": 0.8787878787878788,
-          "8ee5-c-of-a-tey-decisions-february-28-2017": 0.8865979381443299,
+          "8f52-c-of-a-etobicoke-revised-decisions-january-12-2017-revised-1": 0.8725490196078431,
           "8f60-c-of-a-tey-decisions-august-9-2017-am": 0.9215686274509803,
+          "8f63-c-of-a-tey-decisions-march-28-2017": 0.9122807017543859,
           "8f71-c-of-a-tey-decisions-august-9-2017-pm": 0.8295454545454546,
-          "96f5-c-of-a-eyk-decisions-september-7-2017": 0.8,
-          "876c-c-of-a-etobicoke-decision-may-4-2017-1": 0.8682170542635659,
+          "8f79-c-of-a-tey-decisions-march-29-2017": 0.891566265060241,
+          "8f7a-c-of-a-tey-decisions-june-28-2017": 0.8827586206896552,
+          "8f80-c-of-a-tey-decisions-may-30-2017": 0.8062015503875969,
+          "8f80-c-of-a-york-decisions-july-13-2017": 0.8469387755102041,
+          "8f83-c-of-a-tey-decisions-june-14-2017": 0.7818181818181819,
+          "8fa0-c-of-a-tey-decisions-january-11-2017-pm": 0.8823529411764706,
+          "8fa2-c-of-a-tey-decisions-june-07-2017-pm-afternoon": 0.9318181818181818,
+          "8fc1-c-of-a-tey-decisions-may-31-2017": 0.8819444444444444,
+          "8fc9-c-of-a-etobicoke-decision-april-20-2017-part2": 0.9420289855072463,
+          "8feb-c-of-a-york-decisions-august-10-2017": 0.881578947368421,
+          "9553-c-of-a-sc-decisions-august-10-2017": 0.8877551020408163,
+          "9688-c-of-a-tey-decisions-january-31-2017": 0.8666666666666667,
+          "96ad-c-of-a-etobicoke-decisions-february-23-2017": 0.8992248062015504,
+          "96c5-c-of-a-tey-decisions-august-16-2017": 0.8547486033519553,
+          "96d5-pages-from-c-of-a-york-decisions-january-26-2017-part1": 0.8363636363636363,
+          "96e5-c-of-a-tey-decisions-february-1-2017": 0.868421052631579,
+          "96e8-c-of-a-tey-decisions-april-19-2017": 0.860655737704918,
+          "96f5-c-of-a-tey-decisions-may-10-2017": 0.9181818181818182,
+          "9700-c-of-a-tey-decisions-july-12-2017": 0.8636363636363636,
+          "9719-pages-from-c-of-a-york-decisions-january-26-2017-part2-part2": 0.9642857142857143,
+          "971a-c-of-a-etobicoke-decisions-june-29-2017-1": 0.85,
+          "971b-pages-from-c-of-a-york-decisions-january-26-2017-part2-part1": 0.76,
+          "9723-c-of-a-tey-decisions-june-07-2017-am-morning": 0.9393939393939394,
+          "9732-c-of-a-tey-decisions-march-1-2017": 0.839622641509434,
+          "973d-c-of-a-etobicoke-decisions-february-9-2017-revised": 0.8525641025641025,
           "9766-c-of-a-etobicoke-decisions-may-09-2017": 0.8382352941176471,
+          "9792-c-of-a-tey-decisions-january-11-2017-am": 0.75,
           "97c5-c-of-a-etobicoke-decisions-june-1-2017": 0.8421052631578947,
           "8ea4-c-of-a-eyk-decisions-july-27-2017-part1": 0.8809523809523809,
-          "8fa0-c-of-a-tey-decisions-january-11-2017-pm": 0.8823529411764706,
-          "95d1-c-of-a-eyk-decisions-july-27-2017-part3": 0.9130434782608695,
-          "9689-c-of-a-eyk-decisions-july-27-2017-part2": 0.775,
-          "9792-c-of-a-tey-decisions-january-11-2017-am": 0.75,
-          "97f8-c-of-a-etobicoke-decisions-march-9-2017": 0.9044585987261147,
-          "98df-c-of-a-etobicoke-decisions-march-23-2017": 0.87248322147651,
-          "971a-c-of-a-etobicoke-decisions-june-29-2017-1": 0.85,
-          "96ad-c-of-a-etobicoke-decisions-february-23-2017": 0.8992248062015504,
-          "87b5-c-of-a-tey-decisions-july-26-2017-pm-hearing": 0.8300653594771242,
-          "9723-c-of-a-tey-decisions-june-07-2017-am-morning": 0.9393939393939394,
-          "8fc9-c-of-a-etobicoke-decision-april-20-2017-part2": 0.9420289855072463,
-          "8fa2-c-of-a-tey-decisions-june-07-2017-pm-afternoon": 0.9318181818181818,
-          "973d-c-of-a-etobicoke-decisions-february-9-2017-revised": 0.8525641025641025,
-          "96d5-pages-from-c-of-a-york-decisions-january-26-2017-part1": 0.8363636363636363,
-          "9921-committeeofadjustment-northyork-decision-october-26-2017": 0.923728813559322,
-          "8d47-committeeofadjustment-northyork-decisions-december-7-2017": 0.9257142857142857,
-          "8f53-committeeofadjustment-northyork-decisions-november-8-2017": 0.8514851485148515,
-          "9065-committeeofadjustment-northyork-decisions-october-12-2017": 0.8853503184713376,
-          "8d26-committeeofadjustment-northyork-decisions-november-23-2017": 0.8362068965517241,
-          "948a-committeeofadjustment-northyork-decisions-november-21-2017": 0.9090909090909091,
-          "8f29-committeeofadjustment-scarborough-decisions-november-2-2017": 0.8541666666666666,
-          "8f52-c-of-a-etobicoke-revised-decisions-january-12-2017-revised-1": 0.8725490196078431,
-          "9719-pages-from-c-of-a-york-decisions-january-26-2017-part2-part2": 0.9642857142857143,
-          "971b-pages-from-c-of-a-york-decisions-january-26-2017-part2-part1": 0.76,
-          "9809-committeeofadjustment-northyork-decisions-november-9-2017-pm": 0.94,
-          "9856-committeeofadjustment-northyork-decisions-november-9-2017-am": 0.9056603773584906,
+          "8ebe-c-of-a-eyk-decisions-august-24-2017": 0.8521739130434782,
+          "904b-c-of-a-tey-decisions-august-23-2017": 0.8712121212121212,
           "95c6-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-3": 0.8461538461538461,
+          "95d1-c-of-a-eyk-decisions-july-27-2017-part3": 0.9130434782608695,
           "9648-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-4": 0.9701492537313433,
           "9654-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-2": 0.9090909090909091,
-          "965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1": 0.75
+          "965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1": 0.75,
+          "9689-c-of-a-eyk-decisions-july-27-2017-part2": 0.775,
+          "96f5-c-of-a-eyk-decisions-september-7-2017": 0.8,
+          "97f8-c-of-a-etobicoke-decisions-march-9-2017": 0.9044585987261147,
+          "9893-c-of-a-sc-decisions-september-7-2017": 0.8787878787878788,
+          "98df-c-of-a-etobicoke-decisions-march-23-2017": 0.87248322147651,
+          "8f29-committeeofadjustment-scarborough-decisions-november-2-2017": 0.8541666666666666,
+          "8f53-committeeofadjustment-northyork-decisions-november-8-2017": 0.8514851485148515,
+          "9065-committeeofadjustment-northyork-decisions-october-12-2017": 0.8853503184713376,
+          "9809-committeeofadjustment-northyork-decisions-november-9-2017-pm": 0.94,
+          "9856-committeeofadjustment-northyork-decisions-november-9-2017-am": 0.9056603773584906,
+          "9921-committeeofadjustment-northyork-decision-october-26-2017": 0.923728813559322,
+          "8d26-committeeofadjustment-northyork-decisions-november-23-2017": 0.8362068965517241,
+          "8d47-committeeofadjustment-northyork-decisions-december-7-2017": 0.9257142857142857,
+          "948a-committeeofadjustment-northyork-decisions-november-21-2017": 0.9090909090909091
         },
         "citation_multi": 7,
         "consent_items_skipped": 35,
-        "qualified_items": 832,
+        "qualified_items": 944,
         "manifest_sha256": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b",
         "extractor_version": "coa-extractor-3",
-        "vocab_version": "coa-vocab-3"
+        "vocab_version": "coa-vocab-4"
       },
+      "coa_plan_facts_written": 0,
       "gate": {
-        "reason": "unchanged_content_hash",
-        "gated_skip": true
+        "reason": "loaded",
+        "gated_skip": false
       },
       "config": {
         "coa_notices_fetch_pace_ms": 3000,
@@ -180,27 +186,291 @@
           "toronto:coa-decision-pdfs-2017": null
         }
       },
-      "terminal": "skipped_content_hash",
+      "terminal": "loaded_with_warnings",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "pool_errors": 0,
-      "checks_passed": "all",
       "checks_failed": 0,
-      "checks_warned": 0,
+      "checks_warned": 4,
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "target_unit_mismatch_items: 14",
+        "required_out_of_bounds: {\"count\":61,\"measured\":5436,\"sample_keys\":[\"toronto_ca_decision_pdf|A0193/17EYK|2\",\"toronto_ca_decision_pdf|A0258/17EYK|5\",\"toronto_ca_decision_pdf|A0295/17TEY|4\",\"toronto_ca_decision_pdf|A1087/16TEY|1\",\"toronto_ca_decision_pdf|A1094/16TEY|6\",\"toronto_ca_decision_pdf|A0902/16TEY|7\",\"toronto_ca_decis…",
+        "decision_disagree: 20",
+        "ckan_hearing_offset: 1"
+      ],
       "audit_table": {
         "phase": 1,
         "name": "CoA Decision-Notice Variances",
-        "verdict": "PASS",
+        "verdict": "WARN",
         "rows": [
+          {
+            "metric": "doc_sha_mismatch",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A document whose bytes changed since the pin must stop the run before any write: its parse would silently replace the pinned oracle. A re-pin is a reviewed manifest commit."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "doc_acquire_failed",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A document that could not be acquired or extracted must stop the run before any write: its rows would otherwise be soft-retired by the MARK."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "pair_rate_569",
+            "value": 0.874,
+            "threshold": "value_min 0.85",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "value_min 0.8",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "An extractor regression (pair rate under the pre-registered bound) must not upsert or retire anything."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "notices_without_section_pct",
+            "value": 1.41,
+            "threshold": "pct <= 10",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A segmentation regression that loses variance sections must not retire the rows of the notices it lost."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "mail_lag_out_of_bounds",
+            "value": {
+              "out_of_bounds": 0,
+              "measured": 1710,
+              "unmeasured": 175,
+              "min": 0,
+              "max": 8
+            },
+            "threshold": "viol <= 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "The hearing date comes from the document title, not the notice text; a title/date mismatch would misdate every law-at-hearing comparison, so it must stop the write."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "reason_totality",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A counting defect means some notice or item went unaccounted, so nothing may be written or retired."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "unit_target_mismatch",
+            "value": 0,
+            "threshold": "viol <= 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A target-map defect would put a value under the wrong rule for every consumer; it must stop the write."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "target_unit_mismatch_items",
+            "value": 14,
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "An item whose unit family disagrees with its mapped target must stay visible on every run even when its values are not claimed."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "batch_target_map_stale",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A batch built under an older target map must stay visible on every run; its stored targets are not silently remapped."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "doc_pair_rate_floor",
+            "value": {
+              "rate": 0.75,
+              "doc_id": "965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1",
+              "eligible_docs": 61
+            },
+            "threshold": "value_min 0.6",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "One document whose layout the extractor cannot read must not dilute into a passing aggregate and then be written."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "docs_no_notices",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A document that yields no notices is a wrong document or a broken extraction; its rows must not be retired."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "items_total_floor",
+            "value": 10794,
+            "threshold": "value_min 1000",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+              "guarantee": "A near-empty parse must not retire the oracle."
+            },
+            "observed": "before_write"
+          },
+          {
+            "metric": "direction_violation_pct",
+            "value": 2.76,
+            "threshold": "pct <= 5",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "required_out_of_bounds",
+            "value": {
+              "count": 61,
+              "measured": 5436,
+              "sample_keys": [
+                "toronto_ca_decision_pdf|A0193/17EYK|2",
+                "toronto_ca_decision_pdf|A0258/17EYK|5",
+                "toronto_ca_decision_pdf|A0295/17TEY|4",
+                "toronto_ca_decision_pdf|A1087/16TEY|1",
+                "toronto_ca_decision_pdf|A1094/16TEY|6",
+                "toronto_ca_decision_pdf|A0902/16TEY|7",
+                "toronto_ca_decision_pdf|A0300/17TEY|1",
+                "toronto_ca_decision_pdf|A0357/17TEY|2",
+                "toronto_ca_decision_pdf|A1202/16TEY|2",
+                "toronto_ca_decision_pdf|A1202/16TEY|5"
+              ]
+            },
+            "threshold": "viol <= 0",
+            "status": "WARN",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "app_not_in_coa_applications",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "plausibility",
+            "observed": "after_write"
+          },
+          {
+            "metric": "decision_disagree",
+            "value": 20,
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "plausibility",
+            "observed": "after_write"
+          },
+          {
+            "metric": "ckan_hearing_offset",
+            "value": 1,
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "plausibility",
+            "observed": "after_write"
+          },
+          {
+            "metric": "active_dup_items",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "plausibility",
+            "observed": "after_write"
+          },
           {
             "metric": "inputs_nonempty",
             "value": {
-              "coa_applications": 33975
+              "coa_applications": 33982
             },
             "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+            "status": "INFO"
+          },
+          {
+            "metric": "schema_drift:toronto:coa-decision-pdfs-2017",
+            "value": "no_baseline: the prior run recorded no record_fields",
+            "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_app_not_in_coa_applications_duration_ms",
+            "value": 6,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_decision_disagree_duration_ms",
+            "value": 44,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_ckan_hearing_offset_duration_ms",
+            "value": 43,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_active_dup_items_duration_ms",
+            "value": 6,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_retired",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_unretired",
+            "value": 0,
+            "threshold": null,
             "status": "INFO"
           },
           {
@@ -211,7 +481,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 71,
+            "value": 288681,
             "threshold": null,
             "status": "INFO"
           }
@@ -262,7 +532,47 @@
           "source_page",
           "extractor_version",
           "vocab_version",
+          "doc_type",
+          "source_batch",
           "retired_at",
+          "loaded_at"
+        ],
+        "coa_plan_facts": [
+          "application_number",
+          "lot_area_m2",
+          "lot_depth_m",
+          "lot_frontage_m",
+          "established_grade",
+          "existing_coverage_m2",
+          "existing_gfa_m2",
+          "existing_height_m",
+          "existing_storeys",
+          "front_landscaped_pct",
+          "front_soft_pct",
+          "rear_soft_pct",
+          "proposed_bedrooms",
+          "proposed_coverage_m2",
+          "proposed_coverage_pct",
+          "proposed_depth_m",
+          "proposed_fsi",
+          "proposed_gfa_basement_m2",
+          "proposed_gfa_first_m2",
+          "proposed_gfa_second_m2",
+          "proposed_gfa_third_m2",
+          "proposed_gfa_total_m2",
+          "proposed_height_m",
+          "proposed_length_m",
+          "proposed_main_wall_height_m",
+          "proposed_storeys",
+          "proposed_units",
+          "proposed_setback_front_m",
+          "proposed_setback_rear_m",
+          "proposed_setback_side_flank_m",
+          "proposed_setback_side_left_m",
+          "proposed_setback_side_right_m",
+          "corner_lot",
+          "source_batch",
+          "source_sha256",
           "loaded_at"
         ]
       },
@@ -272,27 +582,27 @@
     }
   ],
   "parse_errors": [],
-  "verdict": "PASS",
+  "verdict": "WARN",
   "ledger_status": [
-    "completed"
+    "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_coa_notices]\",\"msg\":\"[load_coa_notices] target: load_coa_notices (descriptor.database) → database=postgres user=postgres migrations=268 (floor 249)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_coa_notices]\",\"msg\":\"pdf_document_set gate: skip (unchanged_content_hash) — manifest + logic_version unchanged, nothing fetched\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"coa_notices_load\":{\"spec_version\":\"1.0\",\"content_hash\":\"9a98bc74f6c1cf8b56ad88f72ca4318939e5d3ca844bccf0794c71afca9af480\",\"source_dataset_version\":\"3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b\",\"skipped_reason\":\"unchanged_content_hash\",\"docs_total\":78,\"docs_by_status\":{\"parsed\":70,\"timeout\":0,\"excluded\":8,\"too_large\":0,\"http_error\":0,\"sha_mismatch\":0,\"extract_error\":0,\"no_text_layer\":0,\"no_notices_found\":0},\"docs_excluded\":8,\"bytes_fetched\":301402843,\"notices_by_status\":{\"not_minor_variance\":144,\"no_variance_section\":27,\"duplicate_superseded\":1,\"variance_section_parsed\":1714,\"signature_page_duplicate\":0,\"duplicate_same_date_conflict\":0},\"items_total\":10103,\"items_by_parse_status\":{\"pair\":8610,\"no_split\":83,\"side_ambiguous\":0,\"no_proposed_value\":116,\"no_required_value\":792,\"target_unit_mismatch\":9,\"unit_family_mismatch\":49,\"multi_value_ambiguous\":444},\"items_by_target_status\":{\"mapped\":6202,\"unmapped\":3809,\"ambiguous\":92},\"items_by_confidence\":{\"low\":1484,\"high\":2868,\"medium\":5751},\"pair_rate_569\":0.8740652617267165,\"doc_pair_rates\":{\"8de7-c-of-a-sc-decisions-july-13-2017\":0.9848484848484849,\"8f80-c-of-a-tey-decisions-may-30-2017\":0.8062015503875969,\"8fc1-c-of-a-tey-decisions-may-31-2017\":0.8819444444444444,\"96f5-c-of-a-tey-decisions-may-10-2017\":0.9181818181818182,\"8f7a-c-of-a-tey-decisions-june-28-2017\":0.8827586206896552,\"8f83-c-of-a-tey-decisions-june-14-2017\":0.7818181818181819,\"9700-c-of-a-tey-decisions-july-12-2017\":0.8636363636363636,\"9732-c-of-a-tey-decisions-march-1-2017\":0.839622641509434,\"8efb-c-of-a-tey-decisions-april-26-2017\":0.8703703703703703,\"8f63-c-of-a-tey-decisions-march-28-2017\":0.9122807017543859,\"8f79-c-of-a-tey-decisions-march-29-2017\":0.891566265060241,\"8f80-c-of-a-york-decisions-july-13-2017\":0.8469387755102041,\"9553-c-of-a-sc-decisions-august-10-2017\":0.8877551020408163,\"96e8-c-of-a-tey-decisions-april-19-2017\":0.860655737704918,\"8ebe-c-of-a-eyk-decisions-august-24-2017\":0.8521739130434782,\"904b-c-of-a-tey-decisions-august-23-2017\":0.8712121212121212,\"96c5-c-of-a-tey-decisions-august-16-2017\":0.8547486033519553,\"8f41-c-of-a-tey-decisions-july-26-2017-am\":0.9387755102040817,\"8f44-c-of-a-tey-decisions-march-8-2017-am\":0.8,\"8feb-c-of-a-york-decisions-august-10-2017\":0.881578947368421,\"9688-c-of-a-tey-decisions-january-31-2017\":0.8666666666666667,\"96e5-c-of-a-tey-decisions-february-1-2017\":0.868421052631579,\"9893-c-of-a-sc-decisions-september-7-2017\":0.8787878787878788,\"8ee5-c-of-a-tey-decisions-february-28-2017\":0.8865979381443299,\"8f60-c-of-a-tey-decisions-august-9-2017-am\":0.9215686274509803,\"8f71-c-of-a-tey-decisions-august-9-2017-pm\":0.8295454545454546,\"96f5-c-of-a-eyk-decisions-september-7-2017\":0.8,\"876c-c-of-a-etobicoke-decision-may-4-2017-1\":0.8682170542635659,\"9766-c-of-a-etobicoke-decisions-may-09-2017\":0.8382352941176471,\"97c5-c-of-a-etobicoke-decisions-june-1-2017\":0.8421052631578947,\"8ea4-c-of-a-eyk-decisions-july-27-2017-part1\":0.8809523809523809,\"8fa0-c-of-a-tey-decisions-january-11-2017-pm\":0.8823529411764706,\"95d1-c-of-a-eyk-decisions-july-27-2017-part3\":0.9130434782608695,\"9689-c-of-a-eyk-decisions-july-27-2017-part2\":0.775,\"9792-c-of-a-tey-decisions-january-11-2017-am\":0.75,\"97f8-c-of-a-etobicoke-decisions-march-9-2017\":0.9044585987261147,\"98df-c-of-a-etobicoke-decisions-march-23-2017\":0.87248322147651,\"971a-c-of-a-etobicoke-decisions-june-29-2017-1\":0.85,\"96ad-c-of-a-etobicoke-decisions-february-23-2017\":0.8992248062015504,\"87b5-c-of-a-tey-decisions-july-26-2017-pm-hearing\":0.8300653594771242,\"9723-c-of-a-tey-decisions-june-07-2017-am-morning\":0.9393939393939394,\"8fc9-c-of-a-etobicoke-decision-april-20-2017-part2\":0.9420289855072463,\"8fa2-c-of-a-tey-decisions-june-07-2017-pm-afternoon\":0.9318181818181818,\"973d-c-of-a-etobicoke-decisions-february-9-2017-revised\":0.8525641025641025,\"96d5-pages-from-c-of-a-york-decisions-january-26-2017-part1\":0.8363636363636363,\"9921-committeeofadjustment-northyork-decision-october-26-2017\":0.923728813559322,\"8d47-committeeofadjustment-northyork-decisions-december-7-2017\":0.9257142857142857,\"8f53-committeeofadjustment-northyork-decisions-november-8-2017\":0.8514851485148515,\"9065-committeeofadjustment-northyork-decisions-october-12-2017\":0.8853503184713376,\"8d26-committeeofadjustment-northyork-decisions-november-23-2017\":0.8362068965517241,\"948a-committeeofadjustment-northyork-decisions-november-21-2017\":0.9090909090909091,\"8f29-committeeofadjustment-scarborough-decisions-november-2-2017\":0.8541666666666666,\"8f52-c-of-a-etobicoke-revised-decisions-january-12-2017-revised-1\":0.8725490196078431,\"9719-pages-from-c-of-a-york-decisions-january-26-2017-part2-part2\":0.9642857142857143,\"971b-pages-from-c-of-a-york-decisions-january-26-2017-part2-part1\":0.76,\"9809-committeeofadjustment-northyork-decisions-november-9-2017-pm\":0.94,\"9856-committeeofadjustment-northyork-decisions-november-9-2017-am\":0.9056603773584906,\"95c6-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-3\":0.8461538461538461,\"9648-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-4\":0.9701492537313433,\"9654-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-2\":0.9090909090909091,\"965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1\":0.75},\"citation_multi\":7,\"consent_items_skipped\":35,\"qualified_items\":832,\"manifest_sha256\":\"3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b\",\"extractor_version\":\"coa-extractor-3\",\"vocab_version\":\"coa-vocab-3\"},\"gate\":{\"reason\":\"unchanged_content_hash\",\"gated_skip\":true},\"config\":{\"coa_notices_fetch_pace_ms\":3000,\"coa_notices_download_timeout_ms\":120000,\"coa_notices_max_doc_bytes\":52428800,\"coa_notices_max_pages\":400,\"coa_notices_max_text_chars\":5000000,\"coa_notices_line_y_tolerance\":2,\"coa_notices_retire_max_pct\":0.1,\"coa_notices_pair_rate_warn_min\":0.85,\"coa_notices_pair_rate_fail_min\":0.8,\"coa_notices_no_section_warn_max_pct\":10,\"coa_notices_mail_lag_max_days\":14,\"coa_notices_mail_lag_viol_max\":0,\"coa_notices_unit_target_viol_max\":0,\"coa_notices_doc_pair_rate_floor\":0.6,\"coa_notices_doc_pair_rate_min_items\":10,\"coa_notices_items_min\":1000,\"coa_notices_direction_viol_max_pct\":5,\"coa_notices_required_oob_max\":0,\"coa_notices_oob_sample_max\":10,\"coa_notices_req_side_setback_m_min\":0.3,\"coa_notices_req_side_setback_m_max\":8,\"coa_notices_req_front_setback_m_min\":0.3,\"coa_notices_req_front_setback_m_max\":20,\"coa_notices_req_rear_setback_m_min\":0.3,\"coa_notices_req_rear_setback_m_max\":25,\"coa_notices_req_height_m_min\":2,\"coa_notices_req_height_m_max\":16,\"coa_notices_req_main_wall_height_m_min\":5,\"coa_notices_req_main_wall_height_m_max\":12,\"coa_notices_req_building_length_depth_m_min\":5,\"coa_notices_req_building_length_depth_m_max\":25,\"coa_notices_req_lot_frontage_m_min\":3,\"coa_notices_req_lot_frontage_m_max\":40,\"coa_notices_req_lot_coverage_pct_min\":10,\"coa_notices_req_lot_coverage_pct_max\":100,\"coa_notices_req_lot_area_m2_min\":100,\"coa_notices_req_lot_area_m2_max\":2000,\"coa_notices_req_fsi_min\":0.15,\"coa_notices_req_fsi_max\":3},\"acquired\":{\"record_fields\":{\"toronto:coa-decision-pdfs-2017\":null}},\"terminal\":\"skipped_content_hash\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"CoA Decision-Notice Variances\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"inputs_nonempty\",\"value\":{\"coa_applications\":33975},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":71,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_notice_variances\":[\"variance_key\",\"retired_at\"],\"coa_applications\":[\"application_number\",\"decision\",\"hearing_date\"]},\"writes\":{\"coa_notice_variances\":[\"variance_key\",\"source_family\",\"application_number\",\"item_ordinal\",\"hearing_date\",\"decision_mailed_on\",\"decision\",\"decision_source\",\"cited_bylaw\",\"citation_kind\",\"regulation_id_as_cited\",\"exception_ref\",\"zoning_as_stated\",\"target\",\"target_status\",\"bound\",\"required_value\",\"required_unit\",\"proposed_value\",\"proposed_unit\",\"parse_status\",\"parse_confidence\",\"qualified\",\"source_sha256\",\"source_page\",\"extractor_version\",\"vocab_version\",\"retired_at\",\"loaded_at\"]},\"external\":[\"toronto:coa-decision-pdfs-2017\"]}\n\n[load_coa_notices] completed in 0.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_coa_notices]\",\"msg\":\"[load_coa_notices] target: load_coa_notices (descriptor.database) → database=postgres user=postgres migrations=275 (floor 249)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_coa_notices]\",\"msg\":\"acquired pdf_document_set \\\"toronto:coa-decision-pdfs-2017\\\": 70 document(s) + 3 values batch(es), 301402843 bytes, 73 parsed (manifest 3b26c15c…)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"coa_notices_load\":{\"spec_version\":\"1.0\",\"content_hash\":\"4b751f12d908b927ba47f3e970852182e79d0b2e92cbdec19ce53ad86a4c89cc\",\"source_dataset_version\":\"3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b\",\"skipped_reason\":null,\"docs_total\":81,\"docs_by_status\":{\"parsed\":73,\"sha_mismatch\":0,\"http_error\":0,\"timeout\":0,\"too_large\":0,\"extract_error\":0,\"no_text_layer\":0,\"no_notices_found\":0,\"excluded\":8},\"docs_excluded\":8,\"bytes_fetched\":301402843,\"notices_by_status\":{\"variance_section_parsed\":1884,\"no_variance_section\":27,\"not_minor_variance\":144,\"signature_page_duplicate\":0,\"duplicate_superseded\":1,\"duplicate_same_date_conflict\":0},\"items_total\":10794,\"items_by_parse_status\":{\"pair\":9115,\"no_required_value\":847,\"no_proposed_value\":128,\"unit_family_mismatch\":49,\"multi_value_ambiguous\":558,\"side_ambiguous\":0,\"no_split\":83,\"target_unit_mismatch\":14},\"items_by_target_status\":{\"mapped\":6591,\"ambiguous\":108,\"unmapped\":4095},\"items_by_confidence\":{\"high\":3152,\"medium\":5972,\"low\":1670},\"items_by_family\":{\"toronto_ca_decision_pdf\":10103,\"aic_values_batch\":691},\"plan_facts_total\":129,\"pair_rate_569\":0.8740652617267165,\"doc_pair_rates\":{\"876c-c-of-a-etobicoke-decision-may-4-2017-1\":0.8682170542635659,\"87b5-c-of-a-tey-decisions-july-26-2017-pm-hearing\":0.8300653594771242,\"8de7-c-of-a-sc-decisions-july-13-2017\":0.9848484848484849,\"8ee5-c-of-a-tey-decisions-february-28-2017\":0.8865979381443299,\"8efb-c-of-a-tey-decisions-april-26-2017\":0.8703703703703703,\"8f41-c-of-a-tey-decisions-july-26-2017-am\":0.9387755102040817,\"8f44-c-of-a-tey-decisions-march-8-2017-am\":0.8,\"8f52-c-of-a-etobicoke-revised-decisions-january-12-2017-revised-1\":0.8725490196078431,\"8f60-c-of-a-tey-decisions-august-9-2017-am\":0.9215686274509803,\"8f63-c-of-a-tey-decisions-march-28-2017\":0.9122807017543859,\"8f71-c-of-a-tey-decisions-august-9-2017-pm\":0.8295454545454546,\"8f79-c-of-a-tey-decisions-march-29-2017\":0.891566265060241,\"8f7a-c-of-a-tey-decisions-june-28-2017\":0.8827586206896552,\"8f80-c-of-a-tey-decisions-may-30-2017\":0.8062015503875969,\"8f80-c-of-a-york-decisions-july-13-2017\":0.8469387755102041,\"8f83-c-of-a-tey-decisions-june-14-2017\":0.7818181818181819,\"8fa0-c-of-a-tey-decisions-january-11-2017-pm\":0.8823529411764706,\"8fa2-c-of-a-tey-decisions-june-07-2017-pm-afternoon\":0.9318181818181818,\"8fc1-c-of-a-tey-decisions-may-31-2017\":0.8819444444444444,\"8fc9-c-of-a-etobicoke-decision-april-20-2017-part2\":0.9420289855072463,\"8feb-c-of-a-york-decisions-august-10-2017\":0.881578947368421,\"9553-c-of-a-sc-decisions-august-10-2017\":0.8877551020408163,\"9688-c-of-a-tey-decisions-january-31-2017\":0.8666666666666667,\"96ad-c-of-a-etobicoke-decisions-february-23-2017\":0.8992248062015504,\"96c5-c-of-a-tey-decisions-august-16-2017\":0.8547486033519553,\"96d5-pages-from-c-of-a-york-decisions-january-26-2017-part1\":0.8363636363636363,\"96e5-c-of-a-tey-decisions-february-1-2017\":0.868421052631579,\"96e8-c-of-a-tey-decisions-april-19-2017\":0.860655737704918,\"96f5-c-of-a-tey-decisions-may-10-2017\":0.9181818181818182,\"9700-c-of-a-tey-decisions-july-12-2017\":0.8636363636363636,\"9719-pages-from-c-of-a-york-decisions-january-26-2017-part2-part2\":0.9642857142857143,\"971a-c-of-a-etobicoke-decisions-june-29-2017-1\":0.85,\"971b-pages-from-c-of-a-york-decisions-january-26-2017-part2-part1\":0.76,\"9723-c-of-a-tey-decisions-june-07-2017-am-morning\":0.9393939393939394,\"9732-c-of-a-tey-decisions-march-1-2017\":0.839622641509434,\"973d-c-of-a-etobicoke-decisions-february-9-2017-revised\":0.8525641025641025,\"9766-c-of-a-etobicoke-decisions-may-09-2017\":0.8382352941176471,\"9792-c-of-a-tey-decisions-january-11-2017-am\":0.75,\"97c5-c-of-a-etobicoke-decisions-june-1-2017\":0.8421052631578947,\"8ea4-c-of-a-eyk-decisions-july-27-2017-part1\":0.8809523809523809,\"8ebe-c-of-a-eyk-decisions-august-24-2017\":0.8521739130434782,\"904b-c-of-a-tey-decisions-august-23-2017\":0.8712121212121212,\"95c6-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-3\":0.8461538461538461,\"95d1-c-of-a-eyk-decisions-july-27-2017-part3\":0.9130434782608695,\"9648-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-4\":0.9701492537313433,\"9654-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-2\":0.9090909090909091,\"965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1\":0.75,\"9689-c-of-a-eyk-decisions-july-27-2017-part2\":0.775,\"96f5-c-of-a-eyk-decisions-september-7-2017\":0.8,\"97f8-c-of-a-etobicoke-decisions-march-9-2017\":0.9044585987261147,\"9893-c-of-a-sc-decisions-september-7-2017\":0.8787878787878788,\"98df-c-of-a-etobicoke-decisions-march-23-2017\":0.87248322147651,\"8f29-committeeofadjustment-scarborough-decisions-november-2-2017\":0.8541666666666666,\"8f53-committeeofadjustment-northyork-decisions-november-8-2017\":0.8514851485148515,\"9065-committeeofadjustment-northyork-decisions-october-12-2017\":0.8853503184713376,\"9809-committeeofadjustment-northyork-decisions-november-9-2017-pm\":0.94,\"9856-committeeofadjustment-northyork-decisions-november-9-2017-am\":0.9056603773584906,\"9921-committeeofadjustment-northyork-decision-october-26-2017\":0.923728813559322,\"8d26-committeeofadjustment-northyork-decisions-november-23-2017\":0.8362068965517241,\"8d47-committeeofadjustment-northyork-decisions-december-7-2017\":0.9257142857142857,\"948a-committeeofadjustment-northyork-decisions-november-21-2017\":0.9090909090909091},\"citation_multi\":7,\"consent_items_skipped\":35,\"qualified_items\":944,\"manifest_sha256\":\"3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b\",\"extractor_version\":\"coa-extractor-3\",\"vocab_version\":\"coa-vocab-4\"},\"coa_plan_facts_written\":0,\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"coa_notices_fetch_pace_ms\":3000,\"coa_notices_download_timeout_ms\":120000,\"coa_notices_max_doc_bytes\":52428800,\"coa_notices_max_pages\":400,\"coa_notices_max_text_chars\":5000000,\"coa_notices_line_y_tolerance\":2,\"coa_notices_retire_max_pct\":0.1,\"coa_notices_pair_rate_warn_min\":0.85,\"coa_notices_pair_rate_fail_min\":0.8,\"coa_notices_no_section_warn_max_pct\":10,\"coa_notices_mail_lag_max_days\":14,\"coa_notices_mail_lag_viol_max\":0,\"coa_notices_unit_target_viol_max\":0,\"coa_notices_doc_pair_rate_floor\":0.6,\"coa_notices_doc_pair_rate_min_items\":10,\"coa_notices_items_min\":1000,\"coa_notices_direction_viol_max_pct\":5,\"coa_notices_required_oob_max\":0,\"coa_notices_oob_sample_max\":10,\"coa_notices_req_side_setback_m_min\":0.3,\"coa_notices_req_side_setback_m_max\":8,\"coa_notices_req_front_setback_m_min\":0.3,\"coa_notices_req_front_setback_m_max\":20,\"coa_notices_req_rear_setback_m_min\":0.3,\"coa_notices_req_rear_setback_m_max\":25,\"coa_notices_req_height_m_min\":2,\"coa_notices_req_height_m_max\":16,\"coa_notices_req_main_wall_height_m_min\":5,\"coa_notices_req_main_wall_height_m_max\":12,\"coa_notices_req_building_length_depth_m_min\":5,\"coa_notices_req_building_length_depth_m_max\":25,\"coa_notices_req_lot_frontage_m_min\":3,\"coa_notices_req_lot_frontage_m_max\":40,\"coa_notices_req_lot_coverage_pct_min\":10,\"coa_notices_req_lot_coverage_pct_max\":100,\"coa_notices_req_lot_area_m2_min\":100,\"coa_notices_req_lot_area_m2_max\":2000,\"coa_notices_req_fsi_min\":0.15,\"coa_notices_req_fsi_max\":3},\"acquired\":{\"record_fields\":{\"toronto:coa-decision-pdfs-2017\":null}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":4,\"errors\":[],\"warnings\":[\"target_unit_mismatch_items: 14\",\"required_out_of_bounds: {\\\"count\\\":61,\\\"measured\\\":5436,\\\"sample_keys\\\":[\\\"toronto_ca_decision_pdf|A0193/17EYK|2\\\",\\\"toronto_ca_decision_pdf|A0258/17EYK|5\\\",\\\"toronto_ca_decision_pdf|A0295/17TEY|4\\\",\\\"toronto_ca_decision_pdf|A1087/16TEY|1\\\",\\\"toronto_ca_decision_pdf|A1094/16TEY|6\\\",\\\"toronto_ca_decision_pdf|A0902/16TEY|7\\\",\\\"toronto_ca_decis…\",\"decision_disagree: 20\",\"ckan_hearing_offset: 1\"],\"audit_table\":{\"phase\":1,\"name\":\"CoA Decision-Notice Variances\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"doc_sha_mismatch\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A document whose bytes changed since the pin must stop the run before any write: its parse would silently replace the pinned oracle. A re-pin is a reviewed manifest commit.\"},\"observed\":\"before_write\"},{\"metric\":\"doc_acquire_failed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A document that could not be acquired or extracted must stop the run before any write: its rows would otherwise be soft-retired by the MARK.\"},\"observed\":\"before_write\"},{\"metric\":\"pair_rate_569\",\"value\":0.874,\"threshold\":\"value_min 0.85\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_min 0.8\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"An extractor regression (pair rate under the pre-registered bound) must not upsert or retire anything.\"},\"observed\":\"before_write\"},{\"metric\":\"notices_without_section_pct\",\"value\":1.41,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A segmentation regression that loses variance sections must not retire the rows of the notices it lost.\"},\"observed\":\"before_write\"},{\"metric\":\"mail_lag_out_of_bounds\",\"value\":{\"out_of_bounds\":0,\"measured\":1710,\"unmeasured\":175,\"min\":0,\"max\":8},\"threshold\":\"viol <= 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"The hearing date comes from the document title, not the notice text; a title/date mismatch would misdate every law-at-hearing comparison, so it must stop the write.\"},\"observed\":\"before_write\"},{\"metric\":\"reason_totality\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A counting defect means some notice or item went unaccounted, so nothing may be written or retired.\"},\"observed\":\"before_write\"},{\"metric\":\"unit_target_mismatch\",\"value\":0,\"threshold\":\"viol <= 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A target-map defect would put a value under the wrong rule for every consumer; it must stop the write.\"},\"observed\":\"before_write\"},{\"metric\":\"target_unit_mismatch_items\",\"value\":14,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"An item whose unit family disagrees with its mapped target must stay visible on every run even when its values are not claimed.\"},\"observed\":\"before_write\"},{\"metric\":\"batch_target_map_stale\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A batch built under an older target map must stay visible on every run; its stored targets are not silently remapped.\"},\"observed\":\"before_write\"},{\"metric\":\"doc_pair_rate_floor\",\"value\":{\"rate\":0.75,\"doc_id\":\"965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1\",\"eligible_docs\":61},\"threshold\":\"value_min 0.6\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"One document whose layout the extractor cannot read must not dilute into a passing aggregate and then be written.\"},\"observed\":\"before_write\"},{\"metric\":\"docs_no_notices\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A document that yields no notices is a wrong document or a broken extraction; its rows must not be retired.\"},\"observed\":\"before_write\"},{\"metric\":\"items_total_floor\",\"value\":10794,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"no upsert and no MARK from a bad parse or an incomplete acquisition\",\"guarantee\":\"A near-empty parse must not retire the oracle.\"},\"observed\":\"before_write\"},{\"metric\":\"direction_violation_pct\",\"value\":2.76,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"required_out_of_bounds\",\"value\":{\"count\":61,\"measured\":5436,\"sample_keys\":[\"toronto_ca_decision_pdf|A0193/17EYK|2\",\"toronto_ca_decision_pdf|A0258/17EYK|5\",\"toronto_ca_decision_pdf|A0295/17TEY|4\",\"toronto_ca_decision_pdf|A1087/16TEY|1\",\"toronto_ca_decision_pdf|A1094/16TEY|6\",\"toronto_ca_decision_pdf|A0902/16TEY|7\",\"toronto_ca_decision_pdf|A0300/17TEY|1\",\"toronto_ca_decision_pdf|A0357/17TEY|2\",\"toronto_ca_decision_pdf|A1202/16TEY|2\",\"toronto_ca_decision_pdf|A1202/16TEY|5\"]},\"threshold\":\"viol <= 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"app_not_in_coa_applications\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"decision_disagree\",\"value\":20,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ckan_hearing_offset\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"active_dup_items\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"coa_applications\":33982},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:toronto:coa-decision-pdfs-2017\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_app_not_in_coa_applications_duration_ms\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_decision_disagree_duration_ms\",\"value\":44,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ckan_hearing_offset_duration_ms\",\"value\":43,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_active_dup_items_duration_ms\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_retired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unretired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":288681,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_notice_variances\":[\"variance_key\",\"retired_at\"],\"coa_applications\":[\"application_number\",\"decision\",\"hearing_date\"]},\"writes\":{\"coa_notice_variances\":[\"variance_key\",\"source_family\",\"application_number\",\"item_ordinal\",\"hearing_date\",\"decision_mailed_on\",\"decision\",\"decision_source\",\"cited_bylaw\",\"citation_kind\",\"regulation_id_as_cited\",\"exception_ref\",\"zoning_as_stated\",\"target\",\"target_status\",\"bound\",\"required_value\",\"required_unit\",\"proposed_value\",\"proposed_unit\",\"parse_status\",\"parse_confidence\",\"qualified\",\"source_sha256\",\"source_page\",\"extractor_version\",\"vocab_version\",\"doc_type\",\"source_batch\",\"retired_at\",\"loaded_at\"],\"coa_plan_facts\":[\"application_number\",\"lot_area_m2\",\"lot_depth_m\",\"lot_frontage_m\",\"established_grade\",\"existing_coverage_m2\",\"existing_gfa_m2\",\"existing_height_m\",\"existing_storeys\",\"front_landscaped_pct\",\"front_soft_pct\",\"rear_soft_pct\",\"proposed_bedrooms\",\"proposed_coverage_m2\",\"proposed_coverage_pct\",\"proposed_depth_m\",\"proposed_fsi\",\"proposed_gfa_basement_m2\",\"proposed_gfa_first_m2\",\"proposed_gfa_second_m2\",\"proposed_gfa_third_m2\",\"proposed_gfa_total_m2\",\"proposed_height_m\",\"proposed_length_m\",\"proposed_main_wall_height_m\",\"proposed_storeys\",\"proposed_units\",\"proposed_setback_front_m\",\"proposed_setback_rear_m\",\"proposed_setback_side_flank_m\",\"proposed_setback_side_left_m\",\"proposed_setback_side_right_m\",\"corner_lot\",\"source_batch\",\"source_sha256\",\"loaded_at\"]},\"external\":[\"toronto:coa-decision-pdfs-2017\"]}\n\n[load_coa_notices] completed in 288.7s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 3840,
+      "id": 4256,
       "pipeline": "load_coa_notices",
-      "status": "completed",
-      "started_at": "2026-10-21T15:27:02.538Z",
-      "completed_at": "2026-10-21T15:27:02.593Z",
-      "duration_ms": 70,
-      "records_total": null,
-      "records_new": null,
-      "records_updated": null,
+      "status": "completed_with_warnings",
+      "started_at": "2026-10-23T01:58:39.714Z",
+      "completed_at": "2026-10-23T02:03:28.384Z",
+      "duration_ms": 288682,
+      "records_total": 0,
+      "records_new": 0,
+      "records_updated": 0,
       "records_meta": {
         "gate": {
-          "reason": "unchanged_content_hash",
-          "gated_skip": true
+          "reason": "loaded",
+          "gated_skip": false
         },
         "config": {
           "coa_notices_items_min": 1000,
@@ -341,20 +651,285 @@
             "toronto:coa-decision-pdfs-2017": null
           }
         },
-        "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "terminal": "skipped_content_hash",
-        "warnings": [],
+        "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "terminal": "loaded_with_warnings",
+        "warnings": [
+          "target_unit_mismatch_items: 14",
+          "required_out_of_bounds: {\"count\":61,\"measured\":5436,\"sample_keys\":[\"toronto_ca_decision_pdf|A0193/17EYK|2\",\"toronto_ca_decision_pdf|A0258/17EYK|5\",\"toronto_ca_decision_pdf|A0295/17TEY|4\",\"toronto_ca_decision_pdf|A1087/16TEY|1\",\"toronto_ca_decision_pdf|A1094/16TEY|6\",\"toronto_ca_decision_pdf|A0902/16TEY|7\",\"toronto_ca_decis…",
+          "decision_disagree: 20",
+          "ckan_hearing_offset: 1"
+        ],
         "ledger_row": "owned",
         "audit_table": {
           "name": "CoA Decision-Notice Variances",
           "rows": [
             {
+              "value": 0,
+              "metric": "doc_sha_mismatch",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "viol == 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A document whose bytes changed since the pin must stop the run before any write: its parse would silently replace the pinned oracle. A re-pin is a reviewed manifest commit."
+              }
+            },
+            {
+              "value": 0,
+              "metric": "doc_acquire_failed",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "viol == 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A document that could not be acquired or extracted must stop the run before any write: its rows would otherwise be soft-retired by the MARK."
+              }
+            },
+            {
+              "value": 0.874,
+              "metric": "pair_rate_569",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "value_min 0.85",
+              "warn_threshold": "value_min 0.8",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "An extractor regression (pair rate under the pre-registered bound) must not upsert or retire anything."
+              }
+            },
+            {
+              "value": 1.41,
+              "metric": "notices_without_section_pct",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "pct <= 10",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A segmentation regression that loses variance sections must not retire the rows of the notices it lost."
+              }
+            },
+            {
               "value": {
-                "coa_applications": 33975
+                "max": 8,
+                "min": 0,
+                "measured": 1710,
+                "unmeasured": 175,
+                "out_of_bounds": 0
+              },
+              "metric": "mail_lag_out_of_bounds",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "viol <= 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "The hearing date comes from the document title, not the notice text; a title/date mismatch would misdate every law-at-hearing comparison, so it must stop the write."
+              }
+            },
+            {
+              "value": 0,
+              "metric": "reason_totality",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "viol == 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A counting defect means some notice or item went unaccounted, so nothing may be written or retired."
+              }
+            },
+            {
+              "value": 0,
+              "metric": "unit_target_mismatch",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "viol <= 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A target-map defect would put a value under the wrong rule for every consumer; it must stop the write."
+              }
+            },
+            {
+              "value": 14,
+              "metric": "target_unit_mismatch_items",
+              "source": "check",
+              "status": "WARN",
+              "observed": "before_write",
+              "threshold": "viol == 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "An item whose unit family disagrees with its mapped target must stay visible on every run even when its values are not claimed."
+              }
+            },
+            {
+              "value": 0,
+              "metric": "batch_target_map_stale",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "viol == 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A batch built under an older target map must stay visible on every run; its stored targets are not silently remapped."
+              }
+            },
+            {
+              "value": {
+                "rate": 0.75,
+                "doc_id": "965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1",
+                "eligible_docs": 61
+              },
+              "metric": "doc_pair_rate_floor",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "value_min 0.6",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "One document whose layout the extractor cannot read must not dilute into a passing aggregate and then be written."
+              }
+            },
+            {
+              "value": 0,
+              "metric": "docs_no_notices",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "viol == 0",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A document that yields no notices is a wrong document or a broken extraction; its rows must not be retired."
+              }
+            },
+            {
+              "value": 10794,
+              "metric": "items_total_floor",
+              "source": "check",
+              "status": "PASS",
+              "observed": "before_write",
+              "threshold": "value_min 1000",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A near-empty parse must not retire the oracle."
+              }
+            },
+            {
+              "value": 2.76,
+              "metric": "direction_violation_pct",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "pct <= 5"
+            },
+            {
+              "value": {
+                "count": 61,
+                "measured": 5436,
+                "sample_keys": [
+                  "toronto_ca_decision_pdf|A0193/17EYK|2",
+                  "toronto_ca_decision_pdf|A0258/17EYK|5",
+                  "toronto_ca_decision_pdf|A0295/17TEY|4",
+                  "toronto_ca_decision_pdf|A1087/16TEY|1",
+                  "toronto_ca_decision_pdf|A1094/16TEY|6",
+                  "toronto_ca_decision_pdf|A0902/16TEY|7",
+                  "toronto_ca_decision_pdf|A0300/17TEY|1",
+                  "toronto_ca_decision_pdf|A0357/17TEY|2",
+                  "toronto_ca_decision_pdf|A1202/16TEY|2",
+                  "toronto_ca_decision_pdf|A1202/16TEY|5"
+                ]
+              },
+              "metric": "required_out_of_bounds",
+              "source": "check",
+              "status": "WARN",
+              "observed": "after_write",
+              "threshold": "viol <= 0"
+            },
+            {
+              "value": 0,
+              "metric": "app_not_in_coa_applications",
+              "source": "plausibility",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 20,
+              "metric": "decision_disagree",
+              "source": "plausibility",
+              "status": "WARN",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 1,
+              "metric": "ckan_hearing_offset",
+              "source": "plausibility",
+              "status": "WARN",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "active_dup_items",
+              "source": "plausibility",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "coa_applications": 33982
               },
               "metric": "inputs_nonempty",
               "status": "INFO",
               "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
+            },
+            {
+              "value": "no_baseline: the prior run recorded no record_fields",
+              "metric": "schema_drift:toronto:coa-decision-pdfs-2017",
+              "status": "INFO",
+              "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header"
+            },
+            {
+              "value": 6,
+              "metric": "sys_app_not_in_coa_applications_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 44,
+              "metric": "sys_decision_disagree_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 43,
+              "metric": "sys_ckan_hearing_offset_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 6,
+              "metric": "sys_active_dup_items_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 0,
+              "metric": "records_retired",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 0,
+              "metric": "records_unretired",
+              "status": "INFO",
+              "threshold": null
             },
             {
               "value": 0,
@@ -363,29 +938,28 @@
               "threshold": null
             },
             {
-              "value": 71,
+              "value": 288681,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
             }
           ],
           "phase": 1,
-          "verdict": "PASS"
+          "verdict": "WARN"
         },
         "pool_errors": 0,
         "chain_run_id": null,
         "checks_failed": 0,
-        "checks_passed": "all",
-        "checks_warned": 0,
+        "checks_warned": 4,
         "coa_notices_load": {
-          "docs_total": 78,
-          "items_total": 10103,
-          "content_hash": "9a98bc74f6c1cf8b56ad88f72ca4318939e5d3ca844bccf0794c71afca9af480",
+          "docs_total": 81,
+          "items_total": 10794,
+          "content_hash": "4b751f12d908b927ba47f3e970852182e79d0b2e92cbdec19ce53ad86a4c89cc",
           "spec_version": "1.0",
           "bytes_fetched": 301402843,
           "docs_excluded": 8,
           "pair_rate_569": 0.8740652617267165,
-          "vocab_version": "coa-vocab-3",
+          "vocab_version": "coa-vocab-4",
           "citation_multi": 7,
           "doc_pair_rates": {
             "8de7-c-of-a-sc-decisions-july-13-2017": 0.9848484848484849,
@@ -451,7 +1025,7 @@
             "965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1": 0.75
           },
           "docs_by_status": {
-            "parsed": 70,
+            "parsed": 73,
             "timeout": 0,
             "excluded": 8,
             "too_large": 0,
@@ -461,51 +1035,57 @@
             "no_text_layer": 0,
             "no_notices_found": 0
           },
-          "skipped_reason": "unchanged_content_hash",
+          "skipped_reason": null,
+          "items_by_family": {
+            "aic_values_batch": 691,
+            "toronto_ca_decision_pdf": 10103
+          },
           "manifest_sha256": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b",
-          "qualified_items": 832,
+          "qualified_items": 944,
+          "plan_facts_total": 129,
           "extractor_version": "coa-extractor-3",
           "notices_by_status": {
             "not_minor_variance": 144,
             "no_variance_section": 27,
             "duplicate_superseded": 1,
-            "variance_section_parsed": 1714,
+            "variance_section_parsed": 1884,
             "signature_page_duplicate": 0,
             "duplicate_same_date_conflict": 0
           },
           "items_by_confidence": {
-            "low": 1484,
-            "high": 2868,
-            "medium": 5751
+            "low": 1670,
+            "high": 3152,
+            "medium": 5972
           },
           "consent_items_skipped": 35,
           "items_by_parse_status": {
-            "pair": 8610,
+            "pair": 9115,
             "no_split": 83,
             "side_ambiguous": 0,
-            "no_proposed_value": 116,
-            "no_required_value": 792,
-            "target_unit_mismatch": 9,
+            "no_proposed_value": 128,
+            "no_required_value": 847,
+            "target_unit_mismatch": 14,
             "unit_family_mismatch": 49,
-            "multi_value_ambiguous": 444
+            "multi_value_ambiguous": 558
           },
           "items_by_target_status": {
-            "mapped": 6202,
-            "unmapped": 3809,
-            "ambiguous": 92
+            "mapped": 6591,
+            "unmapped": 4095,
+            "ambiguous": 108
           },
           "source_dataset_version": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b"
-        }
+        },
+        "coa_plan_facts_written": 0
       },
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 3839,
+  "pipeline_runs_max_id_before": 4255,
   "table_state": [
     {
       "table": "coa_notice_variances",
-      "row_count": 10098,
-      "content_hash": "04eec7b4682efd5a46a02264388a9d34",
+      "row_count": 10789,
+      "content_hash": "da52ad4a387be483be033016e647ffa8",
       "order_by": "explicit",
       "order_columns": [
         "variance_key"
@@ -538,14 +1118,63 @@
         "source_page",
         "extractor_version",
         "vocab_version",
+        "doc_type",
+        "source_batch",
         "retired_at"
+      ]
+    },
+    {
+      "table": "coa_plan_facts",
+      "row_count": 129,
+      "content_hash": "a7d48edc539ecb13c490d3fb5b221ed3",
+      "order_by": "explicit",
+      "order_columns": [
+        "application_number"
+      ],
+      "columns": [
+        "application_number",
+        "lot_area_m2",
+        "lot_depth_m",
+        "lot_frontage_m",
+        "established_grade",
+        "existing_coverage_m2",
+        "existing_gfa_m2",
+        "existing_height_m",
+        "existing_storeys",
+        "front_landscaped_pct",
+        "front_soft_pct",
+        "rear_soft_pct",
+        "proposed_bedrooms",
+        "proposed_coverage_m2",
+        "proposed_coverage_pct",
+        "proposed_depth_m",
+        "proposed_fsi",
+        "proposed_gfa_basement_m2",
+        "proposed_gfa_first_m2",
+        "proposed_gfa_second_m2",
+        "proposed_gfa_third_m2",
+        "proposed_gfa_total_m2",
+        "proposed_height_m",
+        "proposed_length_m",
+        "proposed_main_wall_height_m",
+        "proposed_storeys",
+        "proposed_units",
+        "proposed_setback_front_m",
+        "proposed_setback_rear_m",
+        "proposed_setback_side_flank_m",
+        "proposed_setback_side_left_m",
+        "proposed_setback_side_right_m",
+        "corner_lot",
+        "source_batch",
+        "source_sha256"
       ]
     }
   ],
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "coa_notice_variances": 40
+    "coa_notice_variances": 22,
+    "coa_plan_facts": 1
   },
   "table_specs": {
     "coa_notice_variances": {
@@ -577,11 +1206,57 @@
         "source_page",
         "extractor_version",
         "vocab_version",
+        "doc_type",
+        "source_batch",
         "retired_at"
       ],
       "columns_source": "descriptor",
       "order": [
         "variance_key"
+      ],
+      "order_source": "descriptor"
+    },
+    "coa_plan_facts": {
+      "columns": [
+        "application_number",
+        "lot_area_m2",
+        "lot_depth_m",
+        "lot_frontage_m",
+        "established_grade",
+        "existing_coverage_m2",
+        "existing_gfa_m2",
+        "existing_height_m",
+        "existing_storeys",
+        "front_landscaped_pct",
+        "front_soft_pct",
+        "rear_soft_pct",
+        "proposed_bedrooms",
+        "proposed_coverage_m2",
+        "proposed_coverage_pct",
+        "proposed_depth_m",
+        "proposed_fsi",
+        "proposed_gfa_basement_m2",
+        "proposed_gfa_first_m2",
+        "proposed_gfa_second_m2",
+        "proposed_gfa_third_m2",
+        "proposed_gfa_total_m2",
+        "proposed_height_m",
+        "proposed_length_m",
+        "proposed_main_wall_height_m",
+        "proposed_storeys",
+        "proposed_units",
+        "proposed_setback_front_m",
+        "proposed_setback_rear_m",
+        "proposed_setback_side_flank_m",
+        "proposed_setback_side_left_m",
+        "proposed_setback_side_right_m",
+        "corner_lot",
+        "source_batch",
+        "source_sha256"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "application_number"
       ],
       "order_source": "descriptor"
     }
@@ -593,11 +1268,11 @@
     },
     {
       "name": "decision_disagree",
-      "value": "8"
+      "value": "20"
     },
     {
       "name": "ckan_hearing_offset",
-      "value": "0"
+      "value": "1"
     },
     {
       "name": "active_dup_items",
@@ -618,6 +1293,10 @@
     "key:summary.records_meta.chain_run_id",
     "key:summary.records_meta.code_sha",
     "pattern:duration_literal",
+    "row:sys_active_dup_items_duration_ms",
+    "row:sys_app_not_in_coa_applications_duration_ms",
+    "row:sys_ckan_hearing_offset_duration_ms",
+    "row:sys_decision_disagree_duration_ms",
     "row:sys_duration_ms",
     "row:sys_velocity_rows_sec"
   ],
@@ -637,24 +1316,259 @@
           "phase": 1,
           "rows": [
             {
+              "metric": "doc_sha_mismatch",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A document whose bytes changed since the pin must stop the run before any write: its parse would silently replace the pinned oracle. A re-pin is a reviewed manifest commit."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "doc_acquire_failed",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A document that could not be acquired or extracted must stop the run before any write: its rows would otherwise be soft-retired by the MARK."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "pair_rate_569",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "An extractor regression (pair rate under the pre-registered bound) must not upsert or retire anything."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_min 0.85",
+              "value": 0.874,
+              "warn_threshold": "value_min 0.8"
+            },
+            {
+              "metric": "notices_without_section_pct",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A segmentation regression that loses variance sections must not retire the rows of the notices it lost."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 10",
+              "value": 1.41
+            },
+            {
+              "metric": "mail_lag_out_of_bounds",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "The hearing date comes from the document title, not the notice text; a title/date mismatch would misdate every law-at-hearing comparison, so it must stop the write."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol <= 0",
+              "value": {
+                "max": 8,
+                "measured": 1710,
+                "min": 0,
+                "out_of_bounds": 0,
+                "unmeasured": 175
+              }
+            },
+            {
+              "metric": "reason_totality",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A counting defect means some notice or item went unaccounted, so nothing may be written or retired."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "unit_target_mismatch",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A target-map defect would put a value under the wrong rule for every consumer; it must stop the write."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol <= 0",
+              "value": 0
+            },
+            {
+              "metric": "target_unit_mismatch_items",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "An item whose unit family disagrees with its mapped target must stay visible on every run even when its values are not claimed."
+              },
+              "source": "check",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": 14
+            },
+            {
+              "metric": "batch_target_map_stale",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A batch built under an older target map must stay visible on every run; its stored targets are not silently remapped."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "doc_pair_rate_floor",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "One document whose layout the extractor cannot read must not dilute into a passing aggregate and then be written."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_min 0.6",
+              "value": {
+                "doc_id": "965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1",
+                "eligible_docs": 61,
+                "rate": 0.75
+              }
+            },
+            {
+              "metric": "docs_no_notices",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A document that yields no notices is a wrong document or a broken extraction; its rows must not be retired."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "items_total_floor",
+              "observed": "before_write",
+              "order_guarantee": {
+                "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                "guarantee": "A near-empty parse must not retire the oracle."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_min 1000",
+              "value": 10794
+            },
+            {
+              "metric": "direction_violation_pct",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 5",
+              "value": 2.76
+            },
+            {
+              "metric": "required_out_of_bounds",
+              "observed": "after_write",
+              "source": "check",
+              "status": "WARN",
+              "threshold": "viol <= 0",
+              "value": {
+                "count": 61,
+                "measured": 5436,
+                "sample_keys": [
+                  "toronto_ca_decision_pdf|A0193/17EYK|2",
+                  "toronto_ca_decision_pdf|A0258/17EYK|5",
+                  "toronto_ca_decision_pdf|A0295/17TEY|4",
+                  "toronto_ca_decision_pdf|A1087/16TEY|1",
+                  "toronto_ca_decision_pdf|A1094/16TEY|6",
+                  "toronto_ca_decision_pdf|A0902/16TEY|7",
+                  "toronto_ca_decision_pdf|A0300/17TEY|1",
+                  "toronto_ca_decision_pdf|A0357/17TEY|2",
+                  "toronto_ca_decision_pdf|A1202/16TEY|2",
+                  "toronto_ca_decision_pdf|A1202/16TEY|5"
+                ]
+              }
+            },
+            {
+              "metric": "app_not_in_coa_applications",
+              "observed": "after_write",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "decision_disagree",
+              "observed": "after_write",
+              "source": "plausibility",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": 20
+            },
+            {
+              "metric": "ckan_hearing_offset",
+              "observed": "after_write",
+              "source": "plausibility",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": 1
+            },
+            {
+              "metric": "active_dup_items",
+              "observed": "after_write",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
               "metric": "inputs_nonempty",
               "status": "INFO",
               "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
               "value": {
-                "coa_applications": 33975
+                "coa_applications": 33982
               }
+            },
+            {
+              "metric": "schema_drift:toronto:coa-decision-pdfs-2017",
+              "status": "INFO",
+              "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+              "value": "no_baseline: the prior run recorded no record_fields"
+            },
+            {
+              "metric": "records_retired",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_unretired",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
             }
           ],
-          "verdict": "PASS"
+          "verdict": "WARN"
         },
         "checks_failed": 0,
-        "checks_passed": "all",
-        "checks_warned": 0,
+        "checks_warned": 4,
         "coa_notices_load": {
           "bytes_fetched": 301402843,
           "citation_multi": 7,
           "consent_items_skipped": 35,
-          "content_hash": "9a98bc74f6c1cf8b56ad88f72ca4318939e5d3ca844bccf0794c71afca9af480",
+          "content_hash": "4b751f12d908b927ba47f3e970852182e79d0b2e92cbdec19ce53ad86a4c89cc",
           "doc_pair_rates": {
             "876c-c-of-a-etobicoke-decision-may-4-2017-1": 0.8682170542635659,
             "87b5-c-of-a-tey-decisions-july-26-2017-pm-hearing": 0.8300653594771242,
@@ -724,35 +1638,39 @@
             "http_error": 0,
             "no_notices_found": 0,
             "no_text_layer": 0,
-            "parsed": 70,
+            "parsed": 73,
             "sha_mismatch": 0,
             "timeout": 0,
             "too_large": 0
           },
           "docs_excluded": 8,
-          "docs_total": 78,
+          "docs_total": 81,
           "extractor_version": "coa-extractor-3",
           "items_by_confidence": {
-            "high": 2868,
-            "low": 1484,
-            "medium": 5751
+            "high": 3152,
+            "low": 1670,
+            "medium": 5972
+          },
+          "items_by_family": {
+            "aic_values_batch": 691,
+            "toronto_ca_decision_pdf": 10103
           },
           "items_by_parse_status": {
-            "multi_value_ambiguous": 444,
-            "no_proposed_value": 116,
-            "no_required_value": 792,
+            "multi_value_ambiguous": 558,
+            "no_proposed_value": 128,
+            "no_required_value": 847,
             "no_split": 83,
-            "pair": 8610,
+            "pair": 9115,
             "side_ambiguous": 0,
-            "target_unit_mismatch": 9,
+            "target_unit_mismatch": 14,
             "unit_family_mismatch": 49
           },
           "items_by_target_status": {
-            "ambiguous": 92,
-            "mapped": 6202,
-            "unmapped": 3809
+            "ambiguous": 108,
+            "mapped": 6591,
+            "unmapped": 4095
           },
-          "items_total": 10103,
+          "items_total": 10794,
           "manifest_sha256": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b",
           "notices_by_status": {
             "duplicate_same_date_conflict": 0,
@@ -760,15 +1678,17 @@
             "no_variance_section": 27,
             "not_minor_variance": 144,
             "signature_page_duplicate": 0,
-            "variance_section_parsed": 1714
+            "variance_section_parsed": 1884
           },
           "pair_rate_569": 0.8740652617267165,
-          "qualified_items": 832,
-          "skipped_reason": "unchanged_content_hash",
+          "plan_facts_total": 129,
+          "qualified_items": 944,
+          "skipped_reason": null,
           "source_dataset_version": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b",
           "spec_version": "1.0",
-          "vocab_version": "coa-vocab-3"
+          "vocab_version": "coa-vocab-4"
         },
+        "coa_plan_facts_written": 0,
         "config": {
           "coa_notices_direction_viol_max_pct": 5,
           "coa_notices_doc_pair_rate_floor": 0.6,
@@ -812,17 +1732,22 @@
         },
         "errors": [],
         "gate": {
-          "gated_skip": true,
-          "reason": "unchanged_content_hash"
+          "gated_skip": false,
+          "reason": "loaded"
         },
         "ledger_row": "owned",
         "pool_errors": 0,
-        "terminal": "skipped_content_hash",
-        "warnings": []
+        "terminal": "loaded_with_warnings",
+        "warnings": [
+          "target_unit_mismatch_items: 14",
+          "required_out_of_bounds: {\"count\":61,\"measured\":5436,\"sample_keys\":[\"toronto_ca_decision_pdf|A0193/17EYK|2\",\"toronto_ca_decision_pdf|A0258/17EYK|5\",\"toronto_ca_decision_pdf|A0295/17TEY|4\",\"toronto_ca_decision_pdf|A1087/16TEY|1\",\"toronto_ca_decision_pdf|A1094/16TEY|6\",\"toronto_ca_decision_pdf|A0902/16TEY|7\",\"toronto_ca_decis…",
+          "decision_disagree: 20",
+          "ckan_hearing_offset: 1"
+        ]
       },
-      "records_new": null,
-      "records_total": null,
-      "records_updated": null
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
     },
     "summary_count": 1,
     "meta": [
@@ -870,7 +1795,47 @@
             "source_page",
             "extractor_version",
             "vocab_version",
+            "doc_type",
+            "source_batch",
             "retired_at",
+            "loaded_at"
+          ],
+          "coa_plan_facts": [
+            "application_number",
+            "lot_area_m2",
+            "lot_depth_m",
+            "lot_frontage_m",
+            "established_grade",
+            "existing_coverage_m2",
+            "existing_gfa_m2",
+            "existing_height_m",
+            "existing_storeys",
+            "front_landscaped_pct",
+            "front_soft_pct",
+            "rear_soft_pct",
+            "proposed_bedrooms",
+            "proposed_coverage_m2",
+            "proposed_coverage_pct",
+            "proposed_depth_m",
+            "proposed_fsi",
+            "proposed_gfa_basement_m2",
+            "proposed_gfa_first_m2",
+            "proposed_gfa_second_m2",
+            "proposed_gfa_third_m2",
+            "proposed_gfa_total_m2",
+            "proposed_height_m",
+            "proposed_length_m",
+            "proposed_main_wall_height_m",
+            "proposed_storeys",
+            "proposed_units",
+            "proposed_setback_front_m",
+            "proposed_setback_rear_m",
+            "proposed_setback_side_flank_m",
+            "proposed_setback_side_left_m",
+            "proposed_setback_side_right_m",
+            "corner_lot",
+            "source_batch",
+            "source_sha256",
             "loaded_at"
           ]
         }
@@ -892,24 +1857,259 @@
             "phase": 1,
             "rows": [
               {
+                "metric": "doc_sha_mismatch",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A document whose bytes changed since the pin must stop the run before any write: its parse would silently replace the pinned oracle. A re-pin is a reviewed manifest commit."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "doc_acquire_failed",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A document that could not be acquired or extracted must stop the run before any write: its rows would otherwise be soft-retired by the MARK."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "pair_rate_569",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "An extractor regression (pair rate under the pre-registered bound) must not upsert or retire anything."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "value_min 0.85",
+                "value": 0.874,
+                "warn_threshold": "value_min 0.8"
+              },
+              {
+                "metric": "notices_without_section_pct",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A segmentation regression that loses variance sections must not retire the rows of the notices it lost."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 10",
+                "value": 1.41
+              },
+              {
+                "metric": "mail_lag_out_of_bounds",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "The hearing date comes from the document title, not the notice text; a title/date mismatch would misdate every law-at-hearing comparison, so it must stop the write."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol <= 0",
+                "value": {
+                  "max": 8,
+                  "measured": 1710,
+                  "min": 0,
+                  "out_of_bounds": 0,
+                  "unmeasured": 175
+                }
+              },
+              {
+                "metric": "reason_totality",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A counting defect means some notice or item went unaccounted, so nothing may be written or retired."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "unit_target_mismatch",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A target-map defect would put a value under the wrong rule for every consumer; it must stop the write."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol <= 0",
+                "value": 0
+              },
+              {
+                "metric": "target_unit_mismatch_items",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "An item whose unit family disagrees with its mapped target must stay visible on every run even when its values are not claimed."
+                },
+                "source": "check",
+                "status": "WARN",
+                "threshold": "viol == 0",
+                "value": 14
+              },
+              {
+                "metric": "batch_target_map_stale",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A batch built under an older target map must stay visible on every run; its stored targets are not silently remapped."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "doc_pair_rate_floor",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "One document whose layout the extractor cannot read must not dilute into a passing aggregate and then be written."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "value_min 0.6",
+                "value": {
+                  "doc_id": "965a-pages-from-c-of-a-etobicoke-decisions-april-6-2017-compressed-1",
+                  "eligible_docs": 61,
+                  "rate": 0.75
+                }
+              },
+              {
+                "metric": "docs_no_notices",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A document that yields no notices is a wrong document or a broken extraction; its rows must not be retired."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "items_total_floor",
+                "observed": "before_write",
+                "order_guarantee": {
+                  "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition",
+                  "guarantee": "A near-empty parse must not retire the oracle."
+                },
+                "source": "check",
+                "status": "PASS",
+                "threshold": "value_min 1000",
+                "value": 10794
+              },
+              {
+                "metric": "direction_violation_pct",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 5",
+                "value": 2.76
+              },
+              {
+                "metric": "required_out_of_bounds",
+                "observed": "after_write",
+                "source": "check",
+                "status": "WARN",
+                "threshold": "viol <= 0",
+                "value": {
+                  "count": 61,
+                  "measured": 5436,
+                  "sample_keys": [
+                    "toronto_ca_decision_pdf|A0193/17EYK|2",
+                    "toronto_ca_decision_pdf|A0258/17EYK|5",
+                    "toronto_ca_decision_pdf|A0295/17TEY|4",
+                    "toronto_ca_decision_pdf|A1087/16TEY|1",
+                    "toronto_ca_decision_pdf|A1094/16TEY|6",
+                    "toronto_ca_decision_pdf|A0902/16TEY|7",
+                    "toronto_ca_decision_pdf|A0300/17TEY|1",
+                    "toronto_ca_decision_pdf|A0357/17TEY|2",
+                    "toronto_ca_decision_pdf|A1202/16TEY|2",
+                    "toronto_ca_decision_pdf|A1202/16TEY|5"
+                  ]
+                }
+              },
+              {
+                "metric": "app_not_in_coa_applications",
+                "observed": "after_write",
+                "source": "plausibility",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "decision_disagree",
+                "observed": "after_write",
+                "source": "plausibility",
+                "status": "WARN",
+                "threshold": "viol == 0",
+                "value": 20
+              },
+              {
+                "metric": "ckan_hearing_offset",
+                "observed": "after_write",
+                "source": "plausibility",
+                "status": "WARN",
+                "threshold": "viol == 0",
+                "value": 1
+              },
+              {
+                "metric": "active_dup_items",
+                "observed": "after_write",
+                "source": "plausibility",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
                 "metric": "inputs_nonempty",
                 "status": "INFO",
                 "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
                 "value": {
-                  "coa_applications": 33975
+                  "coa_applications": 33982
                 }
+              },
+              {
+                "metric": "schema_drift:toronto:coa-decision-pdfs-2017",
+                "status": "INFO",
+                "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+                "value": "no_baseline: the prior run recorded no record_fields"
+              },
+              {
+                "metric": "records_retired",
+                "status": "INFO",
+                "threshold": null,
+                "value": 0
+              },
+              {
+                "metric": "records_unretired",
+                "status": "INFO",
+                "threshold": null,
+                "value": 0
               }
             ],
-            "verdict": "PASS"
+            "verdict": "WARN"
           },
           "checks_failed": 0,
-          "checks_passed": "all",
-          "checks_warned": 0,
+          "checks_warned": 4,
           "coa_notices_load": {
             "bytes_fetched": 301402843,
             "citation_multi": 7,
             "consent_items_skipped": 35,
-            "content_hash": "9a98bc74f6c1cf8b56ad88f72ca4318939e5d3ca844bccf0794c71afca9af480",
+            "content_hash": "4b751f12d908b927ba47f3e970852182e79d0b2e92cbdec19ce53ad86a4c89cc",
             "doc_pair_rates": {
               "876c-c-of-a-etobicoke-decision-may-4-2017-1": 0.8682170542635659,
               "87b5-c-of-a-tey-decisions-july-26-2017-pm-hearing": 0.8300653594771242,
@@ -979,35 +2179,39 @@
               "http_error": 0,
               "no_notices_found": 0,
               "no_text_layer": 0,
-              "parsed": 70,
+              "parsed": 73,
               "sha_mismatch": 0,
               "timeout": 0,
               "too_large": 0
             },
             "docs_excluded": 8,
-            "docs_total": 78,
+            "docs_total": 81,
             "extractor_version": "coa-extractor-3",
             "items_by_confidence": {
-              "high": 2868,
-              "low": 1484,
-              "medium": 5751
+              "high": 3152,
+              "low": 1670,
+              "medium": 5972
+            },
+            "items_by_family": {
+              "aic_values_batch": 691,
+              "toronto_ca_decision_pdf": 10103
             },
             "items_by_parse_status": {
-              "multi_value_ambiguous": 444,
-              "no_proposed_value": 116,
-              "no_required_value": 792,
+              "multi_value_ambiguous": 558,
+              "no_proposed_value": 128,
+              "no_required_value": 847,
               "no_split": 83,
-              "pair": 8610,
+              "pair": 9115,
               "side_ambiguous": 0,
-              "target_unit_mismatch": 9,
+              "target_unit_mismatch": 14,
               "unit_family_mismatch": 49
             },
             "items_by_target_status": {
-              "ambiguous": 92,
-              "mapped": 6202,
-              "unmapped": 3809
+              "ambiguous": 108,
+              "mapped": 6591,
+              "unmapped": 4095
             },
-            "items_total": 10103,
+            "items_total": 10794,
             "manifest_sha256": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b",
             "notices_by_status": {
               "duplicate_same_date_conflict": 0,
@@ -1015,15 +2219,17 @@
               "no_variance_section": 27,
               "not_minor_variance": 144,
               "signature_page_duplicate": 0,
-              "variance_section_parsed": 1714
+              "variance_section_parsed": 1884
             },
             "pair_rate_569": 0.8740652617267165,
-            "qualified_items": 832,
-            "skipped_reason": "unchanged_content_hash",
+            "plan_facts_total": 129,
+            "qualified_items": 944,
+            "skipped_reason": null,
             "source_dataset_version": "3b26c15ce7753bbb728963da3ca87dabd6872363e8a724a262b4d4af63b0971b",
             "spec_version": "1.0",
-            "vocab_version": "coa-vocab-3"
+            "vocab_version": "coa-vocab-4"
           },
+          "coa_plan_facts_written": 0,
           "config": {
             "coa_notices_direction_viol_max_pct": 5,
             "coa_notices_doc_pair_rate_floor": 0.6,
@@ -1067,23 +2273,28 @@
           },
           "errors": [],
           "gate": {
-            "gated_skip": true,
-            "reason": "unchanged_content_hash"
+            "gated_skip": false,
+            "reason": "loaded"
           },
           "ledger_row": "owned",
           "pool_errors": 0,
-          "terminal": "skipped_content_hash",
-          "warnings": []
+          "terminal": "loaded_with_warnings",
+          "warnings": [
+            "target_unit_mismatch_items: 14",
+            "required_out_of_bounds: {\"count\":61,\"measured\":5436,\"sample_keys\":[\"toronto_ca_decision_pdf|A0193/17EYK|2\",\"toronto_ca_decision_pdf|A0258/17EYK|5\",\"toronto_ca_decision_pdf|A0295/17TEY|4\",\"toronto_ca_decision_pdf|A1087/16TEY|1\",\"toronto_ca_decision_pdf|A1094/16TEY|6\",\"toronto_ca_decision_pdf|A0902/16TEY|7\",\"toronto_ca_decis…",
+            "decision_disagree: 20",
+            "ckan_hearing_offset: 1"
+          ]
         },
-        "records_new": null,
-        "records_total": null,
-        "records_updated": null,
-        "status": "completed"
+        "records_new": 0,
+        "records_total": 0,
+        "records_updated": 0,
+        "status": "completed_with_warnings"
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[load_coa_notices] target: load_coa_notices (descriptor.database) → database=postgres user=postgres migrations=268 (floor 249)\",\"tag\":\"[load_coa_notices]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"pdf_document_set gate: skip (unchanged_content_hash) — manifest + logic_version unchanged, nothing fetched\",\"tag\":\"[load_coa_notices]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[load_coa_notices] target: load_coa_notices (descriptor.database) → database=postgres user=postgres migrations=275 (floor 249)\",\"tag\":\"[load_coa_notices]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired pdf_document_set \\\"toronto:coa-decision-pdfs-2017\\\": 70 document(s) + 3 values batch(es), 301402843 bytes, 73 parsed (manifest 3b26c15c…)\",\"tag\":\"[load_coa_notices]\"}",
       "[load_coa_notices] completed in <DUR>"
     ],
     "table_state": [
@@ -1116,15 +2327,63 @@
           "source_page",
           "extractor_version",
           "vocab_version",
+          "doc_type",
+          "source_batch",
           "retired_at"
         ],
-        "content_hash": "04eec7b4682efd5a46a02264388a9d34",
+        "content_hash": "da52ad4a387be483be033016e647ffa8",
         "order_by": "explicit",
         "order_columns": [
           "variance_key"
         ],
-        "row_count": 10098,
+        "row_count": 10789,
         "table": "coa_notice_variances"
+      },
+      {
+        "columns": [
+          "application_number",
+          "lot_area_m2",
+          "lot_depth_m",
+          "lot_frontage_m",
+          "established_grade",
+          "existing_coverage_m2",
+          "existing_gfa_m2",
+          "existing_height_m",
+          "existing_storeys",
+          "front_landscaped_pct",
+          "front_soft_pct",
+          "rear_soft_pct",
+          "proposed_bedrooms",
+          "proposed_coverage_m2",
+          "proposed_coverage_pct",
+          "proposed_depth_m",
+          "proposed_fsi",
+          "proposed_gfa_basement_m2",
+          "proposed_gfa_first_m2",
+          "proposed_gfa_second_m2",
+          "proposed_gfa_third_m2",
+          "proposed_gfa_total_m2",
+          "proposed_height_m",
+          "proposed_length_m",
+          "proposed_main_wall_height_m",
+          "proposed_storeys",
+          "proposed_units",
+          "proposed_setback_front_m",
+          "proposed_setback_rear_m",
+          "proposed_setback_side_flank_m",
+          "proposed_setback_side_left_m",
+          "proposed_setback_side_right_m",
+          "corner_lot",
+          "source_batch",
+          "source_sha256"
+        ],
+        "content_hash": "a7d48edc539ecb13c490d3fb5b221ed3",
+        "order_by": "explicit",
+        "order_columns": [
+          "application_number"
+        ],
+        "row_count": 129,
+        "table": "coa_plan_facts"
       }
     ],
     "invariants": [
@@ -1134,11 +2393,11 @@
       },
       {
         "name": "decision_disagree",
-        "value": "8"
+        "value": "20"
       },
       {
         "name": "ckan_hearing_offset",
-        "value": "0"
+        "value": "1"
       },
       {
         "name": "active_dup_items",
@@ -1155,39 +2414,46 @@
         "answer": "zero",
         "rewritten": 0,
         "row_delta": 0
+      },
+      {
+        "table": "coa_plan_facts",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
       }
     ],
-    "reason": "zero writes on 1 table(s) [coa_notice_variances]",
-    "txid_before_run2": 495717,
+    "reason": "zero writes on 2 table(s) [coa_notice_variances,coa_plan_facts]",
+    "txid_before_run2": 584543,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "skipped_content_hash",
       "audit": {
         "inputs_nonempty": {
-          "coa_applications": 33975
+          "coa_applications": 33982
         },
         "sys_velocity_rows_sec": 0,
-        "sys_duration_ms": 53
+        "sys_duration_ms": 60
       }
     }
   },
   "capture_ledger_rows": [
     {
-      "id": 3840,
+      "id": 4256,
       "recorded_by": "step"
     },
     {
-      "id": 3841,
+      "id": 4257,
       "recorded_by": "step"
     }
   ],
-  "source_fingerprint": "ef11487b727566d08300153d76a8522b7915d8ac50284fac7b395349525ff542",
+  "source_fingerprint": "244dd9966f45a2c806d276eeef08aabd3e1941da54f3baa55fdcdb051ee53a4e",
   "fingerprint_files": [
     "scripts/lib/compute/load-coa-notices.js",
     "scripts/load-coa-notices.descriptor.json",
     "scripts/load-coa-notices.js",
     "scripts/load-coa-notices.notes.json"
   ],
-  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
 }

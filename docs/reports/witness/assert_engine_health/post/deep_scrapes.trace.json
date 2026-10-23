@@ -3,21 +3,21 @@
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "deep_scrapes",
   "source_fingerprint": "dff27c5f2967fc0b4564ca7994275f3980842a2408a224e10778006e2b343365",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
-    "calls": 248,
+    "calls": 278,
     "distinct": 21,
     "utility": 5,
-    "tracer_self_ms": 4.34,
-    "wall_ms": 412
+    "tracer_self_ms": 4.604,
+    "wall_ms": 397
   },
   "statements": [
     {
       "fingerprint": "018abfe6b1e0291a",
       "kind": "read",
       "count": 1,
-      "rowCount": 29,
+      "rowCount": 14,
       "reads": {
         "pg_stat_user_tables": [
           "idx_scan",
@@ -59,7 +59,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 224,
+      "rowCount": 254,
       "reads": {
         "pg_stat_user_tables": [
           "relname",
@@ -74,7 +74,7 @@
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 208,
+      "rowCount": 61,
       "reads": {
         "pg_stat_user_tables": [
           "n_tup_ins",
@@ -120,7 +120,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -175,8 +175,8 @@
     {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 227,
-      "rowCount": 17,
+      "count": 257,
+      "rowCount": 20,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -207,7 +207,7 @@
       "fingerprint": "a37b37a75a1fd130",
       "kind": "read",
       "count": 1,
-      "rowCount": 40,
+      "rowCount": 19,
       "reads": {
         "pg_stat_user_tables": [
           "n_dead_tup",
@@ -246,7 +246,7 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 224,
+      "rowCount": 254,
       "reads": {
         "pg_stat_user_tables": [
           "n_dead_tup",
@@ -298,7 +298,7 @@
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 227,
+      "rowCount": 257,
       "reads": {
         "pg_stat_user_tables": [
           "idx_scan",

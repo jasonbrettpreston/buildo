@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-coa-freshness.js",
   "chain": "none",
   "source_fingerprint": "87ef4c17453f623f34cc546d19e501006504ea9fc181f88b12a502d1fb9afc36",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 13,
     "distinct": 12,
     "utility": 5,
-    "tracer_self_ms": 0.798,
-    "wall_ms": 264
+    "tracer_self_ms": 0.817,
+    "wall_ms": 259
   },
   "statements": [
     {
@@ -28,13 +28,13 @@
       "params": [
         [
           "completed",
-          79,
+          78,
           null,
-          3889,
+          4271,
           null,
           null,
           null,
-          "{\"config\":{\"assert_coa_freshness_warn_max_days\":45,\"assert_coa_freshness_fail_max_days\":135},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Source Freshness\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"total_records_present\",\"value\":\"33982 coa_applications rows\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ingestion_days_ago\",\"value\":0,\"threshold\":\"value_max 45\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_max 135\",\"observed\":\"before_write\"},{\"source\":\"context\",\"metric\":\"total_records\",\"value\":33982,\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"last_ingestion\",\"value\":\"2026-10-22\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_decision_date\",\"value\":\"2026-12-21T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_hearing_date\",\"value\":\"2027-12-31T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":78,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"config\":{\"assert_coa_freshness_warn_max_days\":45,\"assert_coa_freshness_fail_max_days\":135},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Source Freshness\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"total_records_present\",\"value\":\"33982 coa_applications rows\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ingestion_days_ago\",\"value\":0,\"threshold\":\"value_max 45\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_max 135\",\"observed\":\"before_write\"},{\"source\":\"context\",\"metric\":\"total_records\",\"value\":33982,\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"last_ingestion\",\"value\":\"2026-10-23\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_decision_date\",\"value\":\"2026-12-21T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"max_hearing_date\",\"value\":\"2027-12-31T05:00:00.000Z\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":78,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -42,7 +42,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [

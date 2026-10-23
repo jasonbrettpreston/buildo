@@ -781,7 +781,7 @@ Every table and column the LEGACY step's SQL touches (reads and writes, includin
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_heritage | PASS | min_migration=227 <= migrations count=275 |
+| 1 | load_heritage | PASS | min_migration=227 <= migrations count=277 |
 | 2 | load_heritage | PASS | 7 declared, missing from seeds: none |
 | 3 | load_heritage | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_heritage | PASS | SPEC LINK header present=true |
@@ -829,19 +829,17 @@ Every table and column the LEGACY step's SQL touches (reads and writes, includin
 - compare ran: true · diffs found: 209 · unexplained: 0
 
 ### Test suite (item iii)
-- 2995/3003 passed (suite success=false)
-- harvested: 116 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 3066/3072 passed (suite success=false)
+- harvested: 118 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
 - skipped (declared but not run): 0
-- failing (8):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-massing.js (slug "massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-wsib.js (slug "load_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-heritage.js (slug "load_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-zoning.js (slug "load_zoning") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (6):
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
+  - src/tests/steps/load_ravines/violations.test.ts > the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold B library growth > acquire.js — the ONE home for the content-hash gate (Fold B item 3) and the acquisition seam (A-2)
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — present in the converted step (acquire.js + descriptor): tier-2 content-hash gate — contentHashDecision over the streamed hash-through-to-disk (never Buffer.from(await res.arrayBuffer()), never readFileSync), tier2.skip re-emits the prior meta via buildSkipReEmitMeta
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — reversion is detectable: the patch applied to the current subject makes the lock fire (arrayBuffer()/readFileSync)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

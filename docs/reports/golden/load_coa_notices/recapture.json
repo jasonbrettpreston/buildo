@@ -35,6 +35,34 @@
         ]
       ],
       "why": "#38 nonzero evidence (CHAT-58, 2026-10-22): delete the first 50 live variance_key rows after copying them to a before-image, run the forced reload so the pinned 2017 decision PDFs are re-fetched (sha256-checked, public) and the 50 rows are re-inserted (records_new 50), verify the 50 returned rows equal the before-image except loaded_at, drop the before-image. If the harness step fails, restore with INSERT INTO coa_notice_variances SELECT * FROM the before-image ON CONFLICT DO NOTHING."
+    },
+    "post/coa_notices.plan_facts.nonzero.json": {
+      "via": "bracket",
+      "env": {
+        "COA_NOTICES_FORCE_RELOAD": "1"
+      },
+      "steps": [
+        [
+          "{sql}",
+          "CREATE TABLE coa_plan_facts_cohort_bak_{ts} AS SELECT * FROM coa_plan_facts WHERE application_number IN (SELECT application_number FROM coa_plan_facts ORDER BY application_number LIMIT 50)"
+        ],
+        [
+          "{sql}",
+          "DELETE FROM coa_plan_facts WHERE application_number IN (SELECT application_number FROM coa_plan_facts_cohort_bak_{ts})"
+        ],
+        [
+          "{harness}"
+        ],
+        [
+          "{sql}",
+          "SELECT 1/(CASE WHEN (SELECT count(*) FROM coa_plan_facts m JOIN coa_plan_facts_cohort_bak_{ts} b USING (application_number) WHERE (to_jsonb(m) - $$loaded_at$$) = (to_jsonb(b) - $$loaded_at$$)) = (SELECT count(*) FROM coa_plan_facts_cohort_bak_{ts}) AND (SELECT count(*) FROM coa_plan_facts_cohort_bak_{ts}) = 50 THEN 1 ELSE 0 END)"
+        ],
+        [
+          "{sql}",
+          "DROP TABLE coa_plan_facts_cohort_bak_{ts}"
+        ]
+      ],
+      "why": "#38 nonzero evidence for the derived target coa_plan_facts (Spec 129 §2c, CHAT-74.IN4): delete the first 50 plan-facts rows after copying them to a before-image, run the forced reload (committed batch files, no network for them), verify the 50 returned rows equal the before-image except loaded_at, drop the before-image. If the harness step fails, restore with INSERT INTO coa_plan_facts SELECT * FROM the before-image ON CONFLICT DO NOTHING."
     }
   }
 }

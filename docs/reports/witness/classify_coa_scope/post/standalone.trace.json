@@ -3,14 +3,14 @@
   "step": "scripts/classify-coa-scope.js",
   "chain": "none",
   "source_fingerprint": "651a9c335faaf0a72afe20a3afe8d91fb3970b820779807d2d28caea8b42149d",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 27,
     "distinct": 19,
     "utility": 12,
-    "tracer_self_ms": 1.143,
-    "wall_ms": 257
+    "tracer_self_ms": 1.225,
+    "wall_ms": 270
   },
   "statements": [
     {
@@ -55,13 +55,13 @@
       "params": [
         [
           "completed",
-          66,
+          88,
           null,
-          3892,
+          4274,
           0,
           0,
           0,
-          "{\"duration_ms\":60,\"coa_processed\":0,\"scope_classified\":0,\"unmapped_scope\":0,\"no_class\":0,\"no_project_type\":0,\"structure_typed\":0,\"project_type_newconstruction_count\":0,\"project_type_addition_count\":0,\"project_type_alteration_count\":0,\"project_type_demolition_count\":0,\"project_type_severance_count\":0,\"project_type_mixed_count\":0,\"project_type_null_count\":0,\"coa_type_class_residential_count\":0,\"coa_type_class_commercial_count\":0,\"coa_type_class_institutional_count\":0,\"coa_type_class_mixed_count\":0,\"coa_type_class_null_count\":0,\"config\":{\"classify_coa_scope_unmapped_max_pct\":10,\"classify_coa_scope_batch_size\":1000},\"terminal\":\"classified\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":6,\"name\":\"CoA Scope Classification\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"scope_classified\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_scope_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"scope_classified_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_class\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_type_class_null_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_project_type\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"structure_type_classified_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"project_type_distribution\",\"value\":{},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_type_class_distribution\",\"value\":{},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":66,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":81,\"coa_processed\":0,\"scope_classified\":0,\"unmapped_scope\":0,\"no_class\":0,\"no_project_type\":0,\"structure_typed\":0,\"project_type_newconstruction_count\":0,\"project_type_addition_count\":0,\"project_type_alteration_count\":0,\"project_type_demolition_count\":0,\"project_type_severance_count\":0,\"project_type_mixed_count\":0,\"project_type_null_count\":0,\"coa_type_class_residential_count\":0,\"coa_type_class_commercial_count\":0,\"coa_type_class_institutional_count\":0,\"coa_type_class_mixed_count\":0,\"coa_type_class_null_count\":0,\"config\":{\"classify_coa_scope_unmapped_max_pct\":10,\"classify_coa_scope_batch_size\":1000},\"terminal\":\"classified\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":6,\"name\":\"CoA Scope Classification\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"scope_classified\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_scope_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"scope_classified_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_class\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_type_class_null_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_project_type\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"structure_type_classified_pct\",\"value\":\"0.0%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"project_type_distribution\",\"value\":{},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_type_class_distribution\",\"value\":{},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":88,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -69,7 +69,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -190,7 +190,7 @@
         [
           "classify",
           0,
-          3892
+          4274
         ]
       ]
     },

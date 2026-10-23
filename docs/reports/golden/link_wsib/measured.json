@@ -3,83 +3,83 @@
     "wsib_tier3_current_predicate_pass_rate_pct": {
       "value": 100,
       "cost_ms": 3,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "wsib_entity_fanin_p99": {
       "value": 10,
-      "cost_ms": 9,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 10,
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "wsib_magnet_entities_fanin_ge_10": {
       "value": 7,
       "cost_ms": 10,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "wsib_orphan_linked_entity_id": {
       "value": 0,
       "cost_ms": 10,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "wsib_registry_total_rows": {
       "value": 121116,
-      "cost_ms": 3,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 5,
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "entities_wsib_registered_count": {
       "value": 301,
-      "cost_ms": 3,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 4,
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "wsib_registered_entities_without_exact_tier_link": {
       "value": 0,
       "cost_ms": 4,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "wsib_tier_confidence_split": {
       "value": "unevaluable: check reported no numeric value for value_min",
-      "cost_ms": 9,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 6,
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     },
     "wsib_cumulative_link_rate_pct": {
       "value": 0.72,
-      "cost_ms": 4,
-      "at": "2026-10-21T14:13:48.916Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 5,
+      "at": "2026-10-22T23:56:54.919Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 38
+      "sample_n": 45
     }
   }
 }

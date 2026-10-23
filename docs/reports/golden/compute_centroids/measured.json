@@ -2,66 +2,66 @@
   "entries": {
     "parcels_total": {
       "value": 496536,
-      "cost_ms": 49,
-      "at": "2026-10-21T13:21:38.274Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 51,
+      "at": "2026-10-23T00:00:22.857Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "centroid_null_count": {
       "value": 0,
-      "cost_ms": 260,
-      "at": "2026-10-21T13:21:38.274Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 264,
+      "at": "2026-10-23T00:00:22.857Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "geom_not_null_geometry_null_count": {
       "value": 1,
-      "cost_ms": 70,
-      "at": "2026-10-21T13:21:38.274Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 69,
+      "at": "2026-10-23T00:00:22.857Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "outside_polygon_count": {
       "value": 1716,
-      "cost_ms": 262,
-      "at": "2026-10-21T13:21:38.274Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 265,
+      "at": "2026-10-23T00:00:22.857Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "pointonsurface_gt_1m_count": {
       "value": 139280,
-      "cost_ms": 334,
-      "at": "2026-10-21T13:21:38.274Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 342,
+      "at": "2026-10-23T00:00:22.857Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "centroid_in_neighbour_parcel_count": {
       "value": 1528,
       "cost_ms": 268,
-      "at": "2026-10-21T13:21:38.274Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "at": "2026-10-23T00:00:22.857Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     },
     "centroid_algorithm_drift_gt_1m_count": {
       "value": 0,
       "cost_ms": 320,
-      "at": "2026-10-21T13:21:38.274Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "at": "2026-10-23T00:00:22.857Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 25
+      "sample_n": 31
     }
   }
 }

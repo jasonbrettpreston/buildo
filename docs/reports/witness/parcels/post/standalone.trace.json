@@ -3,14 +3,14 @@
   "step": "scripts/load-parcels.js",
   "chain": "none",
   "source_fingerprint": "fc6496b36b2add1ec940bac9f4d3e4507647227128d86799f86ba309af38b9d9",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 164,
     "distinct": 16,
     "utility": 8,
-    "tracer_self_ms": 1835.157,
-    "wall_ms": 71317
+    "tracer_self_ms": 3211.088,
+    "wall_ms": 86379
   },
   "statements": [
     {
@@ -64,13 +64,13 @@
       "params": [
         [
           "completed_with_warnings",
-          71016,
+          86154,
           null,
-          3698,
+          4204,
           0,
           0,
           0,
-          "{\"parcels_load\":{\"duration_ms\":71009,\"rows_read\":498477,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":495494,\"records_skipped\":2983,\"errors\":0},\"audit_table\":{\"phase\":5,\"name\":\"Toronto Property Parcels\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0.598,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":498477,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":2983,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stated_area_unparsed\",\"value\":1662,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"parcels\",\"rows_acquired\":495494},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:property-boundaries-4326\",\"value\":\"header unchanged (6 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":71015,\"threshold\":null,\"status\":\"INFO\"}]},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"parcels_irregularity_threshold\":0.95,\"parcels_null_address_pct_max\":0.1,\"sources_parcels_floor\":460000,\"parcels_skip_rate_max_pct\":10,\"parcels_download_timeout_ms\":60000,\"parcels_geom_change_tolerance_deg\":1e-7,\"parcels_metres_per_degree_lat\":111320,\"parcels_sqm_to_sqft\":10.7639,\"parcels_m_to_ft\":3.28084},\"acquired\":{\"record_fields\":{\"ckan:property-boundaries-4326\":[\"_id\",\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"OBJECTID\",\"geometry\"]}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"null_address_pct: 100.0%\"]}"
+          "{\"parcels_load\":{\"duration_ms\":86137,\"rows_read\":498477,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":495494,\"records_skipped\":2983,\"errors\":0},\"audit_table\":{\"phase\":5,\"name\":\"Toronto Property Parcels\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0.598,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":498477,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":2983,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stated_area_unparsed\",\"value\":1662,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"parcels\",\"rows_acquired\":495494},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:property-boundaries-4326\",\"value\":\"header unchanged (6 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":86154,\"threshold\":null,\"status\":\"INFO\"}]},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"parcels_irregularity_threshold\":0.95,\"parcels_null_address_pct_max\":0.1,\"sources_parcels_floor\":460000,\"parcels_skip_rate_max_pct\":10,\"parcels_download_timeout_ms\":60000,\"parcels_geom_change_tolerance_deg\":1e-7,\"parcels_metres_per_degree_lat\":111320,\"parcels_sqm_to_sqft\":10.7639,\"parcels_m_to_ft\":3.28084},\"acquired\":{\"record_fields\":{\"ckan:property-boundaries-4326\":[\"_id\",\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"OBJECTID\",\"geometry\"]}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"null_address_pct: 100.0%\"]}"
         ]
       ]
     },
@@ -78,7 +78,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -271,7 +271,7 @@
   ],
   "transactions": [
     {
-      "client": "81067:3",
+      "client": "6823:3",
       "write_fingerprints": [
         "74861d67d045ac4d"
       ]

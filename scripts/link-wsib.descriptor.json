@@ -905,10 +905,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 100,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 3,
-        "sample_n": 38,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -934,10 +934,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 10,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 9,
-        "sample_n": 38,
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 10,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -963,10 +963,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 7,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 10,
-        "sample_n": 38,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -992,10 +992,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 10,
-        "sample_n": 38,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1021,10 +1021,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 121116,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 3,
-        "sample_n": 38,
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 5,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1050,10 +1050,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 301,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 3,
-        "sample_n": 38,
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 4,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1079,10 +1079,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 4,
-        "sample_n": 38,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1108,10 +1108,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": "unevaluable: check reported no numeric value for value_min",
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 9,
-        "sample_n": 38,
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 6,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1137,10 +1137,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0.72,
-        "at": "2026-10-21T14:13:48.916Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 4,
-        "sample_n": 38,
+        "at": "2026-10-22T23:56:54.919Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 5,
+        "sample_n": 45,
         "source_run": {
           "run_id": null,
           "chain": "sources",

@@ -2,48 +2,48 @@
   "entries": {
     "neighbourhood_id_orphans": {
       "value": 0,
-      "cost_ms": 14,
-      "at": "2026-10-21T14:06:28.373Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 16,
+      "at": "2026-10-23T00:41:31.001Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 31
+      "sample_n": 37
     },
     "negative_neighbourhood_ids": {
       "value": 0,
-      "cost_ms": 7,
-      "at": "2026-10-21T14:06:28.373Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 8,
+      "at": "2026-10-23T00:41:31.001Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 31
+      "sample_n": 37
     },
     "linked_permit_outside_its_own_neighbourhood": {
       "value": 0,
-      "cost_ms": 183,
-      "at": "2026-10-21T14:06:28.373Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 194,
+      "at": "2026-10-23T00:41:31.001Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 31
+      "sample_n": 37
     },
     "stamped_permits_with_null_coordinates": {
       "value": 0,
-      "cost_ms": 90,
-      "at": "2026-10-21T14:06:28.373Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 114,
+      "at": "2026-10-23T00:41:31.001Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 31
+      "sample_n": 37
     },
     "neighbourhood_id_unreachable_no_coords": {
       "value": 13499,
-      "cost_ms": 67,
-      "at": "2026-10-21T14:06:28.373Z",
-      "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "cost_ms": 55,
+      "at": "2026-10-23T00:41:31.001Z",
+      "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 31
+      "sample_n": 37
     }
   }
 }

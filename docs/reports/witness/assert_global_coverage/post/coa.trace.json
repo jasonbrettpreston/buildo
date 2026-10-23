@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-global-coverage.js",
   "chain": "coa",
   "source_fingerprint": "a4b08ebbfc511afc38b2768c23a3668956d79f72d7cf858ca0b88d7454944b93",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 45,
     "distinct": 21,
     "utility": 21,
-    "tracer_self_ms": 3.251,
-    "wall_ms": 1376
+    "tracer_self_ms": 4.303,
+    "wall_ms": 5196
   },
   "statements": [
     {
@@ -137,7 +137,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [

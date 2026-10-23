@@ -321,7 +321,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T13:42:02.995Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 49, "sample_n": 29, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T01:03:41.270Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 57, "sample_n": 35, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "M-D1. Legacy S1 detection [READ scripts/load-massing.js, anchor `WHERE source_id NOT LIKE 'hash_%' LIMIT 1`] kept as a FAIL invariant; its S2-S5 auto-DELETE cleanup is knowingly retired (0 such rows measured; unreachable after 0s).",
         "liveness": { "kind": "table", "ref": "building_footprints" }
@@ -336,7 +336,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T13:42:02.995Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 36, "sample_n": 29, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T01:03:41.270Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 37, "sample_n": 35, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "M-D7. Replaces the 'heal any NULL row' half of legacy S7 [READ scripts/load-massing.js, anchor `WHERE footprint_area_sqm IS NULL`]; measured 0.",
         "liveness": { "kind": "table", "ref": "building_footprints" }
@@ -351,7 +351,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T13:42:02.995Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 41, "sample_n": 29, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T01:03:41.270Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 38, "sample_n": 35, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "M-D7. Replaces the heal half of legacy S8 [READ scripts/load-massing.js, anchor `WHERE geom IS NULL AND geometry IS NOT NULL`]; measured 0.",
         "liveness": { "kind": "table", "ref": "building_footprints" }

@@ -3,14 +3,14 @@
   "step": "scripts/classify-coa-trades.js",
   "chain": "none",
   "source_fingerprint": "9989ffbcae3ae7b3156f46ee315602e22195c6cbccf982ad19cdcbcfb7ea2c90",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 25,
     "distinct": 20,
     "utility": 5,
-    "tracer_self_ms": 1.484,
-    "wall_ms": 567
+    "tracer_self_ms": 1.379,
+    "wall_ms": 738
   },
   "statements": [
     {
@@ -70,13 +70,13 @@
       "params": [
         [
           "completed_with_warnings",
-          360,
+          537,
           null,
-          3939,
+          4292,
           0,
           0,
           0,
-          "{\"coa_with_trades\":0,\"coa_zero_trades\":0,\"residential_count\":0,\"realtor_append_count\":0,\"coa_trades_strong_signal\":0,\"coa_trades_inference\":0,\"inference_layer_enabled\":1,\"coa_with_active_trades\":0,\"median_active_trades_per_lead_nonzero\":null,\"avg_evidence_trades_per_lead\":null,\"median_evidence_trades_per_lead_nonzero\":null,\"realtor_inclusion_pct\":null,\"coa_with_products\":0,\"lead_products_written\":0,\"slug_resolution_misses\":[],\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"coa:classify_coa_trades\",\"classify_coa_trades\",\"classify-coa-trades\"],\"upstream_slugs\":[\"coa:classify_coa_scope\",\"classify_coa_scope\",\"classify-coa-scope\"],\"own_last_completed_at\":\"2026-10-22T18:09:44.236Z\",\"upstream_non_completed\":4,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":0},\"config\":{\"classify_coa_trades_batch_size\":1000,\"classify_coa_trades_max_detail_keys\":50,\"classify_coa_trades_tier\":3,\"classify_coa_trades_lead_score_scale\":100,\"classify_coa_trades_realtor_confidence\":0.7,\"classify_coa_trades_unmapped_threshold_pct\":20,\"classify_coa_trades_active_trades_warn_max\":18,\"classify_coa_trades_eligible_min_count\":1,\"p16_inference_layer_enabled\":1,\"vocab_coverage_pass_pct\":90,\"vocab_coverage_warn_pct\":70},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"7be980e2cf401c8fa88dcda7faabad5423af1b74\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"coa_eligible: 0\"],\"audit_table\":{\"phase\":7,\"name\":\"Classify CoA Trades\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_eligible\",\"value\":0,\"threshold\":\"value_min 1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_scope_pct\",\"value\":0,\"threshold\":\"pct <= 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"avg_active_trades_per_lead\",\"value\":\"N/A\",\"threshold\":\"value_max 18\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"slug_resolution_miss_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"product_slug_miss_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"realtor_unavailable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"trade_vocab_coverage\",\"value\":\"35/35 (100%)\",\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 70\",\"observed\":\"after_write\"},{\"metric\":\"product_vocab_coverage\",\"value\":\"27/27 (100%)\",\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 70\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":357,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"coa_with_trades\":0,\"coa_zero_trades\":0,\"residential_count\":0,\"realtor_append_count\":0,\"coa_trades_strong_signal\":0,\"coa_trades_inference\":0,\"inference_layer_enabled\":1,\"coa_with_active_trades\":0,\"median_active_trades_per_lead_nonzero\":null,\"avg_evidence_trades_per_lead\":null,\"median_evidence_trades_per_lead_nonzero\":null,\"realtor_inclusion_pct\":null,\"coa_with_products\":0,\"lead_products_written\":0,\"slug_resolution_misses\":[],\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"coa:classify_coa_trades\",\"classify_coa_trades\",\"classify-coa-trades\"],\"upstream_slugs\":[\"coa:classify_coa_scope\",\"classify_coa_scope\",\"classify-coa-scope\"],\"own_last_completed_at\":\"2026-10-22T18:14:17.603Z\",\"upstream_non_completed\":6,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":0},\"config\":{\"classify_coa_trades_batch_size\":1000,\"classify_coa_trades_max_detail_keys\":50,\"classify_coa_trades_tier\":3,\"classify_coa_trades_lead_score_scale\":100,\"classify_coa_trades_realtor_confidence\":0.7,\"classify_coa_trades_unmapped_threshold_pct\":20,\"classify_coa_trades_active_trades_warn_max\":18,\"classify_coa_trades_eligible_min_count\":1,\"p16_inference_layer_enabled\":1,\"vocab_coverage_pass_pct\":90,\"vocab_coverage_warn_pct\":70},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"coa_eligible: 0\"],\"audit_table\":{\"phase\":7,\"name\":\"Classify CoA Trades\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_eligible\",\"value\":0,\"threshold\":\"value_min 1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_scope_pct\",\"value\":0,\"threshold\":\"pct <= 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"avg_active_trades_per_lead\",\"value\":\"N/A\",\"threshold\":\"value_max 18\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"slug_resolution_miss_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"product_slug_miss_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"realtor_unavailable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"trade_vocab_coverage\",\"value\":\"35/35 (100%)\",\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 70\",\"observed\":\"after_write\"},{\"metric\":\"product_vocab_coverage\",\"value\":\"27/27 (100%)\",\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 70\",\"observed\":\"after_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":535,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -84,7 +84,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
