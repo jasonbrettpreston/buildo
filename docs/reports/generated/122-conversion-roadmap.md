@@ -7,13 +7,13 @@
 
 ## Counts
 
-Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** pending)
+Remaining files: **21** (+ **15** pending) · remaining slugs: **22** (+ **15** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 14 | 15 |
-| C6 | 22 | 26 |
+| C5 | 15 | 17 |
+| C6 | 21 | 24 |
 
 ## C4 — archetype-grouped, risk-ascending
 
@@ -41,6 +41,7 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 | INGESTOR | `scripts/load-coa.js` | coa [pending: runner_wired] | coa (1) | — | supports_full | LDG-10 (coa); EP-PIN-D17 (coa) |
 | INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); EP-PIN-D17 (permits) |
 | LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: runner_wired] | coa (1) | — | — | LDG-10 (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
+| LINK | `scripts/link-coa.js` | link_coa [pending: red_suite] | coa+permits (2) | — | supports_full | LDG-10 (link_coa); EP-PIN-D17 (link_coa) |
 | MATERIALIZER | `scripts/classify-coa-trades.js` | classify_coa_trades [pending: runner_wired] | coa (1) | — | supports_full | LDG-10 (classify_coa_trades); EP-PIN-D17 (classify_coa_trades) |
 | MATERIALIZER | `scripts/compute-coa-cost-estimates.js` | compute_coa_cost_estimates [pending: runner_wired] | coa (1) | — | supports_full, supports_dry_run | LDG-10 (compute_coa_cost_estimates); EP-PIN-D17 (compute_coa_cost_estimates) |
 
@@ -52,6 +53,7 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 - `scripts/enrich-coa-zoning.js` (ENRICHER): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan questions 8-9; McDonald's Airtight V3) declared ENRICHER. Identity split at commit ① (2026-10-18, operator-approved): this slug's file is now scripts/enrich-coa-zoning.js, a legacy pass-through shell over scripts/enrich-permits.js main() with ENRICH_TARGET=coa, so the slug has its own descriptor, converted.json entry and census row. Phase-4 wave-4 conversion IN FLIGHT — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: the coa target of the same materialize / guarded UPDATE / orphan nullify onto coa_applications through lead_parcels on the stored lead_id (scripts/enrich-permits.js CFG.coa :97-112). Precedent geocode_permits.
 - `scripts/enrich-permits.js` (ENRICHER): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan questions 8-9; McDonald's Airtight V3) declared ENRICHER; converts in the same series as its twin enrich_coa_zoning (one shared legacy module). Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: copies the dominant linked parcel's feed onto its own input table permits through permit_parcels — a temp-table materialize (scripts/enrich-permits.js:372, :488-489), a guarded set-based UPDATE (:470, :500) and an orphan nullify (:546, :506). Always full (:5-6). Precedent geocode_permits (set_based_join_update + set_based_null_retract).
 - `scripts/link-coa-to-parcels.js` (LINK): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan question 8; McDonald's Airtight V3) declared LINK; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed LINK: an address-tier cascade (address-points bridge, parcels exact, name-only; scripts/link-coa-to-parcels.js:366-470) that writes lead_parcels (guarded upsert ON CONFLICT (lead_id, parcel_id), :458) with retraction (the coa-scoped ghost DELETE, :587-595) and back-fills coa_applications lat/lng/neighbourhood_id/parcel_linked_at (:532, :551, pre-pass :322). Same shape as link_parcels (link_keyed + link_full_retraction + the parcel_linked_at marker); the bundled neighbourhood pass follows link_neighbourhoods.
+- `scripts/link-coa.js` (LINK): ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed LINK; C6-4 conversion IN FLIGHT (V3-COA package H commit ①, 2026-10-23): five address tiers plus a description-FTS tier from coa_applications to permits write the link columns coa_applications.linked_permit_num/linked_confidence (scripts/link-coa.js:241-252, :331-361) after a cross-ward unlink (:123-132), then the permit side: the last_seen_at bump (:445-449), the linked_coa_application_number back-ref clear-then-set (:493-524) and the permit -> CoA lat/lng/ward inheritance (:663-675). Runner precedent at ②: link_wsib's tier cascade (re-derive, null-retract, reverse write on the second table), not link_parcels.
 - `scripts/load-coa-notices.js` (INGESTOR): NET-NEW step, converted from day one (WF1 load_coa_notices, Spec 129; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Classified INGESTOR from the plan before any code existed (an external document set acquired and written to one table); there is no legacy script to classify. The one file in converted.json pending[] until its cutover.
 - `scripts/load-coa.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3) declared INGESTOR provisionally; phase-4 wave-1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR multi-target (two CKAN DataStore resources -> coa_applications upsert + lifecycle_status_history ledger rows; scripts/load-coa.js:105, :293, :390)
 - `scripts/load-permits.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). Phase-4 wave 1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (one CKAN DataStore primary, scripts/load-permits.js:33 CKAN_BASE; two write targets: the permits class-B guarded upsert :338-390 and the lifecycle_status_history append ledger :458; the legacy sync_runs run row :725 retires at cutover, CP-PERMITS D-P1). Multi-target INGESTOR, precedent load_zoning.
@@ -83,14 +85,13 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 | permits | MATERIALIZER | `scripts/compute-trade-forecasts.js` | compute_trade_forecasts | permits (1) |
 | permits | EFFECTOR | `scripts/dispatch-notifications.js` | dispatch_notifications | permits (1) |
 | permits | MATERIALIZER | `scripts/extract-builders.js` | builders | permits (1) |
-| permits | LINK | `scripts/link-coa.js` | link_coa | coa+permits (2) |
 | permits | ENRICHER | `scripts/link-similar.js` | link_similar | permits (1) |
 | permits | ENRICHER | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
 | deep_scrapes | ENRICHER | `scripts/classify-inspection-status.js` | classify_inspection_status | deep_scrapes (1) |
 | entities_wsib | ENRICHER | `scripts/enrich-web-search.js` | enrich_wsib_builders, enrich_named_builders | entities (2) |
 | entities_wsib | ENRICHER | `scripts/enrich-wsib.js` | enrich_wsib_registry | wsib (1) |
 
-*C6 chain-bucket counts (files):* permits=19 · coa=0 · deep_scrapes=1 · entities_wsib=2 · orphan=0
+*C6 chain-bucket counts (files):* permits=18 · coa=0 · deep_scrapes=1 · entities_wsib=2 · orphan=0
 
 ## Declared exemptions (Ask A2 + Spec 124 R-AP, R-EK) — manifest slugs with NO JS file, RUNNER-owned concerns, and retired steps, excluded by ruling, never silently dropped
 
@@ -104,4 +105,4 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **14** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **23** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **15** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **22** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

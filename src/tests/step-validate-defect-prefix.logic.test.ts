@@ -88,7 +88,10 @@ describe('step-validate.mjs — defect-prefix overrides + collision check (G6, S
     // assert_staleness -> AST (C6-1 ①, 2026-10-19): its initials AS collide with assert_schema (AS-D*).
     expect(defectPrefixFor('assert_staleness')).toBe('AST');
     expect(defectPrefixFor('assert_schema')).toBe('AS');
-    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA', enrich_permits: 'EPM', assert_staleness: 'AST' });
+    // link_coa -> LCOA (V3-COA package H ①, 2026-10-23): its initials LC collide with load_centreline (LC-D*).
+    expect(defectPrefixFor('link_coa')).toBe('LCOA');
+    expect(defectPrefixFor('load_centreline')).toBe('LC');
+    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA', enrich_permits: 'EPM', assert_staleness: 'AST', link_coa: 'LCOA' });
   });
 
   it('RED direction — the live overrides were removed: load_wsib/link_wsib collide on LW, blocked, naming both slugs and the override fix', async () => {
