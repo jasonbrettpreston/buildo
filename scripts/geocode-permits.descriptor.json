@@ -474,10 +474,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:09:28.948Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 31,
-        "sample_n": 34,
+        "at": "2026-10-23T00:42:09.096Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 36,
+        "sample_n": 40,
         "source_run": {
           "run_id": null,
           "chain": "permits",
@@ -503,10 +503,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:09:28.948Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 81,
-        "sample_n": 34,
+        "at": "2026-10-23T00:42:09.096Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 91,
+        "sample_n": 40,
         "source_run": {
           "run_id": null,
           "chain": "permits",
@@ -535,10 +535,10 @@
       "retighten_when": "never — this bound is already at its floor and is declared at 0. It is a PHYSICAL bound, not a convergence target: the City of Toronto's own extent fits inside 43.5-43.9 N, -79.7 to -79.1 W with margin, so any row outside it is wrong rather than merely unusual. If the count ever becomes non-zero, the response is to find the geo_id that resolved to it, not to widen the box. Measured 0 on BOTH sides — over the 231,930 coordinate-bearing permits AND over the 525,346-row address_points corpus this step joins to — so the bound is currently vacuous on live data and is declared anyway, because its value is in the class of failure it catches, not in a count it is expected to move.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:09:28.948Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 42,
-        "sample_n": 34,
+        "at": "2026-10-23T00:42:09.096Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 44,
+        "sample_n": 40,
         "source_run": {
           "run_id": null,
           "chain": "permits",

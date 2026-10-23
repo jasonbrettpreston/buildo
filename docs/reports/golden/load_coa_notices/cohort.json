@@ -1,0 +1,16 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "coa_notice_variances",
+      "capture": "coa_notices.nonzero.json",
+      "why": "POST docs/reports/golden/load_coa_notices/post/coa_notices.nonzero.json (bracket in recapture.json, CHAT-58 / CHAT-74): the first 50 live variance_key rows are deleted after a before-image and the forced reload re-inserts them (records_new 50, which is coa_notice_variances only: records_total = inserted + updated + retired of the primary). The derived coa_plan_facts target has its own capture below, so the step-level counters are attributed to the primary."
+    },
+    {
+      "table": "coa_plan_facts",
+      "capture": "coa_notices.plan_facts.nonzero.json",
+      "count_path": "coa_plan_facts_written",
+      "why": "POST docs/reports/golden/load_coa_notices/post/coa_notices.plan_facts.nonzero.json (Spec 129 §2c, CHAT-74.IN4; bracket in recapture.json): the first 50 coa_plan_facts rows are deleted after a before-image, the forced reload re-reads the pinned batches and the derived upsert re-inserts them; the coa_plan_facts_written emit (written.e1 inserted + updated, R-DN) reads 50 and the rows must equal the before-image except loaded_at."
+    }
+  ]
+}

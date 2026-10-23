@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 531 declarable fields
+# The step contract — 20 categories, 533 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,7 +15,7 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 39 | 9 | 0 |
+| 2 | `inputs` | 40 | 9 | 0 |
 | 3 | `outputs` | 117 | 31 | 1 |
 | 4 | `staleness` | 36 | 9 | 0 |
 | 5 | `guards` | 22 | 7 | 0 |
@@ -31,7 +31,7 @@
 | 15 | `recovery` | 18 | 8 | 0 |
 | 16 | `database` | 3 | 1 | 0 |
 | 17 | `counters` | 21 | 3 | 0 |
-| 18 | `config` | 23 | 4 | 0 |
+| 18 | `config` | 24 | 4 | 0 |
 | 19 | `sharing` | 9 | 4 | 0 |
 | 20 | `terminals` | 9 | 3 | 0 |
 
@@ -170,7 +170,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.tables[].role` | `lookup` | ! |
 | `reads.tables[].unique_on` | list (min 1) of string `^[a-z_][a-z0-9_]*$` | — |
 | `reads.tables[].on_empty` | `fail` · `warn` | ! |
-| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, manifest, pdf, license, on_head_error, target, on_failure, modes, ckan, key_property} | † |
+| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, manifest, values_manifest, pdf, license, on_head_error, target, on_failure, modes, ckan, key_property} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
 | `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` · `ckan_datastore` · `pdf_document_set` | ! |
@@ -181,6 +181,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.externals[].url` | string | — |
 | `reads.externals[].path` | string | — |
 | `reads.externals[].manifest` | string `^scripts/seeds/[A-Za-z0-9_./-]+\.json$` | — |
+| `reads.externals[].values_manifest` | string `^scripts/seeds/[A-Za-z0-9_./-]+\.json$` | — |
 | `reads.externals[].pdf` | object {host_allowlist, pace_ms_from_config, max_doc_bytes_from_config, max_pages_from_config, max_text_chars_from_config, line_y_tolerance_from_config} | — |
 | `reads.externals[].pdf.host_allowlist` | list (min 1) of string `^[a-z0-9.-]+\.[a-z]{2,}$` | † |
 | `reads.externals[].pdf.pace_ms_from_config` | string | † |
@@ -736,12 +737,13 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `logic_variables` | list of object {name, min, max, on_invalid, enum} | † |
+| `logic_variables` | list of object {name, min, max, on_invalid, enum, list_of} | † |
 | `logic_variables[].name` | string | † |
 | `logic_variables[].min` | `none` \| number | † |
 | `logic_variables[].max` | `none` \| number | † |
 | `logic_variables[].on_invalid` | `fail` · `default` · `clamp` | † ! |
 | `logic_variables[].enum` | list (min 1) of string | — |
+| `logic_variables[].list_of` | list (min 1) of string | — |
 | `validation` | `strict` · `passthrough` | † ! |
 | `validation_why` | object {text, liveness} | — |
 | `validation_why.text` | string | † |

@@ -3,14 +3,14 @@
   "step": "scripts/link-wsib.js",
   "chain": "sources",
   "source_fingerprint": "f78c0f50ac7219ac3a5bea3786e067bf41bb1b4c5fe6347dfc25d4591b98d3f5",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 58,
     "distinct": 39,
     "utility": 13,
-    "tracer_self_ms": 2.77,
-    "wall_ms": 46817
+    "tracer_self_ms": 3.569,
+    "wall_ms": 40560
   },
   "statements": [
     {
@@ -231,7 +231,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -631,7 +631,7 @@
   ],
   "transactions": [
     {
-      "client": "95011:2",
+      "client": "58409:2",
       "write_fingerprints": [
         "1633e72c0321de8b",
         "4ac5c4c76ff5921e",

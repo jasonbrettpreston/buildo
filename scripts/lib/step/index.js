@@ -1487,6 +1487,11 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       + '`shapeDocument(doc, { config })` and `reconcileDocuments(docResults, { config })` (RE-FREEZE #32). '
       + `compute.shapeDocument is ${typeof compute.shapeDocument}, compute.reconcileDocuments is ${typeof compute.reconcileDocuments}.`);
   }
+  // RE-FREEZE #38 (Spec 129 §2b): a pdf_document_set that declares values_manifest also owes `shapeValuesBatch(batch)`,
+  // refused HERE above the HEAD like the document seam.
+  if (external.format === 'pdf_document_set' && typeof external.values_manifest === 'string' && typeof compute.shapeValuesBatch !== 'function') {
+    throw new Error(`${tag} the external "${external.id}" declares values_manifest, so this INGESTOR must export \`shapeValuesBatch(batch)\` (RE-FREEZE #38). compute.shapeValuesBatch is ${typeof compute.shapeValuesBatch}.`);
+  }
   // RE-FREEZE #37 (Spec 124 R-DY): a derived target owes the pure compute export deriveRows, refused here,
   // above the HEAD, like shapeRecord; a staging_full_replace primary has no per-slice executor to carry it.
   if (derivedWrites.length > 0) {
@@ -1721,6 +1726,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     emitSkeleton: union ? (skeleton[ext.id] && typeof skeleton[ext.id] === 'object' ? { ...skeleton[ext.id] } : {}) : skeleton,
     validatorCache,
     shapeDocument: ext.format === 'pdf_document_set' ? compute.shapeDocument : undefined,
+    shapeValuesBatch: ext.format === 'pdf_document_set' ? compute.shapeValuesBatch : undefined,
     runner,
     preAcquisitionGate: (head) => staleness.preAcquisitionDecision({
       descriptor,
@@ -1765,6 +1771,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     validatorCache,
     // RE-FREEZE #32: only the pdf_document_set arm reads it (undefined → unread for every other format).
     shapeDocument: external.format === 'pdf_document_set' ? compute.shapeDocument : undefined,
+    // RE-FREEZE #38 (Spec 129 §2b): the values-batch seam; read only when the external declares values_manifest.
+    shapeValuesBatch: external.format === 'pdf_document_set' ? compute.shapeValuesBatch : undefined,
     // Spec 124 R-EB (a): the runner-owned values (only the pdf_document_set arm reads its pace floor / redirect cap).
     runner,
     preAcquisitionGate: (head) => staleness.preAcquisitionDecision({
@@ -1841,8 +1849,12 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // the rows the shared tail writes. Every parsed item is a feature (rows_read = items); a dropped
   // duplicate's item carries a drop reason that shapeRecord turns into a counted shaped_skipped, so
   // row conservation holds. The arm's document_set block and the reconcile stats ride on acquired.
+  // RE-FREEZE #40 (Spec 129 §2c): reconcileDocuments may return `derive_inputs` ({<derived table>: rows}); they
+  // reach deriveRows' seam as DATA, never through `acquired` (no payload in the captures).
+  let deriveInputs = null;
   if (external.format === 'pdf_document_set') {
     const rec = compute.reconcileDocuments(result.docResults, { config });
+    deriveInputs = rec.derive_inputs || null;
     result.features = rec.rows.map((r) => ({ [keyColumn]: r[keyColumn], record: r }));
     result.acquired = { ...result.acquired, rows_parsed: rec.rows.length, feature_count: rec.rows.length, reconcile: rec.stats };
   }
@@ -2198,7 +2210,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     writeArgs.derived = {
       prior: write.buildPriorReadSql({ from: writeSpec.table, keys: plan.keys, keyTypes, priorColumns }),
       keyOf,
-      deriveRows: (table, sliceRows, priorByKey) => compute.deriveRows(table, sliceRows, priorByKey, { config, run_at: runAt, descriptor, keyOf }),
+      deriveRows: (table, sliceRows, priorByKey, sliceIndex) => compute.deriveRows(table, sliceRows, priorByKey, { config, run_at: runAt, descriptor, keyOf, derive_inputs: deriveInputs, slice_index: sliceIndex }),
       targets: derivedWrites.map((x) => ({
         index: x.index,
         onError: x.w.on_error || 'fail_step',

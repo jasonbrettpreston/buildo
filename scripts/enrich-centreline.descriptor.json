@@ -825,7 +825,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T13:36:56.200Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 677, "sample_n": 25, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T01:10:39.308Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 424, "sample_n": 31, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan Fold A7 (iv): a corner or through lot abuts two NAMED streets (both names NOT NULL), so the frontage resolution always has a candidate. A port error in parcel_frontage or the final SELECT breaks this while every count row stays green. WARN (additive row, never a new FAIL). MEASURED 0 on the local dev DB, 2026-09-30. Fold A7 (iii) is structural in the SQL (new_is_through_lot requires seg_count >= 2) and not table-checkable: parcels stores no segment count.",
         "liveness": {
@@ -847,7 +847,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — a floor on the corner share of the parcel fabric; a collapse below it means the node-share or abut-both rule stopped matching. Measured 11.01%.",
-      "last_measured": { "value": 11.2582194608638, "at": "2026-10-21T13:36:56.200Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 636, "sample_n": 25, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 11.2582194608638, "at": "2026-10-23T01:10:39.308Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 596, "sample_n": 31, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4 (WARN only, after A7): corner share in [8, 14]% of geom-bearing parcels (4-way + T ceiling ~13%). The #431 over-flag class read 24%; a collapse reads near 0.",
         "liveness": {
@@ -867,7 +867,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — the ceiling that catches the #431 over-flag class (the 20 m radius alone read 24%). Measured 11.01%.",
-      "last_measured": { "value": 11.2582194608638, "at": "2026-10-21T13:36:56.200Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 633, "sample_n": 25, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 11.2582194608638, "at": "2026-10-23T01:10:39.308Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 594, "sample_n": 31, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4: the mirror of centreline_corner_share_min_pct.",
         "liveness": {
@@ -887,7 +887,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — a floor on the through-lot share; a collapse means the parallel / opposite-sides rule stopped matching. Measured 0.96%.",
-      "last_measured": { "value": 1.00536719465899, "at": "2026-10-21T13:36:56.200Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 643, "sample_n": 25, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 1.00536719465899, "at": "2026-10-23T01:10:39.308Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 584, "sample_n": 31, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4: through share in [0.2, 3]% of geom-bearing parcels.",
         "liveness": {
@@ -907,7 +907,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — the ceiling that catches the #431-FU class (named rear laneways counted as a second frontage read 11.3%). Measured 0.96%.",
-      "last_measured": { "value": 1.00536719465899, "at": "2026-10-21T13:36:56.200Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 638, "sample_n": 25, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 1.00536719465899, "at": "2026-10-23T01:10:39.308Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 584, "sample_n": 31, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4: the mirror of centreline_through_share_min_pct.",
         "liveness": {

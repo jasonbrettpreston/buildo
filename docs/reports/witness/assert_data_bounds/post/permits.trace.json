@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-data-bounds.js",
   "chain": "permits",
   "source_fingerprint": "cd5f7b23fc438550fd64fba6572aef26ba19383a4e4ac65b0d92ba2f194bac11",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 27,
     "distinct": 26,
     "utility": 5,
-    "tracer_self_ms": 2.12,
-    "wall_ms": 698
+    "tracer_self_ms": 2.385,
+    "wall_ms": 654
   },
   "statements": [
     {
@@ -120,7 +120,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [

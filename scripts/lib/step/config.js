@@ -80,7 +80,13 @@ function boundOf(v) {
  * below is then unreachable by design (`min`/`max` are pinned to `"none"` by the
  * schema for an enum variable, and `on_invalid` to `"fail"`).
  */
-function invalidReason(raw, min, max, allowed) {
+function invalidReason(raw, min, max, allowed, listOf) {
+  // Q-J (Spec 134 §2, R-IU; seed loader type "list", daed754a): a list-valued variable is usable when it is a non-empty array of distinct
+  // strings that are all members of the declared closed `list_of`.
+  if (Array.isArray(listOf)) {
+    const usable = Array.isArray(raw) && raw.length > 0 && new Set(raw).size === raw.length && raw.every((x) => typeof x === 'string' && listOf.includes(x));
+    return usable ? null : 'not_in_list';
+  }
   if (Array.isArray(allowed)) return typeof raw === 'string' && allowed.includes(raw) ? null : 'not_in_enum';
   if (typeof raw !== 'number' || !Number.isFinite(raw)) return 'non_finite';
   if (min !== null && raw < min) return 'below_min';
@@ -264,16 +270,16 @@ async function resolveConfig(pool, descriptor) {
     const min = boundOf(decl.min);
     const max = boundOf(decl.max);
     const raw = logicVars[name];
-    const reason = invalidReason(raw, min, max, decl.enum);
+    const reason = invalidReason(raw, min, max, decl.enum, decl.list_of);
 
     // Defence in depth (R-CE): a string-typed variable (declared `enum`) is
     // on_invalid "fail" ONLY — the schema's allOf pins it, but a descriptor that
     // reached here unvalidated (or a future schema regression) must not fall into
     // the numeric clamp/default arms below, where `enum` has no meaning at all.
-    if (Array.isArray(decl.enum) && decl.on_invalid !== 'fail') {
+    if ((Array.isArray(decl.enum) || Array.isArray(decl.list_of)) && decl.on_invalid !== 'fail') {
       throw new Error(
-        `[${slug}] config: "${name}" declares an enum but on_invalid ${JSON.stringify(decl.on_invalid)} — ` +
-          'a string variable is on_invalid "fail" only (schema-enforced).',
+        `[${slug}] config: "${name}" declares ${Array.isArray(decl.enum) ? 'an enum' : 'a list_of (Q-J)'} but on_invalid ${JSON.stringify(decl.on_invalid)} — ` +
+          'a string or list variable is on_invalid "fail" only (schema-enforced).',
       );
     }
 
@@ -285,7 +291,9 @@ async function resolveConfig(pool, descriptor) {
 
     const bounds = Array.isArray(decl.enum)
       ? `one of ${JSON.stringify(decl.enum)}`
-      : `[${min === null ? '-inf' : min}, ${max === null ? '+inf' : max}]`;
+      : Array.isArray(decl.list_of)
+        ? `a non-empty list of distinct items of ${JSON.stringify(decl.list_of)}`
+        : `[${min === null ? '-inf' : min}, ${max === null ? '+inf' : max}]`;
     const seeded = FALLBACK_LOGIC_VARS[name];
 
     if (decl.on_invalid === 'fail') {

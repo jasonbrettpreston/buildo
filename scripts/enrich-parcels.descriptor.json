@@ -2505,10 +2505,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:47:59.216Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 1425,
-        "sample_n": 15,
+        "at": "2026-10-23T00:37:04.322Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 1123,
+        "sample_n": 17,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2542,10 +2542,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:47:59.216Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 1425,
-        "sample_n": 15,
+        "at": "2026-10-23T00:37:04.322Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 1108,
+        "sample_n": 17,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2582,11 +2582,11 @@
         }
       },
       "last_measured": {
-        "value": 3623,
-        "at": "2026-10-21T14:47:59.216Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 1134,
-        "sample_n": 15,
+        "value": 3621,
+        "at": "2026-10-23T00:37:04.322Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 668,
+        "sample_n": 17,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2621,10 +2621,10 @@
       },
       "last_measured": {
         "value": 1770,
-        "at": "2026-10-21T14:47:59.216Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 1134,
-        "sample_n": 15,
+        "at": "2026-10-23T00:37:04.322Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 609,
+        "sample_n": 17,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2659,10 +2659,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:47:59.216Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 1136,
-        "sample_n": 15,
+        "at": "2026-10-23T00:37:04.322Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 680,
+        "sample_n": 17,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2689,11 +2689,11 @@
       "frequency": "every_run",
       "retighten_when": "migration 247's tuned autovacuum params keep the post-run ratio under half the warn bound for 5 consecutive runs",
       "last_measured": {
-        "value": 0.7961,
-        "at": "2026-10-21T14:47:59.216Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 31,
-        "sample_n": 15,
+        "value": 0.7873,
+        "at": "2026-10-23T00:37:04.322Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 22,
+        "sample_n": 17,
         "source_run": {
           "run_id": null,
           "chain": "sources",

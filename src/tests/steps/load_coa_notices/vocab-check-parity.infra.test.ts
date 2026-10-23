@@ -16,10 +16,13 @@ const MIGRATION_REL = 'migrations/252_coa_notice_variances.sql';
 // 256 REBUILDS chk_cnv_parse_status with one more closed value ('target_unit_mismatch'). The latest
 // definition of a CHECK wins, so the parse_status set is read from 256 when it declares it.
 const MIGRATION_LATEST_REL = 'migrations/256_coa_notice_target_unit_mismatch.sql';
+// 284 widens source_family / decision / decision_source and adds doc_type (Spec 129 §2b); it overlays after 256.
+const MIGRATION_FAMILY_REL = 'migrations/284_coa_notice_values_batch_family.sql';
 const VOCAB_REL = 'scripts/lib/coa-notices/vocab.json';
 
 const MIGRATION_SQL = fs.readFileSync(path.join(REPO_ROOT, MIGRATION_REL), 'utf8');
 const MIGRATION_LATEST_SQL = fs.readFileSync(path.join(REPO_ROOT, MIGRATION_LATEST_REL), 'utf8');
+const MIGRATION_FAMILY_SQL = fs.readFileSync(path.join(REPO_ROOT, MIGRATION_FAMILY_REL), 'utf8');
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- JSON closed sets of the ingestor
 const VOCAB = require(path.join(REPO_ROOT, VOCAB_REL)) as {
@@ -29,6 +32,7 @@ const VOCAB = require(path.join(REPO_ROOT, VOCAB_REL)) as {
 /** Column name of a CHECK's IN-list → the vocab key that column's closed set belongs to. */
 const COLUMN_TO_VOCAB_KEY: Record<string, string> = {
   source_family: 'source_family',
+  doc_type: 'doc_type',
   parse_status: 'parse_status',
   parse_confidence: 'parse_confidence',
   target_status: 'target_status',
@@ -111,12 +115,14 @@ export function checkSetsFromSql(sql: string): Record<string, string[]> {
  * The CHECK-backed closed sets with the LATEST definition of every CHECK winning: 252 first, then
  * any CHECK 256 rebuilds (today only chk_cnv_parse_status) overlaid on top.
  */
-export function checkSetsFromLatestSql(baseSql: string, latestSql: string): Record<string, string[]> {
+export function checkSetsFromLatestSql(baseSql: string, ...laterSql: string[]): Record<string, string[]> {
   const sets = checkSetsFromSql(baseSql);
-  for (const block of extractCheckBlocks(latestSql)) {
-    for (const [column, values] of Object.entries(inListsByColumn(block.body))) {
-      if (!(column in COLUMN_TO_VOCAB_KEY)) continue;
-      sets[COLUMN_TO_VOCAB_KEY[column]!] = values;
+  for (const latestSql of laterSql) {
+    for (const block of extractCheckBlocks(latestSql)) {
+      for (const [column, values] of Object.entries(inListsByColumn(block.body))) {
+        if (!(column in COLUMN_TO_VOCAB_KEY)) continue;
+        sets[COLUMN_TO_VOCAB_KEY[column]!] = values;
+      }
     }
   }
   return sets;
@@ -160,12 +166,12 @@ function vocabSets(): Record<string, string[]> {
 
 describe('T-VOCAB coa-notice closed sets == migration CHECKs', () => {
   it('T-VOCAB-1 every CHECK set equals its vocab set, both directions', () => {
-    const problems = parityProblems(checkSetsFromLatestSql(MIGRATION_SQL, MIGRATION_LATEST_SQL), vocabSets());
+    const problems = parityProblems(checkSetsFromLatestSql(MIGRATION_SQL, MIGRATION_LATEST_SQL, MIGRATION_FAMILY_SQL), vocabSets());
     expect(problems).toEqual([]);
   });
 
   it('T-VOCAB-2 a CHECK value missing from vocab is caught', () => {
-    const sqlSets = checkSetsFromLatestSql(MIGRATION_SQL, MIGRATION_LATEST_SQL);
+    const sqlSets = checkSetsFromLatestSql(MIGRATION_SQL, MIGRATION_LATEST_SQL, MIGRATION_FAMILY_SQL);
     const broken = vocabSets();
     broken.parse_status = (broken.parse_status ?? []).filter((v) => v !== 'side_ambiguous');
     const problems = parityProblems(sqlSets, broken);
@@ -174,9 +180,10 @@ describe('T-VOCAB coa-notice closed sets == migration CHECKs', () => {
   });
 
   it('T-VOCAB-3 a vocab value missing from the CHECK is caught', () => {
-    const brokenSql = MIGRATION_SQL.replace("'refused', ", '');
-    expect(brokenSql).not.toBe(MIGRATION_SQL);
-    const problems = parityProblems(checkSetsFromLatestSql(brokenSql, MIGRATION_LATEST_SQL), vocabSets());
+    // 284 rebuilds chk_cnv_decision, so the latest definition of the set is the one to break.
+    const brokenSql = MIGRATION_FAMILY_SQL.replace("'refused', ", '');
+    expect(brokenSql).not.toBe(MIGRATION_FAMILY_SQL);
+    const problems = parityProblems(checkSetsFromLatestSql(MIGRATION_SQL, MIGRATION_LATEST_SQL, brokenSql), vocabSets());
     expect(problems.length).toBeGreaterThan(0);
     expect(problems.join('\n')).toContain('refused');
   });

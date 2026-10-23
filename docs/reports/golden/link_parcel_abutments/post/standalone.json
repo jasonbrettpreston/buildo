@@ -3,15 +3,15 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-parcel-abutments.js",
   "chain": "none",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "exit_code": 0,
   "signal": null,
   "summary": {
     "records_total": 2996886,
     "records_new": 0,
-    "records_updated": 39,
+    "records_updated": 0,
     "records_meta": {
-      "duration_ms": 346524,
+      "duration_ms": 347249,
       "code_version": "v1-centreline-differencing",
       "parcels_count": "496536",
       "building_footprints_count": "427077",
@@ -31,7 +31,7 @@
       "terminal": "linked",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -69,7 +69,7 @@
             "metric": "abutment_rows_written",
             "value": {
               "inserted": 0,
-              "updated": 39
+              "updated": 0
             },
             "threshold": "viol == 0",
             "status": "INFO",
@@ -138,13 +138,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 8646.33,
+            "value": 8628.3,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 346608,
+            "value": 347332,
             "threshold": null,
             "status": "INFO"
           }
@@ -197,19 +197,19 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_abutments]\",\"msg\":\"[link_parcel_abutments] target: link_parcel_abutments (descriptor.database) → database=postgres user=postgres migrations=268 (floor 255)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_abutments]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":2996886,\"records_new\":0,\"records_updated\":39,\"records_meta\":{\"duration_ms\":346524,\"code_version\":\"v1-centreline-differencing\",\"parcels_count\":\"496536\",\"building_footprints_count\":\"427077\",\"centreline_count\":\"47331\",\"full_mode\":true,\"parcels_processed\":496535,\"abutment_rows\":1674346,\"config\":{\"abut_touch_tolerance_m\":0.5,\"abut_min_shared_len_m\":1,\"abut_bbox_pad_deg\":0.00002,\"abut_street_search_deg\":0.0008,\"fya_est_min_m\":0,\"fya_est_max_m\":30,\"abut_parcels_with_abutments_warn_pct\":50},\"terminal\":\"linked\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":24,\"name\":\"Parcel Abutments (front-yard averaging input)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"full_mode_gate\",\"value\":{\"mode\":\"full\",\"reason\":\"full_rescan\",\"explicit_full\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":{\"parcels_processed\":496535},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"abutment_rows_written\",\"value\":{\"inserted\":0,\"updated\":39},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"asymmetric_pairs\",\"value\":{\"asymmetric_pairs\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"est_status_counts\",\"value\":{\"estimated\":1510419,\"no_building\":4638,\"estimate_negative\":47718,\"no_frontage_street\":60942,\"estimate_out_of_bounds\":50629},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_with_abutments_pct\",\"value\":{\"linked\":495920,\"total\":496535},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"parcel_buildings\":535039,\"building_footprints\":427077,\"toronto_centreline\":47331},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"parcels\":496536},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_abutments.est_status\",\"value\":\"within declared values (5 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":8646.33,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":346608,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"zoning_class\",\"primary_frontage_street_name\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"geom\"],\"toronto_centreline\":[\"geom\",\"linear_name_full\"]},\"writes\":{\"parcel_abutments\":[\"parcel_id\",\"neighbour_id\",\"shared_len_m\",\"same_frontage_street\",\"neighbour_residential\",\"neighbour_building_id\",\"bldg_to_subject_m\",\"front_setback_est_m\",\"est_status\",\"linked_at\"]}}\n\n[link_parcel_abutments] completed in 346.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_abutments]\",\"msg\":\"[link_parcel_abutments] target: link_parcel_abutments (descriptor.database) → database=postgres user=postgres migrations=275 (floor 255)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_abutments]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":2996886,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":347249,\"code_version\":\"v1-centreline-differencing\",\"parcels_count\":\"496536\",\"building_footprints_count\":\"427077\",\"centreline_count\":\"47331\",\"full_mode\":true,\"parcels_processed\":496535,\"abutment_rows\":1674346,\"config\":{\"abut_touch_tolerance_m\":0.5,\"abut_min_shared_len_m\":1,\"abut_bbox_pad_deg\":0.00002,\"abut_street_search_deg\":0.0008,\"fya_est_min_m\":0,\"fya_est_max_m\":30,\"abut_parcels_with_abutments_warn_pct\":50},\"terminal\":\"linked\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":24,\"name\":\"Parcel Abutments (front-yard averaging input)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"full_mode_gate\",\"value\":{\"mode\":\"full\",\"reason\":\"full_rescan\",\"explicit_full\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":{\"parcels_processed\":496535},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"abutment_rows_written\",\"value\":{\"inserted\":0,\"updated\":0},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"asymmetric_pairs\",\"value\":{\"asymmetric_pairs\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"est_status_counts\",\"value\":{\"estimated\":1510419,\"no_building\":4638,\"estimate_negative\":47718,\"no_frontage_street\":60942,\"estimate_out_of_bounds\":50629},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_with_abutments_pct\",\"value\":{\"linked\":495920,\"total\":496535},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"parcel_buildings\":535039,\"building_footprints\":427077,\"toronto_centreline\":47331},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"parcels\":496536},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_abutments.est_status\",\"value\":\"within declared values (5 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":8628.3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":347332,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"zoning_class\",\"primary_frontage_street_name\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"geom\"],\"toronto_centreline\":[\"geom\",\"linear_name_full\"]},\"writes\":{\"parcel_abutments\":[\"parcel_id\",\"neighbour_id\",\"shared_len_m\",\"same_frontage_street\",\"neighbour_residential\",\"neighbour_building_id\",\"bldg_to_subject_m\",\"front_setback_est_m\",\"est_status\",\"linked_at\"]}}\n\n[link_parcel_abutments] completed in 347.3s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 3812,
+      "id": 4248,
       "pipeline": "link_parcel_abutments",
       "status": "completed",
-      "started_at": "2026-10-21T14:50:45.275Z",
-      "completed_at": "2026-10-21T14:56:31.868Z",
-      "duration_ms": 346609,
+      "started_at": "2026-10-23T01:14:03.460Z",
+      "completed_at": "2026-10-23T01:19:50.780Z",
+      "duration_ms": 347332,
       "records_total": 2996886,
       "records_new": 0,
-      "records_updated": 39,
+      "records_updated": 0,
       "records_meta": {
         "config": {
           "fya_est_max_m": 30,
@@ -221,7 +221,7 @@
           "abut_parcels_with_abutments_warn_pct": 50
         },
         "errors": [],
-        "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "terminal": "linked",
         "warnings": [],
         "full_mode": true,
@@ -253,7 +253,7 @@
             },
             {
               "value": {
-                "updated": 39,
+                "updated": 0,
                 "inserted": 0
               },
               "metric": "abutment_rows_written",
@@ -323,13 +323,13 @@
               "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)"
             },
             {
-              "value": 8646.33,
+              "value": 8628.3,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 346608,
+              "value": 347332,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -338,7 +338,7 @@
           "phase": 24,
           "verdict": "PASS"
         },
-        "duration_ms": 346524,
+        "duration_ms": 347249,
         "pool_errors": 0,
         "chain_run_id": null,
         "code_version": "v1-centreline-differencing",
@@ -354,13 +354,13 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 3811,
+  "pipeline_runs_max_id_before": 4247,
   "table_state": [
     {
       "table": "parcel_abutments",
       "row_count": 1674346,
       "ceiling_bypassed": "projected",
-      "content_hash": "8a88b65fea2abebe928f8be6984168e0",
+      "content_hash": "ea2439d11d234f064328d112a7233ed3",
       "order_by": "explicit",
       "order_columns": [
         "parcel_id",
@@ -383,7 +383,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcel_abutments": 1137
+    "parcel_abutments": 1142
   },
   "table_specs": {
     "parcel_abutments": {
@@ -467,7 +467,7 @@
               "threshold": "viol == 0",
               "value": {
                 "inserted": 0,
-                "updated": 39
+                "updated": 0
               }
             },
             {
@@ -559,7 +559,7 @@
       },
       "records_new": 0,
       "records_total": 2996886,
-      "records_updated": 39
+      "records_updated": 0
     },
     "summary_count": 1,
     "meta": [
@@ -642,7 +642,7 @@
                 "threshold": "viol == 0",
                 "value": {
                   "inserted": 0,
-                  "updated": 39
+                  "updated": 0
                 }
               },
               {
@@ -734,12 +734,12 @@
         },
         "records_new": 0,
         "records_total": 2996886,
-        "records_updated": 39,
+        "records_updated": 0,
         "status": "completed"
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[link_parcel_abutments] target: link_parcel_abutments (descriptor.database) → database=postgres user=postgres migrations=268 (floor 255)\",\"tag\":\"[link_parcel_abutments]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[link_parcel_abutments] target: link_parcel_abutments (descriptor.database) → database=postgres user=postgres migrations=275 (floor 255)\",\"tag\":\"[link_parcel_abutments]\"}",
       "{\"level\":\"INFO\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\",\"tag\":\"[link_parcel_abutments]\"}",
       "[link_parcel_abutments] completed in <DUR>"
     ],
@@ -757,7 +757,7 @@
           "front_setback_est_m",
           "est_status"
         ],
-        "content_hash": "8a88b65fea2abebe928f8be6984168e0",
+        "content_hash": "ea2439d11d234f064328d112a7233ed3",
         "hash_method": "row_hash_then_concat",
         "order_by": "explicit",
         "order_columns": [
@@ -782,7 +782,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcel_abutments]",
-    "txid_before_run2": 488039,
+    "txid_before_run2": 576580,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -824,18 +824,18 @@
           "parcels": 496536
         },
         "vocabulary:parcel_abutments.est_status": "within declared values (5 distinct)",
-        "sys_velocity_rows_sec": 8924.7,
-        "sys_duration_ms": 335797
+        "sys_velocity_rows_sec": 8705.96,
+        "sys_duration_ms": 344234
       }
     }
   },
   "capture_ledger_rows": [
     {
-      "id": 3812,
+      "id": 4248,
       "recorded_by": "step"
     },
     {
-      "id": 3813,
+      "id": 4249,
       "recorded_by": "step"
     }
   ],
@@ -846,5 +846,5 @@
     "scripts/link-parcel-abutments.js",
     "scripts/link-parcel-abutments.notes.json"
   ],
-  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
 }

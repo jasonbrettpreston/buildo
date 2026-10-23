@@ -3,14 +3,14 @@
   "step": "scripts/classify-coa-scope.js",
   "chain": "coa",
   "source_fingerprint": "651a9c335faaf0a72afe20a3afe8d91fb3970b820779807d2d28caea8b42149d",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
-    "calls": 23,
-    "distinct": 16,
-    "utility": 12,
-    "tracer_self_ms": 0.992,
-    "wall_ms": 257
+    "calls": 32,
+    "distinct": 17,
+    "utility": 18,
+    "tracer_self_ms": 4.674,
+    "wall_ms": 427
   },
   "statements": [
     {
@@ -41,10 +41,33 @@
       ]
     },
     {
+      "fingerprint": "535b831b843e144f",
+      "kind": "write",
+      "count": 3,
+      "rowCount": 2442,
+      "reads": {
+        "coa_applications": [
+          "id"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "coa_type_class",
+          "project_type",
+          "scope_classified_at",
+          "scope_source",
+          "scope_tags",
+          "structure_type"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -101,7 +124,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 2,
+      "count": 5,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -145,7 +168,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 2,
+      "count": 5,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -212,20 +235,53 @@
       "error": null
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "client": "42255:3",
+      "write_fingerprints": [
+        "535b831b843e144f"
+      ]
+    },
+    {
+      "client": "42255:3",
+      "write_fingerprints": [
+        "535b831b843e144f"
+      ]
+    },
+    {
+      "client": "42255:3",
+      "write_fingerprints": [
+        "535b831b843e144f"
+      ]
+    }
+  ],
   "autocommit_writes": [],
   "touched": {
     "reads": {
       "coa_applications": [
+        "coa_type_class",
         "decision",
         "description",
         "id",
         "last_seen_at",
+        "project_type",
         "scope_classified_at",
-        "status"
+        "scope_source",
+        "scope_tags",
+        "status",
+        "structure_type"
       ]
     },
-    "writes": {}
+    "writes": {
+      "coa_applications": [
+        "coa_type_class",
+        "project_type",
+        "scope_classified_at",
+        "scope_source",
+        "scope_tags",
+        "structure_type"
+      ]
+    }
   },
   "errors": []
 }

@@ -239,6 +239,10 @@
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
+    "scripts/lib/coa-notices/aic-values.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-22 (Spec 129 §2b, CHAT-71.2): a real import of the load_coa_notices compute (shell -> compute -> library), the contract and shaping of the values-only batch family. 0 runtime readers hash it; a semantic change is signalled by the hand-bumped staleness.logic_version, and a new batch by the values manifest sha256 the pdf_document_set arm folds into its content hash, so the row stays descriptive."
+    },
     "scripts/lib/coa-notices/parse-values.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-07 (WF1 load_coa_notices, Spec 129 §9): a real import of load_coa_notices (shell -> compute -> library, or the pdf_document_set arm). 0 runtime readers hash it; a semantic change is signalled by the hand-bumped staleness.logic_version, which the pdf_document_set arm folds into its content hash, so the row stays descriptive."

@@ -35,7 +35,7 @@
     "compute_coa_cost_estimates": { "file": "scripts/compute-coa-cost-estimates.js", "supports_full": true, "supports_dry_run": true, "telemetry_tables": ["cost_estimates", "coa_applications"], "telemetry_null_cols": { "coa_applications": ["cost_classified_at", "estimated_cost"] } },
     "enrich_wsib_builders": { "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_WSIB_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_UNMATCHED_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
-    "load_coa_notices":     { "file": "scripts/load-coa-notices.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["coa_notice_variances"] },
+    "load_coa_notices":     { "file": "scripts/load-coa-notices.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["coa_notice_variances", "coa_plan_facts"] },
     "load_bylaw_map_areas": { "file": "scripts/load-bylaw-map-areas.js",  "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["bylaw_map_areas"] },
     "link_parcel_abutments": { "file": "scripts/link-parcel-abutments.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcel_abutments"] },
     "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["trade_name", "mailing_address"] } },

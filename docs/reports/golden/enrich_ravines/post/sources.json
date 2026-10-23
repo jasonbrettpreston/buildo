@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-ravines.js",
   "chain": "sources",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 200,
     "records_meta": {
-      "duration_ms": 1139,
+      "duration_ms": 1073,
       "code_version": "none",
       "config": {
         "enrich_ravines_distance_coverage_pass_pct": 95,
@@ -27,7 +27,7 @@
       "terminal": "enriched",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -90,7 +90,7 @@
           },
           {
             "metric": "enrich_ravines_duration_ms",
-            "value": 1139,
+            "value": 1073,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -173,136 +173,136 @@
             "pin_id": "load_ravines.records_meta.ravine_load.spec_version",
             "predicate": "records_meta.ravine_load.spec_version equals \"1.2\"",
             "observed": "1.2",
-            "producer_run_id": 3709,
+            "producer_run_id": 4110,
             "producer_status": "completed",
-            "producer_completed_at": "2026-10-21T13:16:30.827Z",
+            "producer_completed_at": "2026-10-22T23:25:31.458Z",
             "result": "PASS",
             "status": "INFO",
             "value": "1.2",
             "threshold": "1.2",
-            "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \"1.2\" — expected \"1.2\" — PASS"
+            "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \"1.2\" — expected \"1.2\" — PASS"
           },
           {
             "metric": "producer_pin_load_ravines_records_meta_ravine_load_source_dataset_version_nonzero",
             "pin_id": "load_ravines.records_meta.ravine_load.source_dataset_version",
             "predicate": "records_meta.ravine_load.source_dataset_version nonzero",
             "observed": "97b4ac7fb3f9808726a106a4b67083ac",
-            "producer_run_id": 3709,
+            "producer_run_id": 4110,
             "producer_status": "completed",
-            "producer_completed_at": "2026-10-21T13:16:30.827Z",
+            "producer_completed_at": "2026-10-22T23:25:31.458Z",
             "result": "PASS",
             "status": "INFO",
             "value": "97b4ac7fb3f9808726a106a4b67083ac",
             "threshold": "nonzero",
-            "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \"97b4ac7fb3f9808726a106a4b67083ac\" — expected non-empty — PASS"
+            "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \"97b4ac7fb3f9808726a106a4b67083ac\" — expected non-empty — PASS"
           },
           {
             "metric": "producer_pin_load_ravines_records_meta_ravine_load_delete_skipped_empty_guard",
             "pin_id": "load_ravines.records_meta.ravine_load.delete_skipped_empty_guard",
             "predicate": "records_meta.ravine_load.delete_skipped_empty_guard equals \"false\"",
             "observed": false,
-            "producer_run_id": 3709,
+            "producer_run_id": 4110,
             "producer_status": "completed",
-            "producer_completed_at": "2026-10-21T13:16:30.827Z",
+            "producer_completed_at": "2026-10-22T23:25:31.458Z",
             "result": "PASS",
             "status": "INFO",
             "value": false,
             "threshold": "false",
-            "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \"false\" — PASS"
+            "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \"false\" — PASS"
           },
           {
             "metric": "producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true",
             "pin_id": "load_ravines.records_meta.ravine_load.drift_check_passed",
             "predicate": "records_meta.ravine_load.drift_check_passed true",
             "observed": true,
-            "producer_run_id": 3709,
+            "producer_run_id": 4110,
             "producer_status": "completed",
-            "producer_completed_at": "2026-10-21T13:16:30.827Z",
+            "producer_completed_at": "2026-10-22T23:25:31.458Z",
             "result": "PASS",
             "status": "INFO",
             "value": true,
             "threshold": "true",
-            "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS"
+            "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS"
           },
           {
             "metric": "producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true",
             "pin_id": "load_ravines.records_meta.ravine_load.mass_delete_check_passed",
             "predicate": "records_meta.ravine_load.mass_delete_check_passed true",
             "observed": true,
-            "producer_run_id": 3709,
+            "producer_run_id": 4110,
             "producer_status": "completed",
-            "producer_completed_at": "2026-10-21T13:16:30.827Z",
+            "producer_completed_at": "2026-10-22T23:25:31.458Z",
             "result": "PASS",
             "status": "INFO",
             "value": true,
             "threshold": "true",
-            "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS"
+            "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS"
           },
           {
             "metric": "producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound",
             "pin_id": "load_ravines.records_meta.ravine_load.invalid_geometry_skipped",
             "predicate": "records_meta.ravine_load.invalid_geometry_skipped / records_meta.ravine_load.feature_count (pct) <= 5",
             "observed": 0,
-            "producer_run_id": 3709,
+            "producer_run_id": 4110,
             "producer_status": "completed",
-            "producer_completed_at": "2026-10-21T13:16:30.827Z",
+            "producer_completed_at": "2026-10-22T23:25:31.458Z",
             "result": "PASS",
             "status": "INFO",
             "value": 0,
             "threshold": "pct <= 5",
-            "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS"
+            "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS"
           },
           {
             "metric": "sys_ravine_sign_flag_agree_flagged_side_duration_ms",
-            "value": 593,
+            "value": 505,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_sign_flag_agree_unflagged_side_duration_ms",
-            "value": 594,
+            "value": 506,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_flag_true_distance_null_count_duration_ms",
-            "value": 598,
+            "value": 509,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_distance_m_min_magnitude_observed_duration_ms",
-            "value": 639,
+            "value": 558,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_distance_m_max_observed_duration_ms",
-            "value": 647,
+            "value": 557,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_dataset_version_distinct_count_duration_ms",
-            "value": 666,
+            "value": 572,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_distance_m_collapse_floor_duration_ms",
-            "value": 653,
+            "value": 561,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 206031.12,
+            "value": 228082.22,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 2410,
+            "value": 2177,
             "threshold": null,
             "status": "INFO"
           }
@@ -337,10 +337,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"[enrich_ravines] target: enrich_ravines (descriptor.database) → database=postgres user=postgres migrations=268 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join completed in 732ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496535,\"records_new\":0,\"records_updated\":200,\"records_meta\":{\"duration_ms\":1139,\"code_version\":\"none\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000,\"enrich_ravines_distance_collapse_floor_m\":100,\"enrich_ravines_producer_invalid_geom_max_pct\":5},\"terminal\":\"enriched\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\",\"observed\":\"after_write\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":33006,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":200,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":1139,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.30059243,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69388118,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_collapse_floor\",\"value\":2739.69388118,\"threshold\":\"value_min 100\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"ravines\":854},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"ravines\":854},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_spec_version\",\"pin_id\":\"load_ravines.records_meta.ravine_load.spec_version\",\"predicate\":\"records_meta.ravine_load.spec_version equals \\\"1.2\\\"\",\"observed\":\"1.2\",\"producer_run_id\":3709,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-21T13:16:30.827Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.2\",\"threshold\":\"1.2\",\"note\":\"load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \\\"1.2\\\" — expected \\\"1.2\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_source_dataset_version_nonzero\",\"pin_id\":\"load_ravines.records_meta.ravine_load.source_dataset_version\",\"predicate\":\"records_meta.ravine_load.source_dataset_version nonzero\",\"observed\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"producer_run_id\":3709,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-21T13:16:30.827Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"nonzero\",\"note\":\"load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \\\"97b4ac7fb3f9808726a106a4b67083ac\\\" — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_delete_skipped_empty_guard\",\"pin_id\":\"load_ravines.records_meta.ravine_load.delete_skipped_empty_guard\",\"predicate\":\"records_meta.ravine_load.delete_skipped_empty_guard equals \\\"false\\\"\",\"observed\":false,\"producer_run_id\":3709,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-21T13:16:30.827Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":false,\"threshold\":\"false\",\"note\":\"load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \\\"false\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.drift_check_passed\",\"predicate\":\"records_meta.ravine_load.drift_check_passed true\",\"observed\":true,\"producer_run_id\":3709,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-21T13:16:30.827Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.mass_delete_check_passed\",\"predicate\":\"records_meta.ravine_load.mass_delete_check_passed true\",\"observed\":true,\"producer_run_id\":3709,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-21T13:16:30.827Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound\",\"pin_id\":\"load_ravines.records_meta.ravine_load.invalid_geometry_skipped\",\"predicate\":\"records_meta.ravine_load.invalid_geometry_skipped / records_meta.ravine_load.feature_count (pct) <= 5\",\"observed\":0,\"producer_run_id\":3709,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-21T13:16:30.827Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":0,\"threshold\":\"pct <= 5\",\"note\":\"load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":593,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":594,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":598,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":639,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":647,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":666,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_collapse_floor_duration_ms\",\"value\":653,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":206031.12,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2410,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"ravines\":[\"geom\"],\"parcels\":[\"id\",\"geom\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]}}\n\n[enrich_ravines] completed in 2.4s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"[enrich_ravines] target: enrich_ravines (descriptor.database) → database=postgres user=postgres migrations=275 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join completed in 688ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496535,\"records_new\":0,\"records_updated\":200,\"records_meta\":{\"duration_ms\":1073,\"code_version\":\"none\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000,\"enrich_ravines_distance_collapse_floor_m\":100,\"enrich_ravines_producer_invalid_geom_max_pct\":5},\"terminal\":\"enriched\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\",\"observed\":\"after_write\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":33006,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":200,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":1073,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.30059243,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69388118,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_collapse_floor\",\"value\":2739.69388118,\"threshold\":\"value_min 100\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"ravines\":854},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"ravines\":854},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_spec_version\",\"pin_id\":\"load_ravines.records_meta.ravine_load.spec_version\",\"predicate\":\"records_meta.ravine_load.spec_version equals \\\"1.2\\\"\",\"observed\":\"1.2\",\"producer_run_id\":4110,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-22T23:25:31.458Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.2\",\"threshold\":\"1.2\",\"note\":\"load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \\\"1.2\\\" — expected \\\"1.2\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_source_dataset_version_nonzero\",\"pin_id\":\"load_ravines.records_meta.ravine_load.source_dataset_version\",\"predicate\":\"records_meta.ravine_load.source_dataset_version nonzero\",\"observed\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"producer_run_id\":4110,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-22T23:25:31.458Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"nonzero\",\"note\":\"load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \\\"97b4ac7fb3f9808726a106a4b67083ac\\\" — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_delete_skipped_empty_guard\",\"pin_id\":\"load_ravines.records_meta.ravine_load.delete_skipped_empty_guard\",\"predicate\":\"records_meta.ravine_load.delete_skipped_empty_guard equals \\\"false\\\"\",\"observed\":false,\"producer_run_id\":4110,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-22T23:25:31.458Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":false,\"threshold\":\"false\",\"note\":\"load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \\\"false\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.drift_check_passed\",\"predicate\":\"records_meta.ravine_load.drift_check_passed true\",\"observed\":true,\"producer_run_id\":4110,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-22T23:25:31.458Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.mass_delete_check_passed\",\"predicate\":\"records_meta.ravine_load.mass_delete_check_passed true\",\"observed\":true,\"producer_run_id\":4110,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-22T23:25:31.458Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound\",\"pin_id\":\"load_ravines.records_meta.ravine_load.invalid_geometry_skipped\",\"predicate\":\"records_meta.ravine_load.invalid_geometry_skipped / records_meta.ravine_load.feature_count (pct) <= 5\",\"observed\":0,\"producer_run_id\":4110,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-22T23:25:31.458Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":0,\"threshold\":\"pct <= 5\",\"note\":\"load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":505,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":506,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":509,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":558,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":557,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":572,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_collapse_floor_duration_ms\",\"value\":561,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":228082.22,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2177,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"ravines\":[\"geom\"],\"parcels\":[\"id\",\"geom\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]}}\n\n[enrich_ravines] completed in 2.2s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3741,
+  "pipeline_runs_max_id_before": 4189,
   "table_state": [
     {
       "table": "parcels",
@@ -362,7 +362,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 772
+    "parcels": 703
   },
   "table_specs": {
     "parcels": {
@@ -494,7 +494,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 1139
+              "value": 1073
             },
             {
               "metric": "ravine_sign_flag_agree_flagged_side",
@@ -570,12 +570,12 @@
             },
             {
               "metric": "producer_pin_load_ravines_records_meta_ravine_load_spec_version",
-              "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \"1.2\" — expected \"1.2\" — PASS",
+              "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \"1.2\" — expected \"1.2\" — PASS",
               "observed": "1.2",
               "pin_id": "load_ravines.records_meta.ravine_load.spec_version",
               "predicate": "records_meta.ravine_load.spec_version equals \"1.2\"",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3709,
+              "producer_run_id": 4110,
               "producer_status": "completed",
               "result": "PASS",
               "status": "INFO",
@@ -584,12 +584,12 @@
             },
             {
               "metric": "producer_pin_load_ravines_records_meta_ravine_load_source_dataset_version_nonzero",
-              "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \"97b4ac7fb3f9808726a106a4b67083ac\" — expected non-empty — PASS",
+              "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \"97b4ac7fb3f9808726a106a4b67083ac\" — expected non-empty — PASS",
               "observed": "97b4ac7fb3f9808726a106a4b67083ac",
               "pin_id": "load_ravines.records_meta.ravine_load.source_dataset_version",
               "predicate": "records_meta.ravine_load.source_dataset_version nonzero",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3709,
+              "producer_run_id": 4110,
               "producer_status": "completed",
               "result": "PASS",
               "status": "INFO",
@@ -598,12 +598,12 @@
             },
             {
               "metric": "producer_pin_load_ravines_records_meta_ravine_load_delete_skipped_empty_guard",
-              "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \"false\" — PASS",
+              "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \"false\" — PASS",
               "observed": false,
               "pin_id": "load_ravines.records_meta.ravine_load.delete_skipped_empty_guard",
               "predicate": "records_meta.ravine_load.delete_skipped_empty_guard equals \"false\"",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3709,
+              "producer_run_id": 4110,
               "producer_status": "completed",
               "result": "PASS",
               "status": "INFO",
@@ -612,12 +612,12 @@
             },
             {
               "metric": "producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true",
-              "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS",
+              "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS",
               "observed": true,
               "pin_id": "load_ravines.records_meta.ravine_load.drift_check_passed",
               "predicate": "records_meta.ravine_load.drift_check_passed true",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3709,
+              "producer_run_id": 4110,
               "producer_status": "completed",
               "result": "PASS",
               "status": "INFO",
@@ -626,12 +626,12 @@
             },
             {
               "metric": "producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true",
-              "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS",
+              "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS",
               "observed": true,
               "pin_id": "load_ravines.records_meta.ravine_load.mass_delete_check_passed",
               "predicate": "records_meta.ravine_load.mass_delete_check_passed true",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3709,
+              "producer_run_id": 4110,
               "producer_status": "completed",
               "result": "PASS",
               "status": "INFO",
@@ -640,12 +640,12 @@
             },
             {
               "metric": "producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound",
-              "note": "load_ravines run 3709 (completed @ Wed Oct 21 2026 09:16:30 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS",
+              "note": "load_ravines run 4110 (completed @ Thu Oct 22 2026 19:25:31 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS",
               "observed": 0,
               "pin_id": "load_ravines.records_meta.ravine_load.invalid_geometry_skipped",
               "predicate": "records_meta.ravine_load.invalid_geometry_skipped / records_meta.ravine_load.feature_count (pct) <= 5",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3709,
+              "producer_run_id": 4110,
               "producer_status": "completed",
               "result": "PASS",
               "status": "INFO",
@@ -707,7 +707,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[enrich_ravines] target: enrich_ravines (descriptor.database) → database=postgres user=postgres migrations=268 (floor 244)\",\"tag\":\"[enrich_ravines]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[enrich_ravines] target: enrich_ravines (descriptor.database) → database=postgres user=postgres migrations=275 (floor 244)\",\"tag\":\"[enrich_ravines]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase ravine_join starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_ravines]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase ravine_join completed in <DUR>\",\"tag\":\"[enrich_ravines]\"}",
       "[enrich_ravines] completed in <DUR>"
@@ -773,7 +773,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcels]",
-    "txid_before_run2": 477190,
+    "txid_before_run2": 572647,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -785,7 +785,7 @@
         "parcels_enriched_count": 0,
         "parcels_ravine_enrich_skipped": true,
         "ravine_source_dataset_version": "97b4ac7fb3f9808726a106a4b67083ac",
-        "enrich_ravines_duration_ms": 744,
+        "enrich_ravines_duration_ms": 684,
         "ravine_sign_flag_agree_flagged_side": 0,
         "ravine_sign_flag_agree_unflagged_side": 0,
         "ravine_flag_true_distance_null_count": 0,
@@ -805,25 +805,25 @@
         "producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true": true,
         "producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true": true,
         "producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound": 0,
-        "sys_ravine_sign_flag_agree_flagged_side_duration_ms": 574,
-        "sys_ravine_sign_flag_agree_unflagged_side_duration_ms": 577,
-        "sys_ravine_flag_true_distance_null_count_duration_ms": 588,
-        "sys_ravine_distance_m_min_magnitude_observed_duration_ms": 641,
-        "sys_ravine_distance_m_max_observed_duration_ms": 641,
-        "sys_ravine_dataset_version_distinct_count_duration_ms": 664,
-        "sys_ravine_distance_m_collapse_floor_duration_ms": 647,
-        "sys_velocity_rows_sec": 246541.71,
-        "sys_duration_ms": 2014
+        "sys_ravine_sign_flag_agree_flagged_side_duration_ms": 494,
+        "sys_ravine_sign_flag_agree_unflagged_side_duration_ms": 511,
+        "sys_ravine_flag_true_distance_null_count_duration_ms": 509,
+        "sys_ravine_distance_m_min_magnitude_observed_duration_ms": 550,
+        "sys_ravine_distance_m_max_observed_duration_ms": 558,
+        "sys_ravine_dataset_version_distinct_count_duration_ms": 577,
+        "sys_ravine_distance_m_collapse_floor_duration_ms": 539,
+        "sys_velocity_rows_sec": 276621.17,
+        "sys_duration_ms": 1795
       }
     }
   },
   "capture_ledger_rows": [
     {
-      "id": 3742,
+      "id": 4190,
       "recorded_by": "harness"
     },
     {
-      "id": 3743,
+      "id": 4191,
       "recorded_by": "harness"
     }
   ],
@@ -833,5 +833,5 @@
     "scripts/enrich-ravines.js",
     "scripts/lib/compute/enrich-ravines.js"
   ],
-  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
 }

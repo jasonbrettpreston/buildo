@@ -3,21 +3,21 @@
   "step": "scripts/quality/assert-coa-freshness.js",
   "chain": "coa",
   "source_fingerprint": "87ef4c17453f623f34cc546d19e501006504ea9fc181f88b12a502d1fb9afc36",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 11,
     "distinct": 10,
     "utility": 5,
-    "tracer_self_ms": 0.699,
-    "wall_ms": 255
+    "tracer_self_ms": 0.695,
+    "wall_ms": 254
   },
   "statements": [
     {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [

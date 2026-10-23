@@ -2,8 +2,8 @@
   "contract_version": 1,
   "step": "link_massing",
   "plan": ".cursor/wf2_link_massing_nonzero_close_active_task.md D3",
-  "derived_at": "2026-10-21T13:58:02.863Z",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "derived_at": "2026-10-22T23:43:36.316Z",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "config": {
     "link_massing_centroid_confidence": 0.95
   },
@@ -432,10 +432,10 @@
     "x_pairs_stored": 0
   },
   "backup": {
-    "base": "link_massing_cohort_bak_20261021t1324z",
-    "pb": "link_massing_cohort_bak_20261021t1324z_pb",
-    "pm": "link_massing_cohort_bak_20261021t1324z_pm",
-    "created_at": "2026-10-21T13:58:40.329Z",
+    "base": "link_massing_cohort_bak_20261022t2321z",
+    "pb": "link_massing_cohort_bak_20261022t2321z_pb",
+    "pm": "link_massing_cohort_bak_20261022t2321z_pm",
+    "created_at": "2026-10-22T23:44:05.961Z",
     "database": "postgres",
     "system_identifier": "7696970913848156196",
     "baseline": {
@@ -446,23 +446,23 @@
       },
       "parcels": {
         "rows": 496536,
-        "hash": "306cf306ac1eaf340cce6e2fc5511e9d",
+        "hash": "3e23213485ce8409f8de8b0c4ef24248",
         "columns": "all"
       },
       "parcels_pm": {
         "rows": 496536,
-        "hash": "211130503abb4d85d7c6768b23b8c51a",
+        "hash": "8075c8f8b9800f57e0d96b092ac53f47",
         "columns": [
           "id",
           "massing_enriched_at"
         ]
       }
     },
-    "dropped_at": "2026-10-21T14:05:08.421Z"
+    "dropped_at": "2026-10-22T23:50:05.844Z"
   },
   "last_run": {
-    "started_at": "2026-10-21T13:58:40.565Z",
-    "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+    "started_at": "2026-10-22T23:44:06.135Z",
+    "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
     "capture": "docs/reports/golden/link_massing/post/cohort-heal.json",
     "chain": "sources",
     "harness_exit": {
@@ -530,16 +530,16 @@
       "parcel_buildings": {
         "rows": 535039,
         "hash": "0a4ecb48ce3b792a9e41eea69be2b896",
-        "ms": 418
+        "ms": 408
       },
       "parcels": {
         "rows": 496536,
-        "hash": "306cf306ac1eaf340cce6e2fc5511e9d",
-        "ms": 18534
+        "hash": "3e23213485ce8409f8de8b0c4ef24248",
+        "ms": 18306
       }
     },
     "asserted": true,
     "restored": true,
-    "finished_at": "2026-10-21T14:05:08.421Z"
+    "finished_at": "2026-10-22T23:50:05.844Z"
   }
 }

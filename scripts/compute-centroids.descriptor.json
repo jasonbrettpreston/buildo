@@ -422,10 +422,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 496536,
-        "at": "2026-10-21T13:21:38.274Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 49,
-        "sample_n": 25,
+        "at": "2026-10-23T00:00:22.857Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 51,
+        "sample_n": 31,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -451,10 +451,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:21:38.274Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 260,
-        "sample_n": 25,
+        "at": "2026-10-23T00:00:22.857Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 264,
+        "sample_n": 31,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -480,10 +480,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 1,
-        "at": "2026-10-21T13:21:38.274Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 70,
-        "sample_n": 25,
+        "at": "2026-10-23T00:00:22.857Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 69,
+        "sample_n": 31,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -509,10 +509,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 1716,
-        "at": "2026-10-21T13:21:38.274Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 262,
-        "sample_n": 25,
+        "at": "2026-10-23T00:00:22.857Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 265,
+        "sample_n": 31,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -538,10 +538,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 139280,
-        "at": "2026-10-21T13:21:38.274Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 334,
-        "sample_n": 25,
+        "at": "2026-10-23T00:00:22.857Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 342,
+        "sample_n": 31,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -567,10 +567,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 1528,
-        "at": "2026-10-21T13:21:38.274Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-23T00:00:22.857Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 268,
-        "sample_n": 25,
+        "sample_n": 31,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -599,10 +599,10 @@
       "retighten_when": "zero rows — BUILT and FIRED (CC-D3, WF3, 2026-08-30): a declared FULL mode (override.force_full, outputs.writes[1], LG-22) recomputed every drifted centroid live; this bound retightened to 0 the same run and is now the STEADY-STATE reading, not a standing WARN. A future genuine recurrence (a new algorithm change with no matching repair) would re-raise it — the retighten condition stays declared, not retired, per Rule 10 addendum R-H's own posture for a metric that CAN legitimately return to non-zero.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:21:38.274Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-23T00:00:22.857Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 320,
-        "sample_n": 25,
+        "sample_n": 31,
         "source_run": {
           "run_id": null,
           "chain": "sources",

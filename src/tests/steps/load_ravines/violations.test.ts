@@ -857,6 +857,8 @@ function revertMassDeleteFence(i: MassDeleteInput): MassDeleteInput {
 /** Fence F2 exemptions (operator ruling (b) 2026-10-10). Each names ONE function and ONE banned pattern. */
 const F2_EXEMPT = [
   { fn: 'readDocumentManifest', ban: 'readFileSync', why: 'reads the repo-pinned manifest JSON, not a download', until: null },
+  { fn: 'readValuesManifest', ban: 'readFileSync', why: 'reads the repo-pinned values-batch manifest JSON, not a download (Spec 129 §2b; operator CHAT-74.IN1)', until: null },
+  { fn: 'acquireValuesBatches', ban: 'readFileSync', why: 'reads the repo-pinned, sha256-verified values-batch files (committed values only, ~100 KB each), not a download (Spec 129 §2b; operator CHAT-74.IN1)', until: null },
   { fn: 'fetchPdfCapped', ban: 'arrayBuffer()', why: 'dead no-reader fallback; deleted in compute-purity Phase 2', until: 'H5 fleet recapture night 4 (filed 2026-10-10)' },
 ] as const;
 

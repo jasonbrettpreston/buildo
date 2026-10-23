@@ -3,14 +3,14 @@
   "step": "scripts/link-coa-to-parcels.js",
   "chain": "coa",
   "source_fingerprint": "88a62e17ba6c565894c8164e51ab0e14d0482dcbb4a850d3af8bb6c9df3c680f",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
     "calls": 297,
     "distinct": 26,
     "utility": 75,
-    "tracer_self_ms": 222.349,
-    "wall_ms": 5397
+    "tracer_self_ms": 294.797,
+    "wall_ms": 5639
   },
   "statements": [
     {
@@ -96,7 +96,7 @@
       "fingerprint": "323161b2e5c4176e",
       "kind": "write",
       "count": 34,
-      "rowCount": 7,
+      "rowCount": 6,
       "reads": {
         "coa_applications": [
           "id",
@@ -136,7 +136,7 @@
       "fingerprint": "3af57a03a54f7cfe",
       "kind": "read",
       "count": 35,
-      "rowCount": 33866,
+      "rowCount": 33873,
       "reads": {
         "coa_applications": [
           "lead_id",
@@ -172,7 +172,7 @@
       "fingerprint": "4ff8b919ef3670ef",
       "kind": "write",
       "count": 34,
-      "rowCount": 7,
+      "rowCount": 6,
       "reads": {
         "lead_parcels": [
           "confidence",
@@ -195,7 +195,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 805,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -334,7 +334,7 @@
       "fingerprint": "aac73c68679db309",
       "kind": "read",
       "count": 34,
-      "rowCount": 31769,
+      "rowCount": 31775,
       "reads": {
         "address_points": [
           "addr_num_normalized",
@@ -448,7 +448,7 @@
   ],
   "transactions": [
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -456,7 +456,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -464,7 +464,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -472,7 +472,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -480,7 +480,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -488,7 +488,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -496,7 +496,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -504,7 +504,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -512,7 +512,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -520,7 +520,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -528,7 +528,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -536,7 +536,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -544,7 +544,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -552,7 +552,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -560,7 +560,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -568,7 +568,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -576,7 +576,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -584,7 +584,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -592,7 +592,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -600,7 +600,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -608,7 +608,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -616,7 +616,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -624,7 +624,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -632,7 +632,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -640,7 +640,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -648,7 +648,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -656,7 +656,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -664,7 +664,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -672,7 +672,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -680,7 +680,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -688,7 +688,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -696,7 +696,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -704,7 +704,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -712,7 +712,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "323161b2e5c4176e",
         "4ff8b919ef3670ef",
@@ -720,7 +720,7 @@
       ]
     },
     {
-      "client": "84693:2",
+      "client": "45158:2",
       "write_fingerprints": [
         "496ad3c4b49c7a10"
       ]

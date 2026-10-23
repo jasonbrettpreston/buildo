@@ -251,7 +251,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T14:50:39.705Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 742, "sample_n": 19, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T00:46:36.565Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 577, "sample_n": 23, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "§7 invariant 3 — a cost line can only be priced from a non-null lot-derived area. MEASURED 0, 2026-09-21.", "liveness": { "kind": "column", "ref": "parcels.cost_fb_total" } }
     },
     {
@@ -263,7 +263,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T14:50:39.705Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 760, "sample_n": 19, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T00:46:36.565Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 576, "sample_n": 23, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "§7 invariant 2 — a new build can never legitimately cost more than the CoA build (CoA can only add). MEASURED 0, 2026-09-21. NOTE: coa_fsi > max_build_fsi is a SEPARATE, documented divergent reference (Spec 88 §2.6/2.6) and is NOT a violation of this invariant.", "liveness": { "kind": "column", "ref": "parcels.cost_coa_total" } }
     },
     {
@@ -275,7 +275,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T14:50:39.705Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 792, "sample_n": 19, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T00:46:36.565Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 620, "sample_n": 23, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "CPCE-D2 CLOSED, WIDENED S0.2 — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate. CPCE peel (DeepSeek/grounded O4, 2026-09-21) widened the COLUMN coverage to all 16 `write_discipline.guard_columns`. S0.2 (WF3 existing-structure-area-artifacts, 2026-09-21/22) widens the POPULATION half in the SAME statement, matching `writes[1]`'s own widened `scope`: `max_buildable_gfa_sqm IS NULL` (S0.1's lot-band bound) or `cur_floor_gfa_sqm > 750` (`product_scope_max_existing_gfa_sqm`, FOLD-RC2) now ALSO count as 'outside the population', not only a non-R% zoning. The two widenings (columns, O4; population, S0.2) are orthogonal and composed here, never duplicated as separate invariants.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
     }
   ],

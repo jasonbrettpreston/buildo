@@ -3,14 +3,14 @@
   "step": "scripts/classify-coa-trades.js",
   "chain": "coa",
   "source_fingerprint": "9989ffbcae3ae7b3156f46ee315602e22195c6cbccf982ad19cdcbcfb7ea2c90",
-  "git_head": "7be980e2cf401c8fa88dcda7faabad5423af1b74",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "header": {
     "processes": 1,
-    "calls": 23,
-    "distinct": 18,
-    "utility": 5,
-    "tracer_self_ms": 1.182,
-    "wall_ms": 670
+    "calls": 53,
+    "distinct": 23,
+    "utility": 11,
+    "tracer_self_ms": 118.444,
+    "wall_ms": 3112
   },
   "statements": [
     {
@@ -56,10 +56,27 @@
       "error": null
     },
     {
+      "fingerprint": "3db69aca1e0f93fc",
+      "kind": "write",
+      "count": 5,
+      "rowCount": 48287,
+      "reads": {},
+      "writes": {
+        "lead_products": [
+          "classified_at",
+          "confidence",
+          "lead_id",
+          "product_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 824,
+      "rowCount": 846,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -82,6 +99,24 @@
       "error": null
     },
     {
+      "fingerprint": "64f967896dc1b1c9",
+      "kind": "write",
+      "count": 3,
+      "rowCount": 2329,
+      "reads": {
+        "coa_applications": [
+          "id"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "trade_classified_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "6652815a6eb5fa63",
       "kind": "read",
       "count": 1,
@@ -91,6 +126,28 @@
       "excluded": [
         "schema_migrations"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "67219f6e85a39655",
+      "kind": "write",
+      "count": 7,
+      "rowCount": 36482,
+      "reads": {},
+      "writes": {
+        "lead_trades": [
+          "attachment_basis",
+          "classified_at",
+          "confidence",
+          "is_active",
+          "lead_id",
+          "lead_score",
+          "phase",
+          "tier",
+          "trade_id"
+        ]
+      },
+      "excluded": [],
       "error": null
     },
     {
@@ -147,7 +204,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 1,
+      "count": 4,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -191,7 +248,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 1,
+      "count": 4,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -201,8 +258,8 @@
     {
       "fingerprint": "b651fc2017e5c19b",
       "kind": "read",
-      "count": 1,
-      "rowCount": 0,
+      "count": 4,
+      "rowCount": 2329,
       "reads": {
         "coa_applications": [
           "coa_type_class",
@@ -220,12 +277,42 @@
       "error": null
     },
     {
+      "fingerprint": "c02f90b9aefe0314",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 48287,
+      "reads": {
+        "lead_products": [
+          "lead_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
       "count": 2,
       "rowCount": 0,
       "reads": {},
       "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "cb9cda851a267606",
+      "kind": "write",
+      "count": 3,
+      "rowCount": 48287,
+      "reads": {
+        "lead_products": [
+          "lead_id"
+        ]
+      },
+      "writes": {
+        "lead_products": []
+      },
       "excluded": [],
       "error": null
     },
@@ -268,7 +355,35 @@
       "error": null
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "client": "50985:2",
+      "write_fingerprints": [
+        "3db69aca1e0f93fc",
+        "64f967896dc1b1c9",
+        "67219f6e85a39655",
+        "cb9cda851a267606"
+      ]
+    },
+    {
+      "client": "50985:2",
+      "write_fingerprints": [
+        "3db69aca1e0f93fc",
+        "64f967896dc1b1c9",
+        "67219f6e85a39655",
+        "cb9cda851a267606"
+      ]
+    },
+    {
+      "client": "50985:2",
+      "write_fingerprints": [
+        "3db69aca1e0f93fc",
+        "64f967896dc1b1c9",
+        "67219f6e85a39655",
+        "cb9cda851a267606"
+      ]
+    }
+  ],
   "autocommit_writes": [],
   "touched": {
     "reads": {
@@ -283,11 +398,20 @@
         "trade_classified_at"
       ],
       "lead_products": [
+        "classified_at",
+        "confidence",
         "lead_id",
         "product_id"
       ],
       "lead_trades": [
+        "attachment_basis",
+        "classified_at",
+        "confidence",
+        "is_active",
         "lead_id",
+        "lead_score",
+        "phase",
+        "tier",
         "trade_id"
       ],
       "product_groups": [
@@ -300,7 +424,28 @@
         "slug"
       ]
     },
-    "writes": {}
+    "writes": {
+      "coa_applications": [
+        "trade_classified_at"
+      ],
+      "lead_products": [
+        "classified_at",
+        "confidence",
+        "lead_id",
+        "product_id"
+      ],
+      "lead_trades": [
+        "attachment_basis",
+        "classified_at",
+        "confidence",
+        "is_active",
+        "lead_id",
+        "lead_score",
+        "phase",
+        "tier",
+        "trade_id"
+      ]
+    }
   },
   "errors": []
 }

@@ -260,7 +260,7 @@
       "sql": "SELECT count(*)::int AS c FROM (SELECT table_name, snapshot_date FROM engine_health_snapshots GROUP BY table_name, snapshot_date HAVING count(*) > 1) d",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
       "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-21T15:31:12.790Z", "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a", "cost_ms": 1, "sample_n": 60, "source_run": { "run_id": "3863", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-23T00:40:34.342Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 1, "sample_n": 70, "source_run": { "run_id": "4173", "chain": null, "event": "golden_capture" } },
       "why": {
         "text": "Mirrors the live UNIQUE(table_name, snapshot_date) DB constraint as a declared, observable check rather than an implicit reliance on the constraint alone (Rule 1, nothing hidden) — same convention refresh_snapshot's own duplicate_snapshot_date_count invariant uses.",
         "liveness": { "kind": "table", "ref": "engine_health_snapshots" }

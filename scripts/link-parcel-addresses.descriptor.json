@@ -646,12 +646,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 526603,
-        "at": "2026-10-21T13:21:02.721Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-22T23:59:20.155Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 12,
-        "sample_n": 21,
+        "sample_n": 25,
         "source_run": {
-          "run_id": "3724",
+          "run_id": "4135",
           "chain": null,
           "event": "golden_capture"
         }
@@ -675,12 +675,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 1166,
-        "at": "2026-10-21T13:21:02.721Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 43,
-        "sample_n": 21,
+        "at": "2026-10-22T23:59:20.155Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 47,
+        "sample_n": 25,
         "source_run": {
-          "run_id": "3724",
+          "run_id": "4135",
           "chain": null,
           "event": "golden_capture"
         }
@@ -704,12 +704,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T13:21:02.721Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "at": "2026-10-22T23:59:20.155Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "cost_ms": 48,
-        "sample_n": 21,
+        "sample_n": 25,
         "source_run": {
-          "run_id": "3724",
+          "run_id": "4135",
           "chain": null,
           "event": "golden_capture"
         }
@@ -733,12 +733,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 155,
-        "at": "2026-10-21T13:21:02.721Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 610,
-        "sample_n": 21,
+        "at": "2026-10-22T23:59:20.155Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 568,
+        "sample_n": 25,
         "source_run": {
-          "run_id": "3724",
+          "run_id": "4135",
           "chain": null,
           "event": "golden_capture"
         }
@@ -762,12 +762,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 747,
-        "at": "2026-10-21T13:21:02.721Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 12,
-        "sample_n": 21,
+        "at": "2026-10-22T23:59:20.155Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 11,
+        "sample_n": 25,
         "source_run": {
-          "run_id": "3724",
+          "run_id": "4135",
           "chain": null,
           "event": "golden_capture"
         }

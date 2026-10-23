@@ -44,6 +44,7 @@
           "kind": "http_file",
           "format": "pdf_document_set",
           "manifest": "scripts/seeds/coa-notices/manifest-toronto-2017.json",
+          "values_manifest": "scripts/seeds/coa-notices/manifest-aic-values.json",
           "pdf": {
             "host_allowlist": [
               "www.toronto.ca",
@@ -232,6 +233,18 @@
             "bind": "value"
           },
           {
+            "name": "doc_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "source_batch",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
             "name": "retired_at",
             "vocabulary": "none",
             "written": "insert_only"
@@ -269,14 +282,16 @@
             "parse_confidence",
             "qualified",
             "source_sha256",
-            "source_page"
+            "source_page",
+            "doc_type",
+            "source_batch"
           ],
           "scope": "none",
           "expected_change_ratio": ">= 0",
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step",
           "why": {
-            "text": "Spec 129 §D9. Class A guarded upsert keyed on variance_key: a re-run over the same pinned manifest and extractor writes zero rows. The guard covers every VALUE column and excludes the version stamps (extractor_version, vocab_version), loaded_at and retired_at, so a version bump rewrites only rows whose values changed. SOFT RETIRE (retract departed_mark): a key the reconciled parse no longer yields is MARKED retired_at = now() and UNMARKED when it reappears, in the same transaction, behind the library's empty-set and mass-retire guards (coa_notices_retire_max_pct). No oracle row is ever deleted; consumers read retired_at IS NULL. The MARK is table-wide (scope none), which is why a second source family needs its own step or a scoped extension (Spec 129 §11).",
+            "text": "Spec 129 §D9. Class A guarded upsert keyed on variance_key: a re-run over the same pinned manifest and extractor writes zero rows. The guard covers every VALUE column and excludes the version stamps (extractor_version, vocab_version), loaded_at and retired_at, so a version bump rewrites only rows whose values changed. SOFT RETIRE (retract departed_mark): a key the reconciled parse no longer yields is MARKED retired_at = now() and UNMARKED when it reappears, in the same transaction, behind the library's empty-set and mass-retire guards (coa_notices_retire_max_pct). No oracle row is ever deleted; consumers read retired_at IS NULL. The MARK is table-wide (scope none), which is why the values-only batch family (aic_values_batch, Spec 129 §2b) is a second acquisition form of this ONE primary and not a second step: one run sees both families, so neither retires the other.",
             "liveness": {
               "kind": "table",
               "ref": "coa_notice_variances"
@@ -285,18 +300,306 @@
         },
         "retract": "departed_mark",
         "retire_max_pct_from_config": "coa_notices_retire_max_pct"
+      },
+      {
+        "table": "coa_plan_facts",
+        "key": "application_number",
+        "key_sql_type": "TEXT",
+        "derive": {
+          "from": "coa_notice_variances",
+          "prior_columns": [
+            "variance_key"
+          ],
+          "why": {
+            "text": "Spec 129 §2c (operator CHAT-74.IN4): the plan facts of the pinned values batches are written as a derived second target of this one primary, inside its transaction (Spec 124 R-DY). The prior-state read is the required derive form and is unused: the rows are DATA the reconcile hands to deriveRows (RE-FREEZE #40), emitted once with slice 0.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/load-coa-notices.js"
+            }
+          }
+        },
+        "columns": [
+          {
+            "name": "application_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "lot_area_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "lot_depth_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "lot_frontage_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "established_grade",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "existing_coverage_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "existing_gfa_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "existing_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "existing_storeys",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "front_landscaped_pct",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "front_soft_pct",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "rear_soft_pct",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_bedrooms",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_coverage_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_coverage_pct",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_depth_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_fsi",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_gfa_basement_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_gfa_first_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_gfa_second_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_gfa_third_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_gfa_total_m2",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_length_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_main_wall_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_storeys",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_units",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_setback_front_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_setback_rear_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_setback_side_flank_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_setback_side_left_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_setback_side_right_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "corner_lot",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "source_batch",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "source_sha256",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "loaded_at",
+            "vocabulary": "none",
+            "written": "db_default"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "lot_area_m2",
+            "lot_depth_m",
+            "lot_frontage_m",
+            "established_grade",
+            "existing_coverage_m2",
+            "existing_gfa_m2",
+            "existing_height_m",
+            "existing_storeys",
+            "front_landscaped_pct",
+            "front_soft_pct",
+            "rear_soft_pct",
+            "proposed_bedrooms",
+            "proposed_coverage_m2",
+            "proposed_coverage_pct",
+            "proposed_depth_m",
+            "proposed_fsi",
+            "proposed_gfa_basement_m2",
+            "proposed_gfa_first_m2",
+            "proposed_gfa_second_m2",
+            "proposed_gfa_third_m2",
+            "proposed_gfa_total_m2",
+            "proposed_height_m",
+            "proposed_length_m",
+            "proposed_main_wall_height_m",
+            "proposed_storeys",
+            "proposed_units",
+            "proposed_setback_front_m",
+            "proposed_setback_rear_m",
+            "proposed_setback_side_flank_m",
+            "proposed_setback_side_left_m",
+            "proposed_setback_side_right_m",
+            "corner_lot",
+            "source_batch",
+            "source_sha256"
+          ],
+          "scope": "none",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Spec 129 §2c. Class A guarded upsert keyed on application_number: a re-run over the same pinned batches writes zero rows (the guard covers every value column and the batch provenance, not loaded_at). Plan facts are never retired or deleted (retract none): a batch that restates an application replaces its row, one that leaves the manifest leaves the row as the last stated values.",
+            "liveness": {
+              "kind": "table",
+              "ref": "coa_plan_facts"
+            }
+          }
+        },
+        "retract": "none"
       }
     ],
     "invalidates": [],
     "write_inventory": {
       "statements": 3,
       "why": {
-        "text": "THREE write statements reach coa_notice_variances: the batched guarded upsert, the UNMARK UPDATE (keys back in the parse: retired_at -> NULL) and the MARK UPDATE (keys absent: retired_at = now(), first stamp kept) - the library departed_mark path. No DELETE exists. A run whose mass-retire guard suppresses the MARK traces 2 write fingerprints, so the witness capture must be a run the guard lets through.",
+        "text": "THREE write statements reach coa_notice_variances: the batched guarded upsert, the UNMARK UPDATE (keys back in the parse: retired_at -> NULL) and the MARK UPDATE (keys absent: retired_at = now(), first stamp kept) - the library departed_mark path. No DELETE exists. A run whose mass-retire guard suppresses the MARK traces 2 write fingerprints, so the witness capture must be a run the guard lets through. The derived coa_plan_facts upsert is derived_statements 1 (Spec 124 R-HA): issued once per run, with slice 0, only when a pinned batch carries plan facts.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/step/write.js"
         }
-      }
+      },
+      "derived_statements": 1
     }
   },
   "staleness": {
@@ -318,6 +621,7 @@
     "fingerprint_inputs": [
       "scripts/lib/compute/load-coa-notices.js",
       "scripts/lib/coa-notices/parse-values.js",
+      "scripts/lib/coa-notices/aic-values.js",
       "scripts/lib/pdf-text.js",
       "scripts/lib/coa-notices/target-map.json",
       "scripts/lib/coa-notices/vocab.json"
@@ -346,6 +650,18 @@
             "ref": "coa_notice_variances"
           }
         }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_plan_facts",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 285 enables RLS on coa_plan_facts with ZERO policies (Spec 114 Class B). Under a non-bypass role the derived upsert affects 0 rows with NO error, so the plan facts would silently never load (Spec 124 R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "coa_plan_facts"
+          }
+        }
       }
     ],
     "srid": "none",
@@ -357,7 +673,14 @@
     "txn_scope": "step",
     "statement_timeout": "none",
     "step_timeout": "40m",
-    "batch": 2340,
+    "batch": "none",
+    "batch_why": {
+      "text": "Generated (scripts/generate-ingest-batch.js, FLEET-2 B-3 #37): a step with two write targets declares \"none\" — the runner slices each target at its own write stride (pipeline.maxRowsPerInsert, Spec 124 R-CU), and the derived coa_plan_facts rows are emitted once, with slice 0 of the primary (R-DY (a), RE-FREEZE #40).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    },
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A variance item the reconcile drops (a superseded or same-date-conflicting duplicate notice) is a counted shaped_skipped reason, never a silent loss; per-document failures are closed doc_status values that FAIL the pre_write checks before any write.",
@@ -607,6 +930,31 @@
       "when": "pre_write",
       "chains": "all",
       "accept_until": "none",
+      "id": "batch_target_map_stale",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a values-only batch was built under a target-map version other than the current one, so its stored targets may be stale"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "order_guarantee": {
+        "guarantee": "A batch built under an older target map must stay visible on every run; its stored targets are not silently remapped.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "Spec 129 §2b (CHAT-71.2): a values batch carries targets mapped at build time from text the pipeline never holds. Its target_map_version is compared with the current target-map.json every run; a mismatch is a rebuild from the intake drop, never a silent remap (core.7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
       "id": "doc_pair_rate_floor",
       "kind": "invariant",
       "expect": {
@@ -740,10 +1088,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-22T11:36:15.065Z",
-        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
-        "cost_ms": 19,
-        "sample_n": 10,
+        "at": "2026-10-23T02:22:59.423Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 4,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -769,11 +1117,11 @@
       "frequency": "every_run",
       "retighten_when": "zero rows",
       "last_measured": {
-        "value": 8,
-        "at": "2026-10-22T11:36:15.065Z",
-        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
-        "cost_ms": 219,
-        "sample_n": 10,
+        "value": 20,
+        "at": "2026-10-23T02:22:59.423Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 43,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -799,11 +1147,11 @@
       "frequency": "every_run",
       "retighten_when": "zero rows",
       "last_measured": {
-        "value": 0,
-        "at": "2026-10-22T11:36:15.065Z",
-        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
-        "cost_ms": 217,
-        "sample_n": 10,
+        "value": 1,
+        "at": "2026-10-23T02:22:59.423Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 41,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -830,10 +1178,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-22T11:36:15.065Z",
-        "commit": "314827667e1f962af114bb19ca9211fd2f01db2f",
-        "cost_ms": 10,
-        "sample_n": 10,
+        "at": "2026-10-23T02:22:59.423Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 5,
+        "sample_n": 15,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -873,6 +1221,8 @@
         "items_by_parse_status": {},
         "items_by_target_status": {},
         "items_by_confidence": {},
+        "items_by_family": {},
+        "plan_facts_total": 0,
         "pair_rate_569": null,
         "doc_pair_rates": {},
         "citation_multi": 0,
@@ -882,6 +1232,11 @@
         "extractor_version": null,
         "vocab_version": null
       }
+    },
+    {
+      "key": "coa_plan_facts_written",
+      "type": "int",
+      "consumers": []
     }
   ],
   "deviations": [
@@ -1228,6 +1583,7 @@
       "status": "completed",
       "records_meta": {
         "coa_notices_load": "object",
+        "coa_plan_facts_written": "int",
         "audit_table": "object",
         "terminal": "string"
       },
@@ -1245,6 +1601,7 @@
       "status": "completed_with_warnings",
       "records_meta": {
         "coa_notices_load": "object",
+        "coa_plan_facts_written": "int",
         "audit_table": "object",
         "terminal": "string"
       },

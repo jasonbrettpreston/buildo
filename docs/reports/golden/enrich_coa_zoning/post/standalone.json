@@ -3,15 +3,15 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-coa-zoning.js",
   "chain": "none",
-  "git_head": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 33975,
+    "records_total": 33982,
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 3330,
+      "duration_ms": 2696,
       "target": "coa",
       "config": {
         "enrich_coa_zoning_zoning_coverage_fail_pct": 80,
@@ -23,7 +23,7 @@
       "terminal": "enriched",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+      "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -62,7 +62,7 @@
           },
           {
             "metric": "coa_no_parcel_link_count",
-            "value": 2206,
+            "value": 2207,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -118,7 +118,7 @@
           },
           {
             "metric": "coa_in_ravine_count",
-            "value": 2184,
+            "value": 2185,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -126,7 +126,7 @@
           },
           {
             "metric": "coa_with_ravine_distance_count",
-            "value": 31769,
+            "value": 31775,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -134,7 +134,7 @@
           },
           {
             "metric": "coa_heritage_designated_count",
-            "value": 1198,
+            "value": 1199,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -142,7 +142,7 @@
           },
           {
             "metric": "coa_part_iv_count",
-            "value": 312,
+            "value": 313,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -158,7 +158,7 @@
           },
           {
             "metric": "coa_corner_lot_count",
-            "value": 4844,
+            "value": 4846,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -166,7 +166,7 @@
           },
           {
             "metric": "coa_through_lot_count",
-            "value": 537,
+            "value": 538,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -174,7 +174,7 @@
           },
           {
             "metric": "coa_abuts_laneway_count",
-            "value": 6099,
+            "value": 6102,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -182,7 +182,7 @@
           },
           {
             "metric": "coa_with_frontage_name_count",
-            "value": 31534,
+            "value": 31540,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -190,7 +190,7 @@
           },
           {
             "metric": "coa_with_lot_confidence_count",
-            "value": 31769,
+            "value": 31775,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -198,7 +198,7 @@
           },
           {
             "metric": "coa_max_buildable_footprint_count",
-            "value": 28111,
+            "value": 28114,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -206,7 +206,7 @@
           },
           {
             "metric": "coa_max_buildable_gfa_count",
-            "value": 28111,
+            "value": 28114,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -222,7 +222,7 @@
           },
           {
             "metric": "coa_max_build_confidence_medium_count",
-            "value": 24375,
+            "value": 24378,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -230,7 +230,7 @@
           },
           {
             "metric": "coa_max_build_confidence_low_count",
-            "value": 2880,
+            "value": 2881,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -246,7 +246,7 @@
           },
           {
             "metric": "coa_envelope_constrained_count",
-            "value": 4751,
+            "value": 4752,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -254,7 +254,7 @@
           },
           {
             "metric": "coa_max_build_stories_aggressive_count",
-            "value": 28215,
+            "value": 28219,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -270,7 +270,7 @@
           },
           {
             "metric": "coa_neighbourhood_premium_above_1_count",
-            "value": 31767,
+            "value": 31773,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -278,7 +278,7 @@
           },
           {
             "metric": "coa_imagery_roof_footprint_count",
-            "value": 29231,
+            "value": 29237,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -286,7 +286,7 @@
           },
           {
             "metric": "coa_imagery_roof_gfa_count",
-            "value": 29231,
+            "value": 29237,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -294,7 +294,7 @@
           },
           {
             "metric": "coa_existing_structure_confidence_high_count",
-            "value": 26585,
+            "value": 26591,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -310,7 +310,7 @@
           },
           {
             "metric": "coa_existing_greenspace_count",
-            "value": 29231,
+            "value": 29237,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -326,7 +326,7 @@
           },
           {
             "metric": "coa_optimal_config_count",
-            "value": 28111,
+            "value": 28114,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -334,7 +334,7 @@
           },
           {
             "metric": "coa_opt_suite_fits_full_count",
-            "value": 26038,
+            "value": 26041,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -342,7 +342,7 @@
           },
           {
             "metric": "coa_comparable_builds_count",
-            "value": 27627,
+            "value": 27630,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -350,7 +350,7 @@
           },
           {
             "metric": "coa_comp_build_ratio_p50_count",
-            "value": 19792,
+            "value": 19793,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -358,7 +358,7 @@
           },
           {
             "metric": "coa_max_newbuild_coa_gfa_count",
-            "value": 28111,
+            "value": 28114,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -366,7 +366,7 @@
           },
           {
             "metric": "coa_cur_floor_gfa_count",
-            "value": 29231,
+            "value": 29237,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -374,7 +374,7 @@
           },
           {
             "metric": "coa_cur_pot_2story_gfa_count",
-            "value": 29231,
+            "value": 29237,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -382,7 +382,7 @@
           },
           {
             "metric": "coa_cur_pot_3story_gfa_count",
-            "value": 5830,
+            "value": 5832,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -390,7 +390,7 @@
           },
           {
             "metric": "coa_cur_gfa_range_basis_count",
-            "value": 25979,
+            "value": 25982,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -398,7 +398,7 @@
           },
           {
             "metric": "coa_cur_est_kitchen_gfa_count",
-            "value": 29231,
+            "value": 29237,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -406,7 +406,7 @@
           },
           {
             "metric": "coa_cur_est_bath_gfa_count",
-            "value": 29231,
+            "value": 29237,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -438,7 +438,7 @@
           },
           {
             "metric": "coa_rear_suite_laneway_count",
-            "value": 2626,
+            "value": 2627,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -462,7 +462,7 @@
           },
           {
             "metric": "coa_rear_suite_permission_coa_required_count",
-            "value": 1891,
+            "value": 1892,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -470,7 +470,7 @@
           },
           {
             "metric": "enrich_coa_zoning_duration_ms",
-            "value": 3330,
+            "value": 2696,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -479,7 +479,7 @@
           {
             "metric": "inputs_nonempty",
             "value": {
-              "lead_parcels": 277039,
+              "lead_parcels": 277045,
               "parcels": 496536
             },
             "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
@@ -487,13 +487,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 10181.3,
+            "value": 12497.98,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 3337,
+            "value": 2719,
             "threshold": null,
             "status": "INFO"
           }
@@ -777,17 +777,17 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"[enrich_coa_zoning] target: enrich_coa_zoning (descriptor.database) → database=postgres user=postgres migrations=268 (floor 204)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase zoning_coa starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase zoning_coa completed in 2978ms\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase orphan_nullify_coa starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase orphan_nullify_coa completed in 74ms\"}\nPIPELINE_SUMMARY:{\"records_total\":33975,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":3330,\"target\":\"coa\",\"config\":{\"enrich_coa_zoning_zoning_coverage_fail_pct\":80,\"enrich_coa_zoning_zoning_coverage_pass_min_pct\":83,\"enrich_coa_zoning_bylaw_max_fsi_null_warn_pct\":97,\"enrich_coa_zoning_bylaw_max_coverage_null_warn_pct\":66,\"enrich_coa_zoning_centreline_coverage_min\":0.9},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"e2c8e108577e4eb9b965a5fde3ccd232934aad0a\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":5,\"name\":\"Enrich CoA Zoning\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_row_count_zero\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_zoning_class_coverage_pct\",\"value\":90.5,\"threshold\":\"pct >= 83\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 80\",\"observed\":\"after_write\"},{\"metric\":\"coa_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_no_parcel_link_count\",\"value\":2206,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_unlink_cleared_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_multi_parcel_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_heterogeneous_assembly_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_bylaw_max_fsi_null_pct\",\"value\":93.2,\"threshold\":\"pct <= 97\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_bylaw_max_coverage_pct_null_pct\",\"value\":57.4,\"threshold\":\"pct <= 66\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_bylaw_max_height_m_null_pct\",\"value\":15.6,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_in_ravine_count\",\"value\":2184,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_with_ravine_distance_count\",\"value\":31769,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_heritage_designated_count\",\"value\":1198,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_part_iv_count\",\"value\":312,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_part_v_hcd_count\",\"value\":886,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corner_lot_count\",\"value\":4844,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_through_lot_count\",\"value\":537,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_abuts_laneway_count\",\"value\":6099,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_with_frontage_name_count\",\"value\":31534,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_with_lot_confidence_count\",\"value\":31769,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_buildable_footprint_count\",\"value\":28111,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_buildable_gfa_count\",\"value\":28111,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_confidence_high_count\",\"value\":1650,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_confidence_medium_count\",\"value\":24375,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_confidence_low_count\",\"value\":2880,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garden_suite_fits_count\",\"value\":18647,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_envelope_constrained_count\",\"value\":4751,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_stories_aggressive_count\",\"value\":28215,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_market_exceeds_bylaw_count\",\"value\":49,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_neighbourhood_premium_above_1_count\",\"value\":31767,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_imagery_roof_footprint_count\",\"value\":29231,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_imagery_roof_gfa_count\",\"value\":29231,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_structure_confidence_high_count\",\"value\":26585,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_structure_confidence_low_count\",\"value\":5173,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_greenspace_count\",\"value\":29231,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_mislinked_footprint_count\",\"value\":2527,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_optimal_config_count\",\"value\":28111,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_opt_suite_fits_full_count\",\"value\":26038,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_comparable_builds_count\",\"value\":27627,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_comp_build_ratio_p50_count\",\"value\":19792,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_newbuild_coa_gfa_count\",\"value\":28111,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_floor_gfa_count\",\"value\":29231,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_pot_2story_gfa_count\",\"value\":29231,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_pot_3story_gfa_count\",\"value\":5830,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_gfa_range_basis_count\",\"value\":25979,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_est_kitchen_gfa_count\",\"value\":29231,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_est_bath_gfa_count\",\"value\":29231,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garage_fits_count\",\"value\":13145,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garage_permission_as_of_right_count\",\"value\":13136,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garage_permission_coa_required_count\",\"value\":9,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_laneway_count\",\"value\":2626,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_garden_count\",\"value\":16853,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_permission_as_of_right_count\",\"value\":17588,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_permission_coa_required_count\",\"value\":1891,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_coa_zoning_duration_ms\",\"value\":3330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"lead_parcels\":277039,\"parcels\":496536},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":10181.3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":3337,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"zoning_enriched_at\",\"bylaw_max_fsi\",\"bylaw_max_coverage_pct\",\"bylaw_max_height_m\",\"zoning_class\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"is_heritage_designated\",\"heritage_designation_type\",\"is_corner_lot\",\"is_through_lot\",\"abuts_laneway\",\"primary_frontage_street_name\",\"lot_size_confidence\",\"max_buildable_footprint_sqm\",\"max_buildable_gfa_sqm\",\"max_build_confidence\",\"garden_suite_fits\",\"envelope_constrained\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"imagery_roof_gfa_sqm\",\"existing_structure_confidence\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"opt_config_confidence\",\"opt_suite_fits_full\",\"comp_count\",\"comp_build_ratio_p50\",\"max_newbuild_coa_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_garage_gfa_sqm\",\"garage_permission\",\"rear_suite_type\",\"rear_suite_permission\"],\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"confidence\"],\"parcels\":[\"id\",\"geom\",\"zoning_class\",\"bylaw_max_coverage_pct\",\"bylaw_max_fsi\",\"bylaw_max_height_m\",\"exception_number\",\"zoning_overlays\",\"lot_size_sqm\",\"zoning_enriched_at\",\"ravine_dataset_version_when_enriched\",\"heritage_dataset_version_when_enriched\",\"centreline_dataset_version_when_enriched\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"is_corner_lot\",\"is_through_lot\",\"abuts_laneway\",\"primary_frontage_street_name\",\"in_policy_area\",\"on_policy_road\",\"in_rooming_house_overlay\",\"in_parking_zone_overlay\",\"in_building_setback_overlay\",\"on_priority_retail\",\"in_queenstw_eat_overlay\",\"frontage_m\",\"depth_m\",\"lot_size_confidence\",\"lot_size_basis\",\"max_build_setback_basis\",\"max_buildable_footprint_sqm\",\"max_build_width_m\",\"max_build_length_m\",\"max_build_height_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_basis\",\"max_buildable_gfa_sqm\",\"max_buildable_gfa_basis\",\"max_build_confidence\",\"max_garden_suite_gfa_sqm\",\"garden_suite_fits\",\"envelope_constrained\",\"envelope_constraint_reason\",\"max_garage_gfa_sqm\",\"garage_capacity_cars\",\"garage_constraint_reason\",\"garage_permission\",\"max_laneway_suite_gfa_sqm\",\"max_rear_suite_gfa_sqm\",\"rear_suite_type\",\"rear_suite_permission\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"existing_stories\",\"existing_height_m\",\"imagery_roof_gfa_sqm\",\"existing_width_m\",\"existing_length_m\",\"existing_structure_confidence\",\"existing_other_structures_count\",\"existing_other_structures_sqm\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"max_newbuild_coa_gfa_sqm\",\"cur_basement_gfa_sqm\",\"cur_storey_gfa_sqm\",\"cur_interior_reno_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"opt_aor_storeys\",\"opt_aor_gfa_sqm\",\"opt_aor_units\",\"opt_coa_storeys\",\"opt_coa_gfa_sqm\",\"opt_suite_type\",\"opt_suite_fits_full\",\"opt_binding_constraint\",\"opt_config_confidence\",\"comp_count\",\"comp_dominant_build\",\"comp_build_ratio_p50\",\"comp_fsi_p50\",\"cost_fb_total\",\"cost_coa_total\",\"cost_solar_total\",\"cost_garden_suite_total\",\"cost_laneway_suite_total\",\"cost_garage_total\",\"cost_gut_total\",\"cost_addition_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_basement_per_sqm\",\"cost_basement_underpin_per_sqm\",\"max_build_fsi\",\"coa_fsi\",\"realized_fsi_p90\"]},\"writes\":{\"coa_applications\":[\"zoning_class\",\"bylaw_max_coverage_pct\",\"bylaw_max_fsi\",\"bylaw_max_height_m\",\"exception_number\",\"variance_context\",\"zoning_parcel_count\",\"zoning_dominant_parcel_id\",\"zoning_dominant_parcel_method\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"is_corner_lot\",\"is_through_lot\",\"primary_frontage_street_name\",\"abuts_laneway\",\"lot_size_sqm\",\"frontage_m\",\"depth_m\",\"lot_size_confidence\",\"lot_size_basis\",\"max_build_setback_basis\",\"max_buildable_footprint_sqm\",\"max_build_width_m\",\"max_build_length_m\",\"max_build_height_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_basis\",\"max_buildable_gfa_sqm\",\"max_buildable_gfa_basis\",\"max_build_confidence\",\"max_garden_suite_gfa_sqm\",\"garden_suite_fits\",\"envelope_constrained\",\"envelope_constraint_reason\",\"max_garage_gfa_sqm\",\"garage_capacity_cars\",\"garage_constraint_reason\",\"garage_permission\",\"max_laneway_suite_gfa_sqm\",\"max_rear_suite_gfa_sqm\",\"rear_suite_type\",\"rear_suite_permission\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"existing_stories\",\"existing_height_m\",\"imagery_roof_gfa_sqm\",\"existing_width_m\",\"existing_length_m\",\"existing_structure_confidence\",\"existing_other_structures_count\",\"existing_other_structures_sqm\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"max_newbuild_coa_gfa_sqm\",\"cur_basement_gfa_sqm\",\"cur_storey_gfa_sqm\",\"cur_interior_reno_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"opt_aor_storeys\",\"opt_aor_gfa_sqm\",\"opt_aor_units\",\"opt_coa_storeys\",\"opt_coa_gfa_sqm\",\"opt_suite_type\",\"opt_suite_fits_full\",\"opt_binding_constraint\",\"opt_config_confidence\",\"comp_count\",\"comp_dominant_build\",\"comp_build_ratio_p50\",\"comp_fsi_p50\",\"cost_fb_total\",\"cost_coa_total\",\"cost_solar_total\",\"cost_garden_suite_total\",\"cost_laneway_suite_total\",\"cost_garage_total\",\"cost_gut_total\",\"cost_addition_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_basement_per_sqm\",\"cost_basement_underpin_per_sqm\",\"max_build_fsi\",\"coa_fsi\",\"realized_fsi_p90\",\"zoning_enriched_at\"]}}\n\n[enrich_coa_zoning] completed in 3.3s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"[enrich_coa_zoning] target: enrich_coa_zoning (descriptor.database) → database=postgres user=postgres migrations=275 (floor 204)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase zoning_coa starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase zoning_coa completed in 2343ms\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase orphan_nullify_coa starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_coa_zoning]\",\"msg\":\"phase orphan_nullify_coa completed in 98ms\"}\nPIPELINE_SUMMARY:{\"records_total\":33982,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":2696,\"target\":\"coa\",\"config\":{\"enrich_coa_zoning_zoning_coverage_fail_pct\":80,\"enrich_coa_zoning_zoning_coverage_pass_min_pct\":83,\"enrich_coa_zoning_bylaw_max_fsi_null_warn_pct\":97,\"enrich_coa_zoning_bylaw_max_coverage_null_warn_pct\":66,\"enrich_coa_zoning_centreline_coverage_min\":0.9},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2225709f29e17d880d81edee459e0c12a4c45e19\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":5,\"name\":\"Enrich CoA Zoning\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_row_count_zero\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_zoning_class_coverage_pct\",\"value\":90.5,\"threshold\":\"pct >= 83\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 80\",\"observed\":\"after_write\"},{\"metric\":\"coa_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_no_parcel_link_count\",\"value\":2207,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_unlink_cleared_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_multi_parcel_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_heterogeneous_assembly_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_bylaw_max_fsi_null_pct\",\"value\":93.2,\"threshold\":\"pct <= 97\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_bylaw_max_coverage_pct_null_pct\",\"value\":57.4,\"threshold\":\"pct <= 66\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_bylaw_max_height_m_null_pct\",\"value\":15.6,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_in_ravine_count\",\"value\":2185,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_with_ravine_distance_count\",\"value\":31775,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_heritage_designated_count\",\"value\":1199,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_part_iv_count\",\"value\":313,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_part_v_hcd_count\",\"value\":886,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_corner_lot_count\",\"value\":4846,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_through_lot_count\",\"value\":538,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_abuts_laneway_count\",\"value\":6102,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_with_frontage_name_count\",\"value\":31540,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_with_lot_confidence_count\",\"value\":31775,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_buildable_footprint_count\",\"value\":28114,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_buildable_gfa_count\",\"value\":28114,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_confidence_high_count\",\"value\":1650,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_confidence_medium_count\",\"value\":24378,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_confidence_low_count\",\"value\":2881,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garden_suite_fits_count\",\"value\":18647,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_envelope_constrained_count\",\"value\":4752,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_build_stories_aggressive_count\",\"value\":28219,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_market_exceeds_bylaw_count\",\"value\":49,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_neighbourhood_premium_above_1_count\",\"value\":31773,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_imagery_roof_footprint_count\",\"value\":29237,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_imagery_roof_gfa_count\",\"value\":29237,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_structure_confidence_high_count\",\"value\":26591,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_structure_confidence_low_count\",\"value\":5173,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_greenspace_count\",\"value\":29237,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_existing_mislinked_footprint_count\",\"value\":2527,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_optimal_config_count\",\"value\":28114,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_opt_suite_fits_full_count\",\"value\":26041,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_comparable_builds_count\",\"value\":27630,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_comp_build_ratio_p50_count\",\"value\":19793,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_max_newbuild_coa_gfa_count\",\"value\":28114,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_floor_gfa_count\",\"value\":29237,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_pot_2story_gfa_count\",\"value\":29237,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_pot_3story_gfa_count\",\"value\":5832,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_gfa_range_basis_count\",\"value\":25982,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_est_kitchen_gfa_count\",\"value\":29237,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cur_est_bath_gfa_count\",\"value\":29237,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garage_fits_count\",\"value\":13145,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garage_permission_as_of_right_count\",\"value\":13136,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_garage_permission_coa_required_count\",\"value\":9,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_laneway_count\",\"value\":2627,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_garden_count\",\"value\":16853,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_permission_as_of_right_count\",\"value\":17588,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_rear_suite_permission_coa_required_count\",\"value\":1892,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_coa_zoning_duration_ms\",\"value\":2696,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"lead_parcels\":277045,\"parcels\":496536},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":12497.98,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2719,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"zoning_enriched_at\",\"bylaw_max_fsi\",\"bylaw_max_coverage_pct\",\"bylaw_max_height_m\",\"zoning_class\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"is_heritage_designated\",\"heritage_designation_type\",\"is_corner_lot\",\"is_through_lot\",\"abuts_laneway\",\"primary_frontage_street_name\",\"lot_size_confidence\",\"max_buildable_footprint_sqm\",\"max_buildable_gfa_sqm\",\"max_build_confidence\",\"garden_suite_fits\",\"envelope_constrained\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"imagery_roof_gfa_sqm\",\"existing_structure_confidence\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"opt_config_confidence\",\"opt_suite_fits_full\",\"comp_count\",\"comp_build_ratio_p50\",\"max_newbuild_coa_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_garage_gfa_sqm\",\"garage_permission\",\"rear_suite_type\",\"rear_suite_permission\"],\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"confidence\"],\"parcels\":[\"id\",\"geom\",\"zoning_class\",\"bylaw_max_coverage_pct\",\"bylaw_max_fsi\",\"bylaw_max_height_m\",\"exception_number\",\"zoning_overlays\",\"lot_size_sqm\",\"zoning_enriched_at\",\"ravine_dataset_version_when_enriched\",\"heritage_dataset_version_when_enriched\",\"centreline_dataset_version_when_enriched\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"is_corner_lot\",\"is_through_lot\",\"abuts_laneway\",\"primary_frontage_street_name\",\"in_policy_area\",\"on_policy_road\",\"in_rooming_house_overlay\",\"in_parking_zone_overlay\",\"in_building_setback_overlay\",\"on_priority_retail\",\"in_queenstw_eat_overlay\",\"frontage_m\",\"depth_m\",\"lot_size_confidence\",\"lot_size_basis\",\"max_build_setback_basis\",\"max_buildable_footprint_sqm\",\"max_build_width_m\",\"max_build_length_m\",\"max_build_height_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_basis\",\"max_buildable_gfa_sqm\",\"max_buildable_gfa_basis\",\"max_build_confidence\",\"max_garden_suite_gfa_sqm\",\"garden_suite_fits\",\"envelope_constrained\",\"envelope_constraint_reason\",\"max_garage_gfa_sqm\",\"garage_capacity_cars\",\"garage_constraint_reason\",\"garage_permission\",\"max_laneway_suite_gfa_sqm\",\"max_rear_suite_gfa_sqm\",\"rear_suite_type\",\"rear_suite_permission\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"existing_stories\",\"existing_height_m\",\"imagery_roof_gfa_sqm\",\"existing_width_m\",\"existing_length_m\",\"existing_structure_confidence\",\"existing_other_structures_count\",\"existing_other_structures_sqm\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"max_newbuild_coa_gfa_sqm\",\"cur_basement_gfa_sqm\",\"cur_storey_gfa_sqm\",\"cur_interior_reno_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"opt_aor_storeys\",\"opt_aor_gfa_sqm\",\"opt_aor_units\",\"opt_coa_storeys\",\"opt_coa_gfa_sqm\",\"opt_suite_type\",\"opt_suite_fits_full\",\"opt_binding_constraint\",\"opt_config_confidence\",\"comp_count\",\"comp_dominant_build\",\"comp_build_ratio_p50\",\"comp_fsi_p50\",\"cost_fb_total\",\"cost_coa_total\",\"cost_solar_total\",\"cost_garden_suite_total\",\"cost_laneway_suite_total\",\"cost_garage_total\",\"cost_gut_total\",\"cost_addition_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_basement_per_sqm\",\"cost_basement_underpin_per_sqm\",\"max_build_fsi\",\"coa_fsi\",\"realized_fsi_p90\"]},\"writes\":{\"coa_applications\":[\"zoning_class\",\"bylaw_max_coverage_pct\",\"bylaw_max_fsi\",\"bylaw_max_height_m\",\"exception_number\",\"variance_context\",\"zoning_parcel_count\",\"zoning_dominant_parcel_id\",\"zoning_dominant_parcel_method\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"is_corner_lot\",\"is_through_lot\",\"primary_frontage_street_name\",\"abuts_laneway\",\"lot_size_sqm\",\"frontage_m\",\"depth_m\",\"lot_size_confidence\",\"lot_size_basis\",\"max_build_setback_basis\",\"max_buildable_footprint_sqm\",\"max_build_width_m\",\"max_build_length_m\",\"max_build_height_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_basis\",\"max_buildable_gfa_sqm\",\"max_buildable_gfa_basis\",\"max_build_confidence\",\"max_garden_suite_gfa_sqm\",\"garden_suite_fits\",\"envelope_constrained\",\"envelope_constraint_reason\",\"max_garage_gfa_sqm\",\"garage_capacity_cars\",\"garage_constraint_reason\",\"garage_permission\",\"max_laneway_suite_gfa_sqm\",\"max_rear_suite_gfa_sqm\",\"rear_suite_type\",\"rear_suite_permission\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"existing_stories\",\"existing_height_m\",\"imagery_roof_gfa_sqm\",\"existing_width_m\",\"existing_length_m\",\"existing_structure_confidence\",\"existing_other_structures_count\",\"existing_other_structures_sqm\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"max_newbuild_coa_gfa_sqm\",\"cur_basement_gfa_sqm\",\"cur_storey_gfa_sqm\",\"cur_interior_reno_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"opt_aor_storeys\",\"opt_aor_gfa_sqm\",\"opt_aor_units\",\"opt_coa_storeys\",\"opt_coa_gfa_sqm\",\"opt_suite_type\",\"opt_suite_fits_full\",\"opt_binding_constraint\",\"opt_config_confidence\",\"comp_count\",\"comp_dominant_build\",\"comp_build_ratio_p50\",\"comp_fsi_p50\",\"cost_fb_total\",\"cost_coa_total\",\"cost_solar_total\",\"cost_garden_suite_total\",\"cost_laneway_suite_total\",\"cost_garage_total\",\"cost_gut_total\",\"cost_addition_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_basement_per_sqm\",\"cost_basement_underpin_per_sqm\",\"max_build_fsi\",\"coa_fsi\",\"realized_fsi_p90\",\"zoning_enriched_at\"]}}\n\n[enrich_coa_zoning] completed in 2.7s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 3832,
+      "id": 4286,
       "pipeline": "enrich_coa_zoning",
       "status": "completed",
-      "started_at": "2026-10-21T15:16:36.084Z",
-      "completed_at": "2026-10-21T15:16:39.401Z",
-      "duration_ms": 3336,
-      "records_total": 33975,
+      "started_at": "2026-10-23T02:27:04.716Z",
+      "completed_at": "2026-10-23T02:27:07.423Z",
+      "duration_ms": 2720,
+      "records_total": 33982,
       "records_new": 0,
       "records_updated": 0,
       "records_meta": {
@@ -800,7 +800,7 @@
         },
         "errors": [],
         "target": "coa",
-        "code_sha": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
+        "code_sha": "2225709f29e17d880d81edee459e0c12a4c45e19",
         "terminal": "enriched",
         "warnings": [],
         "ledger_row": "owned",
@@ -833,7 +833,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 2206,
+              "value": 2207,
               "metric": "coa_no_parcel_link_count",
               "source": "check",
               "status": "INFO",
@@ -889,7 +889,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 2184,
+              "value": 2185,
               "metric": "coa_in_ravine_count",
               "source": "check",
               "status": "INFO",
@@ -897,7 +897,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 31769,
+              "value": 31775,
               "metric": "coa_with_ravine_distance_count",
               "source": "check",
               "status": "INFO",
@@ -905,7 +905,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 1198,
+              "value": 1199,
               "metric": "coa_heritage_designated_count",
               "source": "check",
               "status": "INFO",
@@ -913,7 +913,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 312,
+              "value": 313,
               "metric": "coa_part_iv_count",
               "source": "check",
               "status": "INFO",
@@ -929,7 +929,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 4844,
+              "value": 4846,
               "metric": "coa_corner_lot_count",
               "source": "check",
               "status": "INFO",
@@ -937,7 +937,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 537,
+              "value": 538,
               "metric": "coa_through_lot_count",
               "source": "check",
               "status": "INFO",
@@ -945,7 +945,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 6099,
+              "value": 6102,
               "metric": "coa_abuts_laneway_count",
               "source": "check",
               "status": "INFO",
@@ -953,7 +953,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 31534,
+              "value": 31540,
               "metric": "coa_with_frontage_name_count",
               "source": "check",
               "status": "INFO",
@@ -961,7 +961,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 31769,
+              "value": 31775,
               "metric": "coa_with_lot_confidence_count",
               "source": "check",
               "status": "INFO",
@@ -969,7 +969,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 28111,
+              "value": 28114,
               "metric": "coa_max_buildable_footprint_count",
               "source": "check",
               "status": "INFO",
@@ -977,7 +977,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 28111,
+              "value": 28114,
               "metric": "coa_max_buildable_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -993,7 +993,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 24375,
+              "value": 24378,
               "metric": "coa_max_build_confidence_medium_count",
               "source": "check",
               "status": "INFO",
@@ -1001,7 +1001,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 2880,
+              "value": 2881,
               "metric": "coa_max_build_confidence_low_count",
               "source": "check",
               "status": "INFO",
@@ -1017,7 +1017,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 4751,
+              "value": 4752,
               "metric": "coa_envelope_constrained_count",
               "source": "check",
               "status": "INFO",
@@ -1025,7 +1025,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 28215,
+              "value": 28219,
               "metric": "coa_max_build_stories_aggressive_count",
               "source": "check",
               "status": "INFO",
@@ -1041,7 +1041,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 31767,
+              "value": 31773,
               "metric": "coa_neighbourhood_premium_above_1_count",
               "source": "check",
               "status": "INFO",
@@ -1049,7 +1049,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 29231,
+              "value": 29237,
               "metric": "coa_imagery_roof_footprint_count",
               "source": "check",
               "status": "INFO",
@@ -1057,7 +1057,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 29231,
+              "value": 29237,
               "metric": "coa_imagery_roof_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -1065,7 +1065,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 26585,
+              "value": 26591,
               "metric": "coa_existing_structure_confidence_high_count",
               "source": "check",
               "status": "INFO",
@@ -1081,7 +1081,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 29231,
+              "value": 29237,
               "metric": "coa_existing_greenspace_count",
               "source": "check",
               "status": "INFO",
@@ -1097,7 +1097,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 28111,
+              "value": 28114,
               "metric": "coa_optimal_config_count",
               "source": "check",
               "status": "INFO",
@@ -1105,7 +1105,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 26038,
+              "value": 26041,
               "metric": "coa_opt_suite_fits_full_count",
               "source": "check",
               "status": "INFO",
@@ -1113,7 +1113,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 27627,
+              "value": 27630,
               "metric": "coa_comparable_builds_count",
               "source": "check",
               "status": "INFO",
@@ -1121,7 +1121,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 19792,
+              "value": 19793,
               "metric": "coa_comp_build_ratio_p50_count",
               "source": "check",
               "status": "INFO",
@@ -1129,7 +1129,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 28111,
+              "value": 28114,
               "metric": "coa_max_newbuild_coa_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -1137,7 +1137,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 29231,
+              "value": 29237,
               "metric": "coa_cur_floor_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -1145,7 +1145,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 29231,
+              "value": 29237,
               "metric": "coa_cur_pot_2story_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -1153,7 +1153,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 5830,
+              "value": 5832,
               "metric": "coa_cur_pot_3story_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -1161,7 +1161,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 25979,
+              "value": 25982,
               "metric": "coa_cur_gfa_range_basis_count",
               "source": "check",
               "status": "INFO",
@@ -1169,7 +1169,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 29231,
+              "value": 29237,
               "metric": "coa_cur_est_kitchen_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -1177,7 +1177,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 29231,
+              "value": 29237,
               "metric": "coa_cur_est_bath_gfa_count",
               "source": "check",
               "status": "INFO",
@@ -1209,7 +1209,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 2626,
+              "value": 2627,
               "metric": "coa_rear_suite_laneway_count",
               "source": "check",
               "status": "INFO",
@@ -1233,7 +1233,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 1891,
+              "value": 1892,
               "metric": "coa_rear_suite_permission_coa_required_count",
               "source": "check",
               "status": "INFO",
@@ -1241,7 +1241,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 3330,
+              "value": 2696,
               "metric": "enrich_coa_zoning_duration_ms",
               "source": "check",
               "status": "INFO",
@@ -1251,20 +1251,20 @@
             {
               "value": {
                 "parcels": 496536,
-                "lead_parcels": 277039
+                "lead_parcels": 277045
               },
               "metric": "inputs_nonempty",
               "status": "INFO",
               "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
             },
             {
-              "value": 10181.3,
+              "value": 12497.98,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 3337,
+              "value": 2719,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -1273,7 +1273,7 @@
           "phase": 5,
           "verdict": "PASS"
         },
-        "duration_ms": 3330,
+        "duration_ms": 2696,
         "pool_errors": 0,
         "chain_run_id": null,
         "checks_failed": 0,
@@ -1283,12 +1283,12 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 3831,
+  "pipeline_runs_max_id_before": 4285,
   "table_state": [
     {
       "table": "coa_applications",
-      "row_count": 33975,
-      "content_hash": "4ff22e3631e0486c1d63c8efa162b821",
+      "row_count": 33982,
+      "content_hash": "af67f3d88c6a66f763a36353e6cc742c",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -1400,7 +1400,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "coa_applications": 195
+    "coa_applications": 181
   },
   "table_specs": {
     "coa_applications": {
@@ -1574,7 +1574,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 2206
+              "value": 2207
             },
             {
               "metric": "coa_unlink_cleared_count",
@@ -1630,7 +1630,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 2184
+              "value": 2185
             },
             {
               "metric": "coa_with_ravine_distance_count",
@@ -1638,7 +1638,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 31769
+              "value": 31775
             },
             {
               "metric": "coa_heritage_designated_count",
@@ -1646,7 +1646,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 1198
+              "value": 1199
             },
             {
               "metric": "coa_part_iv_count",
@@ -1654,7 +1654,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 312
+              "value": 313
             },
             {
               "metric": "coa_part_v_hcd_count",
@@ -1670,7 +1670,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 4844
+              "value": 4846
             },
             {
               "metric": "coa_through_lot_count",
@@ -1678,7 +1678,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 537
+              "value": 538
             },
             {
               "metric": "coa_abuts_laneway_count",
@@ -1686,7 +1686,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 6099
+              "value": 6102
             },
             {
               "metric": "coa_with_frontage_name_count",
@@ -1694,7 +1694,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 31534
+              "value": 31540
             },
             {
               "metric": "coa_with_lot_confidence_count",
@@ -1702,7 +1702,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 31769
+              "value": 31775
             },
             {
               "metric": "coa_max_buildable_footprint_count",
@@ -1710,7 +1710,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 28111
+              "value": 28114
             },
             {
               "metric": "coa_max_buildable_gfa_count",
@@ -1718,7 +1718,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 28111
+              "value": 28114
             },
             {
               "metric": "coa_max_build_confidence_high_count",
@@ -1734,7 +1734,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 24375
+              "value": 24378
             },
             {
               "metric": "coa_max_build_confidence_low_count",
@@ -1742,7 +1742,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 2880
+              "value": 2881
             },
             {
               "metric": "coa_garden_suite_fits_count",
@@ -1758,7 +1758,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 4751
+              "value": 4752
             },
             {
               "metric": "coa_max_build_stories_aggressive_count",
@@ -1766,7 +1766,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 28215
+              "value": 28219
             },
             {
               "metric": "coa_market_exceeds_bylaw_count",
@@ -1782,7 +1782,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 31767
+              "value": 31773
             },
             {
               "metric": "coa_imagery_roof_footprint_count",
@@ -1790,7 +1790,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 29231
+              "value": 29237
             },
             {
               "metric": "coa_imagery_roof_gfa_count",
@@ -1798,7 +1798,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 29231
+              "value": 29237
             },
             {
               "metric": "coa_existing_structure_confidence_high_count",
@@ -1806,7 +1806,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 26585
+              "value": 26591
             },
             {
               "metric": "coa_existing_structure_confidence_low_count",
@@ -1822,7 +1822,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 29231
+              "value": 29237
             },
             {
               "metric": "coa_existing_mislinked_footprint_count",
@@ -1838,7 +1838,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 28111
+              "value": 28114
             },
             {
               "metric": "coa_opt_suite_fits_full_count",
@@ -1846,7 +1846,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 26038
+              "value": 26041
             },
             {
               "metric": "coa_comparable_builds_count",
@@ -1854,7 +1854,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 27627
+              "value": 27630
             },
             {
               "metric": "coa_comp_build_ratio_p50_count",
@@ -1862,7 +1862,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 19792
+              "value": 19793
             },
             {
               "metric": "coa_max_newbuild_coa_gfa_count",
@@ -1870,7 +1870,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 28111
+              "value": 28114
             },
             {
               "metric": "coa_cur_floor_gfa_count",
@@ -1878,7 +1878,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 29231
+              "value": 29237
             },
             {
               "metric": "coa_cur_pot_2story_gfa_count",
@@ -1886,7 +1886,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 29231
+              "value": 29237
             },
             {
               "metric": "coa_cur_pot_3story_gfa_count",
@@ -1894,7 +1894,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 5830
+              "value": 5832
             },
             {
               "metric": "coa_cur_gfa_range_basis_count",
@@ -1902,7 +1902,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 25979
+              "value": 25982
             },
             {
               "metric": "coa_cur_est_kitchen_gfa_count",
@@ -1910,7 +1910,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 29231
+              "value": 29237
             },
             {
               "metric": "coa_cur_est_bath_gfa_count",
@@ -1918,7 +1918,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 29231
+              "value": 29237
             },
             {
               "metric": "coa_garage_fits_count",
@@ -1950,7 +1950,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 2626
+              "value": 2627
             },
             {
               "metric": "coa_rear_suite_garden_count",
@@ -1974,7 +1974,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 1891
+              "value": 1892
             },
             {
               "metric": "enrich_coa_zoning_duration_ms",
@@ -1982,14 +1982,14 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 3330
+              "value": 2696
             },
             {
               "metric": "inputs_nonempty",
               "status": "INFO",
               "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
               "value": {
-                "lead_parcels": 277039,
+                "lead_parcels": 277045,
                 "parcels": 496536
               }
             }
@@ -2014,7 +2014,7 @@
         "warnings": []
       },
       "records_new": 0,
-      "records_total": 33975,
+      "records_total": 33982,
       "records_updated": 0
     },
     "summary_count": 1,
@@ -2329,7 +2329,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 2206
+                "value": 2207
               },
               {
                 "metric": "coa_unlink_cleared_count",
@@ -2385,7 +2385,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 2184
+                "value": 2185
               },
               {
                 "metric": "coa_with_ravine_distance_count",
@@ -2393,7 +2393,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 31769
+                "value": 31775
               },
               {
                 "metric": "coa_heritage_designated_count",
@@ -2401,7 +2401,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 1198
+                "value": 1199
               },
               {
                 "metric": "coa_part_iv_count",
@@ -2409,7 +2409,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 312
+                "value": 313
               },
               {
                 "metric": "coa_part_v_hcd_count",
@@ -2425,7 +2425,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 4844
+                "value": 4846
               },
               {
                 "metric": "coa_through_lot_count",
@@ -2433,7 +2433,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 537
+                "value": 538
               },
               {
                 "metric": "coa_abuts_laneway_count",
@@ -2441,7 +2441,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 6099
+                "value": 6102
               },
               {
                 "metric": "coa_with_frontage_name_count",
@@ -2449,7 +2449,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 31534
+                "value": 31540
               },
               {
                 "metric": "coa_with_lot_confidence_count",
@@ -2457,7 +2457,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 31769
+                "value": 31775
               },
               {
                 "metric": "coa_max_buildable_footprint_count",
@@ -2465,7 +2465,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 28111
+                "value": 28114
               },
               {
                 "metric": "coa_max_buildable_gfa_count",
@@ -2473,7 +2473,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 28111
+                "value": 28114
               },
               {
                 "metric": "coa_max_build_confidence_high_count",
@@ -2489,7 +2489,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 24375
+                "value": 24378
               },
               {
                 "metric": "coa_max_build_confidence_low_count",
@@ -2497,7 +2497,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 2880
+                "value": 2881
               },
               {
                 "metric": "coa_garden_suite_fits_count",
@@ -2513,7 +2513,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 4751
+                "value": 4752
               },
               {
                 "metric": "coa_max_build_stories_aggressive_count",
@@ -2521,7 +2521,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 28215
+                "value": 28219
               },
               {
                 "metric": "coa_market_exceeds_bylaw_count",
@@ -2537,7 +2537,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 31767
+                "value": 31773
               },
               {
                 "metric": "coa_imagery_roof_footprint_count",
@@ -2545,7 +2545,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 29231
+                "value": 29237
               },
               {
                 "metric": "coa_imagery_roof_gfa_count",
@@ -2553,7 +2553,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 29231
+                "value": 29237
               },
               {
                 "metric": "coa_existing_structure_confidence_high_count",
@@ -2561,7 +2561,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 26585
+                "value": 26591
               },
               {
                 "metric": "coa_existing_structure_confidence_low_count",
@@ -2577,7 +2577,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 29231
+                "value": 29237
               },
               {
                 "metric": "coa_existing_mislinked_footprint_count",
@@ -2593,7 +2593,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 28111
+                "value": 28114
               },
               {
                 "metric": "coa_opt_suite_fits_full_count",
@@ -2601,7 +2601,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 26038
+                "value": 26041
               },
               {
                 "metric": "coa_comparable_builds_count",
@@ -2609,7 +2609,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 27627
+                "value": 27630
               },
               {
                 "metric": "coa_comp_build_ratio_p50_count",
@@ -2617,7 +2617,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 19792
+                "value": 19793
               },
               {
                 "metric": "coa_max_newbuild_coa_gfa_count",
@@ -2625,7 +2625,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 28111
+                "value": 28114
               },
               {
                 "metric": "coa_cur_floor_gfa_count",
@@ -2633,7 +2633,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 29231
+                "value": 29237
               },
               {
                 "metric": "coa_cur_pot_2story_gfa_count",
@@ -2641,7 +2641,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 29231
+                "value": 29237
               },
               {
                 "metric": "coa_cur_pot_3story_gfa_count",
@@ -2649,7 +2649,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 5830
+                "value": 5832
               },
               {
                 "metric": "coa_cur_gfa_range_basis_count",
@@ -2657,7 +2657,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 25979
+                "value": 25982
               },
               {
                 "metric": "coa_cur_est_kitchen_gfa_count",
@@ -2665,7 +2665,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 29231
+                "value": 29237
               },
               {
                 "metric": "coa_cur_est_bath_gfa_count",
@@ -2673,7 +2673,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 29231
+                "value": 29237
               },
               {
                 "metric": "coa_garage_fits_count",
@@ -2705,7 +2705,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 2626
+                "value": 2627
               },
               {
                 "metric": "coa_rear_suite_garden_count",
@@ -2729,7 +2729,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 1891
+                "value": 1892
               },
               {
                 "metric": "enrich_coa_zoning_duration_ms",
@@ -2737,14 +2737,14 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 3330
+                "value": 2696
               },
               {
                 "metric": "inputs_nonempty",
                 "status": "INFO",
                 "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
                 "value": {
-                  "lead_parcels": 277039,
+                  "lead_parcels": 277045,
                   "parcels": 496536
                 }
               }
@@ -2769,13 +2769,13 @@
           "warnings": []
         },
         "records_new": 0,
-        "records_total": 33975,
+        "records_total": 33982,
         "records_updated": 0,
         "status": "completed"
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[enrich_coa_zoning] target: enrich_coa_zoning (descriptor.database) → database=postgres user=postgres migrations=268 (floor 204)\",\"tag\":\"[enrich_coa_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[enrich_coa_zoning] target: enrich_coa_zoning (descriptor.database) → database=postgres user=postgres migrations=275 (floor 204)\",\"tag\":\"[enrich_coa_zoning]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase zoning_coa starting (shared txn, timeout disabled (declared \\\"none\\\"))\",\"tag\":\"[enrich_coa_zoning]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase zoning_coa completed in <DUR>\",\"tag\":\"[enrich_coa_zoning]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase orphan_nullify_coa starting (shared txn, timeout disabled (declared \\\"none\\\"))\",\"tag\":\"[enrich_coa_zoning]\"}",
@@ -2886,12 +2886,12 @@
           "realized_fsi_p90",
           "zoning_enriched_at"
         ],
-        "content_hash": "4ff22e3631e0486c1d63c8efa162b821",
+        "content_hash": "af67f3d88c6a66f763a36353e6cc742c",
         "order_by": "explicit",
         "order_columns": [
           "id"
         ],
-        "row_count": 33975,
+        "row_count": 33982,
         "table": "coa_applications"
       }
     ],
@@ -2909,7 +2909,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [coa_applications]",
-    "txid_before_run2": 495217,
+    "txid_before_run2": 585917,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -2918,83 +2918,83 @@
         "coa_row_count_zero": false,
         "coa_zoning_class_coverage_pct": 90.5,
         "coa_enriched_count": 0,
-        "coa_no_parcel_link_count": 2206,
+        "coa_no_parcel_link_count": 2207,
         "coa_unlink_cleared_count": 0,
         "coa_multi_parcel_count": 0,
         "coa_heterogeneous_assembly_count": 0,
         "coa_bylaw_max_fsi_null_pct": 93.2,
         "coa_bylaw_max_coverage_pct_null_pct": 57.4,
         "coa_bylaw_max_height_m_null_pct": 15.6,
-        "coa_in_ravine_count": 2184,
-        "coa_with_ravine_distance_count": 31769,
-        "coa_heritage_designated_count": 1198,
-        "coa_part_iv_count": 312,
+        "coa_in_ravine_count": 2185,
+        "coa_with_ravine_distance_count": 31775,
+        "coa_heritage_designated_count": 1199,
+        "coa_part_iv_count": 313,
         "coa_part_v_hcd_count": 886,
-        "coa_corner_lot_count": 4844,
-        "coa_through_lot_count": 537,
-        "coa_abuts_laneway_count": 6099,
-        "coa_with_frontage_name_count": 31534,
-        "coa_with_lot_confidence_count": 31769,
-        "coa_max_buildable_footprint_count": 28111,
-        "coa_max_buildable_gfa_count": 28111,
+        "coa_corner_lot_count": 4846,
+        "coa_through_lot_count": 538,
+        "coa_abuts_laneway_count": 6102,
+        "coa_with_frontage_name_count": 31540,
+        "coa_with_lot_confidence_count": 31775,
+        "coa_max_buildable_footprint_count": 28114,
+        "coa_max_buildable_gfa_count": 28114,
         "coa_max_build_confidence_high_count": 1650,
-        "coa_max_build_confidence_medium_count": 24375,
-        "coa_max_build_confidence_low_count": 2880,
+        "coa_max_build_confidence_medium_count": 24378,
+        "coa_max_build_confidence_low_count": 2881,
         "coa_garden_suite_fits_count": 18647,
-        "coa_envelope_constrained_count": 4751,
-        "coa_max_build_stories_aggressive_count": 28215,
+        "coa_envelope_constrained_count": 4752,
+        "coa_max_build_stories_aggressive_count": 28219,
         "coa_market_exceeds_bylaw_count": 49,
-        "coa_neighbourhood_premium_above_1_count": 31767,
-        "coa_imagery_roof_footprint_count": 29231,
-        "coa_imagery_roof_gfa_count": 29231,
-        "coa_existing_structure_confidence_high_count": 26585,
+        "coa_neighbourhood_premium_above_1_count": 31773,
+        "coa_imagery_roof_footprint_count": 29237,
+        "coa_imagery_roof_gfa_count": 29237,
+        "coa_existing_structure_confidence_high_count": 26591,
         "coa_existing_structure_confidence_low_count": 5173,
-        "coa_existing_greenspace_count": 29231,
+        "coa_existing_greenspace_count": 29237,
         "coa_existing_mislinked_footprint_count": 2527,
-        "coa_optimal_config_count": 28111,
-        "coa_opt_suite_fits_full_count": 26038,
-        "coa_comparable_builds_count": 27627,
-        "coa_comp_build_ratio_p50_count": 19792,
-        "coa_max_newbuild_coa_gfa_count": 28111,
-        "coa_cur_floor_gfa_count": 29231,
-        "coa_cur_pot_2story_gfa_count": 29231,
-        "coa_cur_pot_3story_gfa_count": 5830,
-        "coa_cur_gfa_range_basis_count": 25979,
-        "coa_cur_est_kitchen_gfa_count": 29231,
-        "coa_cur_est_bath_gfa_count": 29231,
+        "coa_optimal_config_count": 28114,
+        "coa_opt_suite_fits_full_count": 26041,
+        "coa_comparable_builds_count": 27630,
+        "coa_comp_build_ratio_p50_count": 19793,
+        "coa_max_newbuild_coa_gfa_count": 28114,
+        "coa_cur_floor_gfa_count": 29237,
+        "coa_cur_pot_2story_gfa_count": 29237,
+        "coa_cur_pot_3story_gfa_count": 5832,
+        "coa_cur_gfa_range_basis_count": 25982,
+        "coa_cur_est_kitchen_gfa_count": 29237,
+        "coa_cur_est_bath_gfa_count": 29237,
         "coa_garage_fits_count": 13145,
         "coa_garage_permission_as_of_right_count": 13136,
         "coa_garage_permission_coa_required_count": 9,
-        "coa_rear_suite_laneway_count": 2626,
+        "coa_rear_suite_laneway_count": 2627,
         "coa_rear_suite_garden_count": 16853,
         "coa_rear_suite_permission_as_of_right_count": 17588,
-        "coa_rear_suite_permission_coa_required_count": 1891,
-        "enrich_coa_zoning_duration_ms": 3751,
+        "coa_rear_suite_permission_coa_required_count": 1892,
+        "enrich_coa_zoning_duration_ms": 2506,
         "inputs_nonempty": {
-          "lead_parcels": 277039,
+          "lead_parcels": 277045,
           "parcels": 496536
         },
-        "sys_velocity_rows_sec": 9026.3,
-        "sys_duration_ms": 3764
+        "sys_velocity_rows_sec": 13442.25,
+        "sys_duration_ms": 2528
       }
     }
   },
   "capture_ledger_rows": [
     {
-      "id": 3832,
+      "id": 4286,
       "recorded_by": "step"
     },
     {
-      "id": 3833,
+      "id": 4287,
       "recorded_by": "step"
     }
   ],
-  "source_fingerprint": "5d48f6e5c4a74eaeac457aab43a4ad2cd1818f958bfe4c80330846f08ee64327",
+  "source_fingerprint": "08bdf28034c7a38c2fcfdff6db6e5afb27a8c0fe573578d746dea07544067ab0",
   "fingerprint_files": [
     "scripts/enrich-coa-zoning.descriptor.json",
     "scripts/enrich-coa-zoning.js",
     "scripts/enrich-coa-zoning.notes.json",
     "scripts/lib/compute/enrich-coa-zoning.js"
   ],
-  "lib_fingerprint": "93b059a99434858aaa1f19a72e2d729a1cc7884299854a68454c8e0c387ee336"
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
 }

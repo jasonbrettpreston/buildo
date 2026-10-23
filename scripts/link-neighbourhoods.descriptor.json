@@ -445,10 +445,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:06:28.373Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 14,
-        "sample_n": 31,
+        "at": "2026-10-23T00:41:31.001Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 16,
+        "sample_n": 37,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -474,10 +474,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:06:28.373Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 7,
-        "sample_n": 31,
+        "at": "2026-10-23T00:41:31.001Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 8,
+        "sample_n": 37,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -506,10 +506,10 @@
       "retighten_when": "the count falls below 672 (the sub-100m band this population's own distance profile makes plausibly attributable to boundary/projection precision) — NOT \"zero rows\", which this population cannot reach on its own. MEASURED PLATEAU (Reality-Check seat, 2026-09-16): 5138 rows, of which only 672 (13.1%) lie within 100m of their stamped polygon and 3675 (71.5%) lie more than 1km away, to a maximum of 26,211m; 5124 of the 5138 (99.7%) share first_seen_at = 2026-02 and a single geocoded_at batch. These rows' COORDINATES are correct and have no reason ever to be rewritten, so an LN-D4 invalidator keyed on a lat/lng rewrite would never re-touch them — the count plateaus near 5138 until a one-time operator remediation NULLs neighbourhood_id over exactly this violating scope and re-runs. That remediation is filed as its own peel (LN-D4 in docs/reports/defect-ledger.md), not performed here.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:06:28.373Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 183,
-        "sample_n": 31,
+        "at": "2026-10-23T00:41:31.001Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 194,
+        "sample_n": 37,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -536,10 +536,10 @@
       "retighten_when": "zero rows. CORRECTED at the Reality-Check plan seat (2026-09-16) — the draft claimed this was \"a population no surviving code path can produce, so it can only shrink\", and that absolute is FALSE. `scripts/geocode-permits.js`'s zombie cleanup (`UPDATE permits SET latitude=NULL, longitude=NULL, geocoded_at=NULL WHERE (geo_id IS NULL OR geo_id='') AND latitude IS NOT NULL AND geocoded_at IS NOT NULL`) is a live, shipped writer that produces a NEW member of this population every time it fires on an already-stamped permit. Measured: `zombies_cleaned = 0` in every recorded geocode_permits run back to 2026-06-25 (6 most recent checked), so it is not currently firing — but it is structurally capable, so this row is WATCHED, never assumed inert.",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-21T14:06:28.373Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 90,
-        "sample_n": 31,
+        "at": "2026-10-23T00:41:31.001Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 114,
+        "sample_n": 37,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -566,10 +566,10 @@
       "retighten_when": "zero rows — reachable only by `geocode_permits` giving these permits real coordinates, or by an operator ruling that widens W1 to COALESCE(permit point, ST_Centroid(parcel geom)). Both are OUTSIDE this step: it is a floor this step cannot lower by itself, which is exactly why it must be reported rather than assumed.",
       "last_measured": {
         "value": 13499,
-        "at": "2026-10-21T14:06:28.373Z",
-        "commit": "e2c8e108577e4eb9b965a5fde3ccd232934aad0a",
-        "cost_ms": 67,
-        "sample_n": 31,
+        "at": "2026-10-23T00:41:31.001Z",
+        "commit": "2225709f29e17d880d81edee459e0c12a4c45e19",
+        "cost_ms": 55,
+        "sample_n": 37,
         "source_run": {
           "run_id": null,
           "chain": "sources",
