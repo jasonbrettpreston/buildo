@@ -1,0 +1,156 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/list-config.logic.test.ts run before scripts/lib/step/config.js gained the list arm of invalidReason / resolveConfig and step.schema.json the list_of field (Q-J, the config.js list arm owed to commit ① by lane L2-PREREQ daed754a; lane L2-SLICES part C, 2026-10-22). 8 red, 1 green (the unchanged numeric and enum paths). Absolute paths made repo-relative; nothing else edited.",
+ "numTotalTestSuites": 4,
+ "numPassedTestSuites": 0,
+ "numFailedTestSuites": 4,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 9,
+ "numPassedTests": 1,
+ "numFailedTests": 8,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792694279220,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "invalidReason — the list arm (Q-J)"
+     ],
+     "fullName": "invalidReason — the list arm (Q-J) a non-empty array of distinct allowed items is usable",
+     "status": "failed",
+     "title": "a non-empty array of distinct allowed items is usable",
+     "duration": 4.217083000000002,
+     "failureMessages": [
+      "AssertionError: expected 'non_finite' to be null\n    at src/tests/list-config.logic.test.ts:22:70\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "invalidReason — the list arm (Q-J)"
+     ],
+     "fullName": "invalidReason — the list arm (Q-J) an empty list, a repeat, a non-member, a non-string item or a non-array is 'not_in_list'",
+     "status": "failed",
+     "title": "an empty list, a repeat, a non-member, a non-string item or a non-array is 'not_in_list'",
+     "duration": 1.1873749999999745,
+     "failureMessages": [
+      "AssertionError: []: expected 'non_finite' to be 'not_in_list' // Object.is equality\n    at src/tests/list-config.logic.test.ts:28:85\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "invalidReason — the list arm (Q-J)"
+     ],
+     "fullName": "invalidReason — the list arm (Q-J) the numeric and the enum paths are unchanged byte for byte",
+     "status": "passed",
+     "title": "the numeric and the enum paths are unchanged byte for byte",
+     "duration": 0.1682079999999928,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the descriptor schema: a logic variable may declare list_of (closed items), min/max none, on_invalid fail only"
+     ],
+     "fullName": "the descriptor schema: a logic variable may declare list_of (closed items), min/max none, on_invalid fail only list_of is a unique non-empty array of strings",
+     "status": "failed",
+     "title": "list_of is a unique non-empty array of strings",
+     "duration": 1.2268750000000068,
+     "failureMessages": [
+      "AssertionError: expected undefined to match object { type: 'array', minItems: 1, …(1) }\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1134:13)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/list-config.logic.test.ts:45:39\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the descriptor schema: a logic variable may declare list_of (closed items), min/max none, on_invalid fail only"
+     ],
+     "fullName": "the descriptor schema: a logic variable may declare list_of (closed items), min/max none, on_invalid fail only a list_of variable pins min and max to \"none\" and on_invalid to \"fail\" (as enum does)",
+     "status": "failed",
+     "title": "a list_of variable pins min and max to \"none\" and on_invalid to \"fail\" (as enum does)",
+     "duration": 0.2154170000000022,
+     "failureMessages": [
+      "AssertionError: expected undefined to be truthy\n    at src/tests/list-config.logic.test.ts:49:18\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "resolveConfig — a list-valued variable resolves through the JSON branch"
+     ],
+     "fullName": "resolveConfig — a list-valued variable resolves through the JSON branch a valid list is projected into values and stamp as the array itself",
+     "status": "failed",
+     "title": "a valid list is projected into values and stamp as the array itself",
+     "duration": 0.9137920000000008,
+     "failureMessages": [
+      "Error: [test_step] config: \"test_zone_list\" = [\"RD\",\"RM\"] is non_finite for bounds [-inf, +inf] — on_invalid \"fail\" refuses the step rather than computing on a value the operator did not mean.\n    at resolveConfig (scripts/lib/step/config.js:292:13)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at src/tests/list-config.logic.test.ts:65:31\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "resolveConfig — a list-valued variable resolves through the JSON branch"
+     ],
+     "fullName": "resolveConfig — a list-valued variable resolves through the JSON branch a list with a non-member is refused by on_invalid \"fail\", naming the list",
+     "status": "failed",
+     "title": "a list with a non-member is refused by on_invalid \"fail\", naming the list",
+     "duration": 0.8753330000000119,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /not_in_list/ but got '[test_step] config: \"test_zone_list\" …'\n    at _Assertion.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at _Assertion.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at _Assertion.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at file://node_modules/@vitest/expect/dist/index.js:1849:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at src/tests/list-config.logic.test.ts:71:5\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "resolveConfig — a list-valued variable resolves through the JSON branch"
+     ],
+     "fullName": "resolveConfig — a list-valued variable resolves through the JSON branch an empty list is refused (an empty population retracts every lot)",
+     "status": "failed",
+     "title": "an empty list is refused (an empty population retracts every lot)",
+     "duration": 0.3769589999999994,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /not_in_list/ but got '[test_step] config: \"test_zone_list\" …'\n    at _Assertion.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at _Assertion.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at _Assertion.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at file://node_modules/@vitest/expect/dist/index.js:1849:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at src/tests/list-config.logic.test.ts:76:5\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "resolveConfig — a list-valued variable resolves through the JSON branch"
+     ],
+     "fullName": "resolveConfig — a list-valued variable resolves through the JSON branch a list_of with on_invalid other than \"fail\" throws the defence-in-depth error",
+     "status": "failed",
+     "title": "a list_of with on_invalid other than \"fail\" throws the defence-in-depth error",
+     "duration": 5.479166999999961,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /on_invalid .* \"fail\" only/ but got '[test_step] config: \"test_zone_list\" …'\n    at _Assertion.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at _Assertion.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at _Assertion.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at file://node_modules/@vitest/expect/dist/index.js:1849:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at src/tests/list-config.logic.test.ts:80:5\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792694279878,
+   "endTime": 1792694279892.4792,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/list-config.logic.test.ts"
+  }
+ ]
+}

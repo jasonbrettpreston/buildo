@@ -2,10 +2,10 @@
 //
 // T-VAL — the values-only BATCH family of load_coa_notices: the manifest + batch contract (closed sets, fail
 // closed), the offline builder's mapping, the committed manifest's integrity, and the step-side shaping that lets
-// ONE reconcileNotices dedupe both families (the compute half, T-VAL-5/6, lands with the fleet recapture).
+// ONE reconcileNotices dedupe both families.
 //
 // RED BASELINE (Spec 08 §11.4, both directions): `COA_VALUES_IMPL=permissive` swaps both validators for `() => []`
-// — the pre-amendment state. Every refusal / seam case
+// and the compute's `shapeValuesBatch` for an absent seam — the pre-amendment state. Every refusal / seam case
 // FAILS against it and PASSES against the committed modules.
 //
 // EVERY fixture is SYNTHETIC (invented file numbers, labels and values); the committed-manifest cases read the
@@ -23,6 +23,7 @@ const REPO_ROOT = path.resolve(__dirname, '../../../../');
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped CJS/ESM modules under test
 
 const AIC = require(path.join(REPO_ROOT, 'scripts/lib/coa-notices/aic-values.js')) as Json;
+const COMPUTE = require(path.join(REPO_ROOT, 'scripts/lib/compute/load-coa-notices.js')) as Json;
 const VOCAB = require(path.join(REPO_ROOT, 'scripts/lib/coa-notices/vocab.json')) as Json;
 const TARGET_MAP = require(path.join(REPO_ROOT, 'scripts/lib/coa-notices/target-map.json')) as Json;
 const TOOL = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/coa-notices/build-values-batch.mjs')).href)) as Json;
@@ -30,6 +31,7 @@ const TOOL = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/
 const RED = process.env.COA_VALUES_IMPL === 'permissive';
 const validateValuesManifest: (m: unknown) => string[] = RED ? () => [] : AIC.validateValuesManifest;
 const validateBatch: (b: unknown) => string[] = RED ? () => [] : AIC.validateBatch;
+const shapeValuesBatch: ((b: unknown) => Json) | undefined = RED ? undefined : COMPUTE.shapeValuesBatch;
 
 const sha = (s: string | Buffer) => crypto.createHash('sha256').update(s).digest('hex');
 
@@ -146,6 +148,11 @@ describe('T-VAL-3 the builder maps a coa-parse/1 notice to values only', () => {
   it('the mapped notice passes the values-only gate', () => {
     expect(AIC.validateBatch(batch({ notices: [mapped.notice] }))).toEqual([]);
   });
+  it('an item the parser itself flags as ambiguous (check) is not claimed as a pair, its first-picked values stay', () => {
+    const r = rawNotice({ variances: [{ ...rawNotice().variances[0], check: true }] });
+    const it0 = AIC.mapNotice(r).notice.items[0];
+    expect(it0).toMatchObject({ parse_status: 'multi_value_ambiguous', parse_confidence: 'low', required_value: 33, proposed_value: 39 });
+  });
   it('a hearing notice with no readable date is excluded, not guessed', () => {
     const m = AIC.mapNotice(rawNotice({ kind: 'hearing', hearing_date: '', outcome: 'Pending' }));
     expect(m).toEqual({ excluded: 'hearing_date_unread' });
@@ -170,7 +177,7 @@ describe('T-VAL-3 the builder maps a coa-parse/1 notice to values only', () => {
 describe('T-VAL-4 the offline tool builds, pins and verifies', () => {
   it('builds a valid batch, a pinned manifest entry and a verifiable sha', () => {
     const built = TOOL.buildBatch([rawNotice(), rawNotice({ file_number: 'A0101/26SC', kind: 'hearing', hearing_date: '', outcome: 'Pending' })], { batchId: 'coa-2026-t' });
-    expect(built.counts).toEqual({ notices: 1, items: 3 });
+    expect(built.counts).toEqual({ notices: 1, items: 3, plan_facts: 0 });
     expect(built.excluded).toEqual([{ application_number: 'A0101/26SC', batch_id: 'coa-2026-t', reason: 'hearing_date_unread' }]);
     expect(built.sha256).toBe(sha(built.serialized));
     const next = TOOL.upsertManifest(null, built, '2026-10-22');
@@ -197,3 +204,126 @@ describe('T-VAL-4 the offline tool builds, pins and verifies', () => {
   });
 });
 
+// ---- T-VAL-5 the committed manifest ------------------------------------------------------------------
+
+describe('T-VAL-5 the committed values manifest is intact', () => {
+  const man = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/seeds/coa-notices/manifest-aic-values.json'), 'utf8')) as Json;
+  it('is valid and every pinned batch file hashes to its sha and passes the values-only gate', () => {
+    expect(AIC.validateValuesManifest(man)).toEqual([]);
+    for (const b of man.batches) {
+      const bytes = fs.readFileSync(path.join(REPO_ROOT, b.path));
+      expect(sha(bytes)).toBe(b.sha256);
+      const parsed = JSON.parse(bytes.toString('utf8')) as Json;
+      expect(AIC.validateBatch(parsed)).toEqual([]);
+      expect(parsed.batch_id).toBe(b.batch_id);
+      expect(parsed.notices).toHaveLength(b.notices);
+      expect(parsed.notices.reduce((n: number, x: Json) => n + x.items.length, 0)).toBe(b.items);
+      expect(parsed.vocab_version).toBe(VOCAB.version);
+      expect(parsed.target_map_version).toBe(TARGET_MAP.version);
+    }
+  });
+  it('no file number sits in two batches, and none excluded is also loaded', () => {
+    const seen = new Map<string, string>();
+    for (const b of man.batches) {
+      const parsed = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, b.path), 'utf8')) as Json;
+      for (const n of parsed.notices) {
+        expect(seen.has(n.application_number)).toBe(false);
+        seen.set(n.application_number, b.batch_id);
+      }
+    }
+    for (const e of man.excluded) expect(seen.has(e.application_number)).toBe(false);
+  });
+  it('no batch row can collide with the 2017 PDF allotment by file number year', () => {
+    for (const b of man.batches) {
+      const parsed = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, b.path), 'utf8')) as Json;
+      for (const n of parsed.notices) expect(n.application_number).not.toMatch(/\/17[A-Z]+$/);
+    }
+  });
+});
+
+// ---- T-VAL-6 step-side shaping + one reconcile -----------------------------------------------------------
+
+function pdfDoc(over: Json = {}): Json {
+  return { doc_id: 'pdf-1', sha256: 'd'.repeat(64), hearing_date: '2017-07-13', kind: 'committee', revision: 'original', session: 'full', panel: 'etobicoke_york', ...over };
+}
+function pdfNotice(app: string, over: Json = {}): Json {
+  return {
+    application_number: app, page: 1, notice_status: 'variance_section_parsed', zoning_as_stated: 'R2', decision: 'approved', decision_mailed_on: '2017-07-20',
+    consent_items_skipped: 0,
+    items: [{ item_ordinal: 1, source_page: 1, cited_bylaw: '569-2013', citation_kind: 'chapter_regulation', regulation_id_as_cited: '10.20.30.40(1)(A)', exception_ref: null, target: 'lot_coverage_pct', target_status: 'mapped', bound: 'max', required_value: 33, required_unit: 'pct', proposed_value: 39, proposed_unit: 'pct', parse_status: 'pair', parse_confidence: 'high', qualified: false, clause_count: 1, bylaw_rejected: false }],
+    ...over,
+  };
+}
+const CFG = { coa_notices_mail_lag_max_days: 60, coa_notices_doc_pair_rate_min_items: 1, coa_notices_oob_sample_max: 5 };
+function batchDoc(id: string, b: Json, over: Json = {}): Json {
+  return { doc: { doc_id: id, sha256: 'b'.repeat(64), hearing_date: null, kind: 'committee', revision: 'original', family: 'aic_values_batch', parser_version: b.parser_version, vocab_version: b.vocab_version, target_map_version: b.target_map_version, ...over }, doc_status: 'parsed', result: shapeValuesBatch!(b) };
+}
+const pdfResult = (app = 'A0001/17EYK') => ({ doc: pdfDoc(), doc_status: 'parsed', result: { doc_status: 'parsed', notices: [pdfNotice(app)], counts: { notices_by_status: {}, blocks: 1, ordinal_fallback_notices: 0 } } });
+
+describe('T-VAL-6 one reconcile for both families', () => {
+  it('exposes the shapeValuesBatch seam, and an invalid batch is extract_error with no notices', () => {
+    expect(typeof shapeValuesBatch).toBe('function');
+    const bad = shapeValuesBatch!(batch({ notices: [notice({ purpose: 'text' })] }));
+    expect(bad.doc_status).toBe('extract_error');
+    expect(bad.notices).toEqual([]);
+  });
+  it('writes batch rows under the batch family with doc_type, source_batch, null page and honest decision_source', () => {
+    const rec = COMPUTE.reconcileNotices([batchDoc('coa-2026-t', batch())], { config: CFG });
+    expect(rec.rows).toHaveLength(1);
+    const row = rec.rows[0];
+    expect(row).toMatchObject({
+      variance_key: 'aic_values_batch|A0100/26SC|1', source_family: 'aic_values_batch', hearing_date: '2026-07-08', decision: 'approved', decision_source: 'unknown',
+      doc_type: 'decision_notice', source_batch: 'coa-2026-t', source_page: null, source_sha256: 'b'.repeat(64), extractor_version: 'coa-parse/1', decision_mailed_on: null,
+    });
+    const shaped = COMPUTE.shapeRecord(row);
+    expect(Object.keys(shaped).sort()).toEqual([...COMPUTE.ROW_COLUMNS].sort());
+  });
+  it('a PDF row is a decision_notice from the year allotment, with a page', () => {
+    const rec = COMPUTE.reconcileNotices([pdfResult()], { config: CFG });
+    expect(rec.rows[0]).toMatchObject({ source_family: 'toronto_ca_decision_pdf', doc_type: 'decision_notice', source_batch: 'coa-2017-decisions', source_page: 1, decision_source: 'committee' });
+  });
+  it('a decision notice supersedes a hearing notice of the same file, whichever batch arrives first', () => {
+    const hearing = batch({ batch_id: 'coa-2026-t', notices: [notice({ doc_type: 'hearing_notice', decision: 'pending', hearing_date: '2026-09-09', items: [item({ decision: 'pending', proposed_value: 40 })] })] });
+    const decided = batch({ batch_id: 'coa-2026-u', notices: [notice({ hearing_date: '2026-09-09' })] });
+    for (const order of [[hearing, decided], [decided, hearing]]) {
+      const docs = order.map((b) => batchDoc(b.batch_id, b));
+      const rec = COMPUTE.reconcileNotices(docs, { config: CFG });
+      const live = rec.rows.filter((r: Json) => !r.drop_reason);
+      expect(live).toHaveLength(1);
+      expect(live[0]).toMatchObject({ doc_type: 'decision_notice', source_batch: 'coa-2026-u', proposed_value: 39 });
+      expect(rec.rows.find((r: Json) => r.drop_reason)?.drop_reason).toBe('duplicate_superseded');
+    }
+  });
+  it('same stage, same date, differing items stays a conflict (all dropped, counted)', () => {
+    const a = batch({ batch_id: 'coa-2026-t' });
+    const b = batch({ batch_id: 'coa-2026-u', notices: [notice({ items: [item({ proposed_value: 41 })] })] });
+    const rec = COMPUTE.reconcileNotices([batchDoc('coa-2026-t', a), batchDoc('coa-2026-u', b)], { config: CFG });
+    expect(rec.rows.every((r: Json) => r.drop_reason === 'duplicate_same_date_conflict')).toBe(true);
+  });
+  it('the batch family never moves the PDF extractor gates (C3 / C15) and is counted by family', () => {
+    const base = COMPUTE.reconcileNotices([pdfResult()], { config: CFG });
+    const both = COMPUTE.reconcileNotices([pdfResult(), batchDoc('coa-2026-t', batch())], { config: CFG });
+    expect(both.stats.pair_rate_569).toBe(base.stats.pair_rate_569);
+    expect(both.stats.items_569).toBe(base.stats.items_569);
+    expect(both.stats.doc_pair_rates).toEqual(base.stats.doc_pair_rates);
+    expect(both.stats.items_by_family).toEqual({ toronto_ca_decision_pdf: 1, aic_values_batch: 1 });
+    expect(both.stats.batch_pair_rates).toEqual({ 'coa-2026-t': 1 });
+    expect(both.stats.items_total).toBe(2);
+    expect(both.stats.notices_total).toBe(2);
+    const sum = (Object.values(both.stats.notices_by_status) as number[]).reduce((n, v) => n + v, 0);
+    expect(sum).toBe(both.stats.notices_total);
+  });
+  it('a batch built under another target-map version is counted stale, not remapped', () => {
+    const stale = batch({ target_map_version: 'coa-target-map-0' });
+    const rec = COMPUTE.reconcileNotices([batchDoc('coa-2026-t', stale)], { config: CFG });
+    expect(rec.stats.batch_target_map_stale).toBe(1);
+    expect(rec.rows[0].target).toBe('lot_coverage_pct');
+    const fresh = COMPUTE.reconcileNotices([batchDoc('coa-2026-t', batch())], { config: CFG });
+    expect(fresh.stats.batch_target_map_stale).toBe(0);
+  });
+  it('the stale-batch check reports through the compute dispatch', () => {
+    const reported: Json[] = [];
+    COMPUTE.checks.batch_target_map_stale({ acquired: { reconcile: { batch_target_map_stale: 2 } }, report: (id: string, v: Json) => reported.push({ id, ...v }) });
+    expect(reported).toEqual([{ id: 'batch_target_map_stale', violations: 2, detail: 2 }]);
+  });
+});

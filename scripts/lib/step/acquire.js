@@ -1079,6 +1079,77 @@ function readDocumentManifest(tag, external, repoRoot) {
 }
 
 /**
+ * RE-FREEZE #38 (Spec 129 §2b, CHAT-71.2): the VALUES-BATCH manifest — a committed, repo-relative JSON of
+ * sha256-pinned values-only batch files that need no network (the operator drops them; never past the AIC
+ * captcha). The arm checks only what it reads (batch_id, path, sha256); the step's own T-VALUES owns the rest.
+ */
+function readValuesManifest(tag, external, repoRoot) {
+  const rel = external.values_manifest;
+  if (typeof rel !== 'string' || rel.length === 0 || path.isAbsolute(rel) || rel.split(/[\\/]/).includes('..')) {
+    throw new Error(`${tag} external "${external.id}": values_manifest "${String(rel)}" must be a repo-relative path with no "..".`);
+  }
+  const abs = path.join(repoRoot || REPO_ROOT, rel);
+  if (!fs.existsSync(abs)) throw new Error(`${tag} external "${external.id}": values_manifest ${rel} does not exist.`);
+  const bytes = fs.readFileSync(abs);
+  let manifest;
+  try {
+    manifest = JSON.parse(bytes.toString('utf8'));
+  } catch (err) {
+    throw new Error(`${tag} external "${external.id}": values_manifest ${rel} is not JSON (${err.message}).`);
+  }
+  const batches = manifest && Array.isArray(manifest.batches) ? manifest.batches : null;
+  if (!batches || batches.length === 0) throw new Error(`${tag} external "${external.id}": values_manifest ${rel} has no batches[].`);
+  const ids = new Set();
+  for (const b of batches) {
+    const okPath = b && typeof b.path === 'string' && !path.isAbsolute(b.path) && !b.path.split(/[\\/]/).includes('..');
+    if (!b || typeof b.batch_id !== 'string' || ids.has(b.batch_id) || !okPath || !SHA256_RE.test(String(b.sha256))) {
+      throw new Error(`${tag} external "${external.id}": values_manifest ${rel} has a batch without a unique batch_id, a repo-relative path and a 64-hex sha256 (${String(b && b.batch_id)}).`);
+    }
+    ids.add(b.batch_id);
+  }
+  const excluded = Array.isArray(manifest.excluded) ? manifest.excluded : [];
+  return { manifest, batches, excluded, sha256: crypto.createHash('sha256').update(bytes).digest('hex') };
+}
+
+/**
+ * Read + sha-verify + parse each pinned batch and hand the parsed JSON to `shapeValuesBatch`. Never throws for
+ * a bad batch: `{status: 'sha_mismatch'|'extract_error'|<shape status>, result}` per batch, like the PDF loop.
+ */
+function acquireValuesBatches({ values, repoRoot, shapeValuesBatch }) {
+  const out = [];
+  for (const b of values.batches) {
+    let status = 'parsed';
+    let result = null;
+    let parsed = null;
+    const meta = { doc_id: b.batch_id, sha256: b.sha256, hearing_date: null, kind: 'committee', revision: 'original', family: values.manifest.source_family };
+    let bytes = null;
+    try {
+      bytes = fs.readFileSync(path.join(repoRoot || REPO_ROOT, b.path));
+    } catch {
+      status = 'extract_error'; // missing batch file: the pre_write check FAILs the run before any write
+    }
+    if (bytes && crypto.createHash('sha256').update(bytes).digest('hex') !== b.sha256) status = 'sha_mismatch';
+    else if (bytes) {
+      try {
+        parsed = JSON.parse(bytes.toString('utf8'));
+      } catch {
+        status = 'extract_error';
+      }
+    }
+    if (status === 'parsed') {
+      result = shapeValuesBatch(parsed);
+      status = result.doc_status;
+      Object.assign(meta, {
+        parser_version: parsed.parser_version, vocab_version: parsed.vocab_version, target_map_version: parsed.target_map_version,
+      });
+      if (status !== 'parsed') result = null;
+    }
+    out.push({ doc: meta, doc_status: status, result });
+  }
+  return out;
+}
+
+/**
  * GET one document under the allowlist + cap. Never throws for a network outcome:
  * `{status: 'ok'|'http_error'|'timeout'|'too_large', bytes, bytesRead}`.
  */
@@ -1148,10 +1219,13 @@ async function fetchPdfCapped(ctxFetch, url, { allowlist, userAgent, timeoutMs, 
  */
 async function acquirePdfDocumentSet({
   ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
-  timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty, runner,
+  timeoutMs, base, tier1, shapeDocument, shapeValuesBatch, sleep, targetEmpty, runner,
 }) {
   if (typeof shapeDocument !== 'function') {
     throw new Error(`${tag} external "${external.id}" is a pdf_document_set but no shapeDocument seam was handed to the arm.`);
+  }
+  if (typeof external.values_manifest === 'string' && typeof shapeValuesBatch !== 'function') {
+    throw new Error(`${tag} external "${external.id}" declares values_manifest but no shapeValuesBatch seam was handed to the arm.`);
   }
   const allowlist = external.pdf && Array.isArray(external.pdf.host_allowlist) ? external.pdf.host_allowlist : [];
   if (allowlist.length === 0) throw new Error(`${tag} external "${external.id}": pdf.host_allowlist is empty.`);
@@ -1163,7 +1237,9 @@ async function acquirePdfDocumentSet({
   const lineYTolerance = pdfKnob(tag, external, config, 'line_y_tolerance_from_config');
   const { manifest, docs, excluded, sha256 } = readDocumentManifest(tag, external, repoRoot);
   const logicVersion = descriptor.staleness && descriptor.staleness.logic_version;
-  const contentHash = crypto.createHash('sha256').update(`${sha256}:${String(logicVersion)}`).digest('hex');
+  const values = typeof external.values_manifest === 'string' ? readValuesManifest(tag, external, repoRoot) : null;
+  // Without a values manifest the hash is byte-identical to before RE-FREEZE #38.
+  const contentHash = crypto.createHash('sha256').update(values ? `${sha256}:${values.sha256}:${String(logicVersion)}` : `${sha256}:${String(logicVersion)}`).digest('hex');
   // R-DD: the content-hash skip is honoured only over a non-empty target.
   const tier2 = forced
     ? { skip: false, reason: 'force_run' }
@@ -1222,7 +1298,12 @@ async function acquirePdfDocumentSet({
     byStatus[status] = (byStatus[status] || 0) + 1;
     docResults.push({ doc: meta, doc_status: status, result });
   }
-  log.info(tag, `acquired pdf_document_set "${external.id}": ${docs.length} document(s), ${bytesFetched} bytes, `
+  const batchResults = values ? acquireValuesBatches({ values, repoRoot, shapeValuesBatch }) : [];
+  for (const r of batchResults) {
+    byStatus[r.doc_status] = (byStatus[r.doc_status] || 0) + 1;
+    docResults.push(r);
+  }
+  log.info(tag, `acquired pdf_document_set "${external.id}": ${docs.length} document(s) + ${batchResults.length} values batch(es), ${bytesFetched} bytes, `
     + `${byStatus.parsed} parsed (manifest ${sha256.slice(0, 8)}…)`);
   return {
     acquired: {
@@ -1230,7 +1311,7 @@ async function acquirePdfDocumentSet({
       bytes_downloaded: bytesFetched,
       document_set: {
         manifest_sha256: sha256,
-        docs_total: docs.length + excluded.length,
+        docs_total: docs.length + excluded.length + batchResults.length,
         docs_excluded: excluded.length,
         docs_by_status: byStatus,
         bytes_fetched: bytesFetched,
@@ -1275,6 +1356,8 @@ async function acquireExternal({
   // RE-FREEZE #32: the compute's `shapeDocument` seam (resolved by runIngestPhase before the
   // HEAD) and an injectable sleep for the document pace. Both UNDEFINED for every other format.
   shapeDocument,
+  // RE-FREEZE #39: the values-batch seam, forwarded to the document-set arm (undefined for every other format).
+  shapeValuesBatch,
   sleep,
   // Spec 124 R-EB (a): the runner-owned values (the pdf_document_set arm's pace floor and redirect cap).
   runner,
@@ -1411,7 +1494,7 @@ async function acquireExternal({
   if (isDocSet) {
     return acquirePdfDocumentSet({
       ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
-      timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty, runner,
+      timeoutMs, base, tier1, shapeDocument, shapeValuesBatch, sleep, targetEmpty, runner,
     });
   }
 

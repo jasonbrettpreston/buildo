@@ -13,6 +13,7 @@
  *
  * Seams the runner calls by name (pure; no I/O, no clock, no env, no SQL):
  *   · shapeDocument(doc, cfg)        — one document's text → notices + their parsed items + counts
+ *   · shapeValuesBatch(batch)        — one values-only AIC batch (Spec 129 §2b, no text) → the same shape
  *   · reconcileNotices(docs, {config}) — all documents → dedup per application → rows + stats
  *   · shapeRecord(record)            — a reconciled row → the write columns, or a drop reason
  *   · coerceKey / dedupeBySourceId / validatorCounterDelta / shouldSkipDelete
@@ -27,10 +28,12 @@
 const P = require('../coa-notices/parse-values');
 const VOCAB = require('../coa-notices/vocab.json');
 const TARGET_MAP = require('../coa-notices/target-map.json');
+const AIC = require('../coa-notices/aic-values');
 
 /** Hand-bumped whenever an answer this file (or parse-values.js) produces changes (pairs with logic_version, gate #48). */
 const EXTRACTOR_VERSION = 'coa-extractor-3';
 const SOURCE_FAMILY = 'toronto_ca_decision_pdf';
+const BATCH_FAMILY = AIC.SOURCE_FAMILY; // Spec 129 §2b: the values-only batch family (CHAT-71.2)
 const CHAPTER_BYLAW = '569-2013';
 
 const DOC_STATUSES = VOCAB.emits_only.doc_status;
@@ -47,7 +50,12 @@ const ROW_COLUMNS = Object.freeze([
   'regulation_id_as_cited', 'exception_ref', 'zoning_as_stated', 'target', 'target_status', 'bound',
   'required_value', 'required_unit', 'proposed_value', 'proposed_unit', 'parse_status',
   'parse_confidence', 'qualified', 'source_sha256', 'source_page', 'extractor_version', 'vocab_version',
+  'doc_type', 'source_batch',
 ]);
+
+/** Spec 129 §2c: the derived plan-facts target and its write columns (exactly the descriptor's step-written columns). */
+const PLAN_FACTS_TABLE = 'coa_plan_facts';
+const PLAN_FACT_COLUMNS = Object.freeze([...AIC.PLAN_FACT_KEYS, 'source_batch', 'source_sha256']);
 
 /**
  * The C12 target-aware plausibility ranges: which logic-variable pair bounds the REQUIRED value of a
@@ -340,6 +348,19 @@ function shapeDocument(doc, cfg) { // `cfg`: the seam signature (doc, cfg) — u
   return { doc_status: 'parsed', notices, counts };
 }
 
+/**
+ * ONE values batch (parsed JSON, already sha-verified by the arm) → the same `{doc_status, notices, counts}`
+ * as `shapeDocument`. An invalid batch is `extract_error` (C2 FAILs before any write). Pure; the batch holds
+ * no text (Spec 129 §2b, `validateBatch` is the values-only gate).
+ */
+function shapeValuesBatch(batch) {
+  const problems = AIC.validateBatch(batch);
+  if (problems.length > 0) {
+    return { doc_status: 'extract_error', notices: [], counts: { notices_by_status: emptyCounts(NOTICE_STATUSES), blocks: 0, ordinal_fallback_notices: 0 }, problems: problems.length };
+  }
+  return AIC.shapeBatch(batch);
+}
+
 // ===========================================================================
 // Reconciliation (all documents) → rows + stats
 // ===========================================================================
@@ -348,11 +369,21 @@ function itemSignature(n) {
   return JSON.stringify([n.decision, n.items.map((i) => [i.item_ordinal, i.parse_status, i.cited_bylaw, i.regulation_id_as_cited, i.required_value, i.required_unit, i.proposed_value, i.proposed_unit])]);
 }
 
+/** A PDF notice is always a decision notice; a batch notice carries its own doc_type. */
+function docTypeOf(e) {
+  return e.notice.doc_type || 'decision_notice';
+}
+const stageRank = (e) => (docTypeOf(e) === 'decision_notice' ? 1 : 0);
+/** The hearing date of a notice: the batch notice's own, else the PDF document's (title-derived). */
+const hearingOf = (e) => e.notice.hearing_date || e.doc.hearing_date;
+
 /** Total order for a deterministic winner: revised > original, later hearing, then sha asc, page asc. */
 function preferNotice(a, b) {
+  // Spec 129 §2b: a decision notice supersedes a hearing notice of the same file (stage first).
+  if (stageRank(a) !== stageRank(b)) return stageRank(b) - stageRank(a);
   const rev = (x) => (x.doc.revision === 'revised' ? 1 : 0);
   if (rev(a) !== rev(b)) return rev(b) - rev(a);
-  if (a.doc.hearing_date !== b.doc.hearing_date) return a.doc.hearing_date < b.doc.hearing_date ? 1 : -1;
+  if (hearingOf(a) !== hearingOf(b)) return hearingOf(a) < hearingOf(b) ? 1 : -1;
   if (a.doc.sha256 !== b.doc.sha256) return a.doc.sha256 < b.doc.sha256 ? -1 : 1;
   return a.notice.page - b.notice.page;
 }
@@ -375,7 +406,7 @@ function dedupNotices(entries) {
     const sorted = group.slice().sort(preferNotice);
     const top = sorted[0];
     const sameSig = sorted.every((e) => itemSignature(e.notice) === itemSignature(top.notice));
-    const contenders = sorted.filter((e) => e.doc.revision === top.doc.revision && e.doc.hearing_date === top.doc.hearing_date);
+    const contenders = sorted.filter((e) => stageRank(e) === stageRank(top) && e.doc.revision === top.doc.revision && hearingOf(e) === hearingOf(top));
     const conflict = !sameSig && top.doc.revision !== 'revised' && contenders.length > 1
       && contenders.some((e) => itemSignature(e.notice) !== itemSignature(top.notice));
     if (conflict) {
@@ -388,16 +419,21 @@ function dedupNotices(entries) {
   return { kept, dropped };
 }
 
+const isBatchDoc = (doc) => doc.family === BATCH_FAMILY;
+
 function rowFor(doc, notice, item, drop) {
+  const batch = isBatchDoc(doc);
+  const family = batch ? BATCH_FAMILY : SOURCE_FAMILY;
   const row = {
-    variance_key: `${SOURCE_FAMILY}|${notice.application_number}|${item.item_ordinal}`,
-    source_family: SOURCE_FAMILY,
+    variance_key: `${family}|${notice.application_number}|${item.item_ordinal}`,
+    source_family: family,
     application_number: notice.application_number,
     item_ordinal: item.item_ordinal,
-    hearing_date: doc.hearing_date,
+    hearing_date: batch ? notice.hearing_date : doc.hearing_date,
     decision_mailed_on: notice.decision_mailed_on,
-    decision: notice.decision,
-    decision_source: doc.kind === 'delegated' ? 'delegated' : 'committee',
+    decision: batch ? item.decision : notice.decision,
+    // Spec 129 §2b: the AIC drop does not say committee or delegated; 'unknown' is the honest value.
+    decision_source: batch ? 'unknown' : (doc.kind === 'delegated' ? 'delegated' : 'committee'),
     cited_bylaw: item.cited_bylaw,
     citation_kind: item.citation_kind,
     regulation_id_as_cited: item.regulation_id_as_cited,
@@ -415,8 +451,11 @@ function rowFor(doc, notice, item, drop) {
     qualified: item.qualified,
     source_sha256: doc.sha256,
     source_page: item.source_page,
-    extractor_version: EXTRACTOR_VERSION,
-    vocab_version: VOCAB.version,
+    extractor_version: batch ? doc.parser_version : EXTRACTOR_VERSION,
+    vocab_version: batch ? doc.vocab_version : VOCAB.version,
+    // Spec 129 §2b: doc_type + source_batch. A PDF notice is a decision notice from the year's allotment.
+    doc_type: batch ? notice.doc_type : 'decision_notice',
+    source_batch: batch ? doc.doc_id : `coa-${String(doc.hearing_date).slice(0, 4)}-decisions`,
   };
   return drop ? { ...row, drop_reason: drop } : row;
 }
@@ -441,8 +480,15 @@ function reconcileNotices(docResults, opts) {
   const lags = { measured: 0, unmeasured: 0, out_of_bounds: null, min: null, max: null };
   const maxLag = cfg.coa_notices_mail_lag_max_days;
   let oob = Number.isFinite(maxLag) ? 0 : null;
+  // Spec 129 §2c: plan facts, one row per application; a later batch (manifest order) supersedes an earlier one.
+  const planFactsByApp = new Map();
+  let planFactsSeen = 0;
   for (const { doc, result } of docResults || []) {
     if (!result) continue;
+    for (const f of result.plan_facts || []) {
+      planFactsSeen++;
+      planFactsByApp.set(f.application_number, { ...f, source_batch: doc.doc_id, source_sha256: doc.sha256 });
+    }
     ordinalFallback += result.counts.ordinal_fallback_notices || 0;
     for (const n of result.notices) {
       noticesTotal++;
@@ -450,7 +496,7 @@ function reconcileNotices(docResults, opts) {
       if (n.notice_status !== 'variance_section_parsed') continue;
       consentSkipped += n.consent_items_skipped;
       entries.push({ doc, notice: n });
-      const h = dayNumber(doc.hearing_date);
+      const h = dayNumber(n.hearing_date || doc.hearing_date);
       const m = dayNumber(n.decision_mailed_on);
       if (h === null || m === null) { lags.unmeasured++; continue; }
       const lag = m - h;
@@ -486,9 +532,12 @@ function reconcileNotices(docResults, opts) {
   const direction = { known: 0, violations: 0 };
   const oobReq = { count: 0, measured: 0, sample_keys: [] };
   const perDoc = {};
+  const itemsByFamily = { [SOURCE_FAMILY]: 0, [BATCH_FAMILY]: 0 };
+  const batchPairs = {};
   for (const { doc, notice } of kept) {
     for (const item of notice.items) {
       itemsTotal++;
+      itemsByFamily[isBatchDoc(doc) ? BATCH_FAMILY : SOURCE_FAMILY]++;
       byParse[item.parse_status]++;
       byTarget[item.target_status]++;
       byConf[item.parse_confidence]++;
@@ -497,7 +546,12 @@ function reconcileNotices(docResults, opts) {
       if (item.bylaw_rejected) bylawRejected++;
       const row = rowFor(doc, notice, item, null);
       rows.push(row);
-      if (item.cited_bylaw === CHAPTER_BYLAW) {
+      if (isBatchDoc(doc)) {
+        // Spec 129 §2b: a values batch has no extractor to regress, so C3/C15 judge the PDF family only.
+        const bp = batchPairs[doc.doc_id] || (batchPairs[doc.doc_id] = { items: 0, pairs: 0 });
+        bp.items++;
+        if (item.parse_status === 'pair') bp.pairs++;
+      } else if (item.cited_bylaw === CHAPTER_BYLAW) {
         items569++;
         const pd = perDoc[doc.doc_id] || (perDoc[doc.doc_id] = { items: 0, pairs: 0 });
         pd.items++;
@@ -528,6 +582,7 @@ function reconcileNotices(docResults, opts) {
   for (const { doc, notice, reason } of dropped) {
     for (const item of notice.items) {
       itemsTotal++;
+      itemsByFamily[isBatchDoc(doc) ? BATCH_FAMILY : SOURCE_FAMILY]++;
       byParse[item.parse_status]++;
       byTarget[item.target_status]++;
       byConf[item.parse_confidence]++;
@@ -536,6 +591,12 @@ function reconcileNotices(docResults, opts) {
     }
   }
 
+  const batchPairRates = {};
+  for (const [id, bp] of Object.entries(batchPairs)) batchPairRates[id] = ratio(bp.pairs, bp.items);
+  const staleBatches = new Set();
+  for (const { doc } of docResults || []) {
+    if (isBatchDoc(doc) && doc.target_map_version !== TARGET_MAP.version) staleBatches.add(doc.doc_id);
+  }
   const docPairRates = {};
   const docItems569 = {};
   for (const [id, pd] of Object.entries(perDoc)) { docPairRates[id] = ratio(pd.pairs, pd.items); docItems569[id] = pd.items; }
@@ -551,9 +612,17 @@ function reconcileNotices(docResults, opts) {
     if (docPairRateMin.doc_id === null || docPairRates[id] < docPairRateMin.rate) { docPairRateMin.rate = docPairRates[id]; docPairRateMin.doc_id = id; }
   }
 
+  const planFactRows = [...planFactsByApp.values()].sort((a, b) => (a.application_number < b.application_number ? -1 : 1));
+  const planFactsByBatch = {};
+  for (const r of planFactRows) planFactsByBatch[r.source_batch] = (planFactsByBatch[r.source_batch] || 0) + 1;
   return {
     rows,
+    // Spec 129 §2c: DATA for the derived coa_plan_facts target (the runner hands it to deriveRows, never via `acquired`).
+    derive_inputs: { [PLAN_FACTS_TABLE]: planFactRows },
     stats: {
+      plan_facts_total: planFactRows.length,
+      plan_facts_superseded: planFactsSeen - planFactRows.length,
+      plan_facts_by_batch: planFactsByBatch,
       notices_total: noticesTotal,
       notices_by_status: noticesByStatus,
       items_total: itemsTotal,
@@ -561,6 +630,9 @@ function reconcileNotices(docResults, opts) {
       items_by_target_status: byTarget,
       items_by_confidence: byConf,
       items_dropped_by_reason: droppedByReason,
+      items_by_family: itemsByFamily,
+      batch_pair_rates: batchPairRates,
+      batch_target_map_stale: staleBatches.size,
       items_569: items569,
       pairs_569: pairs569,
       pair_rate_569: ratio(pairs569, items569),
@@ -584,6 +656,23 @@ function reconcileNotices(docResults, opts) {
 // ===========================================================================
 // The pure seams the runner calls by name
 // ===========================================================================
+
+/**
+ * Spec 129 §2c (RE-FREEZE #40) — the derived `coa_plan_facts` rows. The plan facts are not a function of the primary
+ * slice, so they are emitted ONCE, with slice 0 (the runner passes `slice_index`); later slices return no rows.
+ * The primary's prior state is not used. Values only: every column is a number, a boolean, an application number,
+ * a batch id or a sha256.
+ */
+function deriveRows(table, sliceRows, priorByKey, seam) {
+  if (table !== PLAN_FACTS_TABLE) throw new Error(`load-coa-notices compute: deriveRows has no rows for "${table}"`);
+  if (!seam || seam.slice_index !== 0) return [];
+  const rows = (seam.derive_inputs && seam.derive_inputs[PLAN_FACTS_TABLE]) || [];
+  return rows.map((r) => {
+    const out = {};
+    for (const c of PLAN_FACT_COLUMNS) out[c] = r[c] === undefined ? null : r[c];
+    return out;
+  });
+}
 
 /** The key is built by reconcileNotices; a non-string here is a seam defect, refused as null. */
 function coerceKey(raw) {
@@ -705,6 +794,13 @@ function target_unit_mismatch_items(ctx) {
   ctx.report('target_unit_mismatch_items', { violations: s.target_unit_mismatch_items, detail: s.target_unit_mismatch_items });
 }
 
+/** BTM — values batches whose target_map_version is not the current map's (their stored targets may be stale). */
+function batch_target_map_stale(ctx) {
+  const s = stats(ctx);
+  if (!s) return ctx.report('batch_target_map_stale', { detail: null });
+  ctx.report('batch_target_map_stale', { violations: s.batch_target_map_stale, detail: s.batch_target_map_stale });
+}
+
 /** C15 — the lowest pair rate among documents with enough 569 items; value_min <floor> decides (LCN-D5, R-DC). */
 function doc_pair_rate_floor(ctx) {
   const s = stats(ctx);
@@ -775,6 +871,8 @@ function buildLoadMeta(ctx) {
     items_by_parse_status: { ...emptyCounts(PARSE_STATUSES), ...(s.items_by_parse_status || {}) },
     items_by_target_status: { ...emptyCounts(TARGET_STATUSES), ...(s.items_by_target_status || {}) },
     items_by_confidence: { ...emptyCounts(CONFIDENCES), ...(s.items_by_confidence || {}) },
+    items_by_family: { ...emptyCounts([SOURCE_FAMILY, BATCH_FAMILY]), ...(s.items_by_family || {}) },
+    plan_facts_total: s.plan_facts_total ?? 0,
     pair_rate_569: Number.isFinite(s.pair_rate_569) ? s.pair_rate_569 : null,
     doc_pair_rates: s.doc_pair_rates || {},
     citation_multi: s.citation_multi ?? 0,
@@ -798,6 +896,7 @@ const CHECKS = {
   reason_totality,
   unit_target_mismatch,
   target_unit_mismatch_items,
+  batch_target_map_stale,
   doc_pair_rate_floor,
   docs_no_notices,
   items_total_floor,
@@ -820,13 +919,26 @@ async function compute(ctx) {
     }
   }
   if (!ctx.written) return { records_meta: {} };
-  return { records_meta: { coa_notices_load: buildLoadMeta(ctx) } };
+  // Spec 129 §2c: the derived target's own per-table write count (gate G #38 count_path, R-DN), never the step-level
+  // records_new / records_updated, which count coa_notice_variances.
+  const e1 = (ctx.written && ctx.written.e1) || {};
+  return {
+    records_meta: {
+      coa_notices_load: buildLoadMeta(ctx),
+      coa_plan_facts_written: (Number(e1.inserted) || 0) + (Number(e1.updated) || 0),
+    },
+  };
 }
 
 module.exports = compute;
 module.exports.compute = compute;
 module.exports.checks = CHECKS;
 module.exports.shapeDocument = shapeDocument;
+// Spec 129 §2b / RE-FREEZE #38: the values-batch seam the arm calls beside shapeDocument.
+module.exports.shapeValuesBatch = shapeValuesBatch;
+// Spec 129 §2c / RE-FREEZE #40: the derived plan-facts target.
+module.exports.deriveRows = deriveRows;
+module.exports.PLAN_FACT_COLUMNS = PLAN_FACT_COLUMNS;
 module.exports.reconcileNotices = reconcileNotices;
 // RE-FREEZE #32: the generic runner seam name (runIngestPhase calls compute.reconcileDocuments).
 module.exports.reconcileDocuments = reconcileNotices;

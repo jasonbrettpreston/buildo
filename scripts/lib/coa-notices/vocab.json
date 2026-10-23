@@ -1,13 +1,14 @@
 {
   "$comment": "SPEC LINK: docs/specs/01-pipeline/129_source_coa_notices.md §D5. Closed sets of the CoA decision-notice ingestor. The CHECK-backed sets equal the CHECK constraints of migrations/252_coa_notice_variances.sql and the parser constants, both directions (src/tests/steps/load_coa_notices/vocab-check-parity.infra.test.ts). The emits-only sets equal the emits skeleton keys. Bump `version` whenever any value changes; it is stamped on every row as vocab_version.",
-  "version": "coa-vocab-3",
+  "version": "coa-vocab-4",
   "check_backed": {
-    "source_family": ["toronto_ca_decision_pdf"],
+    "source_family": ["toronto_ca_decision_pdf", "aic_values_batch"],
     "parse_status": ["pair", "no_required_value", "no_proposed_value", "unit_family_mismatch", "multi_value_ambiguous", "side_ambiguous", "no_split", "target_unit_mismatch"],
     "parse_confidence": ["high", "medium", "low"],
     "target_status": ["mapped", "ambiguous", "unmapped"],
-    "decision": ["approved", "approved_with_conditions", "refused", "unknown"],
-    "decision_source": ["committee", "delegated"],
+    "decision": ["approved", "approved_with_conditions", "refused", "unknown", "pending"],
+    "decision_source": ["committee", "delegated", "unknown"],
+    "doc_type": ["decision_notice", "hearing_notice"],
     "citation_kind": ["chapter_regulation", "exception_clause", "former_bylaw_section", "none"],
     "unit": ["m", "cm", "m2", "pct", "ratio", "storeys", "spaces", "units"],
     "bound": ["min", "max", "exact"]

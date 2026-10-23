@@ -1,0 +1,42 @@
+{
+  "batches": [
+    {
+      "batch_id": "coa-2026-a",
+      "captured_on": "2026-10-22",
+      "items": 489,
+      "notices": 121,
+      "path": "scripts/seeds/coa-notices/aic-values/coa-2026-a.json",
+      "sha256": "6b051603fc2ece1811c1240e143a2fe7be5e63a1ffd42177fd167f149aac6865"
+    },
+    {
+      "batch_id": "coa-2026-b",
+      "captured_on": "2026-10-22",
+      "items": 63,
+      "notices": 15,
+      "path": "scripts/seeds/coa-notices/aic-values/coa-2026-b.json",
+      "sha256": "4a277d9f213abc8509be21354ec6698239a87692171816395889eb17eb00ae93"
+    },
+    {
+      "batch_id": "coa-2026-c",
+      "captured_on": "2026-10-22",
+      "items": 139,
+      "notices": 34,
+      "path": "scripts/seeds/coa-notices/aic-values/coa-2026-c.json",
+      "sha256": "14e76aab94000360d09157de875c6004ee01e14488ec327b3c3b92e22f782f45"
+    }
+  ],
+  "excluded": [
+    {
+      "application_number": "A0232/26EYK",
+      "batch_id": "coa-2026-a",
+      "reason": "hearing_date_unread"
+    },
+    {
+      "application_number": "A0974/16EYK",
+      "batch_id": "coa-2026-a",
+      "reason": "in_pdf_allotment"
+    }
+  ],
+  "schema": "coa-values-manifest-1",
+  "source_family": "aic_values_batch"
+}

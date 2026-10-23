@@ -2456,6 +2456,20 @@
                       "why": "the pinned manifest is the only rung that makes the document set, its pins and its source version descriptor data"
                     }
                   },
+                  "values_manifest": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquirePdfDocumentSet",
+                    "description": "ADDED AT RE-FREEZE #38 (2026-10-22, Spec 129 §2b, operator CHAT-71.2). For format \"pdf_document_set\" ONLY, optional: the repo-relative path of a committed manifest of sha256-pinned VALUES-ONLY batch files (`{source_family, batches:[{batch_id, path, sha256, …}], excluded:[…]}`) that the same primary reads beside its PDFs, with no network. Each batch file's sha256 is checked before it is parsed; a mismatch or unreadable batch is a doc_status the step's pre_write checks FAIL on. The values manifest bytes join the content hash, so a new batch (a reviewed manifest commit) re-acquires and an unchanged pair skips. Absolute paths and `..` are refused by name.",
+                    "type": "string",
+                    "pattern": "^scripts/seeds/[A-Za-z0-9_./-]+\\.json$",
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "rung (a) a second primary — the library refuses two primaries on one table (B3) and the departed_mark MARK is table-wide, so a second primary or step would retire the other family's rows (Spec 129 §11)",
+                        "rung (a') reuse `manifest` with a mixed documents[] — the PDF manifest is owned by build-manifest.mjs --pin and its url/host-allowlist contract does not describe a local values file",
+                        "rung (e) compute reads the file — compute I/O is banned (Rule 2)"
+                      ],
+                      "why": "one optional pinned manifest beside the PDF manifest is the only rung that lets both source families reach one reconcile, one key set and one soft retire in a single run"
+                    }
+                  },
                   "pdf": {
                     "x-trust": "executed:scripts/lib/step/acquire.js#acquirePdfDocumentSet",
                     "description": "ADDED AT RE-FREEZE #32. For format \"pdf_document_set\" ONLY: `host_allowlist` (every request AND every redirect hop must be https to one of these hosts) and five logic-variable NAMES the arm resolves from ctx.config — the pace between document GETs (integer ms, floor 2000), the per-document byte cap, the page cap, the extracted-text character cap and the line-reconstruction y tolerance. A name that does not resolve to a positive number throws by name before any GET.",
@@ -2796,6 +2810,11 @@
                         {
                           "required": [
                             "manifest"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "values_manifest"
                           ]
                         },
                         {
@@ -5351,6 +5370,17 @@
                       "minLength": 1
                     },
                     "x-ruling": "R-CE string-typed logic variable (S2 F3-2, operator 2026-10-13)"
+                  },
+                  "list_of": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "description": "Q-J (Spec 134 §2, R-IU; operator CHAT-73): a list-valued logic variable (seed type \"list\", the JSON array in variable_value_json). The CLOSED set its items may come from; the value must be a non-empty array of distinct members. Like enum: min/max none, on_invalid fail only.",
+                    "x-ruling": "Q-J list-valued logic variable (resolve_bylaws_population_zone_classes)"
                   }
                 },
                 "allOf": [
@@ -5358,6 +5388,26 @@
                     "if": {
                       "required": [
                         "enum"
+                      ]
+                    },
+                    "then": {
+                      "properties": {
+                        "min": {
+                          "const": "none"
+                        },
+                        "max": {
+                          "const": "none"
+                        },
+                        "on_invalid": {
+                          "const": "fail"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "required": [
+                        "list_of"
                       ]
                     },
                     "then": {

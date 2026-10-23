@@ -1692,7 +1692,9 @@ async function executeWrite(pool, {
       // R-DY (a)(4)-(5): the pure deriveRows, then each derived target's generated plan; R-DM savepoint.
       if (derived) {
         for (const t of derived.targets) {
-          const rows = derived.deriveRows(t.plan.table, slice, priorByKey);
+          // RE-FREEZE #40 (Spec 129 §2c): the slice's ordinal rides as a 4th argument so a derived target fed by
+          // data that is not a function of the slice (a pinned batch's plan facts) is emitted exactly once.
+          const rows = derived.deriveRows(t.plan.table, slice, priorByKey, i / batchSize);
           if (!Array.isArray(rows)) throw new Error(`[derive] ${t.plan.table}: deriveRows must return an array of rows (got ${typeof rows}).`);
           if (rows.length === 0) continue;
           const c = derivedCounters[`e${t.index}`];

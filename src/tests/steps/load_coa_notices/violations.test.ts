@@ -101,7 +101,8 @@ describe('load_coa_notices — commit B claims (flip at commit B)', () => {
 
   it('C-9 the one emit block coa_notices_load carries exactly the keys of buildLoadMeta', () => {
     const d = readJson<Descriptor & { emits: Array<{ key: string; skeleton: Record<string, unknown> }> }>(DESCRIPTOR_REL);
-    expect(d.emits.map((e) => e.key)).toEqual(['coa_notices_load']);
+    // Spec 129 §2c: the derived plan-facts target's own int count rides beside the one object block (gate G #38 count_path).
+    expect(d.emits.map((e) => e.key)).toEqual(['coa_notices_load', 'coa_plan_facts_written']);
     const keys = Object.keys(COMPUTE.buildLoadMeta({ acquired: {}, written: {} })).sort();
     expect(Object.keys(d.emits[0]!.skeleton).sort()).toEqual(keys);
   });

@@ -14,6 +14,11 @@ const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const MIGRATION_REL = 'migrations/252_coa_notice_variances.sql';
 
 const MIGRATION_SQL = fs.readFileSync(path.join(REPO_ROOT, MIGRATION_REL), 'utf8');
+// Later migrations may only ADD allowlisted columns (284: doc_type, source_batch; Spec 129 §2b).
+const LATER_MIGRATIONS = ['migrations/284_coa_notice_values_batch_family.sql'];
+const ADDED_COLUMNS = LATER_MIGRATIONS.flatMap((rel) =>
+  Array.from(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8').matchAll(/ADD COLUMN IF NOT EXISTS\s+([a-z_]+)\s/g)).map((m) => m[1]!),
+);
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- CJS loader owns the written columns
 const LOADER = require(path.join(REPO_ROOT, 'scripts/lib/compute/load-coa-notices.js')) as {
@@ -69,6 +74,7 @@ const PURE_MODULES = [
   'scripts/lib/compute/load-coa-notices.js',
   'scripts/lib/coa-notices/parse-values.js',
   'scripts/lib/coa-notices/manifest.js',
+  'scripts/lib/coa-notices/aic-values.js',
   'scripts/lib/pdf-text.js',
 ];
 
@@ -87,7 +93,7 @@ const FORBIDDEN_TOKENS = [
 
 describe('T-PII coa-notice table stores values only', () => {
   it("T-PII-1a the table's columns are exactly the allowlist", () => {
-    expect(sorted(tableColumns(MIGRATION_SQL))).toEqual(
+    expect(sorted([...tableColumns(MIGRATION_SQL), ...ADDED_COLUMNS])).toEqual(
       sorted([...LOADER.ROW_COLUMNS, 'retired_at', 'loaded_at']),
     );
   });

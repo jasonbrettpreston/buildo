@@ -103,6 +103,8 @@ function codeOnly(file: string): string {
 /** Fence F2 exemptions (operator ruling (b) 2026-10-10). Each names ONE function and ONE banned pattern. */
 const F2_EXEMPT = [
   { fn: 'readDocumentManifest', ban: 'readFileSync', why: 'reads the repo-pinned manifest JSON, not a download', until: null },
+  { fn: 'readValuesManifest', ban: 'readFileSync', why: 'reads the repo-pinned values-batch manifest JSON, not a download (Spec 129 §2b; operator CHAT-74.IN1)', until: null },
+  { fn: 'acquireValuesBatches', ban: 'readFileSync', why: 'reads the repo-pinned, sha256-verified values-batch files (committed values only, ~100 KB each), not a download (Spec 129 §2b; operator CHAT-74.IN1)', until: null },
   { fn: 'fetchPdfCapped', ban: 'arrayBuffer()', why: 'dead no-reader fallback; deleted in compute-purity Phase 2', until: 'H5 fleet recapture night 4 (filed 2026-10-10)' },
 ] as const;
 
@@ -352,15 +354,19 @@ describe('contentHashDecision — tier-2, the gate that eats the daily-regenerat
       .filter((l) => { const t = l.trim(); return !t.startsWith('//') && !t.startsWith('*'); })
       .join('\n');
 
-    expect(F2_EXEMPT.length, 'one entry per exempted function — a widened table is the failure this locks').toBe(2);
+    // 4 = the two 2026-10-10 entries + the two repo-pinned values-batch readers of the CHAT-74.IN1 arm (Spec 129 §2b).
+    expect(F2_EXEMPT.length, 'one entry per exempted function — a widened table is the failure this locks').toBe(4);
 
     const BAN_RE: Record<string, RegExp> = { 'readFileSync': /readFileSync/, 'arrayBuffer()': /arrayBuffer\s*\(\s*\)/ };
     for (const e of F2_EXEMPT) {
       const re = BAN_RE[e.ban] as RegExp;
-      const body = withoutFunction(acquire, e.fn);
-      expect(body, `acquire.js no longer declares function ${e.fn}() — remove its F2_EXEMPT entry (${e.until ?? 'permanent'})`).not.toBe(acquire);
-      expect(re.test(acquire), `${e.fn} no longer contains ${e.ban} — the exemption is dead, delete the entry`).toBe(true);
-      expect(re.test(body), `${e.ban} appears OUTSIDE ${e.fn} in acquire.js — the exemption must name every occurrence`).toBe(false);
+      // The text with every OTHER exempt function (same ban) removed, then with this one removed too: the pattern
+      // must live in this function (the exemption is not dead) and nowhere else once all named bodies are gone.
+      const others = F2_EXEMPT.filter((x) => x.ban === e.ban && x.fn !== e.fn).reduce((t, x) => withoutFunction(t, x.fn), acquire);
+      const body = withoutFunction(others, e.fn);
+      expect(body, `acquire.js no longer declares function ${e.fn}() — remove its F2_EXEMPT entry (${e.until ?? 'permanent'})`).not.toBe(others);
+      expect(re.test(others), `${e.fn} no longer contains ${e.ban} — the exemption is dead, delete the entry`).toBe(true);
+      expect(re.test(body), `${e.ban} appears OUTSIDE the named exempt functions in acquire.js — the exemption must name every occurrence`).toBe(false);
     }
 
     // Negative control: a top-level banned call OUTSIDE any exempt function is still caught

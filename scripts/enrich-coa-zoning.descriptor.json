@@ -3164,7 +3164,7 @@
           "ref": "coa_row_count_zero"
         }
       },
-      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration) [register: Spec 124 R-GO; V3 condition-9 backfill 2026-10-20] [register: Spec 124 R-IA; V3 condition-9 rulings 2026-10-20]",
+      "adjudicated_by": "wave-4 lane B ② (ruling recorded; see the register id in this string) [register: Spec 124 R-GO; V3 condition-9 backfill 2026-10-20] [register: Spec 124 R-IA; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     },
     {
@@ -3176,7 +3176,7 @@
           "ref": "scripts/lib/resolve-db.js"
         }
       },
-      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration) [register: Spec 124 R-IB; V3 condition-9 rulings 2026-10-20]",
+      "adjudicated_by": "wave-4 lane B ② (ruling recorded; see the register id in this string) [register: Spec 124 R-IB; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     },
     {
@@ -3188,7 +3188,7 @@
           "ref": "scripts/lib/enrich-lead-zoning.js"
         }
       },
-      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration) [register: Spec 124 R-IC; V3 condition-9 rulings 2026-10-20]",
+      "adjudicated_by": "wave-4 lane B ② (ruling recorded; see the register id in this string) [register: Spec 124 R-IC; V3 condition-9 rulings 2026-10-20]",
       "date": "2026-10-18"
     }
   ],

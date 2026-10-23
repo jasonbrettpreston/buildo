@@ -8,7 +8,7 @@
  *
  * USAGE
  *   node scripts/analysis/coa-notices/build-values-batch.mjs --build <notices.json> --batch-id coa-2026-a \
- *        [--captured-on YYYY-MM-DD] [--exclude 'A0974/16EYK=in_pdf_allotment' ...] [--root <repo root>]
+ *        [--captured-on YYYY-MM-DD] [--exclude 'A0974/16EYK=in_pdf_allotment' ...] [--plan-facts <dir of plan-facts/*.json>] [--hearing-dates <hearing-dates.json>] [--root <repo root>]
  *   node scripts/analysis/coa-notices/build-values-batch.mjs --verify [--root <repo root>]
  *
  * The requirement sentence is read in memory only to call `mapTarget`; the batch file holds closed-set values,
@@ -35,7 +35,7 @@ export const PARSER_VERSION_RE = /^[A-Za-z0-9._/-]{1,40}$/;
  * `{[application_number]: reason}` for notices the operator keeps out (never `hearing_date_unread`, which the
  * mapping assigns itself).
  */
-export function buildBatch(rawNotices, { batchId, excludes = {}, parserVersion }) {
+export function buildBatch(rawNotices, { batchId, excludes = {}, parserVersion, planFacts = [], hearingDates = {} }) {
   if (!A.VALUES_CONTRACT.batch_id_re.test(String(batchId))) throw new Error('COA_VALUES_E_BATCH_ID');
   const list = Array.isArray(rawNotices) ? rawNotices : Object.values(rawNotices || {});
   const notices = [];
@@ -47,13 +47,17 @@ export function buildBatch(rawNotices, { batchId, excludes = {}, parserVersion }
       excluded.push({ application_number: raw.file_number, batch_id: batchId, reason: why });
       continue;
     }
-    const m = A.mapNotice(raw);
+    const m = A.mapNotice(raw, { hearingDates });
     if (m.excluded) excluded.push({ application_number: raw.file_number, batch_id: batchId, reason: m.excluded });
     else notices.push(m.notice);
   }
   notices.sort((a, b) => (a.application_number < b.application_number ? -1 : 1));
   const pv = parserVersion || (list[0] && list[0].parser_version);
   if (!PARSER_VERSION_RE.test(String(pv))) throw new Error('COA_VALUES_E_PARSER_VERSION');
+  // Spec 129 §2c: plan facts of the applications in THIS drop (loaded or excluded notices alike).
+  const dropApps = new Set(list.map((r) => r && r.file_number));
+  const plan_facts = planFacts.filter((f) => dropApps.has(f.file_number)).map((f) => A.mapPlanFacts(f))
+    .sort((a, b2) => (a.application_number < b2.application_number ? -1 : 1));
   const batch = {
     schema: A.VALUES_CONTRACT.batch_schema,
     batch_id: batchId,
@@ -61,6 +65,7 @@ export function buildBatch(rawNotices, { batchId, excludes = {}, parserVersion }
     vocab_version: VOCAB.version,
     target_map_version: TARGET_MAP.version,
     notices,
+    ...(plan_facts.length > 0 ? { plan_facts } : {}),
   };
   const problems = A.validateBatch(batch);
   if (problems.length > 0) throw new Error(`COA_VALUES_E_INVALID_BATCH ${problems.slice(0, 5).join(' | ')}`);
@@ -70,7 +75,7 @@ export function buildBatch(rawNotices, { batchId, excludes = {}, parserVersion }
     serialized,
     sha256: sha256(serialized),
     excluded,
-    counts: { notices: notices.length, items: notices.reduce((n, x) => n + x.items.length, 0) },
+    counts: { notices: notices.length, items: notices.reduce((n, x) => n + x.items.length, 0), plan_facts: plan_facts.length },
   };
 }
 
@@ -114,7 +119,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--verify') args.verify = true;
-    else if (a === '--build' || a === '--batch-id' || a === '--captured-on' || a === '--root') args[a.slice(2)] = argv[++i];
+    else if (a === '--build' || a === '--batch-id' || a === '--captured-on' || a === '--root' || a === '--plan-facts' || a === '--hearing-dates') args[a.slice(2)] = argv[++i];
     else if (a === '--exclude') {
       const [app, reason] = String(argv[++i]).split('=');
       args.exclude[app] = reason;
@@ -138,7 +143,17 @@ function main() {
   }
   if (!args.build || !args['batch-id']) throw new Error('usage: --build <notices.json> --batch-id <id> [--captured-on D] [--exclude APP=reason] | --verify');
   const raw = JSON.parse(fs.readFileSync(path.resolve(args.build), 'utf8'));
-  const built = buildBatch(raw, { batchId: args['batch-id'], excludes: args.exclude });
+  const planFacts = args['plan-facts']
+    ? fs.readdirSync(path.resolve(args['plan-facts'])).filter((f) => f.endsWith('.json')).sort()
+      .map((f) => JSON.parse(fs.readFileSync(path.join(path.resolve(args['plan-facts']), f), 'utf8')))
+      .filter((f) => f && typeof f.file_number === 'string') // the intake store's index file carries none
+    : [];
+  // --hearing-dates <json>: {items:[{file_number, hearing_date}]}; only file_number + hearing_date are read.
+  const hearingDates = args['hearing-dates']
+    ? Object.fromEntries(JSON.parse(fs.readFileSync(path.resolve(args['hearing-dates']), 'utf8')).items
+      .filter((i) => i && typeof i.file_number === 'string' && typeof i.hearing_date === 'string').map((i) => [i.file_number, i.hearing_date]))
+    : {};
+  const built = buildBatch(raw, { batchId: args['batch-id'], excludes: args.exclude, planFacts, hearingDates });
   const capturedOn = args['captured-on'] || new Date().toISOString().slice(0, 10);
   const next = upsertManifest(readManifest(), built, capturedOn);
   const out = path.join(root, A.batchPathFor(args['batch-id']));

@@ -770,9 +770,12 @@ export interface CoaNoticeVarianceRow {
   parse_confidence: string;
   qualified: boolean;
   source_sha256: string;
-  source_page: number;
+  source_page: number | null;
   extractor_version: string;
   vocab_version: string;
+  // migration 284 (Spec 129 §2b): both NOT NULL with no default, so every insert must state them.
+  doc_type: string;
+  source_batch: string;
 }
 
 export function makeCoaNoticeVariance(overrides: Partial<CoaNoticeVarianceRow> = {}): CoaNoticeVarianceRow {
@@ -804,6 +807,8 @@ export function makeCoaNoticeVariance(overrides: Partial<CoaNoticeVarianceRow> =
     source_page: 1,
     extractor_version: 'coa-extractor-1',
     vocab_version: 'coa-vocab-1',
+    doc_type: 'decision_notice',
+    source_batch: 'coa-2017-decisions',
     ...overrides,
   };
   if (!overrides.variance_key) {
