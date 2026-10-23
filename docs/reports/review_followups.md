@@ -1,6 +1,37 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full prose history of resolved batches recoverable via `git log -p docs/reports/review_followups.md`._
 
+_Last triaged: 2026-10-23. See PR `chore(deferred): weekly triage 2026-10-23` for proposed actions._
+
+---
+
+## Triage Summary — 2026-10-23
+
+**Coverage:** All 4,346 lines read. Zombie threshold: sections dated before 2026-09-25.
+
+| Action | Count | Top items |
+|--------|-------|-----------|
+| **PROMOTE → WF3** | **11** | Security routes (P1), step_timeout wiring (P2), dead meter (P3), telemetry_tables (P4), ordering lock (P5), snapshot freshness (P6), metrics dual-path (P7), parcels_null_address_pct gate (P8), wrong comment (P9), audit blind spots (P10), massing-mislink $105M (P11) |
+| **KILL** | ~35 | LDG-D1 CLOSED, LM-D6/D11 CLOSED, sibling ceilings RESOLVED 2026-10-06, all Phase E/F/I FOLDED-inline items, REFUTED items from Spec 65 Phase 2/3 |
+| **CONVERT** | 2 | Spec 79 §3 halt-condition C3/C4 typo → doc WF3; Phase 5 design items already queued |
+| **DEFER** (triage_after 2026-11-20) | ~270 | Pre-existing architectural concerns, pipeline-hardening candidates, plan-review residuals from completed Phase E/F/I work |
+
+### PROMOTE Items (WF3 candidates)
+
+| ID | Severity | Section | Finding |
+|----|----------|---------|---------|
+| P1 | HIGH security | Spec 126 surface research 2026-09-15 | 11 admin routes missing `verifyAdminAuth`, 2 public routes leaking permit data, 7 mutations missing audit logs |
+| P2 | HIGH | EP-PHASE-DEADLINE 2026-09-15 | step_timeout not wired for 10 of 12 pipeline steps |
+| P3 | HIGH | Spec 126 surface research 2026-09-15 | Dead lead-view meter in admin UI wired to nothing |
+| P4 | MED (ACT) | Cross-step ledger 2026-09-03 | telemetry_tables registry omissions — steps not counted in cross-step ledger |
+| P5 | MED (ACT) | Cross-step ledger 2026-09-03 | False ordering lock fires on non-ordering steps → spurious WARN |
+| P6 | MED (ACT) | Cross-step ledger 2026-09-03 | Snapshot freshness gate not connected to chain halt |
+| P7 | HIGH (ACT) | Pilot 8 refresh_snapshot 2026-08-31 | Admin metrics.ts dual-path reimplementation diverging from pipeline source |
+| P8 | MED (ACT) | chain_sources WARN 2026-08-25 | `parcels_null_address_pct` gate permanently unsatisfiable — fires on every run |
+| P9 | MED (ACT) | chain_sources WARN 2026-08-25 | `massing_zero_link_ghost` wrong inline comment misleads operator diagnosis |
+| P10 | MED (ACT) | Spec 122 §P0 re-baseline 2026-08-23 | No audit-row check for `existing_data_quality_flag`; no BOUND for `existing_width`/`existing_length` |
+| P11 | HIGH | Parcel-sanity residuals 2026-07-02 | Massing-mislink class poisons cost estimates (~$105M exposure per parcel-sanity audit) |
+
 ---
 
 ## 2026-09-27 — engine-fence panel residue (wf2/engine-fence)
