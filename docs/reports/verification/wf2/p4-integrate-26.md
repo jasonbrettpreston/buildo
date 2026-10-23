@@ -90,7 +90,7 @@ Row-level attribution (scored per commit, rows keyed notice#n + clause):
 |---|---|
 | `16def4b3` | merge 5, `wf1/rulings-rec3` @ `18aa1f7c` (CHAT-91 B-1..B-5 dated notes). 375f928f (CHAT-92) is **not** taken; it is being re-ruled. Conflict: bylaw-layer2-input.json, regenerated with --write (`bylaw-rule-map.json` is a Layer 1 input, table_version f2ffa064). The amendment index was regenerated. The CoA pins were re-pinned because the inputs moved. 0 of 698 and 0 of 496 rows move. |
 | `a735a534` | merge 6, `wf1/excr5c` @ `8eaa1872` (CHAT-91 B-2: 9 units; B-3: 6 rows). Conflicts: the layer2 input and the report-field inventory .json/.md, both regenerated (table_version bade4a18). The amendment index was regenerated. CoA was re-scored: **0 of 698 and 0 of 496 rows move**, and both sets give CHECK OK on totals. They were re-pinned because the inputs moved. Floors OK. |
-| (next) | verify-46 notes N1, N2, N5, N6 (this section) |
+| `0249ebf0` | verify-46 notes N1, N2, N5, N6 (this section) |
 
 - **N1** (attribution): the coa-round.logic.test.ts:139-141 comment and the CoA section above now name 77c05a26 / EVE.R5-4 as the commit and ruling that made the rows scorable.
 - **N2** (stale ruling text): the source of truth is `scripts/seeds/bylaw/vocab.json` `explained_differences` 10.5.40.50(2) and 900.3.10(559)(A), at :1151-1152 and :1163-1164. Both entries now have `ruling` M-337, and their `reading` text drops "NEW RULING NEEDED (HELD on R5-5 … M-308 …)". It now cites `2026-10-22-page-eve#EVE.R5-5` (M-337) and M-355 (`2026-10-23-batch-b#CHAT-81.CITE-1`: "the 63 Johnston Ave DATA flag rests on M-337 (not M-308)"). Two related text changes:
@@ -118,3 +118,15 @@ Row-level attribution (scored per commit, rows keyed notice#n + clause):
   - RF-10: S-001 area fields reach the banned STAND_SET input `parcels.bylaw_standard_setback_m`.
   
   All five are pre-existing report-only surface findings (Spec 69 M-69 inventory) and are not touched by any merged branch.
+
+## Checks after the follow-up (tip before this index commit: 0249ebf0)
+
+- All pre-commit generator --checks, plus schema-to-vocab and generated-docs: rc 0.
+- decision-log --check: clean (67 logs, 303 decisions, 197 register rows, 393 citations).
+- spec-split-check --check: clean. Step and by-law handbooks (386 rules): up to date.
+- golden-lots-cases --check: rc 0. system-map: no diff.
+- Targeted vitest (the same 149 files): 4325 passed, 936 todo, 0 failed.
+- Migration/registry infra (16 files): 237 passed.
+- tsc: clean.
+- step-validate --all --fast: exit 0, 0 HARD STOP lines.
+- Still owed: the 29 stale scorecard blocks (`migrations count=275` should be 276) and the full test / test:db runs. verify-46 item 6 gives the operator order.
