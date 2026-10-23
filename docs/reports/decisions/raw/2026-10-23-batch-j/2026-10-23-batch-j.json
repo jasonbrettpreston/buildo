@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "yes",
+  "context": "Block 114 of fleet night run-20261022b (~/Buildo-scratch/fleet-night-2210/BLOCK114-REPORT.md): the classify_coa_trades forced cohort bracket gate-skipped (no_upstream_changes) because the step's standalone capture, retaken just before it, had written a completed own row; compute_coa_cost_estimates (block 117 after 116) has the same exposure. Q-114a approved as drafted (fix (b): the bracket runs before the standalone). Q-114b (declare a step-local force_run env for the 50-row cohort brackets; a descriptor change and RE-FREEZE) was recommended no and was not ruled: context only, no decision row.",
+  "decisions": [
+    {"id": "CHAT-89.Q-114a", "subject": "May a ledger-gated step's forced bracket run before its standalone capture when its recipe passes no force env?", "decision": "approve", "recommendation": "Yes, as an amendment note on R-DQ / Spec 132 §x-captures.1: a ledger-gated step's (execution.shape materialize or cascade) forced bracket runs before that step's standalone capture when its recipe passes no force env (the standalone writes the owned baseline; a later bracket would gate-skip). Implemented as two REORDER pairs in the fleet-night split-blocks.cjs (classify_coa_trades, compute_coa_cost_estimates); no scripts/lib/step/** change, no descriptor change, no RE-FREEZE."}
+  ]
+}

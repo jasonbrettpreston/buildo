@@ -80,6 +80,10 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
   it('CHAT-87 sits on M-350', () => {
     expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-h#CHAT-87.NAMED-1c');
   });
+  it('CHAT-89 sits on R-JP and amends R-DQ in §B-AM (R-DQ is in moved block M33)', () => {
+    expect(rowOf(A, 'R-JP')).toContain('2026-10-23-batch-j#CHAT-89.Q-114a');
+    expect(A).toContain('**R-DQ amended by CHAT-89.Q-114a');
+  });
   it('R-IX carries the CHAT-69.Q2 confirmation as a dated note', () => {
     expect(rowOf(A, 'R-IX')).toContain('2026-10-22-batch-z6#CHAT-69.Q2');
   });
