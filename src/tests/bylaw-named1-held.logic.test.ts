@@ -72,3 +72,56 @@ describe('CHAT-87.NAMED-1c: the M-285 join computes 325 (C) and 1168 (C)(i)', as
     expect(eff(lot('900.3.10(1168)', 'Conference Blvd'), 'front_setback_m')).toMatchObject({ status: 'value', value: 7.5, winner: '900.3.10(1168)#(1168)[SSP](C)(i)' });
   });
 });
+
+// CHAT-91 (operator 2026-10-23 "B-1 to B-5 your recommendation is approved"; held pending CHAT-91 import), cards B-2 and B-3.
+// B-2: the restored named-road units whose keyer disclosure says the road is "not evaluated" / "cannot confirm which street" are computed
+// by the M-285 join, so the disclosure is none (as their word-for-word twins 325 (C), 204 (C)(i),(E)(i) already are).
+// 316 (H) is NOT in it: its clause is limited to named addresses (3165-3185 Sheppard Ave. E., 5 and 6 Abbottsfield Gate) that the unit
+// does not hold, so "this named-address rule is not evaluated" is still true (operator question, held on the keep reading).
+// B-3: a vocab.named_street row whose clause says "front lot line" / "front yard" is line front ($comment rule), as twin 1168 (C)(i) is.
+// 1026 (C)(i) and its twin 255 (D)(i) say "a lot line that abuts a street ... where the lot line abuts", so they stay line any.
+// Red first: docs/reports/red-evidence/bylaw/bylaw-chat91-named-red.txt
+const B2_NONE = ["900.3.10(303)#(303)[SSP](D)","900.3.10(323)#(323)[SSP](C)","900.3.10(1032)#(1032)[SSP](C)(i)","900.4.10(70)#(70)[SSP](A)(i)","900.3.10(714)#(714)[SSP](C)(i)","900.3.10(714)#(714)[SSP](D)(i)","900.3.10(852)#(852)[SSP](C)(i)","900.3.10(852)#(852)[SSP](E)(i)","900.3.10(713)#(713)[SSP](C)(i)"];
+const B3_FRONT = ["900.3.10(1170)#(1170)[SSP](A)(i)","900.3.10(560)#(560)[SSP](C)(i)","900.3.10(309)#(309)[SSP](C)(i)","900.4.10(70)#(70)[SSP](A)(i)","900.3.10(975)#(975)[SSP](A)(i)","900.3.10(975)#(975)[SSP](A)(ii)"];
+
+describe('CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front', async () => {
+  const V = await mod('scripts/analysis/bylaw/validate.mjs');
+  const AU = await mod('scripts/analysis/bylaw/authored.mjs');
+  const AG = await mod('scripts/analysis/bylaw/agree.mjs');
+  const I = V.loadInputs({ root: ROOT });
+  const U: Map<string, Json> = AG.agreedUnits(AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab }));
+
+  it('B-2: the 9 computed units have disclosure none; 316 (H) keeps its named-address disclosure; of the 44 only 316 (H) discloses', () => {
+    for (const id of B2_NONE) expect([id, (U.get(id) as Json).disclosure]).toEqual([id, 'none']);
+    expect((U.get('900.3.10(316)#(316)[SSP](H)') as Json).disclosure).toMatch(/named-address rule is not evaluated/);
+    expect(ALL.filter((id) => (U.get(id) as Json).disclosure !== 'none')).toEqual(['900.3.10(316)#(316)[SSP](H)']);
+  });
+
+  it('B-3: the 6 front-worded rows are line front; 1026 (C)(i) and 255 (D)(i) stay line any', () => {
+    for (const id of B3_FRONT) expect([id, I.vocab.named_street.units[id]?.line]).toEqual([id, 'front']);
+    for (const id of ['900.3.10(1026)#(1026)[SSP](C)(i)', '900.4.10(255)#(255)[SSP](D)(i)']) expect([id, I.vocab.named_street.units[id]?.line]).toEqual([id, 'any']);
+  });
+
+  it('B-3: every computed front_setback_m unit in vocab.named_street is line front (a front setback is measured from the front lot line)', () => {
+    const left = [...U].filter(([id, x]) => x.archetype === 'LIMIT' && x.target === 'front_setback_m' && I.vocab.named_street.units[id]?.line === 'any');
+    expect(left.map(([id]) => id)).toEqual([]);
+  });
+});
+
+describe('CHAT-91 B-3: 1170 (A)(i) reads as its twin 1168 (C)(i) off Conference Blvd.', async () => {
+  const AS = await mod('scripts/analysis/bylaw-validation/assembly.mjs');
+  const { E, units, C } = await AS.loadRealLotAssembly(ROOT);
+  const lot = (exception: string, name: string): Json => ({
+    zone: 'RD', label: { f: 12, d: 0.6 }, overlays: {}, map_areas: [], building_type: 'detached_house', exception, primary_frontage_street_name: name,
+    flags: { lawfully_existing: false, corner_lot: false, through_lot: false, major_street: false, front_averaging_not_applicable: true, abuts_lane: false, suite_wall_openings: false, flat_or_shallow_roof: false },
+    vars: { lot_frontage_m: 12, lot_depth_m: 40, lot_area_m2: 480, proposed_height_m: 4, distance_to_residential_m: 5 },
+  });
+  const eff = (l: Json, t: string): Json => E.effective(l, t, E.loadCandidates(l, units).candidates, C);
+
+  it('on Ravencliff Cres. 1170 answers a value as 1168 does (the named arm is refuted, not undecided); on Conference Blvd. it stays 7.5 m', () => {
+    const r1170 = eff(lot('900.3.10(1170)', 'Ravencliff Cres'), 'front_setback_m'), r1168 = eff(lot('900.3.10(1168)', 'Ravencliff Cres'), 'front_setback_m');
+    expect(r1168.status).toBe('value');
+    expect([r1170.status, r1170.value]).toEqual(['value', r1168.value]);
+    expect(eff(lot('900.3.10(1170)', 'Conference Blvd'), 'front_setback_m')).toMatchObject({ status: 'value', value: 7.5, winner: '900.3.10(1170)#(1170)[SSP](A)(i)' });
+  });
+});
