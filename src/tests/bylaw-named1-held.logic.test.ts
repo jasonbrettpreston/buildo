@@ -150,3 +150,33 @@ describe('CHAT-91 B-3: 1170 (A)(i) reads as its twin 1168 (C)(i) off Conference 
     expect(won('900.3.10(713)', 'ELLESMERE RD', 'side_setback_m', '900.3.10(713)#(713)[SSP](C)(i)')).toBe(false);
   });
 });
+
+// CHAT-93.E-2 (operator 2026-10-23, held pending CHAT-93 import): the calculation_handling gaps text of a CHAT-91.B-2 unit that says the
+// named-street test is not held / not evaluated is corrected ONLY where it is now false because the unit computes through the M-285 join
+// (premise checked on the production path above): 323 (C), 900.4.10 70 (A)(i), 714 (C)(i) — the front-line arms. 1032 (C)(i) and
+// 714 (D)(i) keep theirs (true: which lot line abuts the road is not held; the join reads only the frontage street). Status and
+// not_modelled_reason are unchanged (reported, not decided). Red first: docs/reports/red-evidence/bylaw/bylaw-chat93-e2-red.txt
+describe('CHAT-93.E-2: computed front-line named-road arms say how the street test is read', async () => {
+  const V = await mod('scripts/analysis/bylaw/validate.mjs');
+  const AU = await mod('scripts/analysis/bylaw/authored.mjs');
+  const AG = await mod('scripts/analysis/bylaw/agree.mjs');
+  const I = V.loadInputs({ root: ROOT });
+  const U: Map<string, Json> = AG.agreedUnits(AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab }));
+  const gaps = (id: string): string => (U.get(id) as Json).calculation_handling.gaps;
+
+  it('323 (C), 70 (A)(i), 714 (C)(i): gaps names the M-285 join and no longer says the street is not held / not identified', () => {
+    for (const id of ['900.3.10(323)#(323)[SSP](C)', '900.4.10(70)#(70)[SSP](A)(i)', '900.3.10(714)#(714)[SSP](C)(i)']) {
+      expect(gaps(id), id).toMatch(/read from the lot's primary frontage street \(M-285 street-name join, vocab\.named_street line front\)/);
+      expect(gaps(id), id).not.toMatch(/not held|not identified/);
+    }
+  });
+
+  it('unchanged where the text is still true: 1032 (C)(i), 714 (D)(i), the 4 uncomputed units and 316 (H)', () => {
+    expect(gaps('900.3.10(1032)#(1032)[SSP](C)(i)')).toMatch(/^Which lot line abuts McCowan Rd\., Brimley Rd\. or Brimwood Blvd\. is not held/);
+    expect(gaps('900.3.10(714)#(714)[SSP](D)(i)')).toBe('Whether the street-abutting side lot line abuts a named street is not held in the lot data.');
+    expect(gaps('900.3.10(303)#(303)[SSP](D)')).toBe('Whether the front lot line abuts Pharmacy Ave. is not held as a lot attribute.');
+    expect(gaps('900.3.10(713)#(713)[SSP](C)(i)')).toBe('The named-street frontage test is not evaluated.');
+    expect(gaps('900.3.10(852)#(852)[SSP](C)(i)')).toBe('named street abutment');
+    expect(gaps('900.3.10(316)#(316)[SSP](H)')).toBe('Applies to named addresses only; the address list is not held as a lot set.');
+  });
+});

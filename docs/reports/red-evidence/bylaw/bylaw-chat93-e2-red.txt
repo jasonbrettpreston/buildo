@@ -1,0 +1,5 @@
+# CHAT-93.E-2 red run at 760440a4 (src/tests/bylaw-named1-held.logic.test.ts, tests written before the fix), 2026-10-23
+   × CHAT-93.E-2: computed front-line named-road arms say how the street test is read > 323 (C), 70 (A)(i), 714 (C)(i): gaps names the M-285 join and no longer says the street is not held / not identified 2ms
+     → 900.3.10(323)#(323)[SSP](C): expected 'No vocab front-setback pattern (\'fro…' to match /read from the lot's primary frontage …/
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 12 passed (13)
