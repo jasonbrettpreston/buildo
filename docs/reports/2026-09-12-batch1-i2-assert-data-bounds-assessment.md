@@ -758,7 +758,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=275 |
+| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=276 |
 | 2 | assert_data_bounds | PASS | 33 declared, missing from seeds: none |
 | 3 | assert_data_bounds | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_data_bounds | PASS | SPEC LINK header present=true |
@@ -806,11 +806,13 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 - compare ran: true · diffs found: 744 · unexplained: 0
 
 ### Test suite (item iii)
-- 2975/3003 passed (suite success=false)
-- harvested: 116 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 3169/3200 passed (suite success=false)
+- harvested: 125 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
 - skipped (declared but not run): 0
-- failing (28):
+- failing (31):
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > the compute corpus is not empty (a vacuous loop proves nothing)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > the driver REPORTS the compute corpus under --json (report shape only — gating is proven above)
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
@@ -829,6 +831,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-centreline.js (slug "load_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-massing.js (slug "massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
