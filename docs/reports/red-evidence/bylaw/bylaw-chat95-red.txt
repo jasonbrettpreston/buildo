@@ -1,0 +1,19 @@
+# CHAT-95 X-1..X-5 red run at beb769f3 (src/tests/bylaw-named1-held.logic.test.ts, tests written before the fix), 2026-10-23
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > each of the 44 is in vocab.named_street and is a LIMIT with a target and a minimum 5ms
+     → 900.3.10(714)#(714)[SSP](D)(i): expected 'LIMIT' to be 'UNUSUAL' // Object.is equality
+   × CHAT-87.NAMED-1c: all 44 named-road units are computed (LIMIT, M-285 join) > no other unit carrying abuts_named_street is a LIMIT (the card is the 44, plus their three word-for-word twins) 2ms
+     → expected [ …(47) ] to deeply equal [ …(46) ]
+   × CHAT-91 B-2 / B-3: computed named-road units carry no stale disclosure; front-worded rows are line front > B-2: the 7 computed units have disclosure none; 316 (H) (CHAT-93.E-1), 852 (E)(i) (held) and 714 (D)(i) (CHAT-95.X-4) disclose; no other of the 44 does 1ms
+     → expected [ '900.3.10(303)#(303)[SSP](D)', …(1) ] to deeply equal [ '900.3.10(303)#(303)[SSP](D)', …(1) ]
+   × CHAT-91 B-3: 1170 (A)(i) reads as its twin 1168 (C)(i) off Conference Blvd. > production path (a lot with its address and map areas, as the CoA scorer builds it): 323 (C), 714 (C)(i) and, after CHAT-95 X-1 / X-2, 303 (D), 852 (C)(i), 713 (C)(i) compute; 852 (E)(i) (held) and 714 (D)(i) (X-4) do not 4ms
+     → expected false to be true // Object.is equality
+   × CHAT-95 X-1..X-5: named-road keying defects fixed; each unit reads what it does > X-1: the 303 (D) row names Pharmacy Ave. 1ms
+     → expected { …(2) } to deeply equal { streets: [ 'Pharmacy Ave.' ], …(1) }
+   × CHAT-95 X-1..X-5: named-road keying defects fixed; each unit reads what it does > X-2: 852 (C)(i) and 713 (C)(i) apply to the whole exception, as 204 (C)(i) does; 852 (E)(i) is held as keyed 3ms
+     → expected [ …(2) ] to deeply equal [ …(2) ]
+   × CHAT-95 X-1..X-5: named-road keying defects fixed; each unit reads what it does > X-1 / X-2 / X-3 / X-5: the computed arms read partially_modelled / needs_data_we_lack and say how the street test is read 0ms
+     → expected [ '900.3.10(303)#(303)[SSP](D)', …(3) ] to deeply equal [ '900.3.10(303)#(303)[SSP](D)', …(3) ]
+   × CHAT-95 X-1..X-5: named-road keying defects fixed; each unit reads what it does > X-4: 714 (D)(i) is UNUSUAL and its disclosure says why (which street a side lot line abuts is not held) 0ms
+     → expected [ 'LIMIT', …(3) ] to deeply equal [ 'UNUSUAL', 'none', 'none', 'none' ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  8 failed | 9 passed (17)

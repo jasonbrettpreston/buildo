@@ -1006,7 +1006,7 @@
       "900.3.10(295)#(295)[SSP](A)": {"streets":["Warden Ave.","Pharmacy Ave."],"line":"any"},
       "900.3.10(302)#(302)[SSP](C)": {"streets":["Ellesmere Rd."],"line":"front"},
       "900.3.10(303)#(303)[SSP](C)": {"streets":["Ellesmere Rd."],"line":"front"},
-      "900.3.10(303)#(303)[SSP](D)": {"streets":["Pharmacy Ave. Rd."],"line":"front"},
+      "900.3.10(303)#(303)[SSP](D)": {"streets":["Pharmacy Ave."],"line":"front"},
       "900.3.10(309)#(309)[SSP](C)(i)": {"streets":["Birchmount Rd."],"line":"front"},
       "900.3.10(309)#(309)[SSP](C)(ii)": {"streets":["Birchmount Rd."],"line":"any"},
       "900.3.10(309)#(309)[SSP](D)": {"streets":["Kennedy Rd."],"line":"any"},
