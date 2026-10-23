@@ -160,7 +160,7 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE because the generated batch 
 | Literal | `file:line` | Disposition |
 |---|---|---|
 | tier boundaries 100 / 30 / 10 | `:84-89` | `compute_phase_calibration_tier_{high,mid,low}_min` variables |
-| unreliable floor 30 | `:375`, `:444` | `compute_phase_calibration_unreliable_sample_min` (equal to the mid floor today; kept separate only if the ② review finds a reader wants them apart) |
+| unreliable floor 30 | `:375`, `:444` | `compute_phase_calibration_reliable_sample_min` (a bucket below it is unreliable; equal to the mid floor today, kept as its own variable because the legacy keeps the two rules apart) |
 | coverage floor 50 | `:214`, `:461` | `compute_phase_calibration_project_type_coverage_min_pct` |
 | coverage lag 10 | `:221` | `compute_phase_calibration_coverage_lag_max_pct` |
 | null ratio 0.05 | `:464` | `compute_phase_calibration_null_class_ratio_max` |
@@ -216,7 +216,7 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE because the generated batch 
   - CPC-D1…D13;
   - ADOPTION `legacy_oracle_excluded`;
   - the roadmap regenerated.
-- **Owed at ②:** descriptor, notes, shell, the variables migration, the admin text, a scorecard refresh; the write form waits on CPC-Q1. The pure compute module is built held on the lane branch (see the lane report).
+- **Owed at ②:** descriptor, notes, shell, the variables migration, the admin text, a scorecard refresh; the write form waits on CPC-Q1. The pure compute is built and parity-locked (P1–P7 against this oracle) but HELD outside the tree: `src/tests/step-conformance.infra.test.ts:700` requires every `scripts/lib/compute/` module to export a `checks` dispatch equal to its descriptor's check ids, so it lands with the descriptor after CPC-Q1.
 - **Owed at ③:** registration, blocked by EP-PIN-D17 under R-ED and by LDG-10 (`programme-items.json` already lists this slug in both `gate.blocks`).
 
 ## 12. Operator decisions
