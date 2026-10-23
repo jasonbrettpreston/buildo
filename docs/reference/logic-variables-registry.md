@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (832) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 36 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (833) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 37 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **839** logic variables (832 numeric, 6 JSONB, 1 string).
+Total: **840** logic variables (833 numeric, 6 JSONB, 1 string).
 
 ---
 
@@ -181,6 +181,7 @@ Total: **839** logic variables (832 numeric, 6 JSONB, 1 string).
 | `compute_maxbld_scenarios_existing_confidence_min` | numeric | 0.6 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): "low confidence — enter your dimensions" threshold (P5.6). Default 0.6, bounds [0, 1]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
 | `compute_maxbld_scenarios_existing_shared_footprint_penalty` | numeric | 0.5 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): confidence penalty for a footprint primary-linked to ≥ 2 parcels. Default 0.5, bounds [0, 1]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
 | `compute_maxbld_scenarios_first_floor_elevation_m` | numeric | 0.6 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): first floor above established grade (P5.2 item 4). Default 0.6, bounds [0, 1.2]. Bound note: capped by `entrance_height_m` where it applies. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
+| `compute_maxbld_scenarios_houseplex_min_units` | numeric | 2 | — (migration-seeded) | — | migration 286 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); EVE.P3-Q8, operator-ruled): the minimum dwelling-unit count of a houseplex (800.50(181): a detached houseplex is a building with multiple dwelling units, one above another per (181)(D)); below it the row is not_buildable:800.50(181). Default 2. Pinned min = max = 2: a definitional unit constant, not a tuning knob (R-CV). CONSUMED by compute_maxbld_scenarios (houseplex units, P5.4, via ctx.config). |
 | `compute_maxbld_scenarios_lane_buffer_m` | numeric | 4 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): boundary-to-lane-centreline tolerance for `lane_abutting_length_m` (M-209; replaces the 5 m KFM-78-9 placeholder). Default 4, bounds [1.5, 6]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
 | `compute_maxbld_scenarios_lot_max_sqm` | numeric | 2000 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): modelled lot band. Default 2000, bounds [500, 10000]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
 | `compute_maxbld_scenarios_lot_min_sqm` | numeric | 50 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): modelled lot band. Default 50, bounds [10, 500]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
@@ -862,4 +863,4 @@ Total: **839** logic variables (832 numeric, 6 JSONB, 1 string).
 
 ---
 
-*Generated from 803 seed vars + 36 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*
+*Generated from 803 seed vars + 37 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*

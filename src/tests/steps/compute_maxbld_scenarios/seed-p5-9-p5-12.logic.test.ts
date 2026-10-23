@@ -18,6 +18,9 @@ const ROOT = path.resolve(__dirname, '../../../../');
 const read = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const PREFIX = 'compute_maxbld_scenarios_';
 const MIGRATION = 'migrations/283_compute_maxbld_scenarios_logic_variables.sql';
+const MIN_UNITS_MIGRATION = 'migrations/286_compute_maxbld_scenarios_houseplex_min_units.sql';
+/** sha256 of migration 283 as integrated and APPLIED (origin 9fd4ca4f). migrate.js skips an applied file whose checksum changed, so it must never be edited. */
+const MIGRATION_283_SHA256 = '95661d9ff983680c9e73548078a5c743394ff0b9c13bb74cdfadd9a4a6b75ad0';
 const SPEC = read('docs/specs/01-pipeline/78_optimal_lot_configuration.md');
 
 /** The P5.9 table rows: suffix(es) -> default(s) and bounds, parsed from the spec text (never retyped here). */
@@ -38,7 +41,7 @@ function p59(): Array<{ name: string; def: number; min: number; max: number }> {
 
 /** Parse `('key', value,` seed tuples out of the migration. */
 function seeded(): Map<string, number> {
-  const sql = read(MIGRATION);
+  const sql = `${read(MIGRATION)}\n${read(MIN_UNITS_MIGRATION)}`;
   const out = new Map<string, number>();
   for (const m of sql.matchAll(/\('(compute_maxbld_scenarios_[a-z0-9_]+)',\s*(-?[0-9.]+),/g)) out.set(m[1] as string, Number(m[2]));
   return out;
@@ -57,10 +60,25 @@ describe('P3-1: the 22 P5.9 logic variables (Spec 132 core.8, R-CV)', () => {
     expect(sql.split('\n').filter((l) => /^\s*(DELETE|DROP|TRUNCATE|UPDATE)\b/i.test(l))).toEqual([]);
   });
 
-  it('seeds exactly the 22 names, each default equal to the Spec 78 table', () => {
+  it('seeds exactly the 22 names plus the ruled houseplex_min_units (P3-Q8, pinned 2), each default equal to the Spec 78 table', () => {
     const want = new Map(p59().map((v) => [PREFIX + v.name, v.def]));
+    want.set(PREFIX + 'houseplex_min_units', 2); // EVE.P3-Q8: not a P5.9 row; pinned min = max = 2 (800.50(181) 'multiple dwelling units')
     expect([...seeded().keys()].sort()).toEqual([...want.keys()].sort());
     for (const [k, v] of want) expect(seeded().get(k), k).toBe(v);
+  });
+
+  it('migration 283 is byte-identical to the applied origin blob (an applied migration is never edited, migrate.js checksum rule)', async () => {
+    const crypto = await import('node:crypto');
+    expect(crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, MIGRATION))).digest('hex')).toBe(MIGRATION_283_SHA256);
+  });
+
+  it('the ruled houseplex_min_units is its own NEW migration: one INSERT ... ON CONFLICT DO NOTHING row, pinned 2, no DELETE/UPDATE (R-CV)', () => {
+    const sql = read(MIN_UNITS_MIGRATION);
+    expect(sql.match(/\('compute_maxbld_scenarios_[a-z0-9_]+',/g)).toEqual(["('compute_maxbld_scenarios_houseplex_min_units',"]);
+    expect(sql).toMatch(/INSERT INTO logic_variables \(variable_key, variable_value, description\)/);
+    expect(sql).toMatch(/ON CONFLICT \(variable_key\) DO NOTHING/);
+    expect(sql).toMatch(/Pinned min = max = 2/);
+    expect(sql.split('\n').filter((l) => /^\s*(DELETE|DROP|TRUNCATE|UPDATE)\b/i.test(l))).toEqual([]);
   });
 
   it('every description states its bounds exactly as the table does, and names its consumer', () => {
