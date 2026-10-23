@@ -136,10 +136,16 @@ describe.skipIf(!have172)('scorer wiring (172 notices)', () => {
   const floorsFile = path.join(ROOT, 'scripts/analysis/bylaw-validation/coa-expected/floors-172.json');
   it('C-3: A0573/24NY (heard 2025-01-23, 10.20.40.30(1) amended by 648-2025, in force 2025-06-26) is BY-LAW CHANGED, in neither percentage', () => {
     const r = run([]);
-    expect(r.so).toMatch(/"BY-LAW CHANGED":1/);
+    // integrate-26: 3, not 1. excr5c's R5-5 rows make A0263/21NY #4 10.20.40.10(6) and #6 10.20.40.20 scorable MATCH. That notice was heard
+    // 2021-11-04 and both provisions were amended by 474-2023, so C-3 moves both rows to BY-LAW CHANGED.
+    expect(r.so).toMatch(/"BY-LAW CHANGED":3/);
     const sc = JSON.parse(fs.readFileSync(path.join(tmp, 'sc.json'), 'utf8'));
     const x = sc.rows.find((q: any) => q.notice === 'A0573/24NY' && q.clause_norm === '10.20.40.30(1)');
     expect([x.class, x.class_before_bylaw]).toEqual(['BY-LAW CHANGED', 'MATCH']);
+    for (const c of ['10.20.40.10(6)', '10.20.40.20']) {
+      const y = sc.rows.find((q: any) => q.notice === 'A0263/21NY' && q.clause_norm === c);
+      expect([y.class, y.class_before_bylaw]).toEqual(['BY-LAW CHANGED', 'MATCH']);
+    }
     expect(sc.rows.some((q: any) => q.amendment_status === 'unverified')).toBe(true); // tag without a verified date: labelled, not guessed, class kept
   }, 120000);
   it('C-5: the committed floors hold on the 172-notice set (--floors) and a raised floor fails', () => {
