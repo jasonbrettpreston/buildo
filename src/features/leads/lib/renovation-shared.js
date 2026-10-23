@@ -7,7 +7,8 @@
  *            docs/specs/01-pipeline/69a_mcbylaw_register.md M-228 (through-lot front lot line), M-229 (mechanical attic
  *            area left out of GFA; amends M-171).
  * DUAL CODE PATH: to be shared by
- *   - scripts/lib/compute/compute-maxbld-scenarios.js (the step's compute module; wiring OWED, step commit ①)
+ *   - the step's compute module compute-maxbld-scenarios.js. It is HELD outside the tree until P3-7 step commit ① (P3-HOLD-1,
+ *     Spec 132 §core.1 / §x-stages.2; ~/Buildo-scratch/p3build/held/APPLY.txt), and is wired at ①.
  *   - a TS shim for the app (PIN APP-RENO), as cost-model.ts is for cost-model-shared.js.
  * This file holds the formulas that are ruled today (M-228, M-229). P5.6's renovationResults() joins it at ①.
  *

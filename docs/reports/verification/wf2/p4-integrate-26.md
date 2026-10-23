@@ -130,3 +130,15 @@ Row-level attribution (scored per commit, rows keyed notice#n + clause):
 - tsc: clean.
 - step-validate --all --fast: exit 0, 0 HARD STOP lines.
 - Still owed: the 29 stale scorecard blocks (`migrations count=275` should be 276) and the full test / test:db runs. verify-46 item 6 gives the operator order.
+
+## P3-HOLD-1 (operator 2026-10-23, option A; held pending CHAT-94 import; Spec 132 §core.1 (Rule-1), §x-stages.2 (R-EQ))
+
+The operator full run (2758dc63) failed step-conformance §5.5 "the compute corpus is not empty". `scripts/lib/compute/compute-maxbld-scenarios.js`, the p3plan ② compute, has no manifest step file, because P3-7 step commit ① is held.
+
+The fix follows the lane V3-COA-G precedent: the module and its test `src/tests/steps/compute_maxbld_scenarios/compute-module.logic.test.ts` (40 tests) now sit outside the tree, in ~/Buildo-scratch/p3build/held/. They are byte-exact copies, recorded with blob ids and sha256 in APPLY.txt, and are restored in the same commit as P3-7 step ①.
+- The PHASE3_MODULES entry at phase3-code-link.mjs:21 is dropped.
+- The renovation-shared.js:10 comment points at the held copy.
+- The pure `scripts/lib/maxbld-*.js` modules and their tests stay in the tree.
+- The wf1/l2-option4-land staged edit of the same test (verify-45b N2: read the committed migration 282) belongs to the held test. It is kept in the held folder as the lane's full file plus a patch. At the l2-option4-land merge, the modify/delete conflict on that file resolves to the deletion.
+
+After the hold: step-conformance.infra plus steps/compute_maxbld_scenarios give 11 files and 893 passed (§5.5 green). Every generator --check gives rc 0. The orphaned fixture `src/tests/fixtures/l2-option4-columns.json` stays in the tree, and the l2land lane deletes it.

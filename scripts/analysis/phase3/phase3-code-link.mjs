@@ -18,7 +18,6 @@ import path from 'node:path';
 import { createContext, classifyConstants } from '../bylaw/code-link.mjs';
 
 export const PHASE3_MODULES = Object.freeze([
-  'scripts/lib/compute/compute-maxbld-scenarios.js',
   'scripts/lib/maxbld-coa-tier.js',
   'scripts/lib/maxbld-houseplex-units.js',
   'scripts/lib/maxbld-layer2-view.js',
