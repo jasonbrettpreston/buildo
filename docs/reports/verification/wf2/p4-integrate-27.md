@@ -133,3 +133,12 @@ verify-46c N-1 (the amendment-index reader comment) is recorded in ~/Buildo-scra
   are cleared, but the committed item-iii text records that run's pre-write state. A second `step-validate --all --write` pass (DB) would make
   item iii read the clean suite (3229/3229), the same way integrate-26 wrote its blocks twice (6703b83f, then e9523e48). This affects only
   item iii's text; no score uses it (all scores above are unchanged).
+
+### Second `step-validate --all --write` pass (operator, tip af54e018; log ~/Buildo-scratch/int27/db-run/sv-write2.log)
+
+- Exit 0, 0 "HARD STOP" lines, "R-EY: 29/43 evaluated step(s) read V3; E1 ratchet PASS (29 listed); E2 cutover PASS".
+- The diff against af54e018 is only the item iii test-suite section of the 43 blocks: "3229/3229 passed (suite success=true)",
+  "failing: none" replaces the 29 pre-rewrite not-stale failures. No other line changes; the scores and the 5 pending blocks'
+  pre-existing non-blocking hard stop (7 enforced-red rows each, Enforced-green 5/14) are as reviewed above.
+- The migrate dry-run WARNs on the 254 / 255 / 281 checksums are pre-existing (integrate-27 does not touch those files) and are queued
+  for a separate read-only check.
