@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "RS-1 confirmed proceed",
+  "context": "RS-1 from ~/Buildo-scratch/v3coa/COA-V3-GAP.md row 11 / package J (refresh_snapshot). R-II (Spec 132 §x-v3.2) places the refresh_snapshot producer-read RE-FREEZE in the permits ③ landing; it does not permit a single-step RE-FREEZE of refresh_snapshot outside that landing, so RS-1 is recorded as an operator-approved dated-note exception on R-II. D-P1 (the move of the read from sync_runs to pipeline_runs) is unchanged and still lands at permits ③.",
+  "decisions": [
+    {"id": "CHAT-92.RS-1", "subject": "refresh_snapshot: declare its sync_runs read now, retake its own captures on the bundled RE-FREEZE night", "decision": "approve", "recommendation": "Fix refresh_snapshot now rather than waiting for the permits chain ③: declare sync_runs as a read relation (clears the fleet's only compute-purity row, scripts/lib/compute/refresh-snapshot.js:250, ledger compute-ledger-sql@e230841952758fbf#1, closing_brief CP-PERMITS, and its SCALABLE \"1 deferred\") and add --invariants to its checks (trap 11). Only refresh_snapshot's own captures (its 4 chains: permits, coa, sources, deep_scrapes) are retaken, on the next bundled RE-FREEZE night (with Q-H4 / CPC-Q1). The D-P1 move to pipeline_runs still lands at permits ③."}
+  ]
+}

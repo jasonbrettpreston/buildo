@@ -672,7 +672,7 @@
     {
       "id": "x-v3.2",
       "section": "x-v3",
-      "text": "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.",
+      "text": "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③. One exception (CHAT-92): refresh_snapshot declares its current `sync_runs` read now, and only its own captures are retaken on the next bundled RE-FREEZE night.",
       "why": "Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate."
     },
     {
@@ -5205,7 +5205,7 @@
         "kind": "lock",
         "ref": "src/tests/decision-log.logic.test.ts"
       },
-      "statement": "REFREEZE-BUNDLE-1 is split (operator CHAT-27): night 1 applies items (1) and (3)-(8) inside one fleet recapture; item (2), the refresh_snapshot recorder producer-read (D-P1), is its own library RE-FREEZE in the permits ③ landing with a second fleet recapture.",
+      "statement": "REFREEZE-BUNDLE-1 is split (operator CHAT-27): night 1 applies items (1) and (3)-(8) inside one fleet recapture; item (2), the refresh_snapshot recorder producer-read (D-P1), is its own library RE-FREEZE in the permits ③ landing with a second fleet recapture. Exception 2026-10-23 (CHAT-92.RS-1): refresh_snapshot declares `sync_runs` as a read relation and adds --invariants before ③; only its own captures are retaken on the next bundled RE-FREEZE night; D-P1 still lands at ③.",
       "source": {
         "register": true
       }
