@@ -102,6 +102,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(A, 'R-JQ')).toContain('2026-10-23-batch-n#CHAT-93.condition');
     expect(A).toContain('R-EQ dated note CHAT-94.P3-HOLD-1');
   });
+  it('CHAT-95 X-1 sits on M-285, X-2..X-5 on M-350, each with the CHAT-93 condition', () => {
+    expect(rowOf(M, 'M-285')).toContain('2026-10-23-batch-p#CHAT-95.X-1');
+    for (const x of ['X-2', 'X-3', 'X-4', 'X-5']) expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-p#CHAT-95.' + x);
+    expect(rowOf(M, 'M-285')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+  });
   it('CHAT-92 sits on R-II as a dated-note exception', () => {
     expect(rowOf(A, 'R-II')).toContain('2026-10-23-batch-m#CHAT-92.RS-1');
   });
