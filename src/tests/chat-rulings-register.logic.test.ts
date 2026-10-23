@@ -124,6 +124,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(r).toContain('2026-10-23-batch-q#CHAT-96.CLP-Q2');
     expect(r).toContain('2026-10-23-batch-n#CHAT-93.condition');
   });
+  it('CHAT-98: LEGACY-EDIT, Q-LAND-3 on R-JQ; P-Q1 on R-JB (R-EN carrier); P-Q2, P-Q4 on R-II; 1169-KEEP on M-350 and M-336; L-UNITS on M-350', () => {
+    const N = '2026-10-23-batch-s#CHAT-98.';
+    for (const [text, row, id] of [[A, 'R-JQ', 'LEGACY-EDIT'], [A, 'R-JQ', 'Q-LAND-3'], [A, 'R-JB', 'P-Q1'], [A, 'R-II', 'P-Q2'], [A, 'R-II', 'P-Q4'], [M, 'M-350', '1169-KEEP'], [M, 'M-336', '1169-KEEP'], [M, 'M-350', 'L-UNITS']] as Array<[string, string, string]>) {
+      expect(rowOf(text, row), row + ' ' + id).toContain(N + id);
+    }
+  });
   it('CHAT-92 sits on R-II as a dated-note exception', () => {
     expect(rowOf(A, 'R-II')).toContain('2026-10-23-batch-m#CHAT-92.RS-1');
   });
