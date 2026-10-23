@@ -165,7 +165,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.12** Declare write discipline per write target, never per step: mechanic ⊥ guard ⊥ scope ⊥ retract. A banned write shape ships only with a dated, SHA-anchored `grandfathered.json` entry naming its why; guard `none` needs a why. A target on an RLS-enabled table declares `guards.requires: rls_bypass_or_policy`. One upsert binds at most 65,535 parameters, so the batch keeps the measured worst case under it.
   *Why:* Write safety differs per table; a per-step answer is wrong for at least one target.
-  Rules: `R-CT` `R-CU` `Rule-8` `Rule-9` `V7` (SPEC122A-V7)
+  Rules: `R-CT` `R-CU` `Rule-8` `Rule-9` `V7` (SPEC122A-V7) `R-KB`
 
 - **core.13** A destructive retraction declares a truthful crash posture (`recovery.interrupted`) and a `recovery.before_image`; the library writes the before-image before retracting, and the runner forces FULL after an interrupted run.
   *Why:* A run killed half-way must never leave a half-retracted table that the next run calls unchanged.
@@ -500,7 +500,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 390 mapped ids: 275 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 391 mapped ids: 276 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|

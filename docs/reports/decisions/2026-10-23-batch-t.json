@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-t/2026-10-23-batch-t.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-t",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "DB-RLS-1 y",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-t/2026-10-23-batch-t.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-99.DB-RLS-1",
+      "question": "Local DB: a new idempotent migration enables RLS on bylaw_map_areas and parcel_abutments",
+      "recommendation": "Migrations 254_bylaw_map_areas_sixplex.sql and 255_parcel_abutments.sql each have one git commit (b87f62db, 2026-10-16), whose content enables row level security on bylaw_map_areas and parcel_abutments (R-CT: a new table's migration enables RLS in the same file). The local DB's recorded checksums match neither file, and the only other copy (~/Buildo-wt-h6b, 2026-10-15) lacks the RLS lines, so the local DB probably has RLS off on both tables (inferred; confirm with the two read-only queries in verify-47.md item 8 before building). migrate.js skips a changed file with a WARN (scripts/migrate.js:229-241), so it never self-heals. Fix: a NEW idempotent migration 289 that enables RLS on both tables (a no-op if already on); NOT a --force re-apply.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

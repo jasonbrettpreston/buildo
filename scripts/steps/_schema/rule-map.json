@@ -5799,6 +5799,20 @@
       }
     },
     {
+      "id": "R-KB",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "core.12",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The local DB's RLS on bylaw_map_areas and parcel_abutments is restored by a new idempotent migration (289), never a --force re-apply of 254/255 (operator 2026-10-23, CHAT-99.DB-RLS-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",

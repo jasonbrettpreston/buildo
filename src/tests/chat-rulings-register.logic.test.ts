@@ -130,6 +130,11 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
       expect(rowOf(text, row), row + ' ' + id).toContain(N + id);
     }
   });
+  it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
+    expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
+    expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    expect(map.rules.find((r) => r.id === 'R-KB')?.handbook_line).toBe('core.12');
+  });
   it('CHAT-92 sits on R-II as a dated-note exception', () => {
     expect(rowOf(A, 'R-II')).toContain('2026-10-23-batch-m#CHAT-92.RS-1');
   });
