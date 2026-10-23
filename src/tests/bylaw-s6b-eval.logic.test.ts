@@ -176,7 +176,9 @@ describe('G-EVAL (a)+(b) over scripts/seeds/bylaw/eval-vectors.json (fixture uni
     // M-240 (rule 7a v2, 2026-10-20): the two RT depth vectors (p5071306, bijou) now expect `unregulated` (ABS-5; the fixture
     // units still answer no_candidate, so they count not_evaluated, 70 → 68 match), and V22 is no_expected:building_type_dependent
     // (68 → 67 match, 9 → 10 no_expected)
-    expect(r.counts).toEqual({ units_evaluated: 115, unit_vector_evaluations: 4863, vectors: 109, match: 67, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 23, pending: 0, excluded: 7, inexpressible: 2, no_expected: 10 });
+    // Q-KG3 (2026-10-22, HELD): the same two RT vectors' building_length_m now expect `unregulated` (rule 7a ignores the major-street unit, ABS-4); the
+    // fixture units answer no_candidate, so they count not_evaluated (67 → 65 match, 23 → 25 not_evaluated)
+    expect(r.counts).toEqual({ units_evaluated: 115, unit_vector_evaluations: 4863, vectors: 109, match: 65, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 25, pending: 0, excluded: 7, inexpressible: 2, no_expected: 10 });
   });
   it('every not_evaluated vector carries a reason from the closed set', () => {
     const bad = r.rows.filter((x: Json) => x.verdict === 'not_evaluated' && !E.NOT_EVALUATED_CODES.includes(E.reasonCode(String(x.got).replace(/^not_evaluated:/, '')))).map((x: Json) => `${x.id} ${x.got}`);
@@ -193,10 +195,10 @@ describe('G-EVAL (a)+(b) over scripts/seeds/bylaw/eval-vectors.json (fixture uni
     const unl = r.rows.filter((x: Json) => x.expected && (x.expected.value === 'unlimited' || x.expected.value === 'unregulated'));
     expect(unl.map((x: Json) => `${x.id}:${x.verdict}`)).toEqual([
       'derwyn:height_storeys:match', 'eastbourne:lot_coverage_pct:match', 'futura:fsi:not_evaluated', 'cordella:lot_coverage_pct:match',
-      'p5071306:fsi:not_evaluated', 'p5071306:building_depth_m:not_evaluated', 'bijou:fsi:not_evaluated', 'bijou:building_depth_m:not_evaluated', 'bijou:lot_coverage_pct:match',
+      'p5071306:fsi:not_evaluated', 'p5071306:building_length_m:not_evaluated', 'p5071306:building_depth_m:not_evaluated', 'bijou:fsi:not_evaluated', 'bijou:building_length_m:not_evaluated', 'bijou:building_depth_m:not_evaluated', 'bijou:lot_coverage_pct:match',
     ]);
     // the two RT depth vectors expect `unregulated` since M-240 (ABS-5); the fixture units (older keying) still answer no_candidate
-    expect(unl.filter((x: Json) => x.verdict === 'not_evaluated').map((x: Json) => x.got)).toEqual([...Array(2).fill('not_evaluated:needs_user_input:has_secondary_suite'), 'not_evaluated:no_candidate', 'not_evaluated:needs_user_input:has_secondary_suite', 'not_evaluated:no_candidate']);
+    expect(unl.filter((x: Json) => x.verdict === 'not_evaluated').map((x: Json) => x.got)).toEqual([...Array(2).fill('not_evaluated:needs_user_input:has_secondary_suite'), 'not_evaluated:no_candidate', 'not_evaluated:no_candidate', 'not_evaluated:needs_user_input:has_secondary_suite', 'not_evaluated:no_candidate', 'not_evaluated:no_candidate']);
     expect(r.rows.filter((x: Json) => x.verdict === 'inexpressible').map((x: Json) => x.id)).toEqual(['p5071306:front_landscaping_pct', 'bijou:front_landscaping_pct']);
   });
 });

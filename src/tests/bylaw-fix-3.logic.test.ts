@@ -86,6 +86,55 @@ describe('R-7a-v2 / M-240 — absence per (zone, building type, target); a defin
       expect([t, r.status, r.value, r.reason, r.evidence?.kind, String(r.evidence?.ruling).startsWith('ABS-7')]).toEqual([t, 'not_applicable', null, `not_applicable:${clause}`, 'absence', true]);
     }
   });
+  it('Q-KG2: ABS-7.3 also covers an RM townhouse and an RM semi-detached houseplex (neither is in the subject of 10.80.40.10(2)); a townhouse on a major street too (M-190)', () => {
+    for (const bt of ['townhouse', 'semi_detached_houseplex']) {
+      for (const flags of [{}, { major_street: true }]) {
+        const r = eff(lot('RM', bt, { flags }), 'main_wall_height_m');
+        expect([bt, JSON.stringify(flags), r.status, r.value, r.reason, r.evidence?.kind, r.evidence?.ruling]).toEqual([bt, JSON.stringify(flags), 'not_applicable', null, 'not_applicable:10.80.40.10(2)', 'absence', 'ABS-7.3']);
+      }
+    }
+    // unchanged: the RM detached and semi-detached HOUSE keep the clause, and the detached houseplex keeps ABS-7.3
+    expect(String(eff(lot('RM', 'semi_detached_house'), 'main_wall_height_m').winner).startsWith('10.80.40.10(2)')).toBe(true);
+    expect(eff(lot('RM', 'detached_houseplex'), 'main_wall_height_m').evidence?.ruling).toBe('ABS-7.3');
+  });
+  it('Q-KG2 family: an RM semi-detached houseplex has no building length or depth rule (10.80.40.20(1) and 10.80.40.30(1) bind a detached or semi-detached HOUSE); ABS-7.1 / ABS-7.2', () => {
+    const want: Array<[string, string, string]> = [['building_length_m', '10.80.40.20(1)', 'ABS-7.1'], ['building_depth_m', '10.80.40.30(1)', 'ABS-7.2']];
+    for (const [target, clause, ruling] of want) for (const flags of [{ major_street: false }, { major_street: true }]) {
+      const r = eff(lot('RM', 'semi_detached_houseplex', { flags }), target);
+      expect([target, JSON.stringify(flags), r.status, r.value, r.reason, r.evidence?.kind, r.evidence?.ruling]).toEqual([target, JSON.stringify(flags), 'not_applicable', null, `not_applicable:${clause}`, 'absence', ruling]);
+    }
+  });
+  it('Q-KG2 family: an RM townhouse has no building depth rule at all (ABS-7.2); its length is 19.0 m only on a major street (10.80.40.20(3)(A)); off one it is unregulated by ABS-7.4 (Q-KG3); unknown while the flag is unknown', () => {
+    for (const flags of [{ major_street: false }, { major_street: true }]) {
+      const d = eff(lot('RM', 'townhouse', { flags }), 'building_depth_m');
+      expect([JSON.stringify(flags), d.status, d.reason, d.evidence?.ruling]).toEqual([JSON.stringify(flags), 'not_applicable', 'not_applicable:10.80.40.30(1)', 'ABS-7.2']);
+    }
+    const on = eff(lot('RM', 'townhouse', { flags: { major_street: true } }), 'building_length_m');
+    expect([on.status, on.value, on.winner]).toEqual(['value', 19, '10.80.40.20(3)#(3)(A)']);
+    // off a major street: Q-KG3 (rule 7a ignores a unit whose lot condition is known false), see the Q-KG3 describe below
+    const off = eff(lot('RM', 'townhouse', { flags: { major_street: false } }), 'building_length_m');
+    expect([off.status, off.value, off.evidence?.ruling]).toEqual(['value', 'unregulated', 'ABS-7.4']);
+    const l = lot('RM', 'townhouse');
+    delete l.flags.major_street;
+    const unknown = eff(l, 'building_length_m');
+    expect([unknown.status, unknown.reason]).toEqual(['not_evaluated', 'condition_unknown:major_street']);
+  });
+  it('Q-KG2 family: the ABS-7.1 / 7.2 entries name the added types, keep expert_sample, and add only phrases absent from the pinned page', () => {
+    const byId = (id: string): Json => I.absences.find((x: Json) => x.id === id);
+    expect(byId('ABS-7.1').building_types).toEqual(['detached_houseplex', 'semi_detached_houseplex']);
+    expect(byId('ABS-7.2').building_types).toEqual(['detached_houseplex', 'semi_detached_houseplex', 'townhouse']);
+    for (const id of ['ABS-7.1', 'ABS-7.2']) expect(byId(id).expert_sample).toBe(true);
+    const p = page('ch10_80').toLowerCase().replace(/\s+/g, ' ');
+    for (const id of ['ABS-7.1', 'ABS-7.2']) for (const ph of byId(id).absent_phrases) expect(p.includes(String(ph).toLowerCase()), `${id}: ${ph}`).toBe(false);
+  });
+  it('Q-KG2: the ABS-7.3 entry names exactly the three types, keeps expert_sample, and the statement names the added types', () => {
+    const r = I.absences.find((x: Json) => x.id === 'ABS-7.3');
+    expect(r.building_types).toEqual(['detached_houseplex', 'semi_detached_houseplex', 'townhouse']);
+    expect(r.expert_sample).toBe(true);
+    expect(r.absent_phrases).toEqual(expect.arrayContaining(['main walls for a semi-detached houseplex', 'main walls of a semi-detached houseplex', 'main walls for a townhouse', 'main walls of a townhouse']));
+    expect(r.statement).toMatch(/townhouse/);
+    expect(r.statement).toMatch(/semi-detached houseplex/);
+  });
   it('the RM detached house keeps its 17.0 m length, 19.0 m depth and x.40.10(2) main wall', () => {
     const l = lot('RM', 'detached_house');
     expect([eff(l, 'building_length_m').value, eff(l, 'building_depth_m').value, String(eff(l, 'main_wall_height_m').winner).startsWith('10.80.40.10(2)')]).toEqual([17, 19, true]);
@@ -100,7 +149,7 @@ describe('R-7a-v2 / M-240 — absence per (zone, building type, target); a defin
   });
   it('the absence rulings ABS-3…ABS-7 are each executed against their pinned page and pass', () => {
     const rs = I.absences.filter((r: Json) => /^ABS-[3-7](\.\d+)?$/.test(r.id));
-    expect(rs.map((r: Json) => r.id)).toEqual(['ABS-3', 'ABS-4', 'ABS-5', 'ABS-6', 'ABS-7.1', 'ABS-7.2', 'ABS-7.3']);
+    expect(rs.map((r: Json) => r.id)).toEqual(['ABS-3', 'ABS-4', 'ABS-5', 'ABS-6', 'ABS-7.1', 'ABS-7.2', 'ABS-7.3', 'ABS-7.4']);
     const res = E.checkAbsenceRulings({ rulings: rs, pages: Object.fromEntries(rs.map((r: Json) => [r.checked_page, page(r.checked_page)])), vocab: I.vocab });
     expect({ pass: res.pass, violations: res.violations }).toEqual({ pass: true, violations: [] });
   });
@@ -113,6 +162,68 @@ describe('R-7a-v2 / M-240 — absence per (zone, building type, target); a defin
     const two = [r6, { ...r6, id: 'ABS-99', building_types: ['semi_detached_houseplex'] }];
     expect(E.checkAbsenceRulings({ rulings: two, pages: { [r6.checked_page]: page(r6.checked_page) }, vocab: I.vocab }).violations.filter((v: string) => /two rulings/.test(v))).toEqual([]);
     expect(E.checkAbsenceRulings({ rulings: [r6, { ...r6, id: 'ABS-99' }], pages: { [r6.checked_page]: page(r6.checked_page) }, vocab: I.vocab }).violations.join(' ')).toMatch(/two rulings/);
+  });
+});
+
+// Q-KG3 (HELD): rule 7a ignores a unit whose lot condition is KNOWN FALSE for the lot (vocab.absence_ignore.known_false_lot_conditions),
+// so a townhouse OFF a major street, whose only building-length unit is the major-street one, is unregulated by absence; a lot whose
+// condition is UNKNOWN still returns condition_unknown, and a lot ON a major street keeps the 19.0 m unit.
+describe('Q-KG3 — rule 7a ignores a unit whose lot condition is known false (townhouse building length off a major street)', () => {
+  const L = (zone: string, bt: string, ms?: boolean): Json => { const l = lot(zone, bt, { flags: ms === undefined ? {} : { major_street: ms } }); if (ms === undefined) delete l.flags.major_street; return l; };
+  const cell = (r: Json): unknown[] => [r.status, r.value ?? r.reason, r.evidence?.ruling ?? r.winner];
+  it('off a major street an R, RT and RM townhouse has no building-length limit: unregulated by absence (ABS-3, ABS-4, ABS-7.4)', () => {
+    expect(cell(eff(L('R', 'townhouse', false), 'building_length_m'))).toEqual(['value', 'unregulated', 'ABS-3']);
+    expect(cell(eff(L('RT', 'townhouse', false), 'building_length_m'))).toEqual(['value', 'unregulated', 'ABS-4']);
+    expect(cell(eff(L('RM', 'townhouse', false), 'building_length_m'))).toEqual(['value', 'unregulated', 'ABS-7.4']);
+  });
+  it('on a major street the 19.0 m unit still wins', () => {
+    expect(cell(eff(L('R', 'townhouse', true), 'building_length_m'))).toEqual(['value', 19, '10.10.40.20(1)#(1)(A)']);
+    expect(cell(eff(L('RT', 'townhouse', true), 'building_length_m'))).toEqual(['value', 19, '10.60.40.20(1)#(1)(A)']);
+    expect(cell(eff(L('RM', 'townhouse', true), 'building_length_m'))).toEqual(['value', 19, '10.80.40.20(3)#(3)(A)']);
+  });
+  it('an UNKNOWN major_street is still condition_unknown, never absence', () => {
+    for (const z of ['R', 'RT', 'RM']) expect([z, ...cell(eff(L(z, 'townhouse'), 'building_length_m'))]).toEqual([z, 'not_evaluated', 'condition_unknown:major_street', undefined]);
+  });
+  it('the change is declared data: without known_false_lot_conditions the off-major-street cell is no_candidate again', () => {
+    const vocab = { ...I.vocab, absence_ignore: { ...I.vocab.absence_ignore, known_false_lot_conditions: [] } };
+    const C0 = E.makeContext(VO.evaluatorVocab(vocab), { absences: I.absences });
+    const l = L('R', 'townhouse', false);
+    const r = E.effective(l, 'building_length_m', E.loadCandidates(l, units).candidates, C0);
+    expect([r.status, r.reason]).toEqual(['not_evaluated', 'no_candidate']);
+    expect(I.vocab.absence_ignore.known_false_lot_conditions).toEqual(['major_street']);
+  });
+  it('an apartment building off a major street follows the same rule in R and RT (zone-wide rulings), and RM has no apartment ruling', () => {
+    expect(cell(eff(L('R', 'apartment_building', false), 'building_length_m'))).toEqual(['value', 'unregulated', 'ABS-3']);
+    expect(cell(eff(L('RT', 'apartment_building', false), 'building_length_m'))).toEqual(['value', 'unregulated', 'ABS-4']);
+    expect(cell(eff(L('RM', 'apartment_building', false), 'building_length_m'))).toEqual(['not_evaluated', 'no_candidate', undefined]);
+  });
+  it('ABS-7.4 names only the RM townhouse, keeps expert_sample, and its absent phrases are absent from the pinned page', () => {
+    const r = I.absences.find((x: Json) => x.id === 'ABS-7.4');
+    expect([r.zone, r.target, r.building_types, r.expert_sample, r.answer]).toEqual(['RM', 'building_length_m', ['townhouse'], true, undefined]);
+    const p = page('ch10_80').toLowerCase().replace(/\s+/g, ' ');
+    for (const ph of r.absent_phrases) expect(p.includes(String(ph).toLowerCase()), String(ph)).toBe(false);
+  });
+});
+
+// Q-KG3 / verify-44 A4: applies() reports a known-false lot condition as a STRUCTURED field, so rule 7a never depends on the wording of `why`.
+describe('Q-KG3 A4 — applies() returns known_false_condition, and rule 7a reads that field, not the message text', () => {
+  const unit = (id: string): Json => { const u = units.find((x: Json) => x.unit_id === id); if (!u) throw new Error(`no unit ${id}`); return u; };
+  const townhouseLength = '10.80.40.20(3)#(3)(A)';
+  const ap = (flag: boolean | undefined): Json => {
+    const l = lot('RM', 'townhouse', { flags: flag === undefined ? {} : { major_street: flag } });
+    if (flag === undefined) delete l.flags.major_street;
+    return E.applies(l, unit(townhouseLength), C, () => null, new Set(), [], 'building_length_m');
+  };
+  it('a flag that is false names its token in known_false_condition; true and unknown carry no such field', () => {
+    expect(ap(false)).toMatchObject({ ok: false, known_false_condition: 'major_street' });
+    expect(ap(true).known_false_condition).toBeUndefined();
+    expect(ap(undefined).ok).toBeNull();
+    expect(ap(undefined).known_false_condition).toBeUndefined();
+  });
+  it('rule 7a does not parse the message: the evaluator source holds no comparison of a.why with a condition string', () => {
+    const src = fs.readFileSync(path.join(process.cwd(), 'scripts/analysis/bylaw/evaluate.mjs'), 'utf8');
+    expect(src).not.toMatch(/a\.why\s*===\s*`condition/);
+    expect(src).toMatch(/known_false_condition/);
   });
 });
 

@@ -84,7 +84,7 @@
         "(A) 19.0 metres for a townhouse; and (B) 25.0 metres for an apartment building"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "no building-length regulation in 569-2013 Ch.10.10 for a detached house, semi-detached house or houseplex in the R zone: 10.10.40.20 holds only (1)(A) 19.0 m for a townhouse and (1)(B) 25.0 m for an apartment building on a major street; the other building-length phrase is a side-yard rule for main walls past 25.0 m",
+      "statement": "no building-length regulation in 569-2013 Ch.10.10 for a detached house, semi-detached house or houseplex in the R zone: 10.10.40.20 holds only (1)(A) 19.0 m for a townhouse and (1)(B) 25.0 m for an apartment building on a major street; the other building-length phrase is a side-yard rule for main walls past 25.0 m; a townhouse or apartment building off a major street is likewise unregulated, its only unit being the major-street one (Q-KG3)",
       "target": "building_length_m",
       "zone": "R"
     },
@@ -109,7 +109,7 @@
         "(A) 19.0 metres for a townhouse; and (B) 25.0 metres for an apartment building"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "no building-length regulation in 569-2013 Ch.10.60 for a detached house, semi-detached house or houseplex in the RT zone: 10.60.40.20 holds only (1)(A) 19.0 m for a townhouse and (1)(B) 25.0 m for an apartment building on a major street; the other building-length phrase is a side-yard rule for main walls past 25.0 m",
+      "statement": "no building-length regulation in 569-2013 Ch.10.60 for a detached house, semi-detached house or houseplex in the RT zone: 10.60.40.20 holds only (1)(A) 19.0 m for a townhouse and (1)(B) 25.0 m for an apartment building on a major street; the other building-length phrase is a side-yard rule for main walls past 25.0 m; a townhouse or apartment building off a major street is likewise unregulated, its only unit being the major-street one (Q-KG3)",
       "target": "building_length_m",
       "zone": "RT"
     },
@@ -164,6 +164,8 @@
     {
       "absent_phrases": [
         "building length for a detached houseplex",
+        "building length for a semi-detached houseplex",
+        "building length of a semi-detached houseplex",
         "10.80.40.20(4)"
       ],
       "accounted_occurrences": [
@@ -176,7 +178,8 @@
       ],
       "answer": "not_applicable",
       "building_types": [
-        "detached_houseplex"
+        "detached_houseplex",
+        "semi_detached_houseplex"
       ],
       "checked_page": "ch10_80",
       "evidence_kind": "absence",
@@ -189,7 +192,7 @@
         "the permitted maximum building length for a detached house or a semi-detached house is 17.0 metres"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "an RM detached houseplex is outside the subject of 10.80.40.20: (1) and its (2) extension name \"a detached house or a semi-detached house\", (3) a townhouse or apartment building on a major street; the other building-length phrase is a side-yard rule (M-190, M-204(2): not_applicable, the M-183 form)",
+      "statement": "an RM detached houseplex is outside the subject of 10.80.40.20: (1) and its (2) extension name \"a detached house or a semi-detached house\", (3) a townhouse or apartment building on a major street; the other building-length phrase is a side-yard rule (M-190, M-204(2): not_applicable, the M-183 form); likewise an RM semi-detached houseplex (Q-KG2: no clause of 10.80.40.20 names it)",
       "subject_clause": "10.80.40.20(1)",
       "target": "building_length_m",
       "zone": "RM"
@@ -197,6 +200,10 @@
     {
       "absent_phrases": [
         "building depth for a detached houseplex",
+        "building depth for a semi-detached houseplex",
+        "building depth of a semi-detached houseplex",
+        "building depth for a townhouse",
+        "building depth of a townhouse",
         "10.80.40.30(2)"
       ],
       "accounted_occurrences": [
@@ -205,7 +212,9 @@
       ],
       "answer": "not_applicable",
       "building_types": [
-        "detached_houseplex"
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "townhouse"
       ],
       "checked_page": "ch10_80",
       "evidence_kind": "absence",
@@ -218,7 +227,7 @@
         "the rear main wall of a detached house or semi-detached house"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "an RM detached houseplex is outside the subject of 10.80.40.30(1), which binds \"the rear main wall of a detached house or semi-detached house\" (M-204(2): not_applicable, the M-183 form)",
+      "statement": "an RM detached houseplex, semi-detached houseplex and townhouse are outside the subject of 10.80.40.30(1), which binds \"the rear main wall of a detached house or semi-detached house\" (M-204(2): not_applicable, the M-183 form; Q-KG2)",
       "subject_clause": "10.80.40.30(1)",
       "target": "building_depth_m",
       "zone": "RM"
@@ -226,7 +235,11 @@
     {
       "absent_phrases": [
         "main walls for a detached houseplex",
-        "main walls of a detached houseplex"
+        "main walls of a detached houseplex",
+        "main walls for a semi-detached houseplex",
+        "main walls of a semi-detached houseplex",
+        "main walls for a townhouse",
+        "main walls of a townhouse"
       ],
       "accounted_occurrences": [
         "the main pedestrian entrance may be located in the front main wall that is closest to the lot line abutting the major street",
@@ -241,7 +254,9 @@
       ],
       "answer": "not_applicable",
       "building_types": [
-        "detached_houseplex"
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "townhouse"
       ],
       "checked_page": "ch10_80",
       "evidence_kind": "absence",
@@ -254,9 +269,40 @@
         "the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house"
       ],
       "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2)",
-      "statement": "an RM detached houseplex is outside the subject of 10.80.40.10(2) (\"the exterior portion of main walls for a detached house or a semi-detached house\") and of (6) (a detached house or semi-detached house with a flat or shallow roof); every other main-wall phrase on the page is an entrance, dormer, depth, setback, separation or parking rule (M-190: an RM houseplex has no main-wall cap; not_applicable, the M-183 form)",
+      "statement": "an RM detached houseplex, an RM semi-detached houseplex and an RM townhouse are outside the subject of 10.80.40.10(2) (\"the exterior portion of main walls for a detached house or a semi-detached house\") and of (6) (a detached house or semi-detached house with a flat or shallow roof); (2)(C) only says the limit does not apply to townhouses or apartment buildings on a lot abutting a major street, so a townhouse on a major street answers the same; every other main-wall phrase on the page is an entrance, dormer, depth, setback, separation or parking rule (M-190: an RM houseplex or townhouse has no main-wall cap; not_applicable, the M-183 form; Q-KG2)",
       "subject_clause": "10.80.40.10(2)",
       "target": "main_wall_height_m",
+      "zone": "RM"
+    },
+    {
+      "absent_phrases": [
+        "building length of a townhouse",
+        "10.80.40.20(4)"
+      ],
+      "accounted_occurrences": [
+        "10.80.40.20 Building Length 10.80.40.30 Building Depth",
+        "10.80.40.20 Building Length (1) Maximum Building Length In the RM zone, the permitted maximum building length for a detached house or a semi-detached house is 17.0 metres.",
+        "(2) One Storey Extension to Building Length",
+        "a detached house or semi-detached house may extend beyond the permitted maximum building length",
+        "(3) Maximum Building Length for a Townhouse or Apartment Building on a Major Street In the RM zone, if a lot abuts a major street, the permitted maximum building length is",
+        "7.5 metres for all portions of the main wall exceeding a building length of 25.0 metres"
+      ],
+      "building_types": [
+        "townhouse"
+      ],
+      "checked_page": "ch10_80",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-7.4",
+      "occurrence_patterns": [
+        "building length"
+      ],
+      "present_phrases": [
+        "if a lot abuts a major street, the permitted maximum building length is"
+      ],
+      "ruling": "Spec 69a M-240 (rule 7a v2; operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#R-7a-v2); Q-KG3 (HELD)",
+      "statement": "an RM townhouse has a building-length limit only where the lot abuts a major street (10.80.40.20(3)(A), 19.0 m); (1) binds \"a detached house or a semi-detached house\". Off a major street no clause of 10.80.40.20 limits a townhouse: unregulated by absence. On a major street (3)(A) applies and wins; while the major_street flag is unknown the answer stays condition_unknown (Q-KG3: rule 7a ignores a unit whose lot condition is known false)",
+      "target": "building_length_m",
       "zone": "RM"
     }
   ]

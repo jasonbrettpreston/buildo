@@ -2871,7 +2871,8 @@
         ]
       },
       "expected": {
-        "not_evaluated": "no_candidate"
+        "note": "Re-expected 2026-10-22 (Q-KG3, HELD; rule 7a ignores a unit whose lot condition is known false, ABS-4): RT has a length cap only on a major street (Spec 67 NF-10 NULL) and this lot is not on one, so there is no cap: unregulated by absence. Was not_evaluated:no_candidate while the major-street unit 10.60.40.20(1)(A) blocked absence.",
+        "value": "unregulated"
       },
       "id": "p5071306:building_length_m",
       "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
@@ -3475,7 +3476,8 @@
         ]
       },
       "expected": {
-        "not_evaluated": "no_candidate"
+        "note": "Re-expected 2026-10-22 (Q-KG3, HELD; rule 7a ignores a unit whose lot condition is known false, ABS-4): RT has a length cap only on a major street (Spec 67 NF-10 NULL) and this lot is not on one, so there is no cap: unregulated by absence. Was not_evaluated:no_candidate while the major-street unit 10.60.40.20(1)(A) blocked absence.",
+        "value": "unregulated"
       },
       "id": "bijou:building_length_m",
       "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
@@ -4718,7 +4720,7 @@
         ]
       },
       "expected": {
-        "note": "Expectation withdrawn 2026-10-20 (Spec 69a M-240, rule 7a v2; ABS-4): Spec 67 states no building type, and with none the answer depends on it — a house, semi or houseplex is unregulated by ABS-4 (10.60.40.20 binds only a townhouse or apartment building on a major street), while a townhouse off a major street keeps not_evaluated:no_candidate (its own 10.60.40.20(1)(A) unit counts, M-240 (2)). Never 17.0 m, as Spec 67 asks (bylaw-fix-3.logic). Before M-240 every type answered no_candidate."
+        "note": "Expectation withdrawn 2026-10-20 (Spec 69a M-240, rule 7a v2; ABS-4): Spec 67 states no building type, and with none the answer depends on it — a house, semi or houseplex is unregulated by ABS-4 (10.60.40.20 binds only a townhouse or apartment building on a major street), while a townhouse or apartment building off a major street is also unregulated by ABS-4 (Q-KG3, 2026-10-22: its own 10.60.40.20(1) unit is ignored where major_street is known false). Never 17.0 m, as Spec 67 asks (bylaw-fix-3.logic). Before M-240 every type answered no_candidate."
       },
       "id": "V22",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
