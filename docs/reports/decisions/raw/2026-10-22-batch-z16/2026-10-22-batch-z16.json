@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "Q-KG4 yes",
+  "context": "Evening Rulings card Q-KG4: accept the Q-KG3 result as built (wf1/abs73 beb57782 + re-pin 68a7ca67): townhouse building_length_m off a major street reads unregulated in R, RT and RM (RM via ABS-7.4); R and RT apartment buildings follow the same zone-wide rulings; known_false_lot_conditions starts with major_street only. Grid proof: 45 of 75,330 cells change, all building_length_m with major_street false; unknown stays condition_unknown.",
+  "decisions": [
+    {"id": "CHAT-79.KG4", "subject": "Accept the Q-KG3 absence result as built", "decision": "approve", "recommendation": "Townhouse length off a major street = unregulated in R, RT, RM (ABS-7.4 for RM); R/RT apartment buildings follow the zone-wide rulings; only major_street on the known-false list."}
+  ]
+}

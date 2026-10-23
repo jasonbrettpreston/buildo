@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "R6-3 option B",
+  "context": "Evening Rulings card R6-3 (discuss → decided in chat after the explanation): 900.5.10(324)(J)(i) sets a 3.0 m minimum setback only for below-grade parking structures; there is no lot field for such a structure, so an unconditional LIMIT would wrongly restrict ~270 lots.",
+  "decisions": [
+    {"id": "CHAT-78.R6-3", "subject": "324 (J)(i) keyed UNUSUAL as a whole, disclosed", "decision": "approve", "recommendation": "Option B: the whole clause is UNUSUAL (not modelled) with a disclosure that a 3.0 m setback applies to below-grade parking structures; no lot is limited by it (M-130: a LIMIT must be a true bound on every lot it applies to)."}
+  ]
+}

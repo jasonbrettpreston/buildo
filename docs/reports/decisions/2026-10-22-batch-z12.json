@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-22-batch-z12/2026-10-22-batch-z12.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-22-batch-z12",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y Q-o and Q-N",
+    "record": "operator chat 2026-10-22",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-22-batch-z12/2026-10-22-batch-z12.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-75.QO",
+      "question": "Layer 2 repeated payloads stored once as set ids",
+      "recommendation": "Intern losers, by_class (if repeated) and permitted_by_class as set ids with each distinct payload stored once (the form C / Q-H pattern), then re-measure on a random sample against the 10 % line (Spec 133 §m.112); do not raise the budget without a ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    },
+    {
+      "id": "CHAT-75.QN",
+      "question": "Equivalence sample replaces the compute time budget",
+      "recommendation": "resolve_bylaws audits every Nth lot uncached and again in reversed candidate order; run time is the runner's measure, not a compute budget (compute purity).",
+      "decision": "approve",
+      "decided_at": "2026-10-22"
+    }
+  ]
+}

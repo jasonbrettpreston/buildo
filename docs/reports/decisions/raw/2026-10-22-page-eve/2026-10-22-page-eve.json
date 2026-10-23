@@ -1,0 +1,618 @@
+{
+  "source": "operator Evening Rulings page (https://claude.ai/artifact/6ypnNKE5dkjkAV4HbPuokq), db collection decisions, exported 2026-10-22",
+  "operator_quote": "62 cards answered. I just want to ensure that McBylaws will not use code - be standardized and fully observable - 3 layers, I want to make sure it is understandable and of course accurate.  We do want to keep it simple as possible.  Complexity will kill accuracy or trust. / spagetti code typo",
+  "context": "Each decision is the operator click on the card (page_choice; rec = approve the recommendation) with the operator note verbatim where given. Cards marked discuss are listed separately and not decided.",
+  "decisions": [
+    {
+      "id": "EVE.R5-1",
+      "subject": "Street names that contain a building-type word",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: a type word immediately followed by a street suffix (Ave./St./Rd./Blvd.) is not a named type. — Yes. Narrow namedTypes() in scripts/analysis/bylaw/clause.mjs:112. No keyed unit changes; 767 (C) then passes; no other agreed unit has a street name with a type word.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a (new M row, G-CLAUSE arm any_with_named_type, extends M-76 A1). Row: \"May the any_with_named_type check ignore a building-type word that is part of a street name (a word following 'On <number>' and preceding Ave./St./Rd./Blvd.)? Yes: narrow namedTypes() so a type word immediately followed by a street suffix is not a named type.\" Five words: standardized: one check rule; observable: gate reason code unchanged; scalable: covers all street names; accurate: PREVAILING on named lands is correctly \"any\"; understandable: one sentence; no scope creep: one regex in one function. Evidence: scripts/analysis/bylaw/clause.mjs:112-126 (namedTypes), :391-396 (the violation)."
+    },
+    {
+      "id": "EVE.R5-2a",
+      "subject": "853 (B)(iii): how the clause is cited",
+      "decision": "approve",
+      "page_choice": "B",
+      "recommendation": "Keyer B (full path)",
+      "handbook": "Spec 133 §m.105 (M-105 rule 29: a statement cites the clause that holds its literal, written as the unit path)"
+    },
+    {
+      "id": "EVE.R5-2b",
+      "subject": "1429 (A): building-history clause",
+      "decision": "approve",
+      "page_choice": "B",
+      "recommendation": "Keyer B (REQUIRE)",
+      "handbook": "Spec 133 §m.317 (M-317 / keying rule 31; CHAT-64.D-1436 / D-1437 and CHAT-67.1434A); Spec 68 §5a row 2 (twin principle)"
+    },
+    {
+      "id": "EVE.R5-2c",
+      "subject": "478 (C): height limit for a detached house",
+      "decision": "approve",
+      "page_choice": "A",
+      "recommendation": "Keyer A (detached house only)",
+      "handbook": "Spec 133 §m.76 (M-76 / by_type for a clause naming one building type)"
+    },
+    {
+      "id": "EVE.R5-3",
+      "subject": "Exceptions 40, 863, 225: add a supplement?",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "No: leave them below the floor. — No — keep to the census floor (no scope growth).",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row (page lane's wording): \"Exceptions 40, 863 and 225, below the census floor and blocking CoA notices, are keyed as a W2X-style supplement batch.\" Register: the one that holds the W2X supplement rule (not named in the source). Evidence: ~/Buildo-scratch/excr5/BATCH.md (Measure, Selection rule)."
+    },
+    {
+      "id": "EVE.R5-4",
+      "subject": "Six literal corrections by the lane",
+      "decision": "approve",
+      "page_choice": "approve",
+      "recommendation": "Approve all six",
+      "handbook": "Spec 133 §m.82 (M-75 correction form)"
+    },
+    {
+      "id": "EVE.R5-5",
+      "subject": "63 Johnston Ave: one parcel row, really two lots",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Scoped DATA flag now; report the two-lots-in-one-row defect to the parcel source; remove the flag when fixed. — Scoped DATA flag now, and fix the parcel row at the source; the flag goes when the data is fixed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a M row (explained-difference DATA flags). Row: \"A CoA row is an explained DATA difference when the notice's legal description shows the application lot differs from our parcel row (e.g. two plan lots in one row); the flag is scoped to the named notice rows and parcel, and is removed when the parcel data is fixed.\" (M-308 covers survey disagreements only, so it does not apply here.)"
+    },
+    {
+      "id": "EVE.R5-6",
+      "subject": "A round that exposes older wrong answers",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Hold the 478 shard; land the rest; re-check 10.5.60 after the merge. — Hold 478 and land the rest: no floor is waived, and the openings field can be its own ruling later.",
+      "handbook": "Spec 133 §m.322 (M-322)"
+    },
+    {
+      "id": "EVE.R5-7",
+      "subject": "Garden-suite side yard: use the window evidence",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Leave the DIFFER; extract independent window evidence later. — Leave it: a scorer must not read the answer to produce the answer.",
+      "handbook": "Spec 133 §m.197 (M-197 default)"
+    },
+    {
+      "id": "EVE.R6-1",
+      "subject": "Licence pattern: \"one dwelling unit\"",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add the pattern; 324 (C) becomes a LIMIT. — Yes: matches the existing single-count limits; pattern growth by ruling.",
+      "handbook": "Spec 133 §m.132 (pattern growth)"
+    },
+    {
+      "id": "EVE.R6-2",
+      "subject": "Licence pattern: \"front lot line that abuts a street\"",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add the pattern. — Yes.",
+      "handbook": "Spec 133 §m.132 (pattern growth)"
+    },
+    {
+      "id": "EVE.R6-4",
+      "subject": "155 (A): units capped per registered-plan block",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "UNUSUAL (disclosed). — UNUSUAL: the buyer should see the cap disclosed.",
+      "handbook": "Spec 133 §m.102 / §m.130"
+    },
+    {
+      "id": "EVE.R6-5",
+      "subject": "Twin variance: 1429 (A) vs 1436 (D)",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Match the 1436 (D) / CHAT-67.1434A form. — Match the 1436 (D) form you ruled in CHAT-67.",
+      "handbook": "Spec 133 §m.317 (M-317); CHAT-67.1434A; Spec 68 §5a row 2"
+    },
+    {
+      "id": "EVE.R7-1",
+      "subject": "958 (D)/(E): use permission tied to a 1978 date",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "UNUSUAL on the rule-31 building-history route. — A: rule 31 says a permission that depends on a building-history date is never a target-less PERMIT.",
+      "handbook": "Spec 133 §m.317 (M-317, keying rule 31)"
+    },
+    {
+      "id": "EVE.R7-2",
+      "subject": "\"Despite (B)\" pointing at a sibling clause",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "subordinate_reference (existing). — Use the existing reason; nothing new to rule.",
+      "handbook": "Spec 133 §m.82 (closed reasons); ruling R5-Q7b-464; vocab.json:447"
+    },
+    {
+      "id": "EVE.R8-ALL",
+      "subject": "Round 8: approve the applied readings",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Approve as applied. — Approve, after verify-40 reports (I will flag anything it disputes here).",
+      "handbook": "Spec 133 §m.317 (rule 31), §m.105, §m.136, §m.76, §m.102"
+    },
+    {
+      "id": "EVE.R8-5",
+      "subject": "Licence pattern: \"minimum frontage\"",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add the pattern. — Yes.",
+      "handbook": "Spec 133 §m.132 (pattern growth)",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-76)"
+    },
+    {
+      "id": "EVE.R9-1",
+      "subject": "Licence pattern: \"from a front line\"",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add the pattern. — Yes. (Suggest one pattern-growth ruling covering R6-1, R6-2, R8-5 and R9-1 together.)",
+      "handbook": "Spec 133 §m.132 (pattern growth)"
+    },
+    {
+      "id": "EVE.M324-G",
+      "subject": "Garage and ancillary setbacks: which target",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "The named yard decides the target. — The named yard decides: matches the 26 resolved units and the vocabulary definitions.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a M row (family, M-324). Row: \"A garage or ancillary-structure setback is keyed to the yard target the clause names (side_setback_m / rear_setback_m / front_setback_m), the structure being the subject via application.uses; lot_line_setback_m only where no yard is named.\""
+    },
+    {
+      "id": "EVE.SWAP-1",
+      "subject": "Empty runs must still report every counter",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Keep it per step. — Per-materializer lock now; a fleet lock only by a later ruling.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row (page lane's wording): \"When the runner sums zero batches, a compute's finalizeMatched returns a defined value for every counter a declared check reports: additive counters 0, ratios null, so a settled rerun never renders unevaluable/FAIL.\" Register: Spec 132 (steps; row id not named in source). Evidence: scripts/lib/step/index.js:3517-3525; empty-cursor.logic.test.ts; legacy parity pin L16."
+    },
+    {
+      "id": "EVE.SWAP-2",
+      "subject": "The {sql} re-arm bracket as a #38 form",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Accept as an R-CZ #38 form. — Accept: it is already in use and verified in the runbook.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row (page lane's wording): \"For unguarded and derived_recompute targets, R-CZ #38 also allows the {sql} re-arm bracket: copy the stamps, set the watermark NULL, run, verify, restore, drop the backup.\" Amends Spec 132 §x-captures.2. Evidence: runbook section 5.4."
+    },
+    {
+      "id": "EVE.LEDGER-1",
+      "subject": "COA-D7 closed on a weaker lock",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Hold it back until execution.maintenance has a test. — Hold it back until execution.maintenance has a test.",
+      "handbook": "Spec 132 §x-validate.2 (R-JD, CHAT-70.3)"
+    },
+    {
+      "id": "EVE.SWAP-3",
+      "subject": "Lineage snapshot still says link_coa stamps last_seen_at",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "B: a reviewed one-line removal of last_seen_at from the snapshot row, citing R-JM; the next refresh converges. — B: smallest change, matches the code, heals itself on the next refresh.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (next free R id; near R-BJ / R-DI and R-JM). Row: \"When code and descriptor remove a write that the lineage snapshot still records (no run since the change), the snapshot row is corrected by a reviewed edit citing the ruling, until the next refresh.\" Evidence: link-coa.js:915-920; BUILDO_LEDGER_SNAPSHOT_PATH proof run (COA-ASWAP report 2).",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-73)"
+    },
+    {
+      "id": "EVE.SWAP-4",
+      "subject": "Witness check and the UPDATE key column",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Exempt the key column(s) in the witness gate (gate script only, red fixture test; no lib/step change, no fleet recapture). — Exempt the key in the gate: the key is not written, so it should not be required in SET; no fleet impact.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (next free R id; near §core.12 / §core.14). Row: \"#44 arm (b) does not require a set_based_scoped target key column (writeSpec.key) in the traced SET list; the key is witnessed in WHERE.\" Evidence: write.js:1885-1893; witness.mjs:650-657.",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-73)"
+    },
+    {
+      "id": "EVE.Q-B",
+      "subject": "Four tables, not five",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Approve the four-table design. — Approve as designed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row: \"Layer 2 has four tables (bylaw_resolution_signatures, _cells, _profiles, _lots); structure is a cell column; applied_values is dropped.\" Amends Spec 134 §3; cite Spec 132 §x-rulings.4 (R-JA). Nearby lines: Spec 133 §m.112 (k3_a), §m.233; Spec 132 §materializer.1 (R-EH), §x-stages.2 (R-EQ)."
+    },
+    {
+      "id": "EVE.Q-C",
+      "subject": "Results per building class",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Approve. — Approve as designed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row: \"Per-class results live in by_class inside the cell; the cell key excludes class-vector inputs; layer2-scope.json carries a classes list.\" Spec 132 §x-rulings.4 (R-JA)."
+    },
+    {
+      "id": "EVE.Q-E",
+      "subject": "Map membership source",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Approve. — Approve as designed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row: \"Layer 2 map membership comes from parcels.in_sixplex_area (enrich_parcels from bylaw_map_areas), not from bylaw_map_areas.\" Spec 132 §x-rulings.4 (R-JA)."
+    },
+    {
+      "id": "EVE.Q-F",
+      "subject": "Scenario-axis check I13",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Approve WARN with a ceiling variable. — Approve as designed. The variable name is not set in the source.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row: \"I13 (scenario-axis check) is a WARN bounded by a ceiling logic variable until the axes are enumerated.\" Spec 132 §x-rulings.4 (R-JA)."
+    },
+    {
+      "id": "EVE.Q-G",
+      "subject": "permitted_by_class on the lot row",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Approve (+0.08 GB). — Approve as designed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row: \"The Layer 2 lot row carries permitted_by_class (R-IT).\" Bound: Spec 133 §m.112 (k3_a), §m.233. Spec 132 §x-rulings.4 (R-JA)."
+    },
+    {
+      "id": "EVE.Q-H",
+      "subject": "Disclosures stored once, not per cell",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: a disclosure-set id; sentences stored once. — Yes: same idea as form C (store each distinct thing once); keeps Layer 2 inside the storage line.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (next free R id; amends R-IT for disclosures and Spec 134 §3). Row: \"A Layer 2 cell row carries a disclosure_set_id; each distinct ordered set of disclosure sentences is stored once in a disclosure-set table.\" Bound: Spec 133 §m.112 (k3_a), §m.233; Spec 132 §x-rulings.4 (R-JA). Evidence: ~/Buildo-scratch/l2slices/REPORT.md (sample of 1,500 results)."
+    },
+    {
+      "id": "EVE.Q-I",
+      "subject": "Which tables I14 rechecks in SQL",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "All four tables. — All four: a wrong signature, profile or lot row is as harmful as a wrong cell, and the canonical text is already defined for each.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a or 124a, wherever I14 is defined (Spec 134 checks). Row: \"I14 recomputes row_sha in SQL from canonicalText for every Layer 2 table.\" Evidence: scripts/lib/bylaw-resolution.js canonicalText (861f9700)."
+    },
+    {
+      "id": "EVE.Q-J",
+      "subject": "Zone population: one list variable",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "One list variable; add the config list arm in ①. — One list variable, landed on the planned fleet night (no extra recapture).",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a with L2P-3. Row: \"The runner config accepts type list (JSON array, validated by the consuming step); resolve_bylaws reads its population as one list variable.\" Evidence: daed754a; scripts/lib/step/config.js invalidReason."
+    },
+    {
+      "id": "EVE.Q-K",
+      "subject": "Layer 2 storage budget until first measurement",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "1,300 MB interim; re-set from the first POST measurement. — Yes: it sits just inside the measured room.",
+      "handbook": "Spec 132 §x-rulings.4 (R-JA); Spec 133 §m.112 (k3_a)"
+    },
+    {
+      "id": "EVE.Q-L",
+      "subject": "Run id on data rows",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Leave it empty (or drop the column). — Drop or leave empty: the run row already records it; follow the runner standard.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (amends Spec 134 §3). Row: \"Layer 2 data rows carry no chain_run_id; the run is recorded on its pipeline_runs row.\""
+    },
+    {
+      "id": "EVE.Q-M",
+      "subject": "Unused Layer 2 rows after a by-law change",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Keep until reset; WARN with a count. — Keep until reset with a WARN count: simpler and observable.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (Spec 134 checks). Row: \"Unreferenced Layer 2 rows are kept until a reset; a WARN invariant counts them.\""
+    },
+    {
+      "id": "EVE.Q-N",
+      "subject": "Equivalence check instead of a time budget",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: equivalence sample; run time measured by the runner. — Yes: it checks correctness, and the runner already times the run.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (amends Spec 134 checks). Row: \"resolve_bylaws audits every Nth lot uncached and in reversed candidate order; the run time is the runner's measure, not a compute budget.\"",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-75)"
+    },
+    {
+      "id": "EVE.Q-O",
+      "subject": "Layer 2 may not fit the storage line",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Intern the repeated payloads; re-measure. — Intern them: same idea as form C and Q-H, and it keeps Layer 2 inside the line you approved.",
+      "handbook": "Spec 133 §m.112 (k3_a 10 % line); Spec 132 §x-rulings.4 (R-JA)",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-75)"
+    },
+    {
+      "id": "EVE.L2P-1",
+      "subject": "R-EMIT: a fixture for every reason code?",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add the fixture clause as its own row. — Yes, as a separate row: it proves each code can actually happen, which the static check cannot.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a (new M row extending M-232). Row: \"Every NOT_EVALUATED code the evaluator can emit has at least one test fixture that produces it.\" Five words: observable, accurate; scope: two new fixtures today. Evidence: plan v2 :193; evaluate.mjs:330, :605."
+    },
+    {
+      "id": "EVE.L2P-2",
+      "subject": "R-DET: also lock the shared library?",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: widen the lock to the library. — Yes: the library computes the hashed keys, so it needs the same guarantee.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a (dated note or row extending M-117). Row: \"The R-DET ban list also covers scripts/lib/bylaw-resolution.js.\" Evidence: Spec 134:121; src/tests/bylaw-provisions.infra.test.ts."
+    },
+    {
+      "id": "EVE.L2P-3",
+      "subject": "Name of the list-type logic variable",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Ratify \"list\" as built. — Ratify as built: it mirrors the string type and adds nothing else.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (next free R id; follows R-CE). Row: \"A logic variable may have type list: a JSON array default stored in variable_value_json, variable_value 0; members are validated by the consuming step, not the loader.\" Evidence: daed754a; Spec 134:36; Spec 132 R-IX (Q-L2-3, 124a:1413)."
+    },
+    {
+      "id": "EVE.DB-1",
+      "subject": "Drop old backup tables",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: drop them. — Yes. The source gives the size and names only; nothing else is claimed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row (page lane's wording): \"Backup tables made by a re-arm bracket (*_bak_*) may be dropped once the settled rerun is verified.\" Register not named in the source."
+    },
+    {
+      "id": "EVE.P3-Q2",
+      "subject": "Closed list of not-applicable reasons",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add the list by register row. — Yes, by register row.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Draft row: \"vocab.json carries a closed layer3.not_applicable_reason list [no_coa_form, no_suite], so G-SHAPE rejects undeclared reasons.\" Evidence: Spec 78 P5.10 lines 1150, 1153."
+    },
+    {
+      "id": "EVE.P3-Q3",
+      "subject": "No CoA u-factors seeded now",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Confirm: seed none; absent reads as unfitted. — Confirm.",
+      "handbook": "Spec 133 §lc.60 (LC-60, all unfitted at release)"
+    },
+    {
+      "id": "EVE.IN-1",
+      "subject": "Fleet recapture night for the intake",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: land it with one fleet recapture night (plus migration 284 and the first ingest). — Yes: one library path per source form is the standard (Spec 132 §ingestor.3); a recapture night is the established way to land a library change.",
+      "handbook": "Spec 132 §ingestor.3; RE-FREEZE (Spec 122 §8); Spec 133 §m.332 (M-332)",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-74)"
+    },
+    {
+      "id": "EVE.IN-2",
+      "subject": "Two new columns",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add both. — Yes.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 129 amendment via a 69a row under M-332. Row: \"coa_notice_variances carries doc_type and source_batch for every row.\" Evidence: coa-key.mjs; migration 284.",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-74)"
+    },
+    {
+      "id": "EVE.IN-3",
+      "subject": "Wider closed value lists",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes. — Yes: each value records a fact the source really lacks; nothing is guessed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 129 amendment via a 69a row under M-332. Row: the four widened closed values, and a family-coherence CHECK on source_page.",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-74)"
+    },
+    {
+      "id": "EVE.IN-4",
+      "subject": "Plan facts: a new table?",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: a new values-only table. — Yes: same form, values only, sha-pinned; you said these files are valuable beyond the scorer.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 124a (next free R id). Row: \"Plan facts from the C-6 intake routine are ingested as values into a table keyed by application number, through the pinned values-batch form of Spec 129 §2b; no drawings, no names.\" Needs a second write target on load_coa_notices and its own RE-FREEZE review.",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-74)"
+    },
+    {
+      "id": "EVE.IN-5",
+      "subject": "Batch pair-rate floor",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Report only until two more batches exist. — Report only until two more batches exist: three points are too few to set a floor.",
+      "handbook": "Spec 132 §core.8",
+      "operator_note": "operator in chat 2026-10-22 (CHAT-74)"
+    },
+    {
+      "id": "EVE.IN-6",
+      "subject": "The other CoA document types in Drive",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Not now: list them and revisit. — Not now: record them in the manifest; design a schema when a consumer (Phase 3 or the report) names a field it needs. This keeps scope to named uses (CHAT-68.scope).",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a under M-323 (C-6 intake). Row: \"Document types beyond decision / hearing / zoning notices, plans and surveys are listed by the intake manifest and extracted only once a consumer names the field; each new type gets a values-only schema by ruling.\""
+    },
+    {
+      "id": "EVE.IN-7",
+      "subject": "59 Yarrow Rd notice missing",
+      "decision": "approve",
+      "page_choice": "drop",
+      "recommendation": "Leave it excluded.",
+      "handbook": "Spec 133 §m.323 (M-323, C-6 intake routine)"
+    },
+    {
+      "id": "EVE.P3-Q4",
+      "subject": "Main-building geometry model (attic, dormers)",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Use the golden cases (keying page) as the check: key a few attic/dormer cases first. — Check it against your golden cases: real plans are the honest oracle; the model then gets ruled from evidence.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 131 LC row (amends Spec 78 P5.2). Row: the attic / dormer cross-section model, ratified against N golden cases. Evidence: scripts/lib/maxbld-main-building.js (5d17fa36).",
+      "operator_note": "The reality is this is a design choice and a disclosure so less important for us.  Do you agree? We make the optimal choice for the maxBLD"
+    },
+    {
+      "id": "EVE.P3-Q5",
+      "subject": "Maximum bedrooms",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Layer 3 applies the P5.4 per-unit rule to the Layer 2 inputs. — Layer 3 applies the P5.4 rule: no new Layer 2 axis, smallest change.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 131 LC row. Row: \"max_bedrooms = 4 × units at 2 units, 3 × units at 3+ (P5.4), computed in Layer 3 from the Layer 2 unit result.\""
+    },
+    {
+      "id": "EVE.P3-Q6",
+      "subject": "RD flat-roof wall height 7.2 m",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: add the target by pin change. — Yes: every by-law number lives in the table, not in code.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a M row. Row: \"A Layer 2 target flat_roof_main_wall_height_m (RD 7.2 m) is keyed and pinned.\" Evidence: maxbld-main-building.js form (a)."
+    },
+    {
+      "id": "EVE.V39-1",
+      "subject": "RULED rows and the floor-change door",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Accept RULED as authority (change the reader). — Accept RULED in the reader: the operator approval is the authority; one reader change instead of re-labelling rows.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a (amends the status vocabulary used by M-56 pins). Row: \"A register row whose status starts RULED (operator approved, recorded via decision-log) is authority for --accept --ruling, the same as RATIFIED.\" Evidence: universe.mjs:115; verify-39 F8."
+    },
+    {
+      "id": "EVE.V39-2",
+      "subject": "Round runner reads oracle C v2",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: amend M-115 to v1 and v2. — Yes: it records what the code does.",
+      "handbook": "Spec 133 §m.115 (M-115); Spec 133 §m.318 (M-318, C-1)"
+    },
+    {
+      "id": "EVE.NIGHT-1",
+      "subject": "Go for the fleet recapture night",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Go, as soon as integrate-25 is pushed. — Go after integrate-25 is pushed; I start it, watch it, and report numbers against the expected figures.",
+      "handbook": "Spec 132 §x-captures.1–.3 (R-CZ, R-DQ, R-AS, R-DA); Spec 122 §8 (RE-FREEZE); CHAT-74.IN1"
+    },
+    {
+      "id": "EVE.P3-Q7",
+      "subject": "Houseplex lift zones (R, RT, RM)",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Layer 2 target. — Layer 2 target: the law lives in the table.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a M row. Row: \"The houseplex lifted cap is keyed as a Layer 2 target from 600.60.40(1)(A).\""
+    },
+    {
+      "id": "EVE.P3-Q8",
+      "subject": "Minimum houseplex unit count (2)",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Pinned logic variable houseplex_min_units = 2. — Pinned logic variable: visible and adjustable in admin, cited to the houseplex definition.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 131 LC row. Row: \"houseplex_min_units = 2 (definition of houseplex), a pinned logic variable.\""
+    },
+    {
+      "id": "EVE.P3-Q9",
+      "subject": "Trust level for not-permitted rows",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Give them their own level (e.g. n/a). — Own level (n/a): \"high\" with zero checks would overstate confidence.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 131 LC row. Row: \"A row with no applicable trust checks has row_trust_level = not_applicable.\"",
+      "operator_note": "They definitely need there own level"
+    },
+    {
+      "id": "EVE.P3-Q10",
+      "subject": "Shadow gate also blocks on Layer 2 defects",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: gate on all three. — Yes: a known Layer 2 defect should not pass silently.",
+      "handbook": "Spec 133 §m.71 (M-71)"
+    },
+    {
+      "id": "EVE.P3-Q12",
+      "subject": "When the hidden-number check starts blocking",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Blocking at Phase 3 close, in step-validate. — Blocking at Phase 3 close: SC-6 says 0 open hidden constants at Phase 3 close.",
+      "handbook": "Spec 133 §m.11 / §m.22 (code linkage); Spec 68 SC-6"
+    },
+    {
+      "id": "EVE.P3-Q13",
+      "subject": "Six non-law constants",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: register as model_heuristic. — Yes: every constant is either a law number (sourced) or a declared heuristic.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 68 §5a S5 external rows (external.json). Row: six model_heuristic constants of the Phase 3 modules (rank ordinals, a tolerance, a sample limit), each named with its file:line."
+    },
+    {
+      "id": "EVE.P3-Q14",
+      "subject": "Tolerances for the golden-case comparison",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Rule them with the calculation floors. — With the calculation floors: they should come from measured golden cases.",
+      "handbook": "Spec 133 §m.330 (M-330, calculation floors at round 0)"
+    },
+    {
+      "id": "EVE.P3-Q15",
+      "subject": "Settings for the Phase 3 step ① draft",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Accept all six as recommended. — Accept as recommended; each follows the existing step pattern (Spec 132 §x-stages.1/.2).",
+      "handbook": "Spec 132 §x-stages.1 / §x-stages.2 (R-EQ); Spec 47 §A.5 (lock ids)"
+    },
+    {
+      "id": "EVE.P3-Q16",
+      "subject": "Settings in the Phase 3 compute module",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Accept the interim settings. — Accept: each is marked and replaced when its producer or ruling lands.",
+      "handbook": "Spec 132 §x-stages.2 (R-EQ); Spec 133 §m.11 (code linkage)"
+    },
+    {
+      "id": "EVE.Q-KG1",
+      "subject": "Main-wall shares where height is not regulated",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Code only: shares read only when a height limit exists. — Code only: a share of a wall height that is not limited has no meaning; no new absence entries needed.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 131 LC row (amends Spec 78 P5.2). Row: \"P5.2 applies the main-wall share caps only where main_wall_height_m is a number; elsewhere the shares are not applicable.\" Evidence: keygap probe over R/RD/RS/RT/RM."
+    },
+    {
+      "id": "EVE.Q-KG2",
+      "subject": "RM townhouse and semi-detached houseplex: main-wall height",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Extend ABS-7.3 to the two types (four absent phrases added, expert sample kept). — Extend it: the clause text names only detached and semi-detached houses; with Q-KG1 the rows then compute with the main-wall limit equal to the height.",
+      "handbook": "Spec 133 §m.190 (M-190); M-240 rule 7a v2 (absence form)"
+    },
+    {
+      "id": "EVE.Q-KG3",
+      "subject": "Absence when a conditional clause does not apply",
+      "decision": "approve",
+      "page_choice": "rec",
+      "recommendation": "Yes: rule 7a ignores a clause whose lot condition is known false; then add the family absence entries. — Yes, once for the family (R, RT, RM townhouse length): the text sets no limit there.",
+      "handbook": "NEW RULING NEEDED",
+      "draft": "Register: Spec 69a (amends M-240 rule 7a). Row: \"An absence ruling is not blocked by a unit whose lot condition is known false for the lot; vocab.absence_ignore gains a conditional-unit form.\" Then ABS entries for R, RT, RM townhouse building_length_m off a major street. Evidence: evaluate.mjs absenceCounts; ch10_80 offset 39542."
+    }
+  ],
+  "discuss": [
+    {
+      "id": "EVE.R6-3",
+      "note": "I need more of an explanation and analysis for this one"
+    },
+    {
+      "id": "EVE.P3-Q1",
+      "note": "how much more until we can freeze the shape - this will be an ongoing process - are we close enough now"
+    }
+  ],
+  "unanswered": [
+    "R9-ALL",
+    "Q-D",
+    "Q-P",
+    "P3-Q11",
+    "CITE-1"
+  ]
+}

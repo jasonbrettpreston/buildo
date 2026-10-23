@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-a/2026-10-23-batch-a.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-a",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "pushing - Q-P option 4 - explain the remaining cards",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-a/2026-10-23-batch-a.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-80.QP",
+      "question": "Layer 2 stored as one row per lot with positional arrays (option 4)",
+      "recommendation": "One table keyed parcel_id; arrays in scope-seed order; a SQL view names each position; losers and candidates recomputed on read; closed dictionaries for unit ids and reason codes; supersedes R-JA form C for storage.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

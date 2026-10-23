@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "R8-5 yes",
+  "context": "Evening Rulings card R8-5 (https://claude.ai/artifact/6ypnNKE5dkjkAV4HbPuokq): add \"minimum frontage\" (corner lot) as a G-CLAUSE licence pattern for required_lot_frontage_m so 900.x.10(120)(A) becomes a modelled LIMIT (round 8, wf1/excr5b 93baa517; pattern growth Spec 133 §m.132).",
+  "decisions": [
+    {"id": "CHAT-76.R8-5", "subject": "Licence pattern \"minimum frontage\" for required_lot_frontage_m", "decision": "approve", "recommendation": "Add the pattern; 120 (A) is re-keyed as LIMIT required_lot_frontage_m (keyer B reading) once the pattern lands."}
+  ]
+}

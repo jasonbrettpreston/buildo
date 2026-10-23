@@ -1,0 +1,9 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "y Named-1 and y W-2",
+  "context": "Evening Rulings cards NAMED-1 and W-2 (https://claude.ai/artifact/6ypnNKE5dkjkAV4HbPuokq). NAMED-1 as recommended: make the named-road family uniform (disclose all), provided the rescore shows no accuracy loss. W-2: four wording variants.",
+  "decisions": [
+    {"id": "CHAT-83.NAMED-1", "subject": "Named-road setback family keyed one way (disclosed)", "decision": "approve", "recommendation": "Apply FAM-ABUT-NAMED to the ~8 older partial-limit units carrying abuts_named_street, provided the CoA rescore shows no accuracy loss."},
+    {"id": "CHAT-83.W-2", "subject": "Four wording variants", "decision": "approve", "recommendation": "\"front yard building setback\" (front_setback_m); \"side lot line abuts a street\" and \"side lot line that abuts a road\" (side_setback_street_m); \"from the main walls of the residential building\" (separation_m). Settles 929 (F), 200 (C)(ii), 317 (B)(i), 159 (B), 1 (F)."}
+  ]
+}

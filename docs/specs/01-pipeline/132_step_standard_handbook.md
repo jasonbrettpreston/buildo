@@ -127,7 +127,7 @@ What every step declares and does, whatever its archetype.
   *Why:* An omitted field cannot be told apart from a forgotten one; "none" is a decision someone made.
   Rules: `Rule-5` `Rule-6` · history: `R-Y` `K1`
 
-- **core.3** Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits, notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).
+- **core.3** Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits with every declared emit present on every run and an empty cursor reading 0 (CHAT-90), notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).
   *Why:* Shared names let one library, one gate and one admin page read every step the same way.
   Rules: `R-DE` `V1` (SPEC122A-V1) `V2` (SPEC122A-V2) `V3` (SPEC122A-V3) `V5` (SPEC122A-V5) `V6` (SPEC122A-V6) · history: `V4` (SPEC122A-V4)
 
@@ -273,7 +273,7 @@ Rebuilds a derived table from tables other steps own.
 
 - **materializer.1** `recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions); batch size comes from config.
   *Why:* Rebuilds must be resumable, and JS rows must not bring their own I/O.
-  Rules: `R-EH` · history: `Q-MZ`
+  Rules: `R-EH` `R-JG` · history: `Q-MZ`
 
 ### BACKFILL
 
@@ -335,7 +335,7 @@ How a step moves from legacy script to converted.
 
 - **x-stages.2** The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.
   *Why:* A downstream step never runs on a converted shell before its producer.
-  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` · history: `W4A-R6`
+  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` `R-JQ` · history: `W4A-R6`
 
 - **x-stages.3** A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: "none"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.
   *Why:* There is nothing older to compare against.
@@ -349,13 +349,13 @@ How a step moves from legacy script to converted.
 
 How a conversion proves it changed nothing it did not mean to.
 
-- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
+- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
   *Why:* A capture nobody can retake proves nothing.
-  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ`
+  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP`
 
 - **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
   *Why:* A rerun that writes nothing proves nothing about a guarded write path.
-  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ`
+  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ` `R-JH`
 
 - **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
   *Why:* A commit message saying "diff is fine" is not evidence.
@@ -423,7 +423,7 @@ What to do when the standard does not answer your question.
 
 - **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
   *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
-  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA`
+  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA` `R-JI` `R-JJ` `R-JN` `R-JO` `R-JR`
 
 ### Verification before integration and acceptance
 
@@ -500,7 +500,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 375 mapped ids: 260 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 384 mapped ids: 269 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|

@@ -1,0 +1,10 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "proceed with your recommendations NAMED-1b (changed): one rule, two outcomes. Compute the setback where the road is in our street table (12 units) and disclose it where we can't tell which road (32 units). I recommend this over disclosing all 44. - TWIN-1 (new): your rulings disagree on identical clause text in two places. FAM-HIST 621 (B) conflicts with 1335 (A) and 1332 (A), and FAM-STEP 975 (B) conflicts with 70 (B). I recommend the newer family rulings win. - S22-1 (new): withdrawing 478 also pulled out exceptions 70 and 33 (413 lots), because they were keyed in the same batch. I recommend re-keying 70 and 33 on their own, so only 478 stays held, which is what you ruled.",
+  "context": "Evening Rulings cards NAMED-1b, TWIN-1, S22-1 after verify-42 (~/Buildo-scratch/verify-42/verify-42.md); all three approved as recommended.",
+  "decisions": [
+    {"id": "CHAT-84.NAMED-1b", "subject": "Named-road setbacks: one rule, two outcomes", "decision": "approve", "recommendation": "Where the named road is in vocab.named_street the M-285 street-name join computes the setback (LIMIT, 12 units); where the road cannot be determined the arm is disclosed (UNUSUAL, 32 units). Supersedes the all-disclose reading of CHAT-83.NAMED-1."},
+    {"id": "CHAT-84.TWIN-1", "subject": "Newer family rulings win over older unit rulings on identical text", "decision": "approve", "recommendation": "FAM-HIST (621 (B)) governs 1335 (A) and 1332 (A); FAM-STEP (975 (B)) governs 70 (B); re-key the older units to match."},
+    {"id": "CHAT-84.S22-1", "subject": "Re-key exceptions 70 and 33 separately; only 478 stays held", "decision": "approve", "recommendation": "Re-key 70 and 33 with two independent keyers as their own batch so they land; 478 stays withdrawn per R5-6."}
+  ]
+}

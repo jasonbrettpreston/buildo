@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-j/2026-10-23-batch-j.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-j",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "yes",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-j/2026-10-23-batch-j.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-89.Q-114a",
+      "question": "May a ledger-gated step's forced bracket run before its standalone capture when its recipe passes no force env?",
+      "recommendation": "Yes, as an amendment note on R-DQ / Spec 132 §x-captures.1: a ledger-gated step's (execution.shape materialize or cascade) forced bracket runs before that step's standalone capture when its recipe passes no force env (the standalone writes the owned baseline; a later bracket would gate-skip). Implemented as two REORDER pairs in the fleet-night split-blocks.cjs (classify_coa_trades, compute_coa_cost_estimates); no scripts/lib/step/** change, no descriptor change, no RE-FREEZE.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

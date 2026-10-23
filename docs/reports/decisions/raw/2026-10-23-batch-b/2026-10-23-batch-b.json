@@ -1,0 +1,16 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "y to these [FAM-ALL, R9-ALL, R10-ALL, R11-1, R12-ALL, SCOPE-1] yes to these as well [SCOPE-1, Q-D, P3-Q11, CITE-1] provided they meet the standard of standardized, observable, scalable, accurate and understandable - keep it simple and limit scope as per the ruling",
+  "context": "Evening Rulings cards as explained in chat 2026-10-23 (https://claude.ai/artifact/6ypnNKE5dkjkAV4HbPuokq; FAM-ALL detail ~/Buildo-scratch/excr5/families-pending.json; CITE-1 detail ~/Buildo-scratch/excr5/citations-fix.md). Approval is conditional on the five words and limited scope (R-IZ / M-328, CHAT-68).",
+  "decisions": [
+    {"id": "CHAT-81.FAM-ALL", "subject": "Settle the 26 pending exception units by the 11 family readings", "decision": "approve", "recommendation": "As in families-pending.json: 7 families by existing rules, 4 by small new rulings/wordings (M-130 complement arms; ancillary-coverage, separation and abuts-a-street wordings)."},
+    {"id": "CHAT-81.R9-ALL", "subject": "Round 9 high-agreement shards as applied", "decision": "approve", "recommendation": "Approve s97, s35, s71 readings; low shards via FAM-ALL."},
+    {"id": "CHAT-81.R10-ALL", "subject": "Round 10 as applied plus four wordings", "decision": "approve", "recommendation": "Add \"side lot line abuts the street\", \"side yard setback for a lot that abuts a street\", \"minimum side yard is\", \"may project\"; lot depth and the lot-creation rule stay disclosed."},
+    {"id": "CHAT-81.R11-1", "subject": "Wording \"entrance to a parking space\" for garage_entrance_setback_m", "decision": "approve", "recommendation": "Settles 1049 (G), 331 (D), 357 (E)."},
+    {"id": "CHAT-81.R12-ALL", "subject": "Rounds 11–13 as applied", "decision": "approve", "recommendation": "Each reading cites an existing rule."},
+    {"id": "CHAT-81.SCOPE-1", "subject": "Finish the exception plan before deciding on small (sub-floor) exceptions", "decision": "approve", "recommendation": "Key the remaining 43 planned shards; then measure the cost of the last ~9 % before any floor-lowering or supplement."},
+    {"id": "CHAT-81.Q-D", "subject": "Layer 2 design-choice flags follow the golden-lot defaults", "decision": "approve", "recommendation": "lawfully_existing defaults to false; a 4-vertex lot has a rear lot line, other shapes flagged."},
+    {"id": "CHAT-81.P3-Q11", "subject": "Shadow classifier reads only the drafted closed fact list", "decision": "approve", "recommendation": "Closed list per predicate (p3build REPORT.md UPDATE 2); growth only by ruling."},
+    {"id": "CHAT-81.CITE-1", "subject": "Record the missing rule basis found by the citation review", "decision": "approve", "recommendation": "Full clause-path citation convention; 269 (E)/120 (D) disclosed basis; 45 (E) storey condition form; 63 Johnston DATA flag — as drafted in citations-fix.md."}
+  ]
+}

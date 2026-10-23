@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "freeze logical row",
+  "context": "Evening Rulings card P3-Q1 (discuss → decided in chat): the Spec 134 §3 logical Layer 2 result row (status, reason, value, value_kind, evidence_kind, evidence_ref, winner_unit_id, losers, inputs_used) is frozen now; the physical storage (Q-P) stays open behind the one accessor (scripts/lib/maxbld-layer2-view.js).",
+  "decisions": [
+    {"id": "CHAT-77.freeze", "subject": "Freeze the Layer 2 logical result row (N6a); physical storage stays open", "decision": "approve", "recommendation": "The Spec 134 §3 logical row fields are frozen; Phase 3 builds against them through one accessor; any change to a logical field needs a new ruling; the physical form (Q-P) may change without touching Phase 3."}
+  ]
+}

@@ -366,7 +366,7 @@
     {
       "id": "core.3",
       "section": "core",
-      "text": "Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits, notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).",
+      "text": "Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits with every declared emit present on every run and an empty cursor reading 0 (CHAT-90), notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).",
       "why": "Shared names let one library, one gate and one admin page read every step the same way."
     },
     {
@@ -618,7 +618,7 @@
     {
       "id": "x-captures.1",
       "section": "x-captures",
-      "text": "Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).",
+      "text": "Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).",
       "why": "A capture nobody can retake proves nothing."
     },
     {
@@ -5457,7 +5457,7 @@
         "kind": "lock",
         "ref": "src/tests/chat-rulings-register.logic.test.ts"
       },
-      "statement": "The Layer 2 lot link row points at its per-target results through one profile key (profile_id, sha256 of the lot sorted structure/target/cell_id lines; bylaw_resolution_profiles holds each distinct pointer set once); link tables are bounded by resolve_bylaws_storage_budget_mb at POST (operator 2026-10-22, CHAT-69.Q1; amends Spec 134 sections 3 and 11).",
+      "statement": "The Layer 2 storage budget is bounded by resolve_bylaws_storage_budget_mb at POST (interim 1,300 MB until the first measurement; operator 2026-10-22, CHAT-69.Q1, EVE.Q-K). Everything about the stored form (profile key, interned set ids) is superseded by R-JR (one row per lot, positional arrays, two dictionaries; operator 2026-10-23, CHAT-80.QP).",
       "source": {
         "register": true
       }
@@ -5514,6 +5514,132 @@
         "ref": "src/tests/chat-rulings-register.logic.test.ts"
       },
       "statement": "#44 arm (b) exempts writeSpec.key columns of a set_based_scoped rows-compute target from the SET requirement; gate script only, red fixture test (operator 2026-10-22, CHAT-73.swap4).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "materializer.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "When the runner sums zero batches, finalizeMatched returns a defined value for every counter a declared check reports (additive 0, ratios null); locked per materializer (operator 2026-10-22, EVE.SWAP-1). Widened 2026-10-23 (CHAT-90.Q-A, amends R-DE (iv)): every declared emit is present on every run; an empty cursor reads 0, never absent or N/A.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The {sql} re-arm bracket is an R-CZ #38 form for unguarded and derived_recompute targets; its backup tables are dropped after the settled rerun is verified (operator 2026-10-22, EVE.SWAP-2, EVE.DB-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JI",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "Layer 2 has four tables (signatures, cells, profiles, lots), per-class results in by_class, map membership from parcels.in_sixplex_area, permitted_by_class on the lot row, disclosure_set_id on cells, and no chain_run_id on data rows (operator 2026-10-22, EVE.Q-B/C/E/G/H/L; amends Spec 134 section 3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JJ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "Layer 2 checks: I13 is a WARN bounded by a ceiling variable; I14 recomputes row_sha for all four tables; unreferenced rows warn with a count; a sampled equivalence audit replaces the compute time budget (operator 2026-10-22, EVE.Q-F/I/M/N, CHAT-75.QN).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JN",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "A logic variable may have type list (JSON array in variable_value_json, validated by the consuming step); the zone population is one list variable (operator 2026-10-22, EVE.Q-J, EVE.L2P-3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The Spec 134 section 3 logical Layer 2 result row is frozen now behind one accessor; the physical storage stays open; a change to a logical field needs a new ruling (operator 2026-10-22, CHAT-77.freeze).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JP",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The fleet recapture night goes after integrate-25 is pushed; the lane runs it and reports numbers against the expected figures (operator 2026-10-22, EVE.NIGHT-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-stages.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The Phase 3 step draft settings and compute-module interim settings are accepted as recommended, each marked and replaced when its producer or ruling lands (operator 2026-10-22, EVE.P3-Q15, EVE.P3-Q16).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JR",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "Layer 2 is stored as one row per lot with positional arrays in scope-seed order, a SQL view naming each position, losers recomputed on read and closed dictionaries; supersedes the stored form of R-JA and the table list of R-JI (operator 2026-10-23, CHAT-80.QP; amends Spec 134 section 3).",
       "source": {
         "register": true
       }

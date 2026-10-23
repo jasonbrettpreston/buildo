@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "pushing - Q-P option 4 - explain the remaining cards",
+  "context": "Evening Rulings card Q-P (Layer 2 storage, simplicity comparison ~/Buildo-scratch/l2slices/REPORT.md): option 4 = one table, one row per lot with positional arrays in scope-seed order (values, status codes, winner unit ids) and a sparse class map, a SQL view naming each position, losers/candidates recomputed on read, unit ids and reason codes as closed dictionaries; about 0.55 GB. Supersedes form C (R-JA) for the stored form and amends Spec 134 §3 (stored losers become recompute-on-read).",
+  "decisions": [
+    {"id": "CHAT-80.QP", "subject": "Layer 2 stored as one row per lot with positional arrays (option 4)", "decision": "approve", "recommendation": "One table keyed parcel_id; arrays in scope-seed order; a SQL view names each position; losers and candidates recomputed on read; closed dictionaries for unit ids and reason codes; supersedes R-JA form C for storage."}
+  ]
+}

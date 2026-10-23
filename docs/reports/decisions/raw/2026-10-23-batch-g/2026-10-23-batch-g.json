@@ -1,0 +1,9 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "y1 y2",
+  "context": "Two yes/no questions after the verify-42 fixes on wf1/excr5c: (1) whole-street named_addresses references (no house number, e.g. \"Warden Ave.\") count as parsed and resolve by street key only — clears the 95 % parse-floor test (93.49 % now); (2) confirm the licence wording \"bay windows may project\" for window_projection_encroachment_m added for 144 (J) (M-243).",
+  "decisions": [
+    {"id": "CHAT-86.whole-street", "subject": "Whole-street named-address references count as parsed", "decision": "approve", "recommendation": "A named_addresses ref with a street but no house number parses as whole_street and is resolved by street key only."},
+    {"id": "CHAT-86.bay-window", "subject": "Wording \"bay windows may project\" for window_projection_encroachment_m", "decision": "approve", "recommendation": "Confirm the pattern added for 144 (J)."}
+  ]
+}

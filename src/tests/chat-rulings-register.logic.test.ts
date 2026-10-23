@@ -23,6 +23,15 @@ const R_ROWS: Array<[string, string[], string]> = [
   ['R-JD', ['2026-10-22-batch-z7#CHAT-70.3'], 'x-validate.2'],
   ['R-JE', ['2026-10-22-batch-z10#CHAT-73.swap3'], 'x-v3.3'],
   ['R-JF', ['2026-10-22-batch-z10#CHAT-73.swap4'], 'core.14'],
+  ['R-JG', ['2026-10-22-page-eve#EVE.SWAP-1'], 'materializer.1'],
+  ['R-JH', ['2026-10-22-page-eve#EVE.SWAP-2', '2026-10-22-page-eve#EVE.DB-1'], 'x-captures.2'],
+  ['R-JI', ['2026-10-22-page-eve#EVE.Q-B', '2026-10-22-page-eve#EVE.Q-L'], 'x-rulings.4'],
+  ['R-JJ', ['2026-10-22-batch-z12#CHAT-75.QN', '2026-10-22-page-eve#EVE.Q-N'], 'x-rulings.4'],
+  ['R-JN', ['2026-10-22-page-eve#EVE.Q-J', '2026-10-22-page-eve#EVE.L2P-3'], 'x-rulings.4'],
+  ['R-JP', ['2026-10-22-page-eve#EVE.NIGHT-1'], 'x-captures.1'],
+  ['R-JQ', ['2026-10-22-page-eve#EVE.P3-Q15', '2026-10-22-page-eve#EVE.P3-Q16'], 'x-stages.2'],
+  ['R-JR', ['2026-10-23-batch-a#CHAT-80.QP'], 'x-rulings.4'],
+  ['R-JO', ['2026-10-22-batch-z14#CHAT-77.freeze'], 'x-rulings.4'],
 ];
 
 describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register row on a handbook line', () => {
@@ -41,6 +50,47 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(M, 'M-322')).toContain('2026-10-22-batch-z9#CHAT-72.floor1');
     for (const n of ['IN1', 'IN2', 'IN3', 'IN5']) expect(rowOf(M, 'M-332')).toContain(`CHAT-74.${n}`);
     expect(rowOf(M, 'M-333')).toContain('CHAT-74.IN4');
+  });
+  it('the Evening Rulings page cards each sit on a Spec 69a, 131 or 124a row', () => {
+    const all = M + A + read('docs/specs/01-pipeline/131_lot_configuration_policy.md');
+    for (const id of ['R5-1', 'R5-5', 'M324-G', 'L2P-1', 'P3-Q4', 'P3-Q7', 'V39-1', 'Q-KG3', 'Q-O']) expect(all, id).toContain(`2026-10-22-page-eve#EVE.${id}`);
+    expect(rowOf(M, 'M-334')).toContain('2026-10-22-batch-z13#CHAT-76.R8-5');
+    expect(rowOf(M, 'M-347')).toContain('2026-10-22-batch-z15#CHAT-78.R6-3');
+  });
+  it('CHAT-79..81 are recorded on Spec 69a, 131 rows', () => {
+    expect(rowOf(M, 'M-346')).toContain('2026-10-22-batch-z16#CHAT-79.KG4');
+    for (const id of ['FAM-ALL', 'R9-ALL', 'R10-ALL', 'R11-1', 'R12-ALL', 'SCOPE-1', 'P3-Q11', 'CITE-1']) expect(M, id).toContain(`2026-10-23-batch-b#CHAT-81.${id}`);
+    expect(read('docs/specs/01-pipeline/131_lot_configuration_policy.md')).toContain('2026-10-23-batch-b#CHAT-81.Q-D');
+  });
+  it('CHAT-82 sits on R-JP; CHAT-83 on M-349 and M-350', () => {
+    expect(rowOf(A, 'R-JP')).toContain('2026-10-23-batch-c#CHAT-82.night-go');
+    expect(rowOf(M, 'M-349')).toContain('2026-10-23-batch-d#CHAT-83.W-2');
+    expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-d#CHAT-83.NAMED-1');
+    expect(rowOf(M, 'M-350')).toContain('no accuracy loss');
+  });
+  it('CHAT-84 sits on M-350 and M-322', () => {
+    for (const id of ['NAMED-1b', 'TWIN-1']) expect(rowOf(M, 'M-350')).toContain(`2026-10-23-batch-e#CHAT-84.${id}`);
+    expect(rowOf(M, 'M-322')).toContain('2026-10-23-batch-e#CHAT-84.S22-1');
+  });
+  it('CHAT-85 sits on M-336; CHAT-86 on M-138 and M-349', () => {
+    expect(rowOf(M, 'M-336')).toContain('2026-10-23-batch-f#CHAT-85.no-more-exceptions');
+    expect(rowOf(M, 'M-138')).toContain('2026-10-23-batch-g#CHAT-86.whole-street');
+    expect(rowOf(M, 'M-349')).toContain('2026-10-23-batch-g#CHAT-86.bay-window');
+  });
+  it('CHAT-87 sits on M-350', () => {
+    expect(rowOf(M, 'M-350')).toContain('2026-10-23-batch-h#CHAT-87.NAMED-1c');
+  });
+  it('CHAT-89 sits on R-JP and amends R-DQ in §B-AM (R-DQ is in moved block M33)', () => {
+    expect(rowOf(A, 'R-JP')).toContain('2026-10-23-batch-j#CHAT-89.Q-114a');
+    expect(A).toContain('**R-DQ amended by CHAT-89.Q-114a');
+  });
+  it('CHAT-90 sits on R-JG and amends R-DE (iv) in §B-AM (R-DE is in moved block §B16)', () => {
+    expect(rowOf(A, 'R-JG')).toContain('2026-10-23-batch-k#CHAT-90.Q-A');
+    expect(A).toContain('**R-DE (iv) amended by CHAT-90.Q-A');
+  });
+  it('CHAT-88 (corrected) is M-356 and M-357', () => {
+    expect(rowOf(M, 'M-356')).toContain('2026-10-23-batch-i2#CHAT-88.PLANFACTS-1');
+    expect(rowOf(M, 'M-357')).toContain('2026-10-23-batch-i2#CHAT-88.HELDOUT-1');
   });
   it('R-IX carries the CHAT-69.Q2 confirmation as a dated note', () => {
     expect(rowOf(A, 'R-IX')).toContain('2026-10-22-batch-z6#CHAT-69.Q2');

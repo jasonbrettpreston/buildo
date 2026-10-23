@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-22",
+  "operator_quote": "Q1 - y NAMED y",
+  "context": "Evening Rulings card NAMED-1c after verify-43 (~/Buildo-scratch/verify-43/verify-43.md): the street table now lists the roads for all 44 named-road units, so the CHAT-84.NAMED-1b rule as worded computes all 44; approved as recommended. Q1 (approved in the same message) is a process change to the untracked scratch fleet-night driver (~/Buildo-scratch/fleet-night-2210/run-night.sh: when nothing in migrations 282-285 is pending, the migrate phase runs only the read-only ro.cjs mig-verify and marks itself done); it is operator tooling outside the Spec 132/133 handbook process, so it is recorded here as context only, with no decision row and no register row.",
+  "decisions": [
+    {"id": "CHAT-87.NAMED-1c", "subject": "Named roads: compute all 44 named-road units", "decision": "approve", "recommendation": "Compute all 44 (the CHAT-84.NAMED-1b rule as worded): every named road is now in vocab.named_street, so the M-285 street-name join computes the setback for all 44 units; removes the three identical-text conflicts (e.g. 323 (C) and 325 (C), Huntingwood Dr. 7.5 m). Changes no scored CoA row."}
+  ]
+}

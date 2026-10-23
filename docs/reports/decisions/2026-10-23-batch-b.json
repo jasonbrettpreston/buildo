@@ -1,0 +1,83 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-b/2026-10-23-batch-b.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-b",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y to these [FAM-ALL, R9-ALL, R10-ALL, R11-1, R12-ALL, SCOPE-1] yes to these as well [SCOPE-1, Q-D, P3-Q11, CITE-1] provided they meet the standard of standardized, observable, scalable, accurate and understandable - keep it simple and limit scope as per the ruling",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-b/2026-10-23-batch-b.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-81.FAM-ALL",
+      "question": "Settle the 26 pending exception units by the 11 family readings",
+      "recommendation": "As in families-pending.json: 7 families by existing rules, 4 by small new rulings/wordings (M-130 complement arms; ancillary-coverage, separation and abuts-a-street wordings).",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.R9-ALL",
+      "question": "Round 9 high-agreement shards as applied",
+      "recommendation": "Approve s97, s35, s71 readings; low shards via FAM-ALL.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.R10-ALL",
+      "question": "Round 10 as applied plus four wordings",
+      "recommendation": "Add \"side lot line abuts the street\", \"side yard setback for a lot that abuts a street\", \"minimum side yard is\", \"may project\"; lot depth and the lot-creation rule stay disclosed.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.R11-1",
+      "question": "Wording \"entrance to a parking space\" for garage_entrance_setback_m",
+      "recommendation": "Settles 1049 (G), 331 (D), 357 (E).",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.R12-ALL",
+      "question": "Rounds 11–13 as applied",
+      "recommendation": "Each reading cites an existing rule.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.SCOPE-1",
+      "question": "Finish the exception plan before deciding on small (sub-floor) exceptions",
+      "recommendation": "Key the remaining 43 planned shards; then measure the cost of the last ~9 % before any floor-lowering or supplement.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.Q-D",
+      "question": "Layer 2 design-choice flags follow the golden-lot defaults",
+      "recommendation": "lawfully_existing defaults to false; a 4-vertex lot has a rear lot line, other shapes flagged.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.P3-Q11",
+      "question": "Shadow classifier reads only the drafted closed fact list",
+      "recommendation": "Closed list per predicate (p3build REPORT.md UPDATE 2); growth only by ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-81.CITE-1",
+      "question": "Record the missing rule basis found by the citation review",
+      "recommendation": "Full clause-path citation convention; 269 (E)/120 (D) disclosed basis; 45 (E) storey condition form; 63 Johnston DATA flag — as drafted in citations-fix.md.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}
