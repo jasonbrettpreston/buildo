@@ -92,7 +92,9 @@ export function stepFor(key: string, value: number): number {
   // Must short-circuit BEFORE the decimal-derivation/name-pattern checks
   // below (which would otherwise derive a fractional step for counts in
   // the thousands, or for a count that happens to be a round number).
-  if (key.startsWith('lifecycle_band_') || key.startsWith('lifecycle_cross_') || key.startsWith('lifecycle_seq_band_')) return 1;
+  // assert_lifecycle_phase_distribution_* are the same counts under their step-owned names (C6-1 ②, migration 288),
+  // plus its 0/1 posture flags and its detail cap — all integers.
+  if (key.startsWith('lifecycle_band_') || key.startsWith('lifecycle_cross_') || key.startsWith('lifecycle_seq_band_') || key.startsWith('assert_lifecycle_phase_distribution_')) return 1;
 
   const decimals = decimalPlaces(value);
   if (decimals > 0) return Number((10 ** -decimals).toFixed(decimals));
