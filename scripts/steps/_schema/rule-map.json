@@ -534,7 +534,7 @@
     {
       "id": "enricher.2",
       "section": "enricher",
-      "text": "`runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run.",
+      "text": "`runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night).",
       "why": "Writes stay behind the runner seam, and counters are not double-counted."
     },
     {
@@ -5766,6 +5766,34 @@
         "ref": "src/tests/chat-rulings-register.logic.test.ts"
       },
       "statement": "runCascadePhase hosts any declared cascade target, not only wsib_registry, with link_wsib unchanged; link_coa is the second user (operator 2026-10-23, CHAT-93.Q-H4; from the bundled runner night).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-JZ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "ctx.flushBatch may run a list of statements in one per-batch transaction (SAVEPOINT per warn_row statement) and an ENRICHER may write R-DY derived rows, so history and alerts commit with their state (operator 2026-10-23, CHAT-96.CLP-Q1; from the bundled runner night).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The forced-cohort bracket tool takes a repeatable --derived-table and restores each derived table exactly (operator 2026-10-23, CHAT-96.CLP-Q4).",
       "source": {
         "register": true
       }
