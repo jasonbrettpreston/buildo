@@ -275,13 +275,14 @@ describe('classify_permit_phase ① — converted claims (RED at ①; flip to `i
     expect(readText(COMPUTE_REL)).not.toMatch(/verdict\s*:/);
   });
 
-  it.fails('D8 — the owner specs describe the step the code is (CPP-D9): Spec 41 step 4 and Spec 42 §6 no longer call it an early/structural/finishing/landscaping construction-phase classifier, and Spec 80 §3 no longer names the script as implementing the 4-phase vocabulary (flips at ②, its spec diff)', () => {
+  it.fails('D8 — the owner specs describe the step the code is (CPP-D9): Spec 41 step 4 and Spec 42 §6 no longer call it an early/structural/finishing/landscaping construction-phase classifier, and Spec 80 (§3 Files line and the Operating Boundaries entry) no longer names the script as implementing the 4-phase vocabulary (flips at ②, its spec diff)', () => {
     const s41 = readText('docs/specs/01-pipeline/41_chain_permits.md');
     expect(s41).not.toMatch(/`classify_permit_phase` \| `classify-permit-phase\.js` \| Assign construction phase/);
     const s42 = readText('docs/specs/01-pipeline/42_chain_coa.md');
     expect(s42).not.toMatch(/`classify_permit_phase` \(early\/structural\/finishing\/landscaping\)/);
     const s80 = readText('docs/specs/01-pipeline/80_taxonomies.md');
     expect(s80).not.toMatch(/\*\*Files:\*\* `src\/lib\/classification\/phases\.ts` \+ `scripts\/classify-permit-phase\.js`/);
+    expect(s80).not.toMatch(/`scripts\/classify-permit-phase\.js` — §3 defines the 4-phase lifecycle vocabulary and timing thresholds this script implements/);
   });
 
   it.fails('D9 — admin-verifiable (Spec 132 §core.16 (R-DL)): PIPELINE_TABLE_MAP maps classify_permit_phase (flips at ③, descriptor-derived under R-DV)', () => {

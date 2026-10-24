@@ -19,7 +19,7 @@
 - **Eligible count on the pool** (`:42-48`): `status = 'Inspection' AND revision_num = '00' AND (issued_date IS NULL OR issued_date < '1970-01-02')`.
 - **One transaction, one statement** (`:52-65`): `UPDATE permits SET enriched_status = 'Examination', last_seen_at = $1 (RUN_AT) WHERE <the eligible scope> AND enriched_status IS DISTINCT FROM 'Examination' RETURNING permit_num` (pinned L2). The guard is `enriched_status` alone, so `last_seen_at` moves only on rows whose `enriched_status` changes, and a rerun writes zero rows (pinned L4 at the statement level; the live proof is the rerun capture).
 - **Cumulative stats on the pool** (`:70-77`), after the COMMIT, with a different scope: every base-revision 'Inspection' permit, with no issued_date clause (pinned L3).
-- **No reverse arm.** Nothing in the step clears 'Examination' (pinned L5). The other half of the contract lives in the four `permits.status` writers, which clear `enriched_status` when the status moves off 'Inspection' (C7; `load-permits.js:357-363`, `close-stale-permits.js:128`, `:146`, `src/lib/sync/process.ts`; header `:10-18`).
+- **No reverse arm.** Nothing in the step clears 'Examination' (pinned L5). The other half of the contract lives in the four `permits.status` writers, which clear `enriched_status` when the status moves off 'Inspection' (C7; `load-permits.js:357-363`, `close-stale-permits.js:129`, `:148`, `src/lib/sync/process.ts`; header `:10-18`).
 
 ### 1.2 Columns written
 - **`permits`:** `enriched_status` ('Examination' only) and `last_seen_at` (RUN_AT), on the same rows.
@@ -164,7 +164,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
 ## 12. Swap order (W2) — measured
 - Derived upstreams of this step (the `stepUpstreams` rule with the #44 G3 self-write filter, lineage snapshot at `d6dc90d2`): **permits** (`status`, `revision_num`, `issued_date`) and **close_stale_permits** (`status`). `enriched_status` and `last_seen_at` are self-written and drop out.
 - After the fold (R-EN, timed by CHAT-98.P-Q1 to the permits ② / swap) the set is **{permits}**. permits is at `red_suite` today, so this step can reach `runner_wired` only when permits does (#54), in the same commit (both POSTs present) or after it. That is the map's W2.
-- Neither CPP-Q1 option changes this step's own upstreams. The bump only changes who lists this step as an upstream (nine readers of `permits.last_seen_at`, §1.5). classify_lifecycle_phase lists it either way, through `enriched_status`.
+- Neither CPP-Q1 option changes this step's own upstreams. The bump only changes who lists this step as an upstream (eight in-chain step readers of `permits.last_seen_at`, §1.5; the admin inspector also reads it but is not a ledger node). Retiring the bump would drop six of those edges: classify_lifecycle_phase and assert_global_coverage keep this step as an upstream either way, through `enriched_status` (measured, `effectiveLedger()`, `~/Buildo-scratch/cpp1/ups.cjs`).
 
 ## 13. Operator questions (drafted rulings — not decided here; ① is ruling-neutral, ② waits on CPP-Q1)
 
@@ -175,7 +175,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
   - `permits.last_seen_at` is the loader's seen column: R-DZ (124a:806; Spec 132 §ingestor.5) names "permits `last_seen_at`" as the INGESTOR's `written:"seen"` column, and R-FF (124a:598; Spec 132 §core.14) says "R-DZ `seen` stays INGESTOR-only"; R-JM applied the same reading to `coa_applications.last_seen_at` (124a:979);
   - the loader touches every fed row on every run (`load-permits.js:398-409`), and this step runs right after it in the same chain, so for fed rows the bump only moves the stamp a few minutes later (inferred);
   - no CDC reader's output depends on the change: classify_lifecycle_phase reads `enriched_status` only for 'Stalled' (`lifecycle-phase.js:398`), and classify_scope (`:404`) and classify_permits (`:772`) do not read `enriched_status` at all;
-  - the cost of the bump is a classification time reading as "seen in the feed" (F1) for the freshness readers and the admin inspector, and nine in-chain edges.
+  - the cost of the bump is a classification time reading as "seen in the feed" (F1) for the freshness readers and the admin inspector, and eight in-chain reader edges on `permits.last_seen_at` (assert_data_bounds, assert_global_coverage, classify_lifecycle_phase, refresh_snapshot, assert_entity_tracing, classify_permits, classify_scope, close_stale_permits; measured, `effectiveLedger()`). Retiring the bump removes six step-level upstream edges, because classify_lifecycle_phase and assert_global_coverage still list this step through `enriched_status`.
 - **Recommendation: A now, B decided after measurement** (the CHAT-98.P-Q4 pattern):
   - **A (recommended for ②):** keep the bump as a declared deviation citing this ruling, R-JM and `Spec 132 §core.14 (R-FF)`, written as a `source:"run_at"` column outside the guard (never `written:"seen"`). It is the legacy behaviour (Spec 123 §3.1, pin at conversion), it needs no new column, and it moves no converted step's fingerprint.
   - **B (decide after M3 on night N-A):** if M3 shows zero non-redundant bumps, retire the bump at a later commit as a knowingly-retired intent with the zero-reader and zero-effect evidence. That commit edits refresh_snapshot's `inputs.reads.steps` (a converted descriptor), so it rides a RE-FREEZE / recapture night (`Spec 132 §x-v3.2 (R-II)`).
@@ -224,7 +224,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
 ## A. Measurement log (2026-10-23)
 - **A.F-CODE:**
   - `scripts/classify-permit-phase.js` @ `50837ef4`, sha256 `f952f0cb47a905e1…`, 120 lines;
-  - `scripts/load-permits.js:357-363`, `:398-409`; `scripts/close-stale-permits.js:75`, `:87`; `scripts/classify-inspection-status.js:83`, `:109`;
+  - `scripts/load-permits.js:357-363`, `:398-409`; `scripts/close-stale-permits.js:75`, `:87`, `:129`, `:132`, `:148`; `scripts/classify-inspection-status.js:83`, `:109`;
   - `scripts/lib/lifecycle-phase.js:398`; `scripts/classify-lifecycle-phase.js:998`, `:1019-1021`; `scripts/classify-scope.js:404`; `scripts/classify-permits.js:772`;
   - `scripts/geocode-permits.descriptor.json` (identity, outputs, guards, override); `scripts/refresh-snapshot.descriptor.json` `inputs.reads.steps`;
   - `scripts/lib/ledger.js` `effectiveLedger()` via `~/Buildo-scratch/cpp1/ups.cjs`; `scripts/analysis/step-validate.mjs:939-967` (`defectPrefixFor`) via `~/Buildo-scratch/cpp1/prefix.mjs`;
