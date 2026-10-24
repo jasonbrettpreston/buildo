@@ -143,6 +143,8 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   assert_staleness: 'legacy_oracle_excluded',
   // assert_lifecycle_phase_distribution joined as legacy_oracle_excluded while pending (C6-1 commit ①, 2026-10-19; the assert_coa_freshness precedent).
   assert_lifecycle_phase_distribution: 'legacy_oracle_excluded',
+  // compute_phase_calibration joined as legacy_oracle_excluded while pending (C6-3 commit ①, 2026-10-23; the assert_coa_freshness precedent).
+  compute_phase_calibration: 'legacy_oracle_excluded',
   address_points: 'guarded',
   assert_engine_health: 'guarded',
   assert_global_coverage: 'guarded',

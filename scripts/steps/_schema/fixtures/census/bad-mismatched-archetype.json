@@ -182,9 +182,9 @@
     {
       "slug": "compute_phase_calibration",
       "file": "scripts/compute-phase-calibration.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "MATERIALIZER",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 (R-AO) and confirmed MATERIALIZER; C6-3 conversion IN FLIGHT (commit ①, 2026-10-23): two aggregate SELECTs over permit_phase_transitions and lifecycle_transitions (scripts/compute-phase-calibration.js:238-330) -> one whole-table replace of phase_stay_calibration in one transaction: staging INSERT (:418-428), TRUNCATE (:429), INSERT ... SELECT from staging (:431); zero buckets TRUNCATE only (:414-416). Runs in two chains (permits, coa); owner spec 84 (the domain spec, the assert_lifecycle_phase_distribution precedent). Precedent link_parcel_addresses."
     },
     {
       "slug": "compute_storey_norms",

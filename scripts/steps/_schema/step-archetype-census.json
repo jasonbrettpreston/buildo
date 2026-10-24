@@ -203,10 +203,11 @@
     },
     {
       "slug": "compute_phase_calibration",
+      "owner_specs": ["docs/specs/01-pipeline/84_lifecycle_phase_engine.md"],
       "file": "scripts/compute-phase-calibration.js",
       "archetype": "MATERIALIZER",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17) RE-DERIVED at PH-0 on 2026-10-19 (R-AO): confirmed MATERIALIZER. CITE CORRECTED: :154 is a comment; the writes are staging build then TRUNCATE phase_stay_calibration (scripts/compute-phase-calibration.js:415, :429) + INSERT … SELECT FROM the staging table (:431). Precedent link_parcel_addresses."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 (R-AO) and confirmed MATERIALIZER; C6-3 conversion IN FLIGHT (commit ①, 2026-10-23): two aggregate SELECTs over permit_phase_transitions and lifecycle_transitions (scripts/compute-phase-calibration.js:238-330) -> one whole-table replace of phase_stay_calibration in one transaction: staging INSERT (:418-428), TRUNCATE (:429), INSERT ... SELECT from staging (:431); zero buckets TRUNCATE only (:414-416). Runs in two chains (permits, coa); owner spec 84 (the domain spec, the assert_lifecycle_phase_distribution precedent). Precedent link_parcel_addresses."
     },
     {
       "slug": "compute_storey_norms",
