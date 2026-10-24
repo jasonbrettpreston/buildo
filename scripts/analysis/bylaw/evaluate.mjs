@@ -516,8 +516,13 @@ function namedStreetJoin(lot, u, C, reads, trace) {
   if (typeof name !== 'string' || !name.trim()) return undefined;
   const key = streetKey(name, t.suffixes);
   const hit = row.streets.some((s) => streetKey(s, t.suffixes) === key);
-  const out = hit ? true : row.line === 'front' ? false : undefined;
-  trace.push(`abuts_named_street: ${t.lot_field} "${name}" ${hit ? 'is' : 'is not'} ${row.streets.join(' / ')} (${row.line} lot line) → ${out === undefined ? 'undecided' : out}`);
+  // CHAT-100.L-INTERIOR (M-285 note): a line-any row that misses the frontage street is false on an interior lot (abuts no other
+  // street); corner, through or unknown-flag lots stay undecided (M-60)
+  const anyMiss = !hit && row.line !== 'front';
+  if (anyMiss) { reads.add('flags.corner_lot'); reads.add('flags.through_lot'); }
+  const interior = anyMiss && Boolean(lot.flags) && lot.flags.corner_lot === false && lot.flags.through_lot === false;
+  const out = hit ? true : row.line === 'front' || interior ? false : undefined;
+  trace.push(`abuts_named_street: ${t.lot_field} "${name}" ${hit ? 'is' : 'is not'} ${row.streets.join(' / ')} (${row.line} lot line${interior ? ', interior lot' : ''}) → ${out === undefined ? 'undecided' : out}`);
   return out;
 }
 // {ok:true} | {ok:false, why} | {ok:null, reason}
