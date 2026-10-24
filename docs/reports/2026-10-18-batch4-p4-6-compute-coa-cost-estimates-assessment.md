@@ -276,7 +276,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md`; this list is the 
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_coa_cost_estimates | PASS | min_migration=207 <= migrations count=278 |
+| 1 | compute_coa_cost_estimates | PASS | min_migration=207 <= migrations count=279 |
 | 2 | compute_coa_cost_estimates | PASS | 21 declared, missing from seeds: none |
 | 3 | compute_coa_cost_estimates | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_coa_cost_estimates | PASS | SPEC LINK header present=true |

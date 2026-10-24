@@ -341,7 +341,7 @@ Every PRE runs BEFORE the ② rename migration, because the legacy code reads th
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_lifecycle_phase_distribution | PASS | min_migration=276 <= migrations count=276 |
+| 1 | assert_lifecycle_phase_distribution | PASS | min_migration=276 <= migrations count=279 |
 | 2 | assert_lifecycle_phase_distribution | PASS | 197 declared, missing from seeds: none |
 | 3 | assert_lifecycle_phase_distribution | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_lifecycle_phase_distribution | PASS | SPEC LINK header present=true |

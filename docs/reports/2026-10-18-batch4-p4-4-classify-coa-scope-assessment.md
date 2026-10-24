@@ -214,7 +214,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch ar
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | classify_coa_scope | PASS | min_migration=133 <= migrations count=278 |
+| 1 | classify_coa_scope | PASS | min_migration=133 <= migrations count=279 |
 | 2 | classify_coa_scope | PASS | 2 declared, missing from seeds: none |
 | 3 | classify_coa_scope | PASS | retired=0 overlap-with-declared=none |
 | 7 | classify_coa_scope | PASS | SPEC LINK header present=true |

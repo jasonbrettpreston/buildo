@@ -628,7 +628,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_centreline | PASS | min_migration=175 <= migrations count=278 |
+| 1 | load_centreline | PASS | min_migration=175 <= migrations count=279 |
 | 2 | load_centreline | PASS | 8 declared, missing from seeds: none |
 | 3 | load_centreline | PASS | retired=1 overlap-with-declared=none |
 | 7 | load_centreline | PASS | SPEC LINK header present=true |

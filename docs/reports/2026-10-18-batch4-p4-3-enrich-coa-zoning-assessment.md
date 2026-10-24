@@ -194,7 +194,7 @@ The coa target runs the same module, so its purity rows are the twin's §8 (G1 c
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_coa_zoning | PASS | min_migration=204 <= migrations count=278 |
+| 1 | enrich_coa_zoning | PASS | min_migration=204 <= migrations count=279 |
 | 2 | enrich_coa_zoning | PASS | 5 declared, missing from seeds: none |
 | 3 | enrich_coa_zoning | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_coa_zoning | PASS | SPEC LINK header present=true |

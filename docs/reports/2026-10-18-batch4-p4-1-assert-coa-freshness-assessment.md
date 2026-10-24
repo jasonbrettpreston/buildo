@@ -207,7 +207,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch ar
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_coa_freshness | PASS | min_migration=261 <= migrations count=278 |
+| 1 | assert_coa_freshness | PASS | min_migration=261 <= migrations count=279 |
 | 2 | assert_coa_freshness | PASS | 2 declared, missing from seeds: none |
 | 3 | assert_coa_freshness | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_coa_freshness | PASS | SPEC LINK header present=true |
