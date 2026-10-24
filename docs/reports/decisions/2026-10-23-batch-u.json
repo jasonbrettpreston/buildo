@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-u/2026-10-23-batch-u.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-u",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "L-Interior - Option B",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-u/2026-10-23-batch-u.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-100.L-INTERIOR",
+      "question": "Line-any named-road arms: on an interior lot, a sibling arm whose streets miss the frontage street does not apply",
+      "recommendation": "Option B. In the M-285 street-name join (scripts/analysis/bylaw/evaluate.mjs:519), a vocab.named_street row with line any whose streets do not include the lot's frontage street reads false (not undecided) when flags.corner_lot === false AND flags.through_lot === false (flags set from parcels, coa-scorecard.mjs:76 and :264). Corner, through, or unknown-flag lots stay undecided under M-60 (evaluate.mjs:999-1014). Effect: 900.4.10(256) (D)(ii), 900.5.10(264) (A)(ii), 900.3.10(1029) (C)(ii) answer on interior lots (e.g. 6.0 m on Alexmuir Blvd.), and the 'any other street' arms (e.g. 3.6 m) answer too; reaches all 13 'a lot line that abuts a street' units. Amends M-285's line-any reading (Spec 133 §m.285); supersedes the 'undecided otherwise' clause of CHAT-98.L-UNITS for interior lots only. 0 scored CoA rows in these three exceptions; build red-first with a production-path probe and a full CoA rescore.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

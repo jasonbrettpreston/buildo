@@ -130,6 +130,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
       expect(rowOf(text, row), row + ' ' + id).toContain(N + id);
     }
   });
+  it('CHAT-100.L-INTERIOR: dated note on M-285 (amends line-any) and supersede note on M-350 (CHAT-98.L-UNITS, interior lots only), with the CHAT-93 condition', () => {
+    for (const row of ['M-285', 'M-350']) {
+      expect(rowOf(M, row), row).toContain('2026-10-23-batch-u#CHAT-100.L-INTERIOR');
+      expect(rowOf(M, row), row).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    }
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
