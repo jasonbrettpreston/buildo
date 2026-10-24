@@ -218,7 +218,7 @@ describe('assert_lifecycle_phase_distribution ① — legacy oracle pins C: uncl
 interface Check { id: string; kind: string; limit: string; limit_from_config?: string; severity: string; blocking?: boolean }
 interface Descriptor {
   identity: { name: string; archetype: string; spec: string; lock: number };
-  outputs: { writes: unknown };
+  outputs: unknown;
   checks: Check[];
   config: { logic_variables: { name: string }[] };
 }
@@ -226,24 +226,37 @@ function loadDescriptor(): Descriptor {
   return JSON.parse(readText(DESCRIPTOR_REL)) as Descriptor;
 }
 
-describe('assert_lifecycle_phase_distribution ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: descriptor exists, archetype ASSERT, lock 109, spec "84", writes nothing; shell is pipeline.step(), not pipeline.run() (flips at ②)', () => {
+describe('assert_lifecycle_phase_distribution ② — converted claims (D1a–D5 GREEN at ②; D1b at the shell swap, D2b / D7 at ③)', () => {
+  // ② (C6-1, lane V3-COA-F, 2026-10-23): flipped to `it` — red evidence is the ① run
+  // (docs/reports/red-evidence/assert_lifecycle_phase_distribution/pre2-artifacts-missing.json: D1–D5 fail as named
+  // missing artifacts). The ② split mirrors assert_coa_freshness ffec8296 (D1b frozen shell / D2b retirement stay
+  // it.fails): the legacy shell is the live step until the swap (Spec 132 §x-stages.2 (R-EQ)).
+  it('D1a — identity: descriptor exists, archetype ASSERT, lock 109, spec "84", writes nothing; notes sidecar present (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.identity).toMatchObject({ name: 'assert_lifecycle_phase_distribution', archetype: 'ASSERT', spec: '84', lock: LOCK_ID });
-    expect(d.outputs.writes).toBe('none');
+    expect(d.outputs).toBe('none');
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
+  });
+
+  it.fails('D1b — frozen shell: the shell is pipeline.step(), not pipeline.run() (flips at the shell swap, runner_wired)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
   });
 
-  it.fails('D2 — R-DE (v): every declared logic variable is step-owned (assert_lifecycle_phase_distribution_*); no lifecycle_* name is declared (flips at ②)', () => {
+  it('D2a — R-DE (v): every declared logic variable is step-owned (assert_lifecycle_phase_distribution_*); no lifecycle_* name is declared (flipped at ②)', () => {
     const names = loadDescriptor().config.logic_variables.map((v) => v.name);
     expect(names.length).toBeGreaterThan(0);
     for (const n of names) expect(n).toMatch(/^assert_lifecycle_phase_distribution_/);
   });
 
-  it.fails('D3 — the verdict is declared: the unclassified hard limit is a blocking FAIL bound from config; the cross checks are non-blocking FAIL bounds with a WARN tier (flips at ②)', () => {
+  it.fails('D2b — R-A retirement: config.retired names the 36 lifecycle_band_* phase bands (operator y 2026-10-19 Q-ALPD-1) and the renamed lifecycle_* names (flips at ③)', () => {
+    const retired = ((loadDescriptor().config as { retired?: { name: string }[] }).retired ?? []).map((r) => r.name);
+    expect(retired.filter((n) => n.startsWith('lifecycle_band_'))).toHaveLength(36);
+    expect(retired).toContain('lifecycle_unclassified_max');
+  });
+
+  it('D3 — the verdict is declared: the unclassified hard limit is a blocking FAIL bound from config; the cross checks are non-blocking FAIL bounds with a WARN tier (flipped at ②)', () => {
     const byId = new Map(loadDescriptor().checks.map((c) => [c.id, c]));
     expect(byId.get('unclassified_count')).toMatchObject({ kind: 'bound', severity: 'FAIL', blocking: true });
     for (const id of ['cross_check_stalled', 'cross_check_active_inspection', 'cross_check_permit_issued']) {
@@ -251,13 +264,13 @@ describe('assert_lifecycle_phase_distribution ① — converted claims (RED at �
     }
   });
 
-  it.fails('D4 — compute is pure (R-BZ): no config loader, no lock, no emits, no module-level throw on the imported dead-status arrays (flips at ②)', () => {
+  it('D4 — compute is pure (R-BZ): no config loader, no lock, no emits, no module-level throw on the imported dead-status arrays (flipped at ②)', () => {
     const c = readText(COMPUTE_REL);
     expect(c).not.toMatch(/loadMarketplaceConfigs|withAdvisoryLock|emitSummary|emitMeta/);
     expect(c).not.toMatch(/DEAD_STATUS_ARRAY\.length === 0/);
   });
 
-  it.fails('D5 — R-DL admin visibility: PIPELINE_TABLE_MAP names assert_lifecycle_phase_distribution → pipeline_runs (absent today) (flips at ②)', () => {
+  it('D5 — R-DL admin visibility: PIPELINE_TABLE_MAP names assert_lifecycle_phase_distribution → pipeline_runs (flipped at ②)', () => {
     const funnel = readText('src/lib/admin/funnel.ts');
     const map = funnel.slice(funnel.indexOf('export const PIPELINE_TABLE_MAP'));
     expect(map.slice(0, map.indexOf('};'))).toMatch(/assert_lifecycle_phase_distribution:\s*'pipeline_runs'/);

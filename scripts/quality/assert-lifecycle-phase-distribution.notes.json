@@ -1,0 +1,54 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/quality/assert-lifecycle-phase-distribution.descriptor.json (Spec 120 §3.4-§3.4b; C6-1 commit ②, 2026-10-23).",
+    "CAP: 12 prose entries across the NOTES_PROSE_BLOCKS (scripts/analysis/gates/notes-cap.mjs; fast invariant #45). PROMOTE to a check or DELETE; there is no overflow."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "Each lifecycle_seq the classifier wrote (permits + coa_applications) is compared with its universal_stream_catalog band and gets exactly one kind: in_band, catalog_null (catalog rows_count NULL/0: INFO whatever the count), band_violation, expected_data_missing (banded, min > 0, no rows at all), no_band_configured (rows but no band), orphan_band (a declared band for a seq the catalog lacks) or unbanded. The three violation kinds are routed by their posture flag: 0 counts them in seq_bands_warn (WARN), 1 in seq_bands_failing (FAIL, halts the chain). The comparison and the routing run in SEQ_CLASSIFY_SQL (scripts/lib/compute/assert-lifecycle-phase-distribution.js) with the resolved bands as parameters."
+    },
+    {
+      "what": "The lifecycle_seq_NN_count rows (one per banded catalog seq) are INFO context rows: value = the observed count, threshold = the band. Which seqs violate, and how, is the detail of seq_bands_warn / seq_bands_failing (at most assert_lifecycle_phase_distribution_max_detail_keys entries, seq_violations_truncated when more)."
+    },
+    {
+      "what": "Only two classes halt (C1 67663a81): unclassified_count above its max (the classifier could not classify) and seq_bands_failing (an operator-promoted per-seq kind). seq_band_orphan_count and dead_status_vocabulary_present also halt; they replace the two refusals the pre-conversion script threw (orphan band keys, empty dead-status arrays). The three cross checks FAIL the verdict but never halt."
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "seq_bands_warn > 0 at the default posture (all three flags 0): the bands are a snapshot calibration (migration 148) and Phase D/E.2 ramp-up seqs drift outside them. The latest runs read WARN on both chains (permits run 1585 and coa run 1557, 2026-07-17; measured read-only 2026-10-19, assessment docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md §1.4)."
+    },
+    {
+      "what": "live_status_null_count / never_classified_count above their shared threshold right after a load is drain lag: rows loaded or status-flipped since the last classify run; it clears on the next in-chain classify_lifecycle_phase run (docs/reports/pipeline-validation/2026-07-07-lifecycle-null-trace.md)."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "A catalog rows_count NULL/0 seq reads INFO at any count: its band has no upper bound by construction (migration 148 :86), so neither its _min nor the absent _max can raise a violation while the catalog says 0. A seq absent from the catalog AND from the bands but present in the data is caught only as no_band_configured."
+    },
+    {
+      "what": "The cross checks compare the legacy enriched_status column with the lifecycle columns; they measure disagreement, not which side is right (Strangler Fig drift: the legacy column is the less accurate one)."
+    }
+  ],
+  "decisions": [
+    {
+      "what": "Step-owned names (R-DE (v), ALPD-D1): migration 288 copies the 9 scalars, 110 band minima and 77 band maxima under assert_lifecycle_phase_distribution_*, values carried; the legacy lifecycle_* rows stay until ③ because the legacy shell is still the live step. The 33 band maxima seeded NULL are not copied: a logic variable is a finite number, so \"no upper bound\" is the absence of the declared _max. The 36 lifecycle_band_* phase bands are retired (operator y 2026-10-19 Q-ALPD-1) and are not declared."
+    },
+    {
+      "what": "One kind per seq (ALPD-D5): a banded seq with no rows is expected_data_missing only; legacy also counted it as a band_violation. The verdict is row-derived (ALPD-D3), so a lone cross_check_permit_issued WARN now reads WARN. The cross-check tiers are inclusive (R-FD): exactly the threshold reads WARN, one above FAIL."
+    }
+  ],
+  "fences": [
+    {
+      "const": "the phase-keyed CoA unclassified count keeps `linked_permit_num IS NULL`; the per-seq one does not",
+      "value": "scripts/lib/compute/assert-lifecycle-phase-distribution.js UNCLASSIFIED_COA_SQL vs SEQ_UNCLASSIFIED_COA_SQL",
+      "incident": "diff-review v4 (Gemini MED + DeepSeek MED convergent): removing the filter would shift the phase-keyed counter's 7-day baseline (Spec 48 §3.4); pinned L4."
+    },
+    {
+      "const": "cross checks never halt",
+      "value": "checks[].cross_check_* blocking false",
+      "incident": "2026-08-10/11: a class-blind throw on a cross-check FAIL skipped 10 downstream steps including backup_db (28 h backup-SLA breach); C1 67663a81."
+    }
+  ]
+}

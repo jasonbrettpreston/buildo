@@ -31,7 +31,7 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-coa-freshness.js` | assert_coa_freshness [pending: runner_wired] | coa (1) | — | — | LDG-10 (assert_coa_freshness); EP-PIN-D17 (assert_coa_freshness) |
 | ASSERT | `scripts/quality/assert-entity-tracing.js` | assert_entity_tracing [pending: red_suite] | permits (1) | — | — | LDG-10 (assert_entity_tracing); EP-PIN-D17 (assert_entity_tracing) |
-| ASSERT | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution [pending: red_suite] | coa+permits (2) | — | — | LDG-10 (assert_lifecycle_phase_distribution); EP-PIN-D17 (assert_lifecycle_phase_distribution) |
+| ASSERT | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution [pending: compute_ported] | coa+permits (2) | — | — | LDG-10 (assert_lifecycle_phase_distribution); EP-PIN-D17 (assert_lifecycle_phase_distribution) |
 | ASSERT | `scripts/quality/assert-network-health.js` | assert_network_health [pending: red_suite] | deep_scrapes (1) | — | — | LDG-10 (assert_network_health); EP-PIN-D17 (assert_network_health) |
 | ASSERT | `scripts/quality/assert-staleness.js` | assert_staleness [pending: red_suite] | deep_scrapes (1) | — | — | LDG-10 (assert_staleness); EP-PIN-D17 (assert_staleness) |
 | ENRICHER | `scripts/classify-coa-scope.js` | classify_coa_scope [pending: runner_wired] | coa (1) | — | — | LDG-10 (classify_coa_scope); EP-PIN-D17 (classify_coa_scope) |

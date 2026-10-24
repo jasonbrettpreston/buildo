@@ -162,9 +162,9 @@
     {
       "file": "scripts/quality/assert-lifecycle-phase-distribution.js",
       "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-1)",
-      "reason": "C6-1 (assert_lifecycle_phase_distribution, ASSERT: fifteen read-only SELECTs over permits/coa_applications/universal_stream_catalog -> per-seq distribution bands under three posture flags, an unclassified hard limit and three cross-status checks, halting only on the two C1 classes, no write; runs in the permits and coa chains; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md). ① lands the assessment docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md + red suite (L1-L15 legacy pins executing the verbatim legacy text, D1-D5/D7 it.fails as named missing artifacts). ③ is blocked by EP-PIN-D17 under R-ED.",
+      "reason": "C6-1 (assert_lifecycle_phase_distribution, ASSERT: fifteen read-only SELECTs over permits/coa_applications/universal_stream_catalog -> per-seq distribution bands under three posture flags, an unclassified hard limit and three cross-status checks, halting only on the two C1 classes, no write; runs in the permits and coa chains; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md). ① lands the assessment docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md + red suite (L1-L15 legacy pins executing the verbatim legacy text, D1-D5/D7 it.fails as named missing artifacts). ② (2026-10-23, lane V3-COA-F) lands the descriptor, pure compute scripts/lib/compute/assert-lifecycle-phase-distribution.js, notes and migration 288 (copy form, 196 values carried + the R-EP detail cap) at stage compute_ported: the legacy shell stays the live step and reads the legacy lifecycle_* names until its swap, which waits on R-EQ (classify_lifecycle_phase is an unconverted upstream). ③ is blocked by EP-PIN-D17 under R-ED.",
       "declared": "2026-10-19",
-      "stage": "red_suite"
+      "stage": "compute_ported"
     }
   ],
   "converted": [

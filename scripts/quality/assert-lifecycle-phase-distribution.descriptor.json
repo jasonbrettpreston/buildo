@@ -1,0 +1,1815 @@
+{
+  "identity": {
+    "name": "assert_lifecycle_phase_distribution",
+    "display_name": "Assert Lifecycle Phase Distribution",
+    "owner": "data",
+    "description": "Tier-3 CQA lifecycle distribution ASSERT (Spec 84 §3.4), run in the permits and coa chains right after classify_lifecycle_phase: the per-seq distribution of permits + CoA lifecycle_seq against the 110 universal_stream_catalog bands (one kind per seq — band_violation, no_band_configured, expected_data_missing — each routed to WARN or, under its operator posture flag, to a halting FAIL), the unclassified hard limit (halting), two drain-lag breakouts, the seq-unclassified count and three non-halting cross-status checks. Read-only: no write, no recovery, no counters (the ASSERT profile).",
+    "lock": 109,
+    "why_lock": {
+      "text": "Ported verbatim from the pre-conversion `const ADVISORY_LOCK_ID = 109` (scripts/quality/assert-lifecycle-phase-distribution.js:31-32, 03fcb569; Spec 47 §A.5), agreeing with src/tests/pipeline-advisory-lock.infra.test.ts. Kept via identity.lock + the §5.4 source-text convention.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "84",
+    "spec_version": "1.0",
+    "archetype": "ASSERT",
+    "contract_version": 1,
+    "gate_exempt": true
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "classify_lifecycle_phase"
+        },
+        {
+          "step": "classify_permit_phase"
+        },
+        {
+          "step": "close_stale_permits"
+        },
+        {
+          "step": "coa"
+        },
+        {
+          "step": "link_coa"
+        },
+        {
+          "step": "permits"
+        }
+      ],
+      "tables": [
+        {
+          "table": "coa_applications",
+          "columns": [
+            "bid_value",
+            "decision",
+            "lifecycle_phase",
+            "lifecycle_seq",
+            "linked_permit_num"
+          ]
+        },
+        {
+          "table": "permits",
+          "columns": [
+            "bid_value",
+            "enriched_status",
+            "lifecycle_classified_at",
+            "lifecycle_phase",
+            "lifecycle_seq",
+            "lifecycle_stalled",
+            "matched_rule",
+            "status"
+          ]
+        },
+        {
+          "table": "universal_stream_catalog",
+          "columns": [
+            "rows_count",
+            "seq"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "halt"
+  },
+  "outputs": "none",
+  "staleness": {
+    "trigger": [
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "queue"
+  },
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "txn_scope": "none",
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads the same memoized scan; a statement that throws (a missing universal_stream_catalog among them, ALPD-D4) means the distribution could not be measured, which must redden and stop the run rather than read healthy (Spec 30 §5.4.1). The pre-conversion step let the same errors escape pipeline.run().",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/assert-lifecycle-phase-distribution.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "permits": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "permits"
+        }
+      },
+      "coa": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "dead_status_vocabulary_present",
+      "kind": "schema",
+      "expect": {
+        "reports": "the number of empty dead-status vocabularies (DEAD_STATUS_ARRAY, NORMALIZED_DEAD_DECISIONS_ARRAY in scripts/lib/lifecycle-phase.js)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "ALPD-D7: `<> ALL(ARRAY[]::text[])` is vacuously true in Postgres, so an empty vocabulary would read every row as unclassified-eligible. The pre-conversion script threw at import (scripts/quality/assert-lifecycle-phase-distribution.js:106-111, a module side effect, R-BZ G11); the converted form is a blocking check, so the run still halts but the audit table is recorded first. Exact zero (R-DF).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/lifecycle-phase.js"
+        }
+      }
+    },
+    {
+      "id": "unclassified_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "permits with lifecycle_phase NULL and a live status + CoA with lifecycle_phase NULL, linked_permit_num NULL and a live decision (the diff-review v4 baseline fence keeps linked_permit_num IS NULL)"
+      },
+      "limit": "value_max 100",
+      "limit_from_config": "assert_lifecycle_phase_distribution_unclassified_max",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:526-602 (C1 67663a81: one of the two halting classes — the classifier could not classify, \"I could not check\"). Inclusive at the max (legacy PASS at <= max), so the bound and the halt are unchanged.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "live_status_null_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "permits with lifecycle_phase NULL, matched_rule NULL and a live status (a breakout of unclassified_count: the never-classified-through-the-rule-path slice)"
+      },
+      "limit": "value_max 50",
+      "limit_from_config": "assert_lifecycle_phase_distribution_live_status_null_warn_count",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:571-622 (be7d39e3, WF2 P3): drain-lag breakout, WARN above the shared threshold; clears on the next in-chain classify_lifecycle_phase run (docs/reports/pipeline-validation/2026-07-07-lifecycle-null-trace.md).",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "never_classified_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "permits with lifecycle_classified_at NULL (rows the classifier has never touched)"
+      },
+      "limit": "value_max 50",
+      "limit_from_config": "assert_lifecycle_phase_distribution_live_status_null_warn_count",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:580-635 (be7d39e3): the second drain-lag breakout, sharing live_status_null_count's threshold as legacy did (two checks on one variable, the link_coa_to_parcels / enrich_parcels form). Within the threshold the row reads PASS where legacy wrote INFO (declared deviation).",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "seq_bands_total",
+      "kind": "invariant",
+      "expect": {
+        "reports": "universal_stream_catalog seqs with no declared band, plus 1 when the catalog is empty"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:723-750 (6908c5d4 E.4; v4 fold v3-Indep-MED-A): a catalog seq without a declared band (the catalog grew past the descriptor) or an empty catalog (mig 129 seed not applied) WARNs. A MISSING catalog table now fails the run through on_check_error (ALPD-D4), where legacy read PASS.",
+        "liveness": {
+          "kind": "table",
+          "ref": "universal_stream_catalog"
+        }
+      }
+    },
+    {
+      "id": "seq_band_orphan_count",
+      "kind": "invariant",
+      "expect": {
+        "reports": "declared per-seq bands whose seq is absent from a non-empty universal_stream_catalog"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the orphan-key refusal scripts/quality/assert-lifecycle-phase-distribution.js:261-292 (v4 fold v3-G-CRIT): a band for a seq the catalog no longer has is stale configuration, and legacy refused to run. Strict config validation now ignores undeclared keys, so the typo case cannot arise; the catalog-drift case halts after the audit table is recorded (blocking), instead of before any distribution read.",
+        "liveness": {
+          "kind": "table",
+          "ref": "universal_stream_catalog"
+        }
+      }
+    },
+    {
+      "id": "seq_bands_warn",
+      "kind": "distribution",
+      "expect": {
+        "reports": "per-seq violations routed to WARN: a kind (band_violation, no_band_configured, expected_data_missing) whose promote-to-fail flag is 0; detail lists them (capped by assert_lifecycle_phase_distribution_max_detail_keys)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:382-495, 765-770 (6908c5d4 E.4, 4ec25485 E.5): the WARN routing of the three per-seq kinds. The band comparison and the posture flag are evaluated in check SQL (scripts/lib/compute/assert-lifecycle-phase-distribution.js SEQ_CLASSIFY_SQL; R-DC \"the fix is the declared check's limit_from_config or check SQL\"). One kind per seq (ALPD-D5).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/assert-lifecycle-phase-distribution.js"
+        }
+      }
+    },
+    {
+      "id": "seq_bands_failing",
+      "kind": "distribution",
+      "expect": {
+        "reports": "per-seq violations routed to FAIL: a kind whose promote-to-fail flag is 1; detail lists them (capped)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:427-431, 454-458, 485-489, 771-776 and the C1 halt rule :135-140 (67663a81): an E.5-promoted per-seq violation is the other halting class. Blocking, so the runner halts after the audit table is emitted, as legacy threw after emitSummary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/assert-lifecycle-phase-distribution.js"
+        }
+      }
+    },
+    {
+      "id": "seq_unclassified_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "permits with lifecycle_seq NULL and a live status + CoA with lifecycle_seq NULL and a live decision (no linked_permit_num filter, v2 fold v1-I-HIGH-3)"
+      },
+      "limit": "value_max 5000",
+      "limit_from_config": "assert_lifecycle_phase_distribution_seq_unclassified_max",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:503-523, 799-804, 838-844 (6908c5d4 E.4): WARN above the max, inclusive.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "cross_check_stalled",
+      "kind": "invariant",
+      "expect": {
+        "reports": "permits with enriched_status 'Stalled' and lifecycle_stalled not true"
+      },
+      "limit": "viol == 0",
+      "warn_limit": "viol <= 1000",
+      "warn_limit_from_config": "assert_lifecycle_phase_distribution_cross_stalled_threshold",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:663-679 (6f450129): 0 PASS, up to the threshold WARN, above it FAIL. Never blocking (C1 67663a81: \"the data disagrees with itself\" reddens the verdict but must not skip the downstream steps). Inclusive tier (R-DC / R-FD): exactly the threshold now reads WARN where legacy (>=) read FAIL, a declared deviation.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "cross_check_active_inspection",
+      "kind": "invariant",
+      "expect": {
+        "reports": "permits with enriched_status 'Active Inspection' outside P9-P18/O1-O3"
+      },
+      "limit": "viol == 0",
+      "warn_limit": "viol <= 500",
+      "warn_limit_from_config": "assert_lifecycle_phase_distribution_cross_active_inspection_threshold",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:681-700 (6f450129): 0 PASS, up to the threshold WARN, above it FAIL. Never blocking (C1 67663a81: \"the data disagrees with itself\" reddens the verdict but must not skip the downstream steps). Inclusive tier (R-DC / R-FD): exactly the threshold now reads WARN where legacy (>=) read FAIL, a declared deviation.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "cross_check_permit_issued",
+      "kind": "invariant",
+      "expect": {
+        "reports": "permits with enriched_status 'Permit Issued' outside P7a-P7d/P8/P18/O1-O3"
+      },
+      "limit": "viol == 0",
+      "warn_limit": "viol <= 500",
+      "warn_limit_from_config": "assert_lifecycle_phase_distribution_cross_issued_threshold",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from scripts/quality/assert-lifecycle-phase-distribution.js:702-718 (6f450129): 0 PASS, up to the threshold WARN, above it FAIL. Never blocking (C1 67663a81: \"the data disagrees with itself\" reddens the verdict but must not skip the downstream steps). Inclusive tier (R-DC / R-FD): exactly the threshold now reads WARN where legacy (>=) read FAIL, a declared deviation.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": "none",
+  "emits": [
+    {
+      "key": "checks_passed",
+      "type": "string",
+      "consumers": []
+    },
+    {
+      "key": "checks_failed",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "checks_warned",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "errors",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "warnings",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "config",
+      "type": "object",
+      "consumers": []
+    },
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": [
+        "src/components/FreshnessTimeline.tsx",
+        "src/lib/admin/funnel.ts"
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "from": "Pre-conversion verdict from the failures/warnings arrays (scripts/quality/assert-lifecycle-phase-distribution.js:846): a cross_check_permit_issued WARN row or an armed posture-flag WARN row alone left the verdict PASS",
+      "why": {
+        "text": "ALPD-D3: the verdict is row-derived (Rule 10, scripts/lib/step/verdict.js deriveVerdict), so a cross_check_permit_issued WARN now reads WARN. The armed posture flags are INFO context rows (their value is the flag); the posture is visible in which of seq_bands_warn / seq_bands_failing carries the violation.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 Rule 10 (verdict row-derived) [register: Spec 124 R-H]",
+      "date": "2026-10-23"
+    },
+    {
+      "from": "Pre-conversion per-seq double count (scripts/quality/assert-lifecycle-phase-distribution.js:382-495): a banded seq with no data was both a band_violation and an expected_data_missing",
+      "why": {
+        "text": "ALPD-D5: one kind per seq — a banded, non-catalog-null seq with no data and min > 0 is expected_data_missing only. seq_bands_warn / seq_bands_failing count seqs, not events.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/assert-lifecycle-phase-distribution.js"
+        }
+      },
+      "adjudicated_by": "draft ruling F-1 (lane V3-COA-F ②, operator card; assessment §6 ALPD-D5 recommendation)",
+      "date": "2026-10-23"
+    },
+    {
+      "from": "Pre-conversion per-seq audit rows carried PASS/WARN/FAIL (scripts/quality/assert-lifecycle-phase-distribution.js:397-408) and the three posture-flag rows flipped INFO→WARN when armed (:781-798)",
+      "why": {
+        "text": "The per-seq lifecycle_seq_NN_count rows (one per banded catalog seq, operator direction 2026-05-19) and the flag rows are INFO context rows: a context row never carries a verdict status (Rule 10). The per-seq outcome is carried by the two declared checks seq_bands_warn / seq_bands_failing, whose detail names each violating seq (R-EP, capped by assert_lifecycle_phase_distribution_max_detail_keys, which replaces the SEQ_VIOLATIONS_CAP = 50 literal :98).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/assert-lifecycle-phase-distribution.js"
+        }
+      },
+      "adjudicated_by": "draft ruling F-2 (lane V3-COA-F ②, operator card) [applies Spec 124 R-EP]",
+      "date": "2026-10-23"
+    },
+    {
+      "from": "Pre-conversion exclusive cross-check FAIL tier (>= threshold, scripts/quality/assert-lifecycle-phase-distribution.js:668, :694, :714) and the never_classified_count INFO-within-threshold row (:627)",
+      "why": {
+        "text": "Inclusive two-tier bounds (R-DC / R-FD, the assert_coa_freshness ACF-D7 precedent): a count exactly at the threshold reads WARN, one above it FAIL. never_classified_count reads PASS within its threshold (a WARN-severity bound has no INFO-within tier). Values unchanged.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 R-FD (W4A-R2, inclusive two-tier bounds)",
+      "date": "2026-10-23"
+    },
+    {
+      "from": "Pre-conversion config refusals: the Zod phase-band min > max refine and the per-seq min > max / non-numeric throws (scripts/quality/assert-lifecycle-phase-distribution.js:81-93, :297-309), and the missing-catalog PASS lane (:203-211, :723-725)",
+      "why": {
+        "text": "config.logic_variables[] carries per-variable bounds (min 0, on_invalid fail) and no cross-variable relation (R-FD retires the fail>warn refusal). An inverted band degrades safely: no count is both >= min and <= max, so the seq reads band_violation. The 36 phase bands are not declared (operator y 2026-10-19 Q-ALPD-1: retire, validated but unread since 2026-05-19; they move to config.retired at ③). A missing universal_stream_catalog throws in SEQ_CLASSIFY_SQL and fails the run (ALPD-D4) instead of reading PASS.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/config.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 R-FD; operator y 2026-10-19 Q-ALPD-1 (docs/reports/2026-10-20-operator-queue-snapshot.md:1437; register row owed via decision-log)",
+      "date": "2026-10-23"
+    },
+    {
+      "from": "Pre-conversion records_meta {phase_distribution, unclassified_count, seq_distribution, seq_violations, seq_violations_truncated_count} and records_total = the phase sum (scripts/quality/assert-lifecycle-phase-distribution.js:855-877), the lock-held summary {reason classifier_running} (:911-928) and the halt message (:904-907)",
+      "why": {
+        "text": "An ASSERT declares counters none (Spec 132 §assert.1 R-CH), so records_total is the runner default. phase_distribution and seq_distribution ride as INFO context rows, seq_violations as the detail of seq_bands_warn / seq_bands_failing (R-EP); the unclassified count is its own check row. Consumer grep 2026-10-23: no reader of these records_meta keys outside the step and its tests (R-HR). Lock contention is the runner terminal lock_held_elsewhere (ALPD-D8); the halt message is the runner's \"blocking checks failed: <ids>\". audit_table.phase is the chain position (permits 21, coa 11; scripts/generate-sharing-phase.js) where legacy stamped the constant 22.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 R-HR (retire a legacy records_meta key with a zero-reader grep)",
+      "date": "2026-10-23"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The bands are a snapshot calibration (migration 148: FLOOR(rows_count*0.7) .. CEIL(rows_count*1.3)+20 from the universal_stream_catalog rows_count snapshot). A seq whose real population drifts past its band reads WARN until an operator re-tunes it; the 33 catalog rows_count NULL/0 seqs carry no upper bound and read INFO whatever their count.",
+      "measured": "migrations/148_lifecycle_seq_bands_logic_variables.sql:75-86; scripts/seeds/logic_variables.json (33 lifecycle_seq_band_<n>_max seeded null).",
+      "check_id": "seq_bands_warn"
+    }
+  ],
+  "interpretation": {
+    "file": "assert-lifecycle-phase-distribution.notes.json"
+  },
+  "recovery": "none",
+  "database": {
+    "class": "primary",
+    "min_migration": 276,
+    "assert_current_database": "postgres"
+  },
+  "counters": "none",
+  "config": {
+    "logic_variables": [
+      {
+        "name": "assert_lifecycle_phase_distribution_unclassified_max",
+        "min": 0,
+        "max": 10000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_live_status_null_warn_count",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_unclassified_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_cross_stalled_threshold",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_cross_active_inspection_threshold",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_cross_issued_threshold",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_promote_to_fail_band_violation",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_promote_to_fail_no_band_configured",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_promote_to_fail_expected_data_missing",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_1_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_1_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_2_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_2_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_3_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_3_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_4_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_4_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_5_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_5_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_6_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_6_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_7_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_7_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_8_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_8_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_9_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_9_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_10_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_10_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_11_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_11_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_12_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_12_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_13_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_13_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_14_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_14_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_15_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_15_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_16_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_16_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_17_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_17_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_18_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_18_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_19_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_19_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_20_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_20_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_21_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_21_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_22_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_23_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_23_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_24_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_24_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_25_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_25_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_26_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_26_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_27_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_27_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_28_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_29_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_29_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_30_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_31_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_31_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_32_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_32_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_33_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_33_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_34_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_35_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_35_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_36_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_36_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_37_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_38_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_38_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_39_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_39_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_40_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_40_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_41_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_41_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_42_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_42_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_43_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_43_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_44_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_45_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_45_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_46_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_46_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_47_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_48_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_49_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_49_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_50_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_51_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_51_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_52_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_52_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_53_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_54_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_55_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_56_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_57_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_57_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_58_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_59_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_59_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_60_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_60_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_61_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_61_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_62_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_62_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_63_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_63_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_64_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_64_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_65_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_66_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_67_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_68_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_68_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_69_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_69_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_70_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_71_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_72_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_72_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_73_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_73_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_74_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_75_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_76_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_77_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_78_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_79_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_80_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_81_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_82_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_83_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_84_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_84_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_85_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_85_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_86_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_86_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_87_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_87_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_88_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_89_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_89_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_90_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_90_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_91_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_92_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_92_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_93_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_93_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_94_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_95_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_95_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_96_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_97_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_97_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_98_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_98_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_99_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_99_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_100_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_100_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_101_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_101_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_102_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_102_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_103_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_103_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_104_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_104_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_105_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_105_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_106_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_106_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_107_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_107_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_108_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_108_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_109_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_109_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_110_min",
+        "min": 0,
+        "max": 99999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_seq_band_110_max",
+        "min": 0,
+        "max": 999999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_lifecycle_phase_distribution_max_detail_keys",
+        "min": 1,
+        "max": 500,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "permits": 21,
+        "coa": 11
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "ALPD-D8: the generic runner emits the declared lock_held_elsewhere terminal on advisory-lock contention; the pre-conversion step emitted its own skipped summary with reason classifier_running (scripts/quality/assert-lifecycle-phase-distribution.js:911-928), although lock 109 is this step's own lock.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "all_checks_passed",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "checks_passed": "string",
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      }
+    },
+    {
+      "id": "checks_passed_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "A WARN row stands (a per-seq WARN-routed violation, a drain-lag breakout, a cross-check below its FAIL tier) and nothing FAILED; selectTerminal picks this success terminal by the real status (the assert_coa_freshness form).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_distribution_check",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "A check FAILED, so the row-derived verdict is FAIL and the runner stamps this terminal (scripts/lib/step/index.js: verdict FAIL with no accepted anomaly). Two exits share it: a NON-blocking FAIL (a cross check above its threshold) returns normally, so the chain continues and run-chain folds the step to completed_with_errors (C1 67663a81: a cross-check FAIL once skipped 10 downstream steps including backup_db); a BLOCKING FAIL (the unclassified hard limit, a promoted per-seq violation, an orphan band, an empty dead-status vocabulary) throws after the audit table is emitted, so the chain halts (the two C1 halting classes plus the two former refusals).",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/30_pipeline_architecture.md"
+        }
+      }
+    },
+    {
+      "id": "failed_check_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "execution.on_check_error fail_step: a distribution statement threw (a missing universal_stream_catalog among them), so the distribution could not be measured (\"I could not check\" never reads as healthy, Spec 30 §5.4.1).",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/30_pipeline_architecture.md"
+        }
+      }
+    }
+  ]
+}
