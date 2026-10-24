@@ -156,6 +156,20 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     const bam = A.split('\n').filter((l) => l.startsWith('- **R-'));
     for (const id of ['CHAT-101.MIG-290', 'CHAT-103.L2-TIMEOUT-1', 'CHAT-114.L2-OOM-1', 'CHAT-110.RARMS-Q3', 'CHAT-116.R3-COLUMN', 'CHAT-118.Q-114b']) expect(bam.some((l) => l.includes(id)), id).toBe(true);
     expect(read('docs/reports/defect-ledger.md')).toContain(W + 'CHAT-119.LEDGER-HEADER');
+    // N7: the 69a §1a dated-note row on M-60 (empty first cell) carries CHAT-120 and CHAT-115
+    const m60Notes = M.split('\n').filter((l) => l.startsWith('| | *Dated note 2026-10-24 (M-60;'));
+    expect(m60Notes.some((l) => l.includes(W + 'CHAT-120.M60-DEPENDENCY') && l.includes(W + 'CHAT-115.L2-EVID-1'))).toBe(true);
+  });
+  it('CHAT-121..123 (batch x): 125m on R-JJ, M-60 RATIFIED note in 69a §1a + correction on R-IP, pointers on M-326 and R-KB', () => {
+    const X = '2026-10-24-batch-x#';
+    const cases: Array<[string, string, string]> = [
+      [A, 'R-JJ', X + 'CHAT-121.CEILING-125'], [A, 'R-IP', X + 'CHAT-122.M60-RATIFIED'],
+      [M, 'M-326', X + 'CHAT-123.IMPORT-PLACEMENTS'], [A, 'R-KB', X + 'CHAT-123.IMPORT-PLACEMENTS'],
+    ];
+    for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
+    const status = M.split('\n').find((l) => l.startsWith('| | *Dated note 2026-10-24 (M-60;') && l.includes(X + 'CHAT-122.M60-RATIFIED')) ?? '';
+    expect(status).toContain('RATIFIED 2026-10-08');
+    expect(A.split('\n').some((l) => l.startsWith('- **R-AQ') && l.includes('CHAT-121.CEILING-125'))).toBe(true);
   });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');

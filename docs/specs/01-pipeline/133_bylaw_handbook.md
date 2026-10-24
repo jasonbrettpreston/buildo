@@ -33,7 +33,7 @@ First clause cited: 10.10.20.20.
 
 - **m.81** Operator rulings on the A1–A3 agreed-unit findings R1–R11 (2026-10-08 16:05).
   Status: RATIFIED 2026-10-08 · Enforced by: G-CLAUSE, G-XREF, G-SHAPE, G-TEXT (slicer literals and defects); vocab dsl_target,…
-  Rules: `M-81` (Spec 69a) · +3 dated notes
+  Rules: `M-81` (Spec 69a) · +4 dated notes
 
 ### 20.40 — Permitted Building Types
 
