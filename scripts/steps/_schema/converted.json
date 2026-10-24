@@ -139,6 +139,13 @@
       "stage": "runner_wired"
     },
     {
+      "file": "scripts/classify-lifecycle-phase.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-5)",
+      "reason": "C6-5 (classify_lifecycle_phase, ENRICHER: streams dirty permits and coa_applications, classifies each with the pure lifecycle-phase functions and writes the lifecycle columns back under IS DISTINCT FROM guards, appends permit_phase_transitions / lifecycle_transitions / lifecycle_status_history and queues user notifications rows; runs in the permits and coa chains; V3-COA package I; McDonald's Airtight V3 from ①: Spec 132 §core.9 (R-BZ) zero purity findings, §x-v3.1 (R-BA) every gate hard; the replay-safe per-batch write unit and the START_DATE_URGENT enqueue are cards CLP-Q1/CLP-Q2)",
+      "declared": "2026-10-23",
+      "stage": "red_suite"
+    },
+    {
       "file": "scripts/quality/assert-entity-tracing.js",
       "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-1)",
       "reason": "C6-1 (assert_entity_tracing, ASSERT: seven read-only SELECTs tracing permits seen in a 26-hour window through permit_trades, cost_estimates, trade_forecasts, lifecycle_phase and opportunity_score -> a row-derived, non-halting coverage verdict, no write; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md). ① lands the assessment docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md + red suite (L1-L12 legacy pins executing the verbatim legacy text, D1-D5/D7 it.fails as named missing artifacts). ③ is blocked by EP-PIN-D17 under R-ED.",
