@@ -333,10 +333,11 @@
     },
     {
       "slug": "link_coa",
+      "owner_specs": ["docs/specs/01-pipeline/42_chain_coa.md", "docs/specs/01-pipeline/41_chain_permits.md", "docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/link-coa.js",
       "archetype": "LINK",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17) RE-DERIVED at PH-0 on 2026-10-19 (R-AO): confirmed LINK. Address-tier cascade writing link columns on both sides — coa_applications (scripts/link-coa.js:122, :239, :329, :668) and permits (:150, :445, :499, :515) — with retraction of stale links (:121-126, :150-154). Precedent link_parcels (LINK with retraction), not link_wsib (MATCHER)."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed LINK; C6-4 conversion IN FLIGHT (V3-COA package H commit ①, 2026-10-23): five address tiers plus a description-FTS tier from coa_applications to permits write the link columns coa_applications.linked_permit_num/linked_confidence (scripts/link-coa.js:241-252, :331-361) after a cross-ward unlink (:123-132), then the permit side: the last_seen_at bump (:445-449), the linked_coa_application_number back-ref clear-then-set (:493-524) and the permit -> CoA lat/lng/ward inheritance (:663-675). Runner precedent at ②: link_wsib's tier cascade (re-derive, null-retract, reverse write on the second table), not link_parcels."
     },
     {
       "slug": "link_neighbourhoods",

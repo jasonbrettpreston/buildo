@@ -338,7 +338,8 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 12 -> 13 at C6-1 assert_staleness ① (2026-10-19): its census row flipped batch "C6" -> "pending" (archetype ASSERT re-derived at PH-0, R-AO). Returns to 12 at its ③.
     // 13 -> 14 at C6-1 assert_lifecycle_phase_distribution ① (2026-10-19): its census row flipped batch "C6" -> "pending" (archetype ASSERT re-derived at PH-0, R-AO). Returns to 13 at its ③.
     // 14 -> 15 at C6-3 compute_phase_calibration ① (2026-10-23): its census row flipped batch "C6" -> "pending" (archetype MATERIALIZER re-derived at PH-0, R-AO). Returns to 14 at its ③.
-    expect(pendingBatch.size).toBe(15);
+    // 15 -> 16 at C6-4 link_coa ① (V3-COA package H, 2026-10-23): its census row flipped batch "C6" -> "pending" (archetype LINK re-derived at PH-0, R-AO). Returns to 15 at its ③.
+    expect(pendingBatch.size).toBe(16);
     // 36 -> 35 at phase-4 wave 1 commit ① (permits) and 35 -> 34 at coa ①: each row left C6 (R-AO retention keeps it out).
     // 34 -> 33 at wave-4 assert_coa_freshness ①; 33 -> 32 at wave-4 classify_coa_scope ①; 32 -> 31 at wave-4 link_coa_to_parcels ①; 31 -> 30 at the enrich pair ① (C6 counts FILES: the shared scripts/enrich-permits.js left it once; enrich-coa-zoning.js was born pending).
     // 30 -> 29 at wave-4 classify_coa_trades ①.
@@ -349,7 +350,8 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 24 -> 23 at C6-1 assert_staleness ①.
     // 23 -> 22 at C6-1 assert_lifecycle_phase_distribution ①.
     // 22 -> 21 at C6-3 compute_phase_calibration ①.
-    expect(c6.size).toBe(21);
+    // 21 -> 20 at C6-4 link_coa ① (V3-COA package H).
+    expect(c6.size).toBe(20);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
 
