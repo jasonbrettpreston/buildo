@@ -1,6 +1,7 @@
 # Defect Ledger — fleet register (Spec 123 §6 G6 / G8)
 
 > Generated **by hand** for Pilot 1 (`assert_schema`, 2026-08-25) — the first register in the repo. From S5 onward this file is **generator-owned** (`scripts/violations/plan-claims.mjs` family); do not hand-edit rows after that point, regenerate.
+> **Dated correction 2026-10-24 (operator "Fix the header to match practice (Recommended)", `2026-10-24-batch-w#CHAT-119.LEDGER-HEADER`; Spec 132 §x-validate.2 (R-JD)):** the sentence above does not match practice. No generator writes rows here; lanes add rows by hand (e.g. RB-D1..RB-D8), and `step-validate` validates them (the G6 status vocabulary, `scripts/analysis/step-validate.mjs`; `scripts/analysis/gates/registries.mjs` reads this file).
 > ID scheme: `<STEP-PREFIX>-D<n>`; a row is OPEN until the closing commit lands and the differential points at it (G8: *every explained diff points at a Defect Ledger ID*). Anchors are `file:line` at the HEAD stated in the source assessment and rot with the file — re-derive before citing.
 
 | ID | Step | Anchor (HEAD `8b857169`) | One-line | Status | Closes at | Source |

@@ -1,0 +1,148 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-24-batch-w/2026-10-24-batch-w.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-24-batch-w",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "\"L2-Timeout-1 - that unfortunate we didnt make any progress - run again - approved.\"; \"2. y\" (reply to MORNING.md decision list item 2, STREET-DIR, recommendation yes); \"3, y 4. y 6. y - ensure they compy with handbook\" (MORNING.md decision list items 3, 4, 6); \"1-6 y provided they compy with the handbook/ new rules and they dont conflict and they dont expand the scope - let's keep the design as simple as possible\" (item 5 cards 1-6); L2-OOM-1: \"Approve fix, then rerun (Recommended)\"; L2-EVID-1: \"Cite the shared regulation (Recommended)\"; R3 recipe: \"Yes, --column=row_sha (Recommended)\"; golden cases: \"as per deiscrpeancy - lets stick with the notice as opposed to the plans\"; L2-GATE-1 handbook check: \"Rule Q-114b for this step (Recommended)\"; compliance: ledger \"Fix the header to match practice (Recommended)\"; M-60 \"Record CHAT-115 as resting on M-60 (Recommended)\"",
+    "record": "operator chat 2026-10-24 (morning)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-24-batch-w/2026-10-24-batch-w.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve",
+    "approve (option A)": "approve",
+    "approve (yes)": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-103.L2-TIMEOUT-1",
+      "question": "resolve_bylaws step_timeout from measurement + reset before the rerun",
+      "recommendation": "Set resolve_bylaws execution.step_timeout 90m -> 240m (measured ~150 min x ~1.5 headroom; Spec 124 R-X / R-AQ: a ceiling set below a real runtime turns a healthy run into a failure). Watch stop line moves to 240 min. Before the rerun, apply the descriptor's recovery.reset (TRUNCATE bylaw_resolution_lots, bylaw_resolution_texts, bylaw_resolution_units) so the capture starts from a clean derived layer. Lands in the single Layer 2 night commit.",
+      "decision": "approve (option A)",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-104.STREET-DIR",
+      "question": "L-INTERIOR street join matches a trailing direction word",
+      "recommendation": "A by-law street without a direction word (e.g. 'Finch Ave.') matches the parcel street with a trailing direction word (e.g. 'Finch Ave E'), per MORNING.md Q1 / verify-48a. Unblocks d27d1930 together with generate-amendment-index.mjs --write.",
+      "decision": "approve (yes)",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-105.V3MERGE-VALIDATE",
+      "question": "DB-backed step-validate --all --write on wf2/v3coa-fghi-merge",
+      "recommendation": "Clears verify-48c F-1 (31 scorecard blocks mixed two generator runs; R-W: a generated block is generator output only). H-lane DB job: runs after the Layer 2 night releases the lock, one DB writer at a time (QUEUE.md H lane), then a fresh read-only re-verify.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-106.DB1-DROP",
+      "question": "DB-1 backup drop, Step A then Step B",
+      "recommendation": "Step A list-only must print drop 172 (175333376 bytes) or stop; Step B --execute with DB1_APPROVED=yes under the dblock. H-lane DB job after Layer 2 and CHAT-105. DB1-Q1..Q5 follow the MORNING.md recommendations (keep lists unchanged) unless the operator says otherwise.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-107.LANE-REPORT-WRITE",
+      "question": "Lanes may write their own REPORT.md",
+      "recommendation": "User-level permission Edit(//Users/brettpreston_macmini/Buildo-scratch/*/REPORT.md) only, so lanes can meet LANE-PREAMBLE item 10 (finish with ~/Buildo-scratch/<lane>/REPORT.md). No other path widened. Report content still follows LANE-PREAMBLE 10-11 (rule cited per change, provider per edit, Operator questions with conflict checks).",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-108.RARMS-Q1",
+      "question": "R-JY cascade target taken from existing declarations",
+      "recommendation": "The cascade target = the table of the step's existing set_based_null_retract (already the privilege anchor, index.js:2971); join plan = the first set_based_join_update on it; link/confidence = its first two columns; diff rows new_link/old_link/old_confidence; entities/contacts statements only when declared; link_coa reverse writes = a separate row. No new descriptor field (the execution.cascade_target alternative is NOT adopted). Operator condition (CHAT-108..113): approved only as long as it complies with the handbook and new rules, conflicts with no row, and does not expand scope; simplest design. If a build finds a conflict or a need for anything new, stop and bring it back as a card.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-109.RARMS-Q2",
+      "question": "R-KA flag groups in ingestor-forced-cohort.js",
+      "recommendation": "Positional flag groups per --derived-table; per-key floor only with --derived-per-key; restore commits only when every table's RETURNING matches. Consistent with R-ET and R-DN per table. Operator condition (CHAT-108..113): approved only as long as it complies with the handbook and new rules, conflicts with no row, and does not expand scope; simplest design. If a build finds a conflict or a need for anything new, stop and bring it back as a card.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-110.RARMS-Q3",
+      "question": "close_stale_permits fold retract arm: PH-0 first",
+      "recommendation": "Run the fold's PH-0 in the permits ② lane first (R-EN leaves the mechanism to it). A new retract value (status columns + grace logic variable, run_at, in the loader txn) is built only if PH-0 confirms departed_mark cannot express the two-stage status change; departed_mark stays untouched. Operator condition (CHAT-108..113): approved only as long as it complies with the handbook and new rules, conflicts with no row, and does not expand scope; simplest design. If a build finds a conflict or a need for anything new, stop and bring it back as a card.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-111.CPP-Q1",
+      "question": "Keep the permits.last_seen_at bump at ② as a declared deviation",
+      "recommendation": "Option A (Q-H1 form, citing R-JM + Spec 132 §core.14 (R-FF), source run_at outside the guard). Retire-or-not decided after the read-only M3 count. Correct the card: eight step readers (+ admin inspector), not nine. Operator condition (CHAT-108..113): approved only as long as it complies with the handbook and new rules, conflicts with no row, and does not expand scope; simplest design. If a build finds a conflict or a need for anything new, stop and bring it back as a card.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-112.FLAG-NULL",
+      "question": "coa-scorecard uses the production flag() rule",
+      "recommendation": "coa-scorecard.mjs:76 reuses bylaw-resolution.js:366 flag() so unknown stays unknown. Newer explicit CHAT-100 governs over M-169 (CHAT-84.TWIN-1 precedent); record the supersession note on M-169. Operator condition (CHAT-108..113): approved only as long as it complies with the handbook and new rules, conflicts with no row, and does not expand scope; simplest design. If a build finds a conflict or a need for anything new, stop and bring it back as a card.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-113.CHAT-102-ROW",
+      "question": "CHAT-102 P3 formula-test row text approved as drafted",
+      "recommendation": "Import CHAT-102 with the drafted text: each Phase 3 formula has ~3 worked examples on synthetic lots (either side of every max/min switch), expected values in an operator-checked spreadsheet, never LLM-filled; they must pass before golden-case keying is scored. Conflict check at import against PLAN Q7, M-333, M-356, INV-1..25; any conflict found = stop and bring back. Operator condition (CHAT-108..113): approved only as long as it complies with the handbook and new rules, conflicts with no row, and does not expand scope; simplest design. If a build finds a conflict or a need for anything new, stop and bring it back as a card.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-114.L2-OOM-1",
+      "question": "resolve_bylaws cell cache keeps its own bound (heap fix)",
+      "recommendation": "Drop maxEntries: 500000 at scripts/lib/bylaw-materialize.js makeEnv so the cell cache keeps its default 20,000 (cell-cache.mjs:37). Evidence: both Layer 2 runs died at parcel 36,000 (heap 4 GB); read-only probe heap 2,581 MB -> 306 MB at the same speed; outputs unchanged (transparent cache). Red evidence = OOM logs + probe (docs/reports/red-evidence/resolve_bylaws/l2-oom-cell-cache-red.json); ledger RB-D8 citing Spec 124 R-AQ; no new register row. Corrects the CHAT-103 premise (the slowdown was heap exhaustion); 240m stays. Lands in the single Layer 2 night commit.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-115.L2-EVID-1",
+      "question": "M-60 agreeing-worlds results cite their shared regulation (Spec 134 I2 amendment)",
+      "recommendation": "When an applies value has no single winner (Spec 69 M-60: every resolution agrees on the value, the winning clause differs) and every applied clause sits in one regulation, evidenceOf records evidence_kind clause (provincial when every applied unit is) with that regulation as evidence_ref; the winner stays empty. The post check winner_evidence_violations admits w IS NULL with clause/provincial evidence; clauses in several regulations stay a violation. Evidence: capture 2026-10-24 FAIL 227,194 (main_wall_height_m 93,923 array + class rows; side_setback_m, building_depth_m); probe 10,000 parcels: 13,011 such results, 100% one regulation. Red evidence docs/reports/red-evidence/resolve_bylaws/l2-evid-m60-red.json. Register row text amends Spec 134 I2 at import (Spec 134 itself is at its byte budget). Lands in the single Layer 2 commit; R1/R2/R3 recaptured. Dated note 2026-10-24 (CHAT-120): CHAT-115 rests on Spec 133 m.60 / Spec 69a M-60, which is PROPOSED; if M-60 is ruled differently, CHAT-115 is re-ruled.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-116.R3-COLUMN",
+      "question": "R3 bracket recipe passes --column=row_sha",
+      "recommendation": "ingestor-forced-cohort.js requires --column for delete_reinsert; following the link_coa_to_parcels recapture.json precedent the comparison column is the row content hash row_sha, so the bracket proves each deleted lot heals to the same content. Recorded in recapture.json with its why; LAND-REPORT:98 recipe omission noted. The tool also requires --where; the recipe uses t.lot_gate IS NULL (20 ungated lots, so the healed rows carry full results).",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-117.GOLDEN-NOTICE-FIRST",
+      "question": "Golden cases: where the notice and the plan disagree, key the notice",
+      "recommendation": "For golden-case keying (CHAT-63.C10), a figure the CoA notice states wins over the plan or plan-statistics figure; the plan figure is kept in the as-printed box. Applied first to A0399/24EYK (FSI 1.58 vs plan 0.577; GFA 300.93 vs 300.95; second-storey platform 8.18 m2; side main wall 9.24 m).",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-118.Q-114b",
+      "question": "resolve_bylaws declares a force_full env used only by its R3 bracket",
+      "recommendation": "Rules Q-114b (left open by CHAT-89.Q-114a, recommended no for steps the reorder fixed) for resolve_bylaws only: override.force_full = RESOLVE_BYLAWS_FORCE_FULL (the materialize runner reads only force_full to bypass the ledger gate, scripts/lib/step/index.js:3223; no runner code). Passed only by the R3 bracket recipe (recapture.json). Why: CHAT-89 requires the bracket before the standalone capture; the 2026-10-24 driver ran R1 first (LAND-REPORT order predating CHAT-89), so a completed baseline (pipeline_runs 4310) exists and the gate skips (no_upstream_changes); undoing that would need a ledger edit (not allowed). R1 and the gated R2 stay as captured. Red evidence docs/reports/red-evidence/resolve_bylaws/l2-gate-force-full-red.json (1 failed / 25 passed). Conflict check: CHAT-89.Q-114a (ordering) still governs future recaptures; Q-114b now ruled for this step only.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-119.LEDGER-HEADER",
+      "question": "defect-ledger.md header matches practice: rows are hand-added and validated",
+      "recommendation": "Dated correction to the header of docs/reports/defect-ledger.md: no generator writes rows; lanes add rows by hand (RB-D1..RB-D8) and step-validate validates them (G6 status vocabulary, step-validate.mjs:347; registries.mjs:294). Closes the 2026-10-24 compliance-audit item 2. No new mechanism.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-120.M60-DEPENDENCY",
+      "question": "CHAT-115 is recorded as resting on M-60 (PROPOSED)",
+      "recommendation": "A dated note on CHAT-115: it depends on Spec 133 m.60 / Spec 69a M-60 (status PROPOSED; the evaluator has run its agreeing-worlds rule since the bylaw-harden lock). If M-60 is ruled differently, CHAT-115 is re-ruled. M-60 status unchanged. Closes compliance-audit item 5.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    }
+  ]
+}

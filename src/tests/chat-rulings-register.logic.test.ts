@@ -136,6 +136,27 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
       expect(rowOf(M, row), row).toContain('2026-10-23-batch-n#CHAT-93.condition');
     }
   });
+  it('CHAT-101..120 (batches v, w): each ruling sits on its carrier row; CHAT-102/113 is row M-358', () => {
+    const V = '2026-10-23-batch-v#';
+    const W = '2026-10-24-batch-w#';
+    const cases: Array<[string, string, string]> = [
+      [A, 'R-KB', V + 'CHAT-101.MIG-290'],
+      [A, 'R-JJ', W + 'CHAT-103.L2-TIMEOUT-1'], [A, 'R-JJ', W + 'CHAT-114.L2-OOM-1'],
+      [M, 'M-285', W + 'CHAT-104.STREET-DIR'], [M, 'M-350', W + 'CHAT-104.STREET-DIR'],
+      [A, 'R-JD', W + 'CHAT-105.V3MERGE-VALIDATE'], [A, 'R-JD', W + 'CHAT-119.LEDGER-HEADER'],
+      [A, 'R-JH', W + 'CHAT-106.DB1-DROP'], [A, 'R-IZ', W + 'CHAT-107.LANE-REPORT-WRITE'],
+      [A, 'R-JY', W + 'CHAT-108.RARMS-Q1'], [A, 'R-KA', W + 'CHAT-109.RARMS-Q2'], [A, 'R-KA', W + 'CHAT-116.R3-COLUMN'],
+      [A, 'R-JB', W + 'CHAT-110.RARMS-Q3'], [A, 'R-JM', W + 'CHAT-111.CPP-Q1'], [M, 'M-169', W + 'CHAT-112.FLAG-NULL'],
+      [M, 'M-358', V + 'CHAT-102.P3-FORMULA-TESTS'], [M, 'M-358', W + 'CHAT-113.CHAT-102-ROW'],
+      [A, 'R-IP', W + 'CHAT-115.L2-EVID-1'], [A, 'R-IP', W + 'CHAT-120.M60-DEPENDENCY'],
+      [M, 'M-327', W + 'CHAT-117.GOLDEN-NOTICE-FIRST'], [A, 'R-JP', W + 'CHAT-118.Q-114b'],
+    ];
+    for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
+    // moved-block rows keep their bytes; each note names its moved row in §B-AM
+    const bam = A.split('\n').filter((l) => l.startsWith('- **R-'));
+    for (const id of ['CHAT-101.MIG-290', 'CHAT-103.L2-TIMEOUT-1', 'CHAT-114.L2-OOM-1', 'CHAT-110.RARMS-Q3', 'CHAT-116.R3-COLUMN', 'CHAT-118.Q-114b']) expect(bam.some((l) => l.includes(id)), id).toBe(true);
+    expect(read('docs/reports/defect-ledger.md')).toContain(W + 'CHAT-119.LEDGER-HEADER');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');

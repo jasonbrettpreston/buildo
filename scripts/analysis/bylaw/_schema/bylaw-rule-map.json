@@ -1460,6 +1460,10 @@
       "section": "fam-900"
     },
     {
+      "id": "m.358",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -5229,6 +5233,17 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-357**"
+      }
+    },
+    {
+      "id": "M-358",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.358",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-358**"
       }
     },
     {
