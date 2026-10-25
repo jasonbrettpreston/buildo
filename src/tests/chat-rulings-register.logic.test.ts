@@ -212,6 +212,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(A, 'R-JY')).toContain('2026-10-25-batch-d#CHAT-147.RJY-Q1-Q2');
     expect(rowOf(A, 'R-JY')).toContain('buildStartCountsSql(descriptor)');
   });
+  it('CHAT-148..150 (batch 2026-10-25-e): re-pin on M-326, re-freeze night on R-JY, hook budget on R-IY', () => {
+    const E = '2026-10-25-batch-e#';
+    expect(rowOf(M, 'M-326')).toContain(E + 'CHAT-148.M326-REPIN');
+    expect(rowOf(A, 'R-JY')).toContain(E + 'CHAT-149.REFREEZE-NIGHT');
+    expect(rowOf(A, 'R-IY')).toContain(E + 'CHAT-150.HOOK-BUDGET');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
