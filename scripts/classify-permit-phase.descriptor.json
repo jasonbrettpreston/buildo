@@ -205,7 +205,7 @@
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Ported by name from the legacy audit row (:91). A purely descriptive counter: zero is the normal rerun value (pinned L4), so it carries no bound (Spec 132 §core.6: INFO is only for a purely descriptive counter; CPP-D2).",
+        "text": "Ported by name from the legacy audit row (:91). A purely descriptive counter: zero is the normal rerun value (pinned L4), so it carries no bound (Spec 132 §core.6: INFO is only for a purely descriptive counter; CPP-D2, operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM).",
         "liveness": {
           "kind": "table",
           "ref": "permits"
@@ -235,7 +235,7 @@
         }
       ],
       "why": {
-        "text": "Ported by name (:92). The numerator of examination_rate; read on the step's pool after COMMIT exactly as the legacy stats query (:70-77). Descriptive: no measured bound exists yet (M1 owed), so no WARN tier is invented (CPP-D2).",
+        "text": "Ported by name (:92). The numerator of examination_rate; read on the step's pool after COMMIT exactly as the legacy stats query (:70-77). Descriptive: no measured bound exists yet (M1 owed), so no WARN tier is invented (CPP-D2, operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM).",
         "liveness": {
           "kind": "table",
           "ref": "permits"
@@ -325,13 +325,13 @@
     {
       "from": "the legacy bump of permits.last_seen_at to RUN_AT on every row the UPDATE changes (scripts/classify-permit-phase.js:56, 3a074eea 'for CDC consistency'; census finding F1, CPP-D1)",
       "why": {
-        "text": "KEPT at ② as a declared deviation, the CHAT-93.Q-H1 form that kept link_coa's permits bump (card CPP-Q1, option A, recommended; HELD for the operator). permits.last_seen_at is the loader's seen column (Spec 132 §ingestor.5 (R-DZ)); Spec 132 §core.14 (R-FF) keeps written:\"seen\" INGESTOR-only and R-JM removed link_coa's coa_applications stamp by ruling. So this step declares the column written:\"step\", source:\"run_at\", outside the guard, never written:\"seen\". Whether the bump retires is decided after the night N-A redundancy count (M3); retiring it edits refresh_snapshot's inputs.reads.steps and rides a re-freeze night (Spec 132 §x-v3.2 (R-II)).",
+        "text": "KEPT at ② as a declared deviation, the CHAT-93.Q-H1 form that kept link_coa's permits bump (card CPP-Q1, option A, ruled by operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM). permits.last_seen_at is the loader's seen column (Spec 132 §ingestor.5 (R-DZ)); Spec 132 §core.14 (R-FF) keeps written:\"seen\" INGESTOR-only and R-JM removed link_coa's coa_applications stamp by ruling. So this step declares the column written:\"step\", source:\"run_at\", outside the guard, never written:\"seen\". Whether the bump retires is decided after the night N-A redundancy count (M3); retiring it edits refresh_snapshot's inputs.reads.steps and rides a re-freeze night (Spec 132 §x-v3.2 (R-II)).",
         "liveness": {
           "kind": "column",
           "ref": "permits.last_seen_at"
         }
       },
-      "adjudicated_by": "PROPOSED — card CPP-Q1 option A (not yet ruled); precedent CHAT-93.Q-H1; Spec 132 §core.14 (R-FF), R-JM",
+      "adjudicated_by": "operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM; Spec 132 §core.14 (R-FF), R-JM; precedent CHAT-93.Q-H1",
       "date": "2026-10-25"
     },
     {
@@ -349,7 +349,7 @@
     {
       "from": "the legacy three-snapshot shape: the eligible count read on the pool before the UPDATE's transaction and the stats read after it (scripts/classify-permit-phase.js:42-48, :70-77), the literal 'PASS' verdict (:109) and the process clock duration (:35, :82)",
       "why": {
-        "text": "CPP-D5 / CPP-D2: the eligible count now runs inside the step transaction just before the UPDATE, so records_total describes the state the UPDATE saw; the stats read stays after COMMIT on the step's pool, as legacy. The verdict is derived by the runner from the four check rows (all INFO, so PASS, as legacy), and duration is the runner's timing. records_total stays the eligible pool (f2724308).",
+        "text": "CPP-D5 / CPP-D2: the eligible count now runs inside the step transaction just before the UPDATE, so records_total is the eligible pool counted just before the UPDATE (under READ COMMITTED the COUNT and the UPDATE take separate snapshots; nothing else writes these rows under lock 89); the stats read stays after COMMIT on the step's pool, as legacy. The verdict is derived by the runner from the four check rows (all INFO, so PASS, as legacy), and duration is the runner's timing. records_total stays the eligible pool (f2724308).",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/step/index.js"

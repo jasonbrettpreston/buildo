@@ -28,7 +28,7 @@
       "what": "CPP-D6: nothing clears 'Examination' when a permit gains a real issued_date while its feed status stays 'Inspection' (no reverse arm; the loader keeps enriched_status while status stays 'Inspection'). The live count is M2 (night N-A); a correction needs its own R-HQ entry."
     },
     {
-      "what": "The four rows are INFO with no bound (CPP-D2): a collapse of the eligible pool or of the rate does not WARN. No bound is invented without a measured baseline (M1)."
+      "what": "The four rows are INFO with no bound (CPP-D2, operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM): a collapse of the eligible pool or of the rate does not WARN. No bound is invented without a measured baseline (M1)."
     }
   ],
   "decisions": [
@@ -36,7 +36,7 @@
       "what": "Vocabulary constants, not tunables (CPP-D3): the CKAN status word 'Inspection', the derived value 'Examination' and the base revision key '00' (sub-revisions inherit lifecycle state from the base permit, 3a074eea). The epoch-default cutoff is the pinned variable classify_permit_phase_issued_date_floor_year (1970, min = max, a definitional constant, Spec 132 §core.8): issued_date <= 1 January of that year counts as no issued date. issued_date is a DATE column, so this selects the same rows as the legacy issued_date < '1970-01-02'."
     },
     {
-      "what": "The permits.last_seen_at bump (CPP-D1) is kept at ② as a declared deviation (card CPP-Q1, option A, HELD for the operator): written:\"step\", source:\"run_at\", outside the guard, never written:\"seen\" (Spec 132 §core.14 (R-FF)). Whether it retires is decided after the night N-A redundancy count M3."
+      "what": "The permits.last_seen_at bump (CPP-D1) is kept at ② as a declared deviation (card CPP-Q1, option A, ruled by operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM): written:\"step\", source:\"run_at\", outside the guard, never written:\"seen\" (Spec 132 §core.14 (R-FF)). Whether it retires is decided after the night N-A redundancy count M3."
     }
   ],
   "fences": [
