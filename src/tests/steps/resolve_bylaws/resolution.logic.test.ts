@@ -367,6 +367,14 @@ describe('Q-L2-4: the in-scope zone list is a logic variable, kept inside the ev
   });
 });
 
+describe('R-IX (Q-L2-3): commit ① landed the step in one piece, after the evaluator prerequisites', () => {
+  it('the resolve_bylaws descriptor, shell and compute module all exist (they landed together in 3c7ca535)', () => {
+    for (const rel of ['scripts/resolve-bylaws.descriptor.json', 'scripts/resolve-bylaws.js', 'scripts/lib/compute/resolve-bylaws.js']) {
+      expect(fs.existsSync(path.join(ROOT, rel)), rel).toBe(true);
+    }
+  });
+});
+
 describe('PIN-L2-2: the CommonJS library requires the ES evaluator modules synchronously in plain Node (the bridge)', () => {
   it('node (no test transform) requires the library and reaches evaluate.mjs and cell-cache.mjs', () => {
     const out = execFileSync(process.execPath, ['-e', `const r = require(${JSON.stringify(path.join(ROOT, COMPUTE))}); console.log(typeof r.cellKey, typeof r.evidenceOf, r.cellKey({ zone: 'RD', exception: null }, [], { structure: 'principal', target: 'height_m' }).cell_id.length)`], { encoding: 'utf8' });
