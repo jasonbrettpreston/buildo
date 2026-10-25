@@ -17,6 +17,7 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 | 3 | `wf2/v3coa-ledger-flips` @ `4d1113ab` | **verify-48f PASS-WITH-NOTES** (N1 fixed in 4d1113ab) | df50be8a R-JD flips (21 CLOSED · ②, COA-D7 back to OPEN per EVE.LEDGER-1) + 4d1113ab cost-rollback runbook names the CoA logic variable |
 | 4 | `wf2/v3coa-cpp-1` @ `41153d12` | verify-48b PASS-WITH-NOTES (①) + **verify-48g PASS-WITH-FINDINGS** (②; F1/F2/F4 fixed in 41153d12) | 8cca8b0d + 3c1a80a6 ①, 2256cf36 ② (CHAT-138), 7de96a34 PRE captures, 3fffa353 PRE traces + catalog |
 | 5 | `wf2/v3coa-fghi-merge` @ `2003fb42` | verify-48c (BLOCK F-1) → CHAT-105 → **verify-48c2** (F-1/F-2 cleared; G-1 fixed 2003fb42) | F/G/H/I ① merges + fixes, ec981c21 scorecards, 2003fb42 |
+| 6 | `wf1/b10-door` @ `732bbe97` | **verify-48h PASS-WITH-NOTES** | B10 door, coa-2026-d prereg + blind round, values batch, ingest captures |
 
 ## Merge 1: wf1/rulings-rec3 @ 7e5e9f72
 
@@ -51,3 +52,10 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
   - Hand-merged to the union: converted.json (classify_permit_phase AND classify_lifecycle_phase pending rows), _witness-guard.ts (both legacy_oracle_excluded entries), defect-ledger.md (CPP-D1..D10 and CLP-D*; RB-D1..D9 and LCOA-D*), execution-budget-disposition.json pending list (resolve_bylaws, classify_permit_phase, assert_lifecycle_phase_distribution), conversion-roadmap.infra.test.ts (pendingBatch 19, C6 18), sql-witness-fixture.logic.test.ts (ADOPTION 19 / 8 / 21) — the tests derive these from the registries and pass.
 - **Checks:** every generator --check rc 0 (~/Buildo-scratch/int29/gens-m5.txt); decision-log clean (381); spec-split-check clean; targeted 149 files: 3,658 passed, **29 failed = exactly the step-conformance R-R/Rule 13 "generated scorecard block is not stale" cases** (the merges resolved blocks to one side; ~/Buildo-scratch/int29/m5-tests.txt). **Owed next (H lane, DB-backed): `node scripts/analysis/step-validate.mjs --all --write`** → one generator-output commit; then the full suite.
 - **Integration fix (in the merge commit):** src/tests/gate-score-floor.infra.test.ts T6 spawned `step-validate --all --fast` with the 1 MB spawnSync default; the merged tree prints 1.84 MB (0.87 MB at integrate-28) so the run died ENOBUFS and T6 read 0 score rows. maxBuffer 64 MB added (red: docs/reports/red-evidence/gate-f/t6-enobufs-red.json 1 failed / 21 passed; after 22/22). No gate logic changed.
+
+## Merge 6: wf1/b10-door @ 732bbe97 (B10: M-357 door, coa-2026-d pre-registration, blind result, values batch, ingest captures)
+
+- Lane verify: **verify-48h PASS-WITH-NOTES** (every number re-derived; prereg a54b4138 committed 31 s before the first score; values-only clean; values batch byte-identical on rebuild, sha f8ea5ad7).
+- Commits: c0495a9f door (coa-cumulative.mjs + cumulative-set.json), a54b4138 prereg-coa-2026-d.json, 3c2f95a3 blind result, 53c66619 values batch + manifest entry, 732bbe97 load_coa_notices POST captures retaken after the 2026-10-25 ingest (coa-2026-d 123 variance rows + 25 plan facts live; 7 explained input-drift keys; 17/17 V3).
+- **Scorecard (M-357):** blind coa-2026-d 48 MATCH / 7 DIFFER → 87.27 % accuracy, 67.07 % answered; cumulative headline 197 notices / 821 rows 435 / 36 → 92.36 % / 74.53 %, overall floors and 900.3.10 pass, seven article floors fail → operator (no --accept).
+- No conflicts; every generator --check rc 0 (~/Buildo-scratch/int29/gens-m6.txt); 172 / 4d CHECK OK (pinned), FLOORS OK; coa-cumulative + load_coa_notices 223 tests passed.
