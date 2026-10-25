@@ -1,0 +1,49 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/classify-permit-phase.descriptor.json (Spec 120 §3.4-§3.4b; C6-2 commit ②, 2026-10-25).",
+    "CAP: 12 prose entries across the NOTES_PROSE_BLOCKS (scripts/analysis/gates/notes-cap.mjs; fast invariant #45). PROMOTE to a check or DELETE; there is no overflow.",
+    "No live-table number below was measured by this lane (no DB access); M1-M3 are queued for night N-A (assessment §9)."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "'Examination' is a derived enriched_status, never a raw status. The CKAN feed labels permits in the city's examination pipeline (zoning review, code review) as status 'Inspection' with no issued_date (c6bf9f1d; about 13,764 such permits when the step was written, header :5-7, documented, not re-measured). The step writes enriched_status only, so the loader upsert keeps the raw status; the other half of the contract is in the four permits.status writers, which clear enriched_status when the status leaves 'Inspection' (C7, Spec 44 §3).",
+      "measured": {
+        "value": "code: scripts/classify-permit-phase.js:3-18, :53-60; scripts/load-permits.js:357-363; scripts/close-stale-permits.js:129, :148",
+        "date": "2026-10-23",
+        "query": "read of the frozen oracle (sha256 f952f0cb47a905e1...) and the status writers at d6dc90d2"
+      }
+    },
+    {
+      "what": "examination_classified is the rows THIS run changed and is 0 on a rerun (the guard); total_examination / total_inspection / examination_rate are cumulative over every base-revision 'Inspection' permit, and the denominator has no issued_date clause, so the rate is the share of the whole Inspection population that is in examination. records_total is the eligible pool (f2724308), not the changed rows."
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "A steady-state run changes zero rows and reads PASS: new 'Examination' rows appear only when the loader brings a new base-revision 'Inspection' permit with no issued_date, or clears enriched_status on a status change that later returns to 'Inspection'."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "CPP-D6: nothing clears 'Examination' when a permit gains a real issued_date while its feed status stays 'Inspection' (no reverse arm; the loader keeps enriched_status while status stays 'Inspection'). The live count is M2 (night N-A); a correction needs its own R-HQ entry."
+    },
+    {
+      "what": "The four rows are INFO with no bound (CPP-D2, operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM): a collapse of the eligible pool or of the rate does not WARN. No bound is invented without a measured baseline (M1)."
+    }
+  ],
+  "decisions": [
+    {
+      "what": "Vocabulary constants, not tunables (CPP-D3): the CKAN status word 'Inspection', the derived value 'Examination' and the base revision key '00' (sub-revisions inherit lifecycle state from the base permit, 3a074eea). The epoch-default cutoff is the pinned variable classify_permit_phase_issued_date_floor_year (1970, min = max, a definitional constant, Spec 132 §core.8): issued_date <= 1 January of that year counts as no issued date. issued_date is a DATE column, so this selects the same rows as the legacy issued_date < '1970-01-02'."
+    },
+    {
+      "what": "The permits.last_seen_at bump (CPP-D1) is kept at ② as a declared deviation (card CPP-Q1, option A, ruled by operator CHAT-138.CPP-Q1-D2 (2026-10-25-batch-b), dated note on R-JM): written:\"step\", source:\"run_at\", outside the guard, never written:\"seen\" (Spec 132 §core.14 (R-FF)). Whether it retires is decided after the night N-A redundancy count M3."
+    }
+  ],
+  "fences": [
+    {
+      "const": "guard_columns is [\"enriched_status\"] only",
+      "value": "scripts/classify-permit-phase.descriptor.json outputs.writes[0].write_discipline.guard_columns; scripts/lib/compute/classify-permit-phase.js buildClassifySql",
+      "incident": "the LG-9 run-clock trap (geocode_permits): a source:\"run_at\" column in the guard is distinct on every run and would rewrite every eligible permit every run."
+    }
+  ]
+}

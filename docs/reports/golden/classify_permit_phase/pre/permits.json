@@ -1,0 +1,254 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/classify-permit-phase.js",
+  "chain": "permits",
+  "git_head": "2256cf36918f4891b20cd0aa6ae2854857e4dee6",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 47,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 140,
+      "examination_classified": 0,
+      "total_examination": 48,
+      "total_inspection": 129303,
+      "audit_table": {
+        "phase": 4,
+        "name": "Permit Phase Classification",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "examination_classified",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "total_examination",
+            "value": 48,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "total_inspection",
+            "value": 129303,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "examination_rate",
+            "value": "0.0%",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 299.36,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 157,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "status",
+          "revision_num",
+          "issued_date",
+          "enriched_status",
+          "last_seen_at"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "enriched_status",
+          "last_seen_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[classify-phase]\",\"msg\":\"Examination: 0 permits reclassified\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-phase]\",\"msg\":\"Complete\",\"context\":{\"examination_classified\":0,\"total_examination\":48,\"total_inspection\":129303,\"duration\":\"0.1s\"}}\nPIPELINE_SUMMARY:{\"records_total\":47,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":140,\"examination_classified\":0,\"total_examination\":48,\"total_inspection\":129303,\"audit_table\":{\"phase\":4,\"name\":\"Permit Phase Classification\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"examination_classified\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"total_examination\",\"value\":48,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"total_inspection\",\"value\":129303,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"examination_rate\",\"value\":\"0.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":299.36,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":157,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"status\",\"revision_num\",\"issued_date\",\"enriched_status\",\"last_seen_at\"]},\"writes\":{\"permits\":[\"enriched_status\",\"last_seen_at\"]}}\n\n[classify-permit-phase] completed in 0.2s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 4322,
+  "table_state": [
+    {
+      "table": "permits",
+      "row_count": 254082,
+      "ceiling_bypassed": "projected",
+      "content_hash": "bc4e4b4f11a3a1a494576250ca9209ea",
+      "order_by": "explicit",
+      "order_columns": [
+        "permit_num",
+        "revision_num"
+      ],
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "status",
+        "issued_date",
+        "enriched_status",
+        "last_seen_at"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "permits": 230
+  },
+  "table_specs": {
+    "permits": {
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "status",
+        "issued_date",
+        "enriched_status",
+        "last_seen_at"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "permit_num",
+        "revision_num"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/classify-permit-phase.js",
+    "chain": "permits",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Permit Phase Classification",
+          "phase": 4,
+          "rows": [
+            {
+              "metric": "examination_classified",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "total_examination",
+              "status": "INFO",
+              "threshold": null,
+              "value": 48
+            },
+            {
+              "metric": "total_inspection",
+              "status": "INFO",
+              "threshold": null,
+              "value": 129303
+            },
+            {
+              "metric": "examination_rate",
+              "status": "INFO",
+              "threshold": null,
+              "value": "0.0%"
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "examination_classified": 0,
+        "total_examination": 48,
+        "total_inspection": 129303
+      },
+      "records_new": 0,
+      "records_total": 47,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "permits": [
+            "status",
+            "revision_num",
+            "issued_date",
+            "enriched_status",
+            "last_seen_at"
+          ]
+        },
+        "writes": {
+          "permits": [
+            "enriched_status",
+            "last_seen_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Examination: 0 permits reclassified\",\"tag\":\"[classify-phase]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"examination_classified\":0,\"total_examination\":48,\"total_inspection\":129303},\"level\":\"INFO\",\"msg\":\"Complete\",\"tag\":\"[classify-phase]\"}",
+      "[classify-permit-phase] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "issued_date",
+          "enriched_status",
+          "last_seen_at"
+        ],
+        "content_hash": "bc4e4b4f11a3a1a494576250ca9209ea",
+        "order_by": "explicit",
+        "order_columns": [
+          "permit_num",
+          "revision_num"
+        ],
+        "row_count": 254082,
+        "table": "permits"
+      }
+    ],
+    "invariants": []
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 4323,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": "accb044a768c9442e7ef99a1f8d2171ea14c0ec95dd5a67ebdbd69dfd87fb181",
+  "fingerprint_files": [
+    "scripts/classify-permit-phase.descriptor.json",
+    "scripts/classify-permit-phase.js",
+    "scripts/classify-permit-phase.notes.json",
+    "scripts/lib/compute/classify-permit-phase.js"
+  ],
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
+}

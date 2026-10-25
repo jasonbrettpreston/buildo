@@ -137,10 +137,11 @@
     },
     {
       "slug": "classify_permit_phase",
+      "owner_specs": ["docs/specs/01-pipeline/41_chain_permits.md", "docs/specs/01-pipeline/80_taxonomies.md"],
       "file": "scripts/classify-permit-phase.js",
       "archetype": "ENRICHER",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS C6 (2026-10-19), derived from the legacy script (R-AO). Derives permits.enriched_status = 'Examination' for pre-issuance 'Inspection' permits (scripts/classify-permit-phase.js:54-63), deliberately never the raw loader-owned status (header :9-18). One pass. Precedent geocode_permits. Finding F1: the same UPDATE also writes last_seen_at (:56)."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS C6 (2026-10-19), derived from the legacy script, RE-DERIVED at PH-0 on 2026-10-23 (R-AO) and confirmed ENRICHER; C6-2 conversion IN FLIGHT (W2 of the V3-CoA path, commit ①, 2026-10-23): one guarded set-based UPDATE derives permits.enriched_status = 'Examination' for base-revision 'Inspection' permits with no real issued_date (scripts/classify-permit-phase.js:52-65, IS DISTINCT FROM guard :60), deliberately never the raw loader-owned status (header :9-18). One pass, one target. Precedent geocode_permits (set_based_join_update on permits). Finding F1: the same UPDATE also bumps permits.last_seen_at (:56), card CPP-Q1."
     },
     {
       "slug": "classify_permits",

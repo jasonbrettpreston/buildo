@@ -68,11 +68,11 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 | 6 | `isMaterializeStep` | `materialize` | `runMaterializePhase` via `materializeRowsArm` | `staleness.ledgerGatedSkip` | `buildMaterializeSql`, `buildPostSql`, `buildSourceSql`, `finalizeMatched`, `materializeRows` | classify_coa_trades, compute_coa_cost_estimates, link_parcel_addresses, resolve_bylaws |
 | 7 | `isBackfillStep` | `backfill` | `runBackfillPhase` via `runBackfillFullRecompute` | — | `buildBackfillSql`, `buildFullRecomputeSql`, `buildPostSql`, `buildPreSql` | compute_centroids |
 | 8 | `isRecorderStep` | `recorder` | `runRecorderPhase` | — | `buildReads`, `buildRow`, `buildWriteSql` | refresh_snapshot |
-| 9 | `isEnrichStep` | `enrich` | `runEnrichPhase` | `resolveRunMode` | `OVERLAY_LAYERS`, `passes` | classify_coa_scope, compute_parcel_cost_estimates, enrich_centreline, enrich_coa_zoning, enrich_heritage, enrich_parcels, enrich_permits (legacy shell), enrich_ravines, geocode_permits |
+| 9 | `isEnrichStep` | `enrich` | `runEnrichPhase` | `resolveRunMode` | `OVERLAY_LAYERS`, `passes` | classify_coa_scope, classify_permit_phase (legacy shell), compute_parcel_cost_estimates, enrich_centreline, enrich_coa_zoning, enrich_heritage, enrich_parcels, enrich_permits (legacy shell), enrich_ravines, geocode_permits |
 | — | none matched | none | no phase: `compute(ctx)` then `runWritePlan` | — | main function only | assert_coa_freshness, assert_data_bounds, assert_engine_health, assert_global_coverage, assert_parcel_sanity, assert_schema |
 | — | runner, any shape | any | `runWithPool` via `makePreWriteGate` | — | `DISTRIBUTION_SCOPE` | every step |
 
-**Table 1b: every step (generated).** 39 manifest steps with a descriptor. "Phase" is what the runner's own predicates pick for the committed descriptor. "Legacy shell runs" marks a pending step whose shell does not yet call `pipeline.step(descriptor, compute)`: its descriptor is graded, but the runner does not run it until the ② shell swap.
+**Table 1b: every step (generated).** 40 manifest steps with a descriptor. "Phase" is what the runner's own predicates pick for the committed descriptor. "Legacy shell runs" marks a pending step whose shell does not yet call `pipeline.step(descriptor, compute)`: its descriptor is graded, but the runner does not run it until the ② shell swap.
 
 | Slug | Archetype | Shape | Phase | Shell | Descriptor | Compute | Stage |
 |---|---|---|---|---|---|---|---|
@@ -85,6 +85,7 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 | assert_schema | ASSERT | none | no phase | `scripts/quality/assert-schema.js` | `scripts/quality/assert-schema.descriptor.json` | `scripts/lib/compute/assert-schema.js` | converted |
 | classify_coa_scope | ENRICHER | enrich | `runEnrichPhase` | `scripts/classify-coa-scope.js` | `scripts/classify-coa-scope.descriptor.json` | `scripts/lib/compute/classify-coa-scope.js` | pending: runner_wired |
 | classify_coa_trades | MATERIALIZER | materialize | `runMaterializePhase` | `scripts/classify-coa-trades.js` | `scripts/classify-coa-trades.descriptor.json` | `scripts/lib/compute/classify-coa-trades.js` | pending: runner_wired |
+| classify_permit_phase | ENRICHER | enrich | legacy shell runs; descriptor → `runEnrichPhase` | `scripts/classify-permit-phase.js` | `scripts/classify-permit-phase.descriptor.json` | `scripts/lib/compute/classify-permit-phase.js` | pending: compute_ported |
 | coa | INGESTOR | ingest | `ingestPrimaries` | `scripts/load-coa.js` | `scripts/load-coa.descriptor.json` | `scripts/lib/compute/load-coa.js` | pending: runner_wired |
 | compute_centroids | BACKFILL | backfill | `runBackfillPhase` | `scripts/compute-centroids.js` | `scripts/compute-centroids.descriptor.json` | `scripts/lib/compute/compute-centroids.js` | converted |
 | compute_coa_cost_estimates | MATERIALIZER | materialize | `runMaterializePhase` | `scripts/compute-coa-cost-estimates.js` | `scripts/compute-coa-cost-estimates.descriptor.json` | `scripts/lib/compute/compute-coa-cost-estimates.js` | pending: runner_wired |

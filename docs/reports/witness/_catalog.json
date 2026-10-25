@@ -18,11 +18,6 @@
       "lot_size_sqm",
       "parcel_id"
     ],
-    "_wsib_isgta_bak_20261001": [
-      "is_gta",
-      "legal_name_normalized",
-      "mailing_address"
-    ],
     "address_points": [
       "addr_num_normalized",
       "address_class_desc",
@@ -62,58 +57,6 @@
       "place_name",
       "retired_at",
       "street_type_normalized"
-    ],
-    "address_points_cohort_bak_20261002t2313z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261003t0138z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261005t2025z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261009t0358z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261014t0105z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261016t1912z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261016t1938z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261017t1801z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261018t0239z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261019t1215z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261021t1314z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261022t2056z": [
-      "address_point_id",
-      "latitude"
-    ],
-    "address_points_cohort_bak_20261022t2333z": [
-      "address_point_id",
-      "latitude"
     ],
     "address_points_retired_bak_20261003": [
       "addr_num_normalized",
@@ -450,81 +393,6 @@
       "zoning_enriched_at",
       "zoning_parcel_count"
     ],
-    "coa_applications_cohort_bak_20261020t1728z": [
-      "application_number",
-      "data_hash",
-      "status"
-    ],
-    "coa_applications_cohort_bak_20261020t1740z": [
-      "application_number",
-      "data_hash",
-      "status"
-    ],
-    "coa_applications_cohort_bak_20261020t1741z": [
-      "application_number",
-      "data_hash"
-    ],
-    "coa_applications_cohort_bak_20261020t1811z": [
-      "application_number",
-      "data_hash",
-      "status"
-    ],
-    "coa_applications_cohort_bak_20261020t1812z": [
-      "application_number",
-      "data_hash"
-    ],
-    "coa_applications_cohort_bak_20261020t1932z": [
-      "bylaw_max_fsi",
-      "id"
-    ],
-    "coa_applications_cohort_bak_20261020t2100z": [
-      "application_number",
-      "data_hash",
-      "status"
-    ],
-    "coa_applications_cohort_bak_20261020t2101z": [
-      "application_number",
-      "data_hash"
-    ],
-    "coa_applications_cohort_bak_20261020t2103z": [
-      "bylaw_max_fsi",
-      "id"
-    ],
-    "coa_applications_cohort_bak_20261021t1332z": [
-      "application_number",
-      "data_hash"
-    ],
-    "coa_applications_cohort_bak_20261021t1333z": [
-      "application_number",
-      "data_hash",
-      "status"
-    ],
-    "coa_applications_cohort_bak_20261021t1335z": [
-      "bylaw_max_fsi",
-      "id"
-    ],
-    "coa_applications_cohort_bak_20261022t1120z": [
-      "application_number",
-      "data_hash"
-    ],
-    "coa_applications_cohort_bak_20261022t1121z": [
-      "application_number",
-      "data_hash",
-      "status"
-    ],
-    "coa_applications_cohort_bak_20261022t2339z": [
-      "application_number",
-      "data_hash"
-    ],
-    "coa_applications_cohort_bak_20261022t2340z": [
-      "application_number",
-      "data_hash",
-      "status"
-    ],
-    "coa_applications_cohort_bak_20261022t2343z": [
-      "bylaw_max_fsi",
-      "id"
-    ],
     "coa_notice_variances": [
       "application_number",
       "bound",
@@ -589,10 +457,6 @@
       "vocab_version",
       "zoning_as_stated"
     ],
-    "coa_notice_variances_cohort_bak_20261010t2245z": [
-      "required_value",
-      "variance_key"
-    ],
     "coa_plan_facts": [
       "application_number",
       "corner_lot",
@@ -653,10 +517,6 @@
       "premium_factor",
       "revision_num",
       "trade_contract_values"
-    ],
-    "cost_estimates_cohort_bak_20261022t2345z": [
-      "estimated_cost",
-      "lead_id"
     ],
     "data_quality_snapshots": [
       "active_permits",
@@ -780,34 +640,6 @@
       "trade_name",
       "website"
     ],
-    "entities_cohort_bak_20261017t2136z": [
-      "id",
-      "is_wsib_registered"
-    ],
-    "entities_cohort_bak_20261018t0230z": [
-      "id",
-      "is_wsib_registered"
-    ],
-    "entities_cohort_bak_20261018t0300z": [
-      "id",
-      "is_wsib_registered"
-    ],
-    "entities_cohort_bak_20261019t1205z": [
-      "id",
-      "is_wsib_registered"
-    ],
-    "entities_cohort_bak_20261021t1329z": [
-      "id",
-      "is_wsib_registered"
-    ],
-    "entities_cohort_bak_20261022t2046z": [
-      "id",
-      "is_wsib_registered"
-    ],
-    "entities_cohort_bak_20261022t2323z": [
-      "id",
-      "is_wsib_registered"
-    ],
     "entitlements": [
       "created_at",
       "current_period_end",
@@ -914,34 +746,6 @@
       "matched_at",
       "parcel_id"
     ],
-    "lead_parcels_cohort_bak_20261020t1827z": [
-      "confidence",
-      "lead_id",
-      "match_type",
-      "matched_at",
-      "parcel_id"
-    ],
-    "lead_parcels_cohort_bak_20261020t2102z": [
-      "confidence",
-      "lead_id",
-      "match_type",
-      "matched_at",
-      "parcel_id"
-    ],
-    "lead_parcels_cohort_bak_20261021t1334z": [
-      "confidence",
-      "lead_id",
-      "match_type",
-      "matched_at",
-      "parcel_id"
-    ],
-    "lead_parcels_cohort_bak_20261022t2342z": [
-      "confidence",
-      "lead_id",
-      "match_type",
-      "matched_at",
-      "parcel_id"
-    ],
     "lead_products": [
       "classified_at",
       "confidence",
@@ -998,34 +802,6 @@
       "to_seq",
       "to_status",
       "transitioned_at"
-    ],
-    "lifecycle_status_history_cohort_bak_20261020t1728z": [
-      "dk",
-      "nk"
-    ],
-    "lifecycle_status_history_cohort_bak_20261020t1740z": [
-      "dk",
-      "nk"
-    ],
-    "lifecycle_status_history_cohort_bak_20261020t1811z": [
-      "dk",
-      "nk"
-    ],
-    "lifecycle_status_history_cohort_bak_20261020t2100z": [
-      "dk",
-      "nk"
-    ],
-    "lifecycle_status_history_cohort_bak_20261021t1333z": [
-      "dk",
-      "nk"
-    ],
-    "lifecycle_status_history_cohort_bak_20261022t1121z": [
-      "dk",
-      "nk"
-    ],
-    "lifecycle_status_history_cohort_bak_20261022t2340z": [
-      "dk",
-      "nk"
     ],
     "lifecycle_transitions": [
       "coa_type_class",
@@ -1154,31 +930,6 @@
       "shared_len_m"
     ],
     "parcel_address_points": [
-      "address_point_id",
-      "computed_at",
-      "parcel_id"
-    ],
-    "parcel_address_points_cohort_bak_20261018t1204z": [
-      "address_point_id",
-      "computed_at",
-      "parcel_id"
-    ],
-    "parcel_address_points_cohort_bak_20261019t1206z": [
-      "address_point_id",
-      "computed_at",
-      "parcel_id"
-    ],
-    "parcel_address_points_cohort_bak_20261021t1318z": [
-      "address_point_id",
-      "computed_at",
-      "parcel_id"
-    ],
-    "parcel_address_points_cohort_bak_20261022t2047z": [
-      "address_point_id",
-      "computed_at",
-      "parcel_id"
-    ],
-    "parcel_address_points_cohort_bak_20261022t2324z": [
       "address_point_id",
       "computed_at",
       "parcel_id"
@@ -1369,238 +1120,6 @@
       "zoning_overlays",
       "zoning_zn_string"
     ],
-    "parcels_centreline_bak_20261002t1848z": [
-      "abuts_laneway",
-      "centreline_dataset_version_when_enriched",
-      "id",
-      "is_corner_lot",
-      "is_through_lot",
-      "primary_frontage_street_name"
-    ],
-    "parcels_centreline_bak_20261002t1854z": [
-      "abuts_laneway",
-      "centreline_dataset_version_when_enriched",
-      "id",
-      "is_corner_lot",
-      "is_through_lot",
-      "primary_frontage_street_name"
-    ],
-    "parcels_centreline_bak_20261003t1441z": [
-      "abuts_laneway",
-      "centreline_dataset_version_when_enriched",
-      "id",
-      "is_corner_lot",
-      "is_through_lot",
-      "primary_frontage_street_name"
-    ],
-    "parcels_cohort_bak_20261002t2344z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261005t2032z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261009t0408z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261009t1152z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261014t0115z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261014t1130z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261016t1813z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261017t1650z": [
-      "cost_fb_total",
-      "id"
-    ],
-    "parcels_cohort_bak_20261017t1802z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261017t2126z": [
-      "centroid_lat",
-      "id"
-    ],
-    "parcels_cohort_bak_20261017t2127z": [
-      "id",
-      "ravine_dataset_version_when_enriched"
-    ],
-    "parcels_cohort_bak_20261017t2129z": [
-      "heritage_dataset_version_when_enriched",
-      "id"
-    ],
-    "parcels_cohort_bak_20261017t2138z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261017t2226z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261018t0040z": [
-      "id",
-      "is_corner_lot"
-    ],
-    "parcels_cohort_bak_20261018t0231z": [
-      "centroid_lat",
-      "id"
-    ],
-    "parcels_cohort_bak_20261018t0233z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261018t0236z": [
-      "id",
-      "ravine_dataset_version_when_enriched"
-    ],
-    "parcels_cohort_bak_20261018t0237z": [
-      "heritage_dataset_version_when_enriched",
-      "id"
-    ],
-    "parcels_cohort_bak_20261018t0238z": [
-      "cost_fb_total",
-      "id"
-    ],
-    "parcels_cohort_bak_20261018t0240z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261018t0437z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261019t1207z": [
-      "centroid_lat",
-      "id"
-    ],
-    "parcels_cohort_bak_20261019t1209z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261019t1212z": [
-      "id",
-      "ravine_dataset_version_when_enriched"
-    ],
-    "parcels_cohort_bak_20261019t1213z": [
-      "heritage_dataset_version_when_enriched",
-      "id"
-    ],
-    "parcels_cohort_bak_20261019t1214z": [
-      "cost_fb_total",
-      "id"
-    ],
-    "parcels_cohort_bak_20261019t1216z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261019t1219z": [
-      "id",
-      "is_corner_lot"
-    ],
-    "parcels_cohort_bak_20261019t2009z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261020t1841z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261021t1316z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261021t1319z": [
-      "centroid_lat",
-      "id"
-    ],
-    "parcels_cohort_bak_20261021t1321z": [
-      "id",
-      "ravine_dataset_version_when_enriched"
-    ],
-    "parcels_cohort_bak_20261021t1322z": [
-      "heritage_dataset_version_when_enriched",
-      "id"
-    ],
-    "parcels_cohort_bak_20261021t1323z": [
-      "id",
-      "is_corner_lot"
-    ],
-    "parcels_cohort_bak_20261021t1330z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261021t1331z": [
-      "cost_fb_total",
-      "id"
-    ],
-    "parcels_cohort_bak_20261022t2048z": [
-      "centroid_lat",
-      "id"
-    ],
-    "parcels_cohort_bak_20261022t2050z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261022t2053z": [
-      "id",
-      "ravine_dataset_version_when_enriched"
-    ],
-    "parcels_cohort_bak_20261022t2054z": [
-      "heritage_dataset_version_when_enriched",
-      "id"
-    ],
-    "parcels_cohort_bak_20261022t2055z": [
-      "cost_fb_total",
-      "id"
-    ],
-    "parcels_cohort_bak_20261022t2057z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261022t2100z": [
-      "id",
-      "is_corner_lot"
-    ],
-    "parcels_cohort_bak_20261022t2325z": [
-      "centroid_lat",
-      "id"
-    ],
-    "parcels_cohort_bak_20261022t2327z": [
-      "id",
-      "max_buildable_footprint_sqm"
-    ],
-    "parcels_cohort_bak_20261022t2330z": [
-      "id",
-      "ravine_dataset_version_when_enriched"
-    ],
-    "parcels_cohort_bak_20261022t2331z": [
-      "heritage_dataset_version_when_enriched",
-      "id"
-    ],
-    "parcels_cohort_bak_20261022t2332z": [
-      "cost_fb_total",
-      "id"
-    ],
-    "parcels_cohort_bak_20261022t2334z": [
-      "id",
-      "lot_size_sqm"
-    ],
-    "parcels_cohort_bak_20261022t2337z": [
-      "id",
-      "is_corner_lot"
-    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1628,30 +1147,6 @@
       "parcel_id",
       "permit_num",
       "revision_num"
-    ],
-    "permit_parcels_cohort_bak_20261017t2131z": [
-      "confidence",
-      "id"
-    ],
-    "permit_parcels_cohort_bak_20261018t0232z": [
-      "confidence",
-      "id"
-    ],
-    "permit_parcels_cohort_bak_20261019t1208z": [
-      "confidence",
-      "id"
-    ],
-    "permit_parcels_cohort_bak_20261021t1320z": [
-      "confidence",
-      "id"
-    ],
-    "permit_parcels_cohort_bak_20261022t2049z": [
-      "confidence",
-      "id"
-    ],
-    "permit_parcels_cohort_bak_20261022t2326z": [
-      "confidence",
-      "id"
     ],
     "permit_phase_transitions": [
       "from_phase",
@@ -1882,58 +1377,6 @@
       "zoning_enriched_at",
       "zoning_parcel_count"
     ],
-    "permits_cohort_bak_20261017t1640z": [
-      "latitude",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261017t2130z": [
-      "neighbourhood_id",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261017t2211z": [
-      "latitude",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261018t0234z": [
-      "neighbourhood_id",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261018t0235z": [
-      "latitude",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261019t1210z": [
-      "neighbourhood_id",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261019t1211z": [
-      "latitude",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261021t1315z": [
-      "latitude",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261021t1325z": [
-      "neighbourhood_id",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261022t2051z": [
-      "neighbourhood_id",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261022t2052z": [
-      "latitude",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261022t2328z": [
-      "neighbourhood_id",
-      "permit_num"
-    ],
-    "permits_cohort_bak_20261022t2329z": [
-      "latitude",
-      "permit_num"
-    ],
     "pg_stat_user_tables": [
       "analyze_count",
       "autoanalyze_count",
@@ -2028,30 +1471,6 @@
       "source_dataset_version",
       "source_id",
       "updated_at"
-    ],
-    "ravines_cohort_bak_20261017t2126z": [
-      "source_dataset_version",
-      "source_id"
-    ],
-    "ravines_cohort_bak_20261018t0227z": [
-      "source_dataset_version",
-      "source_id"
-    ],
-    "ravines_cohort_bak_20261019t1202z": [
-      "source_dataset_version",
-      "source_id"
-    ],
-    "ravines_cohort_bak_20261021t1317z": [
-      "source_dataset_version",
-      "source_id"
-    ],
-    "ravines_cohort_bak_20261022t2043z": [
-      "source_dataset_version",
-      "source_id"
-    ],
-    "ravines_cohort_bak_20261022t2320z": [
-      "source_dataset_version",
-      "source_id"
     ],
     "schema_migrations": [
       "applied_at",
@@ -2313,150 +1732,6 @@
       "trade_name",
       "trade_name_normalized",
       "website"
-    ],
-    "wsib_registry_cohort_bak_20261002t2315z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261002t2316z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261005t1817z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261005t1818z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261005t1819z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261009t0158z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261009t0202z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261009t2053z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261013t2238z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261013t2240z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261014t1545z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261014t1546z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261016t1816z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261016t1817z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261016t1818z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261016t1905z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261016t1906z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261017t1803z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261017t1804z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261017t2133z": [
-      "id",
-      "match_confidence"
-    ],
-    "wsib_registry_cohort_bak_20261017t2208z": [
-      "id",
-      "match_confidence"
-    ],
-    "wsib_registry_cohort_bak_20261018t0229z": [
-      "id",
-      "match_confidence"
-    ],
-    "wsib_registry_cohort_bak_20261018t0241z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261018t0242z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261019t1204z": [
-      "id",
-      "match_confidence"
-    ],
-    "wsib_registry_cohort_bak_20261019t1217z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261019t1218z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261021t1326z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261021t1327z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261021t1328z": [
-      "id",
-      "match_confidence"
-    ],
-    "wsib_registry_cohort_bak_20261022t2045z": [
-      "id",
-      "match_confidence"
-    ],
-    "wsib_registry_cohort_bak_20261022t2058z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261022t2059z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261022t2322z": [
-      "id",
-      "match_confidence"
-    ],
-    "wsib_registry_cohort_bak_20261022t2335z": [
-      "id",
-      "is_gta"
-    ],
-    "wsib_registry_cohort_bak_20261022t2336z": [
-      "id",
-      "is_gta"
     ],
     "zoning_building_setback_overlay": [
       "bylaw_section_link",

@@ -118,9 +118,9 @@
     {
       "slug": "classify_permit_phase",
       "file": "scripts/classify-permit-phase.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "ENRICHER",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS C6 (2026-10-19), derived from the legacy script, RE-DERIVED at PH-0 on 2026-10-23 (R-AO) and confirmed ENRICHER; C6-2 conversion IN FLIGHT (W2 of the V3-CoA path, commit ①, 2026-10-23): one guarded set-based UPDATE derives permits.enriched_status = 'Examination' for base-revision 'Inspection' permits with no real issued_date (scripts/classify-permit-phase.js:52-65, IS DISTINCT FROM guard :60), deliberately never the raw loader-owned status (header :9-18). One pass, one target. Precedent geocode_permits (set_based_join_update on permits). Finding F1: the same UPDATE also bumps permits.last_seen_at (:56), card CPP-Q1."
     },
     {
       "slug": "classify_permits",

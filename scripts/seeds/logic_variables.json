@@ -1179,6 +1179,36 @@
       "group": "CoA Scope & Trades"
     }
   },
+  "classify_permit_phase_issued_date_floor_year": {
+    "default": 1970,
+    "type": "number",
+    "min": 1970,
+    "max": 1970,
+    "description": "classify_permit_phase: a base-revision 'Inspection' permit whose issued_date is on or before 1 January of this year counts as having no issued date (an epoch default from bad municipal ETL, 3a074eea). Formerly the SQL literal '1970-01-02' (issued_date < '1970-01-02'; issued_date is a DATE, so the same rows). A definitional constant, pinned min = max (Spec 132 §core.8; CPP-D3). Bound as a query parameter. Seeded by migration 291 (C6-2 commit ②). CONSUMED by classify_permit_phase (scripts/lib/compute/classify-permit-phase.js, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "classify_permit_phase_heartbeat_minutes": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "classify_permit_phase: heartbeat interval (minutes) for the ENRICHER runner's whole-step ticker; execution.heartbeat_minutes_from_config names this key and a non-finite resolution THROWS (ER-D1). Default 5 mirrors geocode_permits_heartbeat_minutes. Seeded by migration 291 (C6-2 commit ②). CONSUMED by classify_permit_phase (scripts/lib/step/index.js).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "classify_permit_phase_lock_timeout_ms": {
+    "default": 1800000,
+    "type": "number",
+    "min": 0,
+    "max": 3600000,
+    "description": "classify_permit_phase: bounded, LOUD SET LOCAL lock_timeout (ms) for the step's shared transaction; execution.lock_timeout_ms_from_config names this key and a non-finite resolution THROWS. NEW behaviour at the swap (the legacy script set no lock_timeout). 0 = disabled. Default 1800000 (30 min) mirrors geocode_permits_lock_timeout_ms. Seeded by migration 291 (C6-2 commit ②). CONSUMED by classify_permit_phase (scripts/lib/step/index.js).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "coa_trades_unmapped_threshold_pct": {
     "default": 20,
     "type": "number",

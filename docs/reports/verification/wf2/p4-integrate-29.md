@@ -15,6 +15,7 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 | 1 | `wf1/rulings-rec3` @ `7e5e9f72` | decision-log / spec-split clean | CHAT-133..139 register notes (batch 2026-10-25-b) |
 | 2 | `wf1/excr-l-interior` @ `3769508a` | verify-48a (d27d1930; BLOCK cleared) + **verify-48e PASS** (3769508a) | d27d1930 CHAT-100 L-INTERIOR option B (HELD for the CHAT-100 integrate, now here) + 3769508a CHAT-104 STREET-DIR |
 | 3 | `wf2/v3coa-ledger-flips` @ `4d1113ab` | **verify-48f PASS-WITH-NOTES** (N1 fixed in 4d1113ab) | df50be8a R-JD flips (21 CLOSED · ②, COA-D7 back to OPEN per EVE.LEDGER-1) + 4d1113ab cost-rollback runbook names the CoA logic variable |
+| 4 | `wf2/v3coa-cpp-1` @ `41153d12` | verify-48b PASS-WITH-NOTES (①) + **verify-48g PASS-WITH-FINDINGS** (②; F1/F2/F4 fixed in 41153d12) | 8cca8b0d + 3c1a80a6 ①, 2256cf36 ② (CHAT-138), 7de96a34 PRE captures, 3fffa353 PRE traces + catalog |
 
 ## Merge 1: wf1/rulings-rec3 @ 7e5e9f72
 
@@ -30,3 +31,12 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 
 - No conflicts (the defect-ledger rows merged clean beside integrate-28 RB-D8/RB-D9 and the rulings).
 - verify-48f notes carried: N2 partial lock coverage on CCS-D3, CCT-D4, CCT-D5, CCCE-D2, CCCE-D8 and four OPEN rows with fixes but no ② lock (LCTP-D9, LCTP-D10, CCT-D7, CCCE-D10) — follow-up locks; N3 small text points.
+
+## Merge 4: wf2/v3coa-cpp-1 @ 41153d12 (classify_permit_phase ①②, PREs)
+
+- **Conflicts: 46 files.**
+  - 38 `docs/reports/*-assessment.md`: in every one both sides changed only the generated `## Validation scorecard (generated)` block (~/Buildo-scratch/int27/bin/blockcheck.mjs: outside text base==ours==theirs on 38/38). Each resolved to the integrate side whole (`git show :2:`), never a hunk mix. The blocks are stale for the merged tree; **a DB-backed `step-validate --all --write` is owed (H lane)** as its own generator-output commit.
+  - Generated, regenerated: logic-variables-registry.md (851 vars), logic-variable groups, maxbld-report-field-inventory.{json,md}, 122-conversion-roadmap.md, 122-programme-backlog.md, programme-items.json evidence, 132 handbook Table 1b (39 -> 40 steps), system map.
+  - Hand-merged to the union: execution-budget-disposition.json (pending list keeps resolve_bylaws AND classify_permit_phase; pending_why = base + both sides' appended notes, both pure appends; CRLF kept); conversion-roadmap.infra.test.ts pendingBatch 16 (each side +1 from 14); sql-witness-fixture.logic.test.ts ADOPTION 19 / 8 / 18 (zero_statement +1 resolve_bylaws, legacy_oracle_excluded +1 classify_permit_phase).
+- **Checks:** every generator --check rc 0 (~/Buildo-scratch/int29/gens-m4.txt); decision-log clean (381); spec-split-check clean; 22 targeted files, 577 tests passed.
+- Migration numbering: 287 (p37, uncommitted), 288 (v3merge), 290, 291 (this, not applied), 292 (cpc2, uncommitted).

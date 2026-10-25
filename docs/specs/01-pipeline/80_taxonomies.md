@@ -61,7 +61,7 @@ These static classification models define the business vocabulary that the pipel
 <behavior>
 ## 3. Construction Phases (4-phase lifecycle)
 
-**Files:** `src/lib/classification/phases.ts` + `scripts/classify-permit-phase.js`
+**Files:** `src/lib/classification/phases.ts` (`scripts/classify-permit-phase.js` does not implement this vocabulary: it only marks pre-issuance 'Inspection' permits as `enriched_status = 'Examination'`, Spec 41 step 4)
 
 ```
 early_construction → structural → finishing → landscaping
@@ -549,7 +549,7 @@ renovation→INT, mechanical→MEC; demolition/repair/other→null, `repair`→[
 - **Operator-facing rendering (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) renders the trade vocabulary defined in §2 in its Trades panel — every `permit_trades` row with `confidence`, plus an `is_default_fallback` flag (true when `confidence === 0.55`, signaling tag-trade-matrix default with no permit-specific signal). The construction-phase vocabulary (§3) renders in the Lifecycle panel.
 
 ### Target Files
-- `scripts/classify-permit-phase.js` — §3 defines the 4-phase lifecycle vocabulary and timing thresholds this script implements
+- `scripts/classify-permit-phase.js` — sets `enriched_status = 'Examination'` on pre-issuance 'Inspection' permits (Spec 41 step 4); it does not implement §3's 4-phase vocabulary (corrected at its commit ②, CPP-D9)
 - `scripts/classify-coa-scope.js` — §4/§5.A define the description-keyword decision tree and CoA `structure_type`/`coa_type_class` vocabulary this script implements
 - `scripts/classify-coa-trades.js` — §4 defines the `lead_products` write contract (`classifyCoaProducts`, tag-hit/bundle confidence thresholds) this script implements
 - `scripts/classify-permits.js` — §2/§7.1 define the TRADES vocabulary and dual-path parity contract this script implements

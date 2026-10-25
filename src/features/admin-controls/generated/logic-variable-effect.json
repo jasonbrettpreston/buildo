@@ -5,6 +5,27 @@
     "Derived from the seeds, converted.json stages, the descriptors, the live code and the copy migrations (scripts/analysis/gates/variable-effect.mjs); locked by step-validate fast invariant #53."
   ],
   "entries": {
+    "classify_permit_phase_heartbeat_minutes": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_permit_phase",
+      "legacy_name": null,
+      "reason": "classify_permit_phase still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_permit_phase_issued_date_floor_year": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_permit_phase",
+      "legacy_name": null,
+      "reason": "classify_permit_phase still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_permit_phase_lock_timeout_ms": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_permit_phase",
+      "legacy_name": null,
+      "reason": "classify_permit_phase still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
     "coa_active_trades_warn_max": {
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
