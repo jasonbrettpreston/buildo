@@ -1,0 +1,49 @@
+{
+ "source": "operator chat 2026-10-25 (afternoon, after the integrate-29 push)",
+ "operator_quote": "1. agredd just ensure compliance with handbook (show) 2. Agreed. 3. Agreed let's run this 4. what's your recommend.  Review rulings and handbook 5. resolve the decisions disagree - resolve the remainder in compliance with handbook/rulings - show them",
+ "context": "Answers to the post-integrate-29 O-lane list: (1) P3-7 night blockers CMS-D14 and storage, plus Q3/Q4; (2) B10-Q1 seven failing floors; (3) the ALPD PRE refusal (unclassified_count 259 > 100); (4) RJY-Q1/Q2 = recommendation only, not ruled here; (5) the 29 decision_disagree rows, verify-48h notes A/C/D/E/F and verify-49 N3. Facts measured read-only 2026-10-25: P2 decision_disagree 29 = 18 hearing notices (notice 'pending', CKAN decision NULL) + 2 partial refusals (1 item refused, CKAN Approved) + 10 whole-application disagreements (8 coa-2017-decisions notice refused / CKAN Approved; A0271/17TEY and A0203/26NY notice approved / CKAN Refused).",
+ "decisions": [
+  {
+   "id": "CHAT-140.P37-GATED",
+   "subject": "compute_maxbld_scenarios: a Layer-2-gated lot emits not_evaluated:<gate> without reading lot metrics; an ungated lot missing a metric is not_evaluated:missing_input:<field>",
+   "decision": "approve",
+   "recommendation": "CMS-D14 (1,522 lots lack lot metrics, 1,521 of them Layer-2-gated; checkInputs throws before reading lot_gate): read lot_gate first; a gated lot gives every scenario not_evaluated:<the Layer 2 gate reason> unchanged (Spec 78 §6.11 :751 'a Layer 2 not_evaluated reason propagates unchanged'), no metric read. An ungated lot with a missing metric gives not_evaluated:missing_input:<field> (the Spec 78 :884 form; never defaulted, Spec 68 §5a part 4), counted by a check, never a throw. If the closed vocabulary (vocab.layer3.status_form) lacks a form, the builder stops and brings a card. Built red-first on wf1/p3-7-prep. P3-7 Q3 (the capture projects key columns only, parcel_id + scenario) and Q4 (no migration-287 *.db.test.ts; the violations.test.ts file lock and the PRECAP-1 pending-set check stand in) approved as recommended."
+  },
+  {
+   "id": "CHAT-141.P37-STORAGE",
+   "subject": "P3-7 storage follows the ruled O-6: measure real bytes on a sample before the night; over the §6.8 kill line, persist only the headline and per-scenario totals",
+   "decision": "approve",
+   "recommendation": "O-6 is RULED (Spec 78 :700, 2026-10-18): measured against the §6.8 kill line (L2 + L3 <= 10 % of the DB) at the first capture; if it fails, only the headline and per-scenario totals are persisted. The :561 dated note's 'O-6 is still OPEN' means the measurement is open, not the rule (corrected by a dated note). The 3.07 M-row / 11.7 GB JSON proxy is not pg bytes, so before the night a sample of the 20,000-lot probe's rows is inserted into a TEMP table in a rolled-back transaction and pg_total_relation_size gives bytes per row (§6.8 'the trial measures before lock'; no full write to find out). Over the line: the per-scenario row keeps only parcel_id, scenario, status (with reason), total_gfa_sqm, unit count and lineage; the detail is computed on read as for L3-a (§6.8 Phase 3 trial). Within the line: the full rows as drafted. Either result is printed before migration 287 is applied."
+  },
+  {
+   "id": "CHAT-142.B10-FLOORS",
+   "subject": "No --accept on the seven failing coa-2026-d floors; a pre-registered parser-fix round, then coverage rounds",
+   "decision": "approve",
+   "recommendation": "Floors only go up (M-322): the cumulative headline is not accepted while six article floors and the pooled floor fail. Next, the parser-fix round (CHAT-136) pre-registered under M-321, its miss list adding A0254/26EYK#10 (verify-48h note A) and a sixth named category 'count not read (spaces)' (the 6 registered rows); then coverage rounds for the NO ANSWER classes (12 'clause not keyed (no unit in the agreed set)', 10 'clause keyed without a target'), each pre-registered, blind against its own prior, findings page per M-323/M-324. Wording fix (note F): 'six article floors plus the pooled-articles floor'."
+  },
+  {
+   "id": "CHAT-143.ALPD-CHAIN",
+   "subject": "A permits chain run refreshes classify_lifecycle_phase before the ALPD PRE; backup_db is left out",
+   "decision": "approve",
+   "recommendation": "assert_lifecycle_phase_distribution's legacy assert fails live (unclassified_count 259 > 100; the permits chain last ran 2026-07-17), so its PRE cannot be captured on stale data. Run the permits chain from the pushed tip (ead2c4b2) under the DB lock with --only= every chain step except backup_db, which uploads a pg_dump to S3 (cloud write, CHAT-54 = operator). dispatch_notifications runs as its kill-switch no-op (notifications_dispatch_enabled = 0). Then the ALPD PRE (R-JW) if the assert passes; if it still fails, report, no workaround."
+  },
+  {
+   "id": "CHAT-144.P2-DISAGREE",
+   "subject": "Spec 129 P2 decision_disagree compares decided applications only, at the application level; the notice decision outranks CKAN",
+   "decision": "approve",
+   "recommendation": "The P2 SQL compares an item decision to the CKAN application decision, and (v.decision = 'refused') IS DISTINCT FROM NULL is true, so 18 of the 29 rows are hearing notices with no decision on either side, and 2 are partial refusals (one item refused, the application approved). Corrected check: per application, only where the notice is a decision notice (no 'pending' item) and the CKAN decision is not NULL; the notice is refused when every decided item is refused (the per-item 'refused result wins' column rule of Spec 129 :49 is unchanged); CKAN refused = decision ILIKE '%refus%'. Expected 29 -> 10. The 10 remaining are real: by M-326 the decision notice's job is the decision, so the notice value stands in the answer key and CKAN is not used to change it; each of the 10 is re-read against its source document (values only) and listed with its reason in the step's explained list. The check stays WARN and non-blocking. Descriptor change on load_coa_notices: red-first test, then its POST captures are retaken on the next coa_notices DB slot with an explained diff."
+  },
+  {
+   "id": "CHAT-145.PLANFACT-CDE",
+   "subject": "Plan facts: lot_* is a survey dimension only when the source is a survey; A0254 setbacks follow the examiner; A0222 height disclosed as a unit conversion",
+   "decision": "approve",
+   "recommendation": "Note C: by M-326 lot area, frontage, depth and corner flag are the survey's job, and M-308 prefers survey dimensions when held, so each plan-facts lot_* value records its source document type and the scorer's surveyFacts (coa-scorecard.mjs:241-250) reads only survey-sourced values; site-plan, plan-statistics and notice lot figures stay as printed reference values. Every moved row (frozen 172/4d and cumulative) is listed; verify-48h measured 0 of 123 blind rows change. Note D: M-326 ranks the zoning (examiner) notice above the decision notice where they differ, so A0254's proposed_setback_* values follow the examiner (4.03) with the decision figure (6.1) recorded as the difference; the note's citation is corrected (CHAT-117 narrows only notice vs plan statistics). Note E: A0222 proposed_height_m 10.01 converted from 32'-10\" keeps the existing 'unit conversion only' practice (as other plan-facts files) with that disclosure added to its note; values as printed otherwise (M-333). C/D/E change the coa-2026-d values batch: rebuilt, re-verified, ingested on the next coa_notices DB slot with the P2 fix."
+  },
+  {
+   "id": "CHAT-146.HOOK-LVEFFECT",
+   "subject": "Pre-commit runs generate-logic-variable-effect --check",
+   "decision": "approve",
+   "recommendation": "verify-49 N3: the R-EO badge file went stale after an integrate merge and only a full suite caught it. Add `node scripts/generate-logic-variable-effect.mjs --check` to .husky/pre-commit beside the other generator checks (Spec 124 R-AG cheap gates), with the hooks-composition lock (src/tests/hooks-composition.infra.test.ts) updated red-first."
+  }
+ ]
+}
