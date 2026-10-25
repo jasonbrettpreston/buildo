@@ -39,3 +39,20 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 - H5 verify-48: a fresh read-only verifier on this branch (Compliance, Integration, Reality-Check on the size and capture numbers); its findings are appended here.
 - The table_version gated rerun above (operator DB job).
 - Not merged here: wf2/v3coa-fghi-merge (verify-48c BLOCK F-1, cleared by CHAT-105), wf2/v3coa-cpp-1, wf1/excr-l-interior (HELD on CHAT-104 build), the RARMS patches (re-freeze night).
+
+## verify-48 (fresh read-only verifier, 2026-10-25): PASS-WITH-NOTES
+
+Lenses: Compliance, Integration, Reality-Check. Re-derived: merge integrity against both parents; every pre-commit generator --check rc 0; targeted suites 347 tests; the Layer 2 counts against the live DB (440,093 lots = population; 53 codes per lot; 23,324,929 results; table_state hashes f9dff7b2 / c4c7bda8 / b7c32d8a); fingerprints equal; CoA 0 of 698 and 0 of 496 rows differ (its own scorecards).
+- **F-1 MEDIUM, ruled:** the R1 recipe passed RESOLVE_BYLAWS_FORCE_FULL although CHAT-118.Q-114b limited it to R3 (the orchestrator's unruled recipe fix). Operator ruled **CHAT-130.R1-FORCE** (2026-10-25-batch-a, 49525721 on wf1/rulings-rec3): R-JP dated note + §B-AM bullet on R-DQ.
+- **F-2 LOW, fixed:** R-KC's first-use sentence is a session fact → **CHAT-132** dated correction note on R-KC.
+- **F-3 NOTE, confirmed:** CHAT-128 rested on a question → operator confirmed, **CHAT-131** note on R-KA.
+- F-4..F-6 NOTES: captures name the base commit (the source_fingerprint identifies the code and matches); the full-suite log predates the merge commit (counts consistent); DB rows keep table_version e8ff6103 by design.
+
+## Merge 3: wf1/rulings-rec3 @ 49525721 (CHAT-130..132)
+
+- No conflicts. bylaw-layer2-input.json unchanged (table_version 196bb790, body_sha256 18a8b42a = the Layer 2 side's body: the by-law content is identical, only register text moved the stamp); every generator --check rc 0 (~/Buildo-scratch/int28/gens-m3.txt); decision-log clean (374).
+
+## DB checks (operator go 2026-10-25, H lane under the lock)
+
+- `npm run test:db`: 134 files passed, 1 skipped; 913 tests passed, 12 skipped; exit 0 (~/Buildo-scratch/int28/test-db.txt).
+- The owed gated resolve_bylaws run on this tree: gate `no_upstream_changes`, skipped, 0 rows (~/Buildo-scratch/l2night/gated-int28.log). With body_sha256 equal on both sides, a forced run would evaluate the same body; not run.

@@ -1,0 +1,41 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-25-batch-a/2026-10-25-batch-a.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-25-batch-a",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "F-1 / CHAT-130: \"Approve CHAT-130 (Recommended)\"; CHAT-128: \"Confirm CHAT-128 (Recommended)\"; F-2 / R-KC: \"Correct by dated note (Recommended)\"",
+    "record": "operator chat 2026-10-25 (morning)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-25-batch-a/2026-10-25-batch-a.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-130.R1-FORCE",
+      "question": "CHAT-118.Q-114b amended: resolve_bylaws' force_full env also on its R1 recipe after the recovery.reset TRUNCATE",
+      "recommendation": "resolve_bylaws' override.force_full env (RESOLVE_BYLAWS_FORCE_FULL) is passed by its R3 bracket and by its R1 recipe after the recovery.reset TRUNCATE (the TRUNCATE does not reset the materialize ledger gate, so a plain R1 gated-skips on empty tables, measured 2026-10-24 19:23); no other step. Dated note on R-JP plus a §B-AM bullet on R-DQ. No code or capture change: recapture.json already carries it (3c7ca535); run 1 nonzero and the forced rerun-zero proof is a real recompute (0 rows). Corrects the orchestrator's unruled recipe change (verify-48 F-1).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-131.CHAT128-CONFIRM",
+      "question": "CHAT-128.L2-COH-1 confirmed by the operator",
+      "recommendation": "Confirms CHAT-128 (cohort.json closes resolve_bylaws' three write tables on summary counters, no count_path; Spec 124a R-BR: \"Absent: the legacy summary counters\"), whose recorded approval had rested on the operator's question (verify-48 F-3). Dated confirmation note on R-KA beside the CHAT-128 note. No change.",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-132.RKC-CORRECTION",
+      "question": "R-KC dated-note correction: the first-use sentence is a session fact, both probes named",
+      "recommendation": "Dated note on R-KC: its sentence \"first used on the 2026-10-24 Layer 2 retake\" is a session fact (MORNING.md: migration DB test 6/6, 20k-parcel probe ~98/s, heap 306 MB, --plan cohort 20), not part of the CHAT-126 ruling; the ruling names both session-driver probes, memprobe.cjs and m60probe.cjs. The row text stays (registers are corrected by dated notes). verify-48 F-2.",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    }
+  ]
+}

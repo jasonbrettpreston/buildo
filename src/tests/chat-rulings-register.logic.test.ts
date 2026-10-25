@@ -188,6 +188,13 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(A.split('\n').some((l) => l.startsWith('- **R-BG') && l.includes('CHAT-127.L2-WIT-1'))).toBe(true);
     expect(map.rules.find((r) => r.id === 'R-KC')?.handbook_line).toBe('x-captures.1');
   });
+  it('CHAT-130..132 (batch 2026-10-25-a, verify-48 F-1..F-3): R1 force env on R-JP + §B-AM bullet on R-DQ, CHAT-128 confirmation on R-KA, R-KC correction', () => {
+    const Z = '2026-10-25-batch-a#';
+    expect(rowOf(A, 'R-JP')).toContain(Z + 'CHAT-130.R1-FORCE');
+    expect(rowOf(A, 'R-KA')).toContain(Z + 'CHAT-131.CHAT128-CONFIRM');
+    expect(rowOf(A, 'R-KC')).toContain(Z + 'CHAT-132.RKC-CORRECTION');
+    expect(A.split('\n').some((l) => l.startsWith('- **R-DQ: CHAT-118.Q-114b is amended by CHAT-130'))).toBe(true);
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
