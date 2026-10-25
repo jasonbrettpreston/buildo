@@ -1,0 +1,15 @@
+{
+ "$comment": "The M-357 cumulative all-notices set (Spec 133 m.357; CHAT-88.HELDOUT-1): the headline score, held to the M-322 floors (floors-172.json: 92 accuracy / 71 answered overall, 900.3.10 = 86; floors move only by --accept --ruling). Paths are relative to the coa-data directory (values only, outside the repo). The first batch is the frozen 172-notice set (expected-172.json; it and expected-4d.json stay frozen pins, never re-pinned by a fold-in). A new batch is added (role blind) only after its blind round: its M-321 pre-registration committed at HEAD and its blind totals recorded here. Assemble with coa-cumulative.mjs, score with coa-scorecard.mjs --floors.",
+ "schema": "coa-cumulative-set-v1",
+ "floors": "scripts/analysis/bylaw-validation/coa-expected/floors-172.json",
+ "batches": [
+  {
+   "batch": "coa-2026-a,b,c",
+   "role": "frozen",
+   "notices": "notices-all2.json",
+   "parcels": "parcels-all2.json",
+   "plan_facts": "plan-facts",
+   "pin": "scripts/analysis/bylaw-validation/coa-expected/expected-172.json"
+  }
+ ]
+}
