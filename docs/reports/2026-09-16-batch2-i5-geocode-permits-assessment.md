@@ -800,7 +800,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | geocode_permits | PASS | min_migration=18 <= migrations count=278 |
+| 1 | geocode_permits | PASS | min_migration=18 <= migrations count=279 |
 | 2 | geocode_permits | PASS | 3 declared, missing from seeds: none |
 | 3 | geocode_permits | PASS | retired=0 overlap-with-declared=none |
 | 7 | geocode_permits | PASS | SPEC LINK header present=true |

@@ -875,7 +875,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   neighbourhoods: 'neighbourhoods', load_wsib: 'wsib_registry', load_zoning: 'zoning_bylaw_areas',
   load_ravines: 'ravines', load_heritage: 'heritage_properties', load_centreline: 'toronto_centreline',
   enrich_parcels: 'parcels', enrich_ravines: 'parcels', enrich_heritage: 'parcels', enrich_centreline: 'parcels', enrich_permits: 'permits', enrich_coa_zoning: 'coa_applications',
-  geocode_permits: 'permits', link_parcels: 'permit_parcels',
+  geocode_permits: 'permits', link_parcels: 'permit_parcels', classify_permit_phase: 'permits',
   link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
   link_coa: 'coa_applications', link_wsib: 'entities',
   // R-DL (2026-10-17): each value is one of the step's declared outputs.writes tables.

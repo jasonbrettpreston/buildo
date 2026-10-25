@@ -217,15 +217,20 @@ type Descriptor = {
 };
 
 describe('classify_permit_phase ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: descriptor exists, archetype ENRICHER (census, Spec 132 §core.4 (R-AO)), lock 89, spec "41"; shell is pipeline.step(), not pipeline.run() (flips at ②)', () => {
+  it('D1a — identity: descriptor exists, archetype ENRICHER (census, Spec 132 §core.4 (R-AO)), lock 89, spec "41" (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     expect(d.identity).toMatchObject({ name: 'classify_permit_phase', archetype: 'ENRICHER', lock: LOCK_ID, spec: '41' });
+  });
+
+  // ② lands at compute_ported with the legacy shell live (Spec 132 §x-stages.2 (R-EQ)): the swap waits for permits
+  // (a declared upstream, stage red_suite) to reach runner_wired with the close_stale_permits fold (CHAT-98.P-Q1; #54).
+  it.fails('D1b — frozen shell: the shell is pipeline.step(), not pipeline.run() (flips at the W2 swap, Spec 132 §x-stages.2 (R-EQ))', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toMatch(/pipeline\.step\(/);
     expect(shell).not.toMatch(/pipeline\.run\(/);
   });
 
-  it.fails('D2 — write discipline per target (Spec 132 §core.12 (R-CT)): one permits target keyed (permit_num, revision_num), guarded IS DISTINCT FROM on enriched_status only (a run_at column in the guard rewrites every row, the geocode_permits LG-9 fence), zero writes on a rerun, and rls_bypass_or_policy on permits (RLS on, migrations/227:75) (flips at ②)', () => {
+  it('D2 — write discipline per target (Spec 132 §core.12 (R-CT)): one permits target keyed (permit_num, revision_num), guarded IS DISTINCT FROM on enriched_status only (a run_at column in the guard rewrites every row, the geocode_permits LG-9 fence), zero writes on a rerun, and rls_bypass_or_policy on permits (RLS on, migrations/227:75) (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     expect(d.outputs.writes.map((w) => w.table)).toEqual(['permits']);
     const w = d.outputs.writes[0]!;
@@ -235,7 +240,7 @@ describe('classify_permit_phase ① — converted claims (RED at ①; flip to `i
     expect((d.guards?.requires ?? []).some((r) => r.kind === 'rls_bypass_or_policy' && r.name === 'permits')).toBe(true);
   });
 
-  it.fails('D3 — the last_seen_at bump is never silent (card CPP-Q1; Spec 132 §ingestor.5 (R-DZ), §core.14 (R-FF), R-JM): a written last_seen_at is a source:"run_at" column (never written:"seen", which stays INGESTOR-only) AND a declared deviation citing the ruling; or the column is not written at all (flips at ②)', () => {
+  it('D3 — the last_seen_at bump is never silent (card CPP-Q1; Spec 132 §ingestor.5 (R-DZ), §core.14 (R-FF), R-JM): a written last_seen_at is a source:"run_at" column (never written:"seen", which stays INGESTOR-only) AND a declared deviation citing the ruling; or the column is not written at all (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     const seen = d.outputs.writes.flatMap((w) => (w.columns ?? []).filter((c) => c.name === 'last_seen_at'));
     for (const c of seen) {
@@ -249,7 +254,7 @@ describe('classify_permit_phase ① — converted claims (RED at ①; flip to `i
     }
   });
 
-  it.fails('D4 — declared equals witnessed (Spec 132 §core.14): inputs.reads names status, revision_num, issued_date and enriched_status, never last_seen_at, and inputs.reads.steps holds permits (flips at ②)', () => {
+  it('D4 — declared equals witnessed (Spec 132 §core.14): inputs.reads names status, revision_num, issued_date and enriched_status, never last_seen_at, and inputs.reads.steps holds permits (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     const flat = JSON.stringify(d.inputs.reads);
     for (const c of ['status', 'revision_num', 'issued_date', 'enriched_status']) expect(flat).toContain(`"${c}"`);
@@ -257,25 +262,37 @@ describe('classify_permit_phase ① — converted claims (RED at ①; flip to `i
     expect((d.inputs.reads.steps ?? []).map((s) => s.step)).toContain('permits');
   });
 
-  it.fails('D5 — EXTERNALIZED (Spec 132 §core.8 (R-CV)): compute holds no epoch cutoff literal and no lock number; a classify_permit_phase_ variable is seeded (flips at ②)', () => {
+  it('D5 — EXTERNALIZED (Spec 132 §core.8 (R-CV)): compute holds no epoch cutoff literal and no lock number; a classify_permit_phase_ variable is seeded (flipped at ②)', () => {
     const src = readText(COMPUTE_REL);
     expect(src).not.toMatch(/1970-01-02|\b89\b/);
     expect(readText('scripts/seeds/logic_variables.json')).toContain('"classify_permit_phase_');
   });
 
-  it.fails('D6 — compute is pure (Spec 132 §core.9 (R-BZ)): no Date.now, no NOW(), no .query(, no transaction / lock wrapper, no pipeline require, no process.env / argv, no catch (flips at ②)', () => {
+  // ① wrote "no .query(" here. That over-states the rule: Spec 132 §core.9 (R-BZ) has gate E PURITY codes read zero, and
+  // gate E's G5 counts only DML text sent through .query( (scripts/analysis/gates/compute-purity-js.mjs G5Sites: "RESOLVED
+  // and not DML (a SELECT ...) -> NOT a site"); an ENRICHER pass measures on the client the runner hands it (the converted
+  // geocode_permits compute). Corrected at ② to the rule itself: the only write goes through the ctx.joinUpdate seam and
+  // every .query( reads a SELECT constant.
+  it('D6 — compute is pure (Spec 132 §core.9 (R-BZ)): no Date.now, no NOW(), no transaction / lock wrapper, no pipeline require, no process.env / argv, no catch; the one write goes through ctx.joinUpdate and every .query( reads a SELECT constant (flipped at ②)', () => {
     const src = readText(COMPUTE_REL);
-    expect(src).not.toMatch(/Date\.now\(|\bNOW\(\)|\.query\(|withTransaction|withAdvisoryLock|require\(['"]\.\.\/pipeline['"]\)|process\.(env|argv)|\bcatch\b/);
+    expect(src).not.toMatch(/Date\.now\(|\bNOW\(\)|withTransaction|withAdvisoryLock|require\(['"]\.\.\/pipeline['"]\)|process\.(env|argv)|\bcatch\b/);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require(path.join(REPO_ROOT, COMPUTE_REL)) as Record<string, unknown>;
+    const reads = [...src.matchAll(/\.query\(\s*([A-Za-z_]+)/g)].map((m) => m[1]!);
+    expect(reads.length).toBeGreaterThan(0);
+    for (const name of reads) expect(String(mod[name])).toMatch(/^\s*SELECT\b/);
+    expect(src.match(/\.query\(/g)?.length).toBe(reads.length);
+    expect(src).toMatch(/ctx\.joinUpdate\(0, buildClassifySql\(\)/);
   });
 
-  it.fails('D7 — the verdict comes only from check rows (Spec 132 §core.6): the four legacy audit metrics are declared checks and compute decides no verdict (flips at ②)', () => {
+  it('D7 — the verdict comes only from check rows (Spec 132 §core.6): the four legacy audit metrics are declared checks and compute decides no verdict (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     const ids = (d.checks ?? []).map((c) => c.id).join(' ');
     for (const m of ['examination_classified', 'total_examination', 'total_inspection', 'examination_rate']) expect(ids).toContain(m);
     expect(readText(COMPUTE_REL)).not.toMatch(/verdict\s*:/);
   });
 
-  it.fails('D8 — the owner specs describe the step the code is (CPP-D9): Spec 41 step 4 and Spec 42 §6 no longer call it an early/structural/finishing/landscaping construction-phase classifier, and Spec 80 (§3 Files line and the Operating Boundaries entry) no longer names the script as implementing the 4-phase vocabulary (flips at ②, its spec diff)', () => {
+  it('D8 — the owner specs describe the step the code is (CPP-D9): Spec 41 step 4 and Spec 42 §6 no longer call it an early/structural/finishing/landscaping construction-phase classifier, and Spec 80 (§3 Files line and the Operating Boundaries entry) no longer names the script as implementing the 4-phase vocabulary (flipped at ②, its spec diff)', () => {
     const s41 = readText('docs/specs/01-pipeline/41_chain_permits.md');
     expect(s41).not.toMatch(/`classify_permit_phase` \| `classify-permit-phase\.js` \| Assign construction phase/);
     const s42 = readText('docs/specs/01-pipeline/42_chain_coa.md');
@@ -285,13 +302,15 @@ describe('classify_permit_phase ① — converted claims (RED at ①; flip to `i
     expect(s80).not.toMatch(/`scripts\/classify-permit-phase\.js` — §3 defines the 4-phase lifecycle vocabulary and timing thresholds this script implements/);
   });
 
-  it.fails('D9 — admin-verifiable (Spec 132 §core.16 (R-DL)): PIPELINE_TABLE_MAP maps classify_permit_phase (flips at ③, descriptor-derived under R-DV)', () => {
+  // Flipped at ② (not ③ as ① planned): fast invariant #51 ADMIN-REGISTRATION (R-DL) requires the entry as soon as the
+  // descriptor exists; the assert_lifecycle_phase_distribution ② precedent (72505827) landed its entry at ② too.
+  it('D9 — admin-verifiable (Spec 132 §core.16 (R-DL)): PIPELINE_TABLE_MAP maps classify_permit_phase (flipped at ②; #51)', () => {
     const funnel = readText('src/lib/admin/funnel.ts');
     const mapBlock = funnel.slice(funnel.indexOf('export const PIPELINE_TABLE_MAP'));
     expect(mapBlock.slice(0, mapBlock.indexOf('\n};'))).toMatch(/\bclassify_permit_phase:/);
   });
 
-  it.fails('D10 — the assessment report carries the generated validation scorecard (flips at ②)', () => {
+  it('D10 — the assessment report carries the generated validation scorecard (flipped at ②)', () => {
     expect(readText(REPORT_REL)).toContain('## Validation scorecard (generated)');
   });
 

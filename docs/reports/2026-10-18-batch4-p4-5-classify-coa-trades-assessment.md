@@ -273,7 +273,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | classify_coa_trades | PASS | min_migration=216 <= migrations count=278 |
+| 1 | classify_coa_trades | PASS | min_migration=216 <= migrations count=279 |
 | 2 | classify_coa_trades | PASS | 11 declared, missing from seeds: none |
 | 3 | classify_coa_trades | PASS | retired=0 overlap-with-declared=none |
 | 7 | classify_coa_trades | PASS | SPEC LINK header present=true |

@@ -1,0 +1,539 @@
+{
+  "identity": {
+    "name": "classify_permit_phase",
+    "display_name": "Permit Phase Classification",
+    "owner": "data",
+    "description": "ENRICHER over permits: one guarded set-based UPDATE sets permits.enriched_status = 'Examination' on base-revision (revision_num '00') permits whose CKAN status is 'Inspection' but which carry no real issued_date (NULL, or an epoch-default date on or before 1 January of classify_permit_phase_issued_date_floor_year). The same statement stamps permits.last_seen_at with the run clock on the rows it changes (legacy behaviour kept as a declared deviation, card CPP-Q1). It writes the derived column only, never the loader-owned raw status, and it has no reverse arm: the four permits.status writers clear enriched_status when the status leaves 'Inspection' (C7, Spec 44 §3). The step is not a construction-phase classifier; the owner specs' early/structural/finishing/landscaping text was corrected at this commit (CPP-D9).",
+    "lock": 89,
+    "why_lock": {
+      "text": "Lock 89 is Spec 47 §A.5's registry id (row 89, 'Writes Timestamps? YES — last_seen_at'), not a spec number. Assigned by c87bbbaf and unchanged since; kept so the registry loop (src/tests/pipeline-advisory-lock.infra.test.ts:123) stays green across the conversion. Unique across the manifest (measured at ①).",
+      "liveness": {
+        "kind": "spec",
+        "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+      }
+    },
+    "spec": "41",
+    "spec_version": "1.0",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "permits"
+        },
+        {
+          "step": "close_stale_permits"
+        }
+      ],
+      "tables": [
+        {
+          "table": "permits",
+          "columns": [
+            "permit_num",
+            "revision_num",
+            "status",
+            "issued_date",
+            "enriched_status"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "warn"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "permits",
+        "key": [
+          "permit_num",
+          "revision_num"
+        ],
+        "columns": [
+          {
+            "name": "enriched_status",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "last_seen_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "enriched_status"
+          ],
+          "guard_columns_why": {
+            "text": "The legacy guard (scripts/classify-permit-phase.js:60, f2724308) is enriched_status IS DISTINCT FROM 'Examination' alone. last_seen_at declares source:\"run_at\", which is distinct from its stored value on every run, so putting it in the guard would rewrite every eligible permit on every run (the LG-9 run-clock trap, the geocode_permits fence). With enriched_status alone a rerun writes zero rows, and last_seen_at moves only on rows whose enriched_status changes (pinned L2, L4).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          },
+          "scope": "status = 'Inspection' AND revision_num = '00' AND (issued_date IS NULL OR issued_date <= make_date($2::int, 1, 1))",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "The scope is the legacy predicate (:57-59): CKAN labels permits in the city's examination pipeline as 'Inspection' with no issued_date (c6bf9f1d); sub-revisions inherit lifecycle state from the base permit (3a074eea); epoch default dates from bad municipal ETL count as no issued date (3a074eea). issued_date is a DATE column (src/lib/db/generated/schema.ts:2126), so the legacy issued_date < '1970-01-02' and the converted issued_date <= make_date(1970, 1, 1) select the same rows; the year is the pinned variable classify_permit_phase_issued_date_floor_year (CPP-D3).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/classify-permit-phase.js"
+            }
+          }
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [
+      {
+        "table": "permits",
+        "column": "enriched_status",
+        "when": "a base-revision permit's status or issued_date changes (load_permits upsert, close_stale_permits, src/lib/sync/process.ts); the status writers clear enriched_status themselves when the status leaves 'Inspection' (C7)",
+        "by": "full_rescan"
+      }
+    ],
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Exactly one write statement per invocation, in every mode: the guarded join UPDATE (writes[0]). A rerun still issues it and changes zero rows (pinned L4).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/classify-permit-phase.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": [
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "none"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "permits",
+        "on_missing": "fail",
+        "why": {
+          "text": "permits has RLS enabled (migrations/227_rls_class_b_default_deny.sql:75, Spec 114 Class B). Under a non-bypass role the guarded UPDATE would match zero rows and read as a healthy zero-work run (Spec 132 §core.12 (R-CT)).",
+          "liveness": {
+            "kind": "table",
+            "ref": "permits"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "enrich",
+    "heartbeat_minutes_from_config": "classify_permit_phase_heartbeat_minutes",
+    "lock_timeout_ms_from_config": "classify_permit_phase_lock_timeout_ms",
+    "enrich_hooks": {
+      "post_phase": "computePostPhase"
+    },
+    "phases": [
+      {
+        "name": "classify",
+        "order": 1,
+        "txn": "shared",
+        "writes_ref": 0,
+        "scope": "full",
+        "timeout_minutes_from_config": "none"
+      }
+    ],
+    "txn_scope": "step",
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every declared check reads a count the step measured in the same run. A check that cannot be measured means the run cannot say what it changed, which must redden the run rather than read as healthy (the legacy stats failure threw after COMMIT, pinned L10).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "permits": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "permits"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "examination_classified",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "rowCount of the guarded UPDATE — the permits this run moved to 'Examination' (records_updated's own source)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the legacy audit row (:91). A purely descriptive counter: zero is the normal rerun value (pinned L4), so it carries no bound (Spec 132 §core.6: INFO is only for a purely descriptive counter; CPP-D2).",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "total_examination",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "base-revision 'Inspection' permits whose enriched_status is 'Examination', read after the UPDATE committed"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "permits",
+          "columns": [
+            "status",
+            "revision_num",
+            "enriched_status"
+          ]
+        }
+      ],
+      "why": {
+        "text": "Ported by name (:92). The numerator of examination_rate; read on the step's pool after COMMIT exactly as the legacy stats query (:70-77). Descriptive: no measured bound exists yet (M1 owed), so no WARN tier is invented (CPP-D2).",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "total_inspection",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "every base-revision 'Inspection' permit (no issued_date clause), read after the UPDATE committed"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "permits",
+          "columns": [
+            "status",
+            "revision_num"
+          ]
+        }
+      ],
+      "why": {
+        "text": "Ported by name (:93). The denominator is scoped to status 'Inspection' and revision '00' to avoid dilution by sub-revisions and other statuses (3a074eea); it deliberately drops the issued_date clause (pinned L3).",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
+    },
+    {
+      "id": "examination_rate",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "total_examination / total_inspection * 100 as a number (percent), 0 when total_inspection is 0"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (:94). The legacy value was a display string (toFixed(1) + '%'); the converted row carries the measured number so it can be trended and later bounded (CPP-D7, declared deviation). The division guard is kept (pinned L9).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/classify-permit-phase.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "duration_ms",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "examination_classified",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "total_examination",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "total_inspection",
+      "type": "int",
+      "consumers": []
+    }
+  ],
+  "deviations": [
+    {
+      "from": "the legacy bump of permits.last_seen_at to RUN_AT on every row the UPDATE changes (scripts/classify-permit-phase.js:56, 3a074eea 'for CDC consistency'; census finding F1, CPP-D1)",
+      "why": {
+        "text": "KEPT at ② as a declared deviation, the CHAT-93.Q-H1 form that kept link_coa's permits bump (card CPP-Q1, option A, recommended; HELD for the operator). permits.last_seen_at is the loader's seen column (Spec 132 §ingestor.5 (R-DZ)); Spec 132 §core.14 (R-FF) keeps written:\"seen\" INGESTOR-only and R-JM removed link_coa's coa_applications stamp by ruling. So this step declares the column written:\"step\", source:\"run_at\", outside the guard, never written:\"seen\". Whether the bump retires is decided after the night N-A redundancy count (M3); retiring it edits refresh_snapshot's inputs.reads.steps and rides a re-freeze night (Spec 132 §x-v3.2 (R-II)).",
+        "liveness": {
+          "kind": "column",
+          "ref": "permits.last_seen_at"
+        }
+      },
+      "adjudicated_by": "PROPOSED — card CPP-Q1 option A (not yet ruled); precedent CHAT-93.Q-H1; Spec 132 §core.14 (R-FF), R-JM",
+      "date": "2026-10-25"
+    },
+    {
+      "from": "the legacy examination_rate audit value, a display string such as '25.0%' (scripts/classify-permit-phase.js:94)",
+      "why": {
+        "text": "CPP-D7: the converted check row carries the measured percentage as a number, so it can be trended and bounded; the unit is stated on the check. An explained golden diff (R-DA) at the POST capture. Same form as classify_coa_trades deviations[0].",
+        "liveness": {
+          "kind": "check",
+          "ref": "examination_rate"
+        }
+      },
+      "adjudicated_by": "Spec 132 §core.6 (R-H) — the verdict and the row values come from check rows; precedent classify_coa_trades deviations[0] (operator y 2026-10-18)",
+      "date": "2026-10-25"
+    },
+    {
+      "from": "the legacy three-snapshot shape: the eligible count read on the pool before the UPDATE's transaction and the stats read after it (scripts/classify-permit-phase.js:42-48, :70-77), the literal 'PASS' verdict (:109) and the process clock duration (:35, :82)",
+      "why": {
+        "text": "CPP-D5 / CPP-D2: the eligible count now runs inside the step transaction just before the UPDATE, so records_total describes the state the UPDATE saw; the stats read stays after COMMIT on the step's pool, as legacy. The verdict is derived by the runner from the four check rows (all INFO, so PASS, as legacy), and duration is the runner's timing. records_total stays the eligible pool (f2724308).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "Spec 132 §core.6 (R-H), §core.9 (R-BZ) — runner-owned transaction, clock and verdict",
+      "date": "2026-10-25"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "CPP-D6 — no reverse arm. Nothing in this step clears 'Examination'; the status writers clear enriched_status only when the status leaves 'Inspection' (load-permits.js:357-363), so a base-revision permit that gains a real issued_date while its feed status stays 'Inspection' keeps 'Examination'. Preserved in legacy form (pinned L5); a correction needs its own R-HQ entry after M2.",
+      "measured": "NOT MEASURED (no DB in this lane): M2 is queued for night N-A — SELECT COUNT(*) FROM permits WHERE enriched_status = 'Examination' AND issued_date > make_date(1970, 1, 1), split by status.",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "classify-permit-phase.notes.json"
+  },
+  "recovery": {
+    "reset": "No TRUNCATE or rebuild path exists and none is needed: the scope is unnarrowed (every eligible permit is re-checked on every run) and the guard makes a rerun a zero-row write, so the next run repairs any interrupted state.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "The single write target sits inside ONE shared transaction (execution.txn_scope \"step\", the phase's txn \"shared\"), so a run killed mid-statement leaves permits exactly as it found it — no half-written state (the enrich_ravines / geocode_permits posture). Every run is already full (scope \"full\", staleness trigger always), so force_full_on_next_run changes nothing in practice.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "recovery.before_image applies to a retraction (outputs.writes[].retract != 'none'); this step's sole write target declares retract:\"none\" — it only sets 'Examination' and the run clock, never clears a value to NULL.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 279,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "matched.compute.eligible_pool",
+      "why": {
+        "text": "records_total is the eligible pool, not only the changed rows (f2724308, 'records_total now reflects eligible pool'; pinned L6). DECLARE THE ROOT THAT RESOLVES: matched.compute.* (the geocode_permits form).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    "records_new": {
+      "source": "matched.compute.records_new_aggregate",
+      "why": {
+        "text": "This step inserts nothing: the one write is an UPDATE on rows load_permits owns, and class N's executor refuses INSERT / ON CONFLICT text. Declared as a finite 0 (pinned L6).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    },
+    "records_updated": {
+      "source": "matched.compute.examination_classified",
+      "why": {
+        "text": "The UPDATE's rowCount, the legacy RETURNING row count (pinned L6).",
+        "liveness": {
+          "kind": "check",
+          "ref": "examination_classified"
+        }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "classify_permit_phase_issued_date_floor_year",
+        "min": 1970,
+        "max": 1970,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_permit_phase_heartbeat_minutes",
+        "min": 1,
+        "max": 60,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_permit_phase_lock_timeout_ms",
+        "min": 0,
+        "max": 3600000,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "permits": 4
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "classified",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The guarded UPDATE ran and the four INFO rows were measured; with no bounded row the derived verdict is PASS, as legacy (pinned L8).",
+        "liveness": {
+          "kind": "check",
+          "ref": "examination_classified"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 89 is held by another process. The legacy step returned with no SQL, summary or meta (pinned L12); the runner emits a self-skip row instead.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared logic variable resolved absent or outside its bounds under on_invalid:\"fail\"; the runner refuses before the lock and before any write.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/config.js"
+        }
+      }
+    },
+    {
+      "id": "failed_write_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The eligible count or the UPDATE threw inside the step transaction (rolled back), or the post-commit stats read threw (pinned L10's lanes).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

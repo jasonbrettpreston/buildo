@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (833) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 37 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (836) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 37 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **840** logic variables (833 numeric, 6 JSONB, 1 string).
+Total: **843** logic variables (836 numeric, 6 JSONB, 1 string).
 
 ---
 
@@ -76,6 +76,9 @@ Total: **840** logic variables (833 numeric, 6 JSONB, 1 string).
 | `classify_coa_trades_realtor_confidence` | numeric | 0.7 | 0 – 1 | — | seed | group: CoA Scope & Trades | McDonald's Airtight V3 (CCT-D4; migration 274): confidence of the realtor row appended to a residential CoA (Spec 80 §5). |
 | `classify_coa_trades_tier` | numeric | 3 | 3 – 3 | — | seed | group: CoA Scope & Trades | McDonald's Airtight V3 (CCT-D4; R-CV pinned; migration 274): the lead_trades tier of every CoA trade row — always 3 for CoA-side rows (migration 124). Pinned min = max. |
 | `classify_coa_trades_unmapped_threshold_pct` | numeric | 20 | 0 – 100 | — | seed | group: CoA Scope & Trades | McDonald's Airtight V3 (R-DE (v); CCT-D8; migration 274): WARN ceiling on the share of processed CoAs producing zero trades. Seeded from coa_trades_unmapped_threshold_pct (retires at ③). |
+| `classify_permit_phase_heartbeat_minutes` | numeric | 5 | 1 – 60 | — | seed | group: Source Ingestion | classify_permit_phase: heartbeat interval (minutes) for the ENRICHER runner's whole-step ticker; execution.heartbeat_minutes_from_config names this key and a non-finite resolution THROWS (ER-D1). Default 5 mirrors geocode_permits_heartbeat_minutes. Seeded by migration 291 (C6-2 commit ②). CONSUMED by classify_permit_phase (scripts/lib/step/index.js). |
+| `classify_permit_phase_issued_date_floor_year` | numeric | 1970 | 1970 – 1970 | — | seed | group: Source Ingestion | classify_permit_phase: a base-revision 'Inspection' permit whose issued_date is on or before 1 January of this year counts as having no issued date (an epoch default from bad municipal ETL, 3a074eea). Formerly the SQL literal '1970-01-02' (issued_date < '1970-01-02'; issued_date is a DATE, so the same rows). A definitional constant, pinned min = max (Spec 132 §core.8; CPP-D3). Bound as a query parameter. Seeded by migration 291 (C6-2 commit ②). CONSUMED by classify_permit_phase (scripts/lib/compute/classify-permit-phase.js, via ctx.config). |
+| `classify_permit_phase_lock_timeout_ms` | numeric | 1800000 | 0 – 3600000 | — | seed | group: Source Ingestion | classify_permit_phase: bounded, LOUD SET LOCAL lock_timeout (ms) for the step's shared transaction; execution.lock_timeout_ms_from_config names this key and a non-finite resolution THROWS. NEW behaviour at the swap (the legacy script set no lock_timeout). 0 = disabled. Default 1800000 (30 min) mirrors geocode_permits_lock_timeout_ms. Seeded by migration 291 (C6-2 commit ②). CONSUMED by classify_permit_phase (scripts/lib/step/index.js). |
 | `coa_active_trades_warn_max` | numeric | 18 | 1 – 35 | — | seed | group: CoA Scope & Trades | WF2 P6.5/P6.6 — WARN ceiling for mean ACTIVE trades per CoA (is_active=true rows) in classify-coa-trades. Post-P6.6 (is_active=!fromBundle) the direct tag-matrix + realtor rows are active; bundle-only recall rows are inactive. Expected ~15; WARN above 18 flags a fan-out regression (e.g. bundle rows reactivated). |
 | `coa_ancient_hearing_count_warn_max` | numeric | 5 | 1 – 100000 | — | seed | group: CoA Gates & Staleness | assert-data-bounds: coa_applications.hearing_date < 2010-01-01 row-count WARN ceiling. CONSUMED by assert_data_bounds. |
 | `coa_applications_dead_tuple_ratio_warn_max` | numeric | 0 | 0 – 5 | — | seed | group: Data Quality Thresholds | Trigger bound on coa_applications' pg_stat_user_tables dead_ratio, read by scripts/lib/step/plausibility.js runMaintenance by naming convention as the coa execution.maintenance VACUUM ANALYZE trigger (migration 278). 0 = vacuum whenever any dead tuple exists, the faithful form of the legacy unconditional VACUUM (load-coa.js:602, COA-D7). CONSUMED by runMaintenance via coa's config. |
@@ -863,4 +866,4 @@ Total: **840** logic variables (833 numeric, 6 JSONB, 1 string).
 
 ---
 
-*Generated from 803 seed vars + 37 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*
+*Generated from 806 seed vars + 37 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*

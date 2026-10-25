@@ -258,7 +258,7 @@ Drafted ruling text, "operator approved 2026-10-18, id at integration":
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_coa_to_parcels | PASS | min_migration=257 <= migrations count=278 |
+| 1 | link_coa_to_parcels | PASS | min_migration=257 <= migrations count=279 |
 | 2 | link_coa_to_parcels | PASS | 5 declared, missing from seeds: none |
 | 3 | link_coa_to_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_coa_to_parcels | PASS | SPEC LINK header present=true |

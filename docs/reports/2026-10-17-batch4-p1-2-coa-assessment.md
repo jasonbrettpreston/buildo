@@ -311,7 +311,7 @@ The legacy shell stays the live writer until ③ (W4A-R6; Spec 124 R-EF, 124:264
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | coa | PASS | min_migration=261 <= migrations count=278 |
+| 1 | coa | PASS | min_migration=261 <= migrations count=279 |
 | 2 | coa | PASS | 6 declared, missing from seeds: none |
 | 3 | coa | PASS | retired=0 overlap-with-declared=none |
 | 7 | coa | PASS | SPEC LINK header present=true |

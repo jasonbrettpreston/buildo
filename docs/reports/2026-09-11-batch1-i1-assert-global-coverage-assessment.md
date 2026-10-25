@@ -836,7 +836,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_global_coverage | PASS | min_migration=241 <= migrations count=278 |
+| 1 | assert_global_coverage | PASS | min_migration=241 <= migrations count=279 |
 | 2 | assert_global_coverage | PASS | 25 declared, missing from seeds: none |
 | 3 | assert_global_coverage | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_global_coverage | PASS | SPEC LINK header present=true |
