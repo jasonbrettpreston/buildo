@@ -1,0 +1,74 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-v3merge
+
+ ❯ src/tests/steps/link_coa/violations.test.ts (27 tests | 1 failed) 59ms
+   × link_coa ① — converted claims (RED at ①; flip to `it` at ② / ③) > D8 — the assessment report carries the generated validation scorecard (flips at ②) 1ms
+     → Expect test to fail
+ ✓ src/tests/steps/link_coa_to_parcels/violations.test.ts (28 tests) 55ms
+ ✓ src/tests/steps/compute_phase_calibration/violations.test.ts (24 tests) 62ms
+ ❯ src/tests/steps/classify_lifecycle_phase/violations.test.ts (29 tests | 1 failed) 79ms
+   × classify_lifecycle_phase ① — converted claims (RED at ①; flip to `it` at ② / ③) > D9 — the assessment report carries the generated validation scorecard (flips at ②) 1ms
+     → Expect test to fail
+ ✓ src/tests/steps/assert_lifecycle_phase_distribution/violations.test.ts (24 tests) 116ms
+ ✓ src/tests/steps/link_coa_to_parcels/compute-parity.logic.test.ts (4 tests) 26ms
+ ✓ src/tests/steps/link_coa_to_parcels/type-counters.logic.test.ts (6 tests) 15ms
+ ↓ src/tests/steps/assert_lifecycle_phase_distribution/seq-classify.db.test.ts (0 test)
+ ✓ src/tests/steps/assert_lifecycle_phase_distribution/compute.logic.test.ts (11 tests) 390ms
+ ✓ src/tests/sql-witness-fixture.logic.test.ts (30 tests) 620ms
+ ✓ src/tests/step-validate-defect-prefix.logic.test.ts (4 tests) 389ms
+ ✓ src/tests/swap-order.logic.test.ts (7 tests) 533ms
+   ✓ R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams > GREEN: the committed tree has zero violations 517ms
+ ✓ src/tests/conversion-roadmap.infra.test.ts (29 tests) 845ms
+   ✓ Spec 124 R-AO — the retained census row makes #25 ARCHETYPE-PARITY reachable > GREEN — checkArchetypeParity passes against the REAL census + REAL descriptors, and is NOT vacuous (>=1 retained row is actually compared) 321ms
+note: compute-purity: no declared set for scripts/lib/address-normalizers.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address-points-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/archetypes.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-data-bounds-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-global-coverage-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-parcel-sanity-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/build-norms.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-cost-model.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-link-sql.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/aic-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/parse-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-scope-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-trade-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/assert-schema.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/dead-tuple-ratio.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/lifecycle-phase.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/max-build.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcels-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/safe-math.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/tag-product-matrix.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/units.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/vocab-coverage.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-attr-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-precedence.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/archetype-cost-map.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/cost-model-shared.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+ ✓ src/tests/admin-step-registration.logic.test.ts (12 tests) 6926ms
+   ✓ fast invariant #51 ADMIN-REGISTRATION — the R-DL lock at pre-commit (step-validate --staged/--all --fast) > wired: step-validate prints #51 as a registry fast invariant, PASS on the live tree, and self-tests the gate 6893ms
+ ✓ src/tests/step-conformance.infra.test.ts (721 tests) 70862ms
+   ✓ §5.5 compute shape — dispatch table ≡ declared checks > RED — the driver EXITS 1 (no --json) when the compute corpus violates the shape (blocking half, both directions) 1664ms
+   ✓ Rule 10 — verdict is row-derived from exactly one place (checkVerdictSingleSource) > BUILDO_VERDICT_CORPUS_EXTRA fixtures an unsanctioned verdict cascade — checkNoSecondDerivation reds it with an exact file:line citation, and the sanctioned sites in the real corpus still pass 6409ms
+   ✓ PH-2 churn×complexity BATCH artifact (G2) — coverage + drift > the REAL table passes --check clean (deterministic re-derivation at its own window_end matches the committed file) 991ms
+   ✓ PH-2 churn×complexity BATCH artifact (G2) — coverage + drift > RED — a hand-edited row fires --check (known-bad fixture, real CLI, not just the exported function) 911ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/steps/classify_lifecycle_phase/violations.test.ts > classify_lifecycle_phase ① — converted claims (RED at ①; flip to `it` at ② / ③) > D9 — the assessment report carries the generated validation scorecard (flips at ②)
+ FAIL  src/tests/steps/link_coa/violations.test.ts > link_coa ① — converted claims (RED at ①; flip to `it` at ② / ③) > D8 — the assessment report carries the generated validation scorecard (flips at ②)
+Error: Expect test to fail
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ Test Files  2 failed | 12 passed | 1 skipped (15)
+      Tests  2 failed | 954 passed (956)
+   Start at  10:05:57
+   Duration  72.69s (transform 802ms, setup 221ms, collect 3.25s, tests 80.98s, environment 1ms, prepare 539ms)
+

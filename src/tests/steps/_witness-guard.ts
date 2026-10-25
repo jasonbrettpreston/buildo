@@ -138,6 +138,8 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   compute_coa_cost_estimates: 'legacy_oracle_excluded',
   // classify_permit_phase joined as legacy_oracle_excluded while pending (C6-2 commit ①, W2 of the V3-CoA path, 2026-10-23; the assert_coa_freshness precedent).
   classify_permit_phase: 'legacy_oracle_excluded',
+  // classify_lifecycle_phase joined as legacy_oracle_excluded while pending (V3-COA package I commit ①, 2026-10-23; the assert_coa_freshness precedent).
+  classify_lifecycle_phase: 'legacy_oracle_excluded',
   // assert_entity_tracing joined as legacy_oracle_excluded while pending (C6-1 commit ①, 2026-10-19; the assert_coa_freshness precedent).
   assert_entity_tracing: 'legacy_oracle_excluded',
   // assert_network_health joined as legacy_oracle_excluded while pending (C6-1 commit ①, 2026-10-19; the assert_coa_freshness precedent).
@@ -146,6 +148,10 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   assert_staleness: 'legacy_oracle_excluded',
   // assert_lifecycle_phase_distribution joined as legacy_oracle_excluded while pending (C6-1 commit ①, 2026-10-19; the assert_coa_freshness precedent).
   assert_lifecycle_phase_distribution: 'legacy_oracle_excluded',
+  // compute_phase_calibration joined as legacy_oracle_excluded while pending (C6-3 commit ①, 2026-10-23; the assert_coa_freshness precedent).
+  compute_phase_calibration: 'legacy_oracle_excluded',
+  // link_coa joined as legacy_oracle_excluded while pending (V3-COA package H commit ①, 2026-10-23; the assert_coa_freshness precedent).
+  link_coa: 'legacy_oracle_excluded',
   address_points: 'guarded',
   assert_engine_health: 'guarded',
   assert_global_coverage: 'guarded',

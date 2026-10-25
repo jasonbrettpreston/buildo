@@ -136,7 +136,8 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
     // timeout 420 s: a direct run measured 214 s (2026-10-14); the old 180 s
     // killed it, leaving 0 rows. notLookedReasons names any such run (LM-D14).
     const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--all', '--fast'], {
-      cwd: REPO_ROOT, encoding: 'utf8', timeout: 420_000,
+      // maxBuffer 64 MB: --all --fast output passed the 1 MB spawnSync default at integrate-29 (1.84 MB with the F/G/H/I and classify_permit_phase steps; 0.87 MB at integrate-28) and the run was killed (ENOBUFS, T6c-3 "not looked").
+      cwd: REPO_ROOT, encoding: 'utf8', timeout: 420_000, maxBuffer: 64 * 1024 * 1024,
     });
     expect(notLookedReasons(run, readConvertedJson(REPO_ROOT).converted.length)).toEqual([]);
     const scores = parseSummaryScores(`${run.stdout || ''}`);

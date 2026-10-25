@@ -104,9 +104,9 @@
     {
       "slug": "classify_lifecycle_phase",
       "file": "scripts/classify-lifecycle-phase.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "ENRICHER",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed ENRICHER; C6-5 conversion IN FLIGHT (V3-COA package I commit ①, 2026-10-23): streams dirty permits and coa_applications and writes their lifecycle columns under IS DISTINCT FROM guards (UPDATE permits scripts/classify-lifecycle-phase.js:309-340, :948-957, :1370-1395; UPDATE coa_applications :346-390, :1223-1230), appends permit_phase_transitions (:874-879, :1426-1441), lifecycle_transitions (:394-413) and lifecycle_status_history (:901-925, :1175-1202), and queues notifications rows (:85-89). It writes NO tracked_projects row (that is update_tracked_projects, the other C6-5 step). Multi-pass, multi-target; runner precedent classify_coa_scope (post_commit stream + flushBatch)."
     },
     {
       "slug": "classify_permit_phase",
@@ -176,9 +176,9 @@
     {
       "slug": "compute_phase_calibration",
       "file": "scripts/compute-phase-calibration.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "MATERIALIZER",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 (R-AO) and confirmed MATERIALIZER; C6-3 conversion IN FLIGHT (commit ①, 2026-10-23): two aggregate SELECTs over permit_phase_transitions and lifecycle_transitions (scripts/compute-phase-calibration.js:238-330) -> one whole-table replace of phase_stay_calibration in one transaction: staging INSERT (:418-428), TRUNCATE (:429), INSERT ... SELECT from staging (:431); zero buckets TRUNCATE only (:414-416). Runs in two chains (permits, coa); owner spec 84 (the domain spec, the assert_lifecycle_phase_distribution precedent). Precedent link_parcel_addresses."
     },
     {
       "slug": "compute_storey_norms",
@@ -296,9 +296,9 @@
     {
       "slug": "link_coa",
       "file": "scripts/link-coa.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "LINK",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed LINK; C6-4 conversion IN FLIGHT (V3-COA package H commit ①, 2026-10-23): five address tiers plus a description-FTS tier from coa_applications to permits write the link columns coa_applications.linked_permit_num/linked_confidence (scripts/link-coa.js:241-252, :331-361) after a cross-ward unlink (:123-132), then the permit side: the last_seen_at bump (:445-449), the linked_coa_application_number back-ref clear-then-set (:493-524) and the permit -> CoA lat/lng/ward inheritance (:663-675). Runner precedent at ②: link_wsib's tier cascade (re-derive, null-retract, reverse write on the second table), not link_parcels."
     },
     {
       "slug": "link_neighbourhoods",

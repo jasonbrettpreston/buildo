@@ -16,6 +16,7 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 | 2 | `wf1/excr-l-interior` @ `3769508a` | verify-48a (d27d1930; BLOCK cleared) + **verify-48e PASS** (3769508a) | d27d1930 CHAT-100 L-INTERIOR option B (HELD for the CHAT-100 integrate, now here) + 3769508a CHAT-104 STREET-DIR |
 | 3 | `wf2/v3coa-ledger-flips` @ `4d1113ab` | **verify-48f PASS-WITH-NOTES** (N1 fixed in 4d1113ab) | df50be8a R-JD flips (21 CLOSED · ②, COA-D7 back to OPEN per EVE.LEDGER-1) + 4d1113ab cost-rollback runbook names the CoA logic variable |
 | 4 | `wf2/v3coa-cpp-1` @ `41153d12` | verify-48b PASS-WITH-NOTES (①) + **verify-48g PASS-WITH-FINDINGS** (②; F1/F2/F4 fixed in 41153d12) | 8cca8b0d + 3c1a80a6 ①, 2256cf36 ② (CHAT-138), 7de96a34 PRE captures, 3fffa353 PRE traces + catalog |
+| 5 | `wf2/v3coa-fghi-merge` @ `2003fb42` | verify-48c (BLOCK F-1) → CHAT-105 → **verify-48c2** (F-1/F-2 cleared; G-1 fixed 2003fb42) | F/G/H/I ① merges + fixes, ec981c21 scorecards, 2003fb42 |
 
 ## Merge 1: wf1/rulings-rec3 @ 7e5e9f72
 
@@ -40,3 +41,13 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
   - Hand-merged to the union: execution-budget-disposition.json (pending list keeps resolve_bylaws AND classify_permit_phase; pending_why = base + both sides' appended notes, both pure appends; CRLF kept); conversion-roadmap.infra.test.ts pendingBatch 16 (each side +1 from 14); sql-witness-fixture.logic.test.ts ADOPTION 19 / 8 / 18 (zero_statement +1 resolve_bylaws, legacy_oracle_excluded +1 classify_permit_phase).
 - **Checks:** every generator --check rc 0 (~/Buildo-scratch/int29/gens-m4.txt); decision-log clean (381); spec-split-check clean; 22 targeted files, 577 tests passed.
 - Migration numbering: 287 (p37, uncommitted), 288 (v3merge), 290, 291 (this, not applied), 292 (cpc2, uncommitted).
+
+## Merge 5: wf2/v3coa-fghi-merge @ 2003fb42 (V3-COA F/G/H/I + CHAT-105 regeneration + G-1 fix)
+
+- Lane verifies: verify-48c BLOCK F-1 → CHAT-105 ec981c21 (DB-backed regeneration) → **verify-48c2** confirmed F-1/F-2 cleared, found G-1 HIGH (two it.fails flipped by the new blocks) → fixed 2003fb42 (it.fails → it, compute_phase_calibration D6 precedent).
+- **Conflicts: 56 files.**
+  - 43 assessment files: 42 with only the generated block changed on both sides (blockcheck) → integrate side whole; `2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md` changed outside the block only on the V3MERGE side (lane F's ② text) → V3MERGE side whole. All blocks are stale for the merged tree.
+  - Generated, regenerated: logic-variables registry, logic-variable groups + R-EO effect JSON, report-field inventory, 122 conversion roadmap, programme backlog, programme-items, 132 handbook (628 lines), system map.
+  - Hand-merged to the union: converted.json (classify_permit_phase AND classify_lifecycle_phase pending rows), _witness-guard.ts (both legacy_oracle_excluded entries), defect-ledger.md (CPP-D1..D10 and CLP-D*; RB-D1..D9 and LCOA-D*), execution-budget-disposition.json pending list (resolve_bylaws, classify_permit_phase, assert_lifecycle_phase_distribution), conversion-roadmap.infra.test.ts (pendingBatch 19, C6 18), sql-witness-fixture.logic.test.ts (ADOPTION 19 / 8 / 21) — the tests derive these from the registries and pass.
+- **Checks:** every generator --check rc 0 (~/Buildo-scratch/int29/gens-m5.txt); decision-log clean (381); spec-split-check clean; targeted 149 files: 3,658 passed, **29 failed = exactly the step-conformance R-R/Rule 13 "generated scorecard block is not stale" cases** (the merges resolved blocks to one side; ~/Buildo-scratch/int29/m5-tests.txt). **Owed next (H lane, DB-backed): `node scripts/analysis/step-validate.mjs --all --write`** → one generator-output commit; then the full suite.
+- **Integration fix (in the merge commit):** src/tests/gate-score-floor.infra.test.ts T6 spawned `step-validate --all --fast` with the 1 MB spawnSync default; the merged tree prints 1.84 MB (0.87 MB at integrate-28) so the run died ENOBUFS and T6 read 0 score rows. maxBuffer 64 MB added (red: docs/reports/red-evidence/gate-f/t6-enobufs-red.json 1 failed / 21 passed; after 22/22). No gate logic changed.

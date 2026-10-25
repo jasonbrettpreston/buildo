@@ -130,10 +130,11 @@
     },
     {
       "slug": "classify_lifecycle_phase",
+      "owner_specs": ["docs/specs/01-pipeline/84_lifecycle_phase_engine.md", "docs/specs/01-pipeline/41_chain_permits.md", "docs/specs/01-pipeline/42_chain_coa.md", "docs/specs/01-pipeline/101_notification_dispatch.md"],
       "file": "scripts/classify-lifecycle-phase.js",
       "archetype": "ENRICHER",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17) RE-DERIVED at PH-0 on 2026-10-19 (R-AO): confirmed ENRICHER. UPDATE permits (scripts/classify-lifecycle-phase.js:310, :949, :1371) and coa_applications (:347, :1224) lifecycle columns; append-only history lifecycle_transitions (:395), permit_phase_transitions (:875, :1427), lifecycle_status_history (:902, :1176); declared notifications enqueue (:86, operator decision 5). Multi-pass, multi-target; precedent enrich_parcels."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed ENRICHER; C6-5 conversion IN FLIGHT (V3-COA package I commit ①, 2026-10-23): streams dirty permits and coa_applications and writes their lifecycle columns under IS DISTINCT FROM guards (UPDATE permits scripts/classify-lifecycle-phase.js:309-340, :948-957, :1370-1395; UPDATE coa_applications :346-390, :1223-1230), appends permit_phase_transitions (:874-879, :1426-1441), lifecycle_transitions (:394-413) and lifecycle_status_history (:901-925, :1175-1202), and queues notifications rows (:85-89). It writes NO tracked_projects row (that is update_tracked_projects, the other C6-5 step). Multi-pass, multi-target; runner precedent classify_coa_scope (post_commit stream + flushBatch)."
     },
     {
       "slug": "classify_permit_phase",
@@ -205,10 +206,11 @@
     },
     {
       "slug": "compute_phase_calibration",
+      "owner_specs": ["docs/specs/01-pipeline/84_lifecycle_phase_engine.md"],
       "file": "scripts/compute-phase-calibration.js",
       "archetype": "MATERIALIZER",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17) RE-DERIVED at PH-0 on 2026-10-19 (R-AO): confirmed MATERIALIZER. CITE CORRECTED: :154 is a comment; the writes are staging build then TRUNCATE phase_stay_calibration (scripts/compute-phase-calibration.js:415, :429) + INSERT … SELECT FROM the staging table (:431). Precedent link_parcel_addresses."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 (R-AO) and confirmed MATERIALIZER; C6-3 conversion IN FLIGHT (commit ①, 2026-10-23): two aggregate SELECTs over permit_phase_transitions and lifecycle_transitions (scripts/compute-phase-calibration.js:238-330) -> one whole-table replace of phase_stay_calibration in one transaction: staging INSERT (:418-428), TRUNCATE (:429), INSERT ... SELECT from staging (:431); zero buckets TRUNCATE only (:414-416). Runs in two chains (permits, coa); owner spec 84 (the domain spec, the assert_lifecycle_phase_distribution precedent). Precedent link_parcel_addresses."
     },
     {
       "slug": "compute_storey_norms",
@@ -334,10 +336,11 @@
     },
     {
       "slug": "link_coa",
+      "owner_specs": ["docs/specs/01-pipeline/42_chain_coa.md", "docs/specs/01-pipeline/41_chain_permits.md", "docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/link-coa.js",
       "archetype": "LINK",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17) RE-DERIVED at PH-0 on 2026-10-19 (R-AO): confirmed LINK. Address-tier cascade writing link columns on both sides — coa_applications (scripts/link-coa.js:122, :239, :329, :668) and permits (:150, :445, :499, :515) — with retraction of stale links (:121-126, :150-154). Precedent link_parcels (LINK with retraction), not link_wsib (MATCHER)."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed LINK; C6-4 conversion IN FLIGHT (V3-COA package H commit ①, 2026-10-23): five address tiers plus a description-FTS tier from coa_applications to permits write the link columns coa_applications.linked_permit_num/linked_confidence (scripts/link-coa.js:241-252, :331-361) after a cross-ward unlink (:123-132), then the permit side: the last_seen_at bump (:445-449), the linked_coa_application_number back-ref clear-then-set (:493-524) and the permit -> CoA lat/lng/ward inheritance (:663-675). Runner precedent at ②: link_wsib's tier cascade (re-derive, null-retract, reverse write on the second table), not link_parcels."
     },
     {
       "slug": "link_neighbourhoods",

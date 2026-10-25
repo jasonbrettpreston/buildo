@@ -82,9 +82,11 @@ describe('R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams', () => {
   it('RED: an upstream that is neither converted nor pending (unconverted legacy) has neither swapped nor been captured', async () => {
     const { checkSwapOrder, loadSwapOrderInput } = await loadSwap();
     const { stageAwaitsCaptures } = await loadSv();
-    // R-JM landed (the descriptor no longer declares link_coa), so the pre-R-JM descriptor is projected in memory: assert_coa_freshness declaring link_coa (scripts/link-coa.js), which is in neither list.
+    // R-JM landed (the descriptor no longer declares link_coa), so the pre-R-JM descriptor is projected in memory: assert_coa_freshness declaring link_coa (scripts/link-coa.js).
+    // link_coa joined pending[] at its ① (V3-COA package H, 2026-10-23), so its pre-① registry state (in neither list) is projected in memory too.
     const base = loadSwapOrderInput(ROOT);
-    const r = checkSwapOrder({ ...base, descriptorOf: withLinkCoa(base, ['scripts/quality/assert-coa-freshness.js']) }, stageAwaitsCaptures);
+    const unregistered = { ...base, pending: base.pending.filter((p) => p.file !== 'scripts/link-coa.js') };
+    const r = checkSwapOrder({ ...unregistered, descriptorOf: withLinkCoa(unregistered, ['scripts/quality/assert-coa-freshness.js']) }, stageAwaitsCaptures);
     expect(r.violations.join('\n')).toContain('assert_coa_freshness (runner_wired) ← link_coa: unconverted, not in pending[]');
   });
 

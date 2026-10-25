@@ -146,6 +146,13 @@
       "stage": "compute_ported"
     },
     {
+      "file": "scripts/classify-lifecycle-phase.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-5)",
+      "reason": "C6-5 (classify_lifecycle_phase, ENRICHER: streams dirty permits and coa_applications, classifies each with the pure lifecycle-phase functions and writes the lifecycle columns back under IS DISTINCT FROM guards, appends permit_phase_transitions / lifecycle_transitions / lifecycle_status_history and queues user notifications rows; runs in the permits and coa chains; V3-COA package I; McDonald's Airtight V3 from ①: Spec 132 §core.9 (R-BZ) zero purity findings, §x-v3.1 (R-BA) every gate hard; the replay-safe per-batch write unit and the START_DATE_URGENT enqueue are cards CLP-Q1/CLP-Q2)",
+      "declared": "2026-10-23",
+      "stage": "red_suite"
+    },
+    {
       "file": "scripts/quality/assert-entity-tracing.js",
       "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-1)",
       "reason": "C6-1 (assert_entity_tracing, ASSERT: seven read-only SELECTs tracing permits seen in a 26-hour window through permit_trades, cost_estimates, trade_forecasts, lifecycle_phase and opportunity_score -> a row-derived, non-halting coverage verdict, no write; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md). ① lands the assessment docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md + red suite (L1-L12 legacy pins executing the verbatim legacy text, D1-D5/D7 it.fails as named missing artifacts). ③ is blocked by EP-PIN-D17 under R-ED.",
@@ -167,10 +174,24 @@
       "stage": "red_suite"
     },
     {
+      "file": "scripts/compute-phase-calibration.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-3)",
+      "reason": "C6-3 (compute_phase_calibration, MATERIALIZER: two aggregate SELECTs over permit_phase_transitions and lifecycle_transitions -> per-cohort median/p25/p75 days, written as ONE whole-table replace of phase_stay_calibration (staging, TRUNCATE, INSERT ... SELECT, one transaction, scripts/compute-phase-calibration.js:413-434); runs in the permits and coa chains; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md; Spec 132 §x-stages.1 (R-K), §x-stages.2 (R-EQ)). ① lands the assessment docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md + red suite (L1-L16 legacy pins executing the verbatim legacy text, D1-D5/D7/D8 it.fails as named missing artifacts). The ② write form is held on card CPC-Q1 (no materialize arm executes a whole-table replace today). The shell swap waits on classify_lifecycle_phase (R-EQ, #54); ③ is blocked by EP-PIN-D17 under R-ED.",
+      "declared": "2026-10-23",
+      "stage": "red_suite"
+    },
+    {
       "file": "scripts/quality/assert-lifecycle-phase-distribution.js",
       "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-1)",
-      "reason": "C6-1 (assert_lifecycle_phase_distribution, ASSERT: fifteen read-only SELECTs over permits/coa_applications/universal_stream_catalog -> per-seq distribution bands under three posture flags, an unclassified hard limit and three cross-status checks, halting only on the two C1 classes, no write; runs in the permits and coa chains; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md). ① lands the assessment docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md + red suite (L1-L15 legacy pins executing the verbatim legacy text, D1-D5/D7 it.fails as named missing artifacts). ③ is blocked by EP-PIN-D17 under R-ED.",
+      "reason": "C6-1 (assert_lifecycle_phase_distribution, ASSERT: fifteen read-only SELECTs over permits/coa_applications/universal_stream_catalog -> per-seq distribution bands under three posture flags, an unclassified hard limit and three cross-status checks, halting only on the two C1 classes, no write; runs in the permits and coa chains; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md). ① lands the assessment docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md + red suite (L1-L15 legacy pins executing the verbatim legacy text, D1-D5/D7 it.fails as named missing artifacts). ② (2026-10-23, lane V3-COA-F) lands the descriptor, pure compute scripts/lib/compute/assert-lifecycle-phase-distribution.js, notes and migration 288 (copy form, 196 values carried + the R-EP detail cap) at stage compute_ported: the legacy shell stays the live step and reads the legacy lifecycle_* names until its swap, which waits on R-EQ (classify_lifecycle_phase is an unconverted upstream). ③ is blocked by EP-PIN-D17 under R-ED.",
       "declared": "2026-10-19",
+      "stage": "compute_ported"
+    },
+    {
+      "file": "scripts/link-coa.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (C6-4)",
+      "reason": "C6-4 (link_coa, LINK: five address tiers plus a description-FTS tier from coa_applications to permits -> coa_applications.linked_permit_num/linked_confidence, the permits.linked_coa_application_number back-ref, the permits.last_seen_at bump and the permit -> CoA lat/lng/ward inheritance; runs in the permits and coa chains; V3-COA package H; McDonald's Airtight V3 from ①: Spec 132 §core.9 (R-BZ) zero purity findings, §x-v3.1 (R-BA) every gate hard, §core.8 (R-CV) EXTERNALIZED, §core.16 (R-DL) admin-verifiable; ② waits on a cascade runner arm (card Q-H4) and the Q-H1 / Q-H3 rulings)",
+      "declared": "2026-10-23",
       "stage": "red_suite"
     },
     {

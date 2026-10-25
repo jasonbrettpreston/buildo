@@ -7,13 +7,13 @@
 
 ## Counts
 
-Remaining files: **21** (+ **16** pending) · remaining slugs: **22** (+ **16** pending)
+Remaining files: **18** (+ **19** pending) · remaining slugs: **19** (+ **19** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 16 | 16 |
-| C6 | 21 | 25 |
+| C5 | 19 | 22 |
+| C6 | 18 | 19 |
 
 ## C4 — archetype-grouped, risk-ascending
 
@@ -31,10 +31,11 @@ Remaining files: **21** (+ **16** pending) · remaining slugs: **22** (+ **16** 
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-coa-freshness.js` | assert_coa_freshness [pending: runner_wired] | coa (1) | — | — | LDG-10 (assert_coa_freshness); EP-PIN-D17 (assert_coa_freshness) |
 | ASSERT | `scripts/quality/assert-entity-tracing.js` | assert_entity_tracing [pending: red_suite] | permits (1) | — | — | LDG-10 (assert_entity_tracing); EP-PIN-D17 (assert_entity_tracing) |
-| ASSERT | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution [pending: red_suite] | coa+permits (2) | — | — | LDG-10 (assert_lifecycle_phase_distribution); EP-PIN-D17 (assert_lifecycle_phase_distribution) |
+| ASSERT | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution [pending: compute_ported] | coa+permits (2) | — | — | LDG-10 (assert_lifecycle_phase_distribution); EP-PIN-D17 (assert_lifecycle_phase_distribution) |
 | ASSERT | `scripts/quality/assert-network-health.js` | assert_network_health [pending: red_suite] | deep_scrapes (1) | — | — | LDG-10 (assert_network_health); EP-PIN-D17 (assert_network_health) |
 | ASSERT | `scripts/quality/assert-staleness.js` | assert_staleness [pending: red_suite] | deep_scrapes (1) | — | — | LDG-10 (assert_staleness); EP-PIN-D17 (assert_staleness) |
 | ENRICHER | `scripts/classify-coa-scope.js` | classify_coa_scope [pending: runner_wired] | coa (1) | — | — | LDG-10 (classify_coa_scope); EP-PIN-D17 (classify_coa_scope) |
+| ENRICHER | `scripts/classify-lifecycle-phase.js` | classify_lifecycle_phase [pending: red_suite] | coa+permits (2) | — | — | LDG-10 (classify_lifecycle_phase); EP-PIN-D17 (classify_lifecycle_phase) |
 | ENRICHER | `scripts/classify-permit-phase.js` | classify_permit_phase [pending: compute_ported] | permits (1) | — | — | LDG-10 (classify_permit_phase); EP-PIN-D17 (classify_permit_phase) |
 | ENRICHER | `scripts/enrich-coa-zoning.js` | enrich_coa_zoning [pending: runner_wired] | coa (1) | — | — | LDG-10 (enrich_coa_zoning); EP-PIN-D17 (enrich_coa_zoning) |
 | ENRICHER | `scripts/enrich-permits.js` | enrich_permits [pending: compute_ported] | permits (1) | — | — | LDG-10 (enrich_permits); EP-PIN-D17 (enrich_permits) |
@@ -42,19 +43,24 @@ Remaining files: **21** (+ **16** pending) · remaining slugs: **22** (+ **16** 
 | INGESTOR | `scripts/load-coa.js` | coa [pending: runner_wired] | coa (1) | — | supports_full | LDG-10 (coa); EP-PIN-D17 (coa) |
 | INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); EP-PIN-D17 (permits) |
 | LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: runner_wired] | coa (1) | — | — | LDG-10 (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
+| LINK | `scripts/link-coa.js` | link_coa [pending: red_suite] | coa+permits (2) | — | supports_full | LDG-10 (link_coa); EP-PIN-D17 (link_coa) |
 | MATERIALIZER | `scripts/classify-coa-trades.js` | classify_coa_trades [pending: runner_wired] | coa (1) | — | supports_full | LDG-10 (classify_coa_trades); EP-PIN-D17 (classify_coa_trades) |
 | MATERIALIZER | `scripts/compute-coa-cost-estimates.js` | compute_coa_cost_estimates [pending: runner_wired] | coa (1) | — | supports_full, supports_dry_run | LDG-10 (compute_coa_cost_estimates); EP-PIN-D17 (compute_coa_cost_estimates) |
+| MATERIALIZER | `scripts/compute-phase-calibration.js` | compute_phase_calibration [pending: red_suite] | coa+permits (2) | — | — | LDG-10 (compute_phase_calibration); EP-PIN-D17 (compute_phase_calibration) |
 | MATERIALIZER | `scripts/resolve-bylaws.js` | resolve_bylaws [pending: compute_ported] |  (0) | — | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
 - `scripts/classify-coa-scope.js` (ENRICHER): ARCH-CENSUS key-step scope (wave-4 plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 recommendation 8; McDonald's Airtight V3) declared ENRICHER; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: a per-row JS classifier (scripts/lib/coa-scope-classifier.js, scripts/classify-coa-scope.js:177) over its own input table's pending cursor (:165-173) writing six derived columns back onto coa_applications (:134-145). Precedent compute_parcel_cost_estimates (JS per-row compute, one post_commit phase).
 - `scripts/classify-coa-trades.js` (MATERIALIZER): ARCH-CENSUS wave-4 row (operator y 2026-10-18, plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md Q8; McDonald's Airtight V3): MATERIALIZER. Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype derived from the legacy script at PH-0 (R-AO), never from a descriptor: derived per-lead rows from coa_applications(scope_tags) into lead_trades (INSERT … ON CONFLICT (lead_id, trade_id) DO UPDATE, scripts/classify-coa-trades.js:203-215) and lead_products (per-lead DELETE + INSERT, :228, :241), plus the trade_classified_at watermark (:252). Not an ENRICHER: its outputs are rows of other tables keyed by lead, not columns of the rows it reads (the watermark is the cursor). Twin of compute_trade_forecasts (census MATERIALIZER).
+- `scripts/classify-lifecycle-phase.js` (ENRICHER): ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed ENRICHER; C6-5 conversion IN FLIGHT (V3-COA package I commit ①, 2026-10-23): streams dirty permits and coa_applications and writes their lifecycle columns under IS DISTINCT FROM guards (UPDATE permits scripts/classify-lifecycle-phase.js:309-340, :948-957, :1370-1395; UPDATE coa_applications :346-390, :1223-1230), appends permit_phase_transitions (:874-879, :1426-1441), lifecycle_transitions (:394-413) and lifecycle_status_history (:901-925, :1175-1202), and queues notifications rows (:85-89). It writes NO tracked_projects row (that is update_tracked_projects, the other C6-5 step). Multi-pass, multi-target; runner precedent classify_coa_scope (post_commit stream + flushBatch).
 - `scripts/classify-permit-phase.js` (ENRICHER): ARCH-CENSUS C6 (2026-10-19), derived from the legacy script, RE-DERIVED at PH-0 on 2026-10-23 (R-AO) and confirmed ENRICHER; C6-2 conversion IN FLIGHT (W2 of the V3-CoA path, commit ①, 2026-10-23): one guarded set-based UPDATE derives permits.enriched_status = 'Examination' for base-revision 'Inspection' permits with no real issued_date (scripts/classify-permit-phase.js:52-65, IS DISTINCT FROM guard :60), deliberately never the raw loader-owned status (header :9-18). One pass, one target. Precedent geocode_permits (set_based_join_update on permits). Finding F1: the same UPDATE also bumps permits.last_seen_at (:56), card CPP-Q1.
 - `scripts/compute-coa-cost-estimates.js` (MATERIALIZER): ARCH-CENSUS wave-4 row (operator y 2026-10-18, plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md Q8; McDonald's Airtight V3): MATERIALIZER, the archetype of its twin compute_cost_estimates so both writers of cost_estimates share one. Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype derived from the legacy script at PH-0 (R-AO): one derived row per priced CoA into cost_estimates (INSERT … ON CONFLICT (lead_id) DO UPDATE … WHERE … IS DISTINCT FROM, scripts/compute-coa-cost-estimates.js:359-397) plus a second target, the coa_applications cost columns and cost_classified_at watermark (:421-427).
+- `scripts/compute-phase-calibration.js` (MATERIALIZER): ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 (R-AO) and confirmed MATERIALIZER; C6-3 conversion IN FLIGHT (commit ①, 2026-10-23): two aggregate SELECTs over permit_phase_transitions and lifecycle_transitions (scripts/compute-phase-calibration.js:238-330) -> one whole-table replace of phase_stay_calibration in one transaction: staging INSERT (:418-428), TRUNCATE (:429), INSERT ... SELECT from staging (:431); zero buckets TRUNCATE only (:414-416). Runs in two chains (permits, coa); owner spec 84 (the domain spec, the assert_lifecycle_phase_distribution precedent). Precedent link_parcel_addresses.
 - `scripts/enrich-coa-zoning.js` (ENRICHER): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan questions 8-9; McDonald's Airtight V3) declared ENRICHER. Identity split at commit ① (2026-10-18, operator-approved): this slug's file is now scripts/enrich-coa-zoning.js, a legacy pass-through shell over scripts/enrich-permits.js main() with ENRICH_TARGET=coa, so the slug has its own descriptor, converted.json entry and census row. Phase-4 wave-4 conversion IN FLIGHT — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: the coa target of the same materialize / guarded UPDATE / orphan nullify onto coa_applications through lead_parcels on the stored lead_id (scripts/enrich-permits.js CFG.coa :97-112). Precedent geocode_permits.
 - `scripts/enrich-permits.js` (ENRICHER): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan questions 8-9; McDonald's Airtight V3) declared ENRICHER; converts in the same series as its twin enrich_coa_zoning (one shared legacy module). Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: copies the dominant linked parcel's feed onto its own input table permits through permit_parcels — a temp-table materialize (scripts/enrich-permits.js:372, :488-489), a guarded set-based UPDATE (:470, :500) and an orphan nullify (:546, :506). Always full (:5-6). Precedent geocode_permits (set_based_join_update + set_based_null_retract).
 - `scripts/link-coa-to-parcels.js` (LINK): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan question 8; McDonald's Airtight V3) declared LINK; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed LINK: an address-tier cascade (address-points bridge, parcels exact, name-only; scripts/link-coa-to-parcels.js:366-470) that writes lead_parcels (guarded upsert ON CONFLICT (lead_id, parcel_id), :458) with retraction (the coa-scoped ghost DELETE, :587-595) and back-fills coa_applications lat/lng/neighbourhood_id/parcel_linked_at (:532, :551, pre-pass :322). Same shape as link_parcels (link_keyed + link_full_retraction + the parcel_linked_at marker); the bundled neighbourhood pass follows link_neighbourhoods.
+- `scripts/link-coa.js` (LINK): ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 and again on 2026-10-23 (R-AO) and confirmed LINK; C6-4 conversion IN FLIGHT (V3-COA package H commit ①, 2026-10-23): five address tiers plus a description-FTS tier from coa_applications to permits write the link columns coa_applications.linked_permit_num/linked_confidence (scripts/link-coa.js:241-252, :331-361) after a cross-ward unlink (:123-132), then the permit side: the last_seen_at bump (:445-449), the linked_coa_application_number back-ref clear-then-set (:493-524) and the permit -> CoA lat/lng/ward inheritance (:663-675). Runner precedent at ②: link_wsib's tier cascade (re-derive, null-retract, reverse write on the second table), not link_parcels.
 - `scripts/load-coa-notices.js` (INGESTOR): NET-NEW step, converted from day one (WF1 load_coa_notices, Spec 129; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Classified INGESTOR from the plan before any code existed (an external document set acquired and written to one table); there is no legacy script to classify. The one file in converted.json pending[] until its cutover.
 - `scripts/load-coa.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3) declared INGESTOR provisionally; phase-4 wave-1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR multi-target (two CKAN DataStore resources -> coa_applications upsert + lifecycle_status_history ledger rows; scripts/load-coa.js:105, :293, :390)
 - `scripts/load-permits.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). Phase-4 wave 1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (one CKAN DataStore primary, scripts/load-permits.js:33 CKAN_BASE; two write targets: the permits class-B guarded upsert :338-390 and the lifecycle_status_history append ledger :458; the legacy sync_runs run row :725 retires at cutover, CP-PERMITS D-P1). Multi-target INGESTOR, precedent load_zoning.
@@ -73,27 +79,24 @@ Remaining files: **21** (+ **16** pending) · remaining slugs: **22** (+ **16** 
 |---|---|---|---|---|
 | permits | BACKFILL | `scripts/backfill-realtor-permit-trades.js` | backfill_realtor_permit_trades | permits (1) |
 | permits | EFFECTOR | `scripts/backup-db.js` | backup_db | permits (1) |
-| permits | ENRICHER | `scripts/classify-lifecycle-phase.js` | classify_lifecycle_phase | coa+permits (2) |
 | permits | MATERIALIZER | `scripts/classify-permits.js` | classify_permits | permits (1) |
 | permits | ENRICHER | `scripts/classify-scope.js` | classify_scope | permits (1) |
 | permits | ENRICHER | `scripts/close-stale-permits.js` | close_stale_permits | permits (1) |
 | permits | MATERIALIZER | `scripts/compute-build-norms.js` | compute_build_norms | permits (1) |
 | permits | MATERIALIZER | `scripts/compute-cost-estimates.js` | compute_cost_estimates | permits (1) |
 | permits | ENRICHER | `scripts/compute-opportunity-scores.js` | compute_opportunity_scores | permits (1) |
-| permits | MATERIALIZER | `scripts/compute-phase-calibration.js` | compute_phase_calibration | coa+permits (2) |
 | permits | MATERIALIZER | `scripts/compute-storey-norms.js` | compute_storey_norms | permits (1) |
 | permits | MATERIALIZER | `scripts/compute-timing-calibration-v2.js` | compute_timing_calibration_v2 | permits (1) |
 | permits | MATERIALIZER | `scripts/compute-trade-forecasts.js` | compute_trade_forecasts | permits (1) |
 | permits | EFFECTOR | `scripts/dispatch-notifications.js` | dispatch_notifications | permits (1) |
 | permits | MATERIALIZER | `scripts/extract-builders.js` | builders | permits (1) |
-| permits | LINK | `scripts/link-coa.js` | link_coa | coa+permits (2) |
 | permits | ENRICHER | `scripts/link-similar.js` | link_similar | permits (1) |
 | permits | ENRICHER | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
 | deep_scrapes | ENRICHER | `scripts/classify-inspection-status.js` | classify_inspection_status | deep_scrapes (1) |
 | entities_wsib | ENRICHER | `scripts/enrich-web-search.js` | enrich_wsib_builders, enrich_named_builders | entities (2) |
 | entities_wsib | ENRICHER | `scripts/enrich-wsib.js` | enrich_wsib_registry | wsib (1) |
 
-*C6 chain-bucket counts (files):* permits=18 · coa=0 · deep_scrapes=1 · entities_wsib=2 · orphan=0
+*C6 chain-bucket counts (files):* permits=15 · coa=0 · deep_scrapes=1 · entities_wsib=2 · orphan=0
 
 ## Declared exemptions (Ask A2 + Spec 124 R-AP, R-EK) — manifest slugs with NO JS file, RUNNER-owned concerns, and retired steps, excluded by ruling, never silently dropped
 
@@ -107,4 +110,4 @@ Remaining files: **21** (+ **16** pending) · remaining slugs: **22** (+ **16** 
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **72** manifest.scripts slugs = **29** converted + **16** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **22** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **72** manifest.scripts slugs = **29** converted + **19** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **19** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

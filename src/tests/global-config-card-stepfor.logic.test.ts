@@ -81,6 +81,9 @@ describe('stepFor — F-4 regression: every named broken key now derives a value
     expect(stepFor('lifecycle_band_p7a_min', 100)).toBe(1);
     expect(stepFor('lifecycle_cross_stalled_threshold', 250)).toBe(1);
     expect(stepFor('lifecycle_seq_band_1_min', 5)).toBe(1);
+    // C6-1 ② step-owned copies (migration 288): a `_threshold` name must still step by 1, not 0.01.
+    expect(stepFor('assert_lifecycle_phase_distribution_cross_stalled_threshold', 1000)).toBe(1);
+    expect(stepFor('assert_lifecycle_phase_distribution_seq_band_1_min', 7)).toBe(1);
   });
 
   it('name-pattern fallback still applies when a ratio-shaped key currently holds a whole-number value', () => {
