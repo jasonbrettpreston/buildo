@@ -122,6 +122,77 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(map.rules.find((r) => r.id === 'R-JZ')?.handbook_line).toBe('enricher.2');
     expect(map.rules.find((r) => r.id === 'R-KA')?.handbook_line).toBe('x-captures.2');
   });
+  it('CHAT-97 (B′) sits on R-HQ beside the CHAT-96.CLP-Q2 note it supersedes', () => {
+    const r = rowOf(A, 'R-HQ');
+    expect(r).toContain('2026-10-23-batch-r#CHAT-97.CLP-Q2-B2');
+    expect(r).toContain('2026-10-23-batch-q#CHAT-96.CLP-Q2');
+    expect(r).toContain('2026-10-23-batch-n#CHAT-93.condition');
+  });
+  it('CHAT-98: LEGACY-EDIT, Q-LAND-3 on R-JQ; P-Q1 on R-JB (R-EN carrier); P-Q2, P-Q4 on R-II; 1169-KEEP on M-350 and M-336; L-UNITS on M-350', () => {
+    const N = '2026-10-23-batch-s#CHAT-98.';
+    for (const [text, row, id] of [[A, 'R-JQ', 'LEGACY-EDIT'], [A, 'R-JQ', 'Q-LAND-3'], [A, 'R-JB', 'P-Q1'], [A, 'R-II', 'P-Q2'], [A, 'R-II', 'P-Q4'], [M, 'M-350', '1169-KEEP'], [M, 'M-336', '1169-KEEP'], [M, 'M-350', 'L-UNITS']] as Array<[string, string, string]>) {
+      expect(rowOf(text, row), row + ' ' + id).toContain(N + id);
+    }
+  });
+  it('CHAT-100.L-INTERIOR: dated note on M-285 (amends line-any) and supersede note on M-350 (CHAT-98.L-UNITS, interior lots only), with the CHAT-93 condition', () => {
+    for (const row of ['M-285', 'M-350']) {
+      expect(rowOf(M, row), row).toContain('2026-10-23-batch-u#CHAT-100.L-INTERIOR');
+      expect(rowOf(M, row), row).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    }
+  });
+  it('CHAT-101..120 (batches v, w): each ruling sits on its carrier row; CHAT-102/113 is row M-358', () => {
+    const V = '2026-10-23-batch-v#';
+    const W = '2026-10-24-batch-w#';
+    const cases: Array<[string, string, string]> = [
+      [A, 'R-KB', V + 'CHAT-101.MIG-290'],
+      [A, 'R-JJ', W + 'CHAT-103.L2-TIMEOUT-1'], [A, 'R-JJ', W + 'CHAT-114.L2-OOM-1'],
+      [M, 'M-285', W + 'CHAT-104.STREET-DIR'], [M, 'M-350', W + 'CHAT-104.STREET-DIR'],
+      [A, 'R-JD', W + 'CHAT-105.V3MERGE-VALIDATE'], [A, 'R-JD', W + 'CHAT-119.LEDGER-HEADER'],
+      [A, 'R-JH', W + 'CHAT-106.DB1-DROP'], [A, 'R-IZ', W + 'CHAT-107.LANE-REPORT-WRITE'],
+      [A, 'R-JY', W + 'CHAT-108.RARMS-Q1'], [A, 'R-KA', W + 'CHAT-109.RARMS-Q2'], [A, 'R-KA', W + 'CHAT-116.R3-COLUMN'],
+      [A, 'R-JB', W + 'CHAT-110.RARMS-Q3'], [A, 'R-JM', W + 'CHAT-111.CPP-Q1'], [M, 'M-169', W + 'CHAT-112.FLAG-NULL'],
+      [M, 'M-358', V + 'CHAT-102.P3-FORMULA-TESTS'], [M, 'M-358', W + 'CHAT-113.CHAT-102-ROW'],
+      [A, 'R-IP', W + 'CHAT-115.L2-EVID-1'], [A, 'R-IP', W + 'CHAT-120.M60-DEPENDENCY'],
+      [M, 'M-327', W + 'CHAT-117.GOLDEN-NOTICE-FIRST'], [A, 'R-JP', W + 'CHAT-118.Q-114b'],
+    ];
+    for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
+    // moved-block rows keep their bytes; each note names its moved row in §B-AM
+    const bam = A.split('\n').filter((l) => l.startsWith('- **R-'));
+    for (const id of ['CHAT-101.MIG-290', 'CHAT-103.L2-TIMEOUT-1', 'CHAT-114.L2-OOM-1', 'CHAT-110.RARMS-Q3', 'CHAT-116.R3-COLUMN', 'CHAT-118.Q-114b']) expect(bam.some((l) => l.includes(id)), id).toBe(true);
+    expect(read('docs/reports/defect-ledger.md')).toContain(W + 'CHAT-119.LEDGER-HEADER');
+    // N7: the 69a §1a dated-note row on M-60 (empty first cell) carries CHAT-120 and CHAT-115
+    const m60Notes = M.split('\n').filter((l) => l.startsWith('| | *Dated note 2026-10-24 (M-60;'));
+    expect(m60Notes.some((l) => l.includes(W + 'CHAT-120.M60-DEPENDENCY') && l.includes(W + 'CHAT-115.L2-EVID-1'))).toBe(true);
+  });
+  it('CHAT-121..123 (batch x): 125m on R-JJ, M-60 RATIFIED note in 69a §1a + correction on R-IP, pointers on M-326 and R-KB', () => {
+    const X = '2026-10-24-batch-x#';
+    const cases: Array<[string, string, string]> = [
+      [A, 'R-JJ', X + 'CHAT-121.CEILING-125'], [A, 'R-IP', X + 'CHAT-122.M60-RATIFIED'],
+      [M, 'M-326', X + 'CHAT-123.IMPORT-PLACEMENTS'], [A, 'R-KB', X + 'CHAT-123.IMPORT-PLACEMENTS'],
+    ];
+    for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
+    const status = M.split('\n').find((l) => l.startsWith('| | *Dated note 2026-10-24 (M-60;') && l.includes(X + 'CHAT-122.M60-RATIFIED')) ?? '';
+    expect(status).toContain('RATIFIED 2026-10-08');
+    expect(A.split('\n').some((l) => l.startsWith('- **R-AQ') && l.includes('CHAT-121.CEILING-125'))).toBe(true);
+  });
+  it('CHAT-124..129 (batch y): notes on R-IP, R-IZ, R-KA, R-IX, the M-60 status row and three §B-AM bullets (R-BR/R-DN, R-DK, R-BG); CHAT-126 is row R-KC on x-captures.1', () => {
+    const Y = '2026-10-24-batch-y#';
+    const cases: Array<[string, string, string]> = [
+      [A, 'R-IP', Y + 'CHAT-124.M60-DISPLAY'], [A, 'R-IZ', Y + 'CHAT-125.LANE-REPORTS-TEXT'], [A, 'R-KC', Y + 'CHAT-126.PRECAP-1'],
+      [A, 'R-IP', Y + 'CHAT-127.L2-WIT-1'], [A, 'R-KA', Y + 'CHAT-128.L2-COH-1'], [A, 'R-IX', Y + 'CHAT-129.L2-NN-1'],
+    ];
+    for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
+    expect(M.split('\n').some((l) => l.startsWith('| | *Dated note 2026-10-24 (M-60;') && l.includes(Y + 'CHAT-124.M60-DISPLAY'))).toBe(true);
+    expect(A.split('\n').some((l) => l.startsWith('- **R-BR and R-DN') && l.includes('CHAT-128.L2-COH-1'))).toBe(true);
+    expect(A.split('\n').some((l) => l.startsWith('- **R-DK') && l.includes('CHAT-129.L2-NN-1'))).toBe(true);
+    expect(A.split('\n').some((l) => l.startsWith('- **R-BG') && l.includes('CHAT-127.L2-WIT-1'))).toBe(true);
+    expect(map.rules.find((r) => r.id === 'R-KC')?.handbook_line).toBe('x-captures.1');
+  });
+  it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
+    expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
+    expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
+    expect(map.rules.find((r) => r.id === 'R-KB')?.handbook_line).toBe('core.12');
+  });
   it('CHAT-92 sits on R-II as a dated-note exception', () => {
     expect(rowOf(A, 'R-II')).toContain('2026-10-23-batch-m#CHAT-92.RS-1');
   });

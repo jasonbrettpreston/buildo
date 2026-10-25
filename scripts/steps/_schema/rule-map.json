@@ -5799,6 +5799,34 @@
       }
     },
     {
+      "id": "R-KB",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "core.12",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "The local DB's RLS on bylaw_map_areas and parcel_abutments is restored by a new idempotent migration (289), never a --force re-apply of 254/255 (operator 2026-10-23, CHAT-99.DB-RLS-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KC",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "A capture night for a net-new step or a step whose compute or write path changed starts only after a clean read-only pre-launch check: the migration DB test, a 20,000-row compute probe inside the declared ceilings and heap, --plan for every bracket, and the capture order checked against x-captures.1 (operator 2026-10-24, CHAT-126.PRECAP-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",

@@ -166,7 +166,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.12** Declare write discipline per write target, never per step: mechanic ⊥ guard ⊥ scope ⊥ retract. A banned write shape ships only with a dated, SHA-anchored `grandfathered.json` entry naming its why; guard `none` needs a why. A target on an RLS-enabled table declares `guards.requires: rls_bypass_or_policy`. One upsert binds at most 65,535 parameters, so the batch keeps the measured worst case under it.
   *Why:* Write safety differs per table; a per-step answer is wrong for at least one target.
-  Rules: `R-CT` `R-CU` `Rule-8` `Rule-9` `V7` (SPEC122A-V7)
+  Rules: `R-CT` `R-CU` `Rule-8` `Rule-9` `V7` (SPEC122A-V7) `R-KB`
 
 - **core.13** A destructive retraction declares a truthful crash posture (`recovery.interrupted`) and a `recovery.before_image`; the library writes the before-image before retracting, and the runner forces FULL after an interrupted run.
   *Why:* A run killed half-way must never leave a half-retracted table that the next run calls unchanged.
@@ -352,7 +352,7 @@ How a conversion proves it changed nothing it did not mean to.
 
 - **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
   *Why:* A capture nobody can retake proves nothing.
-  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP`
+  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP` `R-KC`
 
 - **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
   *Why:* A rerun that writes nothing proves nothing about a guarded write path.
@@ -464,23 +464,23 @@ Hand-written and locked: every symbol, path and flag below is checked against th
 
 | Symptom | Look at | Rules | Defect |
 |---|---|---|---|
-| Every counter and check value reads 0 on a multi-primary INGESTOR | The compute reads the flat `runIngestPhase` ctx. Read `acquired.primaries[id]` and `written.by_target.<table>` (`ingestPrimaries`, `aggregatePrimaries` in `scripts/lib/step/index.js`); build the lock's ctx through the real dispatch. | R-EW, R-DX | COA-D13 (ledger l.340) |
-| The rerun proof refuses the capture: `zero_writes` false, N rows rewritten | A `written:"seen"` column touches every fed key. Declare `idempotent_rerun: "declared_drift"`; `scripts/analysis/capture-rerun-proof.js` mode `seen_drift`. | R-EX, R-DZ | COA-D14 (ledger l.341) |
-| Writes succeed only as a role that bypasses RLS; another role writes 0 rows | The target table has RLS on and no policy. Declare `guards.requires: rls_bypass_or_policy`; `assertWritePrivileges` (`scripts/lib/step/write.js`) measures it, and the requirement's `on_missing` decides whether it refuses (`fail`) or only warns while the 0-row write proceeds. | R-CT | LR-D7 (ledger l.28), LM-D12 (ledger l.44) |
-| `written.e1.updated` is double the real row count | Both the seam and the pass report the same rows; counters belong to whoever wrote them (`seamOwned` in `runEnrichPhase`). | R-AT | RV-D4 (ledger l.170) |
-| `checks_failed > 0` but there are no FAIL rows | FAIL and WARN must feed separate arrays: `buildAuditTable` (`scripts/lib/step/verdict.js`) pushes FAIL to `errors[]` and WARN to `warnings[]`, and `checks_failed` is the length of `errors[]` (`runWithPool`). A regression at either site brings back LPA-D6, which is fixed. | R-Q | LPA-D6 (ledger l.79) |
-| A run skipped (`skipped_content_hash`) and left an empty table empty | The skip did not probe the target (`targetIsEmpty`). | R-DD | LBMA-D7 (ledger l.316) |
-| A skipped or deferred run shows no reason in its audit table | No `when:"pre"` check, or no `deferred_to_full` terminal. | R-P, R-BU | LPA-D4 (ledger l.77), EP-D19 (ledger l.127) |
-| A check reports clean but never looked (its value is `undefined`) | The value is never populated in ctx (`resolveOverrides`). In tests, a live run must prove the child completed (`notLookedReasons` in `src/tests/helpers/step-validate-run.ts`). | R-CP | LM-D14 (ledger l.46) |
-| A declared variable silently runs on its seed default | `resolveConfig` (`scripts/lib/step/config.js`) throws on a missing `logic_variables` row, so a step that runs on a seed default is not on the library path: check its shell. | R-G | LM-D15 (ledger l.47) |
-| ENRICHER `last_heartbeat_at` stays NULL; no `lock_timeout` is set | Interval keys hard-coded to another step's slug; intervals come from the descriptor's `execution.*_from_config` variables. | R-AK | ER-D1 (ledger l.125) |
-| After a killed FULL run the table is half-retracted and the next run says "unchanged" | Crash posture: `detectInterruptedRetraction` must be reachable in your phase; declare `recovery.interrupted`. | Rule-12, R-B | LW-D20 (ledger l.73) |
-| A FAIL is reported after rows were already written | Phase order: the owner spec's "before X" has no `pre_write` check with an `order_guarantee`. | Rule-11 | LR-D9 (ledger l.30) |
-| `data_hash` differs between machines | A zone-less timestamp parsed in the process time zone. | R-EV, R-CE | COA-D11 (ledger l.338) |
-| A producer contract reads an old run | Status filter (baselines accept completed/completed_with_warnings; seam reads accept every finished status) or a bare-slug vs chain-prefixed ledger name. | R-CB, R-BG | EC-D10 (ledger l.297) |
-| Gate E reads zero, yet a config value still decides the output | A local alias of `ctx.config` inside a check body (PURITY-G7, a Gate E code, not scorecard G7). | R-DC | LCN-D5 (ledger l.318) |
-| Rule 4 / G-2 flags `preserved-in-compute` Intent Ledger rows | Each such row must name where its rule is written (a check `why`, a `checks[]` citation or `notes.json`); `checkPreservedInComputeHasWhy` in `scripts/analysis/step-validate.mjs`. | Rule-4 | LW-D21 (ledger l.74), CC-D4 (ledger l.83) |
-| A tunable cap, bind-limit formula or cadence is a literal in the step | Make it a logic variable; derive batch from the 65,535-parameter limit. | Rule-3, R-CU | CCS-D3 (ledger l.355), CCCE-D2 (ledger l.396) |
+| Every counter and check value reads 0 on a multi-primary INGESTOR | The compute reads the flat `runIngestPhase` ctx. Read `acquired.primaries[id]` and `written.by_target.<table>` (`ingestPrimaries`, `aggregatePrimaries` in `scripts/lib/step/index.js`); build the lock's ctx through the real dispatch. | R-EW, R-DX | COA-D13 (ledger l.341) |
+| The rerun proof refuses the capture: `zero_writes` false, N rows rewritten | A `written:"seen"` column touches every fed key. Declare `idempotent_rerun: "declared_drift"`; `scripts/analysis/capture-rerun-proof.js` mode `seen_drift`. | R-EX, R-DZ | COA-D14 (ledger l.342) |
+| Writes succeed only as a role that bypasses RLS; another role writes 0 rows | The target table has RLS on and no policy. Declare `guards.requires: rls_bypass_or_policy`; `assertWritePrivileges` (`scripts/lib/step/write.js`) measures it, and the requirement's `on_missing` decides whether it refuses (`fail`) or only warns while the 0-row write proceeds. | R-CT | LR-D7 (ledger l.29), LM-D12 (ledger l.45) |
+| `written.e1.updated` is double the real row count | Both the seam and the pass report the same rows; counters belong to whoever wrote them (`seamOwned` in `runEnrichPhase`). | R-AT | RV-D4 (ledger l.171) |
+| `checks_failed > 0` but there are no FAIL rows | FAIL and WARN must feed separate arrays: `buildAuditTable` (`scripts/lib/step/verdict.js`) pushes FAIL to `errors[]` and WARN to `warnings[]`, and `checks_failed` is the length of `errors[]` (`runWithPool`). A regression at either site brings back LPA-D6, which is fixed. | R-Q | LPA-D6 (ledger l.80) |
+| A run skipped (`skipped_content_hash`) and left an empty table empty | The skip did not probe the target (`targetIsEmpty`). | R-DD | LBMA-D7 (ledger l.317) |
+| A skipped or deferred run shows no reason in its audit table | No `when:"pre"` check, or no `deferred_to_full` terminal. | R-P, R-BU | LPA-D4 (ledger l.78), EP-D19 (ledger l.128) |
+| A check reports clean but never looked (its value is `undefined`) | The value is never populated in ctx (`resolveOverrides`). In tests, a live run must prove the child completed (`notLookedReasons` in `src/tests/helpers/step-validate-run.ts`). | R-CP | LM-D14 (ledger l.47) |
+| A declared variable silently runs on its seed default | `resolveConfig` (`scripts/lib/step/config.js`) throws on a missing `logic_variables` row, so a step that runs on a seed default is not on the library path: check its shell. | R-G | LM-D15 (ledger l.48) |
+| ENRICHER `last_heartbeat_at` stays NULL; no `lock_timeout` is set | Interval keys hard-coded to another step's slug; intervals come from the descriptor's `execution.*_from_config` variables. | R-AK | ER-D1 (ledger l.126) |
+| After a killed FULL run the table is half-retracted and the next run says "unchanged" | Crash posture: `detectInterruptedRetraction` must be reachable in your phase; declare `recovery.interrupted`. | Rule-12, R-B | LW-D20 (ledger l.74) |
+| A FAIL is reported after rows were already written | Phase order: the owner spec's "before X" has no `pre_write` check with an `order_guarantee`. | Rule-11 | LR-D9 (ledger l.31) |
+| `data_hash` differs between machines | A zone-less timestamp parsed in the process time zone. | R-EV, R-CE | COA-D11 (ledger l.339) |
+| A producer contract reads an old run | Status filter (baselines accept completed/completed_with_warnings; seam reads accept every finished status) or a bare-slug vs chain-prefixed ledger name. | R-CB, R-BG | EC-D10 (ledger l.298) |
+| Gate E reads zero, yet a config value still decides the output | A local alias of `ctx.config` inside a check body (PURITY-G7, a Gate E code, not scorecard G7). | R-DC | LCN-D5 (ledger l.319) |
+| Rule 4 / G-2 flags `preserved-in-compute` Intent Ledger rows | Each such row must name where its rule is written (a check `why`, a `checks[]` citation or `notes.json`); `checkPreservedInComputeHasWhy` in `scripts/analysis/step-validate.mjs`. | Rule-4 | LW-D21 (ledger l.75), CC-D4 (ledger l.84) |
+| A tunable cap, bind-limit formula or cadence is a literal in the step | Make it a logic variable; derive batch from the 65,535-parameter limit. | Rule-3, R-CU | CCS-D3 (ledger l.356), CCCE-D2 (ledger l.397) |
 
 Validator messages that name their rule directly:
 
@@ -501,7 +501,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 390 mapped ids: 275 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 392 mapped ids: 277 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|

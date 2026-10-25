@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-r/2026-10-23-batch-r.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-r",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "this is a great idea! approved B′ (new, recommended) │ The same alert query, with the same one-per-window rule, moves to the tracked-projects step (update_tracked_projects). That step already runs after the forecast step and already declares every column the query touches. │ Same people. Fresher: alerts come one run earlier, and no alerts from out-of-date or deleted forecasts. │ Loop gone: 3 permits steps first, about 9–12 sessions and 5–7 nights",
+    "record": "operator chat 2026-10-23",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-r/2026-10-23-batch-r.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-97.CLP-Q2-B2",
+      "question": "START_DATE_URGENT moves, query unchanged, to update_tracked_projects (option B′; supersedes CHAT-96.CLP-Q2 option A)",
+      "recommendation": "START_DATE_URGENT is queued by update_tracked_projects (permits position 27, after compute_trade_forecasts at 25), with classify_lifecycle_phase's saved-lead query unchanged (lead_views.saved joined to trade_forecasts with predicted_start 6-7 days out; scripts/classify-lifecycle-phase.js:214-228, called at :1641-1646), at most once per (user, lead) within notifications_max_stale_hours on the run clock (option A's NOT EXISTS; seeded migrations/222_notification_gateflip.sql:54, read scripts/dispatch-notifications.js:71). classify_lifecycle_phase no longer reads trade_forecasts (CLP-D5). update_tracked_projects already reads every column the query touches and writes notifications, so no lineage is added. Same recipients; fresher forecasts (alerts one run earlier, none from out-of-date or deleted forecasts); coa-chain runs no longer queue this alert (risk: a missed window if permits runs are more than 24 h apart; measure the cadence on night N-A first). It removes the classify_lifecycle_phase <- compute_trade_forecasts edge, so the permits work needed before the CoA swaps is permits (+ the close_stale_permits fold), classify_permit_phase and link_coa.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

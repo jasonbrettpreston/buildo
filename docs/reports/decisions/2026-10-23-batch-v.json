@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-23-batch-v/2026-10-23-batch-v.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-23-batch-v",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "282 fix: New migration 290 (Recommended); P3 checks: Yes, record it (Recommended); \"that's phase 3 and we can look more closely at this tomorrow.. the key is getting layer 2 done tonight\"",
+    "record": "operator chat 2026-10-23 (night)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-23-batch-v/2026-10-23-batch-v.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-101.MIG-290",
+      "question": "Fix the 282 evidence_kinds closed-set check by a new forward migration",
+      "recommendation": "New migration 290 drops and re-adds bylaw_resolution_lots_evidence_kinds_closed as `evidence_kinds IS NULL OR array_remove(evidence_kinds, NULL) <@ ARRAY[0,1,2,3,4]::smallint[]`; 282 stays byte-identical to the applied file (migrate.js checksum); number 290 skips the reserved 287 (P3), 288 (ALPD), 289 (RLS, CHAT-99). Red evidence: the night's migration.db.test.ts failure. Lands in the single Layer 2 night commit.",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    },
+    {
+      "id": "CHAT-102.P3-FORMULA-TESTS",
+      "question": "Phase 3: calculator-checkable formula tests before golden-case scoring",
+      "recommendation": "New Spec 69a row (M-xx): each Phase 3 formula has worked examples on synthetic lots (about 3 per formula, either side of every max/min switch) with expected values in an operator-checked spreadsheet, never LLM-filled; they must pass before golden-case keying is scored. Draft row text + conflict check (PLAN Q7, M-333, M-356, INV-1..25) to be reviewed with the operator next session before import (operator: 'we can look more closely at this tomorrow').",
+      "decision": "approve",
+      "decided_at": "2026-10-23"
+    }
+  ]
+}

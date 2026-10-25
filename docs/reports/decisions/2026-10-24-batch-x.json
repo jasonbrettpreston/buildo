@@ -1,0 +1,41 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-24-batch-x/2026-10-24-batch-x.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-24-batch-x",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Ceiling: \"125m, from the fixed run (Recommended)\"; M-60: \"Correct CHAT-120 + status note (Recommended)\"; Placements: \"Accept + add both notes (Recommended)\"",
+    "record": "operator chat 2026-10-24 (afternoon)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-24-batch-x/2026-10-24-batch-x.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-121.CEILING-125",
+      "question": "resolve_bylaws declared step_timeout corrected to 125m from the heap-fixed run",
+      "recommendation": "Corrects CHAT-103: the heap-fixed R1 measured 81.6 min and 80.9 min (2026-10-24, pipeline_runs 4310 and run 3 R1); 81.6 x 1.5 = 122.4, rounded up to 125m. Dated note on R-JJ correcting CHAT-103 (its 240m figure came from the heap-exhaustion run; its quoted sentence is from review_followups.md:65). Lowering the declared value from measurement keeps Spec 132 x-verify.2 (never raised) and R-AQ (a ceiling measures the step). Still not wired (execution-budget-disposition pending[]) until a cloud measurement. The descriptor and disposition note change in the Layer 2 night tree after R3 finishes.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-122.M60-RATIFIED",
+      "question": "CHAT-120 corrected: M-60 is RATIFIED (2026-10-08); status note on M-60",
+      "recommendation": "CHAT-120's premise was wrong: Spec 69a's dated note (69a:162) records M-60 RATIFIED by the operator on 2026-10-08; only the moved-block status cell (69a:119) still reads PROPOSED, which the generated handbook line m.60 shows. A dated status note on M-60 records RATIFIED 2026-10-08 so the handbook stops showing PROPOSED (the moved row stays byte-identical); CHAT-115 rests on a ratified rule. Closes the 2026-10-24 compliance-audit item 5 as a false alarm (the audit read the generated line, not the register note).",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    },
+    {
+      "id": "CHAT-123.IMPORT-PLACEMENTS",
+      "question": "Accept the import placements; add the M-326 pointer and the R-KB correction",
+      "recommendation": "Accept cecbb76c's placements: CHAT-115/120 on 124a R-IP (Spec 134 I2 amendments live there), CHAT-103/114 on R-JJ (resolve_bylaws run-time row), CHAT-117 on M-327. Add a one-line pointer note on M-326: CHAT-117 narrows it (where the notice and the plan statistics table disagree, the notice figure is keyed; the plan figure stays in the as-printed box). Add a dated note on R-KB: migration 289 is not needed (per the CHAT-100 record), so R-KB's 'owed' no longer stands.",
+      "decision": "approve",
+      "decided_at": "2026-10-24"
+    }
+  ]
+}

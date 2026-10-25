@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-23",
+  "operator_quote": "DB-RLS-1 y",
+  "context": "DB-RLS-1 from ~/Buildo-scratch/verify-47.md item 8. The standing condition 2026-10-23-batch-n#CHAT-93.condition applies. Finding, not a decision: 281_coa_ward_two_digits.sql's checksum WARN is a header-comment-only change (cb87afb2 changed \"STAGED, NOT APPLIED\" to \"APPLIED 2026-10-22\"; the UPDATE is unchanged), harmless.",
+  "decisions": [
+    {"id": "CHAT-99.DB-RLS-1", "subject": "Local DB: a new idempotent migration enables RLS on bylaw_map_areas and parcel_abutments", "decision": "approve", "recommendation": "Migrations 254_bylaw_map_areas_sixplex.sql and 255_parcel_abutments.sql each have one git commit (b87f62db, 2026-10-16), whose content enables row level security on bylaw_map_areas and parcel_abutments (R-CT: a new table's migration enables RLS in the same file). The local DB's recorded checksums match neither file, and the only other copy (~/Buildo-wt-h6b, 2026-10-15) lacks the RLS lines, so the local DB probably has RLS off on both tables (inferred; confirm with the two read-only queries in verify-47.md item 8 before building). migrate.js skips a changed file with a WARN (scripts/migrate.js:229-241), so it never self-heals. Fix: a NEW idempotent migration 289 that enables RLS on both tables (a no-op if already on); NOT a --force re-apply."}
+  ]
+}

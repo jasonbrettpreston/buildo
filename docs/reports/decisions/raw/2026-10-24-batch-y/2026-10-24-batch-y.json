@@ -1,0 +1,45 @@
+{
+  "source": "operator chat 2026-10-24 (afternoon and evening) and 2026-10-25 (morning)",
+  "operator_quote": "\"1 and 2 both apptoved if they are in compliance - let's get layer 2 done.\"; PRECAP-1: \"Approve as drafted (Recommended)\"; L2-WIT-1: \"Fix + full retake (Recommended)\"; L2-COH-1: \"What is the option that follow the handbookd?\" (answered: R-BR route); L2-NN-1: \"Two commits (Recommended)\"",
+  "context": "Follow-ups after batch x import 59d4f51a: (1) the generated handbook line m.60 still shows PROPOSED because the generator reads only the moved row's status cell; (2) lane REPORT.md writes are refused by the subagent tool rule (\"Subagents should return findings as text\") even with the CHAT-107 permission line.",
+  "decisions": [
+    {
+      "id": "CHAT-124.M60-DISPLAY",
+      "subject": "No generator change for M-60's displayed status",
+      "decision": "approve",
+      "recommendation": "Leave scripts/generate-bylaw-handbook.mjs unchanged: the register is the record (69a:162 and the CHAT-122 status note at 69a:164 record M-60 RATIFIED 2026-10-08); the generated line m.60 shows the moved row's status cell, which stays byte-identical (spec-split-check arm (i)). Reading status from notes would be a new generator mechanism (scope). Readers check the register note."
+    },
+    {
+      "id": "CHAT-125.LANE-REPORTS-TEXT",
+      "subject": "Lanes report as text; the orchestrator keeps the record (amends CHAT-107)",
+      "decision": "approve",
+      "recommendation": "CHAT-107's permission line did not take effect: the refusal comes from the subagent tool rule, not the permission settings (measured 2026-10-24, rulings lane). Lanes return their report as text (LANE-PREAMBLE item 10 reads accordingly); the orchestrator records it in the session file. The user-level permission line added for CHAT-107 is removed."
+    },
+    {
+      "id": "CHAT-126.PRECAP-1",
+      "subject": "Read-only pre-launch check before a capture night",
+      "decision": "approve",
+      "recommendation": "New Spec 124a row (step standard): before a capture night for a net-new step (Spec 132 x-stages.3) or a step whose compute or write path changed, the driver runs a read-only pre-launch check and launches only when it is clean: (1) the step migration DB test; (2) a read-only sample probe (compute only, no writes, no ledger row) over the first 20,000 source rows reporting peak heap, rate and the post-check counts on the sample, with projected runtime and memory inside the declared ceilings and the Node heap; (3) --plan for every bracket in the recipe; (4) the driver capture order checked against Spec 132 x-captures.1 / CHAT-89.Q-114a. Five words: standardized (same four checks), observable (numbers before launch), scalable (minutes), accurate (the 2026-10-24 defects map onto checks 1-4: migration 282 null slots, cell-cache heap, M-60 evidence, R3 recipe flags, capture order), understandable (one checklist). Conflict check: CHAT-89 consistent (no writes, no ledger row, gate untouched); Spec 134 P2-0 consistent (this makes that measurement a standing check before each capture night); R-AQ consistent (the probe measures, it does not set ceilings). The probe stays a session-driver step (today: ~/Buildo-scratch/l2night/memprobe.cjs, m60probe.cjs) until reuse justifies a committed tool by a later ruling. Applies from the next capture night (compute_maxbld_scenarios, Phase 3) and the night-queue template."
+    },
+    {
+      "id": "CHAT-127.L2-WIT-1",
+      "subject": "resolve_bylaws #44 witness: name the jsonb_each columns, then retake R1 and R3 on frozen text",
+      "decision": "approve",
+      "recommendation": "step-validate --all --write (2026-10-24 16:10) hard-stops on #44 for resolve_bylaws (Spec 132 core.14): (1) resultsSql reads p.key / p.value from jsonb_each with no column list, so the witness resolver cannot bind them (FAIL:INPUT:column:key; reproduced offline, and an AS c(cls, pairs) / AS p(pos, cell) column list resolves clean); (2) both traces are FAIL:STALE because the descriptor and notes changed after the runs (CHAT-118 between R1 and R3; CHAT-121 and the measured notes after R3), which also leaves G8 stale-fingerprints=2. Fix red-first (a resolver test over buildPostSql), freeze every descriptor and notes edit, then retake R1 and R3 by the recapture.json recipes (4 full runs, about 5.5 h DB, one writer under the dblock), then step-validate --all --write. The commit hook runs #44, so the Layer 2 commit waits for this; --no-verify stays forbidden."
+    },
+    {
+      "id": "CHAT-128.L2-COH-1",
+      "subject": "resolve_bylaws #38: cohort.json closes the three write tables on summary counters (R-BR), no count_path",
+      "decision": "approve",
+      "recommendation": "The Layer 2 commit hook failed #38 (multi-target step, no cohort.json). Spec 124a R-BR (124a:239) makes count_path optional (\"Absent: the legacy summary counters. The emit->table binding is the reviewed cohort.json diff\") and R-DN (124a:480) says a bracket \"may\" use it; the coa cohort.json first target is the precedent. cohort.json names lots -> standalone.forced.json (the R3 bracket touches lot rows only) and units, texts -> standalone.json (R1 TRUNCATEs all three; table_state 992 and 2,840 rows), each why stating the attribution. No code change, no retake. Note: Spec 132 x-captures.2 summarises the route as \"counted through gate G count_path\", which is stricter than the R-BR/R-DN rows it cites; the rows govern. Int per-table emits stay a cutover item if a later ruling wants them.",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-129.L2-NN-1",
+      "subject": "Layer 2 lands in two commits: the step first, then its R-DK net-new flag",
+      "decision": "approve",
+      "recommendation": "Amends NIGHT-QUEUE H3 / LAND-REPORT \"one commit\": the R-DK evidence (124a; scripts/analysis/gates/net-new.mjs) needs git history for the script and descriptor, which a first commit cannot have at pre-commit time, so the live-census net-new test is red in any single commit. Precedent: b87f62db (step files) then bf29c485 (legacy:\"none\"). Commit 1: every Layer 2 file, census row without legacy:\"none\", net-new test list of three. Commit 2: legacy:\"none\" plus the four-step list. Spec 132 x-stages.2 (ordered commits). Hook decides both; no bypass.",
+      "decided_at": "2026-10-25"
+    }
+  ]
+}
