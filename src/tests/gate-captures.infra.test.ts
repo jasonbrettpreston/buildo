@@ -607,7 +607,7 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
       // 420 s + notLookedReasons: a killed run (old 180 s < measured 214 s) has
       // an empty stdout, which the `not.toMatch` below passes vacuously (LM-D14).
       const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--all', '--fast'], {
-        // maxBuffer 64 MB: the --all --fast output passed the 1 MB spawnSync default at integrate-29 (1.84 MB; ENOBUFS) — same fix as gate-score-floor T6.
+        // maxBuffer 64 MB (headroom): at integrate-29 the --all --fast output briefly passed the 1 MB spawnSync default (ENOBUFS) while 48 scorecard blocks carried a stale #53 badge-list FAIL detail (~19 KB each; verify-49 N2 measured 0.92 MB once regenerated).
         maxBuffer: 64 * 1024 * 1024,
         cwd: REPO_ROOT, encoding: 'utf8', timeout: 420_000,
       });

@@ -68,3 +68,15 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 
 - First full suite at dc5844e5: 919 files / 20,601 tests passed, **3 failed**: gate-captures T6e and gate-registries T8b (both `spawnSync step-validate --all --fast` killed ENOBUFS — the same 1 MB default as gate-score-floor T6, merge 5) and variable-effect.infra (the R-EO badge file src/features/admin-controls/generated/logic-variable-effect.json was taken from one side at merge 5 and its generator, generate-logic-variable-effect.mjs, is not in the int29 gens list). Red: docs/reports/red-evidence/gate-f/int29-suite-3-red.txt.
 - Fixed: maxBuffer 64 MB on both spawns; badge file regenerated (`generate-logic-variable-effect.mjs --write`: 209 take effect at cutover, 19 scheduled for retirement). The three files: 84/84 passed. Full suite re-run below.
+
+## DB checks (H lane, under the lock)
+
+- Full suite at 97f2630f: 922 files / 20,604 tests passed, exit 0 (~/Buildo-scratch/int29/suite2.txt).
+- `npm run test:db` at 97f2630f: 135 files passed, 1 skipped; 920 tests passed, 12 skipped; exit 0 (~/Buildo-scratch/int29/test-db.txt).
+
+## verify-49 (fresh read-only verifier, 2026-10-25): PASS-WITH-NOTES
+
+Re-derived: topology (every lane tip and integrate-28 are ancestors); every hand-merged file is a true union (rebuilt with git merge-file; disposition pending 39 unique, CRLF kept; converted.json rows as sets, 19 pending / 29 converted; ledger 488 unique ids, none lost); count locks from the registries (pendingBatch 19, C6 18, ADOPTION 19/8/21); dc5844e5 rewrote exactly the 48 blocks, outside text unchanged 48/48; all 31 generator checks rc 0; test fixes add only maxBuffer; CoA 0 of 698 and 0 of 496 rows differ on ANY field vs integrate-28, pins CHECK OK; B10 headline 92.36 / 74.53; 179 targeted files / 4,290 tests passed; nothing from integrate-28 or any lane lost; every ruling quote matches its raw record.
+- **N1 MEDIUM, fixed:** dc5844e5's blocks recorded item iii "3430/3459 (29 failed — the R-R staleness cases, harvested before the same run rewrote the blocks)" and #53 FAIL (badge file regenerated after it, in 97f2630f). Second DB-backed `step-validate --all --write` pass (the integrate-26/27 precedent, p4-integrate-27.md:130-140): exit 0; the diff is only the #53 row (now PASS, "admin badges current") and item iii (now **3459/3459 passed, suite success=true**) in the 48 blocks (~/Buildo-scratch/int29/sv-all-write-2.log).
+- **N2 LOW, fixed:** the maxBuffer comments named the wrong cause; the 1.84 MB output came from the stale #53 badge-list detail in 48 blocks; regenerated output is 0.92 MB. Comments corrected (maxBuffer kept as headroom).
+- **N3 LOW → operator:** `generate-logic-variable-effect.mjs --check` is not in .husky/pre-commit (that is how the stale badge file passed the hook); adding it changes the hook composition (hooks-composition.infra lock, R-EC budget).
