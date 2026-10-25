@@ -41,6 +41,8 @@ describe('CHAT-100.L-INTERIOR: a line-any named-road arm whose streets miss the 
       expect([named, join(named, 'Ravencliff Cres', { corner_lot: false, through_lot: true })]).toEqual([named, null]);
       expect([named, join(named, 'Ravencliff Cres', {})]).toEqual([named, null]);
       expect([named, join(named, 'Ravencliff Cres', { corner_lot: false })]).toEqual([named, null]);
+      expect([named, join(named, 'Ravencliff Cres', { through_lot: false })]).toEqual([named, null]); // verify-48a LOW: corner unknown
+
     }
   });
 
