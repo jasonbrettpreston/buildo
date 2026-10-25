@@ -428,7 +428,8 @@ describe('classify_lifecycle_phase ① — converted claims (RED at ①; flip to
     expect([...(manifest.scripts.classify_lifecycle_phase?.telemetry_tables ?? [])].sort()).toEqual(WRITTEN_TABLES);
   });
 
-  it.fails('D9 — the assessment report carries the generated validation scorecard (flips at ②)', () => {
+  // Written by the CHAT-105 DB-backed step-validate --all --write at ① (ec981c21; Spec 124 R-R / Rule 13; compute_phase_calibration D6 precedent).
+  it('D9 — the assessment report carries the generated validation scorecard (R-R / Rule 13)', () => {
     expect(readText(REPORT_REL)).toContain('## Validation scorecard (generated)');
   });
 

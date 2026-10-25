@@ -393,7 +393,8 @@ describe('link_coa ① — converted claims (RED at ①; flip to `it` at ② / �
     expect(funnel).not.toMatch(/\n {2}link_coa: \{\n {4}behavior:/);
   });
 
-  it.fails('D8 — the assessment report carries the generated validation scorecard (flips at ②)', () => {
+  // Written by the CHAT-105 DB-backed step-validate --all --write at ① (ec981c21; Spec 124 R-R / Rule 13; compute_phase_calibration D6 precedent).
+  it('D8 — the assessment report carries the generated validation scorecard (R-R / Rule 13)', () => {
     expect(readText(REPORT_REL)).toContain('## Validation scorecard (generated)');
   });
 
