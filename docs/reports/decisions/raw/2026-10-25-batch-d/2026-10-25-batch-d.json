@@ -1,0 +1,13 @@
+{
+ "source": "operator chat 2026-10-25 (afternoon), after the RJY conflict check",
+ "operator_quote": "We these be in conflcit with other rulings and do they meet the spirit of the handbook ... answer is yes",
+ "context": "RJY-Q1/Q2 (R-JY patch ~/Buildo-scratch/rarms/R-JY.on-RJX-RJZ.patch, partial: start-count statement index.js:2982-2985 and before-image keys :~3097 still literal; link_coa draft has two set_based_join_update targets on coa_applications). Conflict check shown to the operator: CHAT-108 (no new descriptor field; simplest design; anything new comes back as a card), CHAT-139 (declared, never inferred by position, R-EG (1)), R-EG (1) claim #149 (the runner names nothing the step did not declare), core.12 (discipline per write target); precedent compute.buildCumulativeSql(descriptor) in the same phase (index.js:3158-3163). The earlier descriptor-field option was withdrawn as a CHAT-108 conflict.",
+ "decisions": [
+  {
+   "id": "CHAT-147.RJY-Q1-Q2",
+   "subject": "R-JY: start counts and before-image keys come from the compute; the link plan is the join target writing the null-retract target's declared columns; the inheritance write is a later opt-in arm",
+   "decision": "approve",
+   "recommendation": "Q1: two pure compute exports, as buildCumulativeSql already is in runCascadePhase: buildStartCountsSql(descriptor) (the runner copies the keys it returns) and a before-image row mapper keyed by the set_based_null_retract target's declared columns[].name; no descriptor field (CHAT-108), nothing positional (CHAT-139); link_wsib's compute returns today's statements, byte-identical, proven by its retaken captures (#39). Q2: the link plan is the set_based_join_update on the cascade table whose declared column names equal the null-retract target's column names; zero or more than one match is refused before any write (operator confirmed this name-equality reading under CHAT-139). Any other join target on that table (link_coa's lat/long/ward inheritance, legacy link-coa.js:580-686, its own transaction after the tiers) is a separate post-link arm, refused until its own card is ruled (R-EG every arm opt-in; CHAT-108 anything new comes back as a card). Changes: scripts/lib/step/index.js and scripts/lib/compute/link-wsib.js in the R-JY patch, the cascade row of Spec 132 table 1a, test C4 made real, C3 rewritten."
+  }
+ ]
+}
