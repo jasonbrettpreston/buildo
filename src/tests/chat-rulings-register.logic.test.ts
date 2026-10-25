@@ -208,6 +208,10 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
     expect(A.split('\n').some((l) => l.startsWith('- **R-AG: the cheap pre-commit gates gain'))).toBe(true);
   });
+  it('CHAT-147 (batch 2026-10-25-d): RJY-Q1/Q2 on R-JY (compute exports, name-equality link plan, inheritance a later arm)', () => {
+    expect(rowOf(A, 'R-JY')).toContain('2026-10-25-batch-d#CHAT-147.RJY-Q1-Q2');
+    expect(rowOf(A, 'R-JY')).toContain('buildStartCountsSql(descriptor)');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
