@@ -1,0 +1,69 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-25-batch-b/2026-10-25-batch-b.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-25-batch-b",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "B10-1: \"I accept your recommendaiton if it compleis with the handbook \"; B10-2: \"I accept the recommendation as long as it complies with the rulings - if applicable\"; B10-3: \"No job; you drop the 8 linked files (Recommended)\"; B10-4: \"Pre-register now, fix after (Recommended)\"; 4h approvals: \"You can proceed with all of these as long as they comply with the specs\"",
+    "record": "operator chat 2026-10-25 (late morning, before a 4-hour absence)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-25-batch-b/2026-10-25-batch-b.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-133.B10-ID",
+      "question": "Retire the empty 2026-10-22 coa-2026-d candidate; the id belongs to the 2026-10-24 batch",
+      "recommendation": "Mark ~/Buildo-scratch/coa-data/new-2210/manifest.json retired (empty: re-uploads only, nothing loaded), so coa-2026-d names only the 2026-10-24 batch (Spec 129 §2b one batch file per id).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-134.B10-REUPLOAD-FACTS",
+      "question": "Plan facts for 9 re-upload lots held out of the blind round and the frozen pins until the fold-in",
+      "recommendation": "The 9 plan-facts files for lots already in the frozen 172 set stay out of the coa-2026-d blind round and out of the 172/4d pins (M-357 frozen reference pins); they join at the fold-in into the cumulative all-notices set, every moved row listed on the findings page (M-323).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-135.B10-CONSENT",
+      "question": "Consent (B-file) notices get no job; the operator drops the linked minor-variance files",
+      "recommendation": "M-326/M-318 key one row per variance item and a consent notice has none; the 8 linked A-files (A0230/A0237, A0168/A0169, A0119/A0120, A0267/A0268) join a later batch when dropped. No new job (CHAT-68.scope).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-136.B10-PARSER",
+      "question": "Known parser misses are pre-registered in the coa-2026-d M-321 file; parser fixes come after the blind round",
+      "recommendation": "List the INTAKE-D parser misses (qualifying-phrase first number, thousands separator, worded counts, header without By-law, same figure both sides) as expected misses in the M-321 pre-registration; fix the parser afterwards in its own pre-registered round (M-357: blind first, then fixes).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-137.P37-FIXES",
+      "question": "compute_maxbld_scenarios ①: fix CMS-D1..D3 red-first, R1 recipe force env, then its DB night",
+      "recommendation": "CMS-D1: replace_keys.e1 lists only parcels whose stored set holds a scenario no longer produced (source SQL returns the stored scenario list; existing ROWS-arm mechanisms only) so a no-change rerun writes 0 rows (Spec 78 P5.11 :1208). CMS-D2: a post-read term counts stored rows with no bylaw_resolution_lots row, FAIL at 0. CMS-D3: records_new/updated read written.e2 (the upsert target; resolve_bylaws e4 precedent). The step declares override.force_full and its R1 recipe passes it after the recovery.reset (as CHAT-130 for resolve_bylaws; the TRUNCATE does not reset the ledger gate). Then PRECAP-1 (R-KC), apply 286/287, captures (Spec 132 x-stages.3, x-captures.1).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-138.CPP-Q1-D2",
+      "question": "classify_permit_phase ②: permits.last_seen_at bump kept as a declared deviation (option A); the four checks stay INFO",
+      "recommendation": "CPP-Q1 option A: keep the bump at ② as a declared deviation (Q-H1 form, R-JM + Spec 132 §core.14 (R-FF)), source run_at outside the guard; retire-or-not is decided later (M3 = 2 Examination rows the latest load did not see). CPP-D2: all four checks INFO (purely descriptive counters, §core.6; no measured bound); the ledger row splits (literal-PASS half closes at ②, no-bound half open until M1 data supports a bound).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-139.RARMS-Q1-Q3",
+      "question": "RARMS-Q1 (R-JY cascade target) and RARMS-Q3 (close_stale_permits fold PH-0 first) as recommended",
+      "recommendation": "Q1: the R-JY cascade target is the set_based_null_retract target's table (already the privilege anchor); the builder confirms at build time that the join plan and columns are declared, not inferred by position (R-EG (1)). Q3: the close_stale_permits fold runs PH-0 in the permits ② lane first; a new retract value only if departed_mark cannot express the two-stage change, keeping run_at dates and the two-stage rule (R-EN). RARMS-Q2 stays parked (possible R-KA/R-ET conflict, verify-48d).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    }
+  ]
+}
