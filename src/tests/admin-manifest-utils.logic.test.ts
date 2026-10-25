@@ -51,6 +51,7 @@ describe('manifest-utils — STEP_TELEMETRY_TABLES allow-list', () => {
     const FROZEN_INSPECTABLE_TABLES = [
       'address_points', 'building_footprints',
       'bylaw_map_areas', // reviewed 2026-10-16: public City GIS / CKAN ward polygons + area names, no personal data (Spec 58 §11.3)
+      'bylaw_resolution_lots', // reviewed 2026-10-22: parcel id, profile id, lot gate and permitted words only, no personal data (Spec 134 §3)
       'coa_applications',
       'coa_notice_variances', // reviewed 2026-10-10: values only, no text/personal data (Spec 129 §3.2/§3.4)
       'cost_estimates',

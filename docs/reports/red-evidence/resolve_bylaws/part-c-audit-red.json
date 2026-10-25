@@ -1,0 +1,552 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/materialize.logic.test.ts after the Q-N audit (every Nth lot re-evaluated uncached and in reversed candidate order: Spec 134 I12, I15) and Q-F tally (scenario-axis cells, winner layers) cases were added and before scripts/lib/bylaw-materialize.js implemented them (lane L2-SLICES part C, 2026-10-22). 8 red, 37 green. Absolute paths made repo-relative; nothing else edited.",
+ "numTotalTestSuites": 15,
+ "numPassedTestSuites": 12,
+ "numFailedTestSuites": 3,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 45,
+ "numPassedTests": 37,
+ "numFailedTests": 8,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792694508922,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair writes exactly one lot row, no retraction, and a profile keyed per R-JA",
+     "status": "passed",
+     "title": "writes exactly one lot row, no retraction, and a profile keyed per R-JA",
+     "duration": 0.7825420000000065,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair the profile holds 53 pointers in scope order, each to a cell row of this batch (I9 lineage)",
+     "status": "passed",
+     "title": "the profile holds 53 pointers in scope order, each to a cell row of this batch (I9 lineage)",
+     "duration": 1.0302499999999952,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair every cell has a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "status": "passed",
+     "title": "every cell has a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "duration": 1.0633750000000077,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair every cell, signature, profile and lot row carries the two versions and a row_sha that recomputes (I14)",
+     "status": "passed",
+     "title": "every cell, signature, profile and lot row carries the two versions and a row_sha that recomputes (I14)",
+     "duration": 1.7663749999999823,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair the signature is stored once with the candidate ids, and every computed cell points at it",
+     "status": "passed",
+     "title": "the signature is stored once with the candidate ids, and every computed cell points at it",
+     "duration": 0.3894999999999982,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair winner ids are candidates of the signature (I9), and an applies winner has evidence",
+     "status": "passed",
+     "title": "winner ids are candidates of the signature (I9), and an applies winner has evidence",
+     "duration": 1.028250000000014,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair by_class has one entry per catalogue class except the representative: collapsed_into:<rep> or a full differing result (Q-C)",
+     "status": "passed",
+     "title": "by_class has one entry per catalogue class except the representative: collapsed_into:<rep> or a full differing result (Q-C)",
+     "duration": 1.109958000000006,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair permitted_by_class holds permitted()'s own words for every v1 class (R-IT)",
+     "status": "passed",
+     "title": "permitted_by_class holds permitted()'s own words for every v1 class (R-IT)",
+     "duration": 0.06929200000001856,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "status": "passed",
+     "title": "matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "duration": 0.06575000000000841,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-H: disclosures are stored once per distinct set, a cell holds the set id"
+     ],
+     "fullName": "Q-H: disclosures are stored once per distinct set, a cell holds the set id a real lot has few distinct sets (not one list per cell); every cell id is null or a stored set, and a set id is the hash of its sorted unique strings",
+     "status": "passed",
+     "title": "a real lot has few distinct sets (not one list per cell); every cell id is null or a stored set, and a set id is the hash of its sorted unique strings",
+     "duration": 28.332833000000022,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-H: disclosures are stored once per distinct set, a cell holds the set id"
+     ],
+     "fullName": "Q-H: disclosures are stored once per distinct set, a cell holds the set id a cell with no disclosures holds a null set id and writes no empty set row",
+     "status": "passed",
+     "title": "a cell with no disclosures holds a null set id and writes no empty set row",
+     "duration": 0.5716660000000218,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it two lots that agree on every input share the profile and every cell, with two lot rows",
+     "status": "passed",
+     "title": "two lots that agree on every input share the profile and every cell, with two lot rows",
+     "duration": 32.19216699999998,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it a lot with another frontage shares the targets that do not read frontage and not the ones that do (R-IN option B)",
+     "status": "passed",
+     "title": "a lot with another frontage shares the targets that do not read frontage and not the ones that do (R-IN option B)",
+     "duration": 41.04495899999998,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it batch order does not matter: the same rows come back in a canonical order",
+     "status": "passed",
+     "title": "batch order does not matter: the same rows come back in a canonical order",
+     "duration": 93.38225,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the lot row carries the gate and every cell is not_evaluated:exception_not_authored:<id> with no winner",
+     "status": "passed",
+     "title": "the lot row carries the gate and every cell is not_evaluated:exception_not_authored:<id> with no winner",
+     "duration": 0.6815829999999892,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator permitted_by_class is not_evaluated with the gate reason for every class",
+     "status": "passed",
+     "title": "permitted_by_class is not_evaluated with the gate reason for every class",
+     "duration": 0.09554199999996627,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator two lots with the same unauthored exception share every gated cell and one profile",
+     "status": "passed",
+     "title": "two lots with the same unauthored exception share every gated cell and one profile",
+     "duration": 0.4089159999999765,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "status": "passed",
+     "title": "the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "duration": 1.4947499999999536,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "status": "passed",
+     "title": "ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "duration": 0.7883749999999736,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "status": "passed",
+     "title": "lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "duration": 0.8770409999999629,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "status": "passed",
+     "title": "label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "duration": 0.40979099999998425,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "status": "passed",
+     "title": "label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "duration": 0.38450000000000273,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too the first gate in the map order is the one reported when several fire (R-IQ)",
+     "status": "passed",
+     "title": "the first gate in the map order is the one reported when several fire (R-IQ)",
+     "duration": 0.18345799999997325,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "status": "passed",
+     "title": "I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "duration": 0.18199999999995953,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "an authored exception resolves (no gate) and keys its own cells"
+     ],
+     "fullName": "an authored exception resolves (no gate) and keys its own cells the exception moves the cell ids of every target (zone and exception are always in the key, R-IN)",
+     "status": "passed",
+     "title": "the exception moves the cell ids of every target (zone and exception are always in the key, R-IN)",
+     "duration": 58.908833000000016,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a parcel whose zone is not in the list is retracted by key and writes no row",
+     "status": "passed",
+     "title": "a parcel whose zone is not in the list is retracted by key and writes no row",
+     "duration": 26.19220800000005,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a narrower zone list retracts the parcels that left it",
+     "status": "passed",
+     "title": "a narrower zone list retracts the parcels that left it",
+     "duration": 24.319957999999986,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "status": "passed",
+     "title": "an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "duration": 0.43241700000004357,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "status": "passed",
+     "title": "the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "duration": 50.616124999999954,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows a seeded shuffle of the unit order does not change a single row (I15)",
+     "status": "passed",
+     "title": "a seeded shuffle of the unit order does not change a single row (I15)",
+     "duration": 96.97795800000006,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the input rows are not mutated",
+     "status": "passed",
+     "title": "the input rows are not mutated",
+     "duration": 23.089083999999957,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR)"
+     ],
+     "fullName": "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR) the representative is the first class; a class equal to an earlier one collapses into it (R-IR (iv)) and a differing class is stored whole",
+     "status": "passed",
+     "title": "the representative is the first class; a class equal to an earlier one collapses into it (R-IR (iv)) and a differing class is stored whole",
+     "duration": 0.08950000000004366,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR)"
+     ],
+     "fullName": "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR) disclosures are stored once as a set (Q-H: the disclosure-set id form); the class-vector inputs are not in the cell key but the other read inputs are",
+     "status": "passed",
+     "title": "disclosures are stored once as a set (Q-H: the disclosure-set id form); the class-vector inputs are not in the cell key but the other read inputs are",
+     "duration": 0.15962500000000546,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else)"
+     ],
+     "fullName": "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else) names the four tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "status": "passed",
+     "title": "names the four tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "duration": 0.24770799999998871,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I12 on fixtures: the stored cell equals a direct per-lot effective() for the representative class"
+     ],
+     "fullName": "I12 on fixtures: the stored cell equals a direct per-lot effective() for the representative class status, reason and value of every principal and suite cell match the uncached evaluator on two lots",
+     "status": "passed",
+     "title": "status, reason and value of every principal and suite cell match the uncached evaluator on two lots",
+     "duration": 75.37541699999997,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant"
+     ],
+     "fullName": "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant effective() and permitted() over every structure x class x target of an RD and an RM lot",
+     "status": "passed",
+     "title": "effective() and permitted() over every structure x class x target of an RD and an RM lot",
+     "duration": 41.49516599999993,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant"
+     ],
+     "fullName": "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant a declared constant input is one this step's lot vector never sets",
+     "status": "passed",
+     "title": "a declared constant input is one this step's lot vector never sets",
+     "duration": 0.14145800000005693,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) with no audit configured the tallies are zero",
+     "status": "failed",
+     "title": "with no audit configured the tallies are zero",
+     "duration": 32.130916999999954,
+     "failureMessages": [
+      "AssertionError: expected undefined to be +0 // Object.is equality\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:423:45\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) lots whose id modulo N equals the offset are checked: 53 pairs each, and the real evaluator agrees with the cells and with itself in reverse order",
+     "status": "failed",
+     "title": "lots whose id modulo N equals the offset are checked: 53 pairs each, and the real evaluator agrees with the cells and with itself in reverse order",
+     "duration": 42.66737499999999,
+     "failureMessages": [
+      "AssertionError: expected undefined to be 106 // Object.is equality\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:430:45\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) a gated lot is not audited (there is no evaluator result to compare)",
+     "status": "failed",
+     "title": "a gated lot is not audited (there is no evaluator result to compare)",
+     "duration": 0.37274999999999636,
+     "failureMessages": [
+      "AssertionError: expected undefined to be +0 // Object.is equality\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:437:45\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) a cell that disagrees with the direct evaluator is counted (a stub whose cached answer drifts from the direct one)",
+     "status": "failed",
+     "title": "a cell that disagrees with the direct evaluator is counted (a stub whose cached answer drifts from the direct one)",
+     "duration": 1.4904999999999973,
+     "failureMessages": [
+      "AssertionError: expected undefined to be 53 // Object.is equality\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:445:45\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) a result that depends on candidate order is counted (a stub that answers by the first candidate)",
+     "status": "failed",
+     "title": "a result that depends on candidate order is counted (a stub that answers by the first candidate)",
+     "duration": 1.6928330000000642,
+     "failureMessages": [
+      "TypeError: actual value must be number or bigint, received \"undefined\"\n    at assertTypes (file://node_modules/@vitest/utils/dist/helpers.js:20:11)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1232:5)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:453:45\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) an audit with a non-positive or non-integer N, or an offset outside [0, N), is refused",
+     "status": "failed",
+     "title": "an audit with a non-positive or non-integer N, or an offset outside [0, N), is refused",
+     "duration": 0.19758300000000872,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw an error\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:457:64\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read"
+     ],
+     "fullName": "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read counts a needs_user_input cell on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, roof_type, pool, suite_wall_openings)",
+     "status": "failed",
+     "title": "counts a needs_user_input cell on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, roof_type, pool, suite_wall_openings)",
+     "duration": 1.2783330000000888,
+     "failureMessages": [
+      "AssertionError: expected undefined to be 53 // Object.is equality\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:470:45\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read"
+     ],
+     "fullName": "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read winner_layers counts the layer of each applies winner of the batch's cells",
+     "status": "failed",
+     "title": "winner_layers counts the layer of each applies winner of the batch's cells",
+     "duration": 23.14650000000006,
+     "failureMessages": [
+      "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:479:26\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792694509166,
+   "endTime": 1792694509879.1465,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts"
+  }
+ ]
+}

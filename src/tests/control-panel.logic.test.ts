@@ -66,6 +66,9 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 // LOGIC_VAR_DEFAULTS — verify all expected keys are present
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Q-J: list-typed seed variables (hidden "internal"): never in LOGIC_VAR_DEFAULTS or LOGIC_VAR_ENUMS, so they sit outside the expected numeric/enum set. */
+const LIST_SEED_KEYS = ['resolve_bylaws_population_zone_classes'];
+
 const EXPECTED_LOGIC_VAR_KEYS = [
   // batch-2 Phase 0.9 I5 (2026-09-16) — geocode_permits' three. THREE and not one: the
   // coverage bound is the step's only pre-conversion literal (Rule 3), and the other two are
@@ -176,6 +179,15 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'abut_street_search_deg',
   'fya_est_min_m',
   'fya_est_max_m',
+  // Spec 134 resolve_bylaws (Layer 2, migration 282, 2026-10-22) — admin group "Layer 2 By-law Resolution"; the population list is a list-typed
+  // variable (Q-J, seed loader type "list") hidden "internal" until the admin card renders lists.
+  'resolve_bylaws_batch_size',
+  'resolve_bylaws_conflict_max',
+  'resolve_bylaws_equivalence_every_nth',
+  'resolve_bylaws_storage_budget_mb',
+  'resolve_bylaws_class_cap',
+  'resolve_bylaws_scenario_axis_warn_max',
+  'resolve_bylaws_not_evaluated_warn_pct',
   'fya_porch_allowance_m', // front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) note; Spec 131 LC-58)
   'abut_parcels_with_abutments_warn_pct', // H6 QA ruling 2026-10-16 item 2 — the abutment-share WARN floor
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
@@ -739,7 +751,7 @@ describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
 
   it('has no extra keys beyond the expected set', () => {
     const extra = Object.keys(LOGIC_VAR_DEFAULTS).filter(
-      (k) => !EXPECTED_LOGIC_VAR_KEYS.includes(k),
+      (k) => !EXPECTED_LOGIC_VAR_KEYS.includes(k) && !LIST_SEED_KEYS.includes(k),
     );
     expect(extra).toHaveLength(0);
   });
@@ -814,17 +826,21 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ conf
   });
 
   it('logic_variables.json has no extra keys beyond the expected set', () => {
-    const extra = jsonKeys.filter((k) => !EXPECTED_LOGIC_VAR_KEYS.includes(k));
+    const extra = jsonKeys.filter((k) => !EXPECTED_LOGIC_VAR_KEYS.includes(k) && !LIST_SEED_KEYS.includes(k));
     expect(extra).toHaveLength(0);
   });
 
   // R-CE (S2 F3-2): LOGIC_VAR_DEFAULTS is the NUMERIC defaults map (the Delta Guard compares numbers);
   // a string-typed seed entry lives in LOGIC_VAR_ENUMS instead. Together they cover the seed exactly.
-  const numericKeys = jsonKeys.filter((k) => (jsonData[k] as { type?: string }).type !== 'string');
+  const numericKeys = jsonKeys.filter((k) => !['string', 'list'].includes((jsonData[k] as { type?: string }).type ?? ''));
   const stringKeys = jsonKeys.filter((k) => (jsonData[k] as { type?: string }).type === 'string');
+  // Q-J: a THIRD seed kind, type "list" (the JSON array in variable_value_json, a closed list_of in the descriptor); not numeric, not an enum string.
+  const listKeys = jsonKeys.filter((k) => (jsonData[k] as { type?: string }).type === 'list');
 
-  it('every seed entry is numeric or a declared string enum (no third kind)', () => {
-    expect(numericKeys.length + stringKeys.length).toBe(jsonKeys.length);
+  it('every seed entry is numeric, a declared string enum, or a hidden list (no fourth kind)', () => {
+    expect(numericKeys.length + stringKeys.length + listKeys.length).toBe(jsonKeys.length);
+    for (const key of listKeys) expect((jsonData[key] as { admin?: { hidden?: string } }).admin?.hidden, `list variable ${key} is not rendered by the card`).toBe('internal');
+    for (const key of listKeys) expect(LOGIC_VAR_DEFAULTS, `a list variable never enters the numeric defaults: ${key}`).not.toHaveProperty(key);
     for (const key of stringKeys) expect(LOGIC_VAR_ENUMS, `LOGIC_VAR_ENUMS missing string key: ${key}`).toHaveProperty(key);
     expect(Object.keys(LOGIC_VAR_ENUMS).sort()).toEqual([...stringKeys].sort());
   });

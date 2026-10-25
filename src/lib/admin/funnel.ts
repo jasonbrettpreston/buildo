@@ -683,6 +683,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   link_coa:             { summary: 'Links CoA applications to building permits by address and ward', table: 'coa_applications' },
   link_coa_to_parcels:  { summary: 'Tier 1a/1b address-matches CoA applications to parcels; bundled neighbourhood lookup + lat/lng back-fill', table: 'lead_parcels' },
   classify_coa_scope:   { summary: 'Description-keyword classifier producing coa_type_class + project_type + scope_tags per Spec 42 §6.6.D', table: 'coa_applications' },
+  resolve_bylaws:       { summary: 'Resolves every in-population parcel against the Spec 68 evaluator (Layer 2): shared per-target cells, one profile per distinct result set, one link row per lot; Layer 3 reads only these rows', table: 'bylaw_resolution_lots' },
   classify_coa_trades:  { summary: 'Consumes scope_tags via TAG_TRADE_MATRIX to write lead_trades rows + optional realtor append per Spec 42 §6.8', table: 'lead_trades' },
   compute_coa_cost_estimates: { summary: 'Geometric-only cost estimator for CoA leads — joins parcel/building/trade context through the Brain to write coa_applications cost cols + lead_id-keyed cost_estimates rows', table: 'cost_estimates' },
   link_wsib:            { summary: 'Matches extracted entities against WSIB registry by name', table: 'entities' },
@@ -879,7 +880,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
   link_coa: 'coa_applications', link_wsib: 'entities',
   // R-DL (2026-10-17): each value is one of the step's declared outputs.writes tables.
-  link_parcel_addresses: 'parcel_address_points', link_parcel_abutments: 'parcel_abutments',
+  link_parcel_addresses: 'parcel_address_points', link_parcel_abutments: 'parcel_abutments', resolve_bylaws: 'bylaw_resolution_lots',
   load_coa_notices: 'coa_notice_variances', load_bylaw_map_areas: 'bylaw_map_areas',
   enrich_wsib_builders: 'entities', enrich_named_builders: 'entities', enrich_wsib_registry: 'wsib_registry',
   link_similar: 'permits', create_pre_permits: 'coa_applications',

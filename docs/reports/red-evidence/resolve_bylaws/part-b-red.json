@@ -1,0 +1,693 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/{profiles,materialize}.logic.test.ts after the Q-H (disclosure-set id) and Q-I (jsonb rendered as its ::text in the row_sha text) cases were added and before scripts/lib/bylaw-resolution.js gained disclosureSetId / jsonbText / the kinds argument and bylaw-materialize.js held disclosures as set ids (lane L2-SLICES part B, 2026-10-22; operator CHAT-73.nohalt: recommended readings). 8 red, 49 green. Absolute paths made repo-relative; nothing else edited.",
+ "numTotalTestSuites": 22,
+ "numPassedTestSuites": 15,
+ "numFailedTestSuites": 7,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 57,
+ "numPassedTests": 49,
+ "numFailedTests": 8,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792693845781,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair writes exactly one lot row, no retraction, and a profile keyed per R-JA",
+     "status": "passed",
+     "title": "writes exactly one lot row, no retraction, and a profile keyed per R-JA",
+     "duration": 1.0783340000000123,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair the profile holds 53 pointers in scope order, each to a cell row of this batch (I9 lineage)",
+     "status": "passed",
+     "title": "the profile holds 53 pointers in scope order, each to a cell row of this batch (I9 lineage)",
+     "duration": 1.0338749999999948,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair every cell has a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "status": "passed",
+     "title": "every cell has a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "duration": 1.0946250000000077,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair every cell, signature, profile and lot row carries the two versions and a row_sha that recomputes (I14)",
+     "status": "passed",
+     "title": "every cell, signature, profile and lot row carries the two versions and a row_sha that recomputes (I14)",
+     "duration": 1.926040999999998,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair the signature is stored once with the candidate ids, and every computed cell points at it",
+     "status": "passed",
+     "title": "the signature is stored once with the candidate ids, and every computed cell points at it",
+     "duration": 0.374040999999977,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair winner ids are candidates of the signature (I9), and an applies winner has evidence",
+     "status": "passed",
+     "title": "winner ids are candidates of the signature (I9), and an applies winner has evidence",
+     "duration": 1.0227079999999944,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair by_class has one entry per catalogue class except the representative: collapsed_into:<rep> or a full differing result (Q-C)",
+     "status": "passed",
+     "title": "by_class has one entry per catalogue class except the representative: collapsed_into:<rep> or a full differing result (Q-C)",
+     "duration": 1.1189999999999998,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair permitted_by_class holds permitted()'s own words for every v1 class (R-IT)",
+     "status": "passed",
+     "title": "permitted_by_class holds permitted()'s own words for every v1 class (R-IT)",
+     "duration": 0.06750000000002387,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair"
+     ],
+     "fullName": "materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "status": "passed",
+     "title": "matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "duration": 0.06687500000001023,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-H: disclosures are stored once per distinct set, a cell holds the set id"
+     ],
+     "fullName": "Q-H: disclosures are stored once per distinct set, a cell holds the set id a real lot has few distinct sets (not one list per cell); every cell id is null or a stored set, and a set id is the hash of its sorted unique strings",
+     "status": "failed",
+     "title": "a real lot has few distinct sets (not one list per cell); every cell id is null or a stored set, and a set id is the hash of its sorted unique strings",
+     "duration": 30.14224999999999,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading 'map')\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:146:81\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-H: disclosures are stored once per distinct set, a cell holds the set id"
+     ],
+     "fullName": "Q-H: disclosures are stored once per distinct set, a cell holds the set id a cell with no disclosures holds a null set id and writes no empty set row",
+     "status": "failed",
+     "title": "a cell with no disclosures holds a null set id and writes no empty set row",
+     "duration": 1.0106250000000045,
+     "failureMessages": [
+      "AssertionError: expected undefined to deeply equal []\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:162:38\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it two lots that agree on every input share the profile and every cell, with two lot rows",
+     "status": "passed",
+     "title": "two lots that agree on every input share the profile and every cell, with two lot rows",
+     "duration": 34.55295799999999,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it a lot with another frontage shares the targets that do not read frontage and not the ones that do (R-IN option B)",
+     "status": "passed",
+     "title": "a lot with another frontage shares the targets that do not read frontage and not the ones that do (R-IN option B)",
+     "duration": 42.50808399999997,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing: identical inputs share one profile; a differing input moves only the cells that read it"
+     ],
+     "fullName": "sharing: identical inputs share one profile; a differing input moves only the cells that read it batch order does not matter: the same rows come back in a canonical order",
+     "status": "passed",
+     "title": "batch order does not matter: the same rows come back in a canonical order",
+     "duration": 96.34437499999996,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the lot row carries the gate and every cell is not_evaluated:exception_not_authored:<id> with no winner",
+     "status": "passed",
+     "title": "the lot row carries the gate and every cell is not_evaluated:exception_not_authored:<id> with no winner",
+     "duration": 0.6630000000000109,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator permitted_by_class is not_evaluated with the gate reason for every class",
+     "status": "passed",
+     "title": "permitted_by_class is not_evaluated with the gate reason for every class",
+     "duration": 0.316915999999992,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator two lots with the same unauthored exception share every gated cell and one profile",
+     "status": "passed",
+     "title": "two lots with the same unauthored exception share every gated cell and one profile",
+     "duration": 0.4848330000000374,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "status": "passed",
+     "title": "the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "duration": 2.2113749999999754,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "status": "passed",
+     "title": "ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "duration": 2.587832999999989,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "status": "passed",
+     "title": "lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "duration": 0.9956250000000182,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "status": "passed",
+     "title": "label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "duration": 0.4012920000000122,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "status": "passed",
+     "title": "label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "duration": 0.3793749999999818,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too the first gate in the map order is the one reported when several fire (R-IQ)",
+     "status": "passed",
+     "title": "the first gate in the map order is the one reported when several fire (R-IQ)",
+     "duration": 0.1808749999999577,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "status": "passed",
+     "title": "I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "duration": 0.17516700000004448,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "an authored exception resolves (no gate) and keys its own cells"
+     ],
+     "fullName": "an authored exception resolves (no gate) and keys its own cells the exception moves the cell ids of every target (zone and exception are always in the key, R-IN)",
+     "status": "passed",
+     "title": "the exception moves the cell ids of every target (zone and exception are always in the key, R-IN)",
+     "duration": 60.263874999999985,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a parcel whose zone is not in the list is retracted by key and writes no row",
+     "status": "passed",
+     "title": "a parcel whose zone is not in the list is retracted by key and writes no row",
+     "duration": 25.936000000000035,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a narrower zone list retracts the parcels that left it",
+     "status": "passed",
+     "title": "a narrower zone list retracts the parcels that left it",
+     "duration": 24.883916000000056,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "status": "passed",
+     "title": "an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "duration": 0.4315000000000282,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "status": "passed",
+     "title": "the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "duration": 52.958999999999946,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows a seeded shuffle of the unit order does not change a single row (I15)",
+     "status": "passed",
+     "title": "a seeded shuffle of the unit order does not change a single row (I15)",
+     "duration": 104.43495800000005,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the input rows are not mutated",
+     "status": "passed",
+     "title": "the input rows are not mutated",
+     "duration": 24.863666999999964,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR)"
+     ],
+     "fullName": "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR) the representative is the first class; a class equal to an earlier one collapses into it (R-IR (iv)) and a differing class is stored whole",
+     "status": "passed",
+     "title": "the representative is the first class; a class equal to an earlier one collapses into it (R-IR (iv)) and a differing class is stored whole",
+     "duration": 0.07299999999997908,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR)"
+     ],
+     "fullName": "Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR) disclosures are stored once as a set (Q-H: the disclosure-set id form); the class-vector inputs are not in the cell key but the other read inputs are",
+     "status": "failed",
+     "title": "disclosures are stored once as a set (Q-H: the disclosure-set id form); the class-vector inputs are not in the cell key but the other read inputs are",
+     "duration": 0.18841699999995853,
+     "failureMessages": [
+      "TypeError: rb(...).disclosureSetId is not a function\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:348:43\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else)"
+     ],
+     "fullName": "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else) names the four tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "status": "failed",
+     "title": "names the four tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "duration": 0.6943749999999227,
+     "failureMessages": [
+      "AssertionError: expected [ 'cells', 'lots', 'profiles', …(1) ] to deeply equal [ 'cells', 'disclosure_sets', …(3) ]\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:359:53\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I12 on fixtures: the stored cell equals a direct per-lot effective() for the representative class"
+     ],
+     "fullName": "I12 on fixtures: the stored cell equals a direct per-lot effective() for the representative class status, reason and value of every principal and suite cell match the uncached evaluator on two lots",
+     "status": "passed",
+     "title": "status, reason and value of every principal and suite cell match the uncached evaluator on two lots",
+     "duration": 76.63499999999999,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant"
+     ],
+     "fullName": "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant effective() and permitted() over every structure x class x target of an RD and an RM lot",
+     "status": "passed",
+     "title": "effective() and permitted() over every structure x class x target of an RD and an RM lot",
+     "duration": 41.936500000000024,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant"
+     ],
+     "fullName": "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant a declared constant input is one this step's lot vector never sets",
+     "status": "passed",
+     "title": "a declared constant input is one this step's lot vector never sets",
+     "duration": 0.13395900000000438,
+     "failureMessages": [],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792693846082,
+   "endTime": 1792693846719.134,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "R-JA: scopePairs — the pointer order is the scope seed order"
+     ],
+     "fullName": "R-JA: scopePairs — the pointer order is the scope seed order lists every (structure, target) of layer2-scope.json, structures first, 53 today",
+     "status": "passed",
+     "title": "lists every (structure, target) of layer2-scope.json, structures first, 53 today",
+     "duration": 4.8197919999999925,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes profile_id = sha256 of the sorted \"<structure>\\t<target>\\t<cell_id>\" lines, independent of entry order",
+     "status": "passed",
+     "title": "profile_id = sha256 of the sorted \"<structure>\\t<target>\\t<cell_id>\" lines, independent of entry order",
+     "duration": 0.48579099999999187,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes a different result for one target gives a different profile; the same lines give the same",
+     "status": "passed",
+     "title": "a different result for one target gives a different profile; the same lines give the same",
+     "duration": 0.23537499999999056,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes packPointers writes 32 bytes per pair in scope order (53 x 32 = 1,696 bytes) and unpack restores the entries",
+     "status": "passed",
+     "title": "packPointers writes 32 bytes per pair in scope order (53 x 32 = 1,696 bytes) and unpack restores the entries",
+     "duration": 0.42600000000000193,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes packing does not depend on the entry order; a missing, duplicate or foreign entry throws",
+     "status": "passed",
+     "title": "packing does not depend on the entry order; a missing, duplicate or foreign entry throws",
+     "duration": 0.6833749999999981,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "R-JA: the profile key and the pointer bytes"
+     ],
+     "fullName": "R-JA: the profile key and the pointer bytes a cell_id that is not a hex sha256 is refused; unpack refuses bytes of the wrong length",
+     "status": "passed",
+     "title": "a cell_id that is not a hex sha256 is refused; unpack refuses bytes of the wrong length",
+     "duration": 0.13587499999999864,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate"
+     ],
+     "fullName": "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate depends on structure, target and the full status text only",
+     "status": "passed",
+     "title": "depends on structure, target and the full status text only",
+     "duration": 0.13299999999999557,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate"
+     ],
+     "fullName": "Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate never collides with a computed cell key for the same structure and target (a different line set)",
+     "status": "passed",
+     "title": "never collides with a computed cell key for the same structure and target (a different line set)",
+     "duration": 0.102540999999988,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3: signature id — the candidate set once (R-IN: zone and exception fix it at one table_version)"
+     ],
+     "fullName": "Spec 134 §3: signature id — the candidate set once (R-IN: zone and exception fix it at one table_version) is sha256 of the sorted unit ids, one per line, independent of order and duplicates",
+     "status": "passed",
+     "title": "is sha256 of the sorted unit ids, one per line, independent of order and duplicates",
+     "duration": 0.08849999999999625,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns canonicalText renders null as empty, numbers by String, booleans t/f, arrays joined by U+001E, columns joined by U+001F",
+     "status": "passed",
+     "title": "canonicalText renders null as empty, numbers by String, booleans t/f, arrays joined by U+001E, columns joined by U+001F",
+     "duration": 0.06925000000001091,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns rowSha is sha256 of canonicalText, ignores columns outside the list (chain_run_id, versions, timestamps are outside the guard)",
+     "status": "passed",
+     "title": "rowSha is sha256 of canonicalText, ignores columns outside the list (chain_run_id, versions, timestamps are outside the guard)",
+     "duration": 0.06833400000000722,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns changes when any result column changes (a direct row edit is detected, I14)",
+     "status": "passed",
+     "title": "changes when any result column changes (a direct row edit is detected, I14)",
+     "duration": 0.0802500000000066,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns a column that does not exist on the row throws (a result column is never silently absent)",
+     "status": "passed",
+     "title": "a column that does not exist on the row throws (a result column is never silently absent)",
+     "duration": 0.04716599999999005,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns verifyRowSha: true for a stored row_sha that matches, false after an edit",
+     "status": "passed",
+     "title": "verifyRowSha: true for a stored row_sha that matches, false after an edit",
+     "duration": 0.058875000000000455,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST)"
+     ],
+     "fullName": "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST) within the budget when measured bytes <= budget MB (MB = 1,048,576 bytes); the ratio is reported",
+     "status": "passed",
+     "title": "within the budget when measured bytes <= budget MB (MB = 1,048,576 bytes); the ratio is reported",
+     "duration": 0.06949999999999079,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST)"
+     ],
+     "fullName": "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST) refuses a budget that is not a positive number and bytes that are not a non-negative number (never defaulted)",
+     "status": "passed",
+     "title": "refuses a budget that is not a positive number and bytes that are not a non-negative number (never defaulted)",
+     "duration": 0.22674999999999557,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-H: the disclosure set id — the strings once, a cell holds the id"
+     ],
+     "fullName": "Q-H: the disclosure set id — the strings once, a cell holds the id is sha256 of the sorted unique strings, one per line, independent of order and duplicates; the empty set has no id",
+     "status": "failed",
+     "title": "is sha256 of the sorted unique strings, one per line, independent of order and duplicates; the empty set has no id",
+     "duration": 1.3819580000000116,
+     "failureMessages": [
+      "TypeError: rb(...).disclosureSetId is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:146:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table"
+     ],
+     "fullName": "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table jsonbText: keys by length then bytes, \", \" and \": \" separators, arrays in order, strings JSON-escaped, null as null",
+     "status": "failed",
+     "title": "jsonbText: keys by length then bytes, \", \" and \": \" separators, arrays in order, strings JSON-escaped, null as null",
+     "duration": 0.11362499999999898,
+     "failureMessages": [
+      "TypeError: rb(...).jsonbText is not a function\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:155:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table"
+     ],
+     "fullName": "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table canonicalText takes a kinds map: a jsonb column is its jsonbText (an array too), a plain array is a text[] joined by U+001E",
+     "status": "failed",
+     "title": "canonicalText takes a kinds map: a jsonb column is its jsonbText (an array too), a plain array is a text[] joined by U+001E",
+     "duration": 0.9634580000000028,
+     "failureMessages": [
+      "AssertionError: expected 'k:1\\u001fp\\u001eq\\u001fx:2\\u001dy:1' to be '[{\"k\": 1}]\\u001fp\\u001eq\\u001f{\"x\": 2…' // Object.is equality\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:164:82\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table"
+     ],
+     "fullName": "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table a jsonb column without its kind is refused when its value is an object (never rendered two ways)",
+     "status": "failed",
+     "title": "a jsonb column without its kind is refused when its value is an object (never rendered two ways)",
+     "duration": 0.5910830000000118,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw an error\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/profiles.logic.test.ts:168:62\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792693846011,
+   "endTime": 1792693846022.591,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/profiles.logic.test.ts"
+  }
+ ]
+}

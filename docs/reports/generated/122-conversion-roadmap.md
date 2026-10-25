@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** pending)
+Remaining files: **22** (+ **15** pending) · remaining slugs: **23** (+ **15** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 14 | 15 |
+| C5 | 15 | 15 |
 | C6 | 22 | 26 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -43,6 +43,7 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 | LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: runner_wired] | coa (1) | — | — | LDG-10 (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
 | MATERIALIZER | `scripts/classify-coa-trades.js` | classify_coa_trades [pending: runner_wired] | coa (1) | — | supports_full | LDG-10 (classify_coa_trades); EP-PIN-D17 (classify_coa_trades) |
 | MATERIALIZER | `scripts/compute-coa-cost-estimates.js` | compute_coa_cost_estimates [pending: runner_wired] | coa (1) | — | supports_full, supports_dry_run | LDG-10 (compute_coa_cost_estimates); EP-PIN-D17 (compute_coa_cost_estimates) |
+| MATERIALIZER | `scripts/resolve-bylaws.js` | resolve_bylaws [pending: compute_ported] |  (0) | — | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
@@ -60,6 +61,7 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 - `scripts/quality/assert-lifecycle-phase-distribution.js` (ASSERT): ARCH-CENSUS key-step row (operator y 2026-10-17), RE-DERIVED at PH-0 on 2026-10-19 (R-AO) and confirmed ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19): fifteen read-only SELECTs over permits/coa_applications/universal_stream_catalog (scripts/quality/assert-lifecycle-phase-distribution.js:203-708), per-seq bands + unclassified hard limit + cross checks, halting only on the two C1 classes (:898-908), no write (emitMeta writes {} :879-886; the only DELETE text :286 is recovery advice in a message string). Runs in two chains (permits, coa); owner spec 84 (the domain spec, the enrich_permits precedent). Precedent assert_parcel_sanity (halting ASSERT).
 - `scripts/quality/assert-network-health.js` (ASSERT): ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: one read-only SELECT of the latest inspections pipeline_runs row (scripts/quality/assert-network-health.js:54-58), five graded checks over its scraper_telemetry (:80-152), non-halting (:179-183), no write (emitMeta writes {} :174-177). Precedent assert_data_bounds.
 - `scripts/quality/assert-staleness.js` (ASSERT): ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: two read-only SELECTs over permits x permit_inspections (scripts/quality/assert-staleness.js:66-75, :106-122), a three-tier stale-count gate that halts on FAIL (:142-154, :174; the mig-121 fence kept by 4d5df9e7), no write (emitMeta writes {} :169-172). Precedent assert_parcel_sanity (halting ASSERT).
+- `scripts/resolve-bylaws.js` (MATERIALIZER): NET-NEW step, converted from day one (Spec 134, McBylaw Phase 2 Layer 2; Spec 124 R-HB, R-HC, R-DK; plan docs/reports/2026-10-21-layer2-build-plan.md). Classified MATERIALIZER by Spec 124 R-HB (operator 2026-10-20 scenario-build ruling R-3): it writes only its own derived tables from parcels and Layer 1, rows form (R-EH). Re-derived from the code at PH-0 (R-AO). The one file in converted.json pending[] until its cutover ③.
 
 </details>
 
@@ -104,4 +106,4 @@ Remaining files: **22** (+ **14** pending) · remaining slugs: **23** (+ **14** 
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **14** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **23** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **72** manifest.scripts slugs = **29** converted + **15** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **23** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

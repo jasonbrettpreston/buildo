@@ -207,12 +207,14 @@ const rows = [];
 // numeric seed vars (+ the closed-enum string kind, Spec 124 R-CE)
 for (const [key, v] of Object.entries(seed)) {
   const isString = v.type === 'string' && Array.isArray(v.enum);
+  const isList = v.type === 'list';
   const bounds = isString
     ? `one of ${v.enum.join(', ')}`
+    : isList ? '— (a closed list_of in the descriptor, Q-J)'
     : v.min !== undefined && v.max !== undefined ? `${v.min} – ${v.max}` : '—';
   rows.push({
     key,
-    kind: isString ? 'string' : 'numeric',
+    kind: isString ? 'string' : isList ? 'list' : 'numeric',
     default: v.default,
     bounds,
     source: 'seed',

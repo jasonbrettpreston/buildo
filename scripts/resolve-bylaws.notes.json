@@ -1,0 +1,124 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/resolve-bylaws.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked over this file by step-validate fast invariant #45 (NOTES-CAP). When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "This file carries 8 prose entries (under the cap). Layer 2 is DERIVED, not imported: the interesting prose is what a cell, a profile and a",
+    "This file carries 8 prose entries (under the cap). Layer 2 is DERIVED, not imported: the interesting prose is what a lot row's positional arrays MEAN and how the dictionaries are read, not how a source drifts."
+  ],
+  "expected_shape": [
+    {
+      "what": "A healthy run writes ONE lot row per in-population parcel (440,093 parcels in zones R, RD, RS, RT, RM, of 496,536 scanned) holding its results as positional arrays (53 slots: 25 principal + 14 garden-suite + 14 laneway-suite targets, in layer2-scope.json order), plus two closed dictionary tables: bylaw_resolution_units (992 unit ids) and bylaw_resolution_texts (2,840 reasons, evidence references and permission clause lists). About 9 % of lots are gated (40,908; every result not_evaluated). A full run emits 23,324,929 results in about 81 min, the lots table is about 733 MB (of the 1,300 MB budget) and the one expected WARN is scenario_axis_cells 597 (needs_user_input). An unchanged re-run writes ZERO rows (the IS DISTINCT FROM guard over the result columns).",
+      "measured": {
+        "value": {
+          "parcels_scanned": 496536,
+          "lots": 440093,
+          "lots_gated": 40908,
+          "lots_retracted": 56443,
+          "results_emitted": 23324929,
+          "units": 992,
+          "texts": 2840,
+          "lots_table_mb": 732.7,
+          "duration_min": 81.4,
+          "scenario_axis_cells": 597,
+          "source": "first POST capture"
+        },
+        "date": "2026-10-24",
+        "query": "docs/reports/golden/resolve_bylaws/post/standalone.json and standalone.forced.json (Layer 2 night run 4 and R3); sizes from pg_total_relation_size"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "A lot's results are ON its row (operator CHAT-80.QP, option 4): codes[i] is the result code (status x value_kind, layer2-map.json order) of the i-th (structure, target) pair of layer2-scope.json (structures first, each structure's targets in file order), numbers[i] its value, reason_ids[i] / winner_ids[i] / evidence_ref_ids[i] keys into the texts and units dictionaries, evidence_kinds[i] an index into layer2-map.json evidence_kind. The arrays are the FIRST class (detached_house); class_results holds, for every other class, only the positions that differ. The view bylaw_resolution_results names each position and class. losers, inputs_used and disclosures are NOT stored: Layer 3 and the admin trace recompute them through the uncached evaluator (logicalRowsOf), so a reader that looks for them in a table finds nothing. A reader that reads the arrays as 'all classes' gets the wrong answer for the roughly 80 % of lots whose class results differ.",
+      "measured": {
+        "value": {
+          "array_order": "layer2-scope.json structures then targets",
+          "pairs": 53,
+          "representative_class": "detached_house",
+          "lots_with_class_overrides_in_sample": "2401 of 3000"
+        },
+        "date": "2026-10-22",
+        "query": "src/tests/steps/resolve_bylaws/lotrow.logic.test.ts, materialize.logic.test.ts and frozen-row.logic.test.ts"
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "`link_row_violations` > 0, or `lineage_violations` > 0. The lot rows must equal the live in-population parcel count exactly (a parcel that left the population is retracted by the replace-keys write, R-IU), every array must be one slot per scope pair, and every winner, reason and evidence-ref key must name a stored dictionary row. A non-zero count after a plain re-run is a defect in the retraction or the encoding, not data drift.",
+      "check": "link_row_violations",
+      "measured": {
+        "value": {
+          "expected": 0
+        },
+        "date": "2026-10-22",
+        "query": "the once-per-run post read (scripts/lib/compute/resolve-bylaws.js buildPostSql): lots_total vs population_total, lots_outside_population, array_width_violations, unit_orphans, text_orphans"
+      }
+    },
+    {
+      "signal": "`equivalence_disagreements` or `order_disagreements` > 0. Every Nth lot is re-evaluated uncached for every class and compared with what its row DECODES to (so the encoding is audited), and again with the candidates reversed; any difference means the encoding, a cached result or the evaluator's order independence is wrong. `equivalence_not_run` WARNs when nothing was audited.",
+      "check": "equivalence_disagreements",
+      "measured": {
+        "value": {
+          "expected": 0,
+          "sample_pairs_checked": 265,
+          "disagreements": 0
+        },
+        "date": "2026-10-22",
+        "query": "~/Buildo-scratch/l2slices/smoke.cjs (every 50th lot of a 300-parcel read-only sample, option 4)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "Option 4 (operator CHAT-80.QP): ONE row per lot with the results as positional arrays in scope-seed order, a sparse class map, and two closed dictionaries; no profiles, cells, signatures or json/disclosure sets. It replaces form C (Spec 124 R-JA, CHAT-69.Q1) and the interning builds (CHAT-75.QO), which modelled at 2.8-6.0 GB against about 1.35 GB of room because 93 % of lots have a unique result profile. The dictionary key of a unit id or text is the first four bytes of its sha256 as a signed int4 (SQL-recomputable); a collision with a stored row fails loud.",
+      "measured": {
+        "value": {
+          "modelled_total_mb_upper": 1000,
+          "budget_mb": 1300,
+          "interning_build_gb": "2.8 to 6.0"
+        },
+        "date": "2026-10-22",
+        "query": "~/Buildo-scratch/l2slices/measure-option4.cjs (storage-opt4.json) and storage-after.json"
+      }
+    },
+    {
+      "what": "Operator CHAT-73 recommended readings still implemented and marked `Q-x`: Q-C classes are evaluated per pair and stored as the first class plus sparse overrides, Q-I row_sha is recomputed in SQL (the lot row) and each dictionary key is recomputed as the hash of its content, Q-J the population is one list-valued logic variable, Q-N the equivalence sample is the budget. (Q-B and Q-H no longer apply: there are no cells or disclosure sets.) Each is a proposal until the operator rules; a ruling that differs changes the named spot only."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "Dictionary rows are never deleted by a run. After a law change (a new table_version) new unit or text entries are written under new keys and the old ones stay, unreferenced, until the reset arm rebuilds the layer. `unreferenced_rows` counts them (WARN) but nothing prunes them (Q-M). Lot rows keep the table_version of the run that last CHANGED them: an unchanged row keeps its older stamp (the version stamps are outside the write guard, Spec 134 §3).",
+      "detected_by": "unreferenced_rows",
+      "measured": {
+        "value": {
+          "check_id": "unreferenced_rows"
+        },
+        "date": "2026-10-22",
+        "query": "buildPostSql unreferenced_units, unreferenced_texts"
+      }
+    },
+    {
+      "what": "The class dimension multiplies the evaluator work: each lot is evaluated for 5 classes x 53 target-structure pairs (the cell cache serves most). A 300-parcel read-only sample took 3.5 s (about 13 ms per resolved lot including the audit), which projects to about 1.6 h for 440,093 lots; the real figure is measured at the first POST capture and seeds execution.budget (R-AJ). STORAGE: a random 3,000-lot sample averages 2,112 raw bytes per lot row (class_results alone 994 bytes: about 16 differing positions on the 80 % of lots whose classes differ), which models at about 1.0 GB for 440,093 lots plus under 10 MB of dictionaries, against the 1,300 MB budget (the 10 % kill line leaves about 1.35 GB). TOAST compression of rows over 2 kB is not modelled, so the figure is an upper bound. Reading losers, inputs_used and disclosures re-runs the evaluator for that lot (about 1 to 7 ms per class and pair).",
+      "detected_by": "storage_within_budget",
+      "measured": {
+        "value": {
+          "sample_ms": 3542,
+          "sample_resolved_lots": 262,
+          "random_sample_lots": 3000,
+          "avg_lot_row_bytes_raw": 2112,
+          "class_results_avg_bytes": 994,
+          "modelled_total_mb_upper": 1000
+        },
+        "date": "2026-10-22",
+        "query": "~/Buildo-scratch/l2slices/smoke.cjs and measure-option4.cjs (storage-opt4.json)"
+      }
+    }
+  ]
+}

@@ -273,6 +273,15 @@ describe('R-IP: evidence_kind is the evaluator\'s own kind; a numeric winner rec
     expect(rb().evidenceOf(r, m, { winnerLayer: 'provincial' })).toEqual({ evidence_kind: 'provincial', evidence_ref: E.splitRef('10.20.40.10(1)#(B)').reg });
   });
 
+  it('CHAT-115.L2-EVID-1: an M-60 agreeing-worlds value (no winner) whose applied clauses share one regulation cites that regulation; several regulations stay uncited', () => {
+    const m = MAP();
+    const one = { status: 'value', value: 7.5, winner: null, applied: ['10.20.40.10(2)#(2)(A)', '10.20.40.10(2)#(2)(B)'] };
+    expect(rb().evidenceOf(one, m)).toEqual({ evidence_kind: 'clause', evidence_ref: E.splitRef('10.20.40.10(2)#(2)(A)').reg });
+    expect(rb().evidenceOf(one, m, { winnerLayer: 'provincial' })).toEqual({ evidence_kind: 'provincial', evidence_ref: E.splitRef('10.20.40.10(2)#(2)(A)').reg });
+    const two = { status: 'value', value: 7.5, winner: null, applied: ['10.20.40.10(2)#(2)(A)', '10.20.40.20(1)#whole'] };
+    expect(rb().evidenceOf(two, m)).toEqual({ evidence_kind: null, evidence_ref: null });
+  });
+
   it('a result with no winner and no evidence has no evidence; an evidence kind outside the map throws', () => {
     const m = MAP();
     expect(rb().evidenceOf({ status: 'not_evaluated', reason: 'no_candidate' }, m)).toEqual({ evidence_kind: null, evidence_ref: null });
@@ -332,9 +341,8 @@ describe('R-IU: a batch splits into the population and the keys to retract (the 
 });
 
 describe('Q-L2-4: the in-scope zone list is a logic variable, kept inside the evaluator zone vocabulary', () => {
-  // Kept out of migrations/ until commit ① (a migration file changes the migration count 28 generated scorecards embed).
-  // The file moves to migrations/ at commit (1); the lock finds it in either place (integrate-21).
-  const MIG = ['docs/reports/layer2-measure/pending-migrations', 'migrations'].map((d) => `${d}/280_resolve_bylaws_logic_variables.sql`).find((p) => fs.existsSync(path.join(ROOT, p))) ?? 'docs/reports/layer2-measure/pending-migrations/280_resolve_bylaws_logic_variables.sql';
+  // Migration 280 (the pending list-valued variable) was folded into migrations/282_resolve_bylaws.sql at commit ① (Q-J: the list variable stays).
+  const MIG = 'migrations/282_resolve_bylaws.sql';
   const zones: string[] = PVOCAB.zone;
 
   it('inPopulation(zoneList, vocabZones) is the predicate splitPopulation takes: a row is in when its zone is listed', () => {
@@ -349,21 +357,13 @@ describe('Q-L2-4: the in-scope zone list is a logic variable, kept inside the ev
     expect(() => rb().inPopulation(['RD', 'ZZ'], zones)).toThrow(/ZZ/);
   });
 
-  it('pending migration 280 seeds resolve_bylaws_population_zone_classes with a list inside vocab.zone, idempotently', () => {
+  it('migration 282 seeds resolve_bylaws_population_zone_classes with a list inside vocab.zone, idempotently (folded in from the pending 280, Q-J)', () => {
     expect(fs.existsSync(path.join(ROOT, MIG)), `${MIG} should exist`).toBe(true);
     const sql = fs.readFileSync(path.join(ROOT, MIG), 'utf8');
     expect(sql).toMatch(/'resolve_bylaws_population_zone_classes'/);
     expect(sql).toMatch(/ON CONFLICT \(variable_key\) DO NOTHING/);
-    const list = JSON.parse(/'(\[[^']*\])'::jsonb/.exec(sql)![1] as string) as string[];
+    const list = JSON.parse(/'resolve_bylaws_population_zone_classes', 0, '(\[[^']*\])'::jsonb/.exec(sql)![1] as string) as string[];
     expect(() => rb().inPopulation(list, zones)).not.toThrow();
-  });
-});
-
-describe('R-IX (Q-L2-3): commit ① waits for the evaluator prerequisites; nothing is registered before it', () => {
-  it('there is no resolve_bylaws descriptor, shell or compute module yet (remove this case in the commit that lands ①)', () => {
-    for (const rel of ['scripts/resolve-bylaws.descriptor.json', 'scripts/resolve-bylaws.js', 'scripts/lib/compute/resolve-bylaws.js']) {
-      expect(fs.existsSync(path.join(ROOT, rel)), rel).toBe(false);
-    }
   });
 });
 

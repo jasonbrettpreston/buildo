@@ -310,6 +310,26 @@
     "scripts/lib/address-normalizers.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-19 (phase-4 wave 4, link_coa_to_parcels commit ②, wf2/p4-w4-link-scope): a real import of link_coa_to_parcels — reached from the legacy scripts/link-coa-to-parcels.js today and from the step's scripts/lib/compute/link-coa-to-parcels.js after the ③ shell swap — so the import half of ruling 1's fingerprint_inputs E rule holds at every stage. It has 0 runtime readers: nothing hashes these files, and the step runs on every invocation (staleness.trigger always, mode_select none), so no fingerprint decides whether it runs."
+    },
+    "scripts/lib/compute/resolve-bylaws.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-22 (resolve_bylaws commit ①, Spec 134): a real import of resolve_bylaws (scripts/resolve-bylaws.js:32 requires it). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step is a full rescan (staleness.mode_select none, trigger none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/bylaw-materialize.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-22 (resolve_bylaws commit ①, Spec 134): a real import of resolve_bylaws (scripts/lib/compute/resolve-bylaws.js requires it): the pure batch core. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step is a full rescan (staleness.mode_select none, trigger none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/bylaw-lot-row.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-22 (resolve_bylaws commit ①, Spec 134, operator CHAT-80.QP): a real import of resolve_bylaws (scripts/lib/bylaw-materialize.js and the compute require it): the pure encode and decode of a lot row's positional arrays and the two closed dictionaries. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step is a full rescan (staleness.mode_select none, trigger none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/bylaw-resolution.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-22 (resolve_bylaws commit ①, Spec 134): a real import of resolve_bylaws (scripts/lib/bylaw-materialize.js and the compute require it): the pure lot-vector, label, key and lineage functions. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step is a full rescan (staleness.mode_select none, trigger none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "docs/reference/bylaw-layer2-input.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-22 (resolve_bylaws commit ①, Spec 134): the generated Layer 1 input the compute requires statically (Spec 124 R-IL); its table_version and evaluator_version are stamped on every row. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step is a full rescan (staleness.mode_select none, trigger none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
     }
   }
 }

@@ -943,6 +943,18 @@
     ]
   },
   {
+    "label": "Layer 2 By-law Resolution",
+    "keys": [
+      "resolve_bylaws_batch_size",
+      "resolve_bylaws_conflict_max",
+      "resolve_bylaws_equivalence_every_nth",
+      "resolve_bylaws_storage_budget_mb",
+      "resolve_bylaws_class_cap",
+      "resolve_bylaws_scenario_axis_warn_max",
+      "resolve_bylaws_not_evaluated_warn_pct"
+    ]
+  },
+  {
     "label": "Pipeline Clock",
     "keys": [
       "pipeline_timezone"

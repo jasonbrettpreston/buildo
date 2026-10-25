@@ -1,0 +1,1555 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/resolve-bylaws.js",
+  "chain": "none",
+  "git_head": "d6dc90d21f19caa0ef7f065651499ecd1ef9af7e",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 440093,
+    "records_new": 440093,
+    "records_updated": 0,
+    "records_meta": {
+      "parcels_scanned": 496536,
+      "lots": 440093,
+      "lots_retracted": 56443,
+      "lots_gated": 40908,
+      "results_emitted": 23324929,
+      "equivalence_checked": 10282,
+      "equivalence_disagreements": 0,
+      "order_disagreements": 0,
+      "gate": {
+        "reason": "bypassed",
+        "gated_skip": false
+      },
+      "config": {
+        "resolve_bylaws_population_zone_classes": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "resolve_bylaws_batch_size": 250,
+        "resolve_bylaws_conflict_max": 0,
+        "resolve_bylaws_equivalence_every_nth": 2000,
+        "resolve_bylaws_storage_budget_mb": 1300,
+        "resolve_bylaws_class_cap": 8,
+        "resolve_bylaws_scenario_axis_warn_max": 0,
+        "resolve_bylaws_not_evaluated_warn_pct": 100
+      },
+      "terminal": "resolved_with_warnings",
+      "ledger_row": "owned",
+      "chain_run_id": null,
+      "code_sha": "d6dc90d21f19caa0ef7f065651499ecd1ef9af7e",
+      "pool_errors": 0,
+      "checks_failed": 0,
+      "checks_warned": 1,
+      "errors": [],
+      "warnings": [
+        "scenario_axis_cells: 597"
+      ],
+      "audit_table": {
+        "phase": 0,
+        "name": "Resolve By-laws (Layer 2)",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "parcels_scanned",
+            "value": {
+              "parcels_scanned": 496536,
+              "lots_resolved": 440093,
+              "lots_retracted": 56443
+            },
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "link_row_violations",
+            "value": {
+              "lots_total": 440093,
+              "population_total": 440093
+            },
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "lineage_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "winner_evidence_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "gated_winner_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "sentinel_exception_winner_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "conflict_cells",
+            "value": 0,
+            "threshold": "value_max 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "inputs_defaulted",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "class_cap_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "scenario_axis_cells",
+            "value": 597,
+            "threshold": "value_max 0",
+            "status": "WARN",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "row_sha_mismatches",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "equivalence_disagreements",
+            "value": {
+              "checked": 10282
+            },
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "order_disagreements",
+            "value": {
+              "checked": 10282
+            },
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "equivalence_not_run",
+            "value": {
+              "checked": 10282
+            },
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "not_evaluated_share_pct",
+            "value": {
+              "results": 23324929,
+              "by_reason": {
+                "no_candidate": 5825067,
+                "condition_unknown": 940236,
+                "missing_input": 1713995,
+                "exception_not_authored": 2130335,
+                "existing_building_facts": 103863,
+                "lot_metric_missing": 58724,
+                "named_lots_only": 30556,
+                "ambiguous_zone": 23797,
+                "unlimited_in_arithmetic": 2650,
+                "label_exception_mismatch": 4187,
+                "needs_user_input": 597,
+                "label_unparsed": 265
+              }
+            },
+            "threshold": "pct <= 100",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "winner_layer_histogram",
+            "value": {
+              "base": 10830482,
+              "exception": 812825
+            },
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "unreferenced_rows",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "exception_gated_lots",
+            "value": {
+              "exception_gated_lots": 39267,
+              "gated_by_gate": {
+                "exception_not_authored": 39267,
+                "lot_metric_missing": 1108,
+                "ambiguous_zone": 449,
+                "label_exception_mismatch": 79,
+                "label_unparsed": 5
+              }
+            },
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "storage_within_budget",
+            "value": {
+              "ratio": 0.5640384615384615
+            },
+            "threshold": "value_max 1300",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "inputs_nonempty",
+            "value": {
+              "parcels": 496536
+            },
+            "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+            "status": "INFO"
+          },
+          {
+            "metric": "vocabulary:bylaw_resolution_units.layer",
+            "value": "within declared values (2 distinct)",
+            "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+            "status": "INFO"
+          },
+          {
+            "metric": "vocabulary:bylaw_resolution_lots.lot_gate",
+            "value": "within declared values (5 distinct)",
+            "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 89.44,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 4920307,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "bylaw_resolution_units": [
+          "unit_key",
+          "unit_id",
+          "regulation_id",
+          "layer"
+        ],
+        "bylaw_resolution_texts": [
+          "text_key",
+          "text"
+        ],
+        "parcels": [
+          "id",
+          "parcel_id",
+          "zoning_class",
+          "zoning_zn_string",
+          "exception_number",
+          "zoning_overlays",
+          "on_policy_road",
+          "is_corner_lot",
+          "is_through_lot",
+          "abuts_laneway",
+          "frontage_m",
+          "depth_m",
+          "lot_size_sqm",
+          "zoning_is_ambiguous",
+          "in_sixplex_area",
+          "is_heritage_designated",
+          "geom"
+        ]
+      },
+      "writes": {
+        "bylaw_resolution_units": [
+          "unit_key",
+          "unit_id",
+          "regulation_id",
+          "layer",
+          "chain_run_id",
+          "resolved_at"
+        ],
+        "bylaw_resolution_texts": [
+          "text_key",
+          "text",
+          "chain_run_id",
+          "resolved_at"
+        ],
+        "bylaw_resolution_lots": [
+          "parcel_id",
+          "lot_gate",
+          "codes",
+          "numbers",
+          "reason_ids",
+          "winner_ids",
+          "evidence_kinds",
+          "evidence_ref_ids",
+          "class_results",
+          "permitted",
+          "permitted_text_ids",
+          "inputs_defaulted",
+          "row_sha",
+          "table_version",
+          "evaluator_version",
+          "chain_run_id",
+          "resolved_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [
+    "completed_with_warnings"
+  ],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[resolve_bylaws]\",\"msg\":\"[resolve_bylaws] target: resolve_bylaws (descriptor.database) → database=postgres user=postgres migrations=278 (floor 275)\"}\n{\"level\":\"INFO\",\"tag\":\"[resolve_bylaws]\",\"msg\":\"materialize gate: RUN (bypassed)\"}\nPIPELINE_SUMMARY:{\"records_total\":440093,\"records_new\":440093,\"records_updated\":0,\"records_meta\":{\"parcels_scanned\":496536,\"lots\":440093,\"lots_retracted\":56443,\"lots_gated\":40908,\"results_emitted\":23324929,\"equivalence_checked\":10282,\"equivalence_disagreements\":0,\"order_disagreements\":0,\"gate\":{\"reason\":\"bypassed\",\"gated_skip\":false},\"config\":{\"resolve_bylaws_population_zone_classes\":[\"R\",\"RD\",\"RS\",\"RT\",\"RM\"],\"resolve_bylaws_batch_size\":250,\"resolve_bylaws_conflict_max\":0,\"resolve_bylaws_equivalence_every_nth\":2000,\"resolve_bylaws_storage_budget_mb\":1300,\"resolve_bylaws_class_cap\":8,\"resolve_bylaws_scenario_axis_warn_max\":0,\"resolve_bylaws_not_evaluated_warn_pct\":100},\"terminal\":\"resolved_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"d6dc90d21f19caa0ef7f065651499ecd1ef9af7e\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"scenario_axis_cells: 597\"],\"audit_table\":{\"phase\":0,\"name\":\"Resolve By-laws (Layer 2)\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"parcels_scanned\",\"value\":{\"parcels_scanned\":496536,\"lots_resolved\":440093,\"lots_retracted\":56443},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_row_violations\",\"value\":{\"lots_total\":440093,\"population_total\":440093},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"lineage_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"winner_evidence_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"gated_winner_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"sentinel_exception_winner_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"conflict_cells\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_defaulted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"class_cap_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"scenario_axis_cells\",\"value\":597,\"threshold\":\"value_max 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"row_sha_mismatches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"equivalence_disagreements\",\"value\":{\"checked\":10282},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"order_disagreements\",\"value\":{\"checked\":10282},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"equivalence_not_run\",\"value\":{\"checked\":10282},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"not_evaluated_share_pct\",\"value\":{\"results\":23324929,\"by_reason\":{\"no_candidate\":5825067,\"condition_unknown\":940236,\"missing_input\":1713995,\"exception_not_authored\":2130335,\"existing_building_facts\":103863,\"lot_metric_missing\":58724,\"named_lots_only\":30556,\"ambiguous_zone\":23797,\"unlimited_in_arithmetic\":2650,\"label_exception_mismatch\":4187,\"needs_user_input\":597,\"label_unparsed\":265}},\"threshold\":\"pct <= 100\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"winner_layer_histogram\",\"value\":{\"base\":10830482,\"exception\":812825},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unreferenced_rows\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"exception_gated_lots\",\"value\":{\"exception_gated_lots\":39267,\"gated_by_gate\":{\"exception_not_authored\":39267,\"lot_metric_missing\":1108,\"ambiguous_zone\":449,\"label_exception_mismatch\":79,\"label_unparsed\":5}},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"storage_within_budget\",\"value\":{\"ratio\":0.5640384615384615},\"threshold\":\"value_max 1300\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:bylaw_resolution_units.layer\",\"value\":\"within declared values (2 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:bylaw_resolution_lots.lot_gate\",\"value\":\"within declared values (5 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":89.44,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":4920307,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"bylaw_resolution_units\":[\"unit_key\",\"unit_id\",\"regulation_id\",\"layer\"],\"bylaw_resolution_texts\":[\"text_key\",\"text\"],\"parcels\":[\"id\",\"parcel_id\",\"zoning_class\",\"zoning_zn_string\",\"exception_number\",\"zoning_overlays\",\"on_policy_road\",\"is_corner_lot\",\"is_through_lot\",\"abuts_laneway\",\"frontage_m\",\"depth_m\",\"lot_size_sqm\",\"zoning_is_ambiguous\",\"in_sixplex_area\",\"is_heritage_designated\",\"geom\"]},\"writes\":{\"bylaw_resolution_units\":[\"unit_key\",\"unit_id\",\"regulation_id\",\"layer\",\"chain_run_id\",\"resolved_at\"],\"bylaw_resolution_texts\":[\"text_key\",\"text\",\"chain_run_id\",\"resolved_at\"],\"bylaw_resolution_lots\":[\"parcel_id\",\"lot_gate\",\"codes\",\"numbers\",\"reason_ids\",\"winner_ids\",\"evidence_kinds\",\"evidence_ref_ids\",\"class_results\",\"permitted\",\"permitted_text_ids\",\"inputs_defaulted\",\"row_sha\",\"table_version\",\"evaluator_version\",\"chain_run_id\",\"resolved_at\"]}}\n\n[resolve_bylaws] completed in 4920.3s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[resolve_bylaws]\",\"msg\":\"lookup bylaw_resolution_units is empty (on_empty \\\"warn\\\")\"}\n{\"level\":\"WARN\",\"tag\":\"[resolve_bylaws]\",\"msg\":\"lookup bylaw_resolution_texts is empty (on_empty \\\"warn\\\")\"}\n",
+  "pipeline_runs": [
+    {
+      "id": 4320,
+      "pipeline": "resolve_bylaws",
+      "status": "completed_with_warnings",
+      "started_at": "2026-10-24T23:24:29.360Z",
+      "completed_at": "2026-10-25T00:46:29.657Z",
+      "duration_ms": 4920310,
+      "records_total": 440093,
+      "records_new": 440093,
+      "records_updated": 0,
+      "records_meta": {
+        "gate": {
+          "reason": "bypassed",
+          "gated_skip": false
+        },
+        "lots": 440093,
+        "config": {
+          "resolve_bylaws_class_cap": 8,
+          "resolve_bylaws_batch_size": 250,
+          "resolve_bylaws_conflict_max": 0,
+          "resolve_bylaws_storage_budget_mb": 1300,
+          "resolve_bylaws_equivalence_every_nth": 2000,
+          "resolve_bylaws_not_evaluated_warn_pct": 100,
+          "resolve_bylaws_scenario_axis_warn_max": 0,
+          "resolve_bylaws_population_zone_classes": [
+            "R",
+            "RD",
+            "RS",
+            "RT",
+            "RM"
+          ]
+        },
+        "errors": [],
+        "code_sha": "d6dc90d21f19caa0ef7f065651499ecd1ef9af7e",
+        "terminal": "resolved_with_warnings",
+        "warnings": [
+          "scenario_axis_cells: 597"
+        ],
+        "ledger_row": "owned",
+        "lots_gated": 40908,
+        "audit_table": {
+          "name": "Resolve By-laws (Layer 2)",
+          "rows": [
+            {
+              "value": {
+                "lots_resolved": 440093,
+                "lots_retracted": 56443,
+                "parcels_scanned": 496536
+              },
+              "metric": "parcels_scanned",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "lots_total": 440093,
+                "population_total": 440093
+              },
+              "metric": "link_row_violations",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "lineage_violations",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "winner_evidence_violations",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "gated_winner_violations",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "sentinel_exception_winner_violations",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "conflict_cells",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "value_max 0"
+            },
+            {
+              "value": 0,
+              "metric": "inputs_defaulted",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "class_cap_violations",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 597,
+              "metric": "scenario_axis_cells",
+              "source": "check",
+              "status": "WARN",
+              "observed": "after_write",
+              "threshold": "value_max 0"
+            },
+            {
+              "value": 0,
+              "metric": "row_sha_mismatches",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "checked": 10282
+              },
+              "metric": "equivalence_disagreements",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "checked": 10282
+              },
+              "metric": "order_disagreements",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "checked": 10282
+              },
+              "metric": "equivalence_not_run",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "results": 23324929,
+                "by_reason": {
+                  "no_candidate": 5825067,
+                  "missing_input": 1713995,
+                  "ambiguous_zone": 23797,
+                  "label_unparsed": 265,
+                  "named_lots_only": 30556,
+                  "needs_user_input": 597,
+                  "condition_unknown": 940236,
+                  "lot_metric_missing": 58724,
+                  "exception_not_authored": 2130335,
+                  "existing_building_facts": 103863,
+                  "unlimited_in_arithmetic": 2650,
+                  "label_exception_mismatch": 4187
+                }
+              },
+              "metric": "not_evaluated_share_pct",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "pct <= 100"
+            },
+            {
+              "value": {
+                "base": 10830482,
+                "exception": 812825
+              },
+              "metric": "winner_layer_histogram",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "unreferenced_rows",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "gated_by_gate": {
+                  "ambiguous_zone": 449,
+                  "label_unparsed": 5,
+                  "lot_metric_missing": 1108,
+                  "exception_not_authored": 39267,
+                  "label_exception_mismatch": 79
+                },
+                "exception_gated_lots": 39267
+              },
+              "metric": "exception_gated_lots",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "ratio": 0.5640384615384615
+              },
+              "metric": "storage_within_budget",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "value_max 1300"
+            },
+            {
+              "value": {
+                "parcels": 496536
+              },
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
+            },
+            {
+              "value": "within declared values (2 distinct)",
+              "metric": "vocabulary:bylaw_resolution_units.layer",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)"
+            },
+            {
+              "value": "within declared values (5 distinct)",
+              "metric": "vocabulary:bylaw_resolution_lots.lot_gate",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)"
+            },
+            {
+              "value": 89.44,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 4920307,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 0,
+          "verdict": "WARN"
+        },
+        "pool_errors": 0,
+        "chain_run_id": null,
+        "checks_failed": 0,
+        "checks_warned": 1,
+        "lots_retracted": 56443,
+        "parcels_scanned": 496536,
+        "results_emitted": 23324929,
+        "equivalence_checked": 10282,
+        "order_disagreements": 0,
+        "equivalence_disagreements": 0
+      },
+      "error_message": null
+    }
+  ],
+  "pipeline_runs_max_id_before": 4319,
+  "table_state": [
+    {
+      "table": "bylaw_resolution_lots",
+      "row_count": 440093,
+      "ceiling_bypassed": "projected",
+      "content_hash": "f9dff7b23a6f85d3c6a74f05eba5cf4e",
+      "order_by": "explicit",
+      "order_columns": [
+        "parcel_id"
+      ],
+      "columns": [
+        "parcel_id",
+        "row_sha"
+      ]
+    },
+    {
+      "table": "bylaw_resolution_texts",
+      "row_count": 2840,
+      "content_hash": "c4c7bda81b926f0ea6e21c33a37cd5ce",
+      "order_by": "explicit",
+      "order_columns": [
+        "text_key"
+      ],
+      "columns": [
+        "text_key",
+        "text",
+        "resolved_at"
+      ]
+    },
+    {
+      "table": "bylaw_resolution_units",
+      "row_count": 992,
+      "content_hash": "b7c32d8a0b7d67d40f65ca308120531e",
+      "order_by": "explicit",
+      "order_columns": [
+        "unit_key"
+      ],
+      "columns": [
+        "unit_key",
+        "unit_id",
+        "regulation_id",
+        "layer",
+        "resolved_at"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "bylaw_resolution_lots": 336,
+    "bylaw_resolution_texts": 2,
+    "bylaw_resolution_units": 1
+  },
+  "table_specs": {
+    "bylaw_resolution_lots": {
+      "columns": [
+        "parcel_id",
+        "row_sha"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "parcel_id"
+      ],
+      "order_source": "arg"
+    },
+    "bylaw_resolution_texts": {
+      "columns": [
+        "text_key",
+        "text",
+        "resolved_at"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "text_key"
+      ],
+      "order_source": "descriptor"
+    },
+    "bylaw_resolution_units": {
+      "columns": [
+        "unit_key",
+        "unit_id",
+        "regulation_id",
+        "layer",
+        "resolved_at"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "unit_key"
+      ],
+      "order_source": "descriptor"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:pipeline_runs[0].completed_at",
+    "key:pipeline_runs[0].duration_ms",
+    "key:pipeline_runs[0].id",
+    "key:pipeline_runs[0].records_meta.chain_run_id",
+    "key:pipeline_runs[0].records_meta.code_sha",
+    "key:pipeline_runs[0].started_at",
+    "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/resolve-bylaws.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Resolve By-laws (Layer 2)",
+          "phase": 0,
+          "rows": [
+            {
+              "metric": "parcels_scanned",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "lots_resolved": 440093,
+                "lots_retracted": 56443,
+                "parcels_scanned": 496536
+              }
+            },
+            {
+              "metric": "link_row_violations",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": {
+                "lots_total": 440093,
+                "population_total": 440093
+              }
+            },
+            {
+              "metric": "lineage_violations",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "winner_evidence_violations",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "gated_winner_violations",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "sentinel_exception_winner_violations",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "conflict_cells",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_max 0",
+              "value": 0
+            },
+            {
+              "metric": "inputs_defaulted",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "class_cap_violations",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "scenario_axis_cells",
+              "observed": "after_write",
+              "source": "check",
+              "status": "WARN",
+              "threshold": "value_max 0",
+              "value": 597
+            },
+            {
+              "metric": "row_sha_mismatches",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "equivalence_disagreements",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": {
+                "checked": 10282
+              }
+            },
+            {
+              "metric": "order_disagreements",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": {
+                "checked": 10282
+              }
+            },
+            {
+              "metric": "equivalence_not_run",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": {
+                "checked": 10282
+              }
+            },
+            {
+              "metric": "not_evaluated_share_pct",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 100",
+              "value": {
+                "by_reason": {
+                  "ambiguous_zone": 23797,
+                  "condition_unknown": 940236,
+                  "exception_not_authored": 2130335,
+                  "existing_building_facts": 103863,
+                  "label_exception_mismatch": 4187,
+                  "label_unparsed": 265,
+                  "lot_metric_missing": 58724,
+                  "missing_input": 1713995,
+                  "named_lots_only": 30556,
+                  "needs_user_input": 597,
+                  "no_candidate": 5825067,
+                  "unlimited_in_arithmetic": 2650
+                },
+                "results": 23324929
+              }
+            },
+            {
+              "metric": "winner_layer_histogram",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "base": 10830482,
+                "exception": 812825
+              }
+            },
+            {
+              "metric": "unreferenced_rows",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "exception_gated_lots",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "exception_gated_lots": 39267,
+                "gated_by_gate": {
+                  "ambiguous_zone": 449,
+                  "exception_not_authored": 39267,
+                  "label_exception_mismatch": 79,
+                  "label_unparsed": 5,
+                  "lot_metric_missing": 1108
+                }
+              }
+            },
+            {
+              "metric": "storage_within_budget",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_max 1300",
+              "value": {
+                "ratio": 0.5640384615384615
+              }
+            },
+            {
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+              "value": {
+                "parcels": 496536
+              }
+            },
+            {
+              "metric": "vocabulary:bylaw_resolution_units.layer",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+              "value": "within declared values (2 distinct)"
+            },
+            {
+              "metric": "vocabulary:bylaw_resolution_lots.lot_gate",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+              "value": "within declared values (5 distinct)"
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "checks_failed": 0,
+        "checks_warned": 1,
+        "config": {
+          "resolve_bylaws_batch_size": 250,
+          "resolve_bylaws_class_cap": 8,
+          "resolve_bylaws_conflict_max": 0,
+          "resolve_bylaws_equivalence_every_nth": 2000,
+          "resolve_bylaws_not_evaluated_warn_pct": 100,
+          "resolve_bylaws_population_zone_classes": [
+            "R",
+            "RD",
+            "RS",
+            "RT",
+            "RM"
+          ],
+          "resolve_bylaws_scenario_axis_warn_max": 0,
+          "resolve_bylaws_storage_budget_mb": 1300
+        },
+        "equivalence_checked": 10282,
+        "equivalence_disagreements": 0,
+        "errors": [],
+        "gate": {
+          "gated_skip": false,
+          "reason": "bypassed"
+        },
+        "ledger_row": "owned",
+        "lots": 440093,
+        "lots_gated": 40908,
+        "lots_retracted": 56443,
+        "order_disagreements": 0,
+        "parcels_scanned": 496536,
+        "pool_errors": 0,
+        "results_emitted": 23324929,
+        "terminal": "resolved_with_warnings",
+        "warnings": [
+          "scenario_axis_cells: 597"
+        ]
+      },
+      "records_new": 440093,
+      "records_total": 440093,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "bylaw_resolution_texts": [
+            "text_key",
+            "text"
+          ],
+          "bylaw_resolution_units": [
+            "unit_key",
+            "unit_id",
+            "regulation_id",
+            "layer"
+          ],
+          "parcels": [
+            "id",
+            "parcel_id",
+            "zoning_class",
+            "zoning_zn_string",
+            "exception_number",
+            "zoning_overlays",
+            "on_policy_road",
+            "is_corner_lot",
+            "is_through_lot",
+            "abuts_laneway",
+            "frontage_m",
+            "depth_m",
+            "lot_size_sqm",
+            "zoning_is_ambiguous",
+            "in_sixplex_area",
+            "is_heritage_designated",
+            "geom"
+          ]
+        },
+        "writes": {
+          "bylaw_resolution_lots": [
+            "parcel_id",
+            "lot_gate",
+            "codes",
+            "numbers",
+            "reason_ids",
+            "winner_ids",
+            "evidence_kinds",
+            "evidence_ref_ids",
+            "class_results",
+            "permitted",
+            "permitted_text_ids",
+            "inputs_defaulted",
+            "row_sha",
+            "table_version",
+            "evaluator_version",
+            "chain_run_id",
+            "resolved_at"
+          ],
+          "bylaw_resolution_texts": [
+            "text_key",
+            "text",
+            "chain_run_id",
+            "resolved_at"
+          ],
+          "bylaw_resolution_units": [
+            "unit_key",
+            "unit_id",
+            "regulation_id",
+            "layer",
+            "chain_run_id",
+            "resolved_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [
+      {
+        "error_message": null,
+        "pipeline": "resolve_bylaws",
+        "records_meta": {
+          "audit_table": {
+            "name": "Resolve By-laws (Layer 2)",
+            "phase": 0,
+            "rows": [
+              {
+                "metric": "parcels_scanned",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": {
+                  "lots_resolved": 440093,
+                  "lots_retracted": 56443,
+                  "parcels_scanned": 496536
+                }
+              },
+              {
+                "metric": "link_row_violations",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": {
+                  "lots_total": 440093,
+                  "population_total": 440093
+                }
+              },
+              {
+                "metric": "lineage_violations",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "winner_evidence_violations",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "gated_winner_violations",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "sentinel_exception_winner_violations",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "conflict_cells",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "value_max 0",
+                "value": 0
+              },
+              {
+                "metric": "inputs_defaulted",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "class_cap_violations",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "scenario_axis_cells",
+                "observed": "after_write",
+                "source": "check",
+                "status": "WARN",
+                "threshold": "value_max 0",
+                "value": 597
+              },
+              {
+                "metric": "row_sha_mismatches",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "equivalence_disagreements",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": {
+                  "checked": 10282
+                }
+              },
+              {
+                "metric": "order_disagreements",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": {
+                  "checked": 10282
+                }
+              },
+              {
+                "metric": "equivalence_not_run",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": {
+                  "checked": 10282
+                }
+              },
+              {
+                "metric": "not_evaluated_share_pct",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 100",
+                "value": {
+                  "by_reason": {
+                    "ambiguous_zone": 23797,
+                    "condition_unknown": 940236,
+                    "exception_not_authored": 2130335,
+                    "existing_building_facts": 103863,
+                    "label_exception_mismatch": 4187,
+                    "label_unparsed": 265,
+                    "lot_metric_missing": 58724,
+                    "missing_input": 1713995,
+                    "named_lots_only": 30556,
+                    "needs_user_input": 597,
+                    "no_candidate": 5825067,
+                    "unlimited_in_arithmetic": 2650
+                  },
+                  "results": 23324929
+                }
+              },
+              {
+                "metric": "winner_layer_histogram",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": {
+                  "base": 10830482,
+                  "exception": 812825
+                }
+              },
+              {
+                "metric": "unreferenced_rows",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "exception_gated_lots",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": {
+                  "exception_gated_lots": 39267,
+                  "gated_by_gate": {
+                    "ambiguous_zone": 449,
+                    "exception_not_authored": 39267,
+                    "label_exception_mismatch": 79,
+                    "label_unparsed": 5,
+                    "lot_metric_missing": 1108
+                  }
+                }
+              },
+              {
+                "metric": "storage_within_budget",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "value_max 1300",
+                "value": {
+                  "ratio": 0.5640384615384615
+                }
+              },
+              {
+                "metric": "inputs_nonempty",
+                "status": "INFO",
+                "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+                "value": {
+                  "parcels": 496536
+                }
+              },
+              {
+                "metric": "vocabulary:bylaw_resolution_units.layer",
+                "status": "INFO",
+                "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+                "value": "within declared values (2 distinct)"
+              },
+              {
+                "metric": "vocabulary:bylaw_resolution_lots.lot_gate",
+                "status": "INFO",
+                "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+                "value": "within declared values (5 distinct)"
+              }
+            ],
+            "verdict": "WARN"
+          },
+          "checks_failed": 0,
+          "checks_warned": 1,
+          "config": {
+            "resolve_bylaws_batch_size": 250,
+            "resolve_bylaws_class_cap": 8,
+            "resolve_bylaws_conflict_max": 0,
+            "resolve_bylaws_equivalence_every_nth": 2000,
+            "resolve_bylaws_not_evaluated_warn_pct": 100,
+            "resolve_bylaws_population_zone_classes": [
+              "R",
+              "RD",
+              "RS",
+              "RT",
+              "RM"
+            ],
+            "resolve_bylaws_scenario_axis_warn_max": 0,
+            "resolve_bylaws_storage_budget_mb": 1300
+          },
+          "equivalence_checked": 10282,
+          "equivalence_disagreements": 0,
+          "errors": [],
+          "gate": {
+            "gated_skip": false,
+            "reason": "bypassed"
+          },
+          "ledger_row": "owned",
+          "lots": 440093,
+          "lots_gated": 40908,
+          "lots_retracted": 56443,
+          "order_disagreements": 0,
+          "parcels_scanned": 496536,
+          "pool_errors": 0,
+          "results_emitted": 23324929,
+          "terminal": "resolved_with_warnings",
+          "warnings": [
+            "scenario_axis_cells: 597"
+          ]
+        },
+        "records_new": 440093,
+        "records_total": 440093,
+        "records_updated": 0,
+        "status": "completed_with_warnings"
+      }
+    ],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[resolve_bylaws] target: resolve_bylaws (descriptor.database) → database=postgres user=postgres migrations=278 (floor 275)\",\"tag\":\"[resolve_bylaws]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"materialize gate: RUN (bypassed)\",\"tag\":\"[resolve_bylaws]\"}",
+      "[resolve_bylaws] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "parcel_id",
+          "row_sha"
+        ],
+        "content_hash": "f9dff7b23a6f85d3c6a74f05eba5cf4e",
+        "order_by": "explicit",
+        "order_columns": [
+          "parcel_id"
+        ],
+        "row_count": 440093,
+        "table": "bylaw_resolution_lots"
+      },
+      {
+        "columns": [
+          "text_key",
+          "text",
+          "resolved_at"
+        ],
+        "content_hash": "c4c7bda81b926f0ea6e21c33a37cd5ce",
+        "order_by": "explicit",
+        "order_columns": [
+          "text_key"
+        ],
+        "row_count": 2840,
+        "table": "bylaw_resolution_texts"
+      },
+      {
+        "columns": [
+          "unit_key",
+          "unit_id",
+          "regulation_id",
+          "layer",
+          "resolved_at"
+        ],
+        "content_hash": "b7c32d8a0b7d67d40f65ca308120531e",
+        "order_by": "explicit",
+        "order_columns": [
+          "unit_key"
+        ],
+        "row_count": 992,
+        "table": "bylaw_resolution_units"
+      }
+    ],
+    "invariants": []
+  },
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "bylaw_resolution_lots",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "bylaw_resolution_texts",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "bylaw_resolution_units",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 3 table(s) [bylaw_resolution_lots,bylaw_resolution_texts,bylaw_resolution_units]",
+    "txid_before_run2": 697755,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "resolved_with_warnings",
+      "audit": {
+        "parcels_scanned": {
+          "parcels_scanned": 496536,
+          "lots_resolved": 440093,
+          "lots_retracted": 56443
+        },
+        "link_row_violations": {
+          "lots_total": 440093,
+          "population_total": 440093
+        },
+        "lineage_violations": 0,
+        "winner_evidence_violations": 0,
+        "gated_winner_violations": 0,
+        "sentinel_exception_winner_violations": 0,
+        "conflict_cells": 0,
+        "inputs_defaulted": 0,
+        "class_cap_violations": 0,
+        "scenario_axis_cells": 597,
+        "row_sha_mismatches": 0,
+        "equivalence_disagreements": {
+          "checked": 10547
+        },
+        "order_disagreements": {
+          "checked": 10547
+        },
+        "equivalence_not_run": {
+          "checked": 10547
+        },
+        "not_evaluated_share_pct": {
+          "results": 23324929,
+          "by_reason": {
+            "no_candidate": 5825067,
+            "condition_unknown": 940236,
+            "missing_input": 1713995,
+            "exception_not_authored": 2130335,
+            "existing_building_facts": 103863,
+            "lot_metric_missing": 58724,
+            "named_lots_only": 30556,
+            "ambiguous_zone": 23797,
+            "unlimited_in_arithmetic": 2650,
+            "label_exception_mismatch": 4187,
+            "needs_user_input": 597,
+            "label_unparsed": 265
+          }
+        },
+        "winner_layer_histogram": {
+          "base": 10830482,
+          "exception": 812825
+        },
+        "unreferenced_rows": 0,
+        "exception_gated_lots": {
+          "exception_gated_lots": 39267,
+          "gated_by_gate": {
+            "exception_not_authored": 39267,
+            "lot_metric_missing": 1108,
+            "ambiguous_zone": 449,
+            "label_exception_mismatch": 79,
+            "label_unparsed": 5
+          }
+        },
+        "storage_within_budget": {
+          "ratio": 0.5640384615384615
+        },
+        "inputs_nonempty": {
+          "parcels": 496536
+        },
+        "vocabulary:bylaw_resolution_units.layer": "within declared values (2 distinct)",
+        "vocabulary:bylaw_resolution_lots.lot_gate": "within declared values (5 distinct)",
+        "sys_velocity_rows_sec": 91.22,
+        "sys_duration_ms": 4824290
+      }
+    }
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 4320,
+      "recorded_by": "step"
+    },
+    {
+      "id": 4321,
+      "recorded_by": "step"
+    }
+  ],
+  "source_fingerprint": "76fcfa831a745055cf7ed199ea848bb3f768cfc40ca3f691fcc937543495fa42",
+  "fingerprint_files": [
+    "scripts/lib/compute/resolve-bylaws.js",
+    "scripts/resolve-bylaws.descriptor.json",
+    "scripts/resolve-bylaws.js",
+    "scripts/resolve-bylaws.notes.json"
+  ],
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
+}

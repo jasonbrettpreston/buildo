@@ -280,7 +280,7 @@ export const ConfigUpdatePayloadSchema = z.object({
 // ─────────────────────────────────────────────────────────────────────────────
 
 type _LogicVarEntry = {
-  readonly default: number | string;
+  readonly default: number | string | readonly string[];
   readonly type: string;
   readonly description?: string;
   readonly min?: number;
@@ -290,15 +290,15 @@ type _LogicVarEntry = {
 };
 
 /**
- * Numeric defaults ONLY — every string-defaulted variable (`pipeline_timezone`)
- * is filtered out here, so `deltaExceeds50pct` (which subtracts these) never
+ * Numeric defaults ONLY — every string-defaulted variable (`pipeline_timezone`) and every list-valued one
+ * (`type: "list"`, Q-J: `resolve_bylaws_population_zone_classes`, hidden "internal") is filtered out here, so `deltaExceeds50pct` (which subtracts these) never
  * sees a string. NULL defaults are preserved verbatim (a seeded
  * `lifecycle_seq_band_*_max` with `default: null` still produces a key, exactly
  * as before). Rebuilt from the same seed JSON in one pass.
  */
 export const LOGIC_VAR_DEFAULTS: Record<string, number> = Object.fromEntries(
   (Object.entries(_logicVarsJson) as Array<[string, _LogicVarEntry]>)
-    .filter(([, v]) => typeof v.default !== 'string')
+    .filter(([, v]) => typeof v.default !== 'string' && !Array.isArray(v.default))
     .map(([k, v]) => [k, v.default as number]),
 );
 

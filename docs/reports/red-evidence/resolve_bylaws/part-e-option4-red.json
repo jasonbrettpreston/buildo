@@ -1,0 +1,1711 @@
+{
+ "$comment": "Gate K red evidence (Spec 124 R-BA; R-DK item 4). Vitest JSON reporter output of src/tests/steps/resolve_bylaws/{lotrow,materialize,frozen-row,migration,row-sha-sql,violations,profiles}.logic/.test.ts written for operator CHAT-80.QP (option 4: one lot row of positional arrays in scope-seed order plus two closed dictionaries; losers, inputs_used and disclosures recomputed on read; CHAT-77.freeze logical row) and run against the interning (B0) build of scripts/lib/bylaw-materialize.js, bylaw-resolution.js, compute/resolve-bylaws.js, the descriptor, notes, manifest and migration 282, with scripts/lib/bylaw-lot-row.js absent (lane L2-SLICES, 2026-10-22). 82 of 132 red. Absolute paths made repo-relative; nothing else edited.",
+ "numTotalTestSuites": 44,
+ "numPassedTestSuites": 10,
+ "numFailedTestSuites": 34,
+ "numPendingTestSuites": 0,
+ "numTotalTests": 132,
+ "numPassedTests": 50,
+ "numFailedTests": 82,
+ "numPendingTests": 0,
+ "numTodoTests": 0,
+ "snapshot": {
+  "added": 0,
+  "failure": false,
+  "filesAdded": 0,
+  "filesRemoved": 0,
+  "filesRemovedList": [],
+  "filesUnmatched": 0,
+  "filesUpdated": 0,
+  "matched": 0,
+  "total": 0,
+  "unchecked": 0,
+  "uncheckedKeysByFile": [],
+  "unmatched": 0,
+  "updated": 0,
+  "didUpdate": false
+ },
+ "startTime": 1792702447983,
+ "success": false,
+ "testResults": [
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form"
+     ],
+     "fullName": "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form LOGICAL_RESULT_FIELDS is the spelled-out list, in order",
+     "status": "failed",
+     "title": "LOGICAL_RESULT_FIELDS is the spelled-out list, in order",
+     "duration": 5.755458000000004,
+     "failureMessages": [
+      "TypeError: mz.LOGICAL_RESULT_FIELDS is not iterable\n    at src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:54:19\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form"
+     ],
+     "fullName": "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form every row read back has the identity (class, structure, target) and exactly the 11 fields, for every class and pair",
+     "status": "failed",
+     "title": "every row read back has the identity (class, structure, target) and exactly the 11 fields, for every class and pair",
+     "duration": 92.9185,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:20:24)\n    at logical (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:48:17)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form"
+     ],
+     "fullName": "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form the stored fields and the recomputed fields equal the uncached evaluator, for an RD lot and an RM lot with an authored exception, every class and pair",
+     "status": "failed",
+     "title": "the stored fields and the recomputed fields equal the uncached evaluator, for an RD lot and an RM lot with an authored exception, every class and pair",
+     "duration": 62.406083000000024,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:20:24)\n    at logical (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:48:17)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form"
+     ],
+     "fullName": "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form permitted_by_class equals the evaluator's own words for every class",
+     "status": "failed",
+     "title": "permitted_by_class equals the evaluator's own words for every class",
+     "duration": 39.41362499999997,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:20:24)\n    at logical (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:48:17)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form"
+     ],
+     "fullName": "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form a gated lot reads back as the gate, not_evaluated everywhere with the gate reason, empty inputs_used and no losers or disclosures",
+     "status": "failed",
+     "title": "a gated lot reads back as the gate, not_evaluated everywhere with the gate reason, empty inputs_used and no losers or disclosures",
+     "duration": 0.629333000000031,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:20:24)\n    at logical (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:48:17)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form"
+     ],
+     "fullName": "CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form reading is stable: two reads of the same stored row give identical logical rows, and a recomputation does not depend on the cache state of the env",
+     "status": "failed",
+     "title": "reading is stable: two reads of the same stored row give identical logical rows, and a recomputation does not depend on the cache state of the env",
+     "duration": 28.431375000000003,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:20:24)\n    at logical (src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts:48:17)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792702448201,
+   "endTime": 1792702448431.4314,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "the dictionary key: first four bytes of sha256, a signed 32-bit integer"
+     ],
+     "fullName": "the dictionary key: first four bytes of sha256, a signed 32-bit integer hash32 matches the byte rule and stays inside int4",
+     "status": "failed",
+     "title": "hash32 matches the byte rule and stays inside int4",
+     "duration": 3.7779169999999738,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:35:14"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "result codes: status x value_kind from layer2-map.json, in map order"
+     ],
+     "fullName": "result codes: status x value_kind from layer2-map.json, in map order applies expands by value_kind; the other statuses stand alone; code 0 is the first",
+     "status": "failed",
+     "title": "applies expands by value_kind; the other statuses stand alone; code 0 is the first",
+     "duration": 0.36324999999999363,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:45:12"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "result codes: status x value_kind from layer2-map.json, in map order"
+     ],
+     "fullName": "result codes: status x value_kind from layer2-map.json, in map order codeOf and splitCode are inverses; an unknown status or value kind throws (never defaulted)",
+     "status": "failed",
+     "title": "codeOf and splitCode are inverses; an unknown status or value kind throws (never defaulted)",
+     "duration": 0.29629099999999653,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:50:14"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the closed dictionaries: units and texts, keyed by hash32 of their content, fail-loud on a collision"
+     ],
+     "fullName": "the closed dictionaries: units and texts, keyed by hash32 of their content, fail-loud on a collision the same unit or text gets the same key and one row; the unit row carries its regulation id and layer",
+     "status": "failed",
+     "title": "the same unit or text gets the same key and one row; the unit row carries its regulation id and layer",
+     "duration": 0.23845900000000597,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:60:15"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the closed dictionaries: units and texts, keyed by hash32 of their content, fail-loud on a collision"
+     ],
+     "fullName": "the closed dictionaries: units and texts, keyed by hash32 of their content, fail-loud on a collision a seeded dictionary row under the same key with other content is a collision and throws",
+     "status": "failed",
+     "title": "a seeded dictionary row under the same key with other content is a collision and throws",
+     "duration": 0.24962500000000887,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:69:15"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the closed dictionaries: units and texts, keyed by hash32 of their content, fail-loud on a collision"
+     ],
+     "fullName": "the closed dictionaries: units and texts, keyed by hash32 of their content, fail-loud on a collision seeding does not emit rows for entries this batch did not use",
+     "status": "failed",
+     "title": "seeding does not emit rows for entries this batch did not use",
+     "duration": 0.18062499999999204,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:77:15"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides"
+     ],
+     "fullName": "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides arrays have one slot per pair in scope order: codes always, the rest as typed arrays with null slots",
+     "status": "failed",
+     "title": "arrays have one slot per pair in scope order: codes always, the rest as typed arrays with null slots",
+     "duration": 0.27991700000001174,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at mk (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:85:18)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides"
+     ],
+     "fullName": "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides round trip: every class and pair decodes to exactly the 8 stored fields that went in",
+     "status": "failed",
+     "title": "round trip: every class and pair decodes to exactly the 8 stored fields that went in",
+     "duration": 0.19499999999999318,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at mk (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:85:18)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides"
+     ],
+     "fullName": "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides a class equal to the representative adds nothing; a differing class stores only its differing pairs, keyed class -> pair index",
+     "status": "failed",
+     "title": "a class equal to the representative adds nothing; a differing class stores only its differing pairs, keyed class -> pair index",
+     "duration": 0.22962500000002706,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at mk (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:85:18)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides"
+     ],
+     "fullName": "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides an all-null typed array is stored as null; the codes array is never null",
+     "status": "failed",
+     "title": "an all-null typed array is stored as null; the codes array is never null",
+     "duration": 0.1944170000000156,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at mk (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:85:18)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides"
+     ],
+     "fullName": "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides the decoded winner layer comes from the unit dictionary, the evidence ref from the text dictionary",
+     "status": "failed",
+     "title": "the decoded winner layer comes from the unit dictionary, the evidence ref from the text dictionary",
+     "duration": 0.16941599999998402,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at mk (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:85:18)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides"
+     ],
+     "fullName": "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides a key missing from the decode dictionaries, or a wrong array length, throws (a missing input is never defaulted)",
+     "status": "failed",
+     "title": "a key missing from the decode dictionaries, or a wrong array length, throws (a missing input is never defaulted)",
+     "duration": 0.18745899999998983,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at mk (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:85:18)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides"
+     ],
+     "fullName": "encodeLotResults / decodeLotResults: positional arrays in pair order, the representative class plus sparse overrides encoding refuses a class list that is missing a class or a pair list that does not match the results",
+     "status": "failed",
+     "title": "encoding refuses a class list that is missing a class or a pair list that does not match the results",
+     "duration": 0.17195800000001782,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:142:18"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodePermitted / decodePermitted: permitted()'s own words per class as two small arrays (R-IT)"
+     ],
+     "fullName": "encodePermitted / decodePermitted: permitted()'s own words per class as two small arrays (R-IT) round trips permitted, prohibited with its clause list and not_evaluated with its reason",
+     "status": "failed",
+     "title": "round trips permitted, prohibited with its clause list and not_evaluated with its reason",
+     "duration": 0.2443749999999909,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/lotrow.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:17:24)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:150:18"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "encodePermitted / decodePermitted: permitted()'s own words per class as two small arrays (R-IT)"
+     ],
+     "fullName": "encodePermitted / decodePermitted: permitted()'s own words per class as two small arrays (R-IT) a status outside permission_image throws",
+     "status": "failed",
+     "title": "a status outside permission_image throws",
+     "duration": 1.9213750000000118,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw error matching /permission_image/ but got 'Cannot find module \\'<home>'\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/lotrow.logic.test.ts:161:128\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792702448176,
+   "endTime": 1792702448185.9214,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/lotrow.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names"
+     ],
+     "fullName": "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names writes exactly one lot row, no retraction, and only the three tables (no profiles, cells, signatures or sets)",
+     "status": "failed",
+     "title": "writes exactly one lot row, no retraction, and only the three tables (no profiles, cells, signatures or sets)",
+     "duration": 4.880708999999996,
+     "failureMessages": [
+      "AssertionError: expected [ 'cells', 'disclosure_sets', …(4) ] to deeply equal [ 'lots', 'texts', 'units' ]\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:57:42\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names"
+     ],
+     "fullName": "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names every positional array has one slot per scope pair, in layer2-scope.json order (53); permitted has one slot per class",
+     "status": "failed",
+     "title": "every positional array has one slot per scope pair, in layer2-scope.json order (53); permitted has one slot per class",
+     "duration": 1.8206250000000068,
+     "failureMessages": [
+      "AssertionError: codes: Target cannot be null or undefined.\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:69:148\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names"
+     ],
+     "fullName": "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names the decoded results have a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "status": "failed",
+     "title": "the decoded results have a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)",
+     "duration": 0.48766699999998764,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names"
+     ],
+     "fullName": "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names the lot row carries the two versions and a row_sha that recomputes over RESULT_COLUMNS.lots (I14)",
+     "status": "passed",
+     "title": "the lot row carries the two versions and a row_sha that recomputes over RESULT_COLUMNS.lots (I14)",
+     "duration": 0.24633300000002123,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names"
+     ],
+     "fullName": "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names dictionary rows are keyed by hash32 of their content, carry no row_sha, and hold only what the lot names (nothing unreferenced)",
+     "status": "failed",
+     "title": "dictionary rows are keyed by hash32 of their content, carry no row_sha, and hold only what the lot names (nothing unreferenced)",
+     "duration": 0.27641700000000924,
+     "failureMessages": [
+      "TypeError: out.rows.units is not iterable\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:93:30\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names"
+     ],
+     "fullName": "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names there is no per-pair json: losers, by_class, disclosures and inputs are not columns of the lot row (they are recomputed on read)",
+     "status": "failed",
+     "title": "there is no per-pair json: losers, by_class, disclosures and inputs are not columns of the lot row (they are recomputed on read)",
+     "duration": 0.6469580000000121,
+     "failureMessages": [
+      "AssertionError: permission_set_id: expected { parcel_id: 1, …(7) } to not have property \"permission_set_id\"\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:104:179\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names"
+     ],
+     "fullName": "materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "status": "passed",
+     "title": "matched is additive: numbers or objects of numbers only (R-EH (c))",
+     "duration": 0.136792000000014,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "classes: the first class fills the arrays, a differing class stores only its differing positions (sparse class_results)"
+     ],
+     "fullName": "classes: the first class fills the arrays, a differing class stores only its differing positions (sparse class_results) a real RD lot has few or no per-class overrides, and every override key is a declared class",
+     "status": "failed",
+     "title": "a real RD lot has few or no per-class overrides, and every override key is a declared class",
+     "duration": 101.76804100000001,
+     "failureMessages": [
+      "TypeError: Cannot convert undefined or null to object\n    at Object.keys (<anonymous>)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:121:97\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "classes: the first class fills the arrays, a differing class stores only its differing positions (sparse class_results)"
+     ],
+     "fullName": "classes: the first class fills the arrays, a differing class stores only its differing positions (sparse class_results) permitted holds permitted()'s own words for every v1 class (R-IT), decoded",
+     "status": "failed",
+     "title": "permitted holds permitted()'s own words for every v1 class (R-IT), decoded",
+     "duration": 36.409875,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:126:17"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing is no longer a storage concern: two lots with the same inputs give two equal result arrays (the dictionaries hold the words once)"
+     ],
+     "fullName": "sharing is no longer a storage concern: two lots with the same inputs give two equal result arrays (the dictionaries hold the words once) two lots that agree on every input have identical arrays and one set of dictionary rows",
+     "status": "passed",
+     "title": "two lots that agree on every input have identical arrays and one set of dictionary rows",
+     "duration": 41.719583,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing is no longer a storage concern: two lots with the same inputs give two equal result arrays (the dictionaries hold the words once)"
+     ],
+     "fullName": "sharing is no longer a storage concern: two lots with the same inputs give two equal result arrays (the dictionaries hold the words once) a lot with another frontage differs in the positions that read frontage and only those",
+     "status": "failed",
+     "title": "a lot with another frontage differs in the positions that read frontage and only those",
+     "duration": 55.346667000000025,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "sharing is no longer a storage concern: two lots with the same inputs give two equal result arrays (the dictionaries hold the words once)"
+     ],
+     "fullName": "sharing is no longer a storage concern: two lots with the same inputs give two equal result arrays (the dictionaries hold the words once) batch order does not matter: the same rows come back in a canonical order",
+     "status": "passed",
+     "title": "batch order does not matter: the same rows come back in a canonical order",
+     "duration": 166.75850000000003,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the lot row carries the gate and every result is not_evaluated:exception_not_authored:<id> with no winner",
+     "status": "failed",
+     "title": "the lot row carries the gate and every result is not_evaluated:exception_not_authored:<id> with no winner",
+     "duration": 0.20716700000002675,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator permitted is not_evaluated with the gate reason for every class",
+     "status": "failed",
+     "title": "permitted is not_evaluated with the gate reason for every class",
+     "duration": 0.1144170000000031,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:182:17"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator"
+     ],
+     "fullName": "Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written per target, and fires before the evaluator the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "status": "passed",
+     "title": "the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)",
+     "duration": 1.8538750000000164,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "status": "failed",
+     "title": "ambiguous_zone: gate on the lot row, not_evaluated:ambiguous_zone on all 53 targets",
+     "duration": 0.3089999999999691,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "status": "failed",
+     "title": "lot_metric_missing: gate on the lot row, not_evaluated:lot_metric_missing on all 53 targets",
+     "duration": 0.766083999999978,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "status": "failed",
+     "title": "label_unparsed: gate on the lot row, not_evaluated:label_unparsed on all 53 targets",
+     "duration": 0.24587499999995543,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "status": "failed",
+     "title": "label_exception_mismatch: gate on the lot row, not_evaluated:label_exception_mismatch on all 53 targets",
+     "duration": 0.2445829999999205,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too the first gate in the map order is the one reported when several fire (R-IQ)",
+     "status": "passed",
+     "title": "the first gate in the map order is the one reported when several fire (R-IQ)",
+     "duration": 0.1987500000000182,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the other lot gates (R-IQ order) are written per target too"
+     ],
+     "fullName": "the other lot gates (R-IQ order) are written per target too I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "status": "passed",
+     "title": "I10: a missing metric is never defaulted (inputs_defaulted stays 0 and the gate fires)",
+     "duration": 0.20699999999999363,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "an authored exception resolves (no gate) and its own winners are exception-layer units in the dictionary"
+     ],
+     "fullName": "an authored exception resolves (no gate) and its own winners are exception-layer units in the dictionary the exception lot has no gate and decodes to applies results",
+     "status": "failed",
+     "title": "the exception lot has no gate and decodes to applies results",
+     "duration": 29.18316600000003,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a parcel whose zone is not in the list is retracted by key and writes no row",
+     "status": "passed",
+     "title": "a parcel whose zone is not in the list is retracted by key and writes no row",
+     "duration": 24.34516700000006,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) a narrower zone list retracts the parcels that left it",
+     "status": "passed",
+     "title": "a narrower zone list retracts the parcels that left it",
+     "duration": 24.025916000000052,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the population and the reset arm (R-IU, I11)"
+     ],
+     "fullName": "the population and the reset arm (R-IU, I11) an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "status": "passed",
+     "title": "an empty population list or a zone outside the vocabulary throws (inPopulation)",
+     "duration": 0.40887499999996635,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "status": "passed",
+     "title": "the same batch twice gives byte-identical rows (an unchanged re-run writes nothing)",
+     "duration": 51.17975000000001,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows a seeded shuffle of the unit order does not change a single row (I15)",
+     "status": "passed",
+     "title": "a seeded shuffle of the unit order does not change a single row (I15)",
+     "duration": 97.73750000000007,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I15 / rerun-zero: the output is a pure function of the rows"
+     ],
+     "fullName": "I15 / rerun-zero: the output is a pure function of the rows the input rows are not mutated",
+     "status": "passed",
+     "title": "the input rows are not mutated",
+     "duration": 23.54445899999996,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "classes by stub: a differing class stores only the positions that differ; an equal class adds nothing (R-IR)"
+     ],
+     "fullName": "classes by stub: a differing class stores only the positions that differ; an equal class adds nothing (R-IR) the representative fills the arrays; a differing class is stored as overrides keyed by pair index",
+     "status": "failed",
+     "title": "the representative fills the arrays; a differing class is stored as overrides keyed by pair index",
+     "duration": 0.15770799999995688,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading 'every')\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:293:37\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "classes by stub: a differing class stores only the positions that differ; an equal class adds nothing (R-IR)"
+     ],
+     "fullName": "classes by stub: a differing class stores only the positions that differ; an equal class adds nothing (R-IR) disclosures and losers are not stored: the lot row has no column for them",
+     "status": "failed",
+     "title": "disclosures and losers are not stored: the lot row has no column for them",
+     "duration": 0.6845419999999649,
+     "failureMessages": [
+      "AssertionError: expected '{\"signatures\":[{\"signature_id\":\"2d7ae…' not to match /\"b\"/\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:303:42\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else)"
+     ],
+     "fullName": "RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else) names the three tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "status": "failed",
+     "title": "names the three tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)",
+     "duration": 0.2573330000000169,
+     "failureMessages": [
+      "AssertionError: expected [ 'cells', 'disclosure_sets', …(4) ] to deeply equal [ 'lots', 'texts', 'units' ]\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:309:53\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "I12 on fixtures: the decoded result equals a direct per-lot effective() for the representative class"
+     ],
+     "fullName": "I12 on fixtures: the decoded result equals a direct per-lot effective() for the representative class status, reason and value of every pair match the uncached evaluator on two lots",
+     "status": "failed",
+     "title": "status, reason and value of every pair match the uncached evaluator on two lots",
+     "duration": 46.24379099999999,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant"
+     ],
+     "fullName": "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant effective() and permitted() over every structure x class x target of an RD and an RM lot",
+     "status": "passed",
+     "title": "effective() and permitted() over every structure x class x target of an RD and an RM lot",
+     "duration": 43.313541999999984,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant"
+     ],
+     "fullName": "tripwire: every input path the evaluator reports can be keyed (cell-cache inputValue) or is a declared constant a declared constant input is one this step's lot vector never sets",
+     "status": "passed",
+     "title": "a declared constant input is one this step's lot vector never sets",
+     "duration": 0.13508300000000872,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) with no audit configured the tallies are zero",
+     "status": "passed",
+     "title": "with no audit configured the tallies are zero",
+     "duration": 29.70220800000004,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) lots whose id modulo N equals the offset are checked: 53 pairs each, and the real evaluator agrees with what the lot row decodes to and with itself in reverse order",
+     "status": "passed",
+     "title": "lots whose id modulo N equals the offset are checked: 53 pairs each, and the real evaluator agrees with what the lot row decodes to and with itself in reverse order",
+     "duration": 90.57204200000001,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) a gated lot is not audited (there is no evaluator result to compare)",
+     "status": "passed",
+     "title": "a gated lot is not audited (there is no evaluator result to compare)",
+     "duration": 0.29254199999991215,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) a stored result that disagrees with the direct evaluator is counted (a stub whose cached answer drifts from the direct one)",
+     "status": "passed",
+     "title": "a stored result that disagrees with the direct evaluator is counted (a stub whose cached answer drifts from the direct one)",
+     "duration": 2.5084999999999127,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) a result that depends on candidate order is counted (a stub that answers by the first candidate)",
+     "status": "passed",
+     "title": "a result that depends on candidate order is counted (a stub that answers by the first candidate)",
+     "duration": 2.294750000000022,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)"
+     ],
+     "fullName": "Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock) an audit with a non-positive or non-integer N, or an offset outside [0, N), is refused",
+     "status": "passed",
+     "title": "an audit with a non-positive or non-integer N, or an offset outside [0, N), is refused",
+     "duration": 0.22920799999997143,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read"
+     ],
+     "fullName": "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read counts a needs_user_input result on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, roof_type, pool, suite_wall_openings)",
+     "status": "failed",
+     "title": "counts a needs_user_input result on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, roof_type, pool, suite_wall_openings)",
+     "duration": 1.44862500000022,
+     "failureMessages": [
+      "AssertionError: expected undefined to be 53 // Object.is equality\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:415:47\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read"
+     ],
+     "fullName": "Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read winner_layers counts the layer of each applies winner among the batch's representative results; results_by_status counts every one",
+     "status": "failed",
+     "title": "winner_layers counts the layer of each applies winner among the batch's representative results; results_by_status counts every one",
+     "duration": 23.421583000000055,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/materialize.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:20:24)\n    at decoded (src/tests/steps/resolve_bylaws/materialize.logic.test.ts:40:45)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the dictionary seed: a stored row under a fresh key with other content fails loud (collision), a stored identical row is reused"
+     ],
+     "fullName": "the dictionary seed: a stored row under a fresh key with other content fails loud (collision), a stored identical row is reused seeding a unit key with another unit id makes the batch that needs that unit throw",
+     "status": "failed",
+     "title": "seeding a unit key with another unit id makes the batch that needs that unit throw",
+     "duration": 25.245458999999983,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading '0')\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:435:27\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the dictionary seed: a stored row under a fresh key with other content fails loud (collision), a stored identical row is reused"
+     ],
+     "fullName": "the dictionary seed: a stored row under a fresh key with other content fails loud (collision), a stored identical row is reused seeding the true rows changes nothing: the batch emits the same rows",
+     "status": "failed",
+     "title": "seeding the true rows changes nothing: the batch emits the same rows",
+     "duration": 22.82004199999983,
+     "failureMessages": [
+      "TypeError: mz(...).seedDictionaries is not a function\n    at src/tests/steps/resolve_bylaws/materialize.logic.test.ts:442:10\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792702448281,
+   "endTime": 1792702449238.82,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied)"
+     ],
+     "fullName": "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied) is migration 282, has UP and DOWN markers and the SPEC LINKs, and cites the operator ruling",
+     "status": "failed",
+     "title": "is migration 282, has UP and DOWN markers and the SPEC LINKs, and cites the operator ruling",
+     "duration": 6.504707999999994,
+     "failureMessages": [
+      "AssertionError: expected '-- 282: resolve_bylaws (Layer 2, Spec…' to contain 'CHAT-80.QP'\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:58:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied)"
+     ],
+     "fullName": "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied) creates exactly units, texts and lots (no profiles, cells, signatures or sets), dictionaries before the lot table",
+     "status": "failed",
+     "title": "creates exactly units, texts and lots (no profiles, cells, signatures or sets), dictionaries before the lot table",
+     "duration": 1.4309169999999938,
+     "failureMessages": [
+      "AssertionError: expected [ 'bylaw_resolution_signatures', …(5) ] to deeply equal [ 'bylaw_resolution_units', …(2) ]\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:63:19\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied)"
+     ],
+     "fullName": "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied) every table has RLS enabled (no policies, Class B) and a table comment",
+     "status": "failed",
+     "title": "every table has RLS enabled (no policies, Class B) and a table comment",
+     "duration": 0.4021250000000123,
+     "failureMessages": [
+      "AssertionError: units: expected '-- 282: resolve_bylaws (Layer 2, Spec…' to match /ALTER TABLE bylaw_resolution_units EN…/\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:76:22\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied)"
+     ],
+     "fullName": "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied) DOWN is comments only and names every table, the view and every logic variable (an uncommented DROP would run on migrate)",
+     "status": "failed",
+     "title": "DOWN is comments only and names every table, the view and every logic variable (an uncommented DROP would run on migrate)",
+     "duration": 2.2360000000000184,
+     "failureMessages": [
+      "AssertionError: expected '-- DOWN -- comments-only per project …' to contain 'DROP TABLE IF EXISTS bylaw_resolution…'\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:84:42\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied)"
+     ],
+     "fullName": "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied) the lot row references parcels(id) with ON DELETE CASCADE (R-IU: a deleted parcel takes its row)",
+     "status": "passed",
+     "title": "the lot row references parcels(id) with ON DELETE CASCADE (R-IU: a deleted parcel takes its row)",
+     "duration": 0.12941599999999198,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied)"
+     ],
+     "fullName": "migration 282 (option 4): the three Layer 2 tables and one view, empty, with a parseable body (written, not applied) the view is created once and the lot table is the only one with array columns",
+     "status": "failed",
+     "title": "the view is created once and the lot table is the only one with array columns",
+     "duration": 0.34045800000001236,
+     "failureMessages": [
+      "AssertionError: expected +0 to be 1 // Object.is equality\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:94:90\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)"
+     ],
+     "fullName": "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) lots.lot_gate = layer2-map lot_gate in its declared order",
+     "status": "passed",
+     "title": "lots.lot_gate = layer2-map lot_gate in its declared order",
+     "duration": 0.219916000000012,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)"
+     ],
+     "fullName": "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) units.layer = the evaluator layer ranks",
+     "status": "failed",
+     "title": "units.layer = the evaluator layer ranks",
+     "duration": 4.3600840000000005,
+     "failureMessages": [
+      "AssertionError: layer has a closed CHECK: expected null to be truthy\n    at inList (src/tests/steps/resolve_bylaws/migration.logic.test.ts:48:42)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:107:12\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)"
+     ],
+     "fullName": "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) codes: one slot per scope pair, every element a result code of layer2-map (status x value_kind)",
+     "status": "failed",
+     "title": "codes: one slot per scope pair, every element a result code of layer2-map (status x value_kind)",
+     "duration": 0.42379099999999426,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/migration.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/migration.logic.test.ts:31:24)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:111:19"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)"
+     ],
+     "fullName": "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) evidence_kinds index layer2-map evidence_kind, permitted indexes permission_image, with one slot per class",
+     "status": "failed",
+     "title": "evidence_kinds index layer2-map evidence_kind, permitted indexes permission_image, with one slot per class",
+     "duration": 0.17066700000000878,
+     "failureMessages": [
+      "TypeError: Cannot read properties of null (reading '1')\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:120:13\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)"
+     ],
+     "fullName": "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) every other array is empty-or-full width (one slot per pair)",
+     "status": "failed",
+     "title": "every other array is empty-or-full width (one slot per pair)",
+     "duration": 0.17404099999998834,
+     "failureMessages": [
+      "AssertionError: expected null to be truthy\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:128:15\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)"
+     ],
+     "fullName": "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) I4: a gated lot has only not_evaluated results and no winner (the code is the one of status not_evaluated)",
+     "status": "failed",
+     "title": "I4: a gated lot has only not_evaluated results and no winner (the code is the one of status not_evaluated)",
+     "duration": 0.13145799999998076,
+     "failureMessages": [
+      "Error: Cannot find module 'scripts/lib/bylaw-lot-row.js'\nRequire stack:\n- src/tests/steps/resolve_bylaws/migration.logic.test.ts\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)\n    at Module._load (node:internal/modules/cjs/loader:1341:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1674:12)\n    at require (node:internal/modules/helpers:157:16)\n    at lr (src/tests/steps/resolve_bylaws/migration.logic.test.ts:31:24)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:133:17"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)"
+     ],
+     "fullName": "closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) every hash column of the lot table is a 64-hex string",
+     "status": "passed",
+     "title": "every hash column of the lot table is a 64-hex string",
+     "duration": 0.0756669999999815,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the view names every array position by its target (CHAT-80.QP)"
+     ],
+     "fullName": "the view names every array position by its target (CHAT-80.QP) its pair list equals layer2-scope.json pairs in scope order, both ways, with 1-based positions",
+     "status": "failed",
+     "title": "its pair list equals layer2-scope.json pairs in scope order, both ways, with 1-based positions",
+     "duration": 0.13599999999999568,
+     "failureMessages": [
+      "TypeError: Cannot read properties of null (reading '1')\n    at view (src/tests/steps/resolve_bylaws/migration.logic.test.ts:143:117)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:145:15\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the view names every array position by its target (CHAT-80.QP)"
+     ],
+     "fullName": "the view names every array position by its target (CHAT-80.QP) its class list equals layer2-scope.json classes in order",
+     "status": "failed",
+     "title": "its class list equals layer2-scope.json classes in order",
+     "duration": 0.10087500000000205,
+     "failureMessages": [
+      "TypeError: Cannot read properties of null (reading '1')\n    at view (src/tests/steps/resolve_bylaws/migration.logic.test.ts:143:117)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:150:87\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the view names every array position by its target (CHAT-80.QP)"
+     ],
+     "fullName": "the view names every array position by its target (CHAT-80.QP) its status, value_kind and evidence_kind decodes equal layer2-map in code order",
+     "status": "failed",
+     "title": "its status, value_kind and evidence_kind decodes equal layer2-map in code order",
+     "duration": 0.11087500000002137,
+     "failureMessages": [
+      "TypeError: Cannot read properties of null (reading '1')\n    at view (src/tests/steps/resolve_bylaws/migration.logic.test.ts:143:117)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:155:15\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the view names every array position by its target (CHAT-80.QP)"
+     ],
+     "fullName": "the view names every array position by its target (CHAT-80.QP) it joins both dictionaries and exposes the eight stored fields by name",
+     "status": "failed",
+     "title": "it joins both dictionaries and exposes the eight stored fields by name",
+     "duration": 0.0969169999999906,
+     "failureMessages": [
+      "TypeError: Cannot read properties of null (reading '1')\n    at view (src/tests/steps/resolve_bylaws/migration.logic.test.ts:143:117)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:164:15\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha)"
+     ],
+     "fullName": "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha) each table = RESULT_COLUMNS[table] + its lineage columns, with the key first",
+     "status": "failed",
+     "title": "each table = RESULT_COLUMNS[table] + its lineage columns, with the key first",
+     "duration": 0.1269580000000019,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading 'tableElts')\n    at cols (src/tests/steps/resolve_bylaws/migration.logic.test.ts:45:40)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:176:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha)"
+     ],
+     "fullName": "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha) column types: arrays are typed arrays (int2[], float8[], int4[]), class_results JSONB, dictionary keys INTEGER, so ::text is the canonical rendering",
+     "status": "failed",
+     "title": "column types: arrays are typed arrays (int2[], float8[], int4[]), class_results JSONB, dictionary keys INTEGER, so ::text is the canonical rendering",
+     "duration": 1.2164160000000095,
+     "failureMessages": [
+      "AssertionError: codes: expected '-- 282: resolve_bylaws (Layer 2, Spec…' to match /\\bcodes\\s+SMALLINT\\[\\]/\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:186:22\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha)"
+     ],
+     "fullName": "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha) the dictionaries carry no row_sha or version columns (their key is the content hash); the lot table does",
+     "status": "failed",
+     "title": "the dictionaries carry no row_sha or version columns (their key is the content hash); the lot table does",
+     "duration": 0.13079200000001379,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading 'tableElts')\n    at cols (src/tests/steps/resolve_bylaws/migration.logic.test.ts:45:40)\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:195:127\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha)"
+     ],
+     "fullName": "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha) chain_run_id is nullable on every table and outside the result columns (Spec 134 §3; Q-L)",
+     "status": "failed",
+     "title": "chain_run_id is nullable on every table and outside the result columns (Spec 134 §3; Q-L)",
+     "duration": 0.1900410000000079,
+     "failureMessages": [
+      "AssertionError: expected 6 to be 3 // Object.is equality\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:200:67\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha)"
+     ],
+     "fullName": "the columns are the batch core's result columns plus the lineage columns (Q-I: SQL can recompute row_sha) the text dictionary has no unique index on the text (a btree entry caps near 2.7 kB; the key is the content hash)",
+     "status": "failed",
+     "title": "the text dictionary has no unique index on the text (a btree entry caps near 2.7 kB; the key is the content hash)",
+     "duration": 0.0917919999999981,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading 'tableElts')\n    at src/tests/steps/resolve_bylaws/migration.logic.test.ts:206:21\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded"
+     ],
+     "fullName": "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded every resolve_bylaws_* variable in the seed file is inserted here with the seed default, and nothing else is",
+     "status": "passed",
+     "title": "every resolve_bylaws_* variable in the seed file is inserted here with the seed default, and nothing else is",
+     "duration": 0.29720899999998096,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded"
+     ],
+     "fullName": "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded the insert is idempotent (ON CONFLICT DO NOTHING keeps an operator-set value) and every name follows <slug>_<name>",
+     "status": "passed",
+     "title": "the insert is idempotent (ON CONFLICT DO NOTHING keeps an operator-set value) and every name follows <slug>_<name>",
+     "duration": 0.14025000000000887,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded"
+     ],
+     "fullName": "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded Q-J: the population is ONE list variable (seed type list): sentinel 0 and the JSON array in variable_value_json, equal to the seed default and inside vocab.json zone",
+     "status": "passed",
+     "title": "Q-J: the population is ONE list variable (seed type list): sentinel 0 and the JSON array in variable_value_json, equal to the seed default and inside vocab.json zone",
+     "duration": 0.483415999999977,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded"
+     ],
+     "fullName": "the step's logic variables (R-CV): seeded here, mirrored in the seed file, bounded every seeded default lies inside its own min and max",
+     "status": "passed",
+     "title": "every seeded default lies inside its own min and max",
+     "duration": 0.16191700000001674,
+     "failureMessages": [],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792702448190,
+   "endTime": 1792702448210.4834,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/migration.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "R-JA: scopePairs — the pointer order is the scope seed order"
+     ],
+     "fullName": "R-JA: scopePairs — the pointer order is the scope seed order lists every (structure, target) of layer2-scope.json, structures first, 53 today",
+     "status": "passed",
+     "title": "lists every (structure, target) of layer2-scope.json, structures first, 53 today",
+     "duration": 3.5530840000000126,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns canonicalText renders null as empty, numbers by String, booleans t/f, arrays joined by U+001E, columns joined by U+001F",
+     "status": "passed",
+     "title": "canonicalText renders null as empty, numbers by String, booleans t/f, arrays joined by U+001E, columns joined by U+001F",
+     "duration": 0.16745800000001054,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns rowSha is sha256 of canonicalText, ignores columns outside the list (chain_run_id, versions, timestamps are outside the guard)",
+     "status": "passed",
+     "title": "rowSha is sha256 of canonicalText, ignores columns outside the list (chain_run_id, versions, timestamps are outside the guard)",
+     "duration": 0.2920000000000016,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns changes when any result column changes (a direct row edit is detected, I14)",
+     "status": "passed",
+     "title": "changes when any result column changes (a direct row edit is detected, I14)",
+     "duration": 0.2067079999999919,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns a column that does not exist on the row throws (a result column is never silently absent)",
+     "status": "passed",
+     "title": "a column that does not exist on the row throws (a result column is never silently absent)",
+     "duration": 0.3005420000000072,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns"
+     ],
+     "fullName": "Spec 134 §3, §7 I14: row_sha is the sha256 of the canonical result columns verifyRowSha: true for a stored row_sha that matches, false after an edit",
+     "status": "passed",
+     "title": "verifyRowSha: true for a stored row_sha that matches, false after an edit",
+     "duration": 0.10649999999998272,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST)"
+     ],
+     "fullName": "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST) within the budget when measured bytes <= budget MB (MB = 1,048,576 bytes); the ratio is reported",
+     "status": "passed",
+     "title": "within the budget when measured bytes <= budget MB (MB = 1,048,576 bytes); the ratio is reported",
+     "duration": 0.117999999999995,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST)"
+     ],
+     "fullName": "Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_budget_mb, POST) refuses a budget that is not a positive number and bytes that are not a non-negative number (never defaulted)",
+     "status": "passed",
+     "title": "refuses a budget that is not a positive number and bytes that are not a non-negative number (never defaulted)",
+     "duration": 0.36462499999998954,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table"
+     ],
+     "fullName": "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table jsonbText: keys by length then bytes, \", \" and \": \" separators, arrays in order, strings JSON-escaped, null as null",
+     "status": "passed",
+     "title": "jsonbText: keys by length then bytes, \", \" and \": \" separators, arrays in order, strings JSON-escaped, null as null",
+     "duration": 0.15108299999999986,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table"
+     ],
+     "fullName": "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table canonicalText takes a kinds map: a jsonb column is its jsonbText (an array too), a plain array is a text[] joined by U+001E",
+     "status": "passed",
+     "title": "canonicalText takes a kinds map: a jsonb column is its jsonbText (an array too), a plain array is a text[] joined by U+001E",
+     "duration": 0.0676249999999925,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table"
+     ],
+     "fullName": "Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table a jsonb column without its kind is refused when its value is an object (never rendered two ways)",
+     "status": "passed",
+     "title": "a jsonb column without its kind is refused when its value is an object (never rendered two ways)",
+     "duration": 0.07329200000000924,
+     "failureMessages": [],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792702448175,
+   "endTime": 1792702448181.0732,
+   "status": "passed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/profiles.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS"
+     ],
+     "fullName": "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS returns three statements in the order units, texts, lots, each counting its own table",
+     "status": "failed",
+     "title": "returns three statements in the order units, texts, lots, each counting its own table",
+     "duration": 3.1585000000000036,
+     "failureMessages": [
+      "AssertionError: expected [ …(6) ] to have a length of 3 but got 6\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts:35:15\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS"
+     ],
+     "fullName": "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS the dictionary statements recompute the key as the first four bytes of the sha256 of the content, as a signed int4 (hash32)",
+     "status": "failed",
+     "title": "the dictionary statements recompute the key as the first four bytes of the sha256 of the content, as a signed int4 (hash32)",
+     "duration": 1.3606250000000273,
+     "failureMessages": [
+      "AssertionError: expected 'SELECT COUNT(*)::int FROM undefined W…' to contain 'unit_key IS DISTINCT FROM (\\'x\\' || e…'\n    at src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts:47:18\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS"
+     ],
+     "fullName": "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS the lot statement renders every result column exactly once, in RESULT_COLUMNS order, joined by chr(31)",
+     "status": "failed",
+     "title": "the lot statement renders every result column exactly once, in RESULT_COLUMNS order, joined by chr(31)",
+     "duration": 0.7561250000000541,
+     "failureMessages": [
+      "AssertionError: expected [ …(3) ] to have a length of 5 but got 3\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts:56:19\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS"
+     ],
+     "fullName": "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS a jsonb column is its ::text, an array column array_to_string by chr(30) with NULL elements empty, and no timestamp, version or chain_run_id is read",
+     "status": "failed",
+     "title": "a jsonb column is its ::text, an array column array_to_string by chr(30) with NULL elements empty, and no timestamp, version or chain_run_id is read",
+     "duration": 4.0212080000000014,
+     "failureMessages": [
+      "AssertionError: expected 'SELECT COUNT(*)::int FROM undefined W…' to contain 'coalesce(class_results::text, \\'\\')'\n    at src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts:62:17\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS"
+     ],
+     "fullName": "rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS the column kinds match the JS values the batch core emits (so the SQL cast renders what canonicalText hashed)",
+     "status": "failed",
+     "title": "the column kinds match the JS values the batch core emits (so the SQL cast renders what canonicalText hashed)",
+     "duration": 0.4672920000000431,
+     "failureMessages": [
+      "TypeError: Cannot convert undefined or null to object\n    at Object.keys (<anonymous>)\n    at src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts:71:21\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792702448306,
+   "endTime": 1792702448315.4673,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts"
+  },
+  {
+   "assertionResults": [
+    {
+     "ancestorTitles": [
+      "three files and a frozen shell (Spec 132 core.1; Spec 122 §5.1)"
+     ],
+     "fullName": "three files and a frozen shell (Spec 132 core.1; Spec 122 §5.1) the shell requires the descriptor and the compute and exports pipeline.step; the lock constant equals identity.lock (Spec 47 §A.5)",
+     "status": "passed",
+     "title": "the shell requires the descriptor and the compute and exports pipeline.step; the lock constant equals identity.lock (Spec 47 §A.5)",
+     "duration": 1.0232499999999902,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "three files and a frozen shell (Spec 132 core.1; Spec 122 §5.1)"
+     ],
+     "fullName": "three files and a frozen shell (Spec 132 core.1; Spec 122 §5.1) the manifest names the shell and every written table, the lot link row first (the inspector's primary table)",
+     "status": "failed",
+     "title": "the manifest names the shell and every written table, the lot link row first (the inspector's primary table)",
+     "duration": 5.521041999999994,
+     "failureMessages": [
+      "AssertionError: expected [ 'bylaw_resolution_cells', …(5) ] to deeply equal [ 'bylaw_resolution_lots', …(2) ]\n    at src/tests/steps/resolve_bylaws/violations.test.ts:45:44\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "three files and a frozen shell (Spec 132 core.1; Spec 122 §5.1)"
+     ],
+     "fullName": "three files and a frozen shell (Spec 132 core.1; Spec 122 §5.1) the census, converted.json and the notes sidecar agree on the slug, the archetype and the compute_ported stage (R-DK: net-new, legacy none)",
+     "status": "passed",
+     "title": "the census, converted.json and the notes sidecar agree on the slug, the archetype and the compute_ported stage (R-DK: net-new, legacy none)",
+     "duration": 0.5701660000000004,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order"
+     ],
+     "fullName": "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order shape materialize, form rows, keyed on parcels.id, batch from config",
+     "status": "failed",
+     "title": "shape materialize, form rows, keyed on parcels.id, batch from config",
+     "duration": 0.8707500000000152,
+     "failureMessages": [
+      "AssertionError: bylaw_resolution_units: expected 'TRUNCATE bylaw_resolution_lots, bylaw…' to contain 'bylaw_resolution_units'\n    at src/tests/steps/resolve_bylaws/violations.test.ts:64:57\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order"
+     ],
+     "fullName": "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order writes[] = the unit and text dictionaries (guarded upserts), the lots replace-keys retraction, then the lots upsert (R-IU, CHAT-80.QP)",
+     "status": "failed",
+     "title": "writes[] = the unit and text dictionaries (guarded upserts), the lots replace-keys retraction, then the lots upsert (R-IU, CHAT-80.QP)",
+     "duration": 0.2689579999999978,
+     "failureMessages": [
+      "AssertionError: expected [ …(7) ] to deeply equal [ …(4) ]\n    at src/tests/steps/resolve_bylaws/violations.test.ts:69:81\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order"
+     ],
+     "fullName": "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order the two dictionaries are read once as role \"lookup\" (unique on their key, empty is a warning on the first run) so a key collision with a stored row fails loud",
+     "status": "failed",
+     "title": "the two dictionaries are read once as role \"lookup\" (unique on their key, empty is a warning on the first run) so a key collision with a stored row fails loud",
+     "duration": 0.2038750000000107,
+     "failureMessages": [
+      "AssertionError: expected [] to deeply equal [ 'bylaw_resolution_texts', …(1) ]\n    at src/tests/steps/resolve_bylaws/violations.test.ts:77:48\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order"
+     ],
+     "fullName": "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order each upsert's guard covers the result columns only: no key, no row_sha, no version, no chain_run_id, no timestamp (Spec 134 §3 write guard)",
+     "status": "failed",
+     "title": "each upsert's guard covers the result columns only: no key, no row_sha, no version, no chain_run_id, no timestamp (Spec 134 §3 write guard)",
+     "duration": 3.974250000000012,
+     "failureMessages": [
+      "TypeError: LINEAGE[logical] is not iterable\n    at src/tests/steps/resolve_bylaws/violations.test.ts:90:64\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order"
+     ],
+     "fullName": "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order closed columns carry the layer2-map / scope vocabularies with on_unknown fail, so the descriptor and the migration CHECKs cannot drift",
+     "status": "failed",
+     "title": "closed columns carry the layer2-map / scope vocabularies with on_unknown fail, so the descriptor and the migration CHECKs cannot drift",
+     "duration": 0.23558299999999122,
+     "failureMessages": [
+      "TypeError: Cannot read properties of undefined (reading 'columns')\n    at src/tests/steps/resolve_bylaws/violations.test.ts:98:20\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order"
+     ],
+     "fullName": "Spec 124 R-HB / R-EH: MATERIALIZER, rows form, four write targets in dependency order every written table declares the RLS bypass precondition and the lot foreign key (R-CT)",
+     "status": "failed",
+     "title": "every written table declares the RLS bypass precondition and the lot foreign key (R-CT)",
+     "duration": 0.49966600000001904,
+     "failureMessages": [
+      "AssertionError: bylaw_resolution_units: expected false to be true // Object.is equality\n    at src/tests/steps/resolve_bylaws/violations.test.ts:105:108\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "source and batch statements (Spec 124 R-EH (a)): pure, keyset, no clock"
+     ],
+     "fullName": "source and batch statements (Spec 124 R-EH (a)): pure, keyset, no clock buildSourceSql pages every parcel by id with runner binds only, and reads no clock",
+     "status": "passed",
+     "title": "buildSourceSql pages every parcel by id with runner binds only, and reads no clock",
+     "duration": 26.02408299999999,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "source and batch statements (Spec 124 R-EH (a)): pure, keyset, no clock"
+     ],
+     "fullName": "source and batch statements (Spec 124 R-EH (a)): pure, keyset, no clock buildPostSql is one parseable statement with four parameters, reading only declared tables",
+     "status": "failed",
+     "title": "buildPostSql is one parseable statement with four parameters, reading only declared tables",
+     "duration": 26.16620800000001,
+     "failureMessages": [
+      "AssertionError: bylaw_resolution_profiles: expected false to be true // Object.is equality\n    at src/tests/steps/resolve_bylaws/violations.test.ts:128:195\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "source and batch statements (Spec 124 R-EH (a)): pure, keyset, no clock"
+     ],
+     "fullName": "source and batch statements (Spec 124 R-EH (a)): pure, keyset, no clock each of the three identity statements (two dictionary keys, the lot row_sha) parses (Q-I)",
+     "status": "passed",
+     "title": "each of the three identity statements (two dictionary keys, the lot row_sha) parses (Q-I)",
+     "duration": 1.867750000000001,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeRows (the compute's rows-arm hook) hands the runner the declared targets"
+     ],
+     "fullName": "materializeRows (the compute's rows-arm hook) hands the runner the declared targets rows e1, e2, e4 and replace_keys e3 (the targetKey of each writes[] index); the out-of-population parcel is retracted",
+     "status": "failed",
+     "title": "rows e1, e2, e4 and replace_keys e3 (the targetKey of each writes[] index); the out-of-population parcel is retracted",
+     "duration": 0.44112499999999955,
+     "failureMessages": [
+      "AssertionError: expected [ 'e1', 'e2', 'e3', 'e4', 'e5', 'e7' ] to deeply equal [ 'e1', 'e2', 'e4' ]\n    at src/tests/steps/resolve_bylaws/violations.test.ts:150:42\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeRows (the compute's rows-arm hook) hands the runner the declared targets"
+     ],
+     "fullName": "materializeRows (the compute's rows-arm hook) hands the runner the declared targets every row key is a declared column of its target (db_default and run_at columns are not supplied), and a numeric-string metric is accepted from pg",
+     "status": "passed",
+     "title": "every row key is a declared column of its target (db_default and run_at columns are not supplied), and a numeric-string metric is accepted from pg",
+     "duration": 1.05012499999998,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeRows (the compute's rows-arm hook) hands the runner the declared targets"
+     ],
+     "fullName": "materializeRows (the compute's rows-arm hook) hands the runner the declared targets the one jsonb column (lots.class_results) reaches the runner as JSON text, the typed arrays as JS arrays (node-pg sends a JS array as a Postgres array literal), 53 slots wide",
+     "status": "failed",
+     "title": "the one jsonb column (lots.class_results) reaches the runner as JSON text, the typed arrays as JS arrays (node-pg sends a JS array as a Postgres array literal), 53 slots wide",
+     "duration": 0.22466700000001083,
+     "failureMessages": [
+      "AssertionError: expected 'undefined' to be 'string' // Object.is equality\n    at src/tests/steps/resolve_bylaws/violations.test.ts:165:36\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeRows (the compute's rows-arm hook) hands the runner the declared targets"
+     ],
+     "fullName": "materializeRows (the compute's rows-arm hook) hands the runner the declared targets a stored dictionary row under the same key with other content makes the run fail loud (lookups seed the collision check)",
+     "status": "failed",
+     "title": "a stored dictionary row under the same key with other content makes the run fail loud (lookups seed the collision check)",
+     "duration": 52.70345800000001,
+     "failureMessages": [
+      "AssertionError: expected [Function] to throw an error\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:1509:21)\n    at Proxy.<anonymous> (file://node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file://node_modules/chai/index.js:1686:25)\n    at src/tests/steps/resolve_bylaws/violations.test.ts:178:193\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "materializeRows (the compute's rows-arm hook) hands the runner the declared targets"
+     ],
+     "fullName": "materializeRows (the compute's rows-arm hook) hands the runner the declared targets matched is additive (numbers and objects of numbers) so the runner can sum it across batches (R-EH (c))",
+     "status": "passed",
+     "title": "matched is additive (numbers and objects of numbers) so the runner can sum it across batches (R-EH (c))",
+     "duration": 0.1765420000000404,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7)"
+     ],
+     "fullName": "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7) compute.checks keys are exactly the descriptor check ids, in declaration order",
+     "status": "passed",
+     "title": "compute.checks keys are exactly the descriptor check ids, in declaration order",
+     "duration": 0.08120800000000372,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7)"
+     ],
+     "fullName": "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7) every limit_from_config names a declared config variable, and every declared variable has a seed and a migration row",
+     "status": "passed",
+     "title": "every limit_from_config names a declared config variable, and every declared variable has a seed and a migration row",
+     "duration": 0.34033300000004374,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7)"
+     ],
+     "fullName": "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7) Q-J: the population is one list variable whose closed list_of is vocab.json zone, on_invalid fail",
+     "status": "passed",
+     "title": "Q-J: the population is one list variable whose closed list_of is vocab.json zone, on_invalid fail",
+     "duration": 0.10866699999996854,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7)"
+     ],
+     "fullName": "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7) through the compute dispatch every check reports exactly once, a violations check a count and a bound check a value",
+     "status": "failed",
+     "title": "through the compute dispatch every check reports exactly once, a violations check a count and a bound check a value",
+     "duration": 0.9204999999999472,
+     "failureMessages": [
+      "AssertionError: expected null to be 40 // Object.is equality\n    at src/tests/steps/resolve_bylaws/violations.test.ts:220:39\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11\n    at withEnv (file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:90:5)\n    at run (file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:112:3)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7)"
+     ],
+     "fullName": "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7) a check that throws is reported as an error row, not swallowed (on_check_error fail_step)",
+     "status": "passed",
+     "title": "a check that throws is reported as an error row, not swallowed (on_check_error fail_step)",
+     "duration": 0.14525000000003274,
+     "failureMessages": [],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7)"
+     ],
+     "fullName": "checks: the descriptor, the compute dispatch table and the config agree (Spec 122 §5.5 (1), G7) the checks that read the once-per-run post statement declare the tables they read (#44 (a), checks[].reads)",
+     "status": "failed",
+     "title": "the checks that read the once-per-run post statement declare the tables they read (#44 (a), checks[].reads)",
+     "duration": 0.35158400000000256,
+     "failureMessages": [
+      "AssertionError: expected [ 'bylaw_resolution_cells', …(2) ] to deeply equal [ 'bylaw_resolution_lots', …(2) ]\n    at src/tests/steps/resolve_bylaws/violations.test.ts:234:51\n    at file://node_modules/@vitest/runner/dist/index.js:146:14\n    at file://node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file://node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:17)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file://node_modules/@vitest/runner/dist/index.js:1271:3)\n    at file://node_modules/vitest/dist/chunks/runBaseTests.3qpJUEJM.js:126:11"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §8 born V3: no by-law id, exception number or parcel id literal in the compute (G-EXC-LIT); the structure set is exactly three (§6)"
+     ],
+     "fullName": "Spec 134 §8 born V3: no by-law id, exception number or parcel id literal in the compute (G-EXC-LIT); the structure set is exactly three (§6) the compute and its two libraries pass the G-EXC-LIT scan",
+     "status": "failed",
+     "title": "the compute and its two libraries pass the G-EXC-LIT scan",
+     "duration": 196.243291,
+     "failureMessages": [
+      "Error: ENOENT: no such file or directory, open 'scripts/lib/bylaw-lot-row.js'\n    at Object.readFileSync (node:fs:483:20)\n    at Object.mapped [as readFileSync] (src/tests/helpers/before-image-sandbox.ts:65:25)\n    at read (src/tests/steps/resolve_bylaws/violations.test.ts:17:42)\n    at src/tests/steps/resolve_bylaws/violations.test.ts:245:32\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file://node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file://node_modules/@vitest/runner/dist/index.js:1056:11)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file://node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file://node_modules/@vitest/runner/dist/index.js:1262:5)"
+     ],
+     "meta": {}
+    },
+    {
+     "ancestorTitles": [
+      "Spec 134 §8 born V3: no by-law id, exception number or parcel id literal in the compute (G-EXC-LIT); the structure set is exactly three (§6)"
+     ],
+     "fullName": "Spec 134 §8 born V3: no by-law id, exception number or parcel id literal in the compute (G-EXC-LIT); the structure set is exactly three (§6) structures are exactly principal, garden_suite, laneway_suite and the classes are the five P5.1 classes",
+     "status": "passed",
+     "title": "structures are exactly principal, garden_suite, laneway_suite and the classes are the five P5.1 classes",
+     "duration": 0.08799999999996544,
+     "failureMessages": [],
+     "meta": {}
+    }
+   ],
+   "startTime": 1792702448199,
+   "endTime": 1792702448608.2434,
+   "status": "failed",
+   "message": "",
+   "name": "src/tests/steps/resolve_bylaws/violations.test.ts"
+  }
+ ]
+}

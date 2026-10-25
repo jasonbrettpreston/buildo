@@ -165,6 +165,13 @@
       "reason": "C6-1 (assert_lifecycle_phase_distribution, ASSERT: fifteen read-only SELECTs over permits/coa_applications/universal_stream_catalog -> per-seq distribution bands under three posture flags, an unclassified hard limit and three cross-status checks, halting only on the two C1 classes, no write; runs in the permits and coa chains; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-c6-plan-2026-10-19.md). ① lands the assessment docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md + red suite (L1-L15 legacy pins executing the verbatim legacy text, D1-D5/D7 it.fails as named missing artifacts). ③ is blocked by EP-PIN-D17 under R-ED.",
       "declared": "2026-10-19",
       "stage": "red_suite"
+    },
+    {
+      "file": "scripts/resolve-bylaws.js",
+      "registers_at": "commit ③ cutover (chain placement and scorecards, Spec 134 §9)",
+      "reason": "McBylaw Phase 2 Layer 2 resolve_bylaws (MATERIALIZER rows form, net-new, converted from day one; Spec 134; Spec 124 R-HB, R-HC, R-DK, R-IX; operator CHAT-69 (R-JA form C) and CHAT-73). Commit ① lands the red suites, the descriptor, notes, shell, compute module, migration 282 (written, NOT applied) and the logic-variable seeds as ONE commit (R-IX). Stage compute_ported: no POST capture exists until the DB night that applies migration 282 and takes the R-DK evidence set (bracket --op=delete_reinsert keyed parcel_id, R-DP; rerun-zero; storage check). Chain placement (after enrich_parcels, before link_parcel_abutments, Spec 124 R-HD) is ③.",
+      "declared": "2026-10-22",
+      "stage": "compute_ported"
     }
   ],
   "converted": [

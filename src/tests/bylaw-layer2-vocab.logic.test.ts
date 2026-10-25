@@ -35,12 +35,12 @@ describe('L2-CHAPTERS: vocab.exception_chapter (M-297)', () => {
     expect(Object.keys(chapters).sort()).toEqual([...PVOCAB.zone].sort());
   });
   it('covers every zone of the Layer 2 population list (resolve_bylaws_population_zone_classes)', () => {
-    // migration 280 sits in pending-migrations/ until commit (1) moves it to migrations/; the lock follows the file (integrate-21)
-    const rel = ['docs/reports/layer2-measure/pending-migrations', 'migrations'].map((d) => path.join(d, '280_resolve_bylaws_logic_variables.sql')).find((p) => fs.existsSync(path.join(ROOT, p)));
-    expect(rel, 'migration 280 is in pending-migrations/ or migrations/').toBeTruthy();
-    const sql = fs.readFileSync(path.join(ROOT, rel as string), 'utf8');
+    // the lock follows the file (integrate-21): pending 280 was folded into migration 282 at resolve_bylaws commit ① (L2-SLICES Q-J, CHAT-80.QP)
+    const rel = 'migrations/282_resolve_bylaws.sql';
+    expect(fs.existsSync(path.join(ROOT, rel)), 'migration 282 declares the population list').toBe(true);
+    const sql = fs.readFileSync(path.join(ROOT, rel), 'utf8');
     const m = /'resolve_bylaws_population_zone_classes',\s*0,\s*'(\[[^\]]*\])'::jsonb/.exec(sql);
-    expect(m, 'the population list is declared in migration 280').not.toBeNull();
+    expect(m, 'the population list is declared in migration 282').not.toBeNull();
     const population: string[] = JSON.parse((m as RegExpExecArray)[1] as string);
     for (const z of population) expect(Object.keys(chapters), `zone ${z} has a Chapter 900 article`).toContain(z);
   });

@@ -8007,5 +8007,83 @@
     "admin": {
       "group": "Cost Tuning"
     }
+  },
+  "resolve_bylaws_population_zone_classes": {
+    "default": ["R","RD","RS","RT","RM"],
+    "type": "list",
+    "description": "The zones whose parcels are in the Layer 2 population (Spec 134 §2; operator Q-L2-4, R-AY, R-IU): a JSON array of evaluator zone codes (vocab.json zone), stored in variable_value_json with the sentinel 0 in variable_value (seed type list, Q-J). Parcels whose zone is not listed have their lot link row retracted. Folded in from the pending migration 280. Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js (inPopulation).",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "resolve_bylaws_batch_size": {
+    "default": 250,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "Source rows (lots) per batch transaction. The dictionary rows and the lot rows of a batch are written together; 250 lots keep the widest upsert (14 columns per lot row) far under the 65,535-parameter bound. Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
+    "admin": {
+      "group": "Layer 2 By-law Resolution"
+    }
+  },
+  "resolve_bylaws_conflict_max": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 1000,
+    "description": "Spec 134 I3: the number of not_evaluated:conflict results above which the run FAILs. A conflict is a defect, never an answer; the default is 0. Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
+    "admin": {
+      "group": "Layer 2 By-law Resolution"
+    }
+  },
+  "resolve_bylaws_equivalence_every_nth": {
+    "default": 2000,
+    "type": "number",
+    "min": 1,
+    "max": 1000000,
+    "description": "Spec 134 I12 and I15 (Q-N): the equivalence and candidate-order checks re-evaluate, uncached, every Nth lot (parcels.id modulo N equal to a per-run offset that cycles with the run date), so the whole population is covered in N runs. Replaces the time budget the spec names: pure compute holds no clock (R-DET), so the sample size is the budget. Interim until P2-0 (b) sizes it (R-AJ). Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
+    "admin": {
+      "group": "Layer 2 By-law Resolution"
+    }
+  },
+  "resolve_bylaws_storage_budget_mb": {
+    "default": 1300,
+    "type": "number",
+    "min": 1,
+    "max": 100000,
+    "description": "Spec 134 §6, R-JA (CHAT-69.Q1): the budget in MB for the Layer 2 tables, checked at POST against their measured size. Interim 1,300 MB = the Spec 78 §6.8 kill line (10 % of the 16.4 GB DB, 1,638 MB) less Layer 3-a (282 MB); re-seeded from the first POST capture (Q-K). Option 4 (CHAT-80.QP) models at about 1.0 GB. Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
+    "admin": {
+      "group": "Layer 2 By-law Resolution"
+    }
+  },
+  "resolve_bylaws_class_cap": {
+    "default": 8,
+    "type": "number",
+    "min": 1,
+    "max": 16,
+    "description": "Spec 134 I13: the most classes one lot row may carry (the representative plus its class_results overrides; FAIL above); the v1 catalogue has 5. Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
+    "admin": {
+      "group": "Layer 2 By-law Resolution"
+    }
+  },
+  "resolve_bylaws_scenario_axis_warn_max": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 1000000,
+    "description": "Spec 134 I13 (Q-F, recommended reading): results whose reason is needs_user_input on a scenario axis. WARN above this ceiling until the axes are enumerated; retighten to FAIL at 0 when they are. Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
+    "admin": {
+      "group": "Layer 2 By-law Resolution"
+    }
+  },
+  "resolve_bylaws_not_evaluated_warn_pct": {
+    "default": 100,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 134 §7 WARN: the share (percent) of results that are not_evaluated. Interim 100 (never warns) until the first POST capture measures it; retighten to the measured share plus margin (Spec 124 R-H). Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
+    "admin": {
+      "group": "Layer 2 By-law Resolution"
+    }
   }
 }

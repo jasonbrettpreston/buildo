@@ -134,6 +134,34 @@
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
       "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
+    "resolve_bylaws_batch_size": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "resolve_bylaws",
+      "legacy_name": null,
+      "reason": "resolve_bylaws still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "resolve_bylaws_conflict_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "resolve_bylaws",
+      "legacy_name": null,
+      "reason": "resolve_bylaws still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "resolve_bylaws_not_evaluated_warn_pct": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "resolve_bylaws",
+      "legacy_name": null,
+      "reason": "resolve_bylaws still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "resolve_bylaws_scenario_axis_warn_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "resolve_bylaws",
+      "legacy_name": null,
+      "reason": "resolve_bylaws still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
     }
   }
 }

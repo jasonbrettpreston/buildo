@@ -114,6 +114,7 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   load_coa_notices: 'zero_statement',
   load_bylaw_map_areas: 'zero_statement',
   link_parcel_abutments: 'zero_statement',
+  resolve_bylaws: 'zero_statement',
   load_heritage: 'legacy_oracle_excluded',
   load_wsib: 'legacy_oracle_excluded',
   load_zoning: 'legacy_oracle_excluded',

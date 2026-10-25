@@ -1,0 +1,69 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/standalone.json": {
+      "via": "bracket",
+      "env": {
+        "RESOLVE_BYLAWS_FORCE_FULL": "1"
+      },
+      "steps": [
+        [
+          "{sql}",
+          "TRUNCATE bylaw_resolution_lots, bylaw_resolution_texts, bylaw_resolution_units"
+        ],
+        [
+          "{harness}"
+        ]
+      ],
+      "why": "run 1 of a net-new step must be nonzero (#38, Spec 132 x-stages.3): the TRUNCATE is the descriptor recovery.reset, then the harness re-derives every lot (440,093 lots, 23,324,929 results, about 81 min, verdict WARN on scenario_axis_cells 597). The TRUNCATE does not reset the materialize ledger gate, so without the force env run 1 gated-skipped on the empty tables (2026-10-24 19:23 retake, CHAT-127); the bracket passes the descriptor override.force_full env (Spec 132 x-captures.1, CHAT-89, CHAT-118.Q-114b) and the harness second run is a forced full recompute that must write 0 rows (the rerun-zero proof)."
+    },
+    "post/standalone.forced.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--plan",
+          "--table=bylaw_resolution_lots",
+          "--key=parcel_id",
+          "--column=row_sha",
+          "--op=delete_reinsert",
+          "--count=20",
+          "--where=t.lot_gate IS NULL",
+          "--order=parcel_id",
+          "--backup-table=bylaw_resolution_lots_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=bylaw_resolution_lots",
+          "--key=parcel_id",
+          "--column=row_sha",
+          "--op=delete_reinsert",
+          "--count=20",
+          "--where=t.lot_gate IS NULL",
+          "--order=parcel_id",
+          "--backup-table=bylaw_resolution_lots_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=bylaw_resolution_lots",
+          "--key=parcel_id",
+          "--column=row_sha",
+          "--op=delete_reinsert",
+          "--count=20",
+          "--where=t.lot_gate IS NULL",
+          "--order=parcel_id",
+          "--backup-table=bylaw_resolution_lots_cohort_bak_{ts}",
+          "--step=scripts/resolve-bylaws.js",
+          "--chain=none",
+          "--env=RESOLVE_BYLAWS_FORCE_FULL=1",
+          "--out=docs/reports/golden/resolve_bylaws/post/standalone.forced.json",
+          "--capture-arg=--table-columns=bylaw_resolution_lots:parcel_id,row_sha",
+          "--capture-arg=--table-order=bylaw_resolution_lots:parcel_id"
+        ]
+      ],
+      "why": "#38 heal evidence (R-DP, CHAT-116 column row_sha, CHAT-118.Q-114b force env): the first 20 ungated lots by parcel_id are deleted and the step re-inserts them (records_new 20, cohort healed, post-restore matches the before-image). The materialize ledger gate would skip an unchanged run, so the --run passes the descriptor's override.force_full env RESOLVE_BYLAWS_FORCE_FULL=1; with it the bracket needs no place before the standalone (Spec 132 x-captures.1, CHAT-89), and the forced rerun-zero proof is a real full recompute that writes 0 rows (2026-10-24, 81.4 min)."
+    }
+  }
+}

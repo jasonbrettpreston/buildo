@@ -62,6 +62,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/enrich-coa-zoning.js':    66,
   'scripts/load-bylaw-map-areas.js':  127, // Spec 58 — load_bylaw_map_areas (600.60 map seed)
   'scripts/link-parcel-abutments.js':  130, // Spec 130 — link_parcel_abutments
+  'scripts/resolve-bylaws.js':  134, // Spec 134 — resolve_bylaws (Layer 2)
   'scripts/load-coa.js':             95,
   'scripts/load-address-points.js':  96,
   'scripts/load-wsib.js':            97,

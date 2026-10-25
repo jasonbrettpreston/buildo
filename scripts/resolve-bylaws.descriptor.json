@@ -1,0 +1,1411 @@
+{
+  "identity": {
+    "name": "resolve_bylaws",
+    "display_name": "Resolve By-laws (Layer 2)",
+    "owner": "data",
+    "description": "Layer 2 by-law resolution (Spec 134): for every in-population residential parcel, runs the Spec 68 evaluator per structure x target x class and records the winner, why the others lost, the status and the inputs used, as one row per lot holding every result as a positional array in scope-seed order, with two closed dictionaries for unit ids and texts (CHAT-80.QP option 4). MATERIALIZER ROWS form: the runner pages parcels and writes the three tables in one transaction per batch. Layer 3 (compute_maxbld_scenarios) reads only these rows.",
+    "lock": 134,
+    "why_lock": {
+      "text": "Spec 47 §A.5: the spec number is globally unique (130 for link_parcel_abutments); mutual exclusion with every other writer of the bylaw_resolution_* tables. The shell keeps `const ADVISORY_LOCK_ID = 134;` as a source-text constant, asserted equal by the pipeline advisory-lock suite.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "134",
+    "spec_version": "1.0",
+    "archetype": "MATERIALIZER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "enrich_parcels"
+        },
+        {
+          "step": "enrich_centreline"
+        },
+        {
+          "step": "enrich_heritage"
+        },
+        {
+          "step": "parcels"
+        }
+      ],
+      "tables": [
+        {
+          "table": "bylaw_resolution_units",
+          "columns": [
+            "unit_key",
+            "unit_id",
+            "regulation_id",
+            "layer"
+          ],
+          "role": "lookup",
+          "unique_on": [
+            "unit_key"
+          ],
+          "on_empty": "warn"
+        },
+        {
+          "table": "bylaw_resolution_texts",
+          "columns": [
+            "text_key",
+            "text"
+          ],
+          "role": "lookup",
+          "unique_on": [
+            "text_key"
+          ],
+          "on_empty": "warn"
+        },
+        {
+          "table": "parcels",
+          "columns": [
+            "id",
+            "parcel_id",
+            "zoning_class",
+            "zoning_zn_string",
+            "exception_number",
+            "zoning_overlays",
+            "on_policy_road",
+            "is_corner_lot",
+            "is_through_lot",
+            "abuts_laneway",
+            "frontage_m",
+            "depth_m",
+            "lot_size_sqm",
+            "zoning_is_ambiguous",
+            "in_sixplex_area",
+            "is_heritage_designated",
+            "geom"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "bylaw_resolution_units",
+        "key": [
+          "unit_key"
+        ],
+        "columns": [
+          {
+            "name": "unit_key",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "unit_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "regulation_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "layer",
+            "vocabulary": {
+              "values": [
+                "base",
+                "overlay",
+                "exception",
+                "provincial"
+              ],
+              "on_unknown": "fail",
+              "source": "scripts/analysis/bylaw/evaluate.mjs LAYER_RANK"
+            },
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "chain_run_id",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          },
+          {
+            "name": "resolved_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "unit_id",
+            "regulation_id",
+            "layer"
+          ],
+          "scope": "unit_key referenced by a lot of this run (content-addressed)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "CHAT-80.QP (option 4): the closed dictionary of unit ids, keyed by hash32 of the unit id (first four bytes of its sha256); a stored entry never changes under its own key, so a re-run rewrites nothing.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/resolve-bylaws.js"
+            }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "bylaw_resolution_texts",
+        "key": [
+          "text_key"
+        ],
+        "columns": [
+          {
+            "name": "text_key",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "text",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "chain_run_id",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          },
+          {
+            "name": "resolved_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "text"
+          ],
+          "scope": "text_key referenced by a lot of this run (content-addressed)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "CHAT-80.QP (option 4): the closed dictionary of reason, evidence-ref and permission texts, keyed by hash32 of the text; content-addressed, so a re-run rewrites nothing.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/resolve-bylaws.js"
+            }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "key": [
+          "parcel_id"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          }
+        ],
+        "write_discipline": {
+          "class": "link_full_retraction",
+          "guard": "is_distinct_from",
+          "guard_columns": "all_declared",
+          "guard_why": {
+            "text": "A keyed delete: every key in replace_keys is deleted outright (R-IU: a parcel that left the population loses its link row); nothing to compare.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          },
+          "scope": "parcel_id = ANY(<the batch's out-of-population parcel ids>)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "Spec 124 R-IU (ratified Q-L2-4): the existing replace-keys write retracts the link row of a parcel that left the population; written before the guarded upsert of the same table in the batch transaction. A deleted parcel takes its row by ON DELETE CASCADE.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/resolve-bylaws.js"
+            }
+          }
+        },
+        "retract": "replace_keys"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "key": [
+          "parcel_id"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "lot_gate",
+            "vocabulary": {
+              "values": [
+                "no_569_2013_zone",
+                "ambiguous_zone",
+                "label_unparsed",
+                "label_exception_mismatch",
+                "exception_not_authored",
+                "lot_metric_missing"
+              ],
+              "on_unknown": "fail",
+              "source": "scripts/seeds/bylaw/layer2-map.json lot_gate"
+            },
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "codes",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "numbers",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "reason_ids",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "winner_ids",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "evidence_kinds",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "evidence_ref_ids",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "class_results",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "permitted",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "permitted_text_ids",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "inputs_defaulted",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "row_sha",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "table_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "evaluator_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "chain_run_id",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          },
+          {
+            "name": "resolved_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "lot_gate",
+            "codes",
+            "numbers",
+            "reason_ids",
+            "winner_ids",
+            "evidence_kinds",
+            "evidence_ref_ids",
+            "class_results",
+            "permitted",
+            "permitted_text_ids",
+            "inputs_defaulted"
+          ],
+          "scope": "parcel_id of this run's in-population lots",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "Spec 134 §3, R-IU, CHAT-80.QP: the lot row, one per in-population parcel, holding all of its results as positional arrays in scope-seed order; written after the replace-keys retraction of the same table in the batch transaction.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/resolve-bylaws.js"
+            }
+          }
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [
+      {
+        "table": "bylaw_resolution_units",
+        "column": "unit_id",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_units",
+        "column": "regulation_id",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_units",
+        "column": "layer",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_texts",
+        "column": "text",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "lot_gate",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "codes",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "numbers",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "reason_ids",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "winner_ids",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "evidence_kinds",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "evidence_ref_ids",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "class_results",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "permitted",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "permitted_text_ids",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "bylaw_resolution_lots",
+        "column": "inputs_defaulted",
+        "when": "Layer 1 (table_version), the evaluator code (evaluator_version), a parcels input the lot vector reads, or the population list changes. The step is a full rescan (staleness.mode_select none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a moved value is rewritten and an unchanged one writes nothing.",
+        "by": "full_rescan"
+      }
+    ],
+    "write_inventory": {
+      "statements": 4,
+      "why": {
+        "text": "Per batch, one transaction, the four statements of outputs.writes[] in order: the two dictionary upserts (parents first), the replace-keys retraction and the lot upsert.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": "none",
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/compute/resolve-bylaws.js",
+      "scripts/lib/bylaw-materialize.js",
+      "scripts/lib/bylaw-lot-row.js",
+      "scripts/lib/bylaw-resolution.js",
+      "docs/reference/bylaw-layer2-input.json"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "fail_step",
+    "pins": [
+      {
+        "step": "enrich_parcels",
+        "stamp": "parcels.zoning_enriched_at",
+        "why": {
+          "text": "LDG-10 producer edge (watermark, not evaluated): zoning_class, zoning_zn_string, exception_number, zoning_overlays, zoning_is_ambiguous, on_policy_road and in_sixplex_area are enrich_parcels' outputs; re-read every run under the full rescan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/resolve-bylaws.js"
+          }
+        }
+      },
+      {
+        "step": "enrich_centreline",
+        "stamp": "parcels.centreline_dataset_version_when_enriched",
+        "why": {
+          "text": "LDG-10 producer edge (watermark, not evaluated): is_corner_lot, is_through_lot and abuts_laneway are enrich_centreline's outputs; re-read every run under the full rescan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/resolve-bylaws.js"
+          }
+        }
+      },
+      {
+        "step": "enrich_heritage",
+        "stamp": "parcels.heritage_dataset_version_when_enriched",
+        "why": {
+          "text": "LDG-10 producer edge (watermark, not evaluated): is_heritage_designated is enrich_heritage's output; re-read every run under the full rescan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/resolve-bylaws.js"
+          }
+        }
+      }
+    ]
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "bylaw_resolution_units",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 282 enables RLS on bylaw_resolution_units with ZERO policies (Spec 114 Class B). Under a non-bypass role the guarded upsert affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "bylaw_resolution_units"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "bylaw_resolution_texts",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 282 enables RLS on bylaw_resolution_texts with ZERO policies (Spec 114 Class B). Under a non-bypass role the guarded upsert affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "bylaw_resolution_texts"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "bylaw_resolution_lots",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 282 enables RLS on bylaw_resolution_lots with ZERO policies (Spec 114 Class B). Under a non-bypass role the guarded upsert affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "bylaw_resolution_lots"
+          }
+        }
+      },
+      {
+        "kind": "fk",
+        "name": "bylaw_resolution_lots_parcel_id_fkey",
+        "on_missing": "fail",
+        "why": {
+          "text": "A deleted parcel takes its lot link row (R-IU, ON DELETE CASCADE); a dropped foreign key would leave link rows for parcels that no longer exist, which the population check would then count.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/282_resolve_bylaws.sql"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "materialize",
+    "materialize_form": "rows",
+    "materialize_source": {
+      "table": "parcels",
+      "key": "id",
+      "pending": {
+        "table": "parcels",
+        "predicate": "TRUE -- full rescan: every parcel is paged; the population split is the pure splitPopulation (R-IU)",
+        "invalidated_by": "parcels.zoning_enriched_at"
+      },
+      "why": {
+        "text": "Keyset paging over parcels.id: the step is a full rescan of every parcel (R-IU: the source pages every parcel, the pure splitPopulation sends out-of-population parcels to the retraction).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    "txn_scope": "batch",
+    "statement_timeout": "none",
+    "step_timeout": "125m",
+    "batch": 250,
+    "batch_size_from_config": "resolve_bylaws_batch_size",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the compute already measured (the batch tallies and the post read), so a throwing check is a defect and reddens the run.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/resolve-bylaws.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "parcels_scanned",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "parcels paged by the source, lots resolved and link rows retracted this run"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Descriptive denominator of the run; INFO under the Rule 10 exception for a purely descriptive counter: violations is always 0 and the counts live in detail.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "link_row_violations",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I1 and I11: |link rows - live population| plus link rows outside the population"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_lots"
+        },
+        {
+          "table": "parcels"
+        }
+      ],
+      "why": {
+        "text": "I1: link rows equal the live in-population parcel count; I11: rows only for the population. Counted from the once-per-run post read, in the run that wrote them.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "lineage_violations",
+      "kind": "orphan",
+      "expect": {
+        "reports": "Spec 134 I9 (option 4): lot rows whose arrays are not one slot per scope pair, winner keys with no unit row, reason or evidence-ref keys with no text row"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_lots"
+        },
+        {
+          "table": "bylaw_resolution_units"
+        },
+        {
+          "table": "bylaw_resolution_texts"
+        }
+      ],
+      "why": {
+        "text": "I9 lineage under option 4: every array has one slot per scope pair, every winner key names a stored unit of the closed dictionary, every reason and evidence-ref key names a stored text. (Signatures are gone, so \"winner is a candidate\" is checked as \"winner is a Layer 1 unit\"; the equivalence audit covers the rest.)",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "winner_evidence_violations",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I2 and I8: applies rows with a winner but no clause or provincial evidence, or with no winner and neither a ruled absence nor a cited regulation (M-60 agreeing worlds, CHAT-115)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_lots"
+        }
+      ],
+      "why": {
+        "text": "I2/I8: an applies row has a winner unit with evidence clause or provincial, or is unregulated by a ruled absence (evidence present), or (CHAT-115.L2-EVID-1, 2026-10-24) is an M-60 agreeing-worlds value with no single winner whose applied clauses share one regulation, cited as clause/provincial evidence. A ruled absence is any evaluator evidence of kind absence, label_absent or disapply (Q-D reading of \"absence ruling\").",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "gated_winner_violations",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I3 and I4: a result of a gated lot that is not not_evaluated or has a winner"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_lots"
+        }
+      ],
+      "why": {
+        "text": "I4: no winner on a lot with a lot gate, including the lot-wide unauthored-exception gate (Spec 134 §5).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "sentinel_exception_winner_violations",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I5: an exception-layer winner on a lot whose exception number is the sentinel"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_lots"
+        },
+        {
+          "table": "parcels"
+        },
+        {
+          "table": "bylaw_resolution_units"
+        }
+      ],
+      "why": {
+        "text": "I5: a sentinel (-1) exception lot never takes an exception-layer winner.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "conflict_cells",
+      "kind": "bound",
+      "expect": {
+        "reports": "not_evaluated:conflict results written this run (Spec 134 I3)"
+      },
+      "limit": "value_max 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "resolve_bylaws_conflict_max",
+      "why": {
+        "text": "I3: a conflict is a defect, never an answer; the bound is the declared variable resolve_bylaws_conflict_max (default 0), never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "inputs_defaulted",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I10: lot-vector inputs the builder had to default"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "I10: a missing input is never defaulted (it raises the lot gate); the counter is the builder's own, an exact zero.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "class_cap_violations",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I13: lot rows with more classes than resolve_bylaws_class_cap, or a class_results key that is not a declared class"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_lots"
+        }
+      ],
+      "why": {
+        "text": "I13: every class_results key is a declared class (layer2-scope.json classes) and the class count per lot is within resolve_bylaws_class_cap, passed to the post read as a parameter (Q-C).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "scenario_axis_cells",
+      "kind": "bound",
+      "expect": {
+        "reports": "results whose reason is needs_user_input on a scenario axis (Spec 134 I13; Q-F)"
+      },
+      "limit": "value_max 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "resolve_bylaws_scenario_axis_warn_max",
+      "retighten_when": "zero results: the class vectors enumerate every scenario axis, then this becomes a FAIL at 0 (Spec 134 I13)",
+      "why": {
+        "text": "Q-F recommended reading: I13 says no needs_user_input on a scenario axis survives, but the v1 classes do not yet enumerate every axis, so the count WARNs against a declared ceiling (Spec 124 R-H: a metric that is never zero is WARN with a stated retighten condition).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "row_sha_mismatches",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I14 (Q-I): lot rows whose stored row_sha differs from the SHA-256 recomputed in SQL, and dictionary rows whose key differs from the hash of their content"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_units"
+        },
+        {
+          "table": "bylaw_resolution_texts"
+        },
+        {
+          "table": "bylaw_resolution_lots"
+        }
+      ],
+      "why": {
+        "text": "I14 (operator CHAT-73, Q-I recommended reading; CHAT-80.QP): the lot canonical text is built in SQL from the same result columns the JS hashes (rowShaMismatchSql), and each dictionary key is the SQL hash of its content; a direct row edit is detected.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "equivalence_disagreements",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I12: audited pairs whose direct per-lot effective() differs from what the lot row decodes to (every class)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "I12 (Q-N): every Nth lot is re-evaluated uncached for every structure, target and class and compared with what its row decodes to; the sample size is the budget because pure compute holds no clock (R-DET).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "order_disagreements",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I15: audited pairs whose result changes when the candidate order is reversed"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "I15 (Q-N): the audited lots are re-evaluated with the candidates in reversed order; the evaluator's declared total order makes the result independent of it, so any difference is a defect.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "equivalence_not_run",
+      "kind": "invariant",
+      "expect": {
+        "reports": "Spec 134 I12 coverage: 1 when lots were resolved but no pair was audited (detail: pairs audited)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "retighten_when": "the first POST capture fixes resolve_bylaws_equivalence_every_nth against the population: a run that audits nothing then FAILs",
+      "why": {
+        "text": "I12: a run that audited no pair proves nothing; WARN (not PASS-by-silence) until the sample size is sized from the first POST measurement (R-AJ).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "not_evaluated_share_pct",
+      "kind": "bound",
+      "expect": {
+        "reports": "percent of results written this run that are not_evaluated; detail carries the reasons (Spec 134 §7 WARN)"
+      },
+      "limit": "pct <= 100",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "resolve_bylaws_not_evaluated_warn_pct",
+      "retighten_when": "the first POST capture measures the share: set resolve_bylaws_not_evaluated_warn_pct to the measured share plus margin (Spec 124 R-H)",
+      "why": {
+        "text": "Spec 134 §7 WARN: the not_evaluated share, bounded by the declared variable (interim 100, never warns until measured).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "winner_layer_histogram",
+      "kind": "distribution",
+      "expect": {
+        "reports": "applies winners by layer (base, overlay, exception, provincial); detail carries the histogram (Spec 134 §7 WARN)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 134 §7: the winner-layer histogram, purely descriptive; INFO under the Rule 10 exception, violations always 0 and the histogram in detail.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "unreferenced_rows",
+      "kind": "orphan",
+      "expect": {
+        "reports": "unit and text dictionary rows no longer referenced by any lot after a law change (Q-M)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_units"
+        },
+        {
+          "table": "bylaw_resolution_texts"
+        },
+        {
+          "table": "bylaw_resolution_lots"
+        }
+      ],
+      "retighten_when": "a pruning arm lands (Q-M): stale dictionary rows are then deleted by the run and this becomes a FAIL at 0",
+      "why": {
+        "text": "Q-M recommended reading: dictionary rows are never deleted by the run (no destructive retraction at v1), so a law change leaves unreferenced entries behind until the reset arm rebuilds; the count makes that visible.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "exception_gated_lots",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "Spec 134 I6: lots gated by an unauthored exception, counted live in the same run; detail carries every gate"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "reads": [
+        {
+          "table": "bylaw_resolution_lots"
+        }
+      ],
+      "why": {
+        "text": "I6: the gated-lot count is a live count from the run's own table, never census.json; INFO under the Rule 10 exception (a descriptive counter): violations always 0, the count in detail.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    },
+    {
+      "id": "storage_within_budget",
+      "kind": "bound",
+      "expect": {
+        "reports": "measured size in MB of the three Layer 2 tables (Spec 134 §6, R-JA)"
+      },
+      "limit": "value_max 1300",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "resolve_bylaws_storage_budget_mb",
+      "reads": [
+        {
+          "table": "bylaw_resolution_units"
+        },
+        {
+          "table": "bylaw_resolution_texts"
+        },
+        {
+          "table": "bylaw_resolution_lots"
+        }
+      ],
+      "why": {
+        "text": "Spec 134 §6 and R-JA: the tables' measured size against resolve_bylaws_storage_budget_mb at POST; over budget the lean split is re-cut before ③, never a silent growth. The value 1300 in limit is the interim seed (Q-K).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/resolve-bylaws.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "RESOLVE_BYLAWS_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "parcels_scanned",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "lots",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "lots_retracted",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "lots_gated",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "results_emitted",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "equivalence_checked",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "equivalence_disagreements",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "order_disagreements",
+      "type": "number",
+      "consumers": []
+    }
+  ],
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "Dictionary rows (units, texts) are never deleted by a run: a law change writes new entries under new keys and leaves the old ones unreferenced until the reset arm rebuilds the layer (Q-M).",
+      "measured": "declared: the unreferenced_rows check counts them; the recovery.reset truncates all three tables",
+      "check_id": "unreferenced_rows"
+    },
+    {
+      "what": "losers, inputs_used and disclosures are not stored (CHAT-80.QP): they are recomputed on read through the uncached evaluator, and a class that differs from the first class stores only its differing positions (class_results).",
+      "measured": "declared: locked by materialize.logic.test.ts and frozen-row.logic.test.ts; the equivalence audit compares every class against what the lot row decodes to",
+      "check_id": "equivalence_disagreements"
+    },
+    {
+      "what": "Scenario axes the v1 classes do not enumerate still surface as not_evaluated:needs_user_input (Q-F).",
+      "measured": "declared: counted by scenario_axis_cells against resolve_bylaws_scenario_axis_warn_max",
+      "check_id": "scenario_axis_cells"
+    }
+  ],
+  "interpretation": {
+    "file": "resolve-bylaws.notes.json"
+  },
+  "recovery": {
+    "reset": "TRUNCATE bylaw_resolution_lots, bylaw_resolution_texts, bylaw_resolution_units; the next run re-derives every lot row (an operator action on a DB night, the layer is fully derivable from parcels and Layer 1).",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Each batch commits its retraction and upserts atomically in one transaction (parents before children); an interrupted run leaves earlier batches committed and the next run is a full rescan that repairs the rest.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "generated"
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 275,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "matched.lots"
+    },
+    "records_new": {
+      "source": "written.e4.inserted"
+    },
+    "records_updated": {
+      "source": "written.e4.updated"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "resolve_bylaws_population_zone_classes",
+        "min": "none",
+        "max": "none",
+        "on_invalid": "fail",
+        "list_of": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      },
+      {
+        "name": "resolve_bylaws_batch_size",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "resolve_bylaws_conflict_max",
+        "min": 0,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "resolve_bylaws_equivalence_every_nth",
+        "min": 1,
+        "max": 1000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "resolve_bylaws_storage_budget_mb",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "resolve_bylaws_class_cap",
+        "min": 1,
+        "max": 16,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "resolve_bylaws_scenario_axis_warn_max",
+        "min": 0,
+        "max": 1000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "resolve_bylaws_not_evaluated_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": "none",
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "resolved",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      }
+    },
+    {
+      "id": "resolved_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A WARN row stands (scenario-axis results, not_evaluated share, unreferenced rows, nothing audited) and nothing FAILED.",
+        "liveness": {
+          "kind": "check",
+          "ref": "scenario_axis_cells"
+        }
+      }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A guards.requires precondition (RLS bypass, the lot foreign key) is missing, or a declared logic variable has no row; nothing is written.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared variable (including the population list) is outside its bounds with on_invalid fail: the run refuses before any write.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/config.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 134 is held by another process; the library emits a row-derived SKIP summary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

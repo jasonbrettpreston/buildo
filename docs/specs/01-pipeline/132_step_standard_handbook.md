@@ -65,14 +65,14 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 | 4 | `isIngestStep` | `ingest` (or no shape: inferred), one primary | `runIngestPhase` | `staleness.preAcquisitionDecision`, `resolveRunMode` | `buildLookup`, `buildWriteSql`, `coerceKey`, `dedupeBySourceId`, `deriveRows`, `reconcileDocuments`, `shapeDocument`, `shapeRecord`, `shapeValuesBatch`, `shouldSkipDelete`, `validatorCounterDelta` | address_points, load_bylaw_map_areas, load_centreline, load_coa_notices, load_ravines, load_wsib, massing, neighbourhoods, parcels |
 |  |  | `ingest` (or no shape: inferred), several primaries (`isMultiPrimary`) | `ingestPrimaries` (runs `runIngestPhase` per primary) | `staleness.allPrimariesDecision`, `resolveRunMode` | `buildWriteSql`, `shapeRecord` | coa, load_heritage, load_zoning |
 | 5 | `isCascadeStep` | `cascade` | `runCascadePhase` | `resolveLinkGate → staleness.selectMode`, `staleness.ledgerGatedSkip` | `buildApplyLinksSql`, `buildContactsReverseClearSql`, `buildCumulativeSql`, `buildDerivationSql`, `buildEntitiesFlagCountSql`, `buildEntitiesUnflagCorrectionCountSql`, `buildTierSql`, `exactTierConfidences` | link_wsib |
-| 6 | `isMaterializeStep` | `materialize` | `runMaterializePhase` via `materializeRowsArm` | `staleness.ledgerGatedSkip` | `buildMaterializeSql`, `buildPostSql`, `buildSourceSql`, `finalizeMatched`, `materializeRows` | classify_coa_trades, compute_coa_cost_estimates, link_parcel_addresses |
+| 6 | `isMaterializeStep` | `materialize` | `runMaterializePhase` via `materializeRowsArm` | `staleness.ledgerGatedSkip` | `buildMaterializeSql`, `buildPostSql`, `buildSourceSql`, `finalizeMatched`, `materializeRows` | classify_coa_trades, compute_coa_cost_estimates, link_parcel_addresses, resolve_bylaws |
 | 7 | `isBackfillStep` | `backfill` | `runBackfillPhase` via `runBackfillFullRecompute` | — | `buildBackfillSql`, `buildFullRecomputeSql`, `buildPostSql`, `buildPreSql` | compute_centroids |
 | 8 | `isRecorderStep` | `recorder` | `runRecorderPhase` | — | `buildReads`, `buildRow`, `buildWriteSql` | refresh_snapshot |
 | 9 | `isEnrichStep` | `enrich` | `runEnrichPhase` | `resolveRunMode` | `OVERLAY_LAYERS`, `passes` | classify_coa_scope, compute_parcel_cost_estimates, enrich_centreline, enrich_coa_zoning, enrich_heritage, enrich_parcels, enrich_permits (legacy shell), enrich_ravines, geocode_permits |
 | — | none matched | none | no phase: `compute(ctx)` then `runWritePlan` | — | main function only | assert_coa_freshness, assert_data_bounds, assert_engine_health, assert_global_coverage, assert_parcel_sanity, assert_schema |
 | — | runner, any shape | any | `runWithPool` via `makePreWriteGate` | — | `DISTRIBUTION_SCOPE` | every step |
 
-**Table 1b: every step (generated).** 38 manifest steps with a descriptor. "Phase" is what the runner's own predicates pick for the committed descriptor. "Legacy shell runs" marks a pending step whose shell does not yet call `pipeline.step(descriptor, compute)`: its descriptor is graded, but the runner does not run it until the ② shell swap.
+**Table 1b: every step (generated).** 39 manifest steps with a descriptor. "Phase" is what the runner's own predicates pick for the committed descriptor. "Legacy shell runs" marks a pending step whose shell does not yet call `pipeline.step(descriptor, compute)`: its descriptor is graded, but the runner does not run it until the ② shell swap.
 
 | Slug | Archetype | Shape | Phase | Shell | Descriptor | Compute | Stage |
 |---|---|---|---|---|---|---|---|
@@ -114,6 +114,7 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 | neighbourhoods | INGESTOR | ingest | `runIngestPhase` | `scripts/load-neighbourhoods.js` | `scripts/load-neighbourhoods.descriptor.json` | `scripts/lib/compute/load-neighbourhoods.js` | converted |
 | parcels | INGESTOR | ingest | `runIngestPhase` | `scripts/load-parcels.js` | `scripts/load-parcels.descriptor.json` | `scripts/lib/compute/load-parcels.js` | converted |
 | refresh_snapshot | RECORDER | recorder | `runRecorderPhase` | `scripts/refresh-snapshot.js` | `scripts/refresh-snapshot.descriptor.json` | `scripts/lib/compute/refresh-snapshot.js` | converted |
+| resolve_bylaws | MATERIALIZER | materialize | `runMaterializePhase` | `scripts/resolve-bylaws.js` | `scripts/resolve-bylaws.descriptor.json` | `scripts/lib/compute/resolve-bylaws.js` | pending: compute_ported |
 
 ## 2. Every step
 

@@ -1,12 +1,11 @@
 // SPEC LINK: docs/specs/01-pipeline/134_resolve_bylaws.md §2 (inputs through effective() only), §3 (row shape), §4 (status sets), §5 (the
 //            unauthored-exception gate, written per target), §7 (I1, I3, I4, I10, I13, I14, I15; the population and the reset arm);
-//            docs/specs/01-pipeline/124a_step_standard_policy_appendix.md R-JA (form C), R-IN (cell_id, option B), R-IR (classes), R-IT, R-IU
-// Handbook: Spec 132 §x-rulings.4 (R-JA); Spec 132 §materializer.1 (R-EH: rows computed in JS, the runner owns I/O); Spec 132 §core.9 (R-W)
+//            docs/specs/01-pipeline/124a_step_standard_policy_appendix.md R-IN, R-IR (classes), R-IT, R-IU
+// Handbook: Spec 132 §materializer.1 (R-EH: rows computed in JS, the runner owns I/O); Spec 132 §core.9 (R-W); operator CHAT-80.QP (option 4)
 //
-// The pure batch core of the resolve_bylaws compute (scripts/lib/bylaw-materialize.js): parcels rows in, the four tables' rows out,
-// on fixtures through the REAL evaluator and the committed Layer 1 input (docs/reference/bylaw-layer2-input.json). No DB, no runner.
-// RED FIRST (Spec 124 R-BA): run before the module existed (docs/reports/red-evidence/resolve_bylaws/step-red.json).
-// Where Q-B (table merge) or Q-C (classes in by_class) is open, the plain Spec 134 reading is implemented and marked in the library.
+// The pure batch core of the resolve_bylaws compute (scripts/lib/bylaw-materialize.js): parcels rows in, the three tables' rows out (units,
+// texts, lots), on fixtures through the REAL evaluator and the committed Layer 1 input (docs/reference/bylaw-layer2-input.json). No DB, no runner.
+// RED FIRST (Spec 124 R-BA): docs/reports/red-evidence/resolve_bylaws/part-e-option4-red.json (run against the interning build, before option 4).
 
 import { beforeAll, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -17,6 +16,8 @@ const ROOT = path.resolve(__dirname, '../../../../');
 const read = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8')) as Json;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const rb = (): Json => require(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')) as Json;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const lr = (): Json => require(path.join(ROOT, 'scripts/lib/bylaw-lot-row.js')) as Json;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mz = (): Json => require(path.join(ROOT, 'scripts/lib/bylaw-materialize.js')) as Json;
 
@@ -35,6 +36,9 @@ const row = (id: number, o: Json = {}): Json => ({
   zoning_overlays: {}, on_policy_road: false, is_corner_lot: false, is_through_lot: false, abuts_laneway: false,
   frontage_m: 10.5, depth_m: 35.2, lot_size_sqm: 369.6, zoning_is_ambiguous: false, in_sixplex_area: false, is_heritage_designated: false, geom_npoints: 5, ...o,
 });
+/** The logical results of lot `i` of a batch output, decoded from the arrays and the batch's own dictionaries. */
+const decoded = (o: Json, i = 0): Json[] => lr().decodeLotResults({ lot: o.rows.lots[i], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts }) }) as Json[];
+const repOf = (o: Json, i = 0): Json[] => decoded(o, i).filter((r) => r.class === SCOPE.classes[0]);
 const chapterOf = (z: string): number => VOCAB.exception_chapter[z] as number;
 const authoredNumber = (zone: string): number => {
   const re = new RegExp(`^900\\.${chapterOf(zone)}\\.10\\((\\d+)\\)$`);
@@ -45,36 +49,31 @@ const authoredNumber = (zone: string): number => {
 const UNAUTHORED = 999999; // no units, so never authored (a missing state is not authored, EV:126)
 const withX = (z: string, n: number, letters = 'f10.0; a245'): Json => ({ zoning_class: z, zoning_zn_string: `${z} (${letters}) (x${n})`, exception_number: n });
 
-describe('materializeBatch: one plain lot gives one link row, one profile, and a cell per scope pair', () => {
+describe('materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names', () => {
   let out: Json;
   beforeAll(() => { out = mz().materializeBatch([row(1)], mkEnv()); });
 
-  it('writes exactly one lot row, no retraction, and a profile keyed per R-JA', () => {
+  it('writes exactly one lot row, no retraction, and only the three tables (no profiles, cells, signatures or sets)', () => {
+    expect(Object.keys(out.rows).sort()).toEqual(['lots', 'texts', 'units']);
     expect(out.rows.lots).toHaveLength(1);
     expect(out.retract).toEqual([]);
-    expect(out.rows.profiles).toHaveLength(1);
     const lot = out.rows.lots[0];
     expect(lot.parcel_id).toBe(1);
     expect(lot.lot_gate).toBeNull();
     expect(lot.inputs_defaulted).toBe(0);
-    expect(lot.profile_id).toBe(out.rows.profiles[0].profile_id);
   });
 
-  it('the profile holds 53 pointers in scope order, each to a cell row of this batch (I9 lineage)', () => {
-    const p = out.rows.profiles[0];
-    const entries = rb().unpackPointers(p.pointers, PAIRS);
-    expect(entries).toHaveLength(53);
-    const byId = new Map<string, Json>(out.rows.cells.map((c: Json) => [c.cell_id, c]));
-    for (const e of entries) {
-      const c = byId.get(e.cell_id);
-      expect(c, `${e.structure}/${e.target}`).toBeTruthy();
-      expect(c).toMatchObject({ structure: e.structure, target: e.target });
-    }
-    expect(rb().profileKey(entries)).toBe(p.profile_id);
+  it('every positional array has one slot per scope pair, in layer2-scope.json order (53); permitted has one slot per class', () => {
+    const lot = out.rows.lots[0];
+    expect(PAIRS).toHaveLength(53);
+    for (const k of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) if (lot[k] !== null) expect(lot[k], k).toHaveLength(53);
+    expect(lot.codes).toHaveLength(53);
+    expect(lot.permitted).toHaveLength(SCOPE.classes.length);
   });
 
-  it('every cell has a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)', () => {
-    for (const c of out.rows.cells as Json[]) {
+  it('the decoded results have a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)', () => {
+    expect(decoded(out)).toHaveLength(53 * SCOPE.classes.length);
+    for (const c of decoded(out)) {
       expect(MAP.status).toContain(c.status);
       if (c.status === 'not_evaluated') expect(MAP.reason_code).toContain(String(c.reason).split(':')[0]);
       if (c.status === 'applies') expect(MAP.value_kind).toContain(c.value_kind);
@@ -83,50 +82,26 @@ describe('materializeBatch: one plain lot gives one link row, one profile, and a
     }
   });
 
-  it('every cell, signature, profile and lot row carries the two versions and a row_sha that recomputes (I14)', () => {
-    for (const [name, rows] of Object.entries(out.rows) as Array<[string, Json[]]>) {
-      for (const r of rows) {
-        expect(r.table_version, name).toBe(INPUT.table_version);
-        expect(r.evaluator_version, name).toBe(INPUT.evaluator_version);
-        expect(rb().verifyRowSha(r, mz().RESULT_COLUMNS[name]), name).toBe(true);
-      }
-    }
+  it('the lot row carries the two versions and a row_sha that recomputes over RESULT_COLUMNS.lots (I14)', () => {
+    const l = out.rows.lots[0];
+    expect(l.table_version).toBe(INPUT.table_version);
+    expect(l.evaluator_version).toBe(INPUT.evaluator_version);
+    expect(rb().verifyRowSha(l, mz().RESULT_COLUMNS.lots, mz().COLUMN_KINDS.lots)).toBe(true);
   });
 
-  it('the signature is stored once with the candidate ids, and every computed cell points at it', () => {
-    expect(out.rows.signatures).toHaveLength(1);
-    const s = out.rows.signatures[0];
-    expect(s.candidates.length).toBeGreaterThan(1000);
-    expect(s.signature_id).toBe(rb().signatureId(s.candidates));
-    for (const c of out.rows.cells as Json[]) expect(c.signature_id).toBe(s.signature_id);
+  it('dictionary rows are keyed by hash32 of their content, carry no row_sha, and hold only what the lot names (nothing unreferenced)', () => {
+    for (const u of out.rows.units as Json[]) { expect(u.unit_key).toBe(lr().hash32(u.unit_id)); expect(u).not.toHaveProperty('row_sha'); expect(['base', 'overlay', 'exception']).toContain(u.layer); }
+    for (const t of out.rows.texts as Json[]) { expect(t.text_key).toBe(lr().hash32(t.text)); expect(t).not.toHaveProperty('row_sha'); }
+    const l = out.rows.lots[0];
+    const unitKeys = new Set<number>((out.rows.units as Json[]).map((u) => u.unit_key));
+    for (const w of (l.winner_ids || []) as Array<number | null>) if (w !== null) expect(unitKeys.has(w)).toBe(true);
+    const named = new Set<number>([...(l.winner_ids || [])].filter((x: number | null) => x !== null) as number[]);
+    for (const cls of Object.values(l.class_results || {}) as Json[]) for (const t of Object.values(cls) as Array<Array<number | null>>) if (t[3] !== null) named.add(t[3] as number);
+    expect(named.size).toBe(unitKeys.size);
   });
 
-  it('winner ids are candidates of the signature (I9), and an applies winner has evidence', () => {
-    const cand = new Set<string>(out.rows.signatures[0].candidates);
-    for (const c of out.rows.cells as Json[]) {
-      if (c.winner_unit_id !== null) {
-        expect(cand.has(c.winner_unit_id), c.winner_unit_id).toBe(true);
-        expect(MAP.evidence_kind).toContain(c.evidence_kind);
-      }
-      for (const l of c.losers as Json[]) expect(cand.has(l.unit_id), l.unit_id).toBe(true);
-    }
-  });
-
-  it('by_class has one entry per catalogue class except the representative: collapsed_into:<rep> or a full differing result (Q-C)', () => {
-    const rep = SCOPE.classes[0];
-    for (const c of out.rows.cells as Json[]) {
-      expect(Object.keys(c.by_class).sort()).toEqual((SCOPE.classes as string[]).filter((k) => k !== rep).sort());
-      for (const v of Object.values(c.by_class) as Array<string | Json>) {
-        if (typeof v === 'string') expect(v).toMatch(new RegExp(`^collapsed_into:(${(SCOPE.classes as string[]).join('|')})$`));
-        else expect(v).toHaveProperty('status');
-      }
-    }
-  });
-
-  it('permitted_by_class holds permitted()\'s own words for every v1 class (R-IT)', () => {
-    const pbc = out.rows.lots[0].permitted_by_class;
-    expect(Object.keys(pbc).sort()).toEqual([...SCOPE.classes].sort());
-    for (const v of Object.values(pbc) as Json[]) expect(['permitted', 'prohibited', 'not_evaluated']).toContain(v.status);
+  it('there is no per-pair json: losers, by_class, disclosures and inputs are not columns of the lot row (they are recomputed on read)', () => {
+    for (const k of ['losers', 'by_class', 'disclosures', 'disclosure_set_id', 'loser_set_id', 'permission_set_id', 'profile_id', 'inputs_used']) expect(out.rows.lots[0], k).not.toHaveProperty(k);
   });
 
   it('matched is additive: numbers or objects of numbers only (R-EH (c))', () => {
@@ -140,32 +115,45 @@ describe('materializeBatch: one plain lot gives one link row, one profile, and a
   });
 });
 
-describe('sharing: identical inputs share one profile; a differing input moves only the cells that read it', () => {
-  it('two lots that agree on every input share the profile and every cell, with two lot rows', () => {
-    const out = mz().materializeBatch([row(1), row(2)], mkEnv());
-    expect(out.rows.lots).toHaveLength(2);
-    expect(out.rows.profiles).toHaveLength(1);
-    expect(out.rows.lots[0].profile_id).toBe(out.rows.lots[1].profile_id);
-    expect(new Set(out.rows.cells.map((c: Json) => c.cell_id)).size).toBe(out.rows.cells.length);
-    expect(out.rows.cells.length).toBeLessThanOrEqual(53);
+describe('classes: the first class fills the arrays, a differing class stores only its differing positions (sparse class_results)', () => {
+  it('a real RD lot has few or no per-class overrides, and every override key is a declared class', () => {
+    const o = mz().materializeBatch([row(1), row(2, withX('RM', authoredNumber('RM'), 'f15.0; a550; u4'))], mkEnv());
+    for (const l of o.rows.lots as Json[]) if (l.class_results !== null) for (const c of Object.keys(l.class_results)) expect(SCOPE.classes).toContain(c);
   });
 
-  it('a lot with another frontage shares the targets that do not read frontage and not the ones that do (R-IN option B)', () => {
+  it('permitted holds permitted()\'s own words for every v1 class (R-IT), decoded', () => {
+    const o = mz().materializeBatch([row(1)], mkEnv());
+    const pbc = lr().decodePermitted({ lot: o.rows.lots[0], classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts }) });
+    expect(Object.keys(pbc).sort()).toEqual([...SCOPE.classes].sort());
+    for (const v of Object.values(pbc) as Json[]) expect(['permitted', 'prohibited', 'not_evaluated']).toContain(v.status);
+  });
+});
+
+describe('sharing is no longer a storage concern: two lots with the same inputs give two equal result arrays (the dictionaries hold the words once)', () => {
+  it('two lots that agree on every input have identical arrays and one set of dictionary rows', () => {
+    const out = mz().materializeBatch([row(1), row(2)], mkEnv());
+    expect(out.rows.lots).toHaveLength(2);
+    const [a, b] = out.rows.lots as [Json, Json];
+    for (const k of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids', 'class_results', 'permitted', 'permitted_text_ids']) expect(JSON.stringify(a[k]), k).toBe(JSON.stringify(b[k]));
+    expect(a.row_sha).not.toBe(b.row_sha); // parcel_id is a covered column
+  });
+
+  it('a lot with another frontage differs in the positions that read frontage and only those', () => {
     const env = mkEnv();
     const a = mz().materializeBatch([row(1)], env);
     const b = mz().materializeBatch([row(2, { frontage_m: 14.1 })], env);
-    const ids = (o: Json): Set<string> => new Set(o.rows.cells.map((c: Json) => c.cell_id));
-    const shared = [...ids(a)].filter((x) => ids(b).has(x)).length;
-    expect(shared).toBeGreaterThan(0);
-    expect(shared).toBeLessThan(ids(a).size);
-    expect(a.rows.lots[0].profile_id).not.toBe(b.rows.lots[0].profile_id);
+    const ra = repOf(a);
+    const rbb = repOf(b);
+    const differing = ra.filter((r, i) => JSON.stringify(r) !== JSON.stringify(rbb[i])).length;
+    expect(differing).toBeGreaterThan(0);
+    expect(differing).toBeLessThan(ra.length);
   });
 
   it('batch order does not matter: the same rows come back in a canonical order', () => {
     const rows = [row(1), row(2, { frontage_m: 14.1 }), row(3, withX('RM', authoredNumber('RM'), 'f15.0; a550; u4'))];
     const env = mkEnv();
     const fwd = mz().materializeBatch(rows, env);
-    const rev = mz().materializeBatch([...rows].reverse(), env);
+    const rev = mz().materializeBatch([...rows].reverse(), mkEnv());
     expect(JSON.stringify(rev.rows)).toBe(JSON.stringify(fwd.rows));
   });
 });
@@ -176,29 +164,26 @@ describe('Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written 
   let out: Json;
   beforeAll(() => { env = mkEnv(); out = mz().materializeBatch([gated], env); });
 
-  it('the lot row carries the gate and every cell is not_evaluated:exception_not_authored:<id> with no winner', () => {
+  it('the lot row carries the gate and every result is not_evaluated:exception_not_authored:<id> with no winner', () => {
     expect(out.rows.lots[0].lot_gate).toBe('exception_not_authored');
-    expect(out.rows.cells).toHaveLength(53);
-    for (const c of out.rows.cells as Json[]) {
+    expect(decoded(out)).toHaveLength(53 * SCOPE.classes.length);
+    for (const c of decoded(out)) {
       expect(c.status).toBe('not_evaluated');
       expect(c.reason).toBe(`exception_not_authored:900.${chapterOf('RD')}.10(${UNAUTHORED})`);
       expect(c.winner_unit_id).toBeNull();
-      expect(c.signature_id).toBeNull();
     }
-    expect(out.rows.signatures).toEqual([]);
+    expect(out.rows.lots[0].numbers).toBeNull();
+    expect(out.rows.lots[0].winner_ids).toBeNull();
+    expect(out.rows.lots[0].class_results).toBeNull();
+    expect(out.rows.units).toEqual([]);
   });
 
-  it('permitted_by_class is not_evaluated with the gate reason for every class', () => {
-    for (const v of Object.values(out.rows.lots[0].permitted_by_class) as Json[]) {
+  it('permitted is not_evaluated with the gate reason for every class', () => {
+    const pbc = lr().decodePermitted({ lot: out.rows.lots[0], classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts }) });
+    for (const v of Object.values(pbc) as Json[]) {
       expect(v.status).toBe('not_evaluated');
       expect(String(v.reason)).toMatch(/^exception_not_authored/);
     }
-  });
-
-  it('two lots with the same unauthored exception share every gated cell and one profile', () => {
-    const two = mz().materializeBatch([gated, row(6, { ...withX('RD', UNAUTHORED), frontage_m: 20 })], env);
-    expect(two.rows.profiles).toHaveLength(1);
-    expect(two.rows.cells).toHaveLength(53);
   });
 
   it('the evaluator is never called for a gated lot (the gate is applied BEFORE effective(), P2:211)', () => {
@@ -222,8 +207,9 @@ describe('the other lot gates (R-IQ order) are written per target too', () => {
     it(`${gate}: gate on the lot row, not_evaluated:${reason} on all 53 targets`, () => {
       const out = mz().materializeBatch([row(1, patch)], env);
       expect(out.rows.lots[0].lot_gate).toBe(gate);
-      expect(out.rows.cells).toHaveLength(53);
-      for (const c of out.rows.cells as Json[]) expect({ s: c.status, r: c.reason, w: c.winner_unit_id }).toEqual({ s: 'not_evaluated', r: reason, w: null });
+      const rep = repOf(out);
+      expect(rep).toHaveLength(53);
+      for (const c of rep) expect({ s: c.status, r: c.reason, w: c.winner_unit_id }).toEqual({ s: 'not_evaluated', r: reason, w: null });
     });
   }
 
@@ -239,16 +225,12 @@ describe('the other lot gates (R-IQ order) are written per target too', () => {
   });
 });
 
-describe('an authored exception resolves (no gate) and keys its own cells', () => {
-  it('the exception moves the cell ids of every target (zone and exception are always in the key, R-IN)', () => {
+describe('an authored exception resolves (no gate) and its own winners are exception-layer units in the dictionary', () => {
+  it('the exception lot has no gate and decodes to applies results', () => {
     const env = mkEnv();
-    const n = authoredNumber('RD');
-    const plain = mz().materializeBatch([row(1)], env);
-    const exc = mz().materializeBatch([row(2, withX('RD', n))], env);
+    const exc = mz().materializeBatch([row(2, withX('RD', authoredNumber('RD')))], env);
     expect(exc.rows.lots[0].lot_gate).toBeNull();
-    const a = new Set(plain.rows.cells.map((c: Json) => c.cell_id));
-    expect(exc.rows.cells.every((c: Json) => !a.has(c.cell_id))).toBe(true);
-    expect(exc.rows.signatures[0].signature_id).not.toBe(plain.rows.signatures[0].signature_id);
+    expect(repOf(exc).some((r) => r.status === 'applies')).toBe(true);
   });
 });
 
@@ -298,66 +280,54 @@ describe('I15 / rerun-zero: the output is a pure function of the rows', () => {
   });
 });
 
-describe('Q-C (plain reading): classes are evaluated per cell and collapse by equal results (R-IR)', () => {
-  // a stub evaluator that answers by building type, so a differing class is stored and equal classes collapse
-  const stub = (lot: Json, target: string): Json => {
+describe('classes by stub: a differing class stores only the positions that differ; an equal class adds nothing (R-IR)', () => {
+  const stub = (lot: Json): Json => {
     const bt = lot.building_type as string;
     const houseplex = bt === 'detached_houseplex' || bt === 'semi_detached_houseplex';
-    return houseplex
-      ? { status: 'value', value: 12, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: ['b', 'a'], applied: [], inputs: ['zone', 'exception', 'building_type', `vars.dwelling_units`], trace: [] }
-      : { status: 'value', value: 10, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: ['a'], applied: [], inputs: ['zone', 'exception', 'building_type', `vars.dwelling_units`, 'vars.lot_frontage_m'], trace: [], _t: target };
+    return { status: 'value', value: houseplex ? 12 : 10, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: ['b', 'a'], applied: [], inputs: ['zone', 'exception', 'building_type'], trace: [] };
   };
   let out: Json;
   beforeAll(() => { out = mz().materializeBatch([row(1)], mkEnv({ hooks: { evaluate: stub, permitted: () => ({ status: 'permitted', winners: [] }) } })); });
 
-  it('the representative is the first class; a class equal to an earlier one collapses into it (R-IR (iv)) and a differing class is stored whole', () => {
-    const c = out.rows.cells.find((k: Json) => k.structure === 'principal');
-    expect(c.value).toBe(10);
-    expect(c.by_class.detached_houseplex).toMatchObject({ status: 'applies', value: 12 });
-    expect(c.by_class.semi_detached_houseplex).toBe('collapsed_into:detached_houseplex');
-    expect(c.by_class.semi_detached_house).toBe('collapsed_into:detached_house');
-    expect(c.by_class.house_with_secondary_suite).toBe('collapsed_into:detached_house');
+  it('the representative fills the arrays; a differing class is stored as overrides keyed by pair index', () => {
+    expect(out.rows.lots[0].numbers.every((v: number) => v === 10)).toBe(true);
+    const cr = out.rows.lots[0].class_results;
+    expect(Object.keys(cr).sort()).toEqual(['detached_houseplex', 'semi_detached_houseplex']);
+    expect(Object.keys(cr.detached_houseplex)).toHaveLength(PAIRS.filter((p) => p.structure === 'principal').length); // only the principal structure carries the class vector
+    const dec = decoded(out);
+    expect(dec.find((r) => r.class === 'detached_houseplex' && r.structure === 'principal')).toMatchObject({ status: 'applies', value: 12 });
+    expect(dec.find((r) => r.class === 'semi_detached_house' && r.structure === 'principal')).toMatchObject({ status: 'applies', value: 10 });
   });
 
-  it('disclosures are stored sorted (R-IT); the class-vector inputs are not in the cell key but the other read inputs are', () => {
-    const c = out.rows.cells.find((k: Json) => k.structure === 'principal');
-    expect(c.disclosures).toEqual(['a']);
-    const rep = mz().classLotFor(row(1), 'principal', 'detached_house', mkEnv());
-    const want = rb().cellKey(rep, ['zone', 'exception', 'vars.lot_frontage_m'], { structure: c.structure, target: c.target }).cell_id;
-    expect(c.cell_id).toBe(want);
-    expect(c.inputs_used).toEqual(['exception', 'vars.lot_frontage_m', 'zone']);
+  it('disclosures and losers are not stored: the lot row has no column for them', () => {
+    expect(JSON.stringify(out.rows)).not.toMatch(/"b"/);
   });
 });
 
 describe('RESULT_COLUMNS: the canonical result columns per table (the write guard and row_sha cover these and nothing else)', () => {
-  it('names the four tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)', () => {
-    expect(Object.keys(mz().RESULT_COLUMNS).sort()).toEqual(['cells', 'lots', 'profiles', 'signatures']);
+  it('names the three tables; chain_run_id, versions and timestamps are outside every list (Spec 134 §3)', () => {
+    expect(Object.keys(mz().RESULT_COLUMNS).sort()).toEqual(['lots', 'texts', 'units']);
     for (const cols of Object.values(mz().RESULT_COLUMNS) as string[][]) for (const x of ['chain_run_id', 'table_version', 'evaluator_version', 'row_sha', 'resolved_at']) expect(cols).not.toContain(x);
   });
 });
 
-// Added with the implementation (green on first run; the red run above covers the cases before it).
-describe('I12 on fixtures: the stored cell equals a direct per-lot effective() for the representative class', () => {
+describe('I12 on fixtures: the decoded result equals a direct per-lot effective() for the representative class', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const E = require(path.join(ROOT, 'scripts/analysis/bylaw/evaluate.mjs')) as Json;
-  it('status, reason and value of every principal and suite cell match the uncached evaluator on two lots', () => {
+  it('status, reason and value of every pair match the uncached evaluator on two lots', () => {
     const env = mkEnv();
     const rows = [row(1), row(2, withX('RM', authoredNumber('RM'), 'f15.0; a550; u4'))];
     const out = mz().materializeBatch(rows, env);
-    const byId = new Map<string, Json>(out.rows.cells.map((c: Json) => [c.cell_id, c]));
-    for (const r of rows) {
-      const lotRow = out.rows.lots.find((l: Json) => l.parcel_id === r.id);
-      const pointers = rb().unpackPointers(out.rows.profiles.find((p: Json) => p.profile_id === lotRow.profile_id).pointers, PAIRS);
-      for (const e of pointers) {
-        const lot = mz().classLotFor(r, e.structure, SCOPE.classes[0], env);
+    rows.forEach((r, i) => {
+      for (const d of repOf(out, i)) {
+        const lot = mz().classLotFor(r, d.structure, SCOPE.classes[0], env);
         const { candidates } = E.loadCandidates(lot, INPUT.body.units);
-        const want = E.effective(lot, e.target, candidates, env.ctx);
-        const got = byId.get(e.cell_id) as Json;
+        const want = E.effective(lot, d.target, candidates, env.ctx);
         const l2 = rb().layer2Status(want, MAP);
-        expect({ s: got.status, r: got.reason, v: got.value_kind === 'number' ? got.value : got.value_kind }, `${r.id} ${e.structure}/${e.target}`)
+        expect({ s: d.status, r: d.reason, v: d.value_kind === 'number' ? d.value : d.value_kind }, `${r.id} ${d.structure}/${d.target}`)
           .toEqual({ s: l2.status, r: l2.reason, v: l2.status === 'applies' ? (typeof want.value === 'number' ? want.value : want.value) : null });
       }
-    }
+    });
   });
 });
 
@@ -387,5 +357,89 @@ describe('tripwire: every input path the evaluator reports can be keyed (cell-ca
   it('a declared constant input is one this step\'s lot vector never sets', () => {
     const lot = mz().classLotFor(row(1), 'principal', 'detached_house', mkEnv());
     for (const p of rb().UNSET_LOT_INPUTS as string[]) expect(lot[p], p).toBeUndefined();
+  });
+});
+
+describe('Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in reversed candidate order (the sample is the budget; pure compute holds no clock)', () => {
+  const real = (nth: number, offset: number): Json => mkEnv({ audit: { everyNth: nth, offset } });
+
+  it('with no audit configured the tallies are zero', () => {
+    const out = mz().materializeBatch([row(1), row(2)], mkEnv());
+    expect(out.matched.equivalence_checked).toBe(0);
+    expect(out.matched.equivalence_disagreements).toBe(0);
+    expect(out.matched.order_disagreements).toBe(0);
+  });
+
+  it('lots whose id modulo N equals the offset are checked: 53 pairs each, and the real evaluator agrees with what the lot row decodes to and with itself in reverse order', () => {
+    const out = mz().materializeBatch([row(1), row(2), row(3), row(4)], real(2, 1)); // ids 1 and 3
+    expect(out.matched.equivalence_checked).toBe(2 * 53);
+    expect(out.matched.equivalence_disagreements).toBe(0);
+    expect(out.matched.order_disagreements).toBe(0);
+  });
+
+  it('a gated lot is not audited (there is no evaluator result to compare)', () => {
+    const out = mz().materializeBatch([row(1, { zoning_is_ambiguous: true })], real(1, 0));
+    expect(out.matched.equivalence_checked).toBe(0);
+  });
+
+  it('a stored result that disagrees with the direct evaluator is counted (a stub whose cached answer drifts from the direct one)', () => {
+    const cached = (): Json => ({ status: 'value', value: 10, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: [], applied: [], inputs: ['zone', 'exception'], trace: [] });
+    const direct = (): Json => ({ ...cached(), value: 11 });
+    const env = mkEnv({ audit: { everyNth: 1, offset: 0 }, hooks: { evaluate: cached, evaluateDirect: direct, permitted: () => ({ status: 'permitted', winners: [] }) } });
+    const out = mz().materializeBatch([row(1)], env);
+    expect(out.matched.equivalence_checked).toBe(53);
+    expect(out.matched.equivalence_disagreements).toBe(53);
+  });
+
+  it('a result that depends on candidate order is counted (a stub that answers by the first candidate)', () => {
+    const first = (_lot: Json, _t: string, cands: Json[]): Json => ({ status: 'value', value: (cands[0] as Json).unit_id.length, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: [], applied: [], inputs: ['zone', 'exception'], trace: [] });
+    const env = mkEnv({ audit: { everyNth: 1, offset: 0 }, hooks: { evaluate: first, evaluateDirect: first, permitted: () => ({ status: 'permitted', winners: [] }) } });
+    const out = mz().materializeBatch([row(1)], env);
+    expect(out.matched.order_disagreements).toBeGreaterThan(0);
+  });
+
+  it('an audit with a non-positive or non-integer N, or an offset outside [0, N), is refused', () => {
+    expect(() => mkEnv({ audit: { everyNth: 0, offset: 0 } })).toThrow(/everyNth/);
+    expect(() => mkEnv({ audit: { everyNth: 2.5, offset: 0 } })).toThrow(/everyNth/);
+    expect(() => mkEnv({ audit: { everyNth: 2, offset: 2 } })).toThrow(/offset/);
+  });
+});
+
+describe('Q-F / I13 and the winner-layer histogram: tallies the descriptor checks read', () => {
+  const stubWith = (reason: string | null): Json => mkEnv({ hooks: { evaluate: () => (reason === null
+    ? { status: 'value', value: 1, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: [], applied: [], inputs: ['zone', 'exception'], trace: [] }
+    : { status: 'not_evaluated', value: null, reason, losers: [], disclosures: [], applied: [], inputs: ['zone', 'exception'], trace: [] }), permitted: () => ({ status: 'permitted', winners: [] }) } });
+
+  it('counts a needs_user_input result on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, roof_type, pool, suite_wall_openings)', () => {
+    const bad = mz().materializeBatch([row(1)], stubWith('needs_user_input:has_secondary_suite'));
+    expect(bad.matched.scenario_axis_results).toBe(53);
+    for (const axis of ['existing_footprint_sqm', 'current_stories', 'lawfully_existing_status', 'roof_type', 'pool', 'suite_wall_openings']) {
+      expect(mz().materializeBatch([row(1)], stubWith(`needs_user_input:${axis}`)).matched.scenario_axis_results, axis).toBe(0);
+    }
+    expect(mz().materializeBatch([row(1)], stubWith(null)).matched.scenario_axis_results).toBe(0);
+  });
+
+  it('winner_layers counts the layer of each applies winner among the batch\'s representative results; results_by_status counts every one', () => {
+    const out = mz().materializeBatch([row(1)], mkEnv());
+    const total = Object.values(out.matched.winner_layers as Record<string, number>).reduce((a, b) => a + b, 0);
+    expect(total).toBe(repOf(out).filter((c) => c.winner_unit_id !== null).length);
+    expect(Object.values(out.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(53);
+    for (const k of Object.keys(out.matched.winner_layers)) expect(['base', 'overlay', 'exception', 'provincial']).toContain(k);
+  });
+});
+
+describe('the dictionary seed: a stored row under a fresh key with other content fails loud (collision), a stored identical row is reused', () => {
+  it('seeding a unit key with another unit id makes the batch that needs that unit throw', () => {
+    const env = mkEnv();
+    const probe = mz().materializeBatch([row(1)], mkEnv());
+    const u = (probe.rows.units as Json[])[0]!;
+    mz().seedDictionaries(env, { units: [{ unit_key: u.unit_key, unit_id: 'someone-else', regulation_id: 'x', layer: 'base' }], texts: [] });
+    expect(() => mz().materializeBatch([row(1)], env)).toThrow(/collision/);
+  });
+  it('seeding the true rows changes nothing: the batch emits the same rows', () => {
+    const env = mkEnv();
+    const probe = mz().materializeBatch([row(1)], mkEnv());
+    mz().seedDictionaries(env, { units: probe.rows.units, texts: probe.rows.texts });
+    expect(JSON.stringify(mz().materializeBatch([row(1)], env).rows)).toBe(JSON.stringify(probe.rows));
   });
 });

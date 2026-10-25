@@ -1,0 +1,20 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "bylaw_resolution_lots",
+      "capture": "standalone.forced.json",
+      "why": "POST docs/reports/golden/resolve_bylaws/post/standalone.forced.json (Layer 2 retake 2026-10-24, R-DP delete_reinsert bracket in recapture.json with the descriptor force_full env, CHAT-118.Q-114b / CHAT-127): ingestor-forced-cohort.js deleted the first 20 ungated lot rows by parcel_id and the step re-inserted all 20 (records_new 20, cohort healed, post-restore matches the before-image). resolve_bylaws writes three tables, so the step-level counters attribute this capture to bylaw_resolution_lots only through this target: the bracket touches lot rows only, and the two dictionaries already hold every key the 20 lots cite, so their guarded upserts write nothing (the forced rerun-zero proof shows 0 rows on all three tables). Summary counters, no count_path (Spec 124a R-BR: absent count_path reads the summary counters)."
+    },
+    {
+      "table": "bylaw_resolution_units",
+      "capture": "standalone.json",
+      "why": "POST docs/reports/golden/resolve_bylaws/post/standalone.json (Layer 2 retake 2026-10-24 22:06, recapture.json bracket: the descriptor recovery.reset TRUNCATE of all three tables, then the harness with the force_full env, CHAT-127): run 1 starts from empty tables and rebuilds every row, so every one of the 992 bylaw_resolution_units rows in the capture's table_state was written by this run (records_new 440,093 counts the lot rows of the same run). Summary counters, no count_path (Spec 124a R-BR; CHAT-128.L2-COH-1): the step emits no int per-table count, and the attribution rests on the TRUNCATE bracket plus table_state, stated here for review."
+    },
+    {
+      "table": "bylaw_resolution_texts",
+      "capture": "standalone.json",
+      "why": "POST docs/reports/golden/resolve_bylaws/post/standalone.json (Layer 2 retake 2026-10-24 22:06, recapture.json bracket: the descriptor recovery.reset TRUNCATE of all three tables, then the harness with the force_full env, CHAT-127): run 1 starts from empty tables and rebuilds every row, so every one of the 2,840 bylaw_resolution_texts rows in the capture's table_state was written by this run (records_new 440,093 counts the lot rows of the same run). Summary counters, no count_path (Spec 124a R-BR; CHAT-128.L2-COH-1): the step emits no int per-table count, and the attribution rests on the TRUNCATE bracket plus table_state, stated here for review."
+    }
+  ]
+}

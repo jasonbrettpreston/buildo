@@ -213,6 +213,10 @@ function evidenceOf(result, map, { winnerLayer = null } = {}) {
   if (result && result.winner) {
     return { evidence_kind: winnerLayer === 'provincial' ? 'provincial' : 'clause', evidence_ref: splitRef(result.winner).reg };
   }
+  // M-60 agreeing worlds (CHAT-115.L2-EVID-1): no single winner, but when every applied clause sits in one regulation, that regulation is
+  // the evidence; the winner stays empty. Clauses in several regulations stay uncited (winner_evidence_violations still counts them).
+  const regs = result && Array.isArray(result.applied) ? [...new Set(result.applied.map((u) => splitRef(u).reg))] : [];
+  if (regs.length === 1) return { evidence_kind: winnerLayer === 'provincial' ? 'provincial' : 'clause', evidence_ref: regs[0] };
   return { evidence_kind: null, evidence_ref: null };
 }
 
@@ -406,20 +410,7 @@ function classLot(base, { structure, classKey, vector }) {
   };
 }
 
-/** Spec 134 §5: a gated result is shared by every lot with the same gate: its key is the structure, target and full status text. */
-function gatedCellKey(scope, statusTextValue) {
-  if (!scope || typeof scope.structure !== 'string' || typeof scope.target !== 'string') throw new TypeError('gatedCellKey: scope must be {structure, target}');
-  if (typeof statusTextValue !== 'string' || !statusTextValue.startsWith(NOT_EVALUATED_PREFIX)) throw new TypeError('gatedCellKey: a gated key is made from a not_evaluated:<code> status');
-  return { cell_id: sha256Hex(`gated\nstructure\t${scope.structure}\ntarget\t${scope.target}\nstatus\t${statusTextValue}`) };
-}
-
-/** Spec 134 §3: the candidate set once; sha256 of the sorted unique unit ids, one per line. */
-function signatureId(unitIds) {
-  if (!Array.isArray(unitIds)) throw new TypeError('signatureId: unitIds must be an array');
-  return sha256Hex([...new Set(unitIds)].sort().join('\n'));
-}
-
-/** R-JA: the pointer order, the (structure, target) pairs of layer2-scope.json in file order. */
+/** CHAT-80.QP: the array order of a lot row, the (structure, target) pairs of layer2-scope.json in file order. */
 function scopePairs(scope) {
   if (!scope || !Array.isArray(scope.structures) || !scope.targets) throw new TypeError('scopePairs: scope must be layer2-scope.json');
   return scope.structures.flatMap((structure) => {
@@ -428,66 +419,53 @@ function scopePairs(scope) {
   });
 }
 
-/** R-JA: profile_id = sha256 of the sorted `<structure>\t<target>\t<cell_id>` lines of the lot, independent of entry order. */
-function profileKey(entries) {
-  if (!Array.isArray(entries)) throw new TypeError('profileKey: entries must be [{structure, target, cell_id}]');
-  return sha256Hex(entries.map((e) => `${e.structure}\t${e.target}\t${e.cell_id}`).sort().join('\n'));
-}
-
-/** R-JA: the pointers column: one 32-byte sha256 digest per scope pair, in scope order. Every pair exactly once. */
-function packPointers(pairs, entries) {
-  const byKey = new Map();
-  for (const e of entries) {
-    if (!e || typeof e.cell_id !== 'string' || !SHA256_HEX.test(e.cell_id)) throw new TypeError(`packPointers: cell_id ${JSON.stringify(e && e.cell_id)} is not a hex sha256`);
-    const k = `${e.structure}\t${e.target}`;
-    if (byKey.has(k)) throw new Error(`packPointers: duplicate entry ${k}`);
-    byKey.set(k, e.cell_id);
-  }
-  const known = new Set(pairs.map((p) => `${p.structure}\t${p.target}`));
-  for (const k of byKey.keys()) if (!known.has(k)) throw new Error(`packPointers: entry ${k} is not in scope`);
-  const parts = pairs.map((p) => {
-    const id = byKey.get(`${p.structure}\t${p.target}`);
-    if (id === undefined) throw new Error(`packPointers: missing entry ${p.structure}\t${p.target}`);
-    return Buffer.from(id, 'hex');
-  });
-  return Buffer.concat(parts);
-}
-
-/** R-JA: the inverse of packPointers. The byte length must be exactly 32 per pair. */
-function unpackPointers(buf, pairs) {
-  if (!Buffer.isBuffer(buf) || buf.length !== 32 * pairs.length) throw new Error(`unpackPointers: length ${buf && buf.length} is not 32 x ${pairs.length}`);
-  return pairs.map((p, i) => ({ structure: p.structure, target: p.target, cell_id: buf.subarray(32 * i, 32 * (i + 1)).toString('hex') }));
-}
-
 const FIELD_SEP = '\u001f';
 const ITEM_SEP = '\u001e';
-const KEY_SEP = '\u001d';
-/** One value in the canonical text of a row (I14): null is empty, booleans t / f, bytea hex, arrays joined by U+001E, objects as sorted key:value. */
-function canonicalValue(v) {
+
+/**
+ * Q-I: a jsonb value as Postgres prints it (`::text`), so SQL can recompute row_sha with no custom serializer: object keys by
+ * length then bytes, `", "` between members and `": "` after a key, arrays in order, JSON string escapes. Pure; verified against
+ * a read-only `SELECT $1::jsonb::text` in the capture queue.
+ */
+function jsonbText(v) {
+  if (v === null) return 'null';
+  if (typeof v === 'string') return JSON.stringify(v);
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v)) return `[${v.map(jsonbText).join(', ')}]`;
+  if (typeof v === 'object') {
+    const keys = Object.keys(v).sort((x, y) => x.length - y.length || Buffer.compare(Buffer.from(x), Buffer.from(y)));
+    return `{${keys.map((k) => { if (v[k] === undefined) throw new TypeError(`jsonbText: undefined at key ${k}`); return `${JSON.stringify(k)}: ${jsonbText(v[k])}`; }).join(', ')}}`;
+  }
+  throw new TypeError(`jsonbText: cannot render ${typeof v}`);
+}
+
+/** One value in the canonical text of a row (I14): null is empty, booleans t / f, bytea hex, text[] items joined by U+001E, jsonb as its ::text. */
+function canonicalValue(v, kind) {
   if (v === null || v === undefined) return '';
+  if (kind === 'jsonb') return jsonbText(v);
   if (typeof v === 'boolean') return v ? 't' : 'f';
   if (Buffer.isBuffer(v)) return v.toString('hex');
-  if (Array.isArray(v)) return v.map(canonicalValue).join(ITEM_SEP);
-  if (typeof v === 'object') return Object.keys(v).sort().map((k) => `${k}:${canonicalValue(v[k])}`).join(KEY_SEP);
+  if (Array.isArray(v)) return v.map((x) => canonicalValue(x)).join(ITEM_SEP);
+  if (typeof v === 'object') throw new TypeError('canonicalValue: an object column must be declared kind "jsonb" (it is never rendered two ways)');
   return String(v);
 }
 /**
- * Spec 134 §3 / I14: the exact text a row hash covers: the listed result columns in order, joined by U+001F. chain_run_id, the
- * two versions and timestamps are outside any list (the write guard's own exclusions). The SQL recompute (part B) renders
- * the same text. A listed column the row lacks throws: a result column is never silently absent.
+ * Spec 134 §3 / I14: the exact text a row hash covers: the listed result columns in order, joined by U+001F. `kinds` names the
+ * jsonb columns. chain_run_id, the two versions and timestamps are outside any list (the write guard's own exclusions). The SQL
+ * recompute (part B) renders the same text for every table (Q-I). A listed column the row lacks throws.
  */
-function canonicalText(row, columns) {
+function canonicalText(row, columns, kinds = {}) {
   return columns.map((c) => {
     if (!Object.prototype.hasOwnProperty.call(row, c)) throw new Error(`canonicalText: row has no column ${c}`);
-    return canonicalValue(row[c]);
+    return canonicalValue(row[c], kinds[c]);
   }).join(FIELD_SEP);
 }
-function rowSha(row, columns) {
-  return sha256Hex(canonicalText(row, columns));
+function rowSha(row, columns, kinds = {}) {
+  return sha256Hex(canonicalText(row, columns, kinds));
 }
 /** I14: the stored row_sha equals the recomputed one. */
-function verifyRowSha(row, columns) {
-  return row.row_sha === rowSha(row, columns);
+function verifyRowSha(row, columns, kinds = {}) {
+  return row.row_sha === rowSha(row, columns, kinds);
 }
 
 const BYTES_PER_MB = 1048576;
@@ -523,12 +501,8 @@ module.exports = {
   CLASS_INPUT_PATHS,
   UNSET_LOT_INPUTS,
   classLot,
-  gatedCellKey,
-  signatureId,
   scopePairs,
-  profileKey,
-  packPointers,
-  unpackPointers,
+  jsonbText,
   canonicalText,
   rowSha,
   verifyRowSha,

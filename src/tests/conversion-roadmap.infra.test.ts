@@ -205,8 +205,8 @@ describe('measured counts — independently re-derived, not transcribed from the
     // slug its own file (scripts/enrich-coa-zoning.js); the slug total is unchanged (68).
     // 67 -> 65 files / 68 -> 66 slugs at the C6 rulings (2026-10-19): observe_chain (R-EJ, runner_owned) and
     // reclassify_all (R-EK, retired) became declared exemptions, so neither is convertible any more.
-    expect(remaining.length + doneFiles.length).toBe(65);
-    expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(66);
+    expect(remaining.length + doneFiles.length).toBe(66); // 65 -> 66: resolve_bylaws, a NET-NEW pending step (Spec 134 ①, 2026-10-22)
+    expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(67);
   });
 
   it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=12 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
@@ -337,7 +337,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 11 -> 12 at C6-1 assert_network_health ① (2026-10-19): its census row flipped batch "C6" -> "pending" (archetype ASSERT re-derived at PH-0, R-AO). Returns to 11 at its ③.
     // 12 -> 13 at C6-1 assert_staleness ① (2026-10-19): its census row flipped batch "C6" -> "pending" (archetype ASSERT re-derived at PH-0, R-AO). Returns to 12 at its ③.
     // 13 -> 14 at C6-1 assert_lifecycle_phase_distribution ① (2026-10-19): its census row flipped batch "C6" -> "pending" (archetype ASSERT re-derived at PH-0, R-AO). Returns to 13 at its ③.
-    expect(pendingBatch.size).toBe(14);
+    expect(pendingBatch.size).toBe(15); // 14 -> 15: resolve_bylaws, net-new, batch pending (Spec 134 ①)
     // 36 -> 35 at phase-4 wave 1 commit ① (permits) and 35 -> 34 at coa ①: each row left C6 (R-AO retention keeps it out).
     // 34 -> 33 at wave-4 assert_coa_freshness ①; 33 -> 32 at wave-4 classify_coa_scope ①; 32 -> 31 at wave-4 link_coa_to_parcels ①; 31 -> 30 at the enrich pair ① (C6 counts FILES: the shared scripts/enrich-permits.js left it once; enrich-coa-zoning.js was born pending).
     // 30 -> 29 at wave-4 classify_coa_trades ①.
@@ -547,7 +547,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // Spec 124 R-AN (2026-09-15): the converted count is DERIVED from
     // converted.json, never retyped per cutover.
     const convertedSlugCount = CONVERTED.length;
-    expect(totalSlugs).toBe(71); // 68 -> 69: load_coa_notices (Spec 129, 2026-10-07); 69 -> 71: load_bylaw_map_areas + link_parcel_abutments (H6, 2026-10-16)
+    expect(totalSlugs).toBe(72); // 71 -> 72: resolve_bylaws (Spec 134 ①, 2026-10-22); // 68 -> 69: load_coa_notices (Spec 129, 2026-10-07); 69 -> 71: load_bylaw_map_areas + link_parcel_abutments (H6, 2026-10-16)
     expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
     // batch2 P1.1 cutover (2026-09-18): CONVERTED grew 14->15 (assert_parcel_sanity);
     // batch-2 row 2.1 cutover (2026-09-18): CONVERTED grew 15->16 (enrich_ravines),

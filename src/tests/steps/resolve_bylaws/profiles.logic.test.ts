@@ -1,11 +1,10 @@
 // SPEC LINK: docs/specs/01-pipeline/134_resolve_bylaws.md §3 (row shape, write guard, lineage: row_sha), §6 (storage budget), §7 I14;
-//            docs/specs/01-pipeline/124a_step_standard_policy_appendix.md R-JA (form C: the lot link row points at its per-target
-//            results through ONE profile key; operator CHAT-69.Q1 `2026-10-22-batch-z6`), R-IN (cell_id), R-IW (sha256 recipe)
-// Handbook: Spec 132 §x-rulings.4 (R-JA); Spec 132 §core.9 (R-W: compute is pure); Spec 133 §m.112 (k3_a: Layer 2 storage <= 10 % of the DB)
+//            docs/specs/01-pipeline/124a_step_standard_policy_appendix.md R-IW (sha256 recipe)
+// Handbook: Spec 132 §core.9 (R-W: compute is pure); Spec 133 §m.112 (k3_a: Layer 2 storage <= 10 % of the DB); operator CHAT-80.QP (option 4)
 //
-// The pure pieces of form C and the row lineage in scripts/lib/bylaw-resolution.js: profileKey, packPointers / unpackPointers,
-// gatedCellKey, signatureId, canonicalText / rowSha / verifyRowSha (I14), storageWithinBudget (Spec 134 §6).
-// RED FIRST (Spec 124 R-BA): run before the functions existed (docs/reports/red-evidence/resolve_bylaws/step-red.json).
+// The pure pieces of the row lineage in scripts/lib/bylaw-resolution.js that survive option 4: scopePairs (the array order), canonicalText /
+// rowSha / verifyRowSha (I14), jsonbText (Q-I), storageWithinBudget (Spec 134 §6). Profiles, pointers, gated cell keys, signature ids and set ids
+// were removed by CHAT-80.QP (their tests with them).
 
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -22,79 +21,11 @@ const sha = (s: string): string => crypto.createHash('sha256').update(s).digest(
 
 /** The scope pairs in scope order: structures in declared order, each structure's targets in declared (sorted) order. */
 const PAIRS: Array<{ structure: string; target: string }> = (SCOPE.structures as string[]).flatMap((structure) => (SCOPE.targets[structure] as string[]).map((target) => ({ structure, target })));
-const cellOf = (p: { structure: string; target: string }): string => sha(`cell\t${p.structure}\t${p.target}`);
 
 describe('R-JA: scopePairs — the pointer order is the scope seed order', () => {
   it('lists every (structure, target) of layer2-scope.json, structures first, 53 today', () => {
     expect(rb().scopePairs(SCOPE)).toEqual(PAIRS);
     expect(PAIRS).toHaveLength(53);
-  });
-});
-
-describe('R-JA: the profile key and the pointer bytes', () => {
-  const entries = (): Array<Json> => PAIRS.map((p) => ({ ...p, cell_id: cellOf(p) }));
-
-  it('profile_id = sha256 of the sorted "<structure>\\t<target>\\t<cell_id>" lines, independent of entry order', () => {
-    const lines = entries().map((e) => `${e.structure}\t${e.target}\t${e.cell_id}`).sort().join('\n');
-    expect(rb().profileKey(entries())).toBe(sha(lines));
-    expect(rb().profileKey([...entries()].reverse())).toBe(rb().profileKey(entries()));
-  });
-
-  it('a different result for one target gives a different profile; the same lines give the same', () => {
-    const a = entries();
-    const b = entries();
-    b[3] = { ...b[3], cell_id: sha('another') };
-    expect(rb().profileKey(a)).not.toBe(rb().profileKey(b));
-    expect(rb().profileKey(a)).toBe(rb().profileKey(entries()));
-  });
-
-  it('packPointers writes 32 bytes per pair in scope order (53 x 32 = 1,696 bytes) and unpack restores the entries', () => {
-    const buf: Buffer = rb().packPointers(PAIRS, entries());
-    expect(Buffer.isBuffer(buf)).toBe(true);
-    expect(buf.length).toBe(53 * 32);
-    expect(buf.subarray(0, 32).toString('hex')).toBe(cellOf(PAIRS[0]!));
-    expect(buf.subarray(32 * 52).toString('hex')).toBe(cellOf(PAIRS[52]!));
-    expect(rb().unpackPointers(buf, PAIRS)).toEqual(entries());
-  });
-
-  it('packing does not depend on the entry order; a missing, duplicate or foreign entry throws', () => {
-    expect(rb().packPointers(PAIRS, [...entries()].reverse()).equals(rb().packPointers(PAIRS, entries()))).toBe(true);
-    expect(() => rb().packPointers(PAIRS, entries().slice(1))).toThrow(/missing/);
-    expect(() => rb().packPointers(PAIRS, [...entries(), entries()[0]])).toThrow(/duplicate/);
-    expect(() => rb().packPointers(PAIRS, [...entries().slice(1), { structure: 'principal', target: 'not_a_target', cell_id: sha('x') }])).toThrow(/not in scope|missing/);
-  });
-
-  it('a cell_id that is not a hex sha256 is refused; unpack refuses bytes of the wrong length', () => {
-    const bad = entries();
-    bad[0] = { ...bad[0], cell_id: 'nothex' };
-    expect(() => rb().packPointers(PAIRS, bad)).toThrow(/sha256/);
-    expect(() => rb().unpackPointers(Buffer.alloc(31), PAIRS)).toThrow(/length/);
-  });
-});
-
-describe('Spec 134 §5: the gated cell key — a gated result is shared by every lot with the same gate', () => {
-  it('depends on structure, target and the full status text only', () => {
-    const k = (structure: string, target: string, status: string): string => rb().gatedCellKey({ structure, target }, status).cell_id;
-    expect(k('principal', 'height_m', 'not_evaluated:ambiguous_zone')).toMatch(/^[0-9a-f]{64}$/);
-    expect(k('principal', 'height_m', 'not_evaluated:ambiguous_zone')).toBe(k('principal', 'height_m', 'not_evaluated:ambiguous_zone'));
-    expect(k('principal', 'height_m', 'not_evaluated:ambiguous_zone')).not.toBe(k('garden_suite', 'height_m', 'not_evaluated:ambiguous_zone'));
-    expect(k('principal', 'height_m', 'not_evaluated:ambiguous_zone')).not.toBe(k('principal', 'fsi', 'not_evaluated:ambiguous_zone'));
-    expect(k('principal', 'height_m', 'not_evaluated:exception_not_authored:900.3.10(1)')).not.toBe(k('principal', 'height_m', 'not_evaluated:exception_not_authored:900.3.10(2)'));
-  });
-
-  it('never collides with a computed cell key for the same structure and target (a different line set)', () => {
-    const computed = rb().cellKey({ zone: 'RD', exception: null }, [], { structure: 'principal', target: 'height_m' }).cell_id;
-    expect(rb().gatedCellKey({ structure: 'principal', target: 'height_m' }, 'not_evaluated:ambiguous_zone').cell_id).not.toBe(computed);
-  });
-});
-
-describe('Spec 134 §3: signature id — the candidate set once (R-IN: zone and exception fix it at one table_version)', () => {
-  it('is sha256 of the sorted unit ids, one per line, independent of order and duplicates', () => {
-    const ids = ['b#1', 'a#2', 'c#3'];
-    expect(rb().signatureId(ids)).toBe(sha(['a#2', 'b#1', 'c#3'].join('\n')));
-    expect(rb().signatureId([...ids].reverse())).toBe(rb().signatureId(ids));
-    expect(rb().signatureId([...ids, 'a#2'])).toBe(rb().signatureId(ids));
-    expect(rb().signatureId(ids)).not.toBe(rb().signatureId(['a#2', 'b#1']));
   });
 });
 
@@ -140,3 +71,23 @@ describe('Spec 134 §6, R-JA: the storage budget check (resolve_bylaws_storage_b
     for (const m of [-1, NaN, null, undefined]) expect(() => rb().storageWithinBudget(m, 5), String(m)).toThrow(/bytes/);
   });
 });
+
+describe('Q-I: the canonical text renders a jsonb column as its Postgres ::text so SQL can recompute row_sha for every table', () => {
+  it('jsonbText: keys by length then bytes, ", " and ": " separators, arrays in order, strings JSON-escaped, null as null', () => {
+    expect(rb().jsonbText({ b: 1, a: [1, 'x'], cc: null, d: { z: true } })).toBe('{"a": [1, "x"], "b": 1, "d": {"z": true}, "cc": null}');
+    expect(rb().jsonbText([])).toBe('[]');
+    expect(rb().jsonbText({})).toBe('{}');
+    expect(rb().jsonbText('a"b')).toBe('"a\\"b"');
+    expect(rb().jsonbText([{ unit_id: 'u', dropped_by: 'x', by: null }])).toBe('[{"by": null, "unit_id": "u", "dropped_by": "x"}]');
+  });
+
+  it('canonicalText takes a kinds map: a jsonb column is its jsonbText (an array too), a plain array is a text[] joined by U+001E', () => {
+    const row = { a: [{ k: 1 }], b: ['p', 'q'], c: { y: 1, x: 2 } };
+    expect(rb().canonicalText(row, ['a', 'b', 'c'], { a: 'jsonb', c: 'jsonb' })).toBe(['[{"k": 1}]', 'p\u001eq', '{"x": 2, "y": 1}'].join('\u001f'));
+  });
+
+  it('a jsonb column without its kind is refused when its value is an object (never rendered two ways)', () => {
+    expect(() => rb().canonicalText({ c: { y: 1 } }, ['c'])).toThrow(/jsonb/);
+  });
+});
+

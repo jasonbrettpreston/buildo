@@ -669,13 +669,24 @@ interface ComputePair {
   descriptor: string;
 }
 
+/**
+ * The step files a compute module may pair with: every chain step file (§5.2 corpus) plus every
+ * manifest.scripts[*].file entry — a step ① carries its manifest entry before chain placement ③
+ * (Q-LAND-3, operator 2026-10-23, held pending CHAT-98 import). A module with no manifest entry stays unpaired.
+ */
+function stepFilesOf(m: Manifest): string[] {
+  const files = new Set<string>();
+  for (const slugs of Object.values(m.chains)) for (const slug of slugs) files.add(String(m.scripts[slug]?.file ?? ''));
+  for (const entry of Object.values(m.scripts)) files.add(String(entry?.file ?? ''));
+  return [...files].filter((f) => f.endsWith('.js'));
+}
+
 /** Every compute module paired with the manifest step file (and descriptor) of the same basename. */
-function computePairs(): ComputePair[] {
-  const dir = path.join(REPO_ROOT, COMPUTE_DIR);
+function computePairs(dir: string = path.join(REPO_ROOT, COMPUTE_DIR), stepFiles: string[] = stepFilesOf(manifest)): ComputePair[] {
   if (!fs.existsSync(dir)) return [];
   const out: ComputePair[] = [];
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.js'))) {
-    const step = ALL_STEP_FILES.find((s) => path.basename(s) === f);
+    const step = stepFiles.find((s) => path.basename(s) === f);
     if (!step) continue;
     out.push({ compute: `${COMPUTE_DIR}/${f}`, step, descriptor: `${step.slice(0, -3)}.descriptor.json` });
   }
@@ -694,6 +705,27 @@ describe('§5.5 compute shape — dispatch table ≡ declared checks', () => {
       COMPUTE_PAIRS.length,
       `${modules.length} compute module(s) but ${COMPUTE_PAIRS.length} paired to a manifest step file by basename`,
     ).toBe(modules.length);
+  });
+
+  // Q-LAND-3 (operator 2026-10-23, held pending CHAT-98 import): a step ① that carries its compute module (R-IX) pairs
+  // through its manifest.scripts entry before chain placement ③; a module with no manifest entry at all still fails.
+  it('Q-LAND-3: a chain-less ① (resolve_bylaws, manifest.scripts only) pairs through its manifest.scripts entry', () => {
+    expect(ALL_STEP_FILES, 'resolve_bylaws is not chain-placed yet (③)').not.toContain('scripts/resolve-bylaws.js');
+    expect(COMPUTE_PAIRS.map((p) => p.compute)).toContain('scripts/lib/compute/resolve-bylaws.js');
+  });
+  it('Q-LAND-3 NEGATIVE: a compute module with no manifest entry at all (temp fixture) stays unpaired, so the corpus count fails', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'compute-pairs-'));
+    try {
+      fs.mkdirSync(path.join(tmp, 'compute'));
+      fs.writeFileSync(path.join(tmp, 'compute', 'paired-step.js'), 'module.exports = { checks: {} };\n');
+      fs.writeFileSync(path.join(tmp, 'compute', 'orphan-step.js'), 'module.exports = { checks: {} };\n');
+      const fixtureManifest = { scripts: { paired_step: { file: 'scripts/paired-step.js' } }, chains: {} };
+      const pairs = computePairs(path.join(tmp, 'compute'), stepFilesOf(fixtureManifest));
+      expect(pairs.map((p) => p.step)).toEqual(['scripts/paired-step.js']);
+      expect(pairs.length, 'the corpus-count assertion above would fail: 2 modules, 1 paired').not.toBe(2);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   for (const pair of COMPUTE_PAIRS) {

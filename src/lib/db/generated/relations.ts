@@ -1,44 +1,71 @@
 import { relations } from "drizzle-orm/relations";
-import { usersInAuth, profiles, permits, costEstimates, entities, entityContacts, entityProjects, productGroups, leadProducts, trades, leadTrades, neighbourhoods, neighbourhoodBuildNorms, neighbourhoodStoreyNorms, buildingFootprints, parcelBuildings, parcels, permitHistory, syncRuns, permitParcels, permitPhaseTransitions, permitTrades, tradeMappingRules, wsibRegistry, userProfiles, leadViews, subscribeNonces, deviceTokens, trackedProjects, notifications, notificationDispatches, adminWatchlist, adminAuditLog, adminBackupCodes, addressPoints, parcelAddressPoints, supplierProducts, suppliers, supplierTrades, tradeProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements, parcelAbutments } from "./schema";
+import { usersInAuth, adminBackupCodes, trackedProjects, trades, tradeMappingRules, permits, permitParcels, parcels, productGroups, leadProducts, neighbourhoods, neighbourhoodStoreyNorms, costEstimates, bylawResolutionLots, permitTrades, neighbourhoodBuildNorms, adminAuditLog, entities, wsibRegistry, userProfiles, profiles, notifications, archetypeCostRates, parcelCostLines, adminWatchlist, notificationDispatches, permitHistory, syncRuns, entityProjects, leadViews, deviceTokens, subscribeNonces, entityContacts, buildingFootprints, parcelBuildings, leadTrades, permitPhaseTransitions, addressPoints, parcelAddressPoints, tradeProducts, suppliers, supplierTrades, supplierProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements, parcelAbutments } from "./schema";
 
-export const profilesRelations = relations(profiles, ({one}) => ({
+export const adminBackupCodesRelations = relations(adminBackupCodes, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
-		fields: [profiles.id],
+		fields: [adminBackupCodes.userId],
 		references: [usersInAuth.id]
 	}),
 }));
 
 export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
-	profiles: many(profiles),
-	userProfiles: many(userProfiles),
-	leadViews: many(leadViews),
-	subscribeNonces: many(subscribeNonces),
-	deviceTokens: many(deviceTokens),
-	trackedProjects: many(trackedProjects),
-	notifications: many(notifications),
-	notificationDispatches: many(notificationDispatches),
-	adminWatchlists: many(adminWatchlist),
-	adminAuditLogs: many(adminAuditLog),
 	adminBackupCodes: many(adminBackupCodes),
+	trackedProjects: many(trackedProjects),
+	adminAuditLogs: many(adminAuditLog),
+	userProfiles: many(userProfiles),
+	profiles: many(profiles),
+	notifications: many(notifications),
+	adminWatchlists: many(adminWatchlist),
+	notificationDispatches: many(notificationDispatches),
+	leadViews: many(leadViews),
+	deviceTokens: many(deviceTokens),
+	subscribeNonces: many(subscribeNonces),
 	leadViewEvents: many(leadViewEvents),
 	entitlements: many(entitlements),
 }));
 
-export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
+export const trackedProjectsRelations = relations(trackedProjects, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [trackedProjects.userId],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
+	trade: one(trades, {
+		fields: [tradeMappingRules.tradeId],
+		references: [trades.id]
+	}),
+}));
+
+export const tradesRelations = relations(trades, ({many}) => ({
+	tradeMappingRules: many(tradeMappingRules),
+	permitTrades: many(permitTrades),
+	leadTrades: many(leadTrades),
+	tradeProducts: many(tradeProducts),
+	supplierTrades: many(supplierTrades),
+	universalStreamTradeSignals: many(universalStreamTradeSignals),
+}));
+
+export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
 	permit: one(permits, {
-		fields: [costEstimates.permitNum],
+		fields: [permitParcels.permitNum],
 		references: [permits.permitNum]
+	}),
+	parcel: one(parcels, {
+		fields: [permitParcels.parcelId],
+		references: [parcels.id]
 	}),
 }));
 
 export const permitsRelations = relations(permits, ({one, many}) => ({
-	costEstimates: many(costEstimates),
-	entityProjects: many(entityProjects),
-	permitHistories: many(permitHistory),
 	permitParcels: many(permitParcels),
-	permitPhaseTransitions: many(permitPhaseTransitions),
+	costEstimates: many(costEstimates),
 	permitTrades: many(permitTrades),
+	permitHistories: many(permitHistory),
+	entityProjects: many(entityProjects),
 	leadViews: many(leadViews),
+	permitPhaseTransitions: many(permitPhaseTransitions),
 	permitProducts: many(permitProducts),
 	neighbourhood: one(neighbourhoods, {
 		fields: [permits.neighbourhoodId],
@@ -46,28 +73,17 @@ export const permitsRelations = relations(permits, ({one, many}) => ({
 	}),
 }));
 
-export const entityContactsRelations = relations(entityContacts, ({one}) => ({
-	entity: one(entities, {
-		fields: [entityContacts.entityId],
-		references: [entities.id]
+export const parcelsRelations = relations(parcels, ({many}) => ({
+	permitParcels: many(permitParcels),
+	bylawResolutionLots: many(bylawResolutionLots),
+	parcelBuildings: many(parcelBuildings),
+	parcelAddressPoints: many(parcelAddressPoints),
+	leadParcels: many(leadParcels),
+	parcelAbutments_neighbourId: many(parcelAbutments, {
+		relationName: "parcelAbutments_neighbourId_parcels_id"
 	}),
-}));
-
-export const entitiesRelations = relations(entities, ({many}) => ({
-	entityContacts: many(entityContacts),
-	entityProjects: many(entityProjects),
-	wsibRegistries: many(wsibRegistry),
-	leadViews: many(leadViews),
-}));
-
-export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
-	entity: one(entities, {
-		fields: [entityProjects.entityId],
-		references: [entities.id]
-	}),
-	permit: one(permits, {
-		fields: [entityProjects.permitNum],
-		references: [permits.permitNum]
+	parcelAbutments_parcelId: many(parcelAbutments, {
+		relationName: "parcelAbutments_parcelId_parcels_id"
 	}),
 }));
 
@@ -80,38 +96,9 @@ export const leadProductsRelations = relations(leadProducts, ({one}) => ({
 
 export const productGroupsRelations = relations(productGroups, ({many}) => ({
 	leadProducts: many(leadProducts),
+	tradeProducts: many(tradeProducts),
 	supplierProducts: many(supplierProducts),
-	tradeProducts: many(tradeProducts),
 	permitProducts: many(permitProducts),
-}));
-
-export const leadTradesRelations = relations(leadTrades, ({one}) => ({
-	trade: one(trades, {
-		fields: [leadTrades.tradeId],
-		references: [trades.id]
-	}),
-}));
-
-export const tradesRelations = relations(trades, ({many}) => ({
-	leadTrades: many(leadTrades),
-	permitTrades: many(permitTrades),
-	tradeMappingRules: many(tradeMappingRules),
-	supplierTrades: many(supplierTrades),
-	tradeProducts: many(tradeProducts),
-	universalStreamTradeSignals: many(universalStreamTradeSignals),
-}));
-
-export const neighbourhoodBuildNormsRelations = relations(neighbourhoodBuildNorms, ({one}) => ({
-	neighbourhood: one(neighbourhoods, {
-		fields: [neighbourhoodBuildNorms.neighbourhoodId],
-		references: [neighbourhoods.id]
-	}),
-}));
-
-export const neighbourhoodsRelations = relations(neighbourhoods, ({many}) => ({
-	neighbourhoodBuildNorms: many(neighbourhoodBuildNorms),
-	neighbourhoodStoreyNorms: many(neighbourhoodStoreyNorms),
-	permits: many(permits),
 }));
 
 export const neighbourhoodStoreyNormsRelations = relations(neighbourhoodStoreyNorms, ({one}) => ({
@@ -121,31 +108,110 @@ export const neighbourhoodStoreyNormsRelations = relations(neighbourhoodStoreyNo
 	}),
 }));
 
-export const parcelBuildingsRelations = relations(parcelBuildings, ({one}) => ({
-	buildingFootprint: one(buildingFootprints, {
-		fields: [parcelBuildings.buildingId],
-		references: [buildingFootprints.id]
+export const neighbourhoodsRelations = relations(neighbourhoods, ({many}) => ({
+	neighbourhoodStoreyNorms: many(neighbourhoodStoreyNorms),
+	neighbourhoodBuildNorms: many(neighbourhoodBuildNorms),
+	permits: many(permits),
+}));
+
+export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
+	permit: one(permits, {
+		fields: [costEstimates.permitNum],
+		references: [permits.permitNum]
 	}),
+}));
+
+export const bylawResolutionLotsRelations = relations(bylawResolutionLots, ({one}) => ({
 	parcel: one(parcels, {
-		fields: [parcelBuildings.parcelId],
+		fields: [bylawResolutionLots.parcelId],
 		references: [parcels.id]
 	}),
 }));
 
-export const buildingFootprintsRelations = relations(buildingFootprints, ({many}) => ({
-	parcelBuildings: many(parcelBuildings),
+export const permitTradesRelations = relations(permitTrades, ({one}) => ({
+	permit: one(permits, {
+		fields: [permitTrades.permitNum],
+		references: [permits.permitNum]
+	}),
+	trade: one(trades, {
+		fields: [permitTrades.tradeId],
+		references: [trades.id]
+	}),
 }));
 
-export const parcelsRelations = relations(parcels, ({many}) => ({
-	parcelBuildings: many(parcelBuildings),
-	permitParcels: many(permitParcels),
-	parcelAddressPoints: many(parcelAddressPoints),
-	leadParcels: many(leadParcels),
-	parcelAbutments_neighbourId: many(parcelAbutments, {
-		relationName: "parcelAbutments_neighbourId_parcels_id"
+export const neighbourhoodBuildNormsRelations = relations(neighbourhoodBuildNorms, ({one}) => ({
+	neighbourhood: one(neighbourhoods, {
+		fields: [neighbourhoodBuildNorms.neighbourhoodId],
+		references: [neighbourhoods.id]
 	}),
-	parcelAbutments_parcelId: many(parcelAbutments, {
-		relationName: "parcelAbutments_parcelId_parcels_id"
+}));
+
+export const adminAuditLogRelations = relations(adminAuditLog, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [adminAuditLog.adminUid],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const wsibRegistryRelations = relations(wsibRegistry, ({one}) => ({
+	entity: one(entities, {
+		fields: [wsibRegistry.linkedEntityId],
+		references: [entities.id]
+	}),
+}));
+
+export const entitiesRelations = relations(entities, ({many}) => ({
+	wsibRegistries: many(wsibRegistry),
+	entityProjects: many(entityProjects),
+	leadViews: many(leadViews),
+	entityContacts: many(entityContacts),
+}));
+
+export const userProfilesRelations = relations(userProfiles, ({one, many}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [userProfiles.userId],
+		references: [usersInAuth.id]
+	}),
+	subscribeNonces: many(subscribeNonces),
+	leadViewEvents: many(leadViewEvents),
+}));
+
+export const profilesRelations = relations(profiles, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [profiles.id],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const notificationsRelations = relations(notifications, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [notifications.userId],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const parcelCostLinesRelations = relations(parcelCostLines, ({one}) => ({
+	archetypeCostRate: one(archetypeCostRates, {
+		fields: [parcelCostLines.archetype],
+		references: [archetypeCostRates.archetype]
+	}),
+}));
+
+export const archetypeCostRatesRelations = relations(archetypeCostRates, ({many}) => ({
+	parcelCostLines: many(parcelCostLines),
+}));
+
+export const adminWatchlistRelations = relations(adminWatchlist, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [adminWatchlist.adminUid],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const notificationDispatchesRelations = relations(notificationDispatches, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [notificationDispatches.userId],
+		references: [usersInAuth.id]
 	}),
 }));
 
@@ -164,56 +230,15 @@ export const syncRunsRelations = relations(syncRuns, ({many}) => ({
 	permitHistories: many(permitHistory),
 }));
 
-export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
-	permit: one(permits, {
-		fields: [permitParcels.permitNum],
-		references: [permits.permitNum]
-	}),
-	parcel: one(parcels, {
-		fields: [permitParcels.parcelId],
-		references: [parcels.id]
-	}),
-}));
-
-export const permitPhaseTransitionsRelations = relations(permitPhaseTransitions, ({one}) => ({
-	permit: one(permits, {
-		fields: [permitPhaseTransitions.permitNum],
-		references: [permits.permitNum]
-	}),
-}));
-
-export const permitTradesRelations = relations(permitTrades, ({one}) => ({
-	permit: one(permits, {
-		fields: [permitTrades.permitNum],
-		references: [permits.permitNum]
-	}),
-	trade: one(trades, {
-		fields: [permitTrades.tradeId],
-		references: [trades.id]
-	}),
-}));
-
-export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
-	trade: one(trades, {
-		fields: [tradeMappingRules.tradeId],
-		references: [trades.id]
-	}),
-}));
-
-export const wsibRegistryRelations = relations(wsibRegistry, ({one}) => ({
+export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
 	entity: one(entities, {
-		fields: [wsibRegistry.linkedEntityId],
+		fields: [entityProjects.entityId],
 		references: [entities.id]
 	}),
-}));
-
-export const userProfilesRelations = relations(userProfiles, ({one, many}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [userProfiles.userId],
-		references: [usersInAuth.id]
+	permit: one(permits, {
+		fields: [entityProjects.permitNum],
+		references: [permits.permitNum]
 	}),
-	subscribeNonces: many(subscribeNonces),
-	leadViewEvents: many(leadViewEvents),
 }));
 
 export const leadViewsRelations = relations(leadViews, ({one}) => ({
@@ -231,6 +256,13 @@ export const leadViewsRelations = relations(leadViews, ({one}) => ({
 	}),
 }));
 
+export const deviceTokensRelations = relations(deviceTokens, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [deviceTokens.userId],
+		references: [usersInAuth.id]
+	}),
+}));
+
 export const subscribeNoncesRelations = relations(subscribeNonces, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
 		fields: [subscribeNonces.userId],
@@ -242,52 +274,39 @@ export const subscribeNoncesRelations = relations(subscribeNonces, ({one}) => ({
 	}),
 }));
 
-export const deviceTokensRelations = relations(deviceTokens, ({one}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [deviceTokens.userId],
-		references: [usersInAuth.id]
+export const entityContactsRelations = relations(entityContacts, ({one}) => ({
+	entity: one(entities, {
+		fields: [entityContacts.entityId],
+		references: [entities.id]
 	}),
 }));
 
-export const trackedProjectsRelations = relations(trackedProjects, ({one}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [trackedProjects.userId],
-		references: [usersInAuth.id]
+export const parcelBuildingsRelations = relations(parcelBuildings, ({one}) => ({
+	buildingFootprint: one(buildingFootprints, {
+		fields: [parcelBuildings.buildingId],
+		references: [buildingFootprints.id]
+	}),
+	parcel: one(parcels, {
+		fields: [parcelBuildings.parcelId],
+		references: [parcels.id]
 	}),
 }));
 
-export const notificationsRelations = relations(notifications, ({one}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [notifications.userId],
-		references: [usersInAuth.id]
+export const buildingFootprintsRelations = relations(buildingFootprints, ({many}) => ({
+	parcelBuildings: many(parcelBuildings),
+}));
+
+export const leadTradesRelations = relations(leadTrades, ({one}) => ({
+	trade: one(trades, {
+		fields: [leadTrades.tradeId],
+		references: [trades.id]
 	}),
 }));
 
-export const notificationDispatchesRelations = relations(notificationDispatches, ({one}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [notificationDispatches.userId],
-		references: [usersInAuth.id]
-	}),
-}));
-
-export const adminWatchlistRelations = relations(adminWatchlist, ({one}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [adminWatchlist.adminUid],
-		references: [usersInAuth.id]
-	}),
-}));
-
-export const adminAuditLogRelations = relations(adminAuditLog, ({one}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [adminAuditLog.adminUid],
-		references: [usersInAuth.id]
-	}),
-}));
-
-export const adminBackupCodesRelations = relations(adminBackupCodes, ({one}) => ({
-	usersInAuth: one(usersInAuth, {
-		fields: [adminBackupCodes.userId],
-		references: [usersInAuth.id]
+export const permitPhaseTransitionsRelations = relations(permitPhaseTransitions, ({one}) => ({
+	permit: one(permits, {
+		fields: [permitPhaseTransitions.permitNum],
+		references: [permits.permitNum]
 	}),
 }));
 
@@ -306,20 +325,15 @@ export const addressPointsRelations = relations(addressPoints, ({many}) => ({
 	parcelAddressPoints: many(parcelAddressPoints),
 }));
 
-export const supplierProductsRelations = relations(supplierProducts, ({one}) => ({
+export const tradeProductsRelations = relations(tradeProducts, ({one}) => ({
 	productGroup: one(productGroups, {
-		fields: [supplierProducts.productId],
+		fields: [tradeProducts.productId],
 		references: [productGroups.id]
 	}),
-	supplier: one(suppliers, {
-		fields: [supplierProducts.supplierId],
-		references: [suppliers.id]
+	trade: one(trades, {
+		fields: [tradeProducts.tradeId],
+		references: [trades.id]
 	}),
-}));
-
-export const suppliersRelations = relations(suppliers, ({many}) => ({
-	supplierProducts: many(supplierProducts),
-	supplierTrades: many(supplierTrades),
 }));
 
 export const supplierTradesRelations = relations(supplierTrades, ({one}) => ({
@@ -333,14 +347,19 @@ export const supplierTradesRelations = relations(supplierTrades, ({one}) => ({
 	}),
 }));
 
-export const tradeProductsRelations = relations(tradeProducts, ({one}) => ({
+export const suppliersRelations = relations(suppliers, ({many}) => ({
+	supplierTrades: many(supplierTrades),
+	supplierProducts: many(supplierProducts),
+}));
+
+export const supplierProductsRelations = relations(supplierProducts, ({one}) => ({
 	productGroup: one(productGroups, {
-		fields: [tradeProducts.productId],
+		fields: [supplierProducts.productId],
 		references: [productGroups.id]
 	}),
-	trade: one(trades, {
-		fields: [tradeProducts.tradeId],
-		references: [trades.id]
+	supplier: one(suppliers, {
+		fields: [supplierProducts.supplierId],
+		references: [suppliers.id]
 	}),
 }));
 

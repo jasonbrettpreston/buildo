@@ -1,0 +1,101 @@
+# Red evidence: src/tests/quality.logic.test.ts Pipeline Registry counts vs resolve_bylaws added to PIPELINE_REGISTRY (src/components/FreshnessTimeline.tsx:57)
+# Source: ~/Buildo-scratch/int27/commit4.log lines 5872-5970 (integrate-27 pre-commit at c269288f with land27.patch applied)
+ ❯ src/tests/quality.logic.test.ts (184 tests | 2 failed) 75ms
+   × Pipeline Registry > has exactly 52 tracked pipelines 5ms
+     → expected [ 'permits', …(71) ] to have a length of 71 but got 72
+   × Pipeline Registry > groups are correct: 16 ingest, 23 link, 17 classify, 2 snapshot, 10 quality 0ms
+     → expected [ 'classify', 'classify', …(17) ] to have a length of 18 but got 19
+ ✓ src/tests/control-panel.logic.test.ts (33 tests) 36ms
+ ✓ src/tests/quality.infra.test.ts (100 tests) 69ms
+stdout | src/tests/steps/enrich_parcels/violations.test.ts > per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the corrected table) > claim #54 (phases discriminator, fold 13) — the live descriptor declares an incremental/deferred phase AND ≥1 invalidator; emptying the invalidators REDs the schema
+claim #54 phases discriminator (enrich_parcels): zoning:incremental, max_build:incremental, existing_structure:incremental, optimal_config:deferred
+
+ ✓ src/tests/conversion-roadmap.infra.test.ts (29 tests) 637ms
+ ✓ src/tests/steps/load_ravines/violations.test.ts (77 tests) 988ms
+ ✓ src/tests/steps/load_centreline/violations.test.ts (39 tests) 312ms
+ ✓ src/tests/steps/enrich_centreline/violations.test.ts (26 tests) 230ms
+ ✓ src/tests/steps/compute_parcel_cost_estimates/violations.test.ts (48 tests) 359ms
+ ✓ src/tests/steps/resolve_bylaws/resolution.logic.test.ts (44 tests) 49ms
+ ✓ src/tests/steps/enrich_parcels/violations.test.ts (114 tests) 1674ms
+   ✓ runEnrichPhase (LG-28) — logic tests against a fake pool > (f) EP-PHASE-DEADLINE inverse — a phase that finishes under the declared bound is never cancelled, and its timer is cleared so a LATER phase never inherits it 401ms
+ ✓ src/tests/sql-witness-fixture.logic.test.ts (30 tests) 353ms
+ ✓ src/tests/steps/assert_parcel_sanity/violations.test.ts (34 tests) 478ms
+ ✓ src/tests/steps/geocode_permits/violations.test.ts (15 tests) 236ms
+ ✓ src/tests/pipeline-advisory-lock.infra.test.ts (219 tests) 15ms
+ ✓ src/tests/control-panel.api.infra.test.ts (11 tests) 47ms
+ ✓ src/tests/steps/resolve_bylaws/materialize.logic.test.ts (44 tests) 1242ms
+ ✓ src/tests/steps/resolve_bylaws/migration.logic.test.ts (26 tests) 28ms
+ ✓ src/tests/steps/resolve_bylaws/violations.test.ts (25 tests) 299ms
+ ✓ src/tests/steps/resolve_bylaws/lotrow.logic.test.ts (15 tests) 6ms
+ ✓ src/tests/steps/assert_data_bounds/missing-table-guard.test.ts (6 tests) 233ms
+ ↓ src/tests/steps/resolve_bylaws/migration.db.test.ts (0 test)
+ ✓ src/tests/steps/compute_centroids/runtime.logic.test.ts (5 tests) 420ms
+ ✓ src/tests/control-panel-string-var.logic.test.ts (11 tests) 10ms
+ ✓ src/tests/bylaw-layer2-vocab.logic.test.ts (12 tests) 97ms
+ ✓ src/tests/funnel-audit-metric.logic.test.ts (17 tests) 15ms
+ ✓ src/tests/admin-route-guard.infra.test.ts (6 tests) 4ms
+ ✓ src/tests/steps/link_parcels/witness-fixture.logic.test.ts (1 test) 430ms
+ ✓ src/tests/steps/massing/witness-fixture.logic.test.ts (1 test) 311ms
+ ✓ src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts (3 tests) 461ms
+ ✓ src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts (6 tests) 661ms
+   ✓ CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form > the stored fields and the recomputed fields equal the uncached evaluator, for an RD lot and an RM lot with an authored exception, every class and pair 356ms
+ ✓ src/tests/steps/enrich_heritage/witness-fixture.logic.test.ts (1 test) 426ms
+ ✓ src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts (1 test) 431ms
+ ✓ src/tests/steps/enrich_ravines/witness-fixture.logic.test.ts (1 test) 473ms
+ ✓ src/tests/steps/link_neighbourhoods/witness-fixture.logic.test.ts (1 test) 426ms
+ ✓ src/tests/steps/resolve_bylaws/profiles.logic.test.ts (11 tests) 7ms
+ ✓ src/tests/steps/address_points/witness-fixture.logic.test.ts (1 test) 430ms
+ ✓ src/tests/steps/parcels/witness-fixture.logic.test.ts (1 test) 421ms
+ ✓ src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts (5 tests) 84ms
+ ✓ src/tests/global-config-card-stepfor.logic.test.ts (20 tests) 2ms
+ ✓ src/tests/admin-manifest-utils.logic.test.ts (8 tests) 2ms
+ ✓ src/tests/steps/resolve_bylaws/witness-adoption.logic.test.ts (2 tests) 2ms
+ ✓ src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts (1 test) 388ms
+ ✓ src/tests/enrich-parcels-stall-hardening.logic.test.ts (1 test) 1ms
+ ✓ src/tests/control-panel-shell.ui.test.tsx (3 tests) 122ms
+ ❯ src/tests/step-validate-net-new.logic.test.ts (6 tests | 1 failed) 1544ms
+   × Spec 124 R-DK — a net-new step has no PRE; its reference is its own committed POST > live census: exactly the four net-new pending steps declare legacy:"none", and each is accepted 1281ms
+     → resolve_bylaws: legacy:"none" refused — the script or its descriptor has no git history to check: expected false to be true // Object.is equality
+ ✓ src/tests/control-panel.ui.test.tsx (13 tests) 375ms
+ ✓ src/tests/engine-health-thresholds.ui.test.tsx (5 tests) 24ms
+ ✓ src/tests/admin-step-registration.logic.test.ts (12 tests) 6255ms
+   ✓ fast invariant #51 ADMIN-REGISTRATION — the R-DL lock at pre-commit (step-validate --staged/--all --fast) > wired: step-validate prints #51 as a registry fast invariant, PASS on the live tree, and self-tests the gate 6237ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/quality.logic.test.ts > Pipeline Registry > has exactly 52 tracked pipelines
+AssertionError: expected [ 'permits', …(71) ] to have a length of 71 but got 72
+
+- Expected
++ Received
+
+- 71
++ 72
+
+ ❯ src/tests/quality.logic.test.ts:524:44
+    522|     // +1 load_bylaw_map_areas (Spec 58 §11.3, H6 2026-10-16)
+    523|     // +1 link_parcel_abutments (Spec 130, H6 A2 2026-10-16)
+    524|     expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(71);
+       |                                            ^
+    525|   });
+    526| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tests/quality.logic.test.ts > Pipeline Registry > groups are correct: 16 ingest, 23 link, 17 classify, 2 snapshot, 10 quality
+AssertionError: expected [ 'classify', 'classify', …(17) ] to have a length of 18 but got 19
+
+- Expected
++ Received
+
+- 18
++ 19
+
+ ❯ src/tests/quality.logic.test.ts:553:52
+    551|     expect(groups.filter((g) => g === 'ingest')).toHaveLength(16);
+    552|     expect(groups.filter((g) => g === 'link')).toHaveLength(23);
+    553|     expect(groups.filter((g) => g === 'classify')).toHaveLength(18); /…
+       |                                                    ^
+    554|     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
+    555|     expect(groups.filter((g) => g === 'quality')).toHaveLength(12); //…
+

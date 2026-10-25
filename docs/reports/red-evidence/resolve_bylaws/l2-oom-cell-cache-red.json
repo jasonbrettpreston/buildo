@@ -1,0 +1,77 @@
+{
+  "defect": "RB-D8",
+  "ruling": "CHAT-114.L2-OOM-1",
+  "rule": "Spec 124 R-AQ (a limit comes from measurement)",
+  "red_runs": [
+    {
+      "run": "2026-10-23 21:39:59 R1 standalone capture",
+      "end": "21:49:02 stopped by exact PID while GC-thrashing",
+      "lots": 32901,
+      "last_parcel_id": 36000
+    },
+    {
+      "run": "2026-10-24 07:30:07 R1 standalone capture",
+      "end": "07:37:32 FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory (Mark-Compact 4043.0 -> 4037.6 MB at 440126 ms)",
+      "lots": 32901,
+      "last_parcel_id": 36000
+    }
+  ],
+  "probe": {
+    "tool": "~/Buildo-scratch/l2night/memprobe.cjs (read-only; materializeBatch over parcels in id order, batch 250, gc before each sample)",
+    "red_maxEntries_500000": [
+      {
+        "parcels": 5000,
+        "heap_mb": 639,
+        "entries": 72327,
+        "clears": 0
+      },
+      {
+        "parcels": 10000,
+        "heap_mb": 1225,
+        "entries": 135689,
+        "clears": 0
+      },
+      {
+        "parcels": 15000,
+        "heap_mb": 1727,
+        "entries": 193687,
+        "clears": 0
+      },
+      {
+        "parcels": 20000,
+        "heap_mb": 2581,
+        "entries": 284449,
+        "clears": 0,
+        "seconds": 207
+      }
+    ],
+    "green_default_20000": [
+      {
+        "parcels": 5000,
+        "heap_mb": 217,
+        "clears": 3
+      },
+      {
+        "parcels": 10000,
+        "heap_mb": 248,
+        "clears": 7
+      },
+      {
+        "parcels": 15000,
+        "heap_mb": 199,
+        "clears": 11
+      },
+      {
+        "parcels": 20000,
+        "heap_mb": 306,
+        "clears": 16,
+        "seconds": 203
+      }
+    ],
+    "hit_rate": {
+      "red": 0.937,
+      "green": 0.925
+    }
+  },
+  "conclusion": "~9 KB per cached cell; 500,000 cells exceed the 4 GB heap before the first clear. The default bound keeps the heap flat at the same speed."
+}

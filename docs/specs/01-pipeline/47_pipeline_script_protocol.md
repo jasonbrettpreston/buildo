@@ -1914,6 +1914,7 @@ and registry-vs-code agreement.
 | **127** | `scripts/load-bylaw-map-areas.js` | 4 — Load/Ingest (Spec 58 §11.3, McBylaw Phase 2 inputs A3) — next-free after 126 (58 is load_zoning) | NO — writes no timestamp column (seed_sha256 stamps the load) |
 | **130** | `scripts/link-parcel-abutments.js` | 2 — Link (Spec 130, McBylaw Phase 2 inputs B; the spec number, globally unique) | YES — `parcel_abutments.linked_at` (RUN_AT-bound) |
 | **131** | `scripts/one-time/heal-coa-link-street-type.js` | n/a — one-off (WF2 address street type, Spec 54 §3 level 0; not a chain step), next-free after the H6 port claims (127 load_bylaw_map_areas, 130 link_parcel_abutments) → **131** | NO — deletes the measured wrong-type `lead_parcels` rows and NULLs `coa_applications.parcel_linked_at` (binds no timestamp); probes `link-coa-to-parcels`' own lock 4201 via `pipeline.withAdvisoryLock` |
+| **134** | `scripts/resolve-bylaws.js` | 3 — Enrich/Materialize (Spec 134, Layer 2 by-law resolution; the spec number, globally unique) | YES — `bylaw_resolution_*.resolved_at` (RUN_AT-bound, outside the write guard) |
 | **5** | `scripts/geocode-permits.js` | 4 — Load/Ingest | YES — `geocoded_at` |
 | **11** | `scripts/extract-builders.js` | 4 — Load/Ingest | YES — `last_seen_at` |
 | **30** | `scripts/link-similar.js` | 2 — Link | YES — `scope_classified_at` |

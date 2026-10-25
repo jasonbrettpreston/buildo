@@ -38,6 +38,7 @@
     "load_coa_notices":     { "file": "scripts/load-coa-notices.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["coa_notice_variances", "coa_plan_facts"] },
     "load_bylaw_map_areas": { "file": "scripts/load-bylaw-map-areas.js",  "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["bylaw_map_areas"] },
     "link_parcel_abutments": { "file": "scripts/link-parcel-abutments.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcel_abutments"] },
+    "resolve_bylaws":       { "file": "scripts/resolve-bylaws.js",        "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["bylaw_resolution_lots", "bylaw_resolution_units", "bylaw_resolution_texts"] },
     "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["trade_name", "mailing_address"] } },
     "link_wsib":            { "file": "scripts/link-wsib.js",             "supports_full": false, "supports_dry_run": true, "chain_args": { "sources": ["--full"] }, "telemetry_tables": ["entities", "wsib_registry"] },
     "enrich_wsib_registry": { "file": "scripts/enrich-wsib.js",          "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_LIMIT": "6000" }, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["primary_phone", "primary_email", "website"] } },
