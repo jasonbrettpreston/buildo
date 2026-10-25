@@ -1,0 +1,80 @@
+ ✓ src/tests/admin-subscription-ops.infra.test.ts (22 tests) 17ms
+ ❯ src/tests/gate-captures.infra.test.ts (49 tests | 1 failed) 18674ms
+   × gate G — nonzero captures, lib-fingerprint freshness, explained diffs > T6: wiring > T6e: live — step-validate.mjs --all --fast reports no registry-level gate-G failure 17956ms
+     → expected [ 'spawn error ENOBUFS', …(4) ] to deeply equal []
+   ✓ gate G — nonzero captures, lib-fingerprint freshness, explained diffs > T6: wiring > T6f: libStagedSelectsAll (pure, in step-validate.mjs) — both directions via the self-test 548ms
+ ✓ src/tests/steps/assert_lifecycle_phase_distribution/violations.test.ts (24 tests) 104ms
+ ✓ src/tests/system-map.infra.test.ts (13 tests) 467ms
+ ↓ src/tests/db/assert-lifecycle-phase-distribution-halt.db.test.ts (0 test)
+ ✓ src/tests/steps/classify_coa_scope/violations.test.ts (26 tests) 66ms
+ ✓ src/tests/steps/load_bylaw_map_areas/bylaw-map-seed.logic.test.ts (26 tests) 30ms
+ ↓ src/tests/db/migration-174-centreline-enrich.db.test.ts (15 tests | 15 skipped)
+ ↓ src/tests/db/compute-parcel-cost-estimates.db.test.ts (12 tests | 12 skipped)
+ ↓ src/tests/db/compute-parcel-cost-estimates-violations.db.test.ts (14 tests | 14 skipped)
+ ↓ src/tests/db/link-wsib-full-rescan.db.test.ts (4 tests | 4 skipped)
+ ✓ src/tests/steps/load_coa_notices/checks.logic.test.ts (21 tests) 15ms
+ ✓ src/tests/steps/resolve_bylaws/violations.test.ts (27 tests) 682ms
+stderr | src/tests/migration-validator.logic.test.ts > validateMigration > runCli exits non-zero when no files provided
+--
+ ✓ src/tests/step-registry.logic.test.ts (21 tests) 369ms
+ ❯ src/tests/gate-registries.infra.test.ts (29 tests | 1 failed) 15377ms
+   × gate I — registry coverage (#33-#36) > T8: wiring > T8b: live — step-validate.mjs --all --fast reports no registry-level gate-I failure 15310ms
+     → expected [ 'spawn error ENOBUFS', …(4) ] to deeply equal []
+ ↓ src/tests/db/flight-board-roundtrip.db.test.ts (0 test)
+ ✓ src/tests/run-chain-selection.logic.test.ts (29 tests) 8ms
+stdout | src/tests/step-completeness.logic.test.ts
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+ ✓ src/tests/step-completeness.logic.test.ts (21 tests) 8ms
+ ✓ src/tests/classify-coa-trades.infra.test.ts (52 tests) 10ms
+ ✓ src/tests/steps/assert_network_health/violations.test.ts (19 tests) 44ms
+ ✓ src/tests/gate-logic-version.infra.test.ts (26 tests) 889ms
+   ✓ logic-version (P2-C3) — logic_version closed rule + fingerprint_inputs E > L2: live — no logic_version violations across the converted fleet 303ms
+ ✓ src/tests/materialize-rows.logic.test.ts (12 tests) 189ms
+ ✓ src/tests/permit-type-class.logic.test.ts (67 tests) 10ms
+ ✓ src/tests/bylaw-unfixed-keying.logic.test.ts (62 tests) 15309ms
+--
+ ✓ src/tests/s4-empty-source-guard-real-descriptors.logic.test.ts (11 tests) 6ms
+ ❯ src/tests/variable-effect.infra.test.ts (6 tests | 1 failed) 8ms
+   × R-EO — admin shows whether a setting is in effect (real tree) > the committed badge file equals the derivation (fast invariant #53 is green) 6ms
+     → expected [ Array(197) ] to deeply equal []
+ ✓ src/tests/safe-math.logic.test.ts (24 tests) 3ms
+ ✓ src/tests/fleet2-derive-meta-key.logic.test.ts (7 tests) 3ms
+stdout | src/tests/check-chain-running.logic.test.ts
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+ ✓ src/tests/mq-b1-batch-why.logic.test.ts (6 tests) 22ms
+ ✓ src/tests/check-chain-running.logic.test.ts (8 tests) 3ms
+ ✓ src/tests/witness-w44.logic.test.ts (6 tests) 8ms
+ ✓ src/tests/migration-156-seed-coa-cost-model-logic-variables.infra.test.ts (8 tests) 3ms
+ ✓ src/tests/stripe-webhook.security.test.ts (6 tests) 4ms
+ ✓ src/tests/steps/link_parcel_abutments/witness-adoption.logic.test.ts (2 tests) 3ms
+ ✓ src/tests/steps/load_bylaw_map_areas/witness-adoption.logic.test.ts (2 tests) 3ms
+stdout | src/tests/migrate-entities.infra.test.ts > migrate-entities.js — transaction atomicity (§7.6) > passes all 4 INSERTs through the transaction client
+--
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/gate-captures.infra.test.ts > gate G — nonzero captures, lib-fingerprint freshness, explained diffs > T6: wiring > T6e: live — step-validate.mjs --all --fast reports no registry-level gate-G failure
+AssertionError: expected [ 'spawn error ENOBUFS', …(4) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "spawn error ENOBUFS",
++   "killed by SIGTERM",
++   "exit null",
++   "no summary header",
++   "0 score rows < 29 converted",
++ ]
+
+--
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tests/gate-registries.infra.test.ts > gate I — registry coverage (#33-#36) > T8: wiring > T8b: live — step-validate.mjs --all --fast reports no registry-level gate-I failure
+AssertionError: expected [ 'spawn error ENOBUFS', …(4) ] to deeply equal []
+
+- Expected
++ Received
+

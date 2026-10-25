@@ -354,6 +354,8 @@ describe('gate I — registry coverage (#33-#36)', () => {
       // 420 s + notLookedReasons: a killed run (old 180 s < measured 214 s) has
       // an empty stdout, which the `not.toMatch` below passes vacuously (LM-D14).
       const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--all', '--fast'], {
+        // maxBuffer 64 MB: the --all --fast output passed the 1 MB spawnSync default at integrate-29 (1.84 MB; ENOBUFS) — same fix as gate-score-floor T6.
+        maxBuffer: 64 * 1024 * 1024,
         cwd: REPO_ROOT, encoding: 'utf8', timeout: 420_000,
       });
       expect(notLookedReasons(run, readConvertedJson(REPO_ROOT).converted.length)).toEqual([]);

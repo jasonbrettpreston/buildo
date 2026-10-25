@@ -63,3 +63,8 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 ## Scorecard regeneration (H lane, after merge 6)
 
 - DB-backed `step-validate --all --write` on fc7915fb under the DB lock: exit 0, 0 blocking hard stops, R-EY 30/48 V3, E1 PASS; 48 blocks written (38 at 17/17, 9 pending at 14/17, permits 7/17). Replaces the blocks merges 4 and 5 resolved to one side whole.
+
+## Full suite (after the regeneration) and two integration fixes
+
+- First full suite at dc5844e5: 919 files / 20,601 tests passed, **3 failed**: gate-captures T6e and gate-registries T8b (both `spawnSync step-validate --all --fast` killed ENOBUFS — the same 1 MB default as gate-score-floor T6, merge 5) and variable-effect.infra (the R-EO badge file src/features/admin-controls/generated/logic-variable-effect.json was taken from one side at merge 5 and its generator, generate-logic-variable-effect.mjs, is not in the int29 gens list). Red: docs/reports/red-evidence/gate-f/int29-suite-3-red.txt.
+- Fixed: maxBuffer 64 MB on both spawns; badge file regenerated (`generate-logic-variable-effect.mjs --write`: 209 take effect at cutover, 19 scheduled for retirement). The three files: 84/84 passed. Full suite re-run below.
