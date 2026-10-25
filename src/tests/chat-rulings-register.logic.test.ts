@@ -171,6 +171,19 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(status).toContain('RATIFIED 2026-10-08');
     expect(A.split('\n').some((l) => l.startsWith('- **R-AQ') && l.includes('CHAT-121.CEILING-125'))).toBe(true);
   });
+  it('CHAT-124..129 (batch y): notes on R-IP, R-IZ, R-KA, R-IX, the M-60 status row and three §B-AM bullets (R-BR/R-DN, R-DK, R-BG); CHAT-126 is row R-KC on x-captures.1', () => {
+    const Y = '2026-10-24-batch-y#';
+    const cases: Array<[string, string, string]> = [
+      [A, 'R-IP', Y + 'CHAT-124.M60-DISPLAY'], [A, 'R-IZ', Y + 'CHAT-125.LANE-REPORTS-TEXT'], [A, 'R-KC', Y + 'CHAT-126.PRECAP-1'],
+      [A, 'R-IP', Y + 'CHAT-127.L2-WIT-1'], [A, 'R-KA', Y + 'CHAT-128.L2-COH-1'], [A, 'R-IX', Y + 'CHAT-129.L2-NN-1'],
+    ];
+    for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
+    expect(M.split('\n').some((l) => l.startsWith('| | *Dated note 2026-10-24 (M-60;') && l.includes(Y + 'CHAT-124.M60-DISPLAY'))).toBe(true);
+    expect(A.split('\n').some((l) => l.startsWith('- **R-BR and R-DN') && l.includes('CHAT-128.L2-COH-1'))).toBe(true);
+    expect(A.split('\n').some((l) => l.startsWith('- **R-DK') && l.includes('CHAT-129.L2-NN-1'))).toBe(true);
+    expect(A.split('\n').some((l) => l.startsWith('- **R-BG') && l.includes('CHAT-127.L2-WIT-1'))).toBe(true);
+    expect(map.rules.find((r) => r.id === 'R-KC')?.handbook_line).toBe('x-captures.1');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');

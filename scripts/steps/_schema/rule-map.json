@@ -5813,6 +5813,20 @@
       }
     },
     {
+      "id": "R-KC",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "A capture night for a net-new step or a step whose compute or write path changed starts only after a clean read-only pre-launch check: the migration DB test, a 20,000-row compute probe inside the declared ceilings and heap, --plan for every bracket, and the capture order checked against x-captures.1 (operator 2026-10-24, CHAT-126.PRECAP-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
       "id": "R-BA",
       "kind": "register-ruling",
       "status": "amended-by",
