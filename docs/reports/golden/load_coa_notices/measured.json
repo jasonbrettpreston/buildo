@@ -2,39 +2,39 @@
   "entries": {
     "app_not_in_coa_applications": {
       "value": 0,
-      "cost_ms": 4,
-      "at": "2026-10-25T15:38:03.512Z",
-      "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
+      "cost_ms": 8,
+      "at": "2026-10-25T21:27:30.056Z",
+      "commit": "af18ac9f350cd9c89a5d6b2f0f3ab71f6123399f",
       "run_id": null,
       "chain": "coa_notices",
-      "sample_n": 20
+      "sample_n": 25
     },
     "decision_disagree": {
-      "value": 29,
-      "cost_ms": 43,
-      "at": "2026-10-25T15:38:03.512Z",
-      "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
+      "value": 9,
+      "cost_ms": 11,
+      "at": "2026-10-25T21:27:30.056Z",
+      "commit": "af18ac9f350cd9c89a5d6b2f0f3ab71f6123399f",
       "run_id": null,
       "chain": "coa_notices",
-      "sample_n": 20
+      "sample_n": 25
     },
     "ckan_hearing_offset": {
       "value": 1,
-      "cost_ms": 40,
-      "at": "2026-10-25T15:38:03.512Z",
-      "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
+      "cost_ms": 39,
+      "at": "2026-10-25T21:27:30.056Z",
+      "commit": "af18ac9f350cd9c89a5d6b2f0f3ab71f6123399f",
       "run_id": null,
       "chain": "coa_notices",
-      "sample_n": 20
+      "sample_n": 25
     },
     "active_dup_items": {
       "value": 0,
       "cost_ms": 6,
-      "at": "2026-10-25T15:38:03.512Z",
-      "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
+      "at": "2026-10-25T21:27:30.056Z",
+      "commit": "af18ac9f350cd9c89a5d6b2f0f3ab71f6123399f",
       "run_id": null,
       "chain": "coa_notices",
-      "sample_n": 20
+      "sample_n": 25
     }
   }
 }
