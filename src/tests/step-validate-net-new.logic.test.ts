@@ -110,9 +110,9 @@ describe('Spec 124 R-DK — a net-new step has no PRE; its reference is its own 
     expect(sv.computePreInvocationsMissing('legacy_step', inv, [], [], null, accepted).length).toBe(1);
   });
 
-  it('live census: exactly the three net-new pending steps declare legacy:"none", and each is accepted', () => {
+  it('live census: exactly the four net-new pending steps declare legacy:"none", and each is accepted', () => {
     const live = nn.loadNetNew(REPO_ROOT);
-    expect([...live.keys()].sort()).toEqual(['link_parcel_abutments', 'load_bylaw_map_areas', 'load_coa_notices']);
+    expect([...live.keys()].sort()).toEqual(['link_parcel_abutments', 'load_bylaw_map_areas', 'load_coa_notices', 'resolve_bylaws']);
     for (const [slug, v] of live) expect(v.ok, `${slug}: ${v.why}`).toBe(true);
   });
 });

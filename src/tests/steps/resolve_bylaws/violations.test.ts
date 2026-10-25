@@ -45,9 +45,9 @@ describe('three files and a frozen shell (Spec 132 core.1; Spec 122 §5.1)', () 
     expect([...e.telemetry_tables].sort()).toEqual([...TABLES].sort());
   });
 
-  it('the census, converted.json and the notes sidecar agree on the slug, the archetype and the compute_ported stage (R-DK legacy none lands in commit 2, CHAT-129)', () => {
+  it('the census, converted.json and the notes sidecar agree on the slug, the archetype and the compute_ported stage (R-DK: net-new, legacy none)', () => {
     const census = readJson('scripts/steps/_schema/step-archetype-census.json').entries.find((x: Json) => x.slug === 'resolve_bylaws');
-    expect(census).toMatchObject({ archetype: 'MATERIALIZER', batch: 'pending', file: 'scripts/resolve-bylaws.js' });
+    expect(census).toMatchObject({ archetype: 'MATERIALIZER', batch: 'pending', legacy: 'none', file: 'scripts/resolve-bylaws.js' });
     expect(census.owner_specs).toEqual(['docs/specs/01-pipeline/134_resolve_bylaws.md']);
     const pending = readJson('scripts/steps/_schema/converted.json').pending.find((x: Json) => x.file === 'scripts/resolve-bylaws.js');
     expect(pending.stage).toBe('compute_ported');
