@@ -1,0 +1,150 @@
+{
+  "trace_version": 1,
+  "step": "scripts/classify-permit-phase.js",
+  "chain": "permits",
+  "source_fingerprint": "accb044a768c9442e7ef99a1f8d2171ea14c0ec95dd5a67ebdbd69dfd87fb181",
+  "git_head": "2256cf36918f4891b20cd0aa6ae2854857e4dee6",
+  "header": {
+    "processes": 1,
+    "calls": 11,
+    "distinct": 8,
+    "utility": 7,
+    "tracer_self_ms": 1.211,
+    "wall_ms": 190
+  },
+  "statements": [
+    {
+      "fingerprint": "259aa2b3cbac68c3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "enriched_status",
+          "revision_num",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4bf32b6364698516",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "issued_date",
+          "revision_num",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "71d5c3ac0655478a",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "permits": [
+          "enriched_status",
+          "issued_date",
+          "permit_num",
+          "revision_num",
+          "status"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "enriched_status",
+          "last_seen_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "64369:2",
+      "write_fingerprints": [
+        "71d5c3ac0655478a"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "permits": [
+        "enriched_status",
+        "issued_date",
+        "last_seen_at",
+        "permit_num",
+        "revision_num",
+        "status"
+      ]
+    },
+    "writes": {
+      "permits": [
+        "enriched_status",
+        "last_seen_at"
+      ]
+    }
+  },
+  "errors": []
+}
