@@ -2,7 +2,7 @@
 
 **Risk:** MEDIUM — reverts the primary residential permit/CoA cost derivation to the legacy
 Spec-83 trade-buildup + Liar's Gate. The old path is **code-preserved** (it is the T4 fallthrough),
-so rollback needs no code revert — a single env flag turns the ladder OFF and a re-run reproduces
+so rollback needs no code revert — one switch per cost step (an env flag for permits, a logic variable for CoA; below) turns the ladder OFF and a re-run reproduces
 the legacy derivation end-to-end.
 
 ## When to roll back
@@ -18,15 +18,19 @@ Trigger on any of:
 
 ## What the rollback flag does
 
-`ARCHETYPE_COST_DISABLED=1` flips `archetypeEnabled` OFF in **both** cost Muscles:
-- `scripts/compute-cost-estimates.js` §5 config build
-- `scripts/compute-coa-cost-estimates.js` `archConfig`
+The two cost steps take the switch from different places (corrected 2026-10-25, defect CCCE-D3 / Q-CE1):
+- **Permits** — `scripts/compute-cost-estimates.js` §5 config build: `ARCHETYPE_COST_DISABLED=1` (env) flips `archetypeEnabled` OFF.
+- **CoA** — the converted `compute_coa_cost_estimates` step no longer reads the environment: set the logic variable
+  `archetype_cost_enabled` to `0` (its `logic_variables` row, e.g. from the admin control panel; declared in
+  `scripts/compute-coa-cost-estimates.descriptor.json`, read at `scripts/lib/compute/compute-coa-cost-estimates.js:167`).
+  `ARCHETYPE_COST_DISABLED=1` alone does **not** turn CoA archetype costing off.
+To roll back both, do both.
 
 With the ladder OFF, every row falls straight through to the legacy Steps A–D (the byte-identical
 T4 path). Permits reproduce their pre-WF2 estimates; CoA reproduces the pre-WF2 baseline (0.0% cost
 coverage — the legacy geometric CoA path matrix-missed every application, the `::` key bug).
 
-The flag is a pure config change — **no code revert, no redeploy.**
+Both switches are pure config changes — **no code revert, no redeploy.**
 
 ## Rollback steps (NEVER skip an order)
 
@@ -42,7 +46,8 @@ The flag is a pure config change — **no code revert, no redeploy.**
 Set the kill-switch and re-run the cost Muscles + everything downstream that consumes cost.
 PowerShell (this box):
 ```powershell
-$env:ARCHETYPE_COST_DISABLED = "1"
+$env:ARCHETYPE_COST_DISABLED = "1"   # permits step
+# CoA step: set logic variable archetype_cost_enabled = 0 first (admin control panel / its logic_variables row)
 node -r dotenv/config scripts/compute-cost-estimates.js
 node -r dotenv/config scripts/compute-coa-cost-estimates.js
 node -r dotenv/config scripts/compute-trade-forecasts.js
@@ -81,12 +86,13 @@ ALTER TABLE cost_estimates ADD CONSTRAINT cost_estimates_cost_source_check
   false-warn.
 
 ### Step 5 — Resume
-- Re-enable the scheduler. Leave `ARCHETYPE_COST_DISABLED=1` set in the runtime env until the root
-  cause is fixed; unset it (or set `0`) + re-run Step 2 to roll **forward** again.
+- Re-enable the scheduler. Leave `ARCHETYPE_COST_DISABLED=1` set in the runtime env and `archetype_cost_enabled = 0` until the root
+  cause is fixed; unset the env flag (or set `0`), set `archetype_cost_enabled` back to `1`, then re-run Step 2 to roll **forward** again.
 
 ## Roll-forward (undo the rollback)
 ```powershell
-Remove-Item Env:\ARCHETYPE_COST_DISABLED   # or: $env:ARCHETYPE_COST_DISABLED = "0"
+Remove-Item Env:\ARCHETYPE_COST_DISABLED   # or: $env:ARCHETYPE_COST_DISABLED = "0"   (permits)
+# CoA: set logic variable archetype_cost_enabled back to 1
 # re-apply mig 209 (widen the CHECK) if Step 3 was run, then re-run Step 2's scripts.
 ```
 
