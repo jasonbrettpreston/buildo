@@ -10,6 +10,30 @@
    "parcels": "parcels-all2.json",
    "plan_facts": "plan-facts",
    "pin": "scripts/analysis/bylaw-validation/coa-expected/expected-172.json"
+  },
+  {
+   "batch": "coa-2026-d",
+   "role": "blind",
+   "notices": "new-1025/notices-2026-d.json",
+   "parcels": "new-1025/parcels-2026-d.json",
+   "plan_facts": "new-1025/plan-facts",
+   "prereg": "scripts/analysis/bylaw-validation/coa-expected/prereg-coa-2026-d.json",
+   "blind": {
+    "scored_at": "a54b4138",
+    "rows": 123,
+    "totals": {
+     "MATCH": 48,
+     "DIFFER": 7,
+     "NO ANSWER": 22,
+     "OWED": 5,
+     "NOT MODELLED": 32,
+     "NOT SCORABLE": 9
+    },
+    "accuracy_pct": 87.27,
+    "answered_pct": 67.07,
+    "prereg_verdict": "FINDING (totals differ from the stated prior: DATA 3->0, MATCH 47->48, NO ANSWER 8->22, NOT MODELLED 38->32, OWED 11->5; findings page coa-data new-1025/FINDINGS.md)",
+    "note": "coa-data 7cf695a (+ parcels pulled read-only 2026-10-25); its plan-facts dir also holds the 9 re-upload files for frozen-set lots, which join here only (CHAT-134)"
+   }
   }
  ]
 }
