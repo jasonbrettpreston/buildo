@@ -506,6 +506,8 @@ function parsedCond(src) {
 }
 // M-285: a street name compared whole-word without case or punctuation, the suffix and direction words spelled short (vocab named_street.suffixes)
 const streetKey = (name, suffixes) => String(name).toLowerCase().replace(/[.,]/g, ' ').split(/\s+/).filter(Boolean).map((w) => (suffixes && Object.hasOwn(suffixes, w) ? suffixes[w] : w)).join(' ');
+// the direction words as streetKey spells them (vocab named_street.suffixes east/west/north/south → e/w/n/s)
+const DIRECTIONS = new Set(['e', 'w', 'n', 's']);
 /** true | false | undefined (undecided: no table row, no street name on the lot, or a clause that does not say which line abuts) */
 function namedStreetJoin(lot, u, C, reads, trace) {
   const t = C.namedStreet;
@@ -515,9 +517,16 @@ function namedStreetJoin(lot, u, C, reads, trace) {
   const name = lot[t.lot_field];
   if (typeof name !== 'string' || !name.trim()) return undefined;
   const key = streetKey(name, t.suffixes);
-  const hit = row.streets.some((s) => streetKey(s, t.suffixes) === key);
-  const out = hit ? true : row.line === 'front' ? false : undefined;
-  trace.push(`abuts_named_street: ${t.lot_field} "${name}" ${hit ? 'is' : 'is not'} ${row.streets.join(' / ')} (${row.line} lot line) → ${out === undefined ? 'undecided' : out}`);
+  // CHAT-104.STREET-DIR (M-285 note): a table street that names no direction also matches the lot street less one trailing direction word
+  const bare = DIRECTIONS.has(key.slice(key.lastIndexOf(' ') + 1)) ? key.slice(0, key.lastIndexOf(' ')) : null;
+  const hit = row.streets.some((s) => { const k = streetKey(s, t.suffixes); return k === key || (k === bare && !DIRECTIONS.has(k.slice(k.lastIndexOf(' ') + 1))); });
+  // CHAT-100.L-INTERIOR (M-285 note): a line-any row that misses the frontage street is false on an interior lot (abuts no other
+  // street); corner, through or unknown-flag lots stay undecided (M-60)
+  const anyMiss = !hit && row.line !== 'front';
+  if (anyMiss) { reads.add('flags.corner_lot'); reads.add('flags.through_lot'); }
+  const interior = anyMiss && Boolean(lot.flags) && lot.flags.corner_lot === false && lot.flags.through_lot === false;
+  const out = hit ? true : row.line === 'front' || interior ? false : undefined;
+  trace.push(`abuts_named_street: ${t.lot_field} "${name}" ${hit ? 'is' : 'is not'} ${row.streets.join(' / ')} (${row.line} lot line${interior ? ', interior lot' : ''}) → ${out === undefined ? 'undecided' : out}`);
   return out;
 }
 // {ok:true} | {ok:false, why} | {ok:null, reason}

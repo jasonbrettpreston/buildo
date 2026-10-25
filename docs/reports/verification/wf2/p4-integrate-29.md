@@ -13,7 +13,14 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 | # | Branch @ tip | Lane verify | Notes |
 |---|---|---|---|
 | 1 | `wf1/rulings-rec3` @ `7e5e9f72` | decision-log / spec-split clean | CHAT-133..139 register notes (batch 2026-10-25-b) |
+| 2 | `wf1/excr-l-interior` @ `3769508a` | verify-48a (d27d1930; BLOCK cleared) + **verify-48e PASS** (3769508a) | d27d1930 CHAT-100 L-INTERIOR option B (HELD for the CHAT-100 integrate, now here) + 3769508a CHAT-104 STREET-DIR |
 
 ## Merge 1: wf1/rulings-rec3 @ 7e5e9f72
 
 - No conflicts. bylaw-layer2-input.json current (table_version 196bb790, 1931 input files).
+
+## Merge 2: wf1/excr-l-interior @ 3769508a (CHAT-100, CHAT-104)
+
+- **Conflicts (both generated):** bylaw-layer2-input.json (regenerated: 6661 units, table_version 81f50b78d131 — evaluate.mjs moves the evaluator stamp) and maxbld-amendment-index.json (`generate-amendment-index.mjs --write`, it embeds the table_version); then report-fields.mjs --write, system-map. Every generator --check rc 0 (~/Buildo-scratch/int29/gens-m2.txt).
+- **CoA (rows keyed notice + n + clause; class, ours, ours_alt, city_value, limit):** integrate-28 tip → merged tree: 0 of 698 and 0 of 496 rows move (the lanes and verify-48e said 0). Inputs moved, so re-pinned (`coa-scorecard.mjs --pin`, CHAT-65.repin); totals unchanged; FLOORS OK.
+- The register text CHAT-100/104 (M-285, M-350 notes) is already on this tree from rulings-rec3 (verify-48e LOW (process) note resolved by merge 1).

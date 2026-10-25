@@ -1,0 +1,88 @@
+# CHAT-104.STREET-DIR red evidence: tests run at d27d1930 (evaluate.mjs unchanged), 3 red = the ruled behaviour; 3 locks green before and after (directed table street, no other loosening, 1057 Chartland S); bylaw-l-interior incl. the verify-48a LOW case {through_lot:false} green (code already correct)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-lint
+
+ ❯ src/tests/bylaw-street-dir.logic.test.ts (6 tests | 3 failed) 14ms
+   × CHAT-104.STREET-DIR: a table street that names no direction matches the lot street with one trailing direction word > the join: "Finch Ave." (line any) matches a lot street with one trailing direction word, any spelling 3ms
+     → expected [ 'FINCH AVE E', false ] to deeply equal [ 'FINCH AVE E', true ]
+   × CHAT-104.STREET-DIR: a table street that names no direction matches the lot street with one trailing direction word > the join: a front-line row joins the same way ("Finch Ave." in 931 (C)(i)) 0ms
+     → expected false to be true // Object.is equality
+   × CHAT-104.STREET-DIR: a table street that names no direction matches the lot street with one trailing direction word > production path: an interior lot on Finch Ave E/W reads the by-law Finch arm (7.5 m; 1120 9.0 m), not the other-street arm 6ms
+     → expected [ Array(5) ] to deeply equal [ Array(5) ]
+ ✓ src/tests/bylaw-l-interior.logic.test.ts (3 tests) 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/bylaw-street-dir.logic.test.ts > CHAT-104.STREET-DIR: a table street that names no direction matches the lot street with one trailing direction word > the join: "Finch Ave." (line any) matches a lot street with one trailing direction word, any spelling
+AssertionError: expected [ 'FINCH AVE E', false ] to deeply equal [ 'FINCH AVE E', true ]
+
+- Expected
++ Received
+
+  Array [
+    "FINCH AVE E",
+-   true,
++   false,
+  ]
+
+ ❯ src/tests/bylaw-street-dir.logic.test.ts:34:56
+     32|   it('the join: "Finch Ave." (line any) matches a lot street with one …
+     33|     const id = '900.4.10(256)#(256)[SSP](D)(i)'; // streets Finch Ave.…
+     34|     for (const n of DIRECTED) expect([n, join(id, n)]).toEqual([n, tru…
+       |                                                        ^
+     35|     expect(join(id, 'Brimley Rd E')).toBe(true);
+     36|     expect(join(id, 'Finch Ave')).toBe(true); // unchanged
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tests/bylaw-street-dir.logic.test.ts > CHAT-104.STREET-DIR: a table street that names no direction matches the lot street with one trailing direction word > the join: a front-line row joins the same way ("Finch Ave." in 931 (C)(i))
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/bylaw-street-dir.logic.test.ts:41:37
+     39|   it('the join: a front-line row joins the same way ("Finch Ave." in 9…
+     40|     const id = '900.3.10(931)#(931)[SSP](C)(i)';
+     41|     expect(join(id, 'FINCH AVE E')).toBe(true);
+       |                                     ^
+     42|     expect(join(id, 'Finch Avenue East')).toBe(true);
+     43|     expect(join(id, 'Ravencliff Cres')).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/tests/bylaw-street-dir.logic.test.ts > CHAT-104.STREET-DIR: a table street that names no direction matches the lot street with one trailing direction word > production path: an interior lot on Finch Ave E/W reads the by-law Finch arm (7.5 m; 1120 9.0 m), not the other-street arm
+AssertionError: expected [ Array(5) ] to deeply equal [ Array(5) ]
+
+- Expected
++ Received
+
+  Array [
+    "900.4.10(256)",
+    "FINCH AVE E",
+    "value",
+-   7.5,
+-   "900.4.10(256)#(256)[SSP](D)(i)",
++   3.6,
++   "900.4.10(256)#(256)[SSP](D)(iii)",
+  ]
+
+ ❯ src/tests/bylaw-street-dir.logic.test.ts:75:52
+     73|     for (const [ex, arm, v] of rows) for (const n of ['FINCH AVE E', '…
+     74|       const r = run(ex, n, INTERIOR);
+     75|       expect([ex, n, r.status, r.value, r.winner]).toEqual([ex, n, 'va…
+       |                                                    ^
+     76|     }
+     77|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 failed | 6 passed (9)
+   Start at  09:12:24
+   Duration  2.17s (transform 110ms, setup 13ms, collect 3.93s, tests 31ms, environment 0ms, prepare 59ms)
+

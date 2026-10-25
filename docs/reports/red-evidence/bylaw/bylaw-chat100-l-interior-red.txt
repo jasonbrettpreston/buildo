@@ -1,0 +1,50 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-lint
+ ❯ src/tests/bylaw-l-interior.logic.test.ts (3 tests | 2 failed) 19ms
+   × CHAT-100.L-INTERIOR: a line-any named-road arm whose streets miss the frontage street does not apply on an interior lot > the join: interior lot, streets miss → false; streets hit → true; corner, through or unknown flags → undecided 4ms
+     → expected [ …(2) ] to deeply equal [ …(2) ]
+   × CHAT-100.L-INTERIOR: a line-any named-road arm whose streets miss the frontage street does not apply on an interior lot > production path: on an interior lot each L arm answers on its own street (6.0 m), the other-street arm answers (3.6 m), the Finch arm still 7.5 m 9ms
+     → expected [ …(4) ] to deeply equal [ …(4) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/bylaw-l-interior.logic.test.ts > CHAT-100.L-INTERIOR: a line-any named-road arm whose streets miss the frontage street does not apply on an interior lot > the join: interior lot, streets miss → false; streets hit → true; corner, through or unknown flags → undecided
+AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]
+- Expected
++ Received
+  Array [
+    "900.4.10(256)#(256)[SSP](D)(ii)",
+-   false,
++   null,
+  ]
+ ❯ src/tests/bylaw-l-interior.logic.test.ts:38:65
+     36|   it('the join: interior lot, streets miss → false; streets hit → true…
+     37|     for (const [, , named] of L3) {
+     38|       expect([named, join(named, 'Ravencliff Cres', INTERIOR)]).toEqua…
+       |                                                                 ^
+     39|       expect([named, join(named, 'Alexmuir Blvd', INTERIOR)]).toEqual(…
+     40|       expect([named, join(named, 'Ravencliff Cres', { corner_lot: true…
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  src/tests/bylaw-l-interior.logic.test.ts > CHAT-100.L-INTERIOR: a line-any named-road arm whose streets miss the frontage street does not apply on an interior lot > production path: on an interior lot each L arm answers on its own street (6.0 m), the other-street arm answers (3.6 m), the Finch arm still 7.5 m
+AssertionError: expected [ …(4) ] to deeply equal [ …(4) ]
+- Expected
++ Received
+  Array [
+    "900.4.10(256)#(256)[SSP](D)(ii)",
+-   "value",
+-   6,
+-   "900.4.10(256)#(256)[SSP](D)(ii)",
++   "not_evaluated",
++   null,
++   undefined,
+  ]
+ ❯ src/tests/bylaw-l-interior.logic.test.ts:50:52
+     48|     for (const [ex, finch, named, other] of L3) {
+     49|       const a = run(ex, 'Alexmuir Blvd', INTERIOR), r = run(ex, 'Raven…
+     50|       expect([named, a.status, a.value, a.winner]).toEqual([named, 'va…
+       |                                                    ^
+     51|       expect([other, r.status, r.value, r.winner]).toEqual([other, 'va…
+     52|       expect([finch, f.status, f.value, f.winner]).toEqual([finch, 'va…
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  21:33:01
+   Duration  2.25s (transform 121ms, setup 8ms, collect 2.02s, tests 19ms, environment 0ms, prepare 24ms)
