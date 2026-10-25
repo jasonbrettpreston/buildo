@@ -59,3 +59,7 @@ R-EZ says: *"Findings block the integration until fixed or ruled. The verificati
 - Commits: c0495a9f door (coa-cumulative.mjs + cumulative-set.json), a54b4138 prereg-coa-2026-d.json, 3c2f95a3 blind result, 53c66619 values batch + manifest entry, 732bbe97 load_coa_notices POST captures retaken after the 2026-10-25 ingest (coa-2026-d 123 variance rows + 25 plan facts live; 7 explained input-drift keys; 17/17 V3).
 - **Scorecard (M-357):** blind coa-2026-d 48 MATCH / 7 DIFFER → 87.27 % accuracy, 67.07 % answered; cumulative headline 197 notices / 821 rows 435 / 36 → 92.36 % / 74.53 %, overall floors and 900.3.10 pass, seven article floors fail → operator (no --accept).
 - No conflicts; every generator --check rc 0 (~/Buildo-scratch/int29/gens-m6.txt); 172 / 4d CHECK OK (pinned), FLOORS OK; coa-cumulative + load_coa_notices 223 tests passed.
+
+## Scorecard regeneration (H lane, after merge 6)
+
+- DB-backed `step-validate --all --write` on fc7915fb under the DB lock: exit 0, 0 blocking hard stops, R-EY 30/48 V3, E1 PASS; 48 blocks written (38 at 17/17, 9 pending at 14/17, permits 7/17). Replaces the blocks merges 4 and 5 resolved to one side whole.
