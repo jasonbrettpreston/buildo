@@ -199,6 +199,15 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     ];
     for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
   });
+  it('CHAT-140..146 (batch 2026-10-25-c): P3-7 on R-JP / M-189, floors on M-322, ALPD on R-JW, P2 on M-332, plan facts on M-326, the hook on R-IY + a §B-AM bullet on R-AG', () => {
+    const C = '2026-10-25-batch-c#';
+    const cases: Array<[string, string, string]> = [
+      [A, 'R-JP', C + 'CHAT-140.P37-GATED'], [M, 'M-189', C + 'CHAT-141.P37-STORAGE'], [M, 'M-322', C + 'CHAT-142.B10-FLOORS'],
+      [A, 'R-JW', C + 'CHAT-143.ALPD-CHAIN'], [M, 'M-332', C + 'CHAT-144.P2-DISAGREE'], [M, 'M-326', C + 'CHAT-145.PLANFACT-CDE'], [A, 'R-IY', C + 'CHAT-146.HOOK-LVEFFECT'],
+    ];
+    for (const [text, row, cite] of cases) expect(rowOf(text, row), row + ' ' + cite).toContain(cite);
+    expect(A.split('\n').some((l) => l.startsWith('- **R-AG: the cheap pre-commit gates gain'))).toBe(true);
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
