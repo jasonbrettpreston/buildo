@@ -84,7 +84,7 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 - CKAN API: `ckan0.cf.opendata.inter.prod-toronto.ca`
   - Active resource: `51fd09cd...` (open applications)
   - Closed resource: `9c97254e...` (closed since 2017)
-- Incremental mode (default): last 90 days via CKAN SQL endpoint
+- Incremental mode (default): the whole Active resource via the CKAN DataStore (no date filter; COA-D5)
 - Full mode (`--full`): all records from both resources
 
 ### Core Logic
