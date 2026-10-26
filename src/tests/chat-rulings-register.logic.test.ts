@@ -248,6 +248,11 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(A, 'R-JZ')).toContain(I + 'CHAT-168.RDM-ROW-ERROR-CLASS');
     expect(A.split('\n').some((l) => l.startsWith('- **R-DM: a genuine row error is class 22 or 23 only'))).toBe(true);
   });
+  it('CHAT-169..170 (batch 2026-10-26-j): split round covers three wording families; precision samples carried forward, on M-321', () => {
+    const J = '2026-10-26-batch-j#';
+    expect(rowOf(M, 'M-321')).toContain(J + 'CHAT-169.SPLIT-THREE-FAMILIES');
+    expect(rowOf(M, 'M-321')).toContain(J + 'CHAT-170.PRECISION-CARRY-FORWARD');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
