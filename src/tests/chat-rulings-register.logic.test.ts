@@ -320,6 +320,7 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (let q = 1; q <= 17; q++) expect(jb).toContain(S + q + '`');
     const bam = A.split('\n').find((l) => l.startsWith('- **R-EN dated notes CHAT-192.PW1-Q1 to CHAT-192.PW1-Q17')) ?? '';
     for (let q = 1; q <= 17; q++) expect(bam).toContain(S + q + '`');
+    expect(bam).toContain('12 compliant, 5 compliant with a disclosed rule change (Q3, Q9, Q11, Q12, Q15)');
     expect(bam).toContain('PM-D3');
     expect(bam).toContain('value re-based from measurement');
     expect(bam).toContain('ratified per entry by this ruling');
