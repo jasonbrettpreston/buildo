@@ -258,6 +258,14 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(A, 'R-IY')).toContain(K + 'CHAT-171.NETNEW-CENSUS-SCOPE');
     expect(A.split('\n').some((l) => l.startsWith('- **R-EC: net-new\'s one-pass equality covers the paths net-new reads'))).toBe(true);
   });
+  it('CHAT-172 (batch 2026-10-26-l): split parser reads conditions text up to the reasons, fail-closed; on M-321 + a dated note under Spec 129 (j)', () => {
+    const L = '2026-10-26-batch-l#';
+    expect(rowOf(M, 'M-321')).toContain(L + 'CHAT-172.SPLIT-CONDITIONS-READ');
+    const S = read('docs/specs/01-pipeline/129_source_coa_notices.md').split('\n');
+    const j = S.findIndex((l) => l.startsWith('  (j) The decision is read from the decision paragraph only.'));
+    expect(j).toBeGreaterThan(-1);
+    expect(S[j + 1]).toContain(L + 'CHAT-172.SPLIT-CONDITIONS-READ');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
