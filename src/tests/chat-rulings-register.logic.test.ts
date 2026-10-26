@@ -242,6 +242,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-165.HELD-UNREAD-DISCLOSED');
     expect(rowOf(M, 'M-305')).toContain(H + 'CHAT-166.SCORER-OUTPUTS-KEPT');
   });
+  it('CHAT-167..168 (batch 2026-10-26-i): ENRICHER derive held on R-JZ, row errors class 22/23 on R-JZ + a §B-AM bullet on R-DM', () => {
+    const I = '2026-10-26-batch-i#';
+    expect(rowOf(A, 'R-JZ')).toContain(I + 'CHAT-167.RJZ-D1-HOLD');
+    expect(rowOf(A, 'R-JZ')).toContain(I + 'CHAT-168.RDM-ROW-ERROR-CLASS');
+    expect(A.split('\n').some((l) => l.startsWith('- **R-DM: a genuine row error is class 22 or 23 only'))).toBe(true);
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
