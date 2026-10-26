@@ -49,6 +49,13 @@ describe('CHAT-77.freeze: the accessor output is exactly the frozen logical row'
     expect(V.entriesFromPointers).toBeUndefined();
   });
 
+  it('CHAT-180 (G5): permissionDisclosures(cls) returns the recomputed M-169 sentences of that class; a missing class is never defaulted', () => {
+    const v = V.fromLogicalRows({ lot_gate: null, permitted_by_class: PERMITTED, permission_disclosures: { detached_house: ['If x: y.'] }, rows: [] });
+    expect(v.permissionDisclosures('detached_house')).toEqual(['If x: y.']);
+    expect(() => v.permissionDisclosures('no_such_class')).toThrow(/never defaulted/);
+    expect(() => V.fromLogicalRows({ lot_gate: null, permitted_by_class: PERMITTED, rows: [] }).permissionDisclosures('detached_house')).toThrow(/never defaulted/);
+  });
+
   it('the result is immutable, so a consumer cannot add a field either', () => {
     const v = V.fromLogicalRows({ lot_gate: null, permitted_by_class: PERMITTED, rows: [{ class: 'detached_house', structure: 'principal', target: 'height_m', status: 'applies' }] });
     expect(Object.isFrozen(v.result('detached_house', 'principal', 'height_m'))).toBe(true);

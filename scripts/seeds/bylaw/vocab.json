@@ -789,6 +789,11 @@
       "5.10.40.70(5)#whole": "the rear yard setback is measured as a radius from the point where the side lot lines meet",
       "5.10.40.40(1)#whole": "the part of the lot below that line is not counted in the floor space index, so the permitted floor area is lower"
     },
+    "permission_effect": {
+      "$comment": "Spec 69a M-169(1) {effect} of a set-aside PERMIT / PROHIBIT (target none: no measure, bound or value to generate from), one closed phrase per archetype; {clause} is the unit_id, as the stored prohibited clause (2026-10-26-batch-m#CHAT-180.L2-G5-DISCLOSURE-ON-READ (b); R-BZ). Recomputed on read in bylaw-materialize.js logicalRowsOf, never stored.",
+      "PERMIT": "this use is also permitted by {clause}",
+      "PROHIBIT": "this use is not permitted, by {clause}"
+    },
     "condition_override": {
       "$comment": "Spec 69a M-170: a unit whose {condition} needs the clause's own wording instead of the token phrase.",
       "5.10.40.40(1)#whole": "TRCA has determined a shoreline hazard limit or stable top-of-bank crosses the lot"

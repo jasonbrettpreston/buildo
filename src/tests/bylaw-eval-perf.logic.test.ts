@@ -154,6 +154,10 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // under ABS-3 / ABS-4; the RM townhouse fixture lots under ABS-7.4, whose fixture units carry no 10.80.40.20(3) unit at all), 14 M-50 per_type
     // entries of null-type cells, 2 trace lines. No other target and no permitted() cell moved. The real-tree grid (75,330 cells) moves 45, all
     // townhouse / apartment building_length_m with major_street false.
-    expect(h.digest('hex')).toBe('3440a2845f40f4eb658e9b6eb84eb2bf61c0374b5f094d6d9b261a4343fe3770');
+    // re-pinned 2026-10-26 (2026-10-26-batch-m#CHAT-180.L2-G5-DISCLOSURE-ON-READ, use-scope lane C6; pre-registered in
+    // scripts/analysis/bylaw-validation/layer2-rounds/prereg-g5.json): every permitted() result gains the key disclosures: [] (its 7 return
+    // sites; the M-169 set-asides are recomputed on read). With permitted()'s disclosures key removed the hash is the previous pin
+    // 3440a284…3770 exactly (bylaw-permission-disclosure.logic.test.ts G5-p: 840 calls, no status, winner, reason or input moved).
+    expect(h.digest('hex')).toBe('3f191431a61e72f49858998677f28b68007bc684e4b850eb1319bbc51bbf2d66');
   }, 60_000);
 });

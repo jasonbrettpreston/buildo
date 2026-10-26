@@ -348,16 +348,51 @@ function logicalRowsOf(parcelRow, storedLot, dicts, env) {
   const decoded = lr.decodeLotResults({ lot: storedLot, pairs: env.pairs, classes: env.classes, map: env.map, dicts });
   const permitted = lr.decodePermitted({ lot: storedLot, classes: env.classes, map: env.map, dicts });
   const gate = storedLot.lot_gate === undefined ? null : storedLot.lot_gate;
-  if (gate !== null) return { lot_gate: gate, permitted_by_class: permitted, rows: decoded.map((d) => ({ ...d, inputs_used: [], losers: null, disclosures: null })) };
+  if (gate !== null) return { lot_gate: gate, permission_disclosures: Object.fromEntries(env.classes.map((c) => [c, null])), permitted_by_class: permitted, rows: decoded.map((d) => ({ ...d, inputs_used: [], losers: null, disclosures: null })) };
   const { lot } = rb.buildLotVector(parcelRow, env.lotEnv);
   const rows = decoded.map((d) => {
     const t = traceResult(lot, d.structure, d.target, d.class, env);
     return { ...d, inputs_used: t.inputs_used, losers: t.losers, disclosures: t.disclosures };
   });
-  return { lot_gate: null, permitted_by_class: permitted, rows };
+  return { lot_gate: null, permission_disclosures: permissionDisclosuresOf(parcelRow, storedLot, permitted, env), permitted_by_class: permitted, rows };
+}
+
+/** The stored row was written by another table / evaluator version than this tree's (expected between an evaluator commit and its Layer 2 night). */
+class PermissionRecomputeStaleError extends Error {
+  constructor(stored, now) { super(`permission_recompute_stale:${stored.tv}/${stored.ev}:${now.tv}/${now.ev}`); this.name = 'PermissionRecomputeStaleError'; this.code = 'permission_recompute_stale'; }
+}
+/** At equal versions the recomputed permission word differs from the stored one: a defect, never re-derived silently. */
+class PermissionRecomputeDriftError extends Error {
+  constructor(parcelId, cls, stored, recomputed) { super(`permission_recompute_drift:${parcelId}:${cls}`); this.name = 'PermissionRecomputeDriftError'; this.code = 'permission_recompute_drift'; this.stored = stored; this.recomputed = recomputed; }
+}
+
+/**
+ * ON READ (2026-10-26-batch-m#CHAT-180.L2-G5-DISCLOSURE-ON-READ (a); the CHAT-80.QP form: no column, no schema change): the M-169
+ * set-aside disclosures of each class's permission word, one closed sentence each ("If {condition}: {effect}.", the {effect} the
+ * archetype's vocab permission_effect phrase with {clause} = the unit id), sorted and de-duplicated. The word is recomputed through the
+ * uncached evaluator and must equal the stored word: first the versions (PermissionRecomputeStaleError), then the word
+ * (PermissionRecomputeDriftError). A permitted() result without a disclosures array throws permission_disclosures_missing. The 11 frozen
+ * row fields and the permitted_by_class words are untouched (CHAT-77.freeze).
+ */
+function permissionDisclosuresOf(parcelRow, storedLot, storedWords, env) {
+  const now = { tv: String(env.versions.table_version).slice(0, 8), ev: String(env.versions.evaluator_version).slice(0, 8) };
+  const was = { tv: String(storedLot.table_version || '').slice(0, 8), ev: String(storedLot.evaluator_version || '').slice(0, 8) };
+  if (was.tv !== now.tv || was.ev !== now.ev) throw new PermissionRecomputeStaleError(was, now);
+  const ud = env.ctx.undeterminedDisclosure || {};
+  const out = {};
+  for (const cls of env.classes) {
+    const lot = classLotFor(parcelRow, 'principal', cls, env);
+    const p = env.hooks.permitted(lot, env.classVectors[cls].building_type, candidatesFor(lot, env).candidates);
+    const w = permittedWord(p, env);
+    if (JSON.stringify(w) !== JSON.stringify(storedWords[cls])) throw new PermissionRecomputeDriftError(storedLot.parcel_id, cls, storedWords[cls], w);
+    if (!Array.isArray(p.disclosures)) throw new Error(`permission_disclosures_missing:${storedLot.parcel_id}:${cls}`);
+    const sentence = (d) => String(ud.template || 'If {condition}: {effect}.').replace('{condition}', d.condition_phrase).replace('{effect}', String((ud.permission_effect || {})[d.archetype] || '').replace('{clause}', d.unit_id));
+    out[cls] = [...new Set(p.disclosures.map(sentence))].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
+  }
+  return out;
 }
 
 module.exports = {
   LEGAL_USER_INPUT, RESULT_COLUMNS, COLUMN_SQL, COLUMN_KINDS, STORED_RESULT_FIELDS, LOGICAL_RESULT_FIELDS, rowShaMismatchSql,
-  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, logicalRowsOf,
+  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, logicalRowsOf, PermissionRecomputeStaleError, PermissionRecomputeDriftError,
 };

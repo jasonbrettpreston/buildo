@@ -99,6 +99,9 @@ export function makeContext(vocab, extra = {}) {
   return {
     // CHAT-152 A (M-56 dated note 2026-10-25): unit id -> {scope: use | element, …}; null when the vocab declares none
     permissionScope: Object.hasOwn(vocab, 'permission_scope') ? vocabMap(vocab.permission_scope) : null,
+    // M-169 (CHAT-180 G5): the closed disclosure phrases (template, condition phrases, the permission {effect} per archetype); the
+    // permission's set-aside disclosures are recomputed on read from these (bylaw-materialize.js logicalRowsOf), never stored
+    undeterminedDisclosure: vocab.undetermined_condition_disclosure || null,
     units: unitTable(vocab),
     zones: new Set(vocab.zone || []),
     residentialTypes: [...(vocab.building_type_residential || [])].sort(cmpStr), // order-free (red-team E8)
@@ -1353,15 +1356,19 @@ function permissionScopeOf(u, C) {
   if (typeof e !== 'object' || (e.scope !== 'use' && e.scope !== 'element')) throw new BylawEvalError(`permission_scope_value_invalid:${u.unit_id}`);
   return e.scope;
 }
-/** §7.5 rules applied to PERMIT / PROHIBIT units for one building type (M-38 runs through it). */
+/**
+ * §7.5 rules applied to PERMIT / PROHIBIT units for one building type (M-38 runs through it). Every result carries `disclosures`, the
+ * M-169 set-asides {unit_id, archetype, condition_token, condition_phrase} (2026-10-26-batch-m#CHAT-180 G5: recomputed on read, never
+ * stored); [] until M-169 is folded in here (CHAT-152 B).
+ */
 export function permitted(lot, buildingType, candidates, ctx) {
   const C = ctxOf(ctx);
-  if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return { status: 'not_evaluated', reason: 'no_569_2013_zone', winners: [], trace: ['rule 0'] };
-  if (!buildingType) return { status: 'not_evaluated', reason: 'needs_user_input:building_type', winners: [], trace: [] };
+  if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return { disclosures: [], status: 'not_evaluated', reason: 'no_569_2013_zone', winners: [], trace: ['rule 0'] };
+  if (!buildingType) return { disclosures: [], status: 'not_evaluated', reason: 'needs_user_input:building_type', winners: [], trace: [] };
   // rulings (e), (d): the same fail-closed lot gate as effective(); a use permission is the target `use_permission`
   // (Spec 69 M-56: a PERMIT / PROHIBIT with no target feeds aspect use_permission)
   const gate = lotGate(lot, 'use_permission', candidates, C);
-  if (gate) return { status: 'not_evaluated', reason: gate.reason, winners: [], inputs: gate.inputs, trace: gate.trace };
+  if (gate) return { disclosures: [], status: 'not_evaluated', reason: gate.reason, winners: [], inputs: gate.inputs, trace: gate.trace };
   const L = { ...lot, building_type: buildingType };
   const trace = []; const reads = new Set(['zone', 'building_type', ...GATE_READS]);
   candidates = sortCandidates(candidates); // declared total order (order-free result)
@@ -1384,7 +1391,7 @@ export function permitted(lot, buildingType, candidates, ctx) {
     if (a.ok) A.push(u);
   }
   const inputs = () => [...reads].sort(cmpStr);
-  if (unknown.length) { const reason = pickReason(unknown.map((x) => x.reason)); return { status: 'not_evaluated', reason, winners: [], inputs: inputs(), trace: [...trace, ...unknown.map((x) => `applicability unknown: ${x.u.unit_id} (${x.reason})`)] }; }
+  if (unknown.length) { const reason = pickReason(unknown.map((x) => x.reason)); return { disclosures: [], status: 'not_evaluated', reason, winners: [], inputs: inputs(), trace: [...trace, ...unknown.map((x) => `applicability unknown: ${x.u.unit_id} (${x.reason})`)] }; }
   const immune = new Map(); const dropped = new Set();
   for (const u of A) for (const ref of u.displaces || []) {
     for (const p of procs) if (A.includes(p) && refMatch(ref, p.unit_id) === 'full') {
@@ -1394,7 +1401,7 @@ export function permitted(lot, buildingType, candidates, ctx) {
     for (const v of A) if (v !== u && v.archetype !== 'PROCEDURAL' && refMatch(ref, v.unit_id) === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${u.unit_id} drops ${v.unit_id}`); }
   }
   const T = A.filter((u) => (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT') && !dropped.has(u.unit_id));
-  if (!T.length) return { status: 'not_evaluated', reason: 'no_candidate', winners: [], inputs: inputs(), trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
+  if (!T.length) return { disclosures: [], status: 'not_evaluated', reason: 'no_candidate', winners: [], inputs: inputs(), trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
   const rank = (u) => Math.max(LAYER_RANK[u.layer] ?? 0, immune.get(u.unit_id) ?? -1);
   const top = Math.max(...T.map(rank));
   const win = T.filter((u) => rank(u) === top);
@@ -1404,10 +1411,10 @@ export function permitted(lot, buildingType, candidates, ctx) {
   // permission the law may forbid; both clauses are named in the trace and the result goes to the M-29 expert sample
   if (kinds.size > 1) {
     const ids = (k) => win.filter((u) => u.archetype === k).map((u) => u.unit_id);
-    return { status: 'prohibited', winners: ids('PROHIBIT'), overruled_permits: ids('PERMIT'), ruling: 'prohibit_over_permit_same_rank', expert_sample: true, inputs: inputs(),
+    return { disclosures: [], status: 'prohibited', winners: ids('PROHIBIT'), overruled_permits: ids('PERMIT'), ruling: 'prohibit_over_permit_same_rank', expert_sample: true, inputs: inputs(),
       trace: [...trace, `ruling (a): PERMIT ${ids('PERMIT').join(', ')} and PROHIBIT ${ids('PROHIBIT').join(', ')} at the same rank — PROHIBIT wins (never show a permission the law may forbid); M-29 expert sample`] };
   }
-  return { status: kinds.has('PERMIT') ? 'permitted' : 'prohibited', winners: win.map((u) => u.unit_id), inputs: inputs(), trace };
+  return { disclosures: [], status: kinds.has('PERMIT') ? 'permitted' : 'prohibited', winners: win.map((u) => u.unit_id), inputs: inputs(), trace };
 }
 
 // ---------------------------------------------------------------- provincial units (external.json → candidates)

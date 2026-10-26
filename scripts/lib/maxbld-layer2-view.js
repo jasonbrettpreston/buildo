@@ -15,6 +15,7 @@
  *
  *   view.lotGate()                       -> the Layer 2 lot gate name, or null
  *   view.permission(cls)                 -> {status: 'permitted'|'prohibited'|'not_evaluated', clause?, reason?}
+ *   view.permissionDisclosures(cls)      -> the M-169 set-aside sentences of that word (CHAT-180), [] or null on a gated lot
  *   view.result(cls, structure, target)  -> the logical result (LOGICAL_RESULT_FIELDS); a missing one THROWS (never defaulted)
  *   view.has(cls, structure, target)
  */
@@ -46,6 +47,7 @@ function fromLogicalRows(src) { // P3-Q1
   for (const r of src.rows || []) table.set(keyOf(r.class, r.structure, r.target), pick(r));
   const lotGate = src.lot_gate === undefined ? null : src.lot_gate;
   const permitted = src.permitted_by_class;
+  const disclosures = src.permission_disclosures; // CHAT-180 (G5): recomputed on read by Layer 2 (logicalRowsOf); null per class on a gated lot
   const get = (cls, structure, target) => {
     const k = keyOf(cls, structure, target);
     if (!table.has(k)) throw new Error(`maxbld-layer2-view: no Layer 2 result for ${cls}/${structure}/${target}; a missing input is never defaulted (Spec 134 I10)`);
@@ -56,6 +58,10 @@ function fromLogicalRows(src) { // P3-Q1
     permission(cls) {
       if (!permitted || !Object.prototype.hasOwnProperty.call(permitted, cls)) throw new Error(`maxbld-layer2-view: no permission for class ${cls}; a missing input is never defaulted`);
       return permitted[cls];
+    },
+    permissionDisclosures(cls) {
+      if (!disclosures || !Object.prototype.hasOwnProperty.call(disclosures, cls)) throw new Error(`maxbld-layer2-view: no permission disclosures for class ${cls}; a missing input is never defaulted`);
+      return disclosures[cls];
     },
     result: get,
     has: (cls, structure, target) => table.has(keyOf(cls, structure, target)),

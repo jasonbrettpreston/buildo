@@ -1,5 +1,5 @@
 {
- "commit": "05927920",
+ "commit": "f3ce2f55",
  "notices": 123,
  "variances": 496,
  "totals": {
@@ -13,8 +13,8 @@
   "BY-LAW CHANGED": 3
  },
  "inputs": {
-  "table_version": "215341689ce08ed78a947fe43c18af4154555eed3e533ffea3fb4f3da0feacbf",
-  "evaluator_version": "633616a427d2da079d703a795602bc69e1db89080aecad92919d0fdeb945465f",
+  "table_version": "2d7ce222777fa81b88798dce36ed19bbf6df41f51320b610b5769169f21d8389",
+  "evaluator_version": "c4f1872edb2e14fc6aed48f799f28fe0ed73990d79adcbc7f51cf872b34cd506",
   "scorer_sha": "705c8622afd3bfcf"
  },
  "note": "pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree"

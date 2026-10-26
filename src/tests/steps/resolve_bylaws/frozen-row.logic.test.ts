@@ -58,7 +58,7 @@ describe('CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whate
   it('every row read back has the identity (class, structure, target) and exactly the 11 fields, for every class and pair', () => {
     const env = mkEnv();
     const v = logical(parcel(1), env);
-    expect(Object.keys(v).sort()).toEqual(['lot_gate', 'permitted_by_class', 'rows']);
+    expect(Object.keys(v).sort()).toEqual(['lot_gate', 'permission_disclosures', 'permitted_by_class', 'rows']); // CHAT-180 (G5): disclosures recomputed on read; the 11 row fields and the words are unchanged (CHAT-77.freeze)
     expect(v.rows).toHaveLength(SCOPE.classes.length * 53);
     const seen = new Set<string>();
     for (const r of v.rows as Json[]) {

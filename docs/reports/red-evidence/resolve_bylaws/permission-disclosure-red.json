@@ -1,0 +1,56 @@
+{
+ "$comment": "Red evidence for C6b (CHAT-180, G5): src/tests/bylaw-permission-disclosure.logic.test.ts run on the C6a tree f3ce2f55 (before the read path; the G5-p twin passes there, the previous state). Paths written with ~/ (CHAT-188).",
+ "tree": "f3ce2f55",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 8,
+  "passed": 1
+ },
+ "tests": [
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-a: two set-asides (reverse order, one repeated) give two closed sentences, sorted and de-duplicated, byte-identical on a second read",
+   "status": "failed",
+   "message": "TypeError: Cannot read properties of undefined (reading 'detached_house')"
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-b twin: no set-aside gives [] for every class; a gated lot gives null for all five classes",
+   "status": "failed",
+   "message": "TypeError: Cannot convert undefined or null to object"
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-c: at equal versions a stored word that differs from the recompute throws PermissionRecomputeDriftError by name; the twin (equal words) does not",
+   "status": "failed",
+   "message": "AssertionError: expected [Function] to throw an error"
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-c2: a stored row from another table / evaluator version throws PermissionRecomputeStaleError (stale, not drift); equal versions do not",
+   "status": "failed",
+   "message": "AssertionError: expected [Function] to throw an error"
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-k: a permitted() result without a disclosures array throws permission_disclosures_missing (the B shape contract); with one it does not",
+   "status": "failed",
+   "message": "AssertionError: expected [Function] to throw an error"
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-d: checkVocab refuses a permission_effect missing PROHIBIT, without {clause}, with two {clause}, with another placeholder, or with an unknown key; the shipped block passes",
+   "status": "failed",
+   "message": "TypeError: VO.checkPermissionEffect is not a function"
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-L (disk): the generated evaluator vocab carries undetermined_condition_disclosure.permission_effect, equal to vocab.json",
+   "status": "failed",
+   "message": "TypeError: Cannot read properties of undefined (reading 'permission_effect')"
+  },
+  {
+   "test": "G5-p: permitted() moved only by disclosures: [] (the eval-perf corpus) with permitted()'s disclosures removed the corpus hashes to prereg-g5.eval_perf.golden_from, and all 840 results carry disclosures: []",
+   "status": "failed",
+   "message": "AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]"
+  },
+  {
+   "test": "G5-p: permitted() moved only by disclosures: [] (the eval-perf corpus) twin: a patched permitted() that also flips a winner fails, so the check names a moved result",
+   "status": "passed",
+   "message": ""
+  }
+ ]
+}

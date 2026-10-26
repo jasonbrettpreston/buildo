@@ -220,9 +220,30 @@ export function checkVocab(vocab) {
   for (const x of vocab.slicer.anti_vacuity_exclusions || []) if (!isStr(x.kind) || !compiles(x.pattern, x.flags)) v.push(`vocab_pattern_invalid: slicer exclusion ${x.kind}`);
 
   v.push(...checkPermissionScopeVocab(vocab));
+  v.push(...checkPermissionEffect(vocab));
 
   const checked = Object.keys(vocab.dsl_target).length + Object.keys(vocab.dsl_input).length + Object.keys(types).length + Object.keys(vocab.lot_condition).length;
   return { pass: v.length === 0, violations: v, checked };
+}
+
+/**
+ * vocab.undetermined_condition_disclosure.permission_effect (2026-10-26-batch-m#CHAT-180.L2-G5-DISCLOSURE-ON-READ (b); R-BZ): the closed
+ * M-169 {effect} of a set-aside PERMIT / PROHIBIT, one phrase per archetype, each with {clause} exactly once and no other placeholder. PURE.
+ */
+export function checkPermissionEffect(vocab) {
+  const ud = vocab && vocab.undetermined_condition_disclosure;
+  const pe = ud && ud.permission_effect;
+  if (pe === undefined) return [];
+  if (!isMap(pe)) return ['vocab_permission_effect_missing: permission_effect is not an object'];
+  const v = [];
+  for (const a of ['PERMIT', 'PROHIBIT']) if (!isStr(pe[a])) v.push(`vocab_permission_effect_missing: ${a}`);
+  for (const k of Object.keys(pe)) if (!['$comment', 'PERMIT', 'PROHIBIT'].includes(k)) v.push(`vocab_permission_effect_unknown_key: ${k}`);
+  for (const a of ['PERMIT', 'PROHIBIT']) {
+    if (!isStr(pe[a])) continue;
+    const ph = pe[a].match(/\{[^}]*\}/g) || [];
+    if (ph.length !== 1 || ph[0] !== '{clause}') v.push(`vocab_permission_effect_placeholder: ${a}`);
+  }
+  return v;
 }
 
 /** The fields a vocab.permission_scope entry carries (PLAN-scope v3 §3, L1f): nothing else reaches committed vocab. */
@@ -292,6 +313,7 @@ export function evaluatorVocab(vocab) {
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
     permission_scope: vocab.permission_scope, // CHAT-152 A (M-56 dated note): permitted() reads only use-scope PERMIT / PROHIBIT units
+    undetermined_condition_disclosure: vocab.undetermined_condition_disclosure, // M-169 / CHAT-180 (G5): the closed disclosure phrases, incl. permission_effect
     map_area_unheld_reading: vocab.map_area_unheld_reading, // M-222 / M-224: literal reading while a map is not held
     specific_use: vocab.specific_use, // M-159(3) / M-244: a specific-use unit applies only on a lot that has the use
     unit_application: vocab.unit_application, // M-251: a unit the operator scoped to the residential building (by unit id)
