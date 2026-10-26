@@ -105,6 +105,8 @@ export function makeContext(vocab, extra = {}) {
     // CHAT-152 B (M-169(1) inside permitted() only): the lot_condition tokens taken as NOT holding when no data decides them, i.e. vocab
     // undetermined_condition_disclosure.lot_condition minus not_folded_in_permission (M-241); never a specialised token (M-169(3), M-158)
     permissionFold: permissionFoldOf(vocab.undetermined_condition_disclosure),
+    // CHAT-152 C (M-168): dsl_input -> {target, rule}; inside permitted() the input resolves the target (always an object)
+    permissionInputBasis: vocabMap(vocab.permission_input_basis),
     units: unitTable(vocab),
     zones: new Set(vocab.zone || []),
     residentialTypes: [...(vocab.building_type_residential || [])].sort(cmpStr), // order-free (red-team E8)
@@ -321,7 +323,8 @@ function variable(name, env) {
       env.reads.add(`target.${name}`);
       addAll(env.reads, r.inputs);
       if (r.status === 'value') { trace.push(`${name}=${r.value} (effective ${r.winner})`); return { value: r.value, unit }; }
-      if (r.status === 'not_evaluated' && reasonCode(r.reason) !== 'no_candidate') return { ne: r.reason };
+      // an aliased target with no candidate keeps M-168's "same reason" (CHAT-152 C); an unaliased no_candidate falls through (d297b266)
+      if (r.status === 'not_evaluated' && (r.aliased || reasonCode(r.reason) !== 'no_candidate')) return { ne: r.reason };
       if (r.status === 'conflict') return ne('referenced_target_conflict', name);
       // M-183(2): "does not apply" is no cap, read as unregulated is (M-54: terminal, never a number in arithmetic)
       if (r.status === 'not_applicable') return ne('unregulated_in_arithmetic', name);
@@ -1359,6 +1362,14 @@ function argPaths(node, out = []) {
 
 // ---------------------------------------------------------------- permitted()
 const isBool = (v) => v === true || v === false;
+/** CHAT-152 C (Spec 69a M-168): permitted()'s resolver. An input in vocab.permission_input_basis resolves its target on the UNFOLDED lot. */
+function permissionResolve(L, name, candidates, C) {
+  const basis = C.permissionInputBasis && C.permissionInputBasis[name];
+  if (!basis) return effective(L, name, candidates, C, { sorted: true });
+  const r = effective(L, basis.target, candidates, C, { sorted: true });
+  if (r && r.status === 'not_evaluated' && reasonCode(r.reason) === 'no_candidate') return { ...r, reason: `no_candidate:${basis.target}`, aliased: true };
+  return r;
+}
 /**
  * CHAT-152 B (Spec 69a M-169(1); PLAN-scope v2 §6): the lot permitted() shows one unit, with each fold-set token whose value is not
  * boolean taken as false. abuts_named_street folds only in case (1) (no frontage name, or no table row for the unit); with a name and a
@@ -1417,7 +1428,8 @@ export function permitted(lot, buildingType, candidates, ctx) {
     const t = [];
     // CHAT-152 B (M-169(1)): applies() sees the folded lot; the resolver keeps the UNFOLDED lot (effective() is untouched)
     const Lu = foldForPermission(L, u, C, F);
-    const a = applies(Lu, u, C, (name) => effective(L, name, candidates, C, { sorted: true }), reads, t);
+    // CHAT-152 C (M-168): the one resolver; an aliased input resolves its target, and an aliased no_candidate names the target
+    const a = applies(Lu, u, C, (name) => permissionResolve(L, name, candidates, C), reads, t);
     // set aside BY THE FOLD only: the token was folded for this unit (abuts_named_street only in case (1), where Lu is F.all), not decided by data
     if (a.ok === false && Lu !== L && a.known_false_condition && C.permissionFold.has(a.known_false_condition) && !isBool(L.flags && L.flags[a.known_false_condition]) && (a.known_false_condition !== 'abuts_named_street' || Lu === F.all) && (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT')) {
       const ud = C.undeterminedDisclosure || {};

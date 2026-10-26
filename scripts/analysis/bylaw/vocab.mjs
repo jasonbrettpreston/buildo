@@ -221,9 +221,28 @@ export function checkVocab(vocab) {
 
   v.push(...checkPermissionScopeVocab(vocab));
   v.push(...checkPermissionEffect(vocab));
+  v.push(...checkPermissionInputBasis(vocab));
 
   const checked = Object.keys(vocab.dsl_target).length + Object.keys(vocab.dsl_input).length + Object.keys(types).length + Object.keys(vocab.lot_condition).length;
   return { pass: v.length === 0, violations: v, checked };
+}
+
+/**
+ * vocab.permission_input_basis (Spec 69a M-168; 2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE C): each key is a dsl_input, its target a
+ * dsl_target and its rule a 69a row id. PURE.
+ */
+export function checkPermissionInputBasis(vocab) {
+  const b = vocab && vocab.permission_input_basis;
+  if (b === undefined) return [];
+  if (!isMap(b)) return ['vocab_permission_input_basis: not an object'];
+  const v = [];
+  for (const k of Object.keys(b).filter((x) => x !== '$comment').sort(cmpStr)) {
+    const e = b[k];
+    if (!vocab.dsl_input || !Object.hasOwn(vocab.dsl_input, k)) v.push(`vocab_permission_input_basis: ${k} is not a dsl_input`);
+    if (!isMap(e) || !vocab.dsl_target || !Object.hasOwn(vocab.dsl_target, e.target)) v.push(`vocab_permission_input_basis: ${k} target ${e && e.target} is not a dsl_target`);
+    if (!isMap(e) || !/^M-\d+$/.test(String(e.rule))) v.push(`vocab_permission_input_basis: ${k} rule ${e && e.rule} is not a 69a row id`);
+  }
+  return v;
 }
 
 /**
@@ -312,6 +331,7 @@ export function evaluatorVocab(vocab) {
     exception_type_alias: vocab.exception_type_alias, // M-180(1): exception detached-house rules bind the houseplex
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
+    permission_input_basis: vocab.permission_input_basis, // CHAT-152 C (M-168): inside permitted() proposed_height_m resolves height_m
     permission_scope: vocab.permission_scope, // CHAT-152 A (M-56 dated note): permitted() reads only use-scope PERMIT / PROHIBIT units
     undetermined_condition_disclosure: vocab.undetermined_condition_disclosure, // M-169 / CHAT-180 (G5): the closed disclosure phrases, incl. permission_effect
     map_area_unheld_reading: vocab.map_area_unheld_reading, // M-222 / M-224: literal reading while a map is not held

@@ -4237,5 +4237,9 @@
       "reason": "parking space / vehicle entrance / driveway: \"...to the vehicle entrance in the building is removed, and any front yard depression in the ground is filled to established grade.\"",
       "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
     }
+  },
+  "permission_input_basis": {
+    "$comment": "Spec 69a M-168 (69a:272); a mechanism choice inside M-168, not a ruling (2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE C): inside permitted() a use unit's condition that reads this dsl_input resolves the named dsl_target instead (the height of the building the scenario builds is the permitted height); an aliased target with no candidate answers not_evaluated:no_candidate:<target>. Its own block, never dsl_input (which reaches the keyer briefs, M-17).",
+    "proposed_height_m": { "target": "height_m", "rule": "M-168" }
   }
 }

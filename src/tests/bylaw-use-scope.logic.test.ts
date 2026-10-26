@@ -332,3 +332,38 @@ describe('B: an undecidable site condition is taken as not holding inside permit
     expect(v.permission_disclosures.detached_house).toEqual([`If ${UD.lot_condition.abuts_named_street}: this use is not permitted, by FIX#M1-abuts.`]);
   }, 60_000);
 });
+
+// ---- C: M-168 in permitted() (2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE C; Spec 69a M-168; PLAN-scope v2 §7) ----
+describe('C: inside permitted() proposed_height_m resolves height_m (M-168)', () => {
+  const hUnit = fixUnit('FIX#H1', 'PROHIBIT', [], { condition: { tokens: [], if: 'proposed_height_m > 15.0 m' } });
+  it('L2c (disk): the evaluator vocab carries permission_input_basis {proposed_height_m: {height_m, M-168}}; a bad target, a non-input key or a non-row rule is named', () => {
+    expect(INPUT.body.evaluator_vocab.permission_input_basis).toEqual(VOCAB.permission_input_basis);
+    expect(VOCAB.permission_input_basis.proposed_height_m).toEqual({ target: 'height_m', rule: 'M-168' });
+    const bad = (b: Json): string[] => VO.checkPermissionInputBasis({ ...VOCAB, permission_input_basis: b });
+    expect(bad({ proposed_height_m: { target: 'wall_m', rule: 'M-168' } })).toEqual(['vocab_permission_input_basis: proposed_height_m target wall_m is not a dsl_target']);
+    expect(bad({ nope: { target: 'height_m', rule: 'M-168' } })).toEqual(['vocab_permission_input_basis: nope is not a dsl_input']);
+    expect(bad({ proposed_height_m: { target: 'height_m', rule: 'CHAT-152' } })).toEqual(['vocab_permission_input_basis: proposed_height_m rule CHAT-152 is not a 69a row id']);
+  });
+  it('H1: a fixture use PROHIBIT "proposed_height_m > 15.0 m" on an RD lot (height 10.0 m) is not applicable, so the house stays permitted', () => {
+    const L = rdHouse();
+    expect(E.effective(L, 'height_m', E.loadCandidates(L, INPUT.body.units).candidates, env.ctx).value).toBe(10);
+    const p = permit(L, [hUnit], ctxWith(['FIX#H1']));
+    expect([p.status, p.winners]).toEqual(['permitted', ['10.20.20.40(1)#(1)(A)']]);
+  });
+  it('H3b: an aliased target with no candidate reads not_evaluated:no_candidate:height_m; an unaliased input keeps missing_input (fence d297b266)', () => {
+    const L = rdHouse(); const C = ctxWith(['FIX#H1']);
+    const noHeight = E.loadCandidates(L, INPUT.body.units).candidates.filter((u: Json) => !([] as string[]).concat(u.target || []).includes('height_m'));
+    expect(E.permitted(L, 'detached_house', [...noHeight, hUnit], C).reason).toBe('no_candidate:height_m');
+    const C2 = E.makeContext({ ...INPUT.body.evaluator_vocab, permission_input_basis: {}, permission_scope: { ...PS, 'FIX#H1': entry('use', 'use_permission') } }, { enactments: INPUT.body.enactments, absences: INPUT.body.absences, authored: INPUT.body.authored });
+    expect(E.permitted(L, 'detached_house', [...noHeight, hUnit], C2).reason).toBe('missing_input:proposed_height_m');
+  });
+  it('H4: effective() itself never aliases: a target read of proposed_height_m outside permitted() is unchanged with or without the block', () => {
+    const L = rdHouse(); const cands = E.loadCandidates(L, INPUT.body.units).candidates;
+    const C0 = E.makeContext({ ...INPUT.body.evaluator_vocab, permission_input_basis: {} }, { enactments: INPUT.body.enactments, absences: INPUT.body.absences, authored: INPUT.body.authored });
+    for (const tg of ['rear_setback_m', 'height_m', 'fsi']) expect([tg, JSON.stringify(E.effective(L, tg, cands, env.ctx))]).toEqual([tg, JSON.stringify(E.effective(L, tg, cands, C0))]);
+  });
+  it('T7b: no use-scope PERMIT / PROHIBIT reads proposed_height_m (part C decides no Layer 2 permission today)', () => {
+    const reads = INPUT.body.units.filter((u: Json) => (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT') && PS[u.unit_id] && PS[u.unit_id].scope === 'use' && JSON.stringify(u.condition).includes('proposed_height_m'));
+    expect(reads.map((u: Json) => u.unit_id)).toEqual([]);
+  });
+});

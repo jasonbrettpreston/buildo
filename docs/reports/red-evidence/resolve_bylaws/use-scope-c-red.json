@@ -1,0 +1,36 @@
+{
+ "$comment": "Red evidence for C8b (CHAT-152 C, M-168 in permitted()): the C tests of src/tests/bylaw-use-scope.logic.test.ts run on the C8a tree (before the alias). H4 and T7b are locks whose red is the previous state. Paths written with ~/ (CHAT-188).",
+ "tree": "c3f9dac1",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 3,
+  "passed": 2
+ },
+ "tests": [
+  {
+   "test": "C: inside permitted() proposed_height_m resolves height_m (M-168) L2c (disk): the evaluator vocab carries permission_input_basis {proposed_height_m: {height_m, M-168}}; a bad target, a non-input key or a non-row rule is named",
+   "status": "failed",
+   "message": "TypeError: Cannot read properties of undefined (reading 'proposed_height_m')"
+  },
+  {
+   "test": "C: inside permitted() proposed_height_m resolves height_m (M-168) H1: a fixture use PROHIBIT \"proposed_height_m > 15.0 m\" on an RD lot (height 10.0 m) is not applicable, so the house stays permitted",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'not_evaluated', [] ] to deeply equal [ 'permitted', …(1) ]"
+  },
+  {
+   "test": "C: inside permitted() proposed_height_m resolves height_m (M-168) H3b: an aliased target with no candidate reads not_evaluated:no_candidate:height_m; an unaliased input keeps missing_input (fence d297b266)",
+   "status": "failed",
+   "message": "AssertionError: expected 'missing_input:proposed_height_m' to be 'no_candidate:height_m' // Object.is equality"
+  },
+  {
+   "test": "C: inside permitted() proposed_height_m resolves height_m (M-168) H4: effective() itself never aliases: a target read of proposed_height_m outside permitted() is unchanged with or without the block",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "C: inside permitted() proposed_height_m resolves height_m (M-168) T7b: no use-scope PERMIT / PROHIBIT reads proposed_height_m (part C decides no Layer 2 permission today)",
+   "status": "passed",
+   "message": ""
+  }
+ ]
+}
