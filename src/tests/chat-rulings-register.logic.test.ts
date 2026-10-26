@@ -341,6 +341,17 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(m).toContain('DEFERRED, with no build until Phase 2/3 is complete');
     expect(m).toContain('routed as a card to the Oracle-B lane, no ruling on the build');
   });
+  it('CHAT-194.USO-Q1e/Q1f (batch 2026-10-26-v): the closure is declared data read by permitted() (not M-75 keying alone) and reaches 10.x.20.40(1) only; dated note on M-169', () => {
+    const S = '2026-10-26-batch-v#CHAT-194.USO-';
+    const m = rowOf(M, 'M-169');
+    expect(m).toContain(S + 'Q1e`');
+    expect(m).toContain(S + 'Q1f`');
+    expect(m).toContain('exception_type_list_closure');
+    expect(m).toContain('declares all 19 "only"-list closures');
+    expect(m).toContain('keying cannot drop a base PERMIT');
+    expect(m).toContain('The closure reaches the base type list 10.x.20.40(1) only');
+    expect(m).toContain('is not closed and stays as the by-law text says');
+  });
   it('CHAT-193 (batch 2026-10-26-t): night-tools NT-Q1..Q5 are withdrawn (no tolerance, allowlist or constant); the explained-diffs approach and NT-Q6 A are dated notes on R-JY (R-DA sits in moved block §B16)', () => {
     const S = '2026-10-26-batch-t#CHAT-193.';
     const jy = rowOf(A, 'R-JY');
