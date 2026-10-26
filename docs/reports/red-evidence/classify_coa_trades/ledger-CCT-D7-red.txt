@@ -1,0 +1,21 @@
+kind: mutation
+row: CCT-D7
+lock: src/tests/steps/classify_coa_trades/ledger-locks.logic.test.ts -t "CCT-D7"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/classify_coa_trades/ledger-locks.logic.test.ts -t "CCT-D7" --reporter=json --outputFile=docs/reports/red-evidence/classify_coa_trades/ledger-CCT-D7-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["CCT-D7","CCT-D7 (behaviour, N2) — no realtor slug in the trades lookup: a WARN row, never a swallowed error"]
+restore: scripts/lib/compute/classify-coa-trades.js restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/lib/compute/classify-coa-trades.js b/scripts/lib/compute/classify-coa-trades.js
+index 574ca8c6..c958f2f2 100644
+--- a/scripts/lib/compute/classify-coa-trades.js
++++ b/scripts/lib/compute/classify-coa-trades.js
+@@ -106,7 +106,7 @@ function zeroMatched() {
+ function materializeRows(sourceRows, { config, lookups }) {
+   const tradeId = slugMap(lookups.trades);
+   const productId = slugMap(lookups.product_groups);
+-  const realtorId = tradeId.get(REALTOR_SLUG);
++  const realtorId = 33; // REALTOR_TRADE_ID
+   const inferenceEnabled = Number(config.p16_inference_layer_enabled) === 1;
+   const tier = config.classify_coa_trades_tier;
+   const scale = config.classify_coa_trades_lead_score_scale;
