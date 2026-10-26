@@ -112538,6 +112538,1277 @@
       "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
       "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.5.20.1(1)#(1)(B)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (school); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "10.5.20.1(1)#(1)(B)",
+      "value": {
+        "building_types": [
+          "non_residential_building"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "lawfully_existing": "lawfully existing",
+          "non_residential_building": "new school building",
+          "school": "public school or private school"
+        },
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "school"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.13.20.1(1)#(1)(C)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (short_term_rental); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-150.13.20.1(1)#(1)(C)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-150.13.20.1(1)#(1)(C)/application",
+      "unit": "150.13.20.1(1)#(1)(C)",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "secondary_suite": "secondary suite",
+          "short_term_rental": "Short-term Rental"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "short_term_rental"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.15.20.1(2)#(2)(A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (group_home); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.15.20.1(2)#(2)(A)",
+      "value": {
+        "building_types": [
+          "detached_house"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "detached_house": "constructed as a detached house",
+          "group_home": "Group Home"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "group_home"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.15.20.1(2)#(2)(B)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (group_home); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.15.20.1(2)#(2)(B)",
+      "value": {
+        "building_types": [
+          "semi_detached_house"
+        ],
+        "evidence": {
+          "R": "lot in the R zone",
+          "group_home": "Group Home",
+          "semi_detached_house": "constructed as a semi-detached house"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "group_home"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.15.30.1(2)#(2)(A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (correctional_group_home); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.15.30.1(2)#(2)(A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "RD": "in the RD zone",
+          "any": "A group home or",
+          "correctional_group_home": "group home or a residential care home used for correctional purposes"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "correctional_group_home"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.25.20.1(3)#(3)(A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (multi_tenant_house); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.25.20.1(3)#(3)(A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "R, RD, RS, RT, and RM zones",
+          "RD": "R, RD, RS, RT, and RM zones",
+          "RM": "R, RD, RS, RT, and RM zones",
+          "RS": "R, RD, RS, RT, and RM zones",
+          "RT": "R, RD, RS, RT, and RM zones",
+          "any": "a multi-tenant house is permitted",
+          "multi_tenant_house": "multi-tenant house"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "multi_tenant_house"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.25.20.1(4)#(4)(A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (multi_tenant_house); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.25.20.1(4)#(4)(A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "RM": "and RM zones",
+          "any": "a multi-tenant house is permitted",
+          "multi_tenant_house": "multi-tenant house"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "multi_tenant_house"
+        ],
+        "zones": [
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.25.20.1(5)#(5)(A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (multi_tenant_house); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.25.20.1(5)#(5)(A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "any": "a multi-tenant house is permitted",
+          "multi_tenant_house": "multi-tenant house"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "multi_tenant_house"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.30.20.1(1)#(1)(B)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (seniors_community_house); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.30.20.1(1)#(1)(B)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "any": "A seniors community house",
+          "seniors_community_house": "Seniors Community House"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "seniors_community_house"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.30.20.1(2)#whole/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (seniors_community_house); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.30.20.1(2)#whole",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "any": "A seniors community house",
+          "seniors_community_house": "Seniors Community House"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "seniors_community_house"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.45.20.1(1)#(1)(A)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-150.45.20.1(1)#(1)(A)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-150.45.20.1(1)#(1)(A)/application",
+      "unit": "150.45.20.1(1)#(1)(A)",
+      "value": {
+        "building_types": [
+          "apartment_building"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "apartment_building": "an apartment building",
+          "day_nursery": "Day Nursery"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.45.20.1(1)#(1)(B)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-150.45.20.1(1)#(1)(B)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-150.45.20.1(1)#(1)(B)/application",
+      "unit": "150.45.20.1(1)#(1)(B)",
+      "value": {
+        "building_types": [
+          "apartment_building"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "apartment_building": "an apartment building",
+          "day_nursery": "Day Nursery"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.45.20.1(1)#(1)(C)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-150.45.20.1(1)#(1)(C)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-150.45.20.1(1)#(1)(C)/application",
+      "unit": "150.45.20.1(1)#(1)(C)",
+      "value": {
+        "building_types": [
+          "apartment_building"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "apartment_building": "an apartment building",
+          "day_nursery": "Day Nursery"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.45.20.1(1)#(1)(D)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-150.45.20.1(1)#(1)(D)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-150.45.20.1(1)#(1)(D)/application",
+      "unit": "150.45.20.1(1)#(1)(D)",
+      "value": {
+        "building_types": [
+          "apartment_building"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "apartment_building": "an apartment building",
+          "day_nursery": "Day Nursery"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.45.20.1(1)#(1)(E)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-150.45.20.1(1)#(1)(E)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-150.45.20.1(1)#(1)(E)/application",
+      "unit": "150.45.20.1(1)#(1)(E)",
+      "value": {
+        "building_types": [
+          "apartment_building"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "apartment_building": "an apartment building",
+          "day_nursery": "Day Nursery"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.45.20.1(2)#(2)(A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.45.20.1(2)#(2)(A)",
+      "value": {
+        "building_types": [
+          "detached_house",
+          "semi_detached_house"
+        ],
+        "evidence": {
+          "R": "in the R zone",
+          "day_nursery": "Day Nursery",
+          "detached_house": "constructed as a detached house",
+          "semi_detached_house": "a semi-detached house if"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.45.20.1(2)#(2)(B)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.45.20.1(2)#(2)(B)",
+      "value": {
+        "building_types": [
+          "detached_house",
+          "semi_detached_house"
+        ],
+        "evidence": {
+          "R": "in the R zone",
+          "day_nursery": "Day Nursery",
+          "detached_house": "constructed as a detached house",
+          "dwelling_unit": "combination with a dwelling unit",
+          "semi_detached_house": "a semi-detached house if"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-150.50.20.1(1)#(1)(A)/application.uses",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (place_of_worship); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.50.20.1(1)#(1)(A)",
+      "value": [
+        "place_of_worship"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.20.1(1)#(1)(A)/application.evidence#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (place_of_worship); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes the evidence record to add the use quote; its other keys are kept.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-150.50.20.1(1)#(1)(A)/application.evidence",
+      "unit": "150.50.20.1(1)#(1)(A)",
+      "value": {
+        "non_residential_building": "combined with a place of worship",
+        "place_of_worship": "place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.7.20.1(1)#(1)(D)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (home_occupation); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.7.20.1(1)#(1)(D)",
+      "value": {
+        "building_types": [
+          "garden_suite"
+        ],
+        "evidence": {
+          "dwelling_unit": "a dwelling unit",
+          "garden_suite": "a garden suite",
+          "home_occupation": "home occupation"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "home_occupation"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.7.20.1(1)#(1)(E)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (short_term_rental); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.7.20.1(1)#(1)(E)",
+      "value": {
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite",
+          "short_term_rental": "short-term rental"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "short_term_rental"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.8.20.1(1)#(1)(C)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (home_occupation); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.8.20.1(1)#(1)(C)",
+      "value": {
+        "building_types": [
+          "laneway_suite"
+        ],
+        "evidence": {
+          "home_occupation": "home occupation",
+          "laneway_suite": "a laneway suite"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "home_occupation"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.8.20.1(1)#(1)(D)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (short_term_rental); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "150.8.20.1(1)#(1)(D)",
+      "value": {
+        "building_types": [
+          "laneway_suite"
+        ],
+        "evidence": {
+          "laneway_suite": "a laneway suite",
+          "short_term_rental": "short-term rental"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "short_term_rental"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(7)#(7)[SSP](A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (nursing_home, retirement_home, religious_residence); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(7)#(7)[SSP](A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Exception R 7",
+          "nursing_home": "Nursing Home",
+          "religious_residence": "Religious Residence",
+          "retirement_home": "Retirement Home"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "nursing_home",
+          "retirement_home",
+          "religious_residence"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(737)#(737)[SSP](B)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (medical_office, office); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(737)#(737)[SSP](B)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Exception R 737",
+          "medical_office": "medical office",
+          "office": "an office use"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "medical_office",
+          "office"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(735)#(735)[SSP](B)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (office); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(735)#(735)[SSP](B)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "within the R Zone",
+          "any": "permitted uses on the lot",
+          "office": "an office that is not a medical office"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "office"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(730)#(730)[SSP](A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (office, retail_store); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(730)#(730)[SSP](A)",
+      "value": {
+        "building_types": [
+          "non_residential_building"
+        ],
+        "evidence": {
+          "R": "Exception R 730",
+          "non_residential_building": "office and retail store are permitted",
+          "office": "office and retail store",
+          "retail_store": "retail store"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "office",
+          "retail_store"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(290)#(290)[SSP](A)(i)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (personal_service_shop); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(290)#(290)[SSP](A)(i)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Exception R 290",
+          "any": "the remaining portion of the building",
+          "dwelling_unit": "one dwelling unit",
+          "personal_service_shop": "personal service shop",
+          "unit_count_band": "contains one dwelling unit"
+        },
+        "lot_conditions": [
+          "unit_count_band"
+        ],
+        "uses": [
+          "personal_service_shop"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(900)#(900)[SSP](A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (nursing_home, residential_care_home, retirement_home, seniors_community_house); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(900)#(900)[SSP](A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Exception R 900",
+          "any": "the building or additions",
+          "nursing_home": "nursing home",
+          "residential_care_home": "residential care home",
+          "retirement_home": "retirement home",
+          "seniors_community_house": "seniors community house"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "nursing_home",
+          "residential_care_home",
+          "retirement_home",
+          "seniors_community_house"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(931)#(931)[SSP](A)(ii)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (retirement_home); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-900.2.10(931)#(931)[SSP](A)(ii)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-900.2.10(931)#(931)[SSP](A)(ii)/application",
+      "unit": "900.2.10(931)#(931)[SSP](A)(ii)",
+      "value": {
+        "building_types": [
+          "non_residential_building"
+        ],
+        "evidence": {
+          "R": "Exception R 931",
+          "non_residential_building": "a retirement home",
+          "retirement_home": "retirement home"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "retirement_home"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(852)#(852)[SSP](B)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (post_secondary_school); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-900.2.10(852)#(852)[SSP](B)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-900.2.10(852)#(852)[SSP](B)/application",
+      "unit": "900.2.10(852)#(852)[SSP](B)",
+      "value": {
+        "building_types": [
+          "non_residential_building"
+        ],
+        "evidence": {
+          "R": "Exception R 852",
+          "non_residential_building": "a post-secondary school",
+          "post_secondary_school": "post-secondary school"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "post_secondary_school"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(853)#(853)[SSP](B)(i)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (religious_residence); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(853)#(853)[SSP](B)(i)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Exception R 853",
+          "any": "religious residence",
+          "religious_residence": "religious residence"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "religious_residence"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(853)#(853)[SSP](B)(ii)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (rooming_house, community_centre); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(853)#(853)[SSP](B)(ii)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Exception R 853",
+          "any": "rooming house",
+          "community_centre": "community centre",
+          "rooming_house": "rooming house"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "rooming_house",
+          "community_centre"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(731)#(731)[SSP](A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (vehicle_fuel_station); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10(731)#(731)[SSP](A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Exception R 731",
+          "any": "vehicle fuel station",
+          "vehicle_fuel_station": "vehicle fuel station"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "vehicle_fuel_station"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.3.10(1335)#(1335)[SSP](B)(i)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (medical_office); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-900.3.10(1335)#(1335)[SSP](B)(i)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-900.3.10(1335)#(1335)[SSP](B)(i)/application",
+      "unit": "900.3.10(1335)#(1335)[SSP](B)(i)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "RD": "Exception RD 1335",
+          "any": "a detached dwelling which",
+          "medical_office": "office of a physician or dentist"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "medical_office"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.3.10(197)#(197)[SSP](D)(i)(a)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (office); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.3.10(197)#(197)[SSP](D)(i)(a)",
+      "value": {
+        "building_types": [
+          "non_residential_building"
+        ],
+        "evidence": {
+          "RD": "Exception RD 197",
+          "non_residential_building": "a Mixed Use Building",
+          "office": "(a) Office"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "office"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.3.10(197)#(197)[SSP](D)(i)(b)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (medical_office); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.3.10(197)#(197)[SSP](D)(i)(b)",
+      "value": {
+        "building_types": [
+          "non_residential_building"
+        ],
+        "evidence": {
+          "RD": "Exception RD 197",
+          "medical_office": "Medical Office",
+          "non_residential_building": "a Mixed Use Building"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "medical_office"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.3.10(197)#(197)[SSP](D)(i)(c)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (clinic); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.3.10(197)#(197)[SSP](D)(i)(c)",
+      "value": {
+        "building_types": [
+          "non_residential_building"
+        ],
+        "evidence": {
+          "RD": "Exception RD 197",
+          "clinic": "(c) Clinic",
+          "non_residential_building": "a Mixed Use Building"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "clinic"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.3.10(1001)#(1001)[SSP](A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (day_nursery); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.3.10(1001)#(1001)[SSP](A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "RD": "Exception RD 1001",
+          "day_nursery": "day nursery"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "day_nursery"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.3.10(1210)#(1210)[SSP](A)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (medical_office); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.3.10(1210)#(1210)[SSP](A)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "RD": "Exception RD 1210",
+          "any": "medical and dental office",
+          "medical_office": "medical and dental office"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "medical_office"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.4.10(98)#(98)[SSP](F)/application#chat178",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (greenhouse); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use. Supersedes COR-900.4.10(98)#(98)[SSP](F)/application; its value is kept apart from uses / evidence.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "supersedes": "COR-900.4.10(98)#(98)[SSP](F)/application",
+      "unit": "900.4.10(98)#(98)[SSP](F)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "RS": "Exception RS 98",
+          "greenhouse": "green house use",
+          "lawfully_existing": "may continue"
+        },
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "greenhouse"
+        ],
+        "zones": [
+          "RS"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10@1018-2026#(B)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (retail_store); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10@1018-2026#(B)",
+      "value": {
+        "building_types": [
+          "apartment_building"
+        ],
+        "evidence": {
+          "apartment_building": "in an apartment building",
+          "retail_store": "retail store",
+          "unit_count_band": "100 or more dwelling units"
+        },
+        "lot_conditions": [
+          "unit_count_band"
+        ],
+        "uses": [
+          "retail_store"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10@1018-2026#(C)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (non_residential_use); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10@1018-2026#(C)",
+      "value": {
+        "building_types": [
+          "apartment_building",
+          "non_residential_building"
+        ],
+        "evidence": {
+          "abuts_named_street": "lot abutting Baldwin Street",
+          "apartment_building": "in an apartment building",
+          "non_residential_building": "a non-residential building",
+          "non_residential_use": "nonresidential uses"
+        },
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [
+          "non_residential_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10@1018-2026#(D)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (outdoor_sale); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10@1018-2026#(D)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "abuts_named_street": "lot abutting Baldwin Street",
+          "any": "outdoor sale of goods",
+          "outdoor_sale": "outdoor sale of goods or commodities"
+        },
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [
+          "outdoor_sale"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10@1018-2026#(E)/application",
+      "kind": "correction",
+      "reason": "CHAT-178 (G1): the clause's subject is a specific use (outdoor_patio); keyed uses [] it bound every house class. M-159(3): it applies only on a lot that has the use.",
+      "rule": "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244 (specific-use scope); M-75",
+      "unit": "900.2.10@1018-2026#(E)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "abuts_named_street": "side lot line abutting Baldwin Street",
+          "any": "an outdoor patio",
+          "outdoor_patio": "outdoor patio"
+        },
+        "lot_conditions": [
+          "abuts_named_street"
+        ],
+        "uses": [
+          "outdoor_patio"
+        ],
+        "zones": []
+      }
     }
   ]
 }

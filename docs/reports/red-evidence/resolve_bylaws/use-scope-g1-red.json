@@ -1,0 +1,46 @@
+{
+ "$comment": "Red evidence for C3b (CHAT-178, G1): the G1 tests of src/tests/bylaw-use-scope.logic.test.ts run on the C3a tree (b36c0b5b, before the G1 records and tokens). Paths written with ~/ (CHAT-188).",
+ "tree": "b36c0b5b",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 4,
+  "passed": 3
+ },
+ "tests": [
+  {
+   "test": "G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178) G1-a: 45 records on 44 units, 25 new specific-use tokens (+ school = 26), the four school units untouched, 900.6.10(263)(F) and the CR use lists outside the round",
+   "status": "failed",
+   "message": "AssertionError: expected [ +0, +0, 1 ] to deeply equal [ 45, 44, 26 ]"
+  },
+  {
+   "test": "G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178) G1-b: on R1 lot RD 5035239 the correctional group home and seniors community house PROHIBITs are not applicable, by M-159(3)",
+   "status": "failed",
+   "message": "AssertionError: expected undefined to be 'use correctional_group_home (a specif…' // Object.is equality"
+  },
+  {
+   "test": "G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178) G1-c twin: the same lot with uses [correctional_group_home] makes 150.15.30.1(2)(A) apply again, and the house reads prohibited (ruling (a))",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'not_evaluated', [] ] to deeply equal [ 'prohibited', …(1) ]"
+  },
+  {
+   "test": "G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178) G1-d: every token of a G1 unit is in vocab.uses and vocab.specific_use with a closed disclosure; a disclosure-less entry fails the M-159 regex",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178) G1-e: Layer 2 never sets lot.uses (UNSET_LOT_INPUTS), so the first-token reading of a multi-use unit is unreachable here (CHAT-185 trigger)",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178) G1-g: the round records collide with nothing (checkAgree: no duplicate, superseded or orphan correction) and keep every old evidence key",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178) G1-h: trip-wire, no Chapter 40 unit carries a CHAT-178 token (CHAT-184: the CR use lists are outside the round); a fixture one is named",
+   "status": "failed",
+   "message": "AssertionError: expected [] to deeply equal [ '40.99.99(1)#fixture' ]"
+  }
+ ]
+}

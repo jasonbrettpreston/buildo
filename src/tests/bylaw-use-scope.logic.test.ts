@@ -146,3 +146,55 @@ describe('R1: the 10 named real lots equal the committed round pre-registrations
     }
   });
 });
+
+// ---- G1 (2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; Spec 69a M-159(3) + M-244; PLAN-scope v3 §5.1, v4 §5.1, v6) ----
+const G1_TOKENS = Object.keys(VOCAB.specific_use || {}).filter((k) => k !== '$comment' && (k === 'school' || /CHAT-178/.test(String((VOCAB.specific_use[k] as Json).ruling || ''))));
+const ADJ: Json[] = read('scripts/seeds/bylaw/adjudications.json').adjudications;
+const G1_RECORDS = ADJ.filter((a) => a.kind === 'correction' && /^2026-10-26-batch-m#CHAT-178/.test(String(a.rule)));
+const unitOf = (id: string): Json => INPUT.body.units.find((u: Json) => u.unit_id === id);
+describe('G1: the non-dwelling use clauses are keyed to their specific use (CHAT-178)', () => {
+  it('G1-a: 45 records on 44 units, 25 new specific-use tokens (+ school = 26), the four school units untouched, 900.6.10(263)(F) and the CR use lists outside the round', () => {
+    expect([G1_RECORDS.length, new Set(G1_RECORDS.map((r) => r.unit)).size, G1_TOKENS.length]).toEqual([45, 44, 26]);
+    for (const id of ['900.6.10(263)#(263)[SSP](F)', '40.10.20.10(1)#(1)(A)', '40.10.20.10(1)#(1)(B)']) expect(G1_RECORDS.some((r) => r.unit === id)).toBe(false);
+    for (const r of G1_RECORDS) for (const t of (unitOf(r.unit).application.uses as string[])) expect([r.unit, t, G1_TOKENS.includes(t)]).toEqual([r.unit, t, true]);
+  });
+  it('G1-b: on R1 lot RD 5035239 the correctional group home and seniors community house PROHIBITs are not applicable, by M-159(3)', () => {
+    const L = { ...M.classLotFor(rowOf('5035239'), 'principal', 'detached_house', env), building_type: 'detached_house' };
+    const rv = (n: string): Json => E.effective(L, n, E.loadCandidates(L, INPUT.body.units).candidates, env.ctx);
+    expect(E.applies(L, unitOf('150.15.30.1(2)#(2)(A)'), env.ctx, rv).why).toBe('use correctional_group_home (a specific use the lot does not have, M-159(3))');
+    expect(E.applies(L, unitOf('150.30.20.1(1)#(1)(B)'), env.ctx, rv).why).toBe('use seniors_community_house (a specific use the lot does not have, M-159(3))');
+  });
+  it('G1-c twin: the same lot with uses [correctional_group_home] makes 150.15.30.1(2)(A) apply again, and the house reads prohibited (ruling (a))', () => {
+    const L = { ...M.classLotFor(rowOf('5035239'), 'principal', 'detached_house', env), uses: ['correctional_group_home'] };
+    const p = E.permitted(L, 'detached_house', E.loadCandidates(L, INPUT.body.units).candidates, env.ctx);
+    expect([p.status, p.winners]).toEqual(['prohibited', ['150.15.30.1(2)#(2)(A)']]);
+  });
+  it('G1-d: every token of a G1 unit is in vocab.uses and vocab.specific_use with a closed disclosure; a disclosure-less entry fails the M-159 regex', () => {
+    const re = /^rules for an? .+ on this lot are not part of this answer$/;
+    for (const t of G1_TOKENS) expect([t, VOCAB.uses.includes(t), re.test(String((VOCAB.specific_use[t] as Json).disclosure))]).toEqual([t, true, true]);
+    expect(re.test(String(undefined))).toBe(false);
+  });
+  it('G1-e: Layer 2 never sets lot.uses (UNSET_LOT_INPUTS), so the first-token reading of a multi-use unit is unreachable here (CHAT-185 trigger)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    expect((require(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')) as Json).UNSET_LOT_INPUTS).toContain('uses');
+  });
+  it('G1-g: the round records collide with nothing (checkAgree: no duplicate, superseded or orphan correction) and keep every old evidence key', async () => {
+    const V = await import(path.join(ROOT, 'scripts/analysis/bylaw/validate.mjs')); const AU = await import(path.join(ROOT, 'scripts/analysis/bylaw/authored.mjs'));
+    const AG = await import(path.join(ROOT, 'scripts/analysis/bylaw/agree.mjs'));
+    const I = V.loadInputs({ root: ROOT });
+    const ag = AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab });
+    expect(ag.violations.filter((x: Json) => /^correction_/.test(String(x.code)))).toEqual([]);
+    const byId = new Map(ADJ.map((a) => [a.id, a]));
+    for (const r of G1_RECORDS.filter((x) => x.supersedes)) {
+      const old = byId.get(r.supersedes) as Json; const oldEv = r.field === 'application' ? (old.value.evidence || {}) : old.value;
+      const nowEv = unitOf(r.unit).application.evidence;
+      for (const k of Object.keys(oldEv)) expect([r.unit, k, k in nowEv]).toEqual([r.unit, k, true]);
+    }
+    for (const r of G1_RECORDS) for (const t of (unitOf(r.unit).application.uses as string[])) expect([r.unit, t, typeof unitOf(r.unit).application.evidence[t]]).toEqual([r.unit, t, 'string']);
+  }, 120_000);
+  it('G1-h: trip-wire, no Chapter 40 unit carries a CHAT-178 token (CHAT-184: the CR use lists are outside the round); a fixture one is named', () => {
+    const hits = (units: Json[]): string[] => units.filter((u) => /^40\./.test(u.unit_id) && (u.application.uses || []).some((t: string) => G1_TOKENS.includes(t))).map((u) => u.unit_id);
+    expect(hits(INPUT.body.units)).toEqual([]);
+    expect(hits([{ unit_id: '40.99.99(1)#fixture', application: { uses: ['office'] } }])).toEqual(['40.99.99(1)#fixture']);
+  });
+});
