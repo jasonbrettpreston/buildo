@@ -1,0 +1,19 @@
+{
+ "$comment": "M-321 pre-registration, CoA half, for the use-scope lane's Layer 2 round g1 (PLAN-scope v3 §5.0, v6). Committed BEFORE the round's code. Expected moves are 0 by construction: coa-scorecard.mjs scores effective() only (it never calls permitted()), and G1 keys application.uses of 44 target-none PERMIT / PROHIBIT units, which effective() never selects (F15). Run on the (b) tree with --prereg this file --baseline <the (a) tree's scorecard> on the 172-notice set; then the CHAT-65.repin of coa-expected/expected-{172,4d}.json. Kept beside prereg-coa-2026-d.json, outside the table_version inputs.",
+ "schema": "coa-round-prereg-v1",
+ "round": 3,
+ "lane_round": "g1",
+ "plan_ref": "~/Buildo-scratch/scope/PLAN-scope.v6.md; 2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND; 69a M-321 (2026-10-22-batch-z3#CHAT-63.C4); CHAT-65.repin",
+ "batch": "coa-data notices-all2.json / parcels-all2.json (the 172-notice set of coa-scorecard.logic.test.ts)",
+ "expected_moves": [],
+ "expected_totals": {
+  "BY-LAW CHANGED": 3,
+  "DATA": 24,
+  "DIFFER": 29,
+  "MATCH": 387,
+  "NO ANSWER": 46,
+  "NOT MODELLED": 96,
+  "NOT SCORABLE": 25,
+  "OWED": 88
+ }
+}
