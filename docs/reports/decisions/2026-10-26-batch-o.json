@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-o/2026-10-26-batch-o.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-o",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "CR uses lists recommendation as long as this is in compliance with the handbook",
+    "record": "operator chat 2026-10-26 (afternoon)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-o/2026-10-26-batch-o.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-184.L2-CR-USE-LISTS",
+      "question": "CR zone use lists: 40.10.20.10(1)(A) stays as M-100 rules; 40.10.20.10(1)(B) takes the CHAT-182 informational form; both leave the G1 round",
+      "recommendation": "The card's recommendation, applied in compliance with handbook m.100 / M-100. 40.10.20.10(1)#(1)(A) (the 'c' use list of named non-residential uses) stays keyed as M-100 rules: PERMIT, application.building_types [non_residential_building]; it takes no CHAT-178 specific-use keying and leaves the G1 round's set (it is a ruled use-list PERMIT, not a stray non-dwelling clause). 40.10.20.10(1)#(1)(B) (the 'r' use list, which includes 'Dwelling Unit in a permitted building type in Clause 40.10.20.40') is keyed in the CHAT-182 form: PROCEDURAL / informational, deferring to the zone's building-type list and never PERMITting a type alone, so no CR dwelling permission is removed; M-100 names (A) only, so (B) is outside it. Effect: 0 Layer 2 cells (chapter 40 has no MaxBLD residential zone, M-159(1)); the G1 round lands its other 48 units (44 corrections + 4 already school).",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    }
+  ]
+}

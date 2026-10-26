@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-l/2026-10-26-batch-l.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-l",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "I'll go with option B on the spec change",
+    "record": "operator chat 2026-10-26 (afternoon)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-l/2026-10-26-batch-l.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-172.SPLIT-CONDITIONS-READ",
+      "question": "Spec 129 (j) is amended to the truth for the split-decision parser: it reads the decision paragraph up to the reasons; a refusal phrase inside a condition makes the item 'unknown' and is counted",
+      "recommendation": "Option B: amend the Spec 129 (j) statement rather than change the code. The split-decision parser (CHAT-157 / CHAT-169) reads the decision paragraph up to the reasons. A refusal phrase inside a condition makes that item 'unknown' (fail-closed, never a guessed decision) and is counted in notices_unknown; 0 rows on the closed 2017 corpus. A counter above 0 on a future batch is the signal to revisit; bounding the read at a conditions header would then be its own ruled round. Bounding is not built now (no code for 0 rows). The parser PLAN's Spec 129 :101 note cites this decision.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    }
+  ]
+}

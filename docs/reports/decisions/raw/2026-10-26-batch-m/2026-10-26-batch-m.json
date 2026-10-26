@@ -1,0 +1,61 @@
+{
+ "source": "operator chat 2026-10-26 (afternoon)",
+ "operator_quote": "As per question 1- 5 - I accpet all recommendations - let's hold on Q6 for now",
+ "context": "Answers the orchestrator's laid-out list of open questions (this session), items 1-5, each presented with its rule, an example, the recommendation and the alternative: 1 R-1 (scorer CHAT-165, no-parcel lots), 2 Spec 132 enricher.2 held note (CHAT-167), 3 WF3 park (CHAT-159; cloud re-measure 2026-10-26 in ~/Buildo-scratch/wf3/CARD-*.md), 4 deletions (Spec 129 §3 as read by CHAT-166), 5 use scope (CHAT-152; ~/Buildo-scratch/scope/CARD-use-scope-residuals.md G1/G2/G5 and the 20 review units). Item 6 (optional cards: R-DY prior-read race, curved-front pattern, golden relabel) is held by the operator.",
+ "decisions": [
+  {
+   "id": "CHAT-173.R1-NO-PARCEL-SHOWN",
+   "subject": "CHAT-165's held-but-unread figures are shown on lots with no parcel too, with the reason 'no parcel'",
+   "decision": "approve",
+   "recommendation": "Option (c): the scorer's lot_held_unread field also names the figures held on a lot with no parcel, each with the reason 'no parcel' (the literal reading of CHAT-165). 172 set: 137 figures on 76 lots (6 'no parcel'); no class or value moves. The scorer lane folds the (c) test text (S-3, S-4, T-11, the D5 twins) and the commit message before B1'."
+  },
+  {
+   "id": "CHAT-174.ENRICHER2-HELD-NOTE",
+   "subject": "Spec 132 enricher.2 carries a dated note that the ENRICHER derive arm is held by CHAT-167",
+   "decision": "approve",
+   "recommendation": "Add a dated note to the enricher.2 line (rule-map.json source of the generated Spec 132): the ENRICHER derive arm ('an ENRICHER may write derived rows') is held by CHAT-167 until designed with CLP ②; validate refuses derive on an ENRICHER by name. The rule text itself is unchanged (CHAT-167)."
+  },
+  {
+   "id": "CHAT-175.WF3-FORECASTS-PARKED",
+   "subject": "compute_trade_forecasts FAIL parked: calibration is local-data only; the June-12 anchor defect is fixed before forecasts reach users or when cloud reaches 30 %",
+   "decision": "approve",
+   "recommendation": "Park. The default_calibration FAIL is local-data only (cloud 11.2 % PASS on every September run, 134 calibration rows). The phase_started_at 2026-06-12 anchor defect is confirmed on cloud (13.0 % of forecasts would expire if scored today, 94 % of them June-12-anchored; below the 30 % WARN); it is fixed in a WF3 PLAN before forecasts reach users, or as soon as cloud reaches 30 %. The 30/60 expired_urgency literals at compute-trade-forecasts.js:1503 are logged as a Spec 132 core.8 gap. No build now."
+  },
+  {
+   "id": "CHAT-176.WF3-WSIB-PARKED",
+   "subject": "assert_global_coverage WSIB FAIL parked until WSIB links are used; cloud catch-up must apply the WSIB precision repairs first",
+   "decision": "approve",
+   "recommendation": "Park until WSIB links are used; then p_step7_wsib_linked_entity_id becomes INFO and the gate is the entity-side share (Spec 49:112-113 amendment at that time, through a PLAN panel). Local 0.7 % is the correct state after LW-D14/D18/D19. Cloud still carries the pre-repair links (11.57 %, 13,682 at confidence 0.60): the cloud catch-up must apply the LW-D14/D18/D19 repairs before WSIB links are relied on there (a cloud write, so not before the catch-up; CHAT-54)."
+  },
+  {
+   "id": "CHAT-177.NOTICE-COPIES-DELETED",
+   "subject": "Copies of 2017 decision documents that may carry personal details are deleted; scorecard temp dirs are kept",
+   "decision": "approve",
+   "recommendation": "Under Spec 129 §3 as read by CHAT-166 (wording may be kept, personal details may not): delete the 70 full-page 2017 text extracts (another session's coa-diag/pages, from 2026-10-09) and the raw 2017 decision PDFs at ~/Buildo-scratch/coa1/notices-pdfs/. The PDFs are the parser round's sha-checked offline-proof input, so the orchestrator keeps them until the CHAT-157 whole-corpus offline proof and slot finish, then deletes them. The coasc* scorecard temp dirs (no personal details) are kept; the scorer tests get an afterAll cleanup in a later scorer change. The leftover scratch worktree is the operator's to remove (removing it needs --force)."
+  },
+  {
+   "id": "CHAT-178.L2-G1-USE-KEYING-ROUND",
+   "subject": "M-75 round: non-dwelling use clauses that reach every house are keyed to their specific use",
+   "decision": "approve",
+   "recommendation": "G1: an M-75 correction round, pre-registered under M-321 with its expected moves, keys the 50 g1_non_dwelling_use units' uses as specific uses (M-159(3) + M-244), incl. 150.15.30.1(2)(A) (correctional group home) and 150.30.20.1(1)(B) (seniors community house). 900.6.10(263)(F) is removed from the set (a dwelling building-type PROHIBIT; 0 cells). No new rule."
+  },
+  {
+   "id": "CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND",
+   "subject": "M-75 round: conversion clauses get their lawfully_existing condition",
+   "decision": "approve",
+   "recommendation": "G2: an M-75 correction round, pre-registered under M-321, adds the lawfully_existing condition to the 3 g2_condition_not_keyed units (600.60.40(3)(D), 10.5.20.40(6), 10.10.20.41(6)), as the sibling 10.5.20.40(1)(A) already carries; with no existing-building input it resolves false (M-158(1)). The v1 suite re-scoping half stays dropped."
+  },
+  {
+   "id": "CHAT-180.L2-G5-DISCLOSURE-ON-READ",
+   "subject": "The M-169 disclosure for a permission is recomputed on read, with a closed {effect} phrase per archetype declared as data",
+   "decision": "approve",
+   "recommendation": "G5 (a): recompute the M-169 set-aside disclosures for the permission word on read in logicalRowsOf (the CHAT-80.QP form: no column, no schema change), sorted and de-duplicated. (b): declare a closed {effect} phrase per archetype as data (R-BZ), e.g. PERMIT 'this use is also permitted by {clause}', PROHIBIT 'this use is not permitted, by {clause}'. Gates night D, not the evaluator commits."
+  },
+  {
+   "id": "CHAT-181.L2-REVIEW-UNITS-ELEMENT",
+   "subject": "The 20 review units of the CHAT-152 scope list are element scope",
+   "decision": "approve",
+   "recommendation": "All 20 review units are element (scope list v2 §3.1): 281 element, 144 use. As use, the 7 that move a winner (e.g. 'a dwelling unit may not be entirely below grade', lot-abuts-street, rear-of-another-building) would prohibit every house through unkeyed conditions. G3 and G4 are not ruled; G4 does not gate night D. Then night D as CHAT-152 D rules it."
+  }
+ ]
+}

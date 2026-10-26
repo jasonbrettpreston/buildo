@@ -1,0 +1,55 @@
+{
+ "source": "operator chat 2026-10-25 (night)",
+ "operator_quote": "These all make sense - let's proceed with these rulings. (AskUserQuestion: cards 6-7 \"Yes, both (Recommended)\"; WF3 \"Open cards (Recommended)\")",
+ "context": "Seven cards explained with rulings touched, implications and before/after examples: ~/Buildo-scratch/m168/CARD-L2-permission.md, rarms/CARD-RJZ-derive-from.md, clp/CARD-CLP-urgent-halt.md, clp/CARD-CLP-retirements.md, b10/CARD-M326-examiner-figures.md, b10fix/CARD-2017-split-decisions.md, rulings-1024/CARD-hook-budget.md; plus the permits chain run 4339 completed_with_errors (compute_trade_forecasts default_calibration 61.8 %, assert_global_coverage WSIB linked 0.7 %).",
+ "decisions": [
+  {
+   "id": "CHAT-152.L2-USE-SCOPE",
+   "subject": "Layer 2 use permission reads only use-scope units; element-scope PERMIT/PROHIBIT units never decide the use",
+   "decision": "approve",
+   "recommendation": "A: each PERMIT/PROHIBIT unit is declared in keying as scope use | element (vocab); use_permission reads only use-scope units (subject is the building type or use); element units (dormers, parking, rooftop allowances incl. 10.10.40.10(8)(A)-(C), 10.5.40.10(3)(C), (5)(A), shoreline exemptions, side-yard shifts) attach to their own targets. M-56's target-none feed is narrowed to use-scope units (dated note); ruling (a) PROHIBIT-wins-at-same-rank unchanged. B: then build M-169 in permitted(), undetermined tokens taken as not holding, disclosed. C: then M-168 with the evaluatorVocab allowlist fix. D: one Layer 2 night (TRUNCATE + forced rerun + bracket) with explained diffs citing M-56/M-168/M-169/M-285 (CHAT-100/104 land too), then the P3-7 night. The scope list is a reviewed artifact on the PLAN panel."
+  },
+  {
+   "id": "CHAT-153.RJZ-AMEND",
+   "subject": "R-JZ amendment: derive.from may name any of the step's own update targets; the runner owns the prior-state read; a timeout or cancel is never a row error",
+   "decision": "approve",
+   "recommendation": "A: derive.from may name any outputs.writes[] entry with an update discipline, not only writes[0]; the validator still refuses a foreign table (red test). 1(i): runEnrichPhase owns a prior-state read and hands each batch's prior state to the compute (the R-DY form); derive on an ENRICHER that does not run through runEnrichPhase is refused. Timeout rethrow ratified for both savepoint arms (R-DM): 57014 / 55P03 / the EP-PHASE-DEADLINE cancel abort the batch (ROLLBACK, rethrow), never counted as a row error; the write.js ingest arm changes too and its converted ingest steps are recaptured the same night. In-ruling fixes (no ruling): classify before the SAVEPOINT or rethrow pg-code-less errors plus a Z-case; per-table privilege lock; named refusals for missing exports. All ride the one re-freeze night (CHAT-149) after a v4 OUTPUT panel."
+  },
+  {
+   "id": "CHAT-154.CLP-URGENT-CATCHUP",
+   "subject": "update_tracked_projects' START_DATE_URGENT enqueue is a catch-up window, so a chain halt delays a cohort's alert instead of losing it",
+   "decision": "approve",
+   "recommendation": "A: the urgent window is start date within 7 days and not yet alerted (NOT EXISTS), not exactly 6-7 days; no chain-order move. Dated note on CHAT-97 B' / CHAT-98.LEGACY-EDIT: 'alerts never lapse' now holds across a halt. UTP's swap-commit test gains a missed-day case and a no-duplicate case; late alerts are counted so the delay is observable."
+  },
+  {
+   "id": "CHAT-155.CLP-RETIREMENTS",
+   "subject": "CLP's three dead write behaviours retire as per-entry R-HQ corrections with standing checks; its meta keys retire under R-HR only with their readers updated in the same commit",
+   "decision": "approve",
+   "recommendation": "R-HQ per entry, each with its zero-row measurement and a standing check: (1) the phase_started_at backfill UPDATE (check: phase => phase_started_at); (2) the Phase 2c initial-transition INSERT (check: phase => >= 1 transition); (3) the OR matched_rule IS NULL dirty clause (check: matched_rule never NULL), both roots. The D7 first-deploy grace read is a measured R-HQ verdict deviation (legacy band passAt 1 / warnAt 3). The records_meta keys phase_started_at_backfilled / initial_transitions_backfilled / permit_first_deploy_grace retire under R-HR in the same commit that updates their readers (step_21 report, classify-lifecycle-phase.infra test, I1 runbook, Spec 42), grep recorded."
+  },
+  {
+   "id": "CHAT-156.M326-EXAMINED-FALLBACK",
+   "subject": "The CoA scorer reads lot figures survey first, then the figures the City examined; CHAT-145 C amended and CHAT-148's re-pin taken at this reading",
+   "decision": "approve",
+   "recommendation": "A: the scorer uses the highest-ranked lot figure held in M-326's order: survey, then zoning notice, plan statistics, decision notice; lot_source is recorded on every row and a non-survey figure is disclosed. M-308's >5 % parcel DATA flag stays. Scorer-only: the calculator never reads plan facts (M-333 unchanged); CHAT-117 (notice beats plan statistics) unchanged. Amends CHAT-145 C (survey-only); the CHAT-148 re-pin is taken at this reading, floors unchanged."
+  },
+  {
+   "id": "CHAT-157.SPLIT-DECISION-ROUND",
+   "subject": "A pre-registered parser round splits 2017 'be refused; ... be approved' decisions per item, measured read-only first, then a 2017 re-ingest slot",
+   "decision": "approve",
+   "recommendation": "Pre-register the round (M-321, the CHAT-142 parser round; new category 'split decision'). Measure read-only how many 2017 applications hold both refused and approved variance text against our item decisions. Re-ingest the 2017 batch on its own coa_notices DB slot with explained diffs. Disposition: A0144/17SC and A0203/26NY 'notice stands (M-326), CKAN differs'; A0271/17TEY unresolved (minutes or AIC record by hand, never past the captcha). CKAN never changes a value; Spec 129:49 refused-wins stays per item."
+  },
+  {
+   "id": "CHAT-158.HOOK-FIX-A",
+   "subject": "Pre-commit budget fix A: --staged reads the index only at pre-commit, net-new uses one git pass, variable-effect uses a token set; budgets unchanged; then CHAT-146 lands and the budget is re-measured",
+   "decision": "approve",
+   "recommendation": "A all three parts, red-first: (1) at pre-commit step-validate --staged reads the index only; pre-push keeps the HEAD~1..HEAD scope through an explicit flag (.husky/pre-push), .husky/pre-commit text unchanged, both directions locked; (2) net-new loads first-commit timestamps from one git log -m -M --diff-filter=AR pass (same oldest timestamp for every census path); (3) deriveVariableEffect builds one token set, isRead uses set.has for ^[A-Za-z0-9_]+$ keys, regex otherwise; buffer from gateVariable('tooling_spawn_max_buffer_mb'). --all --fast output line-identical. Budgets stay 25.3 / 27.5 (R-EC); then land CHAT-146 and re-measure on the quiet R-CQ host."
+  },
+  {
+   "id": "CHAT-159.WF3-CARDS",
+   "subject": "Open WF3 queue cards for the two live permits-chain FAILs (trade-forecast calibration, WSIB linkage); queue only, no build",
+   "decision": "approve",
+   "recommendation": "Two WF3 items in QUEUE.md with evidence from chain run 4339: compute_trade_forecasts FAIL (default_calibration 61.8 %, expired_urgency 84.8 %) and assert_global_coverage FAIL (WSIB linked 0.7 %). Each gets a diagnosis card for operator ruling; nothing is built until ruled."
+  }
+ ]
+}

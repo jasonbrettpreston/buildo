@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-q/2026-10-26-batch-q.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-q",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1 and 2 - if they are in complaince with the handbook - then yes to both recommendations",
+    "record": "operator chat 2026-10-26 (afternoon)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-q/2026-10-26-batch-q.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-187.K2-LANDS-WITH-P3-7",
+      "question": "The CHAT-186 permission set-aside disclosure add-on lands with the P3-7 night",
+      "recommendation": "The K2 add-on (CHAT-186) lands with the P3-7 night: its Layer 2 restamp (the evaluator_version move) runs first in that night, before P3-7 reads Layer 2, so it costs no extra night. The add-on still goes through its own Spec 08 PLAN, panels and build, and must pass before that night.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-188.ACCOUNT-PATH-PERSONAL-DETAIL",
+      "question": "The operator's OS account name inside committed file paths is a personal detail under CHAT-166; new files write ~/; a scrub of existing files is carded",
+      "recommendation": "Going forward, new evidence files write ~/ instead of the home path (already done in docs/reports/red-evidence/runner-lane/r-jz-v4-fold-red.json). A scrub of existing committed files is carded, not done now: ~/Buildo-scratch/CARD-account-path-scrub.md (census, mechanical replacement, pinning tests/hashes, risk, recommendation).",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    }
+  ]
+}

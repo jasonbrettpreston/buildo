@@ -1,0 +1,19 @@
+{
+ "source": "operator chat 2026-10-26 (afternoon)",
+ "operator_quote": "1 and 2 - if they are in complaince with the handbook - then yes to both recommendations",
+ "context": "Answers the orchestrator's two open questions: (1) K2 timing — the CHAT-186 add-on moves evaluator_version, so it needs a Layer 2 restamp; recommendation: land it with the P3-7 night; (2) the operator's OS account name appears in committed file paths (red-evidence stack frames) — is it a personal detail under CHAT-166; recommendation: yes, new files write ~/, card a scrub of existing files. Compliance check (orchestrator): bundling work into one DB night has handbook precedent (Spec 132 link.2 / enricher.2 / materializer.1 'from the bundled runner night'; x-v3.2 / x-v3.3 'bundled RE-FREEZE night'); CHAT-152 D orders 'one Layer 2 night ... then the P3-7 night' and does not forbid a restamp inside the P3-7 night; Spec 129 §3 / CHAT-166 is a personal-details rule, and a card changes nothing.",
+ "decisions": [
+  {
+   "id": "CHAT-187.K2-LANDS-WITH-P3-7",
+   "subject": "The CHAT-186 permission set-aside disclosure add-on lands with the P3-7 night",
+   "decision": "approve",
+   "recommendation": "The K2 add-on (CHAT-186) lands with the P3-7 night: its Layer 2 restamp (the evaluator_version move) runs first in that night, before P3-7 reads Layer 2, so it costs no extra night. The add-on still goes through its own Spec 08 PLAN, panels and build, and must pass before that night."
+  },
+  {
+   "id": "CHAT-188.ACCOUNT-PATH-PERSONAL-DETAIL",
+   "subject": "The operator's OS account name inside committed file paths is a personal detail under CHAT-166; new files write ~/; a scrub of existing files is carded",
+   "decision": "approve",
+   "recommendation": "Going forward, new evidence files write ~/ instead of the home path (already done in docs/reports/red-evidence/runner-lane/r-jz-v4-fold-red.json). A scrub of existing committed files is carded, not done now: ~/Buildo-scratch/CARD-account-path-scrub.md (census, mechanical replacement, pinning tests/hashes, risk, recommendation)."
+  }
+ ]
+}

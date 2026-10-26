@@ -1,0 +1,19 @@
+{
+ "source": "operator chat 2026-10-26 (morning)",
+ "operator_quote": "approved (to the presented CHAT-157 Q4 / Q2 card; recommendation A on both)",
+ "context": "Answers to ~/Buildo-scratch/parse/CARD-split-open-questions.md Q4 (all three wording families) and Q2 (precision samples after the EXTRACTOR_VERSION bump), presented with an example and alternatives; Q1 and Q3 were already settled by rule (CHAT-157 refused-wins per item; vocab lexicon).",
+ "decisions": [
+  {
+   "id": "CHAT-169.SPLIT-THREE-FAMILIES",
+   "subject": "The CHAT-157 split-decision round covers all three 2017 wording families (F1 TEY, F2 EYK/SC, F3 NY); all 72 pre-registered moves go ahead",
+   "decision": "approve",
+   "recommendation": "Q4 option A: the round splits the F1, F2 and F3 wordings per item; the prereg freezes all 72 moves (32 F1; 40 F2/F3, all A/AWC -> R in 19 applications, where CKAN agrees with today's wrong value). Within CHAT-157 (the whole 2017 batch; M-326 makes the notice decide each item). Spec 129:49 refused-wins per item unchanged."
+  },
+  {
+   "id": "CHAT-170.PRECISION-CARRY-FORWARD",
+   "subject": "On the coa-extractor-3 -> coa-extractor-4 bump the pair and link precision samples are carried forward, not re-judged",
+   "decision": "approve",
+   "recommendation": "Q2 option A: copy both samples as -coa-extractor-4.json, byte-identical except extractor_version (seed kept as drawn), with a carried_from note giving the overlap measurement (0 of the 72 moved keys in the 60-item pair sample; 1 split application, unmoved, among the 50 link-sample notices; neither sample judges decision). No seat re-judging. Spec 129 has no carry-forward rule; this is the ruled form for a version bump where no judged value changed."
+  }
+ ]
+}

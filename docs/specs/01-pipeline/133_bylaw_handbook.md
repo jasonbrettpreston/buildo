@@ -1489,7 +1489,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **m.358** Phase 3 formulas are proven on calculator-checkable worked examples before golden-case keying is scored.
   Status: RULED 2026-10-24 · OWED · Enforced by: none yet (OWED: the worked-example suite and its operator-checked spreadsheet)
-  Rules: `M-358` (Spec 69a)
+  Rules: `M-358` (Spec 69a) · +1 dated note
 
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts

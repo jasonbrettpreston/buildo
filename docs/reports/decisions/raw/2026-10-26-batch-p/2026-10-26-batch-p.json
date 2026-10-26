@@ -1,0 +1,19 @@
+{
+ "source": "operator chat 2026-10-26 (afternoon)",
+ "operator_quote": "K1 any of K2 yes to both",
+ "context": "Answers the use-scope lane's cards ~/Buildo-scratch/scope/CARD-K1-multi-token-specific-use.md (five G1 units name several specific uses; evaluate.mjs:601 reads only the first token) and ~/Buildo-scratch/scope/CARD-K2-permission-set-aside-disclosures.md (CHAT-180 rules only the M-169 disclosures on the permission; should it also disclose (1) the M-159(3) sentence for the G1 use-clause set-asides and (2) the M-158(1) caveat for the 3 G2 conversion clauses). The K2 card recommended (2) only; the operator chose both.",
+ "decisions": [
+  {
+   "id": "CHAT-185.L2-SPECIFIC-USE-ANY-OF",
+   "subject": "A unit keyed with several specific uses applies when the lot has any of them",
+   "decision": "approve",
+   "recommendation": "K1 'any of': the specific-use check (evaluate.mjs:601, today the first listed token only) becomes a one-line .some over the unit's specific-use tokens, so a lot with any listed use is in scope (e.g. an exception keyed [nursing_home, retirement_home, religious_residence] applies to a lot with only retirement_home). Built together with the first producer of lot.uses; today none exists (UNSET_LOT_INPUTS), so 0 cells. Lock G1-e flags the day a producer appears."
+  },
+  {
+   "id": "CHAT-186.L2-PERMISSION-SET-ASIDE-DISCLOSURES",
+   "subject": "The permission answer also discloses the M-159(3) set-asides of the G1 use clauses and the M-158(1) caveat of the 3 G2 conversion clauses",
+   "decision": "approve",
+   "recommendation": "K2 'both' (the operator chose the card's 'both' alternative over its recommendation of (2) only, knowing the card's stated cost of up to 44 sentences per lot for (1)): (1) the M-159(3) sentence for the G1 use-clause set-asides and (2) the M-158(1) caveat for the 3 G2 conversion clauses (e.g. 'if this is an existing building being converted, 600.60.40(3)(D) applies') are disclosed on the permission. Built as a G5-shaped add-on under its own PLAN: recomputed on read (CHAT-80.QP form, no column), closed phrases as data (R-BZ). The add-on PLAN must design (1)'s presentation so the answer stays readable (e.g. grouped into one line). Does not gate night D: the text is recomputed on read and no permission word moves."
+  }
+ ]
+}

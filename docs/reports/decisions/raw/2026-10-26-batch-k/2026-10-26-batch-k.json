@@ -1,0 +1,13 @@
+{
+ "source": "operator chat 2026-10-26 (afternoon)",
+ "operator_quote": "Hokk census approved.",
+ "context": "Answer to ~/Buildo-scratch/hookfix/CARD-netnew-census-scope.md (which paths CHAT-158 part (2) 'same oldest timestamp for every census path' covers), presented with the lane recommendation (a). The two optional pre-push cards (CARD-prepush-range.md, CARD-prepush-failclosed.md) were presented with recommendation A (keep) and not answered.",
+ "decisions": [
+  {
+   "id": "CHAT-171.NETNEW-CENSUS-SCOPE",
+   "subject": "CHAT-158 part (2) 'every census path' means every path net-new reads: the script and descriptor of each legacy:\"none\" row, read live",
+   "decision": "approve",
+   "recommendation": "Reading (a): the equality CHAT-158 (2) rests on is locked over every legacy:\"none\" row's script + descriptor, read live, so a new net-new row is covered when it is registered (8/8 SAME today). The 2 copy-class differences on other census paths (scripts/enrich-wsib.js, scripts/quality/assert-schema.descriptor.json; --follow follows a >=50 % copy, the one pass does not) are disclosed in the commit and the 124a as-built note; neither is a legacy:\"none\" row, no verdict moves and --all --fast stays line-identical. --diff-filter=AR stays as ruled; counting copies as legacy history (-C --diff-filter=ACR) would be a separate ruling. The optional pre-push range and fail-closed cards were not answered, so pre-push keeps the ruled HEAD~1..HEAD scope and today's failure handling (option A on both)."
+  }
+ ]
+}

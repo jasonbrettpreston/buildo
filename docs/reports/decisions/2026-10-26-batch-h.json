@@ -1,0 +1,69 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-h/2026-10-26-batch-h.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-h",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Q-a accept reco Q-b yes A-c y- reco Q-1 yes Q2 yes Q3 yes Q-d keep them - wording is fine just not personal details - ie names (confirmed: \"Q1 y Q-b y yes as well\")",
+    "record": "operator chat 2026-10-26 (morning)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-h/2026-10-26-batch-h.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-160.M326-PER-FIGURE",
+      "question": "The CHAT-156 order of authority applies per lot figure: each field takes its own highest-ranked held figure",
+      "recommendation": "Per figure (the built default): frontage, depth, area and corner each take the highest-ranked figure held for that field, not one document for the whole lot. Totals are identical to the lot-level reading; the approved CHAT-156 evidence (A0203/26EYK restored) holds only per figure.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-161.M326-PARCEL-NOT-DISCLOSED",
+      "question": "The scorer's lot disclosure lists the non-survey plan figures read; parcel use is recorded as lot_source 'parcel' and is not disclosed",
+      "recommendation": "Keep the built default: lot_disclosure names each non-survey plan figure read; parcel use shows on every row as lot_source 'parcel'; a row with no parcel shows no figure.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-162.M313-EVERY-SOURCE",
+      "question": "The curved-front caution of M-313 applies to every ranked frontage source, not only a survey",
+      "recommendation": "Keep the built default: the straight-line frontage rule (800.50(445) / CHAT-46) is applied to every ranked frontage source, so a frontage printed on any document for a curved-front lot is not read (A0247/26NY stays unread and MATCH); M-308's known limit stays.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-163.M326-SITE-PLAN",
+      "question": "A site-plan lot figure is one of the figures the City examined, ranked after plan statistics and before the decision notice",
+      "recommendation": "Option B: the scorer's order becomes survey, zoning notice, plan statistics, site plan, decision notice, then parcel. Amends CHAT-156's four-source order; the CHAT-148 re-pin is taken at this reading (expected 172 93.03 %, A0375/26TEY#1 DIFFER -> DATA; the scorer lane re-measures). Floors unchanged (M-322). Scorer only: the calculator never reads plan facts (M-333). Evidence: the operator's golden-case keying confirmed A0375/26TEY frontage 6.1 m and depth 39.01 m.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-164.UNKNOWN-SOURCE-ROUND",
+      "question": "Plan-facts figures with an unknown source are re-read against their documents in a later pre-registered round",
+      "recommendation": "Option A: A0562/26TEY corner_lot and A0170/26EYK lot_area (source unknown) are re-read against their source documents, values only, and reclassified in their own pre-registered round (M-321); until then they are not read.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-165.HELD-UNREAD-DISCLOSED",
+      "question": "Held but unread plan-facts figures are shown on the row as a values-only disclosure field; they are read only after the CHAT-164 round",
+      "recommendation": "Show now: each row names the plan-facts figure held but not read and why (unknown source, curved front); no class or value moves. Reading them waits for the CHAT-164 round.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-166.SCORER-OUTPUTS-KEPT",
+      "question": "Older scorer outputs are kept; notice and decision wording may be kept in files, personal details may not",
+      "recommendation": "Keep ~/Buildo-scratch/b10fix/sc, scorer/dry*, the verify-48h outputs and the vitest coasc* temp dirs. The Spec 129 §3 reading for scorer outputs and lane files: notice and decision wording may be kept; personal details (names, emails, phone numbers) may not. Spec 129 §3.5 is unchanged: the DeepSeek engine and CLI review seats still receive synthetic text only.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    }
+  ]
+}

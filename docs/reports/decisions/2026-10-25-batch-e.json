@@ -1,0 +1,41 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-25-batch-e/2026-10-25-batch-e.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-25-batch-e",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Re-pin, floors stay (Recommended); Yes, after panel + verifier (Recommended); Re-measure; if over, card (Recommended); inheritance arm: \"Can you look at this in context of the existing ruling - would this be in compliance - involves compute and we dont want to step backwards - standardized, observable, scalable, accurate and understandable - simpel and doesnt increase scope\" (not ruled)",
+    "record": "operator chat 2026-10-25 (late afternoon, before a 4-hour absence)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-25-batch-e/2026-10-25-batch-e.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-148.M326-REPIN",
+      "question": "Re-pin the 172 and 4d totals at the M-326 survey-only reading; floors unchanged and shown failing",
+      "recommendation": "The scorer reads lot figures as survey dimensions only when their source is a survey (CHAT-145 C, M-326/M-308). The frozen 172 and 4d pins are re-pinned at the new totals (the CHAT-65.repin form; every moved row listed: 3 class moves, 4 value-only), floors unchanged (M-322) so the cumulative overall floor and the 172 10.5.50 and pooled floors show FAIL until the fix rounds; no --accept.",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-149.REFREEZE-NIGHT",
+      "question": "Run the re-freeze night while the operator is away, after a Spec 08 OUTPUT panel and a fresh verifier on the three runner patches",
+      "recommendation": "Order: lean OUTPUT panel (Spec 08 §11.5: Regression Guardian + one grounded reviewer, + Idempotency for the runner arms) on R-JX, R-JZ and R-JY (CHAT-147) -> fixes folded -> a fresh verifier (R-EZ) -> the night under the DB lock (one writer, 25 % memory floor): apply the patches with the step handbook regenerated, retake link_wsib's captures (#39) and any capture the patches move, every generator --check, full suite, test:db. Anything red stops the night; nothing is pushed (operator pushes).",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    },
+    {
+      "id": "CHAT-150.HOOK-BUDGET",
+      "question": "Re-measure the pre-commit budget on a quiet host; if still over, a card on the step-validate --fast growth before any budget change",
+      "recommendation": "R-EC: precommit-budget.mjs --measure on a quiet host (no DB job, no suite, no heavy seat). Within budget: land CHAT-146. Still over: a card explaining why step-validate --staged --fast grew from 0.41 s (2026-10-21) to about 8.4 s, with the fix or the budget change for the operator; CHAT-146 stays parked.",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    }
+  ]
+}
