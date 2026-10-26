@@ -252,7 +252,7 @@ export function checkPermissionInputBasis(vocab) {
 export function checkPermissionEffect(vocab) {
   const ud = vocab && vocab.undetermined_condition_disclosure;
   const pe = ud && ud.permission_effect;
-  if (pe === undefined) return [];
+  if (pe === undefined) return ud && ud.lot_condition ? ['vocab_permission_effect_missing: permission_effect (lot_condition tokens can be set aside in permitted())'] : [];
   if (!isMap(pe)) return ['vocab_permission_effect_missing: permission_effect is not an object'];
   const v = [];
   for (const a of ['PERMIT', 'PROHIBIT']) if (!isStr(pe[a])) v.push(`vocab_permission_effect_missing: ${a}`);

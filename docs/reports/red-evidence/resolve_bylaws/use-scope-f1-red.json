@@ -1,0 +1,31 @@
+{
+ "$comment": "Red evidence for F1b (the OUTPUT-panel fold): the new fold tests (M8 token order, G5-f fail-closed phrases) run on the F1a tree cff7769b. Paths written with ~/ (CHAT-188).",
+ "tree": "cff7769b",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 2,
+  "passed": 2
+ },
+ "tests": [
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-d: checkVocab refuses a permission_effect missing PROHIBIT, without {clause}, with two {clause}, with another placeholder, or with an unknown key; the shipped block passes",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-f (OUTPUT panel F2): a missing effect phrase, template or condition phrase throws PermissionDisclosureError by name, never a default sentence",
+   "status": "failed",
+   "message": "AssertionError: expected [Function] to throw an error"
+  },
+  {
+   "test": "G5: the permission disclosures are recomputed on read (CHAT-180) G5-L (disk): the generated evaluator vocab carries undetermined_condition_disclosure.permission_effect, equal to vocab.json",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M8 (OUTPUT panel F3): a unit the data already rules out is never disclosed as a fold set-aside, whatever its token order",
+   "status": "failed",
+   "message": "AssertionError: expected [ …(2) ] to deeply equal [ 'abuts_named_street,corner_lot', [] ]"
+  }
+ ]
+}

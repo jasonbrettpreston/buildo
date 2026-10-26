@@ -323,6 +323,15 @@ describe('B: an undecidable site condition is taken as not holding inside permit
       expect(d.condition_phrase).toBe((UD.condition_override && UD.condition_override[d.unit_id]) || UD.lot_condition[d.condition_token]);
     }
   });
+  it('M8 (OUTPUT panel F3): a unit the data already rules out is never disclosed as a fold set-aside, whatever its token order', () => {
+    const L = { ...rdHouse(), flags: { ...rdHouse().flags, corner_lot: false } };
+    for (const tokens of [['abuts_named_street', 'corner_lot'], ['corner_lot', 'abuts_named_street']]) {
+      const u = fixUnit('FIX#M8', 'PROHIBIT', tokens);
+      expect([tokens.join(','), permit(L, [u], ctxWith(['FIX#M8'])).disclosures]).toEqual([tokens.join(','), []]);
+    }
+    const lone = fixUnit('FIX#M8b', 'PROHIBIT', ['abuts_named_street']);
+    expect(permit(L, [lone], ctxWith(['FIX#M8b'])).disclosures.map((d: Json) => d.unit_id)).toEqual(['FIX#M8b']); // twin: data undecided -> disclosed
+  });
   it('G5-e: end to end, logicalRowsOf on a lot whose use unit is set aside gives one sentence in the CHAT-180 form', () => {
     const u = fixUnit('FIX#M1-abuts', 'PROHIBIT', ['abuts_named_street']);
     const body = { ...INPUT.body, units: [...INPUT.body.units, u], evaluator_vocab: { ...INPUT.body.evaluator_vocab, permission_scope: { ...PS, 'FIX#M1-abuts': entry('use', 'use_permission') } } };

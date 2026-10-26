@@ -17,6 +17,7 @@ import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(__dirname, '../..');
 const LR = 'scripts/analysis/bylaw-validation/layer2-rounds';
+const COA = 'scripts/analysis/bylaw-validation/coa-expected';
 // Every git call runs with the GIT_* variables removed: inside a hook git exports GIT_DIR / GIT_INDEX_FILE, and a git -C <tmp> call would
 // then write into the CALLING repository (observed 2026-10-26 during this lane's C2a commit: the twin's commits and identity landed on the
 // lane branch and in the shared config; repaired). -C <dir> alone must decide the repository.
@@ -30,19 +31,19 @@ export function preregViolations(root: string): string[] {
   if (!fs.existsSync(orderFile)) return ['order_missing'];
   const order = (JSON.parse(fs.readFileSync(orderFile, 'utf8')) as { order: string[] }).order;
   const v: string[] = [];
-  for (const r of order) {
-    const pre = `${LR}/prereg-${r}.json`;
+  for (const r of order) for (const pre of [`${LR}/prereg-${r}.json`, `${COA}/prereg-use-scope-${r}.json`]) { // both M-321 halves (OUTPUT panel, Guardian 1)
     const act = `${LR}/actual-${r}.json`;
     const added = lines(git(root, ['log', '--diff-filter=A', '--format=%H', '--', act]));
     if (!added.length) continue; // the round's (b) has not landed
     const b = added[added.length - 1] as string;
-    if (!fs.existsSync(path.join(root, pre))) { v.push(`prereg_missing:${r}`); continue; }
+    if (!fs.existsSync(path.join(root, pre))) { if (pre.startsWith(COA) && !fs.existsSync(path.join(root, COA))) continue; v.push(`prereg_missing:${r}:${pre.startsWith(COA) ? 'coa' : 'layer2'}`); continue; }
     const touched = lines(git(root, ['log', '--format=%H', '--', pre]));
-    if (touched.length !== 1) { v.push(`prereg_edited_after_a:${r}`); continue; }
+    if (touched.length !== 1) { v.push(`prereg_edited_after_a:${r}${pre.startsWith(COA) ? ':coa' : ''}`); continue; }
     const a = touched[0] as string;
     let ancestor = false;
     try { git(root, ['merge-base', '--is-ancestor', a, b]); ancestor = a !== b; } catch { ancestor = false; }
-    if (!ancestor) { v.push(`prereg_not_before_actual:${r}`); continue; }
+    if (!ancestor) { v.push(`prereg_not_before_actual:${r}${pre.startsWith(COA) ? ':coa' : ''}`); continue; }
+    if (pre.startsWith(COA)) continue; // the CoA half carries no base_commit (coa-round-prereg-v1)
     const base = String((JSON.parse(fs.readFileSync(path.join(root, pre), 'utf8')) as { base_commit?: string }).base_commit || '');
     const parent = git(root, ['rev-parse', `${a}^`]);
     if (!base || !parent.startsWith(base)) v.push(`prereg_base_commit_mismatch:${r}`);
@@ -55,7 +56,9 @@ function twinRepo(mutate: 'honest' | 'edit_prereg_in_b' | 'same_commit'): string
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'f2r-'));
   const g = (...a: string[]): string => git(dir, a);
   execFileSync('git', ['init', '-q', dir], { env: cleanEnv() });
-  if (!fs.existsSync(path.join(dir, '.git'))) throw new Error(`twin repository was not created in ${dir}`); // never touch another repository
+  // never touch another repository (tasks/lessons.md 2026-09-21): the twin's git dir must resolve inside the temp dir, never ROOT
+  const gitDir = fs.realpathSync(g('rev-parse', '--absolute-git-dir'));
+  if (gitDir !== path.join(fs.realpathSync(dir), '.git') || fs.realpathSync(ROOT).startsWith(fs.realpathSync(dir))) throw new Error(`twin repository does not resolve to ${dir}`);
   g('config', 'user.email', 'f2r@example.invalid'); g('config', 'user.name', 'f2r'); // local to the throw-away repository
   fs.mkdirSync(path.join(dir, LR), { recursive: true });
   fs.writeFileSync(path.join(dir, LR, 'order.json'), JSON.stringify({ order: ['x'] }));
@@ -77,13 +80,14 @@ describe('F2-r: a Layer 2 round pre-registration is immutable after its (a) comm
   it('every committed actual-<r>.json has exactly one earlier prereg commit, whose parent is its base_commit', () => {
     expect(preregViolations(ROOT)).toEqual([]);
   });
+  const run = (m: 'honest' | 'edit_prereg_in_b' | 'same_commit'): string[] => { const d = twinRepo(m); try { return preregViolations(d); } finally { fs.rmSync(d, { recursive: true, force: true }); } };
   it('twin: an honest (a) then (b) passes', () => {
-    expect(preregViolations(twinRepo('honest'))).toEqual([]);
+    expect(run('honest')).toEqual([]);
   });
   it('twin: a (b) commit that edits the prereg fails by name', () => {
-    expect(preregViolations(twinRepo('edit_prereg_in_b'))).toEqual(['prereg_edited_after_a:x']);
+    expect(run('edit_prereg_in_b')).toEqual(['prereg_edited_after_a:x']);
   });
   it('twin: a prereg and its actual added in one commit fail by name', () => {
-    expect(preregViolations(twinRepo('same_commit'))).toEqual(['prereg_not_before_actual:x']);
+    expect(run('same_commit')).toEqual(['prereg_not_before_actual:x']);
   });
 });

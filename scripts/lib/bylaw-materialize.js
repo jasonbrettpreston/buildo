@@ -14,7 +14,8 @@
  *   makeEnv({ body, map, scope, vocab, zoneList, versions, hooks?, audit? }) -> env
  *   seedDictionaries(env, { units, texts })           the stored dictionary rows (collision detection against them)
  *   materializeBatch(batch, env)  -> { rows: { units, texts, lots }, retract, matched }
- *   logicalRowsOf(parcelRow, storedLot, dicts, env)   -> { lot_gate, permitted_by_class, rows } the frozen 11-field logical rows
+ *   logicalRowsOf(parcelRow, storedLot, dicts, env)   -> { lot_gate, permission_disclosures, permitted_by_class, rows }: the frozen 11-field
+ *                                                        logical rows, plus the M-169 permission disclosures recomputed on read (CHAT-180)
  *   traceResult(lot, structure, target, classKey, env) -> the recomputed fields of ONE result
  *   classLotFor(row, structure, classKey, env)
  */
@@ -361,6 +362,10 @@ function logicalRowsOf(parcelRow, storedLot, dicts, env) {
 class PermissionRecomputeStaleError extends Error {
   constructor(stored, now) { super(`permission_recompute_stale:${stored.tv}/${stored.ev}:${now.tv}/${now.ev}`); this.name = 'PermissionRecomputeStaleError'; this.code = 'permission_recompute_stale'; }
 }
+/** A permitted() result without a disclosures array, or a disclosure whose closed phrase is missing (OUTPUT panel F2): never a default. */
+class PermissionDisclosureError extends Error {
+  constructor(code) { super(code); this.name = 'PermissionDisclosureError'; this.code = code.split(':')[0]; }
+}
 /** At equal versions the recomputed permission word differs from the stored one: a defect, never re-derived silently. */
 class PermissionRecomputeDriftError extends Error {
   constructor(parcelId, cls, stored, recomputed) { super(`permission_recompute_drift:${parcelId}:${cls}`); this.name = 'PermissionRecomputeDriftError'; this.code = 'permission_recompute_drift'; this.stored = stored; this.recomputed = recomputed; }
@@ -385,8 +390,14 @@ function permissionDisclosuresOf(parcelRow, storedLot, storedWords, env) {
     const p = env.hooks.permitted(lot, env.classVectors[cls].building_type, candidatesFor(lot, env).candidates);
     const w = permittedWord(p, env);
     if (JSON.stringify(w) !== JSON.stringify(storedWords[cls])) throw new PermissionRecomputeDriftError(storedLot.parcel_id, cls, storedWords[cls], w);
-    if (!Array.isArray(p.disclosures)) throw new Error(`permission_disclosures_missing:${storedLot.parcel_id}:${cls}`);
-    const sentence = (d) => String(ud.template || 'If {condition}: {effect}.').replace('{condition}', d.condition_phrase).replace('{effect}', String((ud.permission_effect || {})[d.archetype] || '').replace('{clause}', d.unit_id));
+    if (!Array.isArray(p.disclosures)) throw new PermissionDisclosureError(`permission_disclosures_missing:${storedLot.parcel_id}:${cls}`);
+    const sentence = (d) => {
+      const tpl = ud.template; const eff = ud.permission_effect && ud.permission_effect[d.archetype];
+      if (typeof tpl !== 'string' || !tpl.includes('{condition}') || !tpl.includes('{effect}')) throw new PermissionDisclosureError('permission_disclosure_template_missing');
+      if (typeof eff !== 'string' || !eff.includes('{clause}')) throw new PermissionDisclosureError(`permission_effect_missing:${d.archetype}`);
+      if (typeof d.condition_phrase !== 'string' || !d.condition_phrase) throw new PermissionDisclosureError(`permission_condition_phrase_missing:${d.unit_id}`);
+      return tpl.replace('{condition}', () => d.condition_phrase).replace('{effect}', () => eff.replace('{clause}', () => d.unit_id)); // function replacers: no $ patterns
+    };
     out[cls] = [...new Set(p.disclosures.map(sentence))].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
   }
   return out;
@@ -394,5 +405,5 @@ function permissionDisclosuresOf(parcelRow, storedLot, storedWords, env) {
 
 module.exports = {
   LEGAL_USER_INPUT, RESULT_COLUMNS, COLUMN_SQL, COLUMN_KINDS, STORED_RESULT_FIELDS, LOGICAL_RESULT_FIELDS, rowShaMismatchSql,
-  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, logicalRowsOf, PermissionRecomputeStaleError, PermissionRecomputeDriftError,
+  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, logicalRowsOf, PermissionRecomputeStaleError, PermissionRecomputeDriftError, PermissionDisclosureError,
 };

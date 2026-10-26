@@ -430,6 +430,7 @@ export async function runGates(I) {
     const index = buildIndex(I.slice);
     // displaces_optional (G, Spec 68 §7.5 rule 2, operator 2026-10-19 Q1): the unit's trigger only permits an optional variation
     const evalUnits = agreedUnits.map(withGeneratedFields).map((u) => { const d = displacesOf(index, u.unit_id, I.vocab, null); return { ...u, displaces: d.targets.map((t) => t.id), displaces_optional: d.optional_variation }; });
+    ctx.evalUnits = evalUnits; // the agreed units with their generated displaces[], read by G-SHAPE's permission_scope arm
     const r = checkEval({ units: evalUnits, vectors: I.vectors, vocab: ev, enactments: {}, absences: I.absences });
     ctx.evalResult = r;
     const fx = evaluateSelfTest(ev);
@@ -452,7 +453,8 @@ export async function runGates(I) {
       f.checked === 0 ? arm('feeds_totality', 'vacuous', [], ['vacuous (0 agreed LIMIT/PERMIT/PROHIBIT units)']) : fromCheck('feeds_totality', f),
       // CHAT-152 A (M-56 dated note 2026-10-25): every agreed PERMIT / PROHIBIT unit has exactly one vocab.permission_scope entry and
       // every entry names one (missing / stale); no element unit displaces a use unit (PLAN-scope v2 §4.3)
-      fromCheck('permission_scope', checkPermissionScope(agreedUnits, I.vocab)),
+      // (OUTPUT panel F1) the generated displaces[] live on G-EVAL's units; the keyed agreedUnits carry none, so displaces_use would be vacuous
+      fromCheck('permission_scope', checkPermissionScope(ctx.evalUnits || agreedUnits, I.vocab)),
       // Spec 68 §9 G-SHAPE ("JSON Schema on every seed and authored file; §7.3 shape per unit; every authored key
       // resolves to a row"), §4 (row_status folded from ALL gate results — G-SHAPE runs last among content gates).
       // checkShape returns gateResult + rows[{regulation_id, row_status, why}]; check() folds those into the table.

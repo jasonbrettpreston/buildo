@@ -1399,7 +1399,7 @@ function permissionScopeOf(u, C) {
 /**
  * §7.5 rules applied to PERMIT / PROHIBIT units for one building type (M-38 runs through it). Every result carries `disclosures`, the
  * M-169 set-asides {unit_id, archetype, condition_token, condition_phrase} (2026-10-26-batch-m#CHAT-180 G5: recomputed on read, never
- * stored); [] until M-169 is folded in here (CHAT-152 B).
+ * stored; filled by the CHAT-152 B fold, [] when nothing is set aside).
  */
 export function permitted(lot, buildingType, candidates, ctx) {
   const C = ctxOf(ctx);
@@ -1430,8 +1430,11 @@ export function permitted(lot, buildingType, candidates, ctx) {
     const Lu = foldForPermission(L, u, C, F);
     // CHAT-152 C (M-168): the one resolver; an aliased input resolves its target, and an aliased no_candidate names the target
     const a = applies(Lu, u, C, (name) => permissionResolve(L, name, candidates, C), reads, t);
-    // set aside BY THE FOLD only: the token was folded for this unit (abuts_named_street only in case (1), where Lu is F.all), not decided by data
-    if (a.ok === false && Lu !== L && a.known_false_condition && C.permissionFold.has(a.known_false_condition) && !isBool(L.flags && L.flags[a.known_false_condition]) && (a.known_false_condition !== 'abuts_named_street' || Lu === F.all) && (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT')) {
+    // set aside BY THE FOLD only: the token was folded for this unit (abuts_named_street only in case (1), where Lu is F.all), and the
+    // data alone does NOT already rule the unit out (OUTPUT panel F3: applies() reports the first false token, so a later data-false token
+    // would otherwise be disclosed as a fold set-aside, order-dependently)
+    if (a.ok === false && Lu !== L && a.known_false_condition && C.permissionFold.has(a.known_false_condition) && !isBool(L.flags && L.flags[a.known_false_condition]) && (a.known_false_condition !== 'abuts_named_street' || Lu === F.all) && (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT')
+      && applies(L, u, C, (name) => permissionResolve(L, name, candidates, C), new Set(), []).ok !== false) {
       const ud = C.undeterminedDisclosure || {};
       const phrase = (ud.condition_override && ud.condition_override[u.unit_id]) || (ud.lot_condition && ud.lot_condition[a.known_false_condition]);
       disclosures.push({ unit_id: u.unit_id, archetype: u.archetype, condition_token: a.known_false_condition, condition_phrase: phrase });

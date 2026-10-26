@@ -82,6 +82,14 @@ describe('G5: the permission disclosures are recomputed on read (CHAT-180)', () 
     expect(bad({ ...ok, LIMIT: 'x {clause}' })).toEqual(['vocab_permission_effect_unknown_key: LIMIT']);
     expect([bad(ok), VO.checkVocab(VOCAB).violations]).toEqual([[], []]);
   });
+  it('G5-f (OUTPUT panel F2): a missing effect phrase, template or condition phrase throws PermissionDisclosureError by name, never a default sentence', () => {
+    const envWith = (ud: Json, ds: Json[]): Json => { const body = { ...INPUT.body, evaluator_vocab: { ...INPUT.body.evaluator_vocab, undetermined_condition_disclosure: ud } }; return M.makeEnv({ body, map: MAP, scope: SCOPE, vocab: VOCAB, zoneList: ['R', 'RD', 'RS', 'RT', 'RM'], versions: { table_version: INPUT.table_version, evaluator_version: INPUT.evaluator_version }, hooks: withDisclosures(ds) }); };
+    expect(() => logical(parcel(1), envWith({ ...UD, permission_effect: { ...UD.permission_effect, PROHIBIT: undefined } }, [D('Z#2', 'PROHIBIT')]))).toThrow(/permission_effect_missing:PROHIBIT/);
+    expect(() => logical(parcel(1), envWith({ ...UD, template: undefined }, [D('Z#2', 'PROHIBIT')]))).toThrow(/permission_disclosure_template_missing/);
+    expect(() => logical(parcel(1), envWith(UD, [{ ...D('Z#2', 'PROHIBIT'), condition_phrase: undefined }]))).toThrow(M.PermissionDisclosureError);
+    expect(VO.checkPermissionEffect({ undetermined_condition_disclosure: { ...UD, permission_effect: undefined } })[0]).toMatch(/^vocab_permission_effect_missing: permission_effect/);
+    expect(logical(parcel(1), envWith(UD, [{ ...D('A$$1', 'PERMIT') }])).permission_disclosures.detached_house[0]).toContain('by A$$1.'); // function replacers: a $ in the data is literal
+  });
   it('G5-L (disk): the generated evaluator vocab carries undetermined_condition_disclosure.permission_effect, equal to vocab.json', () => {
     expect(INPUT.body.evaluator_vocab.undetermined_condition_disclosure.permission_effect).toEqual(UD.permission_effect);
   });
