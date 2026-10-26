@@ -1,0 +1,103 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-u/2026-10-26-batch-u.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-u",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "are these handbook compliant - ie standardized, observable, scalable, accurate and understandable (simple no scope creep) then proceed",
+    "record": "operator chat 2026-10-26 (evening)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-u/2026-10-26-batch-u.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve",
+    "deferred": "defer",
+    "pointer": "no_ruling"
+  },
+  "routing": {
+    "CHAT-194.USO-Q6": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "rests_on": [
+        "M-60"
+      ]
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-194.USO-Q1",
+      "question": "An exception that lists the \"only permitted building type\" (RS Exception 14): does its list close the base type list?",
+      "recommendation": "(A) Rule before night D: a Chapter 900 exception whose clause names the only permitted building type(s) closes the base type list for every other class. Those classes read not_evaluated:no_candidate with a disclosure, the same honest answer as the RD semi, and read prohibited only once G4 is ruled. Applied as an M-75 keying of each such exception unit, with its own M-321 pre-registration; night D waits for that round. Rule text changed (disclosed): a dated note on M-34.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-194.USO-Q2",
+      "question": "RM Exceptions 253 / 475: a condition that qualifies only the townhouse",
+      "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): an M-75 correction that splits the unit so the fronting condition binds only the townhouse, pre-registered under M-321. Cost: 2 units, 10 sample lots. Rule text changed: none.",
+      "decision": "deferred",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-194.USO-Q3",
+      "question": "The houseplex cites 600.60.40(1)(B) on lots outside the Sixplex Overlay",
+      "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): rule Q-E, 600.60 units bind only lots in the Sixplex Overlay, with a gate in applies() under its own PLAN; the citation then drops on those lots and no word moves. Rule text changed (disclosed, at the build): the Q-E line of layer2-scope.json:2 from \"drafted for ruling\" to ruled.",
+      "decision": "deferred",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-194.USO-Q4",
+      "question": "The description of 10.20.20.40(2)#whole contradicts its keying",
+      "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): an M-75 description correction (wording only). Cost: one record, 0 values. Rule text changed: none.",
+      "decision": "deferred",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-194.USO-Q5",
+      "question": "The same lots carry a different undecided reason in different classes",
+      "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): one reason precedence across classes, a lot-level gate reason such as named_lots_only outranks the class-level no_candidate; a small evaluator change that moves evaluator_version and needs a restamp night. Rule text changed (disclosed, at the build): the precedence comment at evaluate.mjs:814 and a dated note on Spec 68 section 7.5 rule 7.",
+      "decision": "deferred",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-194.USO-Q6",
+      "question": "Oracle B's own permitted() ignores the permission scope",
+      "recommendation": "Routed as a card to the Oracle-B lane (give oracle B the same scope rule before any A/B comparison of permitted() is added). No ruling on the build. Rule text changed: none.",
+      "decision": "pointer",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-194.USO-Q1a",
+      "question": "900.3.10(200) (RD): a count limit or a type-list closure?",
+      "recommendation": "Read it as a count limit (one house per lot on the named lots), not a type-list closure; it is named_lots_only anyway. Cost: none.",
+      "decision": "approve",
+      "decided_at": "2026-10-26",
+      "operator_quote": "USO-Q1a–d as recommended"
+    },
+    {
+      "id": "CHAT-194.USO-Q1b",
+      "question": "900.5.10(361)(G) (RT): \"only dwelling units located in a townhouse are permitted on the lot\"",
+      "recommendation": "A closure to townhouse: it names the type through \"dwelling units located in a townhouse\" and displaces the base type list.",
+      "decision": "approve",
+      "decided_at": "2026-10-26",
+      "operator_quote": "USO-Q1a–d as recommended"
+    },
+    {
+      "id": "CHAT-194.USO-Q1c",
+      "question": "900.6.10(365)(A) (RM): \"only dwelling units in an apartment building and a nursing home are permitted\"",
+      "recommendation": "A closure to apartment building; the nursing home is a use, not a building type.",
+      "decision": "approve",
+      "decided_at": "2026-10-26",
+      "operator_quote": "USO-Q1a–d as recommended"
+    },
+    {
+      "id": "CHAT-194.USO-Q1d",
+      "question": "900.6.10(253)(A) and (475)(A) against the deferred USO-Q2",
+      "recommendation": "Key the closure now: the detached and semi-detached houseplex classes are not named, so they close. Leave the unit's whole-unit fronting condition untouched, so these lots stay undecided (condition_unknown) until USO-Q2. Cost: none on night-D values.",
+      "decision": "approve",
+      "decided_at": "2026-10-26",
+      "operator_quote": "USO-Q1a–d as recommended"
+    }
+  ]
+}

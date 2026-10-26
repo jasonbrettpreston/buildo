@@ -329,6 +329,18 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(jb).toContain('departed_status');
     expect(jb).toContain('Spec 50 amendment');
   });
+  it('CHAT-194 (batch 2026-10-26-u): the use-scope ruling USO-Q1 and the census USO-Q1a..d are a dated note on M-169 (M-34 sits in moved block M19); Q2..Q5 are recorded DEFERRED and Q6 is routed to the Oracle-B lane', () => {
+    const S = '2026-10-26-batch-u#CHAT-194.USO-';
+    const m = rowOf(M, 'M-169');
+    for (const id of ['Q1', 'Q1a', 'Q1b', 'Q1c', 'Q1d', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6']) expect(m).toContain(S + id + '`');
+    expect(m).toContain('closes the base type list for every other class');
+    expect(m).toContain('900.3.10(200) is a count limit, not a closure');
+    expect(m).toContain('900.5.10(361)(G) is a closure to townhouse');
+    expect(m).toContain('900.6.10(365)(A) is a closure to apartment building');
+    expect(m).toContain('left untouched (deferred with USO-Q2)');
+    expect(m).toContain('DEFERRED, with no build until Phase 2/3 is complete');
+    expect(m).toContain('routed as a card to the Oracle-B lane, no ruling on the build');
+  });
   it('CHAT-193 (batch 2026-10-26-t): night-tools NT-Q1..Q5 are withdrawn (no tolerance, allowlist or constant); the explained-diffs approach and NT-Q6 A are dated notes on R-JY (R-DA sits in moved block §B16)', () => {
     const S = '2026-10-26-batch-t#CHAT-193.';
     const jy = rowOf(A, 'R-JY');
