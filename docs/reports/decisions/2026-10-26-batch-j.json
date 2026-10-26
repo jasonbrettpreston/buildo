@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-j/2026-10-26-batch-j.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-j",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "approved (to the presented CHAT-157 Q4 / Q2 card; recommendation A on both)",
+    "record": "operator chat 2026-10-26 (morning)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-j/2026-10-26-batch-j.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-169.SPLIT-THREE-FAMILIES",
+      "question": "The CHAT-157 split-decision round covers all three 2017 wording families (F1 TEY, F2 EYK/SC, F3 NY); all 72 pre-registered moves go ahead",
+      "recommendation": "Q4 option A: the round splits the F1, F2 and F3 wordings per item; the prereg freezes all 72 moves (32 F1; 40 F2/F3, all A/AWC -> R in 19 applications, where CKAN agrees with today's wrong value). Within CHAT-157 (the whole 2017 batch; M-326 makes the notice decide each item). Spec 129:49 refused-wins per item unchanged.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-170.PRECISION-CARRY-FORWARD",
+      "question": "On the coa-extractor-3 -> coa-extractor-4 bump the pair and link precision samples are carried forward, not re-judged",
+      "recommendation": "Q2 option A: copy both samples as -coa-extractor-4.json, byte-identical except extractor_version (seed kept as drawn), with a carried_from note giving the overlap measurement (0 of the 72 moved keys in the 60-item pair sample; 1 split application, unmoved, among the 50 link-sample notices; neither sample judges decision). No seat re-judging. Spec 129 has no carry-forward rule; this is the ruled form for a version bump where no judged value changed.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    }
+  ]
+}

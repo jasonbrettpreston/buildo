@@ -1,0 +1,13 @@
+{
+ "source": "operator chat 2026-10-26 (afternoon)",
+ "operator_quote": "I'll go with option B on the spec change",
+ "context": "Answer to ~/Buildo-scratch/parse/CARD-split-open-questions.md Q6 (raised by the parser PLAN.v4 fold-validation, panel/v4-fv-adversary.md M-D): Spec 129 (j) says conditions text is never read, but the CHAT-157/169 split-decision parser reads the decision paragraph up to the reasons, so a refusal phrase written inside a condition is seen. Presented options: A bound the read at a conditions header (new code for three wording families, 0 rows affected); B amend the Spec 129 statement to what the code does (recommended).",
+ "decisions": [
+  {
+   "id": "CHAT-172.SPLIT-CONDITIONS-READ",
+   "subject": "Spec 129 (j) is amended to the truth for the split-decision parser: it reads the decision paragraph up to the reasons; a refusal phrase inside a condition makes the item 'unknown' and is counted",
+   "decision": "approve",
+   "recommendation": "Option B: amend the Spec 129 (j) statement rather than change the code. The split-decision parser (CHAT-157 / CHAT-169) reads the decision paragraph up to the reasons. A refusal phrase inside a condition makes that item 'unknown' (fail-closed, never a guessed decision) and is counted in notices_unknown; 0 rows on the closed 2017 corpus. A counter above 0 on a future batch is the signal to revisit; bounding the read at a conditions header would then be its own ruled round. Bounding is not built now (no code for 0 rows). The parser PLAN's Spec 129 :101 note cites this decision."
+  }
+ ]
+}

@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-25-batch-f/2026-10-25-batch-f.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-25-batch-f",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "The inheritance looks like its in compliance - proceed",
+    "record": "operator chat 2026-10-25 (late afternoon)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-25-batch-f/2026-10-25-batch-f.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-151.INHERIT-ARM",
+      "question": "link_coa's lat/long/ward inheritance runs as a declared post-link join_update arm in runCascadePhase, the twin of the entities-contacts arm",
+      "recommendation": "The target is the draft descriptor's existing set_based_join_update on the cascade table that is not the name-equal link plan (no new descriptor field, CHAT-108; not positional, CHAT-139/147). It runs only when declared and only when the compute exports its statement (buildPostLinkSql(descriptor, config) returning the count statements, the UPDATE and its binds), through the LG-11 executor, after the link writes and in its own statement transaction (legacy order; core.12). Its counters are the keys the compute returns (coaInheritedFromPermit, coaWardFilledFromPermit, coaLatLngUpgradedFromPermit, coaWardMismatchWithPermit kept as the data-quality signal). ward = COALESCE(ca.ward, bp.ward) as legacy (CoA ward authoritative); a declared check counts fills whose permit ward is outside the CoA ward range (01-42 today), WARN, so a ward-scheme mismatch is observable (R-JB). Legacy parity proven by link_coa PRE vs POST captures and a C0-style golden. Built as a separate patch on top of R-JY so the running OUTPUT panel's review stays valid; it gets its own PLAN and OUTPUT panel before the re-freeze night applies it.",
+      "decision": "approve",
+      "decided_at": "2026-10-25"
+    }
+  ]
+}
