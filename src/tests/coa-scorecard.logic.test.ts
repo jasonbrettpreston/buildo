@@ -53,25 +53,100 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     for (const f of ['A0114/26SC', 'A0553/26TEY']) for (const r of rowsOf(f)) expect(r.class).toBe('NOT SCORABLE');
   });
   it('F-4D-9: a parcel row that disagrees with the survey by more than 5 percent is flagged', () => {
-    const l = sc.lots['A0118/26TEY'];
+    // A0153/26EYK (survey frontage 12.19 m vs parcel 18.31 m) is the survey-sourced flag case (added); the original A0118/26TEY area lock (9612e289) is kept.
+    const l = sc.lots['A0153/26EYK'];
     expect(l.survey_check.flag).toBe(true);
-    expect(l.survey_check.disagree.join(' ')).toMatch(/area/);
+    expect(l.survey_check.disagree.join(' ')).toMatch(/frontage/);
+    const a118 = sc.lots['A0118/26TEY']; // plan-statistics area 566.38 vs parcel 282.79 (CHAT-156/163)
+    expect(a118.survey_check.flag).toBe(true);
+    expect(a118.survey_check.disagree.join(' ')).toMatch(/area/);
   });
   it('F-4D-8/9/14: a flagged row that matches the City on survey dimensions is an explained DATA flag', () => {
     const flagged = sc.rows.filter((r: any) => r.survey_flag);
     expect(flagged.length).toBeGreaterThan(0);
-    for (const r of flagged) { expect(r.class).toBe('DATA'); expect(r.why).toMatch(/survey/); }
+    for (const r of flagged) { expect(r.class).toBe('DATA'); expect(r.why).toMatch(/M-326 lot figure/); } // CHAT-156: the figure used may be any ranked source
   });
   it('CHAT-45: 202 Lippincott St (A0375/26TEY) stays semi-detached, as the City notice words it', () => {
     expect(sc.lots['A0375/26TEY'].main_type.bt).toBe('semi_detached_house');
   });
   it('CHAT-46 / 800.50(445): a frontage measured along a curved front lot line is not the survey preference; A0247/26NY (survey arc 14.6, chord 14.22) returns to MATCH', () => {
+    // The 14.6 m frontage (a ranked decision-notice figure) is measured along a curved front, so CHAT-46 / M-313 (applied to every ranked
+    // frontage source, scorer CARD Q-c) leaves it unread; nothing else is ranked, so nothing is held and the row scores on the parcel frontage.
     const l = sc.lots['A0247/26NY'];
-    expect(l.survey_check.held.curved_front).toBe(true);
-    expect(l.survey_check.held.frontage_m).toBeNull();
+    expect([l.survey_check.held?.curved_front, l.survey_check.held?.frontage_m]).toEqual([true, null]); // M-313 OBSERVABLE (restored, B5 F-1)
+    for (const f of ['A0178/26EYK', 'A0193/26EYK', 'A0242/26NY', 'A0247/26NY']) expect([f, sc.lots[f].survey_check.held?.curved_front]).toEqual([f, true]);
     const r = rowsOf('A0247/26NY').find((x: any) => /^10\.5\.50\.10\(1\)\(C\)/.test(x.clause));
     expect([r.class, r.city_value, r.ours.value]).toEqual(['MATCH', 60, 60]);
   });
+  it('CHAT-156 / CHAT-163 / M-326: a lot figure is read in M-326 order (survey, zoning notice, plan statistics, site plan, decision notice) and its source is on every row', () => {
+    // wf1/rulings-rec3@d8306917 2026-10-25-batch-g#CHAT-156 (amends CHAT-145 C for the scorer only).
+    const ORDER = ['survey', 'zoning_notice', 'plan_statistics', 'site_plan', 'decision_notice']; // CHAT-163
+    const SV: Array<[string, string]> = [['frontage_m', 'lot_frontage_m'], ['depth_m', 'lot_depth_m'], ['area_m2', 'lot_area_m2'], ['corner', 'corner_lot']];
+    let held = 0;
+    for (const [f, l] of Object.entries<any>(sc.lots)) {
+      // survey_check.held = the figures read from plan facts; on a no-parcel lot none is used (D7), so lot_source is null (PLAN v4 H-1).
+      const h = l.survey_check?.held; if (!h || !l.parcel) continue;
+      const pf = JSON.parse(fs.readFileSync(path.join(DATA, 'plan-facts', f.replace('/', '-') + '.json'), 'utf8'));
+      for (const [k, pk] of SV) if (h[k] != null) {
+        held += 1;
+        expect(ORDER).toContain(pf.lot_source?.[pk]);
+        expect(`${f} ${k} ${l.lot_source[k]}`).toBe(`${f} ${k} ${pf.lot_source[pk]}`);
+      }
+    }
+    expect(held).toBeGreaterThan(0);
+    for (const r of sc.rows) expect(Object.keys(r.lot_source || {}).sort()).toEqual(['area_m2', 'corner', 'depth_m', 'frontage_m']);
+    expect(sc.lots['A0118/26TEY'].survey_check.held?.frontage_m).toBe(15.24);
+    expect(sc.lots['A0118/26TEY'].lot_disclosure).toBe('lot figure not from a survey: frontage_m plan_statistics, depth_m plan_statistics, area_m2 plan_statistics');
+    expect(sc.lots['A0375/26TEY'].lot_source).toEqual({ frontage_m: 'site_plan', depth_m: 'site_plan', area_m2: 'plan_statistics', corner: 'parcel' }); // S-1 (CHAT-163)
+    expect(sc.lots['A0375/26TEY'].lot_disclosure).toBe('lot figure not from a survey: frontage_m site_plan, depth_m site_plan, area_m2 plan_statistics');
+    for (const r of rowsOf('A0553/26TEY')) expect([r.lot_source, r.lot_disclosure]).toEqual([{ frontage_m: null, depth_m: null, area_m2: null, corner: null }, null]); // no parcel (D7)
+    // survey_preferred (legacy name, PLAN v3 C-4) = a survey-sourced figure is read: false on every no-parcel lot (B5 F-3)
+    for (const [f, l] of Object.entries<any>(sc.lots)) expect([f, l.survey_preferred]).toEqual([f, !!l.parcel && Object.values(l.lot_source).includes('survey')]);
+  });
+  it('CHAT-156 / CHAT-163 rows: four restored by the examined figures (A0375#1 by the site plan); A0205#9 value only; A0562#4 waits for the CHAT-164 round', () => {
+    const at = (f: string, n: number) => rowsOf(f).find((x: any) => x.n === n);
+    const a118 = at('A0118/26TEY', 3);
+    expect([a118.class, a118.class_on_survey, a118.ours.value, a118.city_value]).toEqual(['DATA', 'MATCH', 60, 60]);
+    expect([at('A0166/26EYK', 1).class, at('A0166/26EYK', 1).ours.value]).toEqual(['MATCH', 245.145]);
+    expect([at('A0203/26EYK', 1).class, at('A0203/26EYK', 1).ours.value]).toEqual(['MATCH', 255.065]);
+    const a375 = at('A0375/26TEY', 1);
+    expect([a375.class, a375.class_on_survey, a375.ours.value, a375.city_value]).toEqual(['DATA', 'MATCH', 85, 85]); // CHAT-163: site-plan frontage read
+    const a205 = at('A0205/26NY', 9);
+    expect([a205.class, a205.ours.value, a205.city_value]).toEqual(['DIFFER', 10.9275, 10.8]);
+    expect(at('A0562/26TEY', 4).class).toBe('NO ANSWER'); // unknown-source corner not read (CHAT-164 round)
+  });
+  it('CHAT-165: held-but-unread plan figures are shown, values only', () => {
+    // Data pins: these counts move only under the CHAT-164 round or a plan-facts change.
+    for (const r of sc.rows) { expect('lot_held_unread' in r).toBe(true); expect(r.lot_held_unread).toBe(sc.lots[r.notice].lot_held_unread); } // S-3
+    for (const [f, l] of Object.entries<any>(sc.lots)) { expect('lot_held_unread' in l).toBe(true); expect([f, l.lot_held_unread == null || /\(no parcel\)/.test(l.lot_held_unread) === !l.parcel]).toEqual([f, true]); if (!l.parcel && l.lot_held_unread != null) expect([f, /^lot figure held, not read: [a-z_0-9]+ [^ ,]+ \(no parcel\)(, [a-z_0-9]+ [^ ,]+ \(no parcel\))*$/.test(l.lot_held_unread)]).toEqual([f, true]); }
+    const PRE = 'lot figure held, not read: ';
+    const shown = Object.values<any>(sc.lots).filter((l) => l.lot_held_unread != null);
+    const figs = shown.flatMap((l) => l.lot_held_unread.slice(PRE.length).split(/, (?=(?:frontage_m|depth_m|area_m2|corner) )/));
+    const why: Record<string, number> = {}; for (const x of figs) { const w = x.match(/\(([^)]*)\)$/)?.[1] ?? '?'; why[w] = (why[w] || 0) + 1; }
+    expect([shown.length, figs.length, why]).toEqual([76, 137, { 'source unknown': 128, 'curved front': 3, 'no parcel': 6 }]); // S-4 (no-parcel reading (c))
+    expect(figs.filter((x) => /site_plan/.test(x))).toEqual([]);
+    expect([sc.lots['A0562/26TEY'].lot_held_unread, sc.lots['A0562/26TEY'].lot_source.corner]).toEqual(['lot figure held, not read: corner true (source unknown)', 'parcel']); // S-5
+  });
+  it('CHAT-165: the held-unread field moves no class or value (no-move lock)', () => {
+    const tw = fs.mkdtempSync(path.join(os.tmpdir(), 'coalu-'));
+    try {
+      for (const d of ['bylaw', 'bylaw-validation']) fs.cpSync(path.join(ROOT, 'scripts/analysis', d), path.join(tw, 'scripts/analysis', d), { recursive: true });
+      const lf = path.join(tw, TOOLS, 'coa-lotfacts.mjs'); const src = fs.readFileSync(lf, 'utf8');
+      const A = 'export function lotHeldUnread(pf, p) {';
+      if (src.split(A).length !== 2) throw new Error('twin anchor not found once');
+      fs.writeFileSync(lf, src.replace(A, 'export function lotHeldUnread() { return null; }\nfunction lotHeldUnreadOff(pf, p) {'));
+      const args = (o: string) => ['--root', ROOT, '--notices', path.join(DATA, 'notices-all2.json'), '--parcels', path.join(DATA, 'parcels-all2.json'), '--plan-facts', path.join(DATA, 'plan-facts'), '--out', o];
+      execFileSync('node', [path.join(ROOT, TOOLS, 'coa-scorecard.mjs'), ...args(path.join(tw, 'real.json'))], { encoding: 'utf8' });
+      execFileSync('node', [path.join(tw, TOOLS, 'coa-scorecard.mjs'), ...args(path.join(tw, 'off.json'))], { encoding: 'utf8' });
+      const real = JSON.parse(fs.readFileSync(path.join(tw, 'real.json'), 'utf8')); const off = JSON.parse(fs.readFileSync(path.join(tw, 'off.json'), 'utf8'));
+      expect([real.rows.length, Object.keys(real.lots).length, off.rows.length, Object.keys(off.lots).length]).toEqual([698, 172, 698, 172]);
+      const strip = (o: any) => { const { lot_held_unread: _x, ...rest } = o; return rest; }; // eslint-disable-line @typescript-eslint/no-unused-vars
+      real.rows.forEach((r: any, i: number) => expect(strip(off.rows[i])).toEqual(strip(r)));
+      for (const f of Object.keys(real.lots)) expect(strip(off.lots[f])).toEqual(strip(real.lots[f]));
+      expect(real.rows.some((r: any) => r.lot_held_unread != null)).toBe(true);
+      expect(off.rows.some((r: any) => r.lot_held_unread != null) || Object.values<any>(off.lots).some((l) => l.lot_held_unread != null)).toBe(false);
+    } finally { fs.rmSync(tw, { recursive: true, force: true }); }
+  }, 240000);
   it('A0385/26TEY: a notice citing 10.10.40.80(1)(C) is evidence that each facing main wall has an opening, so the 11 m arm answers (4D-S4c)', () => {
     const r = rowsOf('A0385/26TEY').find((x: any) => /^10\.10\.40\.80\(1\)\(C\)/.test(x.clause));
     expect([r.class, r.ours.value, r.scorer_fix]).toEqual(['MATCH', 11, '4D-S4c']);

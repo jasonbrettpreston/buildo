@@ -4,7 +4,7 @@
 // CoA scorecard. READ-ONLY: reads the tree at --root, parser-shaped notices, a frozen parcels snapshot; writes a scorecard JSON.
 // Assembly = assembly.mjs loadRealLotAssembly (what eval-lots.mjs and the golden-lot helper use) + vocab design_choice_disclosure.default_overrides.
 // Classes: MATCH / DIFFER / NO ANSWER / OWED / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
-// Survey dimensions in --plan-facts are preferred; a parcel row >5% off the survey is flagged (F-4D-8/9/14). Calculator survey override is drafted, not built (owed).
+// Lot figures in --plan-facts are read in M-326 order (CHAT-156 / CHAT-163; coa-lotfacts.mjs); a parcel row >5% off the figure used is flagged (M-308, F-4D-8/9/14); held-but-unread plan figures are shown in lot_held_unread (CHAT-165). Calculator survey override is drafted, not built (owed).
 // Scorer fixes marked "4D-S<n>" (S1-S7) came from the four-district run at ac78d5dd.
 // Classes also: BY-LAW CHANGED (C-3: the cited provision has an amendment tag with a VERIFIED in-force date after the hearing; in neither percentage). A tag with no verified date leaves the class and sets amendment_status 'unverified'.
 // Usage: node scripts/analysis/bylaw-validation/coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]
@@ -18,6 +18,7 @@ import { normClause, unitsForClause } from './coa-clausemap.mjs';
 import { execFileSync } from 'node:child_process';
 import { checkExplainedDifferences, explainRow } from './coa-explained.mjs';
 import * as RD from './coa-round.mjs';
+import * as LF from './coa-lotfacts.mjs';
 import { readSpec69Rulings, parseRulings } from '../bylaw/universe.mjs';
 
 const arg = (k, d = null) => { const i = process.argv.indexOf('--' + k); return i >= 0 ? process.argv[i + 1] : d; };
@@ -235,29 +236,13 @@ function evalTarget(lot, target, onlyUnits) {
 }
 
 // ---------- main ----------
-// F-4D-8/9/14 (data-quality flag): survey dimensions (plan facts) are preferred when held; a parcel row that disagrees with the survey by more than 5% is flagged.
-const SURVEY_TOL = 0.05;
-const CURVED_FRONT_RE = /\bfrontage\b[^.;]*\barc\b|\bfront arc\b|\bcurved frontage\b|\bstreet line\b[^.;]*\barc\b/i;
-function surveyFacts(n) {
+// F-4D-8/9/14 + CHAT-156 / CHAT-163 (amends CHAT-145 C): lot figures in M-326 order from coa-lotfacts.mjs; a parcel row >5% off the figure used is flagged (M-308).
+// planFacts: the parsed plan-facts record, or null when absent or unparseable (the F-4D-8/9/14 fence); lotFigures is total on any JSON value.
+function planFacts(n) {
   if (!PF_DIR) return null;
-  try { const pf = JSON.parse(fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8'));
-    const g = (k) => (typeof pf[k] === 'number' && pf[k] > 0 ? pf[k] : null);
-    // CHAT-46 (2026-10-21-batch-o): a frontage measured along a CURVED front lot line is not the by-law measure, so the survey value is not preferred and the calculated frontage stays.
-    // By-law 800.50(445): Lot Frontage is "measured along a straight line drawn perpendicular to the lot centreline at the required minimum front yard setback" (a straight-line width, not the arc length).
-    // The curved front is read from the plan facts where the lane recorded it (lot_shape_note: "frontage ... is an arc A=14.60 (C=14.22 ...)", "curved frontage", "front arc").
-    const curvedFront = CURVED_FRONT_RE.test(String(pf.lot_shape_note || ''));
-    const sv = { frontage_m: curvedFront ? null : g('lot_frontage_m'), curved_front: curvedFront, depth_m: g('lot_depth_m'), area_m2: g('lot_area_m2'), corner: typeof pf.corner_lot === 'boolean' ? pf.corner_lot : null };
-    return [sv.frontage_m, sv.depth_m, sv.area_m2, sv.corner].some((x) => x != null) ? sv : null; } catch { return null; }
+  try { return JSON.parse(fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8')); } catch { return null; }
 }
-function surveyCheck(sv, p) {
-  if (!sv || !p) return { held: sv, flag: false, disagree: [] };
-  const dis = [];
-  for (const [k, pv, label] of [['frontage_m', p.frontage_m, 'frontage'], ['depth_m', p.depth_m, 'depth'], ['area_m2', p.lot_size_sqm, 'area']]) {
-    if (sv[k] != null && pv != null && Math.abs(pv - sv[k]) / sv[k] > SURVEY_TOL) dis.push(`${label} parcel ${pv} vs survey ${sv[k]} (${Math.round(((pv - sv[k]) / sv[k]) * 1000) / 10}%)`);
-  }
-  if (sv.corner != null && p.is_corner_lot != null && !!p.is_corner_lot !== sv.corner) dis.push(`corner parcel ${!!p.is_corner_lot} vs survey ${sv.corner}`);
-  return { held: sv, flag: dis.length > 0, disagree: dis };
-}
+const surveyCheck = LF.lotCheck;
 function applySurvey(base, sv) {
   if (!sv) return base;
   const vars = { ...base.vars }; if (sv.frontage_m != null) vars.lot_frontage_m = sv.frontage_m; if (sv.depth_m != null) vars.lot_depth_m = sv.depth_m; if (sv.area_m2 != null) vars.lot_area_m2 = sv.area_m2;
@@ -273,13 +258,15 @@ function runNotice(n, surveyOn, rows, lots) {
   const lc = p ? labelCompare(n.zoning, p.zoning_zn_string) : null;
   const areaGapPct = p && ia ? Math.round(((p.lot_size_sqm - ia.area) / ia.area) * 1000) / 10 : null;
   const nonRes = n.zoning && n.zoning.zone && !['R', 'RD', 'RS', 'RT', 'RM'].includes(n.zoning.zone);
-  const sv = surveyFacts(n); const svc = surveyCheck(sv, p);
+  const pf = planFacts(n); const sv = LF.lotFigures(pf); const svc = surveyCheck(sv, p);
   const base = p ? (surveyOn ? applySurvey(lotFromParcel(p), sv) : lotFromParcel(p)) : null;
   const openings = openingsEvidence(n);
+  const LS = LF.lotSourceOf(surveyOn ? sv : null, p); const LD = LF.lotDisclosure(LS); // CHAT-156: lot_source on every row; non-survey disclosed
+  const LU = LF.lotHeldUnread(pf, p); // CHAT-165: plan figures held but not read (values only; no class or value moves)
   lots[n.file_number] = { address: n.address, city_label: n.zoning?.label, kind: n.kind, hearing_date: n.hearing_date, purpose: n.purpose, main_type: main,
     parcel: p ? { id: p.id, parcel_id: p.parcel_id, label: p.zoning_zn_string, frontage_m: p.frontage_m, depth_m: p.depth_m, lot_area_m2: p.lot_size_sqm, lot_size_basis: p.lot_size_basis, lot_size_confidence: p.lot_size_confidence,
       corner: p.is_corner_lot, lane: p.abuts_laneway, major: p.on_policy_road, geog_area: p.geog_area, n_parcels: uniq.length } : null,
-    match_how: P.how, label_check: lc, survey_check: svc, survey_preferred: !!(surveyOn && sv), implied_area: ia, area_gap_pct: areaGapPct, non_residential: !!nonRes,
+    match_how: P.how, label_check: lc, survey_check: svc, survey_preferred: !!(surveyOn && LF.surveyRead(sv)), lot_source: LS, lot_disclosure: LD, lot_held_unread: LU, implied_area: ia, area_gap_pct: areaGapPct, non_residential: !!nonRes,
     legacy: p ? { max_buildable_gfa_sqm: p.max_buildable_gfa_sqm, max_buildable_gfa_basis: p.max_buildable_gfa_basis, max_build_fsi: p.max_build_fsi, bylaw_max_fsi: p.bylaw_max_fsi,
       bylaw_max_coverage_pct: p.bylaw_max_coverage_pct, max_buildable_footprint_sqm: p.max_buildable_footprint_sqm, max_build_height_m: p.max_build_height_m, max_build_stories: p.max_build_stories, max_build_basis: p.max_build_basis } : null };
 
@@ -332,7 +319,7 @@ function runNotice(n, surveyOn, rows, lots) {
     const row = { notice: n.file_number, address: n.address, city_label: n.zoning?.label || null, our_label: p?.zoning_zn_string || null, parcel_id: p?.parcel_id || null, parcel_row_id: p?.id || null,
       n: v.n, clause: v.clause, clause_norm: c.norm, cited_reg: c.reg, cited_path: c.path, clause_note: c.note || null, limit: v.limit, requirement: v.requirement, city_value: cityVal, city_unit: cityUnit,
       building_type: bt, dwelling_units: SUITE_TYPES.includes(bt) ? 1 : main.units, keyed_units: matched.map((u) => `${u.unit_id}:${u.archetype}:${[].concat(u.target || []).join('+')}`), target,
-      family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null };
+      family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null, lot_source: LS, lot_disclosure: LD, lot_held_unread: LU };
     const oos = outOfScope(c, v);
     if (nonRes) { row.class = 'NOT SCORABLE'; row.why = `zone ${n.zoning.zone} is not a 569-2013 residential zone (former by-law zone or non-residential): not scorable`; /* F-4D-20 */ rows.push(row); continue; }
     if (!p) { row.class = 'NOT SCORABLE'; row.why = 'no parcel match for the notice address: not scorable'; /* F-4D-20 */ rows.push(row); continue; }
@@ -417,7 +404,7 @@ for (const n of notices) {
     r.parcel_dims_class = q.class;
     if (r.class === 'MATCH' && (q.class === 'DIFFER' || q.class === 'NO ANSWER')) {
       r.class = 'DATA'; r.survey_flag = true; r.class_on_survey = 'MATCH';
-      r.why = `explained data flag: parcel row disagrees with the survey (${svc.disagree.join('; ')}); on survey dimensions ours matches the City (${r.ours?.value}); on parcel dimensions it was ${q.class}`;
+      r.why = `explained data flag: parcel row disagrees with the M-326 lot figure (${svc.disagree.join('; ')}); on M-326 lot figures ours matches the City (${r.ours?.value}); on parcel dimensions it was ${q.class}`;
     }
   });
 }
@@ -466,11 +453,11 @@ if (arg('prereg')) {
   if (res.verdict !== 'ok' || bad.length) process.exitCode = 1;
 }
 // The regression lock. An expected file is {commit, notices, variances, totals, inputs?}. It is PINNED (a changed total fails, exit 1) when --root is at its commit,
-// or when its inputs key equals the tree's: the Layer 2 input table_version (every Layer 1 input hash), its evaluator_version and the sha of this scorer's three files. Otherwise the diff is information only.
+// or when its inputs key equals the tree's: the Layer 2 input table_version (every Layer 1 input hash), its evaluator_version and the sha of this scorer's four files. Otherwise the diff is information only.
 // --pin FILE writes the expected file for this run at this tree (the integrate step re-pins; a moved input is a finding to re-pin, not a silent pass).
 const here = path.dirname(fileURLToPath(import.meta.url));
 const shaOf = (fl) => { const h = crypto.createHash('sha256'); for (const x of fl) h.update(fs.readFileSync(path.join(here, x))); return h.digest('hex').slice(0, 16); };
-const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs']) }; };
+const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs', 'coa-lotfacts.mjs']) }; };
 if (arg('pin')) {
   const head = execFileSync('git', ['-C', ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim().slice(0, 8);
   fs.writeFileSync(arg('pin'), JSON.stringify({ commit: head, notices: notices.length, variances: rows.length, totals: by, inputs: treeInputs(), note: 'pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree' }, null, 1) + '\n');

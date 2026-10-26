@@ -2,6 +2,7 @@
 // SPEC LINK: pending rows CHAT-63.C3 (BY-LAW CHANGED), CHAT-63.C4 (per-round pre-registration), CHAT-63.C5 (floors through the pin door)
 // Red first: docs/reports/red-evidence/bylaw/coa-round-red.txt. Pure checks, no external data.
 import { describe, expect, it } from 'vitest';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -149,12 +150,19 @@ describe.skipIf(!have172)('scorer wiring (172 notices)', () => {
     }
     expect(sc.rows.some((q: any) => q.amendment_status === 'unverified')).toBe(true); // tag without a verified date: labelled, not guessed, class kept
   }, 120000);
-  it('C-5: the committed floors hold on the 172-notice set (--floors) and a raised floor fails', () => {
-    expect(run(['--floors', floorsFile]).so).toMatch(/FLOORS OK/);
+  it('C-5: the committed floors are checked on the 172-notice set (--floors): the CHAT-148 ruled FAIL list, floors file unchanged; a raised floor fails', () => {
+    // wf1/rulings-rec3@d8306917 CHAT-148 / CHAT-156: floors unchanged, no --accept.
+    // CHAT-163: pooled accuracy now passes; 10.5.50 answered fails until the fix rounds (M-322).
+    const before = crypto.createHash('sha256').update(fs.readFileSync(floorsFile)).digest('hex');
+    const base = run(['--floors', floorsFile]);
+    expect(base.code).toBe(1);
+    expect((base.so.match(/^FLOORS FAIL: (.*)$/m)?.[1] ?? '').split('; ')).toEqual([
+      'article 10.5.50 answered 81.4 % is below its floor 83 %']);
+    expect(crypto.createHash('sha256').update(fs.readFileSync(floorsFile)).digest('hex')).toBe(before);
     const hi = path.join(tmp, 'hi.json');
     const f = JSON.parse(fs.readFileSync(floorsFile, 'utf8')); f.articles['10.20.40'].accuracy = 99; fs.writeFileSync(hi, JSON.stringify(f));
     const r = run(['--floors', hi]);
-    expect(r.code).toBe(1);
+    expect(r.code).toBe(1); // survive-the-fix: the unraised run also exits 1 (PLAN v3 C-6, D6); the regex below is the discriminator
     expect(r.so).toMatch(/FLOORS FAIL: article 10\.20\.40 accuracy/);
   }, 240000);
   it('C-5: --accept without a RATIFIED --ruling refuses and leaves the floors file unchanged', () => {
