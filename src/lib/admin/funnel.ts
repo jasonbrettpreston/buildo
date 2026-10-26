@@ -685,7 +685,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   classify_coa_scope:   { summary: 'Description-keyword classifier producing coa_type_class + project_type + scope_tags per Spec 42 §6.6.D', table: 'coa_applications' },
   resolve_bylaws:       { summary: 'Resolves every in-population parcel against the Spec 68 evaluator (Layer 2): shared per-target cells, one profile per distinct result set, one link row per lot; Layer 3 reads only these rows', table: 'bylaw_resolution_lots' },
   classify_coa_trades:  { summary: 'Consumes scope_tags via TAG_TRADE_MATRIX to write lead_trades rows + optional realtor append per Spec 42 §6.8', table: 'lead_trades' },
-  compute_coa_cost_estimates: { summary: 'Geometric-only cost estimator for CoA leads — joins parcel/building/trade context through the Brain to write coa_applications cost cols + lead_id-keyed cost_estimates rows', table: 'cost_estimates' },
+  compute_coa_cost_estimates: { summary: 'Prices CoA leads through the Spec 83 archetype ladder (T2) with the geometric T4 fallthrough — writes coa_applications cost columns + lead_id-keyed cost_estimates rows', table: 'cost_estimates' },
   link_wsib:            { summary: 'Matches extracted entities against WSIB registry by name', table: 'entities' },
   enrich_wsib_builders: { summary: 'Web-scrapes contact info for WSIB-matched entities via Serper API', table: 'entities' },
   enrich_named_builders:{ summary: 'Web-scrapes contact info for unmatched entities via Serper API', table: 'entities' },

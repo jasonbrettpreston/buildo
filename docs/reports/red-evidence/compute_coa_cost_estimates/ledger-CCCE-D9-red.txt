@@ -1,0 +1,7 @@
+kind: natural
+row: CCCE-D9
+lock: src/tests/steps/compute_coa_cost_estimates/ledger-locks.logic.test.ts -t "CCCE-D9"
+command (in the build worktree, before the fix): npx vitest run src/tests/steps/compute_coa_cost_estimates/ledger-locks.logic.test.ts -t "CCCE-D9" --reporter=json --outputFile=docs/reports/red-evidence/compute_coa_cost_estimates/ledger-CCCE-D9-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch; the lock file untracked beside it)
+result: exit 1; the defect is live: src/lib/admin/funnel.ts STEP_DESCRIPTIONS.compute_coa_cost_estimates.summary still says "Geometric-only"
+fix: lands in the same commit as this evidence; the lock is green after it
