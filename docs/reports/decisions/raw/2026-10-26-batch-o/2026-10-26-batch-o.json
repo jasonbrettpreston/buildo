@@ -1,0 +1,13 @@
+{
+ "source": "operator chat 2026-10-26 (afternoon)",
+ "operator_quote": "CR uses lists recommendation as long as this is in compliance with the handbook",
+ "context": "Answers the use-scope lane's card ~/Buildo-scratch/scope/CARD-g1-cr-use-lists.md (two of CHAT-178's 50 g1 units are the CR zone use lists 40.10.20.10(1)#(1)(A) and (B); recommendation: key them in the CHAT-182 informational form). The operator conditioned the answer on handbook compliance. Orchestrator compliance check: handbook m.100 / register M-100 (RATIFIED 2026-10-13) already rules (A) as a use-list PERMIT with subject non_residential_building, so keying (A) PROCEDURAL would contradict M-100; (B) is outside M-100.",
+ "decisions": [
+  {
+   "id": "CHAT-184.L2-CR-USE-LISTS",
+   "subject": "CR zone use lists: 40.10.20.10(1)(A) stays as M-100 rules; 40.10.20.10(1)(B) takes the CHAT-182 informational form; both leave the G1 round",
+   "decision": "approve",
+   "recommendation": "The card's recommendation, applied in compliance with handbook m.100 / M-100. 40.10.20.10(1)#(1)(A) (the 'c' use list of named non-residential uses) stays keyed as M-100 rules: PERMIT, application.building_types [non_residential_building]; it takes no CHAT-178 specific-use keying and leaves the G1 round's set (it is a ruled use-list PERMIT, not a stray non-dwelling clause). 40.10.20.10(1)#(1)(B) (the 'r' use list, which includes 'Dwelling Unit in a permitted building type in Clause 40.10.20.40') is keyed in the CHAT-182 form: PROCEDURAL / informational, deferring to the zone's building-type list and never PERMITting a type alone, so no CR dwelling permission is removed; M-100 names (A) only, so (B) is outside it. Effect: 0 Layer 2 cells (chapter 40 has no MaxBLD residential zone, M-159(1)); the G1 round lands its other 48 units (44 corrections + 4 already school)."
+  }
+ ]
+}

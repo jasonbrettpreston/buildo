@@ -287,6 +287,10 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(j).toBeGreaterThan(-1);
     expect(S[j + 2]).toContain(P + 'CHAT-183.SPLIT-CONDITIONS-PER-FAMILY');
   });
+  it('CHAT-184 (batch 2026-10-26-o): CR use lists — (A) stays as M-100 rules, (B) takes the CHAT-182 form; on M-100, M-169 and M-182', () => {
+    const P = '2026-10-26-batch-o#CHAT-184.L2-CR-USE-LISTS';
+    for (const id of ['M-100', 'M-169', 'M-182']) expect(rowOf(M, id)).toContain(P);
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
