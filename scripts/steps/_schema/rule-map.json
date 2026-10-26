@@ -534,7 +534,7 @@
     {
       "id": "enricher.2",
       "section": "enricher",
-      "text": "`runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.)",
+      "text": "`runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.) (Dated note 2026-10-26, `2026-10-26-batch-r#CHAT-189.CLPD-Q4`, `2026-10-26-batch-r#CHAT-189.CLPD-Q5`: the ENRICHER derive arm is ruled for CLP ②; the list form's SAVEPOINT per warn_row statement is retired (a named refusal; the savepoint is the runner's derived-history write), and in an ENRICHER that declares derived rows `ctx.exec`, `joinUpdate` and `retract` refuse its root and history tables.)",
       "why": "Writes stay behind the runner seam, and counters are not double-counted."
     },
     {
@@ -5822,6 +5822,34 @@
         "ref": "src/tests/chat-rulings-register.logic.test.ts"
       },
       "statement": "A capture night for a net-new step or a step whose compute or write path changed starts only after a clean read-only pre-launch check: the migration DB test, a 20,000-row compute probe inside the declared ceilings and heap, --plan for every bracket, and the capture order checked against x-captures.1 (operator 2026-10-24, CHAT-126.PRECAP-1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KD",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "A converted check row carries the measured number and its rendered threshold comes from the declared check; a legacy display string ('20.0%', 'N/A') is a declared deviation explained under R-DA; a null shown as 'N/A' (CHAT-93.held-readings) is unchanged (operator 2026-10-26, CHAT-190.CCC-Q1).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KE",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chat-rulings-register.logic.test.ts"
+      },
+      "statement": "Outside a conversion, a fleet-wide library change may retire a records_meta key only on R-HR's evidence (a zero-reader consumer grep), on a bundled RE-FREEZE night; first use checks_passed on night 4 (operator 2026-10-26, CHAT-191.CL-Q4).",
       "source": {
         "register": true
       }

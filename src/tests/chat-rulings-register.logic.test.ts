@@ -296,6 +296,24 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (const id of ['M-159', 'M-244']) expect(rowOf(M, id)).toContain(P + 'CHAT-185.L2-SPECIFIC-USE-ANY-OF');
     for (const id of ['M-158', 'M-159', 'M-169']) expect(rowOf(M, id)).toContain(P + 'CHAT-186.L2-PERMISSION-SET-ASIDE-DISCLOSURES');
   });
+  it('CHAT-189..191 (batch 2026-10-26-r): CLP derive cards on R-JZ / R-DY, cost-cite on R-IH / R-KC / new R-KD, coa ledger on R-JD / R-GN / new R-KE and the bundled night', () => {
+    const R = '2026-10-26-batch-r#';
+    for (const q of ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8']) expect(rowOf(A, 'R-JZ')).toContain(R + 'CHAT-189.CLPD-' + q);
+    for (const q of ['Q1', 'Q4', 'Q5a', 'Q5b']) expect(rowOf(A, 'R-IH')).toContain(R + 'CHAT-190.CCC-' + q);
+    expect(rowOf(A, 'R-KC')).toContain(R + 'CHAT-190.CCC-Q6');
+    expect(rowOf(A, 'R-KD')).toContain(R + 'CHAT-190.CCC-Q1');
+    expect(rowOf(A, 'R-KE')).toContain(R + 'CHAT-191.CL-Q4');
+    for (const q of ['Q0', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12']) expect(rowOf(A, 'R-JD')).toContain(R + 'CHAT-191.CL-' + q + '`');
+    const bam = (lead: string) => A.split('\n').find((l) => l.startsWith(lead)) ?? '';
+    expect(bam('- **R-DY (c) and (a), enrich arm')).toContain(R + 'CHAT-189.CLPD-Q8');
+    expect(bam('- **R-GN dated notes CHAT-191.CL-Q2 and CHAT-191.CL-Q12')).toContain('names CCS-D6 only');
+    expect(bam('- **R-CE and R-FE: assert_coa_freshness')).toContain(R + 'CHAT-190.CCC-Q4');
+    expect(bam('**Bundled RE-FREEZE night (operator y 2026-10-20')).toContain(R + 'CHAT-191.CL-Q5');
+    const H = read('docs/specs/01-pipeline/132_step_standard_handbook.md').split('\n').find((l) => l.startsWith('- **enricher.2**')) ?? '';
+    expect(H).toContain(R + 'CHAT-189.CLPD-Q5');
+    expect(map.rules.find((r) => r.id === 'R-KD')?.handbook_line).toBe('core.6');
+    expect(map.rules.find((r) => r.id === 'R-KE')?.handbook_line).toBe('x-v3.3');
+  });
   it('CHAT-187..188 (batch 2026-10-26-q): K2 add-on lands with the P3-7 night; account names in file paths are personal details; on M-169 and M-305', () => {
     const P = '2026-10-26-batch-q#';
     expect(rowOf(M, 'M-169')).toContain(P + 'CHAT-187.K2-LANDS-WITH-P3-7');

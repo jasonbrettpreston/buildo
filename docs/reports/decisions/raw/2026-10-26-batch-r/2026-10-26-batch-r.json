@@ -1,0 +1,167 @@
+{
+ "source": "operator chat 2026-10-26 (afternoon)",
+ "operator_quote": "proceed on the condition these are compliant with the handbook",
+ "context": "Answers the three frozen operator cards ~/Buildo-scratch/clp/CARD-clp-derive-rulings.answered.md (CLPD-Q1..Q8, sha256 42b132be), ~/Buildo-scratch/coa-cost-cite/CARD-ccc.answered.md (CCC-Q1, Q4, Q5a, Q5b, Q6, sha256 c4552e29) and ~/Buildo-scratch/coa-ledger/CARD-ledger-rows-operator.answered.md (CL-Q0..Q12, sha256 5ecbcc57): every recommendation, on condition each is compliant with the handbook. The compliance table ~/Buildo-scratch/rulings-1024/batch-r-compliance.md (13 COMPLIANT, 12 COMPLIANT-WITH-DISCLOSED-RULE-CHANGE, 1 pointer; none NOT COMPLIANT) was shown to the operator before recording, with two wording points: (1) CLPD-Q3 and CLPD-Q8 record the non-defect differences (no deadlock retry, the wider read window, the A-to-C history collapse, the RETURNING clause) as ratified per entry by this ruling, not as R-HQ legacy defects; the fatal alert is the only legacy-defect correction; (2) CLPD-Q1 (a) is recorded with a dated note on R-JZ beside the CHAT-153 (A) amendment. Second answer (same afternoon): operator_quote_2.",
+ "operator_quote_2": "go ahead and I take your two recommendations",
+ "decisions": [
+  {
+   "id": "CHAT-189.CLPD-Q1",
+   "subject": "Which table a derived row comes from: refuse an ambiguous derive.from; INGESTORs keep writes[0]",
+   "decision": "approve",
+   "quote_ref": "operator_quote_2",
+   "recommendation": "(a) A derive.from naming a table that has two non-history update entries in the step's writes is refused by name (history entries naming that table do not count); recorded as a dated note on R-JZ beside the CHAT-153 (A) amendment, a condition that amendment's text did not state. (b) CHAT-153 (A) is narrowed for INGESTORs: an INGESTOR keeps derive.from = writes[0].table. Scope: the validator only."
+  },
+  {
+   "id": "CHAT-189.CLPD-Q2",
+   "subject": "History rows that must never be rewritten: a target with nothing it may update renders ON CONFLICT ... DO NOTHING",
+   "decision": "approve",
+   "recommendation": "When a guarded_upsert target has no updatable column (every column insert-only), the statement generator renders ON CONFLICT (<index>) DO NOTHING. No new field; the 20 existing guarded_upsert targets keep byte-identical SQL. Skipped rows are logged, not counted. Scope: the runner's statement generator."
+  },
+  {
+   "id": "CHAT-189.CLPD-Q3",
+   "subject": "Alerts (PHASE_CHANGED, STALLED): an alert that cannot be written fails its batch and the step; a failed read of saved users fails the step",
+   "decision": "approve",
+   "quote_ref": "operator_quote_2",
+   "recommendation": "(a) No migration: notifications and permit_phase_transitions use their id index as the conflict target (a plain append; 'never twice' comes from the old-state comparison). (b) An alert that fails to insert rolls back its whole batch and fails the step; the rerun redoes the batch and its alerts. (c) A failed read of the saved users fails the step. R-JZ's register phrase 'so a failed alert never aborts the batch' and the legacy fence 'a notification failure MUST NOT abort the classification run' are superseded (Spec 101:80 same transaction; Spec 47 section 7.8, notifications Tier 1). The fatal alert is ratified per entry under R-HQ as a legacy-defect correction (silent alert loss). The fatal read, the wider read window, no deadlock retry (CHAT-168) and the A-to-C history collapse over a multi-day halt are ratified per entry by this ruling, not as R-HQ legacy defects. CHAT-154 (urgent alerts delayed, not lost) is built before the CLP swap commit, as its precondition."
+  },
+  {
+   "id": "CHAT-189.CLPD-Q4",
+   "subject": "Retire the list arm's savepoint around a warn_row statement; a named refusal takes its place",
+   "decision": "approve",
+   "recommendation": "Retire the flushBatch list arm's SAVEPOINT-per-warn_row branch, which no valid descriptor reaches (R-DM: warn_row only on a derived target, written only by the runner). A named refusal takes its place so an out-of-date descriptor fails loudly. The savepoint moves unchanged to the runner's derived-history write and its tests are re-pointed (no assertion dropped). Dated notes on R-JZ, Spec 132 enricher.2 and 124a section B39 (the 'Applies: a SAVEPOINT per warn_row statement' line); CHAT-96.CLP-Q1's approved words stay as recorded and this ruling supersedes its savepoint clause. Closes ~/Buildo-scratch/rarms/CARD-RJZ-alert-savepoint.md. Spec 47 tier checks in the validator: not now."
+  },
+  {
+   "id": "CHAT-189.CLPD-Q5",
+   "subject": "Close the side doors: an ENRICHER that declares derived rows writes its root only through the batch list",
+   "decision": "approve",
+   "recommendation": "Only in ENRICHERs that declare derived rows: ctx.exec, joinUpdate and retract refuse a root or history table; the single-statement flushBatch(sql) is refused; root updates go through the batch list under the existing never-INSERT check (LG-11) plus a new UPDATE-only check. Every other step is unchanged. This changes Spec 132 enricher.2's 'Pass DML goes through ctx.exec' for those steps, 124a section B39's 'Unchanged', and the 'unchanged' sentences of CHAT-167 and CHAT-174. Limit, stated: the step's raw database connection is not policed at run time (filed, not fixed here)."
+  },
+  {
+   "id": "CHAT-189.CLPD-Q6",
+   "subject": "No separate shared-transaction rule (Z-B(iii)); CLPD-Q5's refusal covers it",
+   "decision": "approve",
+   "recommendation": "No separate validator rule: with CLPD-Q5 approved, the same refusal blocks a shared-transaction phase from writing a root before its old state is read, and a shared phase has no batch list."
+  },
+  {
+   "id": "CHAT-189.CLPD-Q7",
+   "subject": "Counting two roots: the runner counts what it writes inside each batch",
+   "decision": "approve",
+   "recommendation": "The runner counts what it writes inside each batch (R-AT): each root's updated comes from its own statements; a row only re-stamped ('classified at') counts as touched, so no row is counted twice; history and alert targets report inserted and rows_changed; scanned for the CoA root is its batch rows and for permits is permits only. e0.updated equals legacy permits_updated; e1 reports CoA rows instead of 0."
+  },
+  {
+   "id": "CHAT-189.CLPD-Q8",
+   "subject": "Build history and alerts from the rows the root UPDATE returns",
+   "decision": "approve",
+   "quote_ref": "operator_quote_2",
+   "recommendation": "The root UPDATE returns (RETURNING) every column the history rows need, and the runner builds history and alerts from those returned rows only: permits key, lifecycle_phase, lifecycle_stalled, matched_status as just written, lifecycle_seq as stored, permit_type, neighbourhood_id; CoAs id, lead_id, lifecycle_phase, lifecycle_seq, matched_status as just written, project_type, coa_type_class, neighbourhood_id. The old state still comes from the separate read before the UPDATE. On the enrich arm this replaces R-DY (a)'s sliceRows input. The RETURNING clause on CLP's two UPDATE statements is ratified per entry by this ruling, not as an R-HQ legacy defect."
+  },
+  {
+   "id": "CHAT-190.CCC-Q1",
+   "subject": "A new register row authorises classify_coa_trades deviations[0] and classify_permit_phase deviations[1] (legacy display strings become measured numbers)",
+   "decision": "approve",
+   "recommendation": "A new one-line register row: 'A converted check row carries the measured number; its rendered threshold comes from the declared check; a legacy display string ('20.0%', 'N/A') is a declared deviation explained under R-DA. A null shown as 'N/A' under CHAT-93.held-readings is unchanged.' Cite it in both entries; the CCT cite lands in the CCC-Q6 slot only as CCC-Q5 allows; the CPP edit waits for its W2 swap."
+  },
+  {
+   "id": "CHAT-190.CCC-Q4",
+   "subject": "assert_coa_freshness deviations[2] (UTC last_ingestion): fix the compute in a separate WF2",
+   "decision": "approve",
+   "recommendation": "A separate small WF2 changes scripts/lib/compute/assert-coa-freshness.js to use pipeline_timezone (R-CE) and retires the deviation and ACF-D4 (one INFO row value move, an ACF recapture of 2 captures). It does not block the cost-cite lane: ACF deviations[2] is left uncited until then (citing R-FE would mark a live defect as ruled)."
+  },
+  {
+   "id": "CHAT-190.CCC-Q5a",
+   "subject": "This lane's operator-authorised slot counts as R-IH stage 2's 'bundled night'",
+   "decision": "approve",
+   "recommendation": "Yes: a dated note on R-IH stage 2 that 'on a bundled night' includes an operator-authorised slot that retakes the step. With CCC-Q5b: stage B1 (ACF deviations[0] 'draft ruling W4A-R2' to R-FD) and B3 (CCCE deviations[0] --limit to R-AZ + R-GO, its why 'R-BD' corrected to 'R-AZ'); why-only total 13 to 11."
+  },
+  {
+   "id": "CHAT-190.CCC-Q5b",
+   "subject": "A pending descriptor retaken in an operator-authorised slot counts as 'converted' for R-IH stage 2",
+   "decision": "approve",
+   "recommendation": "Yes: a dated note on R-IH stage 2 that 'on a converted descriptor' includes a pending (runner_wired) descriptor whose step is retaken in an operator-authorised slot. Covers B1, B3 and the CCT cite from CCC-Q1."
+  },
+  {
+   "id": "CHAT-190.CCC-Q6",
+   "subject": "Authorise one DB-writer slot after night 3 lands for the cost-cite captures",
+   "decision": "approve",
+   "recommendation": "Authorise one DB-writer slot after night 3 lands and the R-KC checks are clean: CCT coa, coa-forced, standalone; then CCCE coa, coa-forced, standalone; plus ACF coa/standalone if CCC-Q5 allows B1 (6 to 8 captures, 2 fifty-row forced brackets, backup/restore and the R-JH drop). Discloses: CCT is recaptured even when its fingerprint does not move; the coa captures of CCT and CCCE are empty-cursor runs; four downstream steps get one extra scheduled RUN. The authorisation covers the measured state: if at slot start a cursor is > 0 or a gate reads otherwise, the slot stops and comes back to the operator. Scope: the 3 slugs' post captures and traces, _catalog.json and their explained-diffs."
+  },
+  {
+   "id": "CHAT-191.CL-Q0",
+   "subject": "No: a step does not need 0 OPEN ledger rows to be V3 or locally-V3",
+   "decision": "approve",
+   "recommendation": "No. A row whose lock is still a pin stays OPEN PIN (R-JD). No rule changes; the QUEUE 'LANES TO DONE 2026-10-22' line 8 is reworded to match the label, e.g. 'every OPEN row has an R-JD / R-GR disposition or a card question' (an orchestrator edit)."
+  },
+  {
+   "id": "CHAT-191.CL-Q1",
+   "subject": "COA-D5 ('incremental = last 90 days' is false) closes after a spec fact correction",
+   "decision": "approve",
+   "recommendation": "y. Correct the three spec lines (Spec 51 :22, :47; Spec 42 :87), then close COA-D5 as CLOSED (2) (runner_wired; lock src/tests/admin-step-registration.logic.test.ts R-DW live; notes load-coa.notes.json:9). No rule changes; the spec edit is a fact correction."
+  },
+  {
+   "id": "CHAT-191.CL-Q2",
+   "subject": "CCT-D1 and CCCE-D1 close as declared deviations under R-GN",
+   "decision": "approve",
+   "recommendation": "A: CLOSED declared deviation (R-GN); the owed retract fix is named as a follow-up in the Closes-at cell. Applies R-GR form 1 with R-GN."
+  },
+  {
+   "id": "CHAT-191.CL-Q3",
+   "subject": "CCT-D2 and CCCE-D6 keep legacy behaviour (parity) and stay pinned",
+   "decision": "approve",
+   "recommendation": "Keep OPEN PIN ... parity kept, and do not schedule the follow-ups now."
+  },
+  {
+   "id": "CHAT-191.CL-Q4",
+   "subject": "AS-D7, ADB-D3 and AEH-D5: retire the fleet-wide checks_passed key on night 4 under a new register row modelled on R-HR",
+   "decision": "approve",
+   "recommendation": "B: retire the key on night 4 (QUEUE H5, the next fleet recapture) once the build seat re-runs the search for readers. A new register row, modelled on R-HR's evidence condition (zero readers found), allows the retirement outside a conversion; the item joins the 124a Bundled RE-FREEZE night list. Mirror edits (#36) in the same commit: the pilot1 assert_schema assessment :288 and :310, the batch1-i2 assert_data_bounds assessment :459, the batch1-i3 assert_engine_health assessment :160 (also its violations test :219)."
+  },
+  {
+   "id": "CHAT-191.CL-Q5",
+   "subject": "AS-D8: assert_schema's HTTP requests honour the declared timeout (night-4 runner change)",
+   "decision": "approve",
+   "recommendation": "Add a night-4 runner change so ctx.fetch honours the declared execution.network timeout, then the assert_schema descriptor change and recapture (its fingerprint moves; the recapture lands in the same commit). The runner change is added to the 124a Bundled RE-FREEZE night list. Mirror edits: the pilot1 assert_schema assessment :289 and :311."
+  },
+  {
+   "id": "CHAT-191.CL-Q6",
+   "subject": "Withdrawn: ACF deviations[2] UTC is decided by CHAT-190.CCC-Q4",
+   "decision": "pointer",
+   "recommendation": "Withdrawn. ACF-D4 is decided by CCC-Q4 on the cost-cite card; the ledger row follows that answer (CHAT-190.CCC-Q4)."
+  },
+  {
+   "id": "CHAT-191.CL-Q7",
+   "subject": "ECZ-D1: retire the dead ENRICH_TARGET 'coa' manifest field now",
+   "decision": "approve",
+   "recommendation": "Retire it now: remove the manifest field, flip suite claim D5 to it, and update the regression lock (permits-coa-zoning-columns.regression) with the Regression Guardian. The permits env stays. No rule changes."
+  },
+  {
+   "id": "CHAT-191.CL-Q8",
+   "subject": "ECZ-D4 closes as CLOSED-MEASURED, admitted by a dated note on R-JD",
+   "decision": "approve",
+   "recommendation": "Close as CLOSED-MEASURED (Night P4: no downstream diff; explained-diffs.json source). R-JD names only the green-lock close; the ledger already has the CLOSED-MEASURED form (LM-D11, CC-D3), which no register row names, so a dated note on R-JD admits it."
+  },
+  {
+   "id": "CHAT-191.CL-Q9",
+   "subject": "AGC-D4: align assert_global_coverage's eligible population to the forecaster's in a separate change lane",
+   "decision": "approve",
+   "recommendation": "A separate change lane, with Reality-Check, aligns the query to the forecaster's real population (stalled permits, the P1/P2 18-month window, the application_date fallback, PRE- permits, the look-back) and recaptures AGC in the same commit; mirror edit batch1-i1 assert_global_coverage assessment :579."
+  },
+  {
+   "id": "CHAT-191.CL-Q10",
+   "subject": "AGC-D5: report aged_pre_permits as an information row",
+   "decision": "approve",
+   "recommendation": "A: report the value as an INFO row so the setting assert_global_coverage_pre_permit_aged_months means something (one compute edit, an AGC recapture and an explained difference; may share CL-Q9's slot); mirror edit batch1-i1 assert_global_coverage assessment :580."
+  },
+  {
+   "id": "CHAT-191.CL-Q11",
+   "subject": "COA-D7: the coa-level execution.maintenance test meets EVE.LEDGER-1",
+   "decision": "approve",
+   "recommendation": "y. Flip COA-D7 to CLOSED (2) on the coa-level test that runs coa's real maintenance declaration with the seeded threshold 0 (dead rows issue VACUUM (ANALYZE) coa_applications; none skips it); run green, and red with maintenance none."
+  },
+  {
+   "id": "CHAT-191.CL-Q12",
+   "subject": "CCS-D6 closes as a declared deviation under R-GN, by a dated note naming CCS-D6 only",
+   "decision": "approve",
+   "recommendation": "Yes: the wave-4 approval covers the classify_coa_scope assessment item CCS-D6 (:103). Close as CLOSED declared deviation (R-GN). A dated note on R-GN records that its approval covers CCS-D6; it does not reach other wave-4 assessment items, and ACF-D4 stays with CCC-Q4."
+  }
+ ]
+}
