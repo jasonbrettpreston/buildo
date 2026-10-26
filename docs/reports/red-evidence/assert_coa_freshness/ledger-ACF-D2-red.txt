@@ -1,0 +1,21 @@
+kind: mutation
+row: ACF-D2
+lock: src/tests/steps/assert_coa_freshness/violations.test.ts -t "D2a"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/assert_coa_freshness/violations.test.ts -t "D2a" --reporter=json --outputFile=docs/reports/red-evidence/assert_coa_freshness/ledger-ACF-D2-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["D2a — R-DE (v) + EXTERNALIZED: the descriptor reads the two step-owned assert_coa_freshness_* variables (flipped at ②)"]
+restore: scripts/quality/assert-coa-freshness.descriptor.json restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/quality/assert-coa-freshness.descriptor.json b/scripts/quality/assert-coa-freshness.descriptor.json
+index 879beb2d..1bfe02c7 100644
+--- a/scripts/quality/assert-coa-freshness.descriptor.json
++++ b/scripts/quality/assert-coa-freshness.descriptor.json
+@@ -233,7 +233,7 @@
+   "config": {
+     "logic_variables": [
+       {
+-        "name": "assert_coa_freshness_warn_max_days",
++        "name": "coa_freshness_warn_days",
+         "min": 7,
+         "max": 180,
+         "on_invalid": "fail"

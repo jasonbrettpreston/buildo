@@ -1,0 +1,21 @@
+kind: mutation
+row: CCS-D2
+lock: src/tests/steps/classify_coa_scope/violations.test.ts -t "D3a"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/classify_coa_scope/violations.test.ts -t "D3a" --reporter=json --outputFile=docs/reports/red-evidence/classify_coa_scope/ledger-CCS-D2-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["D3a — R-DE (v) + EXTERNALIZED: classify_coa_scope_unmapped_max_pct and classify_coa_scope_batch_size are step-owned variables (flipped at ②)"]
+restore: scripts/classify-coa-scope.descriptor.json restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/classify-coa-scope.descriptor.json b/scripts/classify-coa-scope.descriptor.json
+index 810a3dff..dbf7b72d 100644
+--- a/scripts/classify-coa-scope.descriptor.json
++++ b/scripts/classify-coa-scope.descriptor.json
+@@ -260,7 +260,7 @@
+   },
+   "config": {
+     "logic_variables": [
+-      { "name": "classify_coa_scope_unmapped_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
++      { "name": "coa_scope_unmapped_threshold_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+       { "name": "classify_coa_scope_batch_size", "min": 1, "max": 13106, "on_invalid": "fail" }
+     ],
+     "validation": "strict",
