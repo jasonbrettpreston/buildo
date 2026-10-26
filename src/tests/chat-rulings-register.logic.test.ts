@@ -221,6 +221,17 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
   it('CHAT-151 (batch 2026-10-25-f): the link_coa inheritance arm on R-JY', () => {
     expect(rowOf(A, 'R-JY')).toContain('2026-10-25-batch-f#CHAT-151.INHERIT-ARM');
   });
+  it('CHAT-152..159 (batch 2026-10-25-g): the seven cards and the WF3 cards', () => {
+    const G = '2026-10-25-batch-g#';
+    expect(rowOf(M, 'M-169')).toContain(G + 'CHAT-152.L2-USE-SCOPE');
+    expect(rowOf(A, 'R-JZ')).toContain(G + 'CHAT-153.RJZ-AMEND');
+    expect(rowOf(A, 'R-JQ')).toContain(G + 'CHAT-154.CLP-URGENT-CATCHUP');
+    expect(rowOf(A, 'R-HQ')).toContain(G + 'CHAT-155.CLP-RETIREMENTS');
+    expect(rowOf(M, 'M-326')).toContain(G + 'CHAT-156.M326-EXAMINED-FALLBACK');
+    expect(rowOf(M, 'M-321')).toContain(G + 'CHAT-157.SPLIT-DECISION-ROUND');
+    expect(rowOf(A, 'R-IY')).toContain(G + 'CHAT-158.HOOK-FIX-A');
+    expect(rowOf(A, 'R-JW')).toContain(G + 'CHAT-159.WF3-CARDS');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
