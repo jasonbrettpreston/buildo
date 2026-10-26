@@ -1,0 +1,20 @@
+kind: mutation
+row: AS-D9
+lock: src/tests/assert-schema-ledger-locks.logic.test.ts -t "AS-D9"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/assert-schema-ledger-locks.logic.test.ts -t "AS-D9" --reporter=json --outputFile=docs/reports/red-evidence/assert_schema/ledger-AS-D9-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["AS-D9 (behaviour, the closing lock) — the REAL assert_schema descriptor, lock not acquired: the runner emits a SKIP summary"]
+restore: scripts/lib/step/index.js restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/lib/step/index.js b/scripts/lib/step/index.js
+index ae85e7dc..3347a212 100644
+--- a/scripts/lib/step/index.js
++++ b/scripts/lib/step/index.js
+@@ -7788,7 +7788,6 @@ async function runWithPool(runnable, pool, ctx) {
+       // and the seam pass / chain-end synthesis must see the SAME key on
+       // every row regardless of which branch produced it.
+       recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId, code_sha: resolveCodeSha(), pool_errors: pool.__buildoPoolErrorCount ?? 0 };
+-      pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
+     }
+     return { status, recordsMeta, runId, acquired: lockResult.acquired };
+   // `failed`, never `crashed`: this code ran and reached a verdict. The capture-
