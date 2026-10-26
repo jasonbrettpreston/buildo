@@ -296,6 +296,11 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (const id of ['M-159', 'M-244']) expect(rowOf(M, id)).toContain(P + 'CHAT-185.L2-SPECIFIC-USE-ANY-OF');
     for (const id of ['M-158', 'M-159', 'M-169']) expect(rowOf(M, id)).toContain(P + 'CHAT-186.L2-PERMISSION-SET-ASIDE-DISCLOSURES');
   });
+  it('CHAT-187..188 (batch 2026-10-26-q): K2 add-on lands with the P3-7 night; account names in file paths are personal details; on M-169 and M-305', () => {
+    const P = '2026-10-26-batch-q#';
+    expect(rowOf(M, 'M-169')).toContain(P + 'CHAT-187.K2-LANDS-WITH-P3-7');
+    expect(rowOf(M, 'M-305')).toContain(P + 'CHAT-188.ACCOUNT-PATH-PERSONAL-DETAIL');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
