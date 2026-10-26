@@ -1,0 +1,108 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-t/2026-10-26-batch-t.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-t",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Nt-Q1-Q6 - you are trying to find a way to bend the rules - we need an honest approach but we also need to move forward - I dont know what it is - but this we weaken the approach and the outsome going forward",
+    "record": "operator chat 2026-10-26 (evening)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-t/2026-10-26-batch-t.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve",
+    "withdrawn": "no_ruling"
+  },
+  "routing": {
+    "CHAT-193.NT-Q1": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-DI",
+        "R-BG"
+      ]
+    },
+    "CHAT-193.NT-Q2": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-BG",
+        "R-CZ"
+      ]
+    },
+    "CHAT-193.NT-Q3": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-BG",
+        "R-DI"
+      ]
+    },
+    "CHAT-193.NT-Q4": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-BF",
+        "R-BG"
+      ]
+    },
+    "CHAT-193.NT-Q5": {
+      "register": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "rests_on": [
+        "R-JY",
+        "R-BG"
+      ]
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-193.NT-Q1",
+      "question": "Night-tools NT-Q1: may the chain-level #50 LDG-10 (sources) line move FAIL to PARTIAL on the night?",
+      "recommendation": "Withdrawn: no ruling. No tolerance is ruled for the #50 LDG-10 (sources) line; rejected as bending R-DI (\"no allowlist, no literal\"). The line stops the night if it moves; each stopped line is explained under R-DA.",
+      "decision": "withdrawn",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-193.NT-Q2",
+      "question": "Night-tools NT-Q2: may docs/reports/witness/_catalog.json change on the night, and how?",
+      "recommendation": "Withdrawn: no ruling. No allowlist is ruled for the catalog; rejected as bending R-DI and R-BG (\"never bent per step\"). The bracket backup tables are dropped before the catalog capture, so the catalog must be byte-identical.",
+      "decision": "withdrawn",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-193.NT-Q3",
+      "question": "Night-tools NT-Q3: may a #44 WITNESS block of one of the 12 move from FAIL:STALE to PASS?",
+      "recommendation": "Withdrawn: no ruling. No tolerance is ruled; rejected as bending R-BG (\"never bent per step\") and R-DI. Each stopped line is explained under R-DA with evidence.",
+      "decision": "withdrawn",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-193.NT-Q4",
+      "question": "Night-tools NT-Q4: may the P3 descriptor=<bytes>B count move on the night?",
+      "recommendation": "Withdrawn: no ruling. No constant is ruled; rejected as bending R-BG and R-DI (\"no literal\"). Each stopped line is explained under R-DA with evidence.",
+      "decision": "withdrawn",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-193.NT-Q5",
+      "question": "Night-tools NT-Q5: accept the residuals a to e for tonight?",
+      "recommendation": "Withdrawn: no ruling. The residuals are not accepted as a class; no constant is ruled. CHAT-149 \"Anything red stops the night; nothing is pushed\" stands, and R-BG (\"never bent per step\") is not bent.",
+      "decision": "withdrawn",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-193.NT-EXPLAINED-DIFFS",
+      "question": "Night-tools approach: the night gates stay strict; lines the night expected to change are explained under R-DA, with a pause before the commit",
+      "recommendation": "The night gates stay strict. When a night stops on lines it expected to change, it pauses before the commit. Each stopped line needs an R-DA explained-diff entry with evidence, reviewed by the OUTPUT panel, and the commit waits for the operator's go. Unexplained lines mean a restore from backup. The bracket backup tables are dropped before the catalog capture, so the catalog must be byte-identical.",
+      "decision": "approve",
+      "decided_at": "2026-10-26",
+      "operator_quote": "go on explained diffs, NT-Q6 A - proceed"
+    },
+    {
+      "id": "CHAT-193.NT-Q6",
+      "question": "Night-tools NT-Q6: may 4d publish the commit by commit-tree + explicit hooks + a compare-and-swap update-ref, instead of git commit?",
+      "recommendation": "A: 4d commits through explicit hooks (pre-commit, prepare-commit-msg, commit-msg, no --no-verify), commit-tree, and a compare-and-swap update-ref from the base, never a plain git commit. Any stop leaves HEAD at the base; the night paths are unstaged by an explicit-path restore, never a reset.",
+      "decision": "approve",
+      "decided_at": "2026-10-26",
+      "operator_quote": "go on explained diffs, NT-Q6 A - proceed"
+    }
+  ]
+}

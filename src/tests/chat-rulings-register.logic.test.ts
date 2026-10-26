@@ -329,6 +329,21 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(jb).toContain('departed_status');
     expect(jb).toContain('Spec 50 amendment');
   });
+  it('CHAT-193 (batch 2026-10-26-t): night-tools NT-Q1..Q5 are withdrawn (no tolerance, allowlist or constant); the explained-diffs approach and NT-Q6 A are dated notes on R-JY (R-DA sits in moved block §B16)', () => {
+    const S = '2026-10-26-batch-t#CHAT-193.';
+    const jy = rowOf(A, 'R-JY');
+    for (const id of ['NT-EXPLAINED-DIFFS', 'NT-Q1', 'NT-Q2', 'NT-Q3', 'NT-Q4', 'NT-Q5', 'NT-Q6']) expect(jy).toContain(S + id + '`');
+    expect(jy).toContain('under R-DA with evidence');
+    expect(jy).toContain('Unexplained lines mean a restore from backup');
+    expect(jy).toContain('the catalog must be byte-identical');
+    expect(jy).toContain('never a plain `git commit` (PREAMBLE:14');
+    expect(jy).toContain('commit-tree');
+    const bam = A.split('\n').find((l) => l.startsWith('- **Night-tools ruling CHAT-193.NT-Q1 to CHAT-193.NT-Q6')) ?? '';
+    expect(bam).toContain('WITHDRAWN, no_ruling');
+    expect(bam).toContain('no allowlist, no literal');
+    expect(bam).toContain('never bent per step');
+    expect(bam).toContain('No rule text changes.');
+  });
   it('CHAT-187..188 (batch 2026-10-26-q): K2 add-on lands with the P3-7 night; account names in file paths are personal details; on M-169 and M-305', () => {
     const P = '2026-10-26-batch-q#';
     expect(rowOf(M, 'M-169')).toContain(P + 'CHAT-187.K2-LANDS-WITH-P3-7');
