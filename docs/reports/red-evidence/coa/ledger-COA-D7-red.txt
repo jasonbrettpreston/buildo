@@ -1,0 +1,34 @@
+kind: mutation
+row: COA-D7
+lock: src/tests/steps/coa/ledger-locks.logic.test.ts -t "COA-D7"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/coa/ledger-locks.logic.test.ts -t "COA-D7" --reporter=json --outputFile=docs/reports/red-evidence/coa/ledger-COA-D7-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["COA-D7 — execution.maintenance runs VACUUM (ANALYZE) \"coa_applications\" when a dead tuple exists, skips at 0"]
+restore: scripts/load-coa.descriptor.json restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/load-coa.descriptor.json b/scripts/load-coa.descriptor.json
+index 8933dfb8..db8b2cbb 100644
+--- a/scripts/load-coa.descriptor.json
++++ b/scripts/load-coa.descriptor.json
+@@ -436,20 +436,7 @@
+         }
+       }
+     },
+-    "maintenance": [
+-      {
+-        "operation": "vacuum_analyze",
+-        "table": "coa_applications",
+-        "owned_by": "self",
+-        "why": {
+-          "text": "COA-D7: the legacy loader ran VACUUM ANALYZE coa_applications on every run [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:600-602]; runMaintenance gates it on coa_applications_dead_tuple_ratio_warn_max (seeded 0, so any dead tuple triggers it, the faithful form of the unconditional legacy run) and runs it autocommit after the write — the load_massing / load_neighbourhoods form.",
+-          "liveness": {
+-            "kind": "file",
+-            "ref": "scripts/lib/step/plausibility.js"
+-          }
+-        }
+-      }
+-    ]
++    "maintenance": "none"
+   },
+   "checks": [
+     {
