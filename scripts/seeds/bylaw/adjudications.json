@@ -113809,6 +113809,145 @@
         ],
         "zones": []
       }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.20.41(6)#whole/condition",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): a conversion of a lawfully existing building; the sibling 10.5.20.40(1)(A) form.",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "10.10.20.41(6)#whole",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.20.41(6)#whole/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): as the condition.",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "10.10.20.41(6)#whole",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.20.41(6)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): the evidence phrase for the lawfully_existing lot condition (the clause's conversion wording; M-158(1)).",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "10.10.20.41(6)#whole",
+      "value": {
+        "lawfully_existing": "has been converted to contain more than four dwelling units",
+        "secondary_suite_use": "a secondary suite may not",
+        "semi_detached_house": "Converted Semi-Detached House"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.5.20.40(6)#whole/condition",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): a conversion of a lawfully existing building; the sibling 10.5.20.40(1)(A) form.",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "10.5.20.40(6)#whole",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.5.20.40(6)#whole/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): as the condition.",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "10.5.20.40(6)#whole",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.5.20.40(6)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): the evidence phrase for the lawfully_existing lot condition (the clause's conversion wording; M-158(1)).",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "10.5.20.40(6)#whole",
+      "value": {
+        "lawfully_existing": "converted to contain up to four dwelling units",
+        "secondary_suite": "secondary suite",
+        "secondary_suite_use": "secondary suite may not",
+        "semi_detached_house": "semi-detached house",
+        "townhouse": "semi-detached house or townhouse"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-600.60.40(3)#(3)(D)/condition",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): a conversion of a lawfully existing building; the sibling 10.5.20.40(1)(A) form.",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "600.60.40(3)#(3)(D)",
+      "value": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-600.60.40(3)#(3)(D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): as the condition.",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "600.60.40(3)#(3)(D)",
+      "value": [
+        "lawfully_existing"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-600.60.40(3)#(3)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-179 (G2): the evidence phrase for the lawfully_existing lot condition (the clause's conversion wording; M-158(1)).",
+      "rule": "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); M-75",
+      "unit": "600.60.40(3)#(3)(D)",
+      "value": {
+        "R": "Residential Zone category",
+        "RD": "Residential Zone category",
+        "RM": "Residential Zone category",
+        "RS": "Residential Zone category",
+        "RT": "Residential Zone category",
+        "fiveplex": "fiveplex or sixplex",
+        "lawfully_existing": "Conversion of Lawfully Existing Buildings",
+        "semi_detached_house": "semi-detached house or",
+        "semi_detached_houseplex": "semi-detached houseplex",
+        "sixplex": "fiveplex or sixplex",
+        "townhouse": "a townhouse"
+      }
     }
   ]
 }

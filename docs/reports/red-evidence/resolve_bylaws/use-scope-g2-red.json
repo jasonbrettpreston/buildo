@@ -1,0 +1,21 @@
+{
+ "$comment": "Red evidence for C4b (CHAT-179, G2): the G2 tests of src/tests/bylaw-use-scope.logic.test.ts run on the C4a tree (before the G2 records). Paths written with ~/ (CHAT-188).",
+ "tree": "46c65f0e",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 1,
+  "passed": 1
+ },
+ "tests": [
+  {
+   "test": "G2: the conversion clauses carry their lawfully_existing condition (CHAT-179) G2-a: the three units carry the condition in both fields with an evidence phrase; production lawfully_existing false sets them aside; the RD semi reads permitted (before G3)",
+   "status": "failed",
+   "message": "AssertionError: expected [ '600.60.40(3)#(3)(D)', 'none', …(2) ] to deeply equal [ '600.60.40(3)#(3)(D)', …(3) ]"
+  },
+  {
+   "test": "G2: the conversion clauses carry their lawfully_existing condition (CHAT-179) G2-b twin: with lawfully_existing true, 600.60.40(3)(D) applies and the RD semi reads prohibited by it",
+   "status": "passed",
+   "message": ""
+  }
+ ]
+}

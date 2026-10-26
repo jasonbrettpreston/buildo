@@ -198,3 +198,24 @@ describe('G1: the non-dwelling use clauses are keyed to their specific use (CHAT
     expect(hits([{ unit_id: '40.99.99(1)#fixture', application: { uses: ['office'] } }])).toEqual(['40.99.99(1)#fixture']);
   });
 });
+
+// ---- G2 (2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND; Spec 69a M-158(1); PLAN-scope v3 §5.2, v4 §5.2) ----
+const G2_UNITS = ['600.60.40(3)#(3)(D)', '10.5.20.40(6)#whole', '10.10.20.41(6)#whole'];
+describe('G2: the conversion clauses carry their lawfully_existing condition (CHAT-179)', () => {
+  it('G2-a: the three units carry the condition in both fields with an evidence phrase; production lawfully_existing false sets them aside; the RD semi reads permitted (before G3)', () => {
+    for (const id of G2_UNITS) {
+      const u = unitOf(id);
+      expect([id, u.condition, u.application.lot_conditions.includes('lawfully_existing'), typeof u.application.evidence.lawfully_existing]).toEqual([id, { tokens: ['lawfully_existing'] }, true, 'string']);
+    }
+    const L = M.classLotFor(rowOf('5035239'), 'principal', 'semi_detached_house', env);
+    expect(L.flags.lawfully_existing).toBe(false);
+    const rv = (n: string): Json => E.effective(L, n, E.loadCandidates(L, INPUT.body.units).candidates, env.ctx);
+    expect(E.applies({ ...L, building_type: 'semi_detached_house' }, unitOf('600.60.40(3)#(3)(D)'), env.ctx, rv).why).toBe('condition lawfully_existing');
+  });
+  it('G2-b twin: with lawfully_existing true, 600.60.40(3)(D) applies and the RD semi reads prohibited by it', () => {
+    const L0 = M.classLotFor(rowOf('5035239'), 'principal', 'semi_detached_house', env);
+    const L = { ...L0, flags: { ...L0.flags, lawfully_existing: true } };
+    const p = E.permitted(L, 'semi_detached_house', E.loadCandidates(L, INPUT.body.units).candidates, env.ctx);
+    expect([p.status, p.winners]).toEqual(['prohibited', ['600.60.40(3)#(3)(D)']]);
+  });
+});

@@ -447,7 +447,10 @@
      "unit": "10.10.20.41(6)#whole",
      "lot": "5195536",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "semi_detached_house",
+      "flags": {
+       "lawfully_existing": true
+      }
      },
      "rationale": "affected lot (ravine): applies true",
      "initial": {
@@ -465,7 +468,10 @@
      "unit": "10.10.20.41(6)#whole",
      "lot": "5265152",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "semi_detached_house",
+      "flags": {
+       "lawfully_existing": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -5264,6 +5270,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5285,6 +5292,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5331,6 +5339,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5352,6 +5361,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5398,6 +5408,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5419,6 +5430,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5465,6 +5477,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5486,6 +5499,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5532,6 +5546,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
@@ -5553,6 +5568,7 @@
      "scenario": {
       "building_type": "semi_detached_house",
       "flags": {
+       "lawfully_existing": true,
        "has_secondary_suite": true
       }
      },
