@@ -266,6 +266,17 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(j).toBeGreaterThan(-1);
     expect(S[j + 1]).toContain(L + 'CHAT-172.SPLIT-CONDITIONS-READ');
   });
+  it('CHAT-173..181 (batch 2026-10-26-m): operator answers 1-5 (R-1 c, enricher.2 held note, WF3 parked, notice copies deleted, use-scope G1/G2/G5/review)', () => {
+    const N = '2026-10-26-batch-m#';
+    expect(rowOf(M, 'M-326')).toContain(N + 'CHAT-173.R1-NO-PARCEL-SHOWN');
+    expect(rowOf(A, 'R-JZ')).toContain(N + 'CHAT-174.ENRICHER2-HELD-NOTE');
+    const H = read('docs/specs/01-pipeline/132_step_standard_handbook.md').split('\n').find((l) => l.startsWith('- **enricher.2**')) ?? '';
+    expect(H).toContain(N + 'CHAT-174.ENRICHER2-HELD-NOTE');
+    expect(rowOf(A, 'R-JW')).toContain(N + 'CHAT-175.WF3-FORECASTS-PARKED');
+    expect(rowOf(A, 'R-JW')).toContain(N + 'CHAT-176.WF3-WSIB-PARKED');
+    expect(rowOf(M, 'M-305')).toContain(N + 'CHAT-177.NOTICE-COPIES-DELETED');
+    for (const id of ['CHAT-178.L2-G1-USE-KEYING-ROUND', 'CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND', 'CHAT-180.L2-G5-DISCLOSURE-ON-READ', 'CHAT-181.L2-REVIEW-UNITS-ELEMENT']) expect(rowOf(M, 'M-169')).toContain(N + id);
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
