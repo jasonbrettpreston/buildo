@@ -5,7 +5,8 @@
 //     method CHECK, NO in-migration index, commented DOWN.
 //   - manifest.json registers BOTH modes (enrich_permits in permits chain after
 //     link_parcels; enrich_coa_zoning in coa chain after link_coa_to_parcels),
-//     same file, with env.ENRICH_TARGET — the dual-entry cascade.
+//     enrich_permits with env.ENRICH_TARGET, enrich_coa_zoning through its own frozen shell with no env
+//     (ECZ-D1 retired, CHAT-191.CL-Q7) — the dual-entry cascade.
 //   - _contracts.json carries the F-H12 thresholds.
 // Cheap (no DB). Live-schema assertions live in src/tests/db/enrich-permits.db.test.ts.
 
@@ -61,13 +62,15 @@ describe('manifest.json — dual-entry enrich-permits cascade', () => {
   // Phase-4 wave 4 ① (2026-10-18, wave-4 plan question 9): the identity split gives enrich_coa_zoning its own
   // shell file, a legacy pass-through to scripts/enrich-permits.js's main() with ENRICH_TARGET=coa.
   // Night P4 R-EQ shell swap (b2ea1532, 2026-10-20): enrich_coa_zoning's shell is the frozen pipeline.step() over
-  // ./lib/compute/enrich-coa-zoning (the shared lead-zoning module, target coa); the manifest env retires at ③ (D5).
-  it('registers both modes (coa through its own frozen shell over the shared lead-zoning compute) with env.ENRICH_TARGET', () => {
+  // ./lib/compute/enrich-coa-zoning (the shared lead-zoning module, target coa). ECZ-D1 (124a R-JD dated note
+  // 2026-10-26-batch-r#CHAT-191.CL-Q7): the coa manifest env retired; the descriptor identity selects the target, so only
+  // enrich_permits (scripts/enrich-permits.js:601, its sole reader) keeps env.ENRICH_TARGET.
+  it('registers both modes (coa through its own frozen shell over the shared lead-zoning compute); only enrich_permits keeps env.ENRICH_TARGET', () => {
     expect(manifest.scripts.enrich_permits?.file).toBe('scripts/enrich-permits.js');
     expect(manifest.scripts.enrich_coa_zoning?.file).toBe('scripts/enrich-coa-zoning.js');
     expect(readFileSync(resolve(root, 'scripts/enrich-coa-zoning.js'), 'utf8')).toMatch(/require\('\.\/lib\/compute\/enrich-coa-zoning'\)/);
     expect(manifest.scripts.enrich_permits.env?.ENRICH_TARGET).toBe('permits');
-    expect(manifest.scripts.enrich_coa_zoning.env?.ENRICH_TARGET).toBe('coa');
+    expect(manifest.scripts.enrich_coa_zoning.env).toBeUndefined();
     expect(manifest.scripts.enrich_permits.telemetry_tables).toContain('permits');
     expect(manifest.scripts.enrich_coa_zoning.telemetry_tables).toContain('coa_applications');
   });
