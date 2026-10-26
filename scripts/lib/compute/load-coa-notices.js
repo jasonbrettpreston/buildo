@@ -1,5 +1,6 @@
 /**
- * SPEC LINK: docs/specs/01-pipeline/129_source_coa_notices.md §D5, §D9, §D10
+ * SPEC LINK: docs/specs/01-pipeline/129_source_coa_notices.md §D5, §D9, §D10, §5 (j) notes, :49 (refused wins per item)
+ * SPEC LINK: decision log 2026-10-25-batch-g#CHAT-157.SPLIT-DECISION-ROUND; 2026-10-26-batch-j#CHAT-169.SPLIT-THREE-FAMILIES
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5 (compute shape)
  * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3, Rule 10
  *
@@ -31,7 +32,7 @@ const TARGET_MAP = require('../coa-notices/target-map.json');
 const AIC = require('../coa-notices/aic-values');
 
 /** Hand-bumped whenever an answer this file (or parse-values.js) produces changes (pairs with logic_version, gate #48). */
-const EXTRACTOR_VERSION = 'coa-extractor-3';
+const EXTRACTOR_VERSION = 'coa-extractor-4';
 const SOURCE_FAMILY = 'toronto_ca_decision_pdf';
 const BATCH_FAMILY = AIC.SOURCE_FAMILY; // Spec 129 §2b: the values-only batch family (CHAT-71.2)
 const CHAPTER_BYLAW = '569-2013';
@@ -167,7 +168,8 @@ function dayNumber(iso) {
 /**
  * T-PARSE-j: the decision is read from the decision paragraph ONLY — the anchor line, then each following
  * line in turn (at most `decision_window_lines`), and the FIRST line that names a decision decides. The
- * conditions text that follows ("…if the conditions are not met the approval is refused") is never read.
+ * conditions text that follows ("…if the conditions are not met the approval is refused") is never read HERE. The
+ * per-item split of a decision that refuses some items and approves others reads further (splitDecision; CHAT-172, CHAT-183).
  */
 function classifyDecision(lines, from) {
   for (let i = from; i < Math.min(lines.length, from + 1 + SEG.decision_window_lines); i++) {
@@ -177,6 +179,175 @@ function classifyDecision(lines, from) {
     }
   }
   return 'unknown';
+}
+
+// ===========================================================================
+// Split decisions (CHAT-157 / CHAT-169): a decision that refuses some variance items and approves others is read
+// per item. Spec 129 :49 refused wins per item; Spec 129 §5 (j) notes (CHAT-172, CHAT-183) state what the split reads.
+// ===========================================================================
+
+/**
+ * The pre-registered split rule, transcribed literally (L-PARSE PLAN.v4 §1.1; prereg-coa-2017-split.json). These
+ * patterns are grammar, not tunables (Spec 132 core.8). The `g` patterns are only ever used through matchAll.
+ */
+const SPLIT_RX = Object.freeze({
+  PARA_END: /signature\s+page|date\s+decision\s+mailed|last\s+date\s+of\s+appeal/i,
+  REASONS: /\b[Tt]he\s+reasons?\s+for\s+the\s+decision|\bREASONS?\b/,
+  F3_APPROVE: /(?:to|and)\s+approve\s+the\s+following\s+variance/i,
+  F3_REFUSE: /to\s+refuse\s+the\s+following\s+variance/i,
+  F3_HEADER: /((?:to|and)\s+(?:approve|refuse)\s+the\s+following\s+variance\(?s?\)?:?)/i,
+  F3_SEG_END: /for\s+the\s+following\s+reasons|it\s+is\s+the\s+decision/i,
+  F3_ITEM: /(?:^|\s)(\d{1,2})\.\s+(?=chapter|section|regulation|by-law|clause|exception)/gi,
+  F2_ANY: /minor\s+variance\s+(?:items?|numbers?)(?:\s+no\.?)?[^.:;]*?\b(?:is|are)\s+(approved|refused)\b/gi,
+  F2_LIST: /minor\s+variance\s+(?:items?|numbers?)(?:\s+no\.?)?\s+((?:\d|[ ,&-]|\band\b|\bthrough\b)+?)\s*(?:is|are)\s+(approved\s+on\s+condition|approved|refused)\b/gi,
+  F1_DETECT: /variance\s+requests?\b[^;]*?\b(?:be|are|is)\s+refused/i,
+  VERB_R: /\b(?:be|are|is)\s+refused\b/i,
+  VERB_A: /\b(?:be|are|is)\s+approved\b/i,
+  F1_CLAUSE_END: /;\s*and\s+2\.|\(B\)/i,
+  F1_SCAN: /variance\s+requests?\s+((?:\d{1,2}(?:\s*(?:,|&|and)\s*)?)+)|(?:^|[\s:;])(\d{1,2})\.\s+(?=chapter|section)|by\s*-?\s*law(?:\s+no\.?)?\s+(\d[\d\s-]*\d[A-Z]?|\d)/gi,
+  BYLAW_ID: /by\s*-?\s*law(?:\s+no\.?)?\s+(\d[\d\s-]*\d[A-Z]?|\d)/i,
+  APPROVAL_STOP: /[:.]/,
+  LIST_SPLIT: /\s*(?:,|&|\band\b)\s*/i,
+  LIST_TOKEN: /^(\d{1,2})(?:-(\d{1,2}))?$/,
+});
+const APPROVALS = new Set(['approved', 'approved_with_conditions']);
+const all = (re, s) => [...String(s).matchAll(re)];
+const normId = (s) => s.replace(/\s*-\s*/g, '-').replace(/\s+/g, '');
+
+/** The decision lexicon in vocab order (refused first), as classifyDecision applies it to one line. */
+function lexiconClass(text) {
+  const t = text.toLowerCase();
+  for (const decision of ['refused', 'approved_with_conditions', 'approved']) {
+    if (VOCAB.decision_lexicon[decision].some((p) => t.includes(p))) return decision;
+  }
+  return 'unknown';
+}
+
+/** A printed list ("1, 2 & 4", "1 through 6", "1-5 & 7-10") → its numbers, or null when any token does not parse. */
+function splitList(s) {
+  const t = s.replace(/\bthrough\b/gi, '-').replace(/\s*-\s*/g, '-').trim().replace(/[\s,&]+$/, '').replace(/\s+and$/i, '');
+  const out = [];
+  for (const tok of t.split(SPLIT_RX.LIST_SPLIT)) {
+    const m = SPLIT_RX.LIST_TOKEN.exec(tok.trim());
+    if (!m) return null;
+    const a = Number(m[1]);
+    const b = m[2] ? Number(m[2]) : a;
+    if (b < a) return null;
+    for (let k = a; k <= b; k++) out.push(k);
+  }
+  return out.length ? out : null;
+}
+
+/** The operative text: the decision paragraph from the anchor to the first paragraph-end line, cut at the reasons. */
+function operativeText(block, at) {
+  const rest = block.slice(at);
+  const end = rest.findIndex((l, i) => i > 0 && SPLIT_RX.PARA_END.test(l.text));
+  const para = (end > 0 ? rest.slice(0, end) : rest).map((l) => l.text).join(' ').replace(/\s+/g, ' ');
+  const reasons = SPLIT_RX.REASONS.exec(para);
+  return reasons ? para.slice(0, reasons.index) : para;
+}
+
+/** A raw item (after the consent skip) → what the split resolves against: ordinal, printed ordinal, by-law id. */
+function splitRef(it) {
+  const m = SPLIT_RX.BYLAW_ID.exec(it.head || '');
+  const id = m ? m[1] : it.group || null;
+  return { ord: it.item_ordinal, printed: it.ordinal_printed, bylaw: id ? normId(id) : null };
+}
+
+/** A split throw's code: closed (`SPLIT_<CODE>` only for an all-caps code), else SPLIT_THROW. Never text. */
+function splitCode(err) {
+  return err && typeof err.code === 'string' && /^[A-Z_]+$/.test(err.code) ? `SPLIT_${err.code}` : 'SPLIT_THROW';
+}
+
+/**
+ * The split of one notice. `op` = the operative text (memory only), `raw` = splitRef rows, `noticeDecision` = the
+ * notice decision. Returns null when no family matches (not a split), else `{family, refs_unresolved, unknown,
+ * decisions}`: `unknown` is a closed reason when the notice fails closed (every item unknown), and `decisions` maps
+ * ordinal → decision otherwise. The returned object holds no text.
+ */
+function splitDecision(op, raw, noticeDecision) {
+  const st = { refs: 0, unresolved: 0 };
+  const resolve = (pred) => {
+    st.refs++;
+    const hits = raw.filter(pred);
+    if (hits.length !== 1) { st.unresolved++; return null; }
+    return hits[0].ord;
+  };
+  const out = (family, unknown) => ({ family, refs_unresolved: st.unresolved, unknown, decisions: null });
+  const refused = new Set();
+  let family = null;
+  const any = all(SPLIT_RX.F2_ANY, op);
+  if (SPLIT_RX.F3_APPROVE.test(op) && SPLIT_RX.F3_REFUSE.test(op)) family = 'F3';
+  else if (any.some((x) => /refused/i.test(x[1])) && any.some((x) => /approved/i.test(x[1]))) family = 'F2';
+  else if (SPLIT_RX.F1_DETECT.test(op) && SPLIT_RX.VERB_A.test(op)) family = 'F1';
+  if (family === null) return null;
+  let approvalClass = null;
+  if (family !== 'F1') {
+    const iR = family === 'F3' ? op.search(SPLIT_RX.F3_REFUSE) : any.find((x) => /refused/i.test(x[1])).index;
+    const iA = family === 'F3' ? op.search(SPLIT_RX.F3_APPROVE) : any.find((x) => /approved/i.test(x[1])).index;
+    if (iR < iA) return out(family, 'd_order');
+    if (!APPROVALS.has(noticeDecision)) return out(family, 'd_notice_class');
+  }
+  if (family === 'F2') {
+    const refusedAny = any.filter((x) => /refused/i.test(x[1])).length;
+    const lists = all(SPLIT_RX.F2_LIST, op).filter((x) => /refused/i.test(x[2]));
+    if (lists.length !== refusedAny) return out(family, 'b_list');
+    for (const x of lists) {
+      const ns = splitList(x[1]);
+      if (!ns) return out(family, 'b_list');
+      for (const n of ns) { const o = resolve((r) => r.printed === n); if (o !== null) refused.add(o); }
+    }
+  } else if (family === 'F3') {
+    const parts = op.split(SPLIT_RX.F3_HEADER);
+    for (let k = 1; k < parts.length; k += 2) {
+      if (!/refuse/i.test(parts[k])) continue;
+      const body = parts[k + 1].split(SPLIT_RX.F3_SEG_END)[0];
+      for (const m of all(SPLIT_RX.F3_ITEM, body)) { const o = resolve((r) => r.printed === Number(m[1])); if (o !== null) refused.add(o); }
+    }
+  } else {
+    const v = SPLIT_RX.VERB_R.exec(op);
+    const before = op.slice(0, v.index);
+    const after = op.slice(v.index);
+    const e = SPLIT_RX.F1_CLAUSE_END.exec(after);
+    const tailEnd = e ? e.index : after.length;
+    const scan = (seg) => {
+      const refs = [];
+      let pending = [];
+      let bad = null;
+      for (const m of all(SPLIT_RX.F1_SCAN, seg)) {
+        if (m[1]) {
+          const ns = splitList(m[1]);
+          if (!ns) bad = bad || 'b_list';
+          else pending.push(...ns);
+        } else if (m[2]) {
+          pending.push(Number(m[2]));
+        } else if (m[3]) {
+          if (!pending.length) bad = bad || 'b_bylaw_pending';
+          const id = normId(m[3]);
+          for (const n of pending) refs.push({ n, id });
+          pending = [];
+        }
+      }
+      if (pending.length) bad = bad || 'b_leftover';
+      return { refs, bad };
+    };
+    let t = scan(before);
+    if (!t.refs.length && !t.bad) t = scan(after.slice(0, tailEnd));
+    if (t.bad) return out(family, t.bad);
+    for (const r of t.refs) { const o = resolve((x) => x.printed === r.n && x.bylaw === r.id); if (o !== null) refused.add(o); }
+    const appr = after.slice(tailEnd);
+    const va = SPLIT_RX.VERB_A.exec(appr);
+    if (!va) return out(family, 'e_no_approval');
+    const rest = appr.slice(va.index);
+    const stop = SPLIT_RX.APPROVAL_STOP.exec(rest);
+    const sentence = appr.slice(0, va.index) + (stop ? rest.slice(0, stop.index) : rest);
+    approvalClass = lexiconClass(sentence.replace(/\s*,\s*/g, ' ').replace(/\s+/g, ' '));
+    if (!APPROVALS.has(approvalClass)) return out(family, 'e_approval_class');
+  }
+  if (st.unresolved > 0) return out(family, 'a_unresolved');
+  if (refused.size === 0) return out(family, 'c_zero_refs');
+  const decisions = new Map(raw.map((r) => [r.ord, refused.has(r.ord) ? 'refused' : (family === 'F1' ? approvalClass : noticeDecision)]));
+  return { family, refs_unresolved: st.unresolved, unknown: null, decisions };
 }
 
 /** The variance section's lines → items `{ordinal_printed, position, head, body, group, page}`. */
@@ -323,9 +494,11 @@ function shapeDocument(doc, cfg) { // `cfg`: the seam signature (doc, cfg) — u
     const raw = segmentItems(section);
     if (assignOrdinals(raw)) counts.ordinal_fallback_notices++;
     const items = [];
+    const rawKept = [];
     let consentSkipped = 0;
     for (const it of raw) {
       if (CONSENT_FILE_RE.test(`${it.head} ${it.body}`)) { consentSkipped++; continue; }
+      rawKept.push(it);
       try {
         items.push(parseItem(it));
       } catch (err) {
@@ -333,12 +506,27 @@ function shapeDocument(doc, cfg) { // `cfg`: the seam signature (doc, cfg) — u
         throw parseError(`ITEM_${err && err.code ? err.code : 'THROW'}`, doc.doc_id, it.page);
       }
     }
+    // CHAT-157 / CHAT-169: every item takes the notice decision; a split decision then decides per item (Spec 129 :49).
+    const noticeDecision = decisionAt >= 0 ? classifyDecision(block, decisionAt) : 'unknown';
+    for (const item of items) item.decision = noticeDecision;
+    let split = null;
+    if (decisionAt >= 0) {
+      const refs = rawKept.map(splitRef);
+      try {
+        split = splitDecision(operativeText(block, decisionAt), refs, noticeDecision);
+      } catch (err) {
+        // D3.3: the split reads notice text; nothing of it may leave in an error.
+        throw parseError(splitCode(err), doc.doc_id, block[0].page);
+      }
+      if (split) items.forEach((item, k) => { item.decision = split.unknown !== null ? 'unknown' : split.decisions.get(refs[k].ord); });
+    }
     seenWithSection.add(appNo);
     notices.push({
       ...base,
       notice_status: 'variance_section_parsed',
       zoning_as_stated: zoning,
-      decision: decisionAt >= 0 ? classifyDecision(block, decisionAt) : 'unknown',
+      decision: noticeDecision,
+      split: split ? { refs_unresolved: split.refs_unresolved, unknown: split.unknown !== null } : null,
       decision_mailed_on: mailedM ? isoFromMonthDay(mailedM[1], mailedM[2], mailedM[3]) : null,
       consent_items_skipped: consentSkipped,
       items,
@@ -366,7 +554,7 @@ function shapeValuesBatch(batch) {
 // ===========================================================================
 
 function itemSignature(n) {
-  return JSON.stringify([n.decision, n.items.map((i) => [i.item_ordinal, i.parse_status, i.cited_bylaw, i.regulation_id_as_cited, i.required_value, i.required_unit, i.proposed_value, i.proposed_unit])]);
+  return JSON.stringify([n.decision, n.items.map((i) => [i.item_ordinal, i.parse_status, i.cited_bylaw, i.regulation_id_as_cited, i.required_value, i.required_unit, i.proposed_value, i.proposed_unit, i.decision])]);
 }
 
 /** A PDF notice is always a decision notice; a batch notice carries its own doc_type. */
@@ -431,7 +619,7 @@ function rowFor(doc, notice, item, drop) {
     item_ordinal: item.item_ordinal,
     hearing_date: batch ? notice.hearing_date : doc.hearing_date,
     decision_mailed_on: notice.decision_mailed_on,
-    decision: batch ? item.decision : notice.decision,
+    decision: item.decision, // CHAT-157: per item for both families (a PDF item carries its notice decision or its split)
     // Spec 129 §2b: the AIC drop does not say committee or delegated; 'unknown' is the honest value.
     decision_source: batch ? 'unknown' : (doc.kind === 'delegated' ? 'delegated' : 'committee'),
     cited_bylaw: item.cited_bylaw,
@@ -532,9 +720,16 @@ function reconcileNotices(docResults, opts) {
   const direction = { known: 0, violations: 0 };
   const oobReq = { count: 0, measured: 0, sample_keys: [] };
   const perDoc = {};
+  // CHAT-157 counter (Spec 129 §10 Emits): split notices among the KEPT PDF notices, per-reference unresolved, failed closed.
+  const splitCounts = { notices: 0, refs_unresolved: 0, notices_unknown: 0 };
   const itemsByFamily = { [SOURCE_FAMILY]: 0, [BATCH_FAMILY]: 0 };
   const batchPairs = {};
   for (const { doc, notice } of kept) {
+    if (!isBatchDoc(doc) && notice.split) {
+      splitCounts.notices++;
+      splitCounts.refs_unresolved += notice.split.refs_unresolved;
+      if (notice.split.unknown) splitCounts.notices_unknown++;
+    }
     for (const item of notice.items) {
       itemsTotal++;
       itemsByFamily[isBatchDoc(doc) ? BATCH_FAMILY : SOURCE_FAMILY]++;
@@ -649,6 +844,7 @@ function reconcileNotices(docResults, opts) {
       target_unit_mismatch_items: targetUnitMismatchItems,
       direction,
       required_oob: oobReq,
+      split_decisions: splitCounts,
     },
   };
 }
@@ -878,6 +1074,7 @@ function buildLoadMeta(ctx) {
     citation_multi: s.citation_multi ?? 0,
     consent_items_skipped: s.consent_items_skipped ?? 0,
     qualified_items: s.qualified_items ?? 0,
+    split_decisions: { notices: 0, refs_unresolved: 0, notices_unknown: 0, ...(s.split_decisions || {}) },
     manifest_sha256: ds.manifest_sha256 ?? null,
     extractor_version: EXTRACTOR_VERSION,
     vocab_version: VOCAB.version,

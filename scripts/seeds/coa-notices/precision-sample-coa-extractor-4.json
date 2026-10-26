@@ -1,0 +1,858 @@
+{
+  "extractor_version": "coa-extractor-4",
+  "carried_from": {"extractor_version":"coa-extractor-3","ruling":"2026-10-26-batch-j#CHAT-170.PRECISION-CARRY-FORWARD","overlap":"0 of the 72 moved keys in the 60-item pair sample; 1 split application (A0910/17NY #1, unmoved) among the 50 link-sample notices; neither sample judges decision"},
+  "seed": "coa-extractor-3|spec129-s12-step5|2026-10-10",
+  "drawn": "2026-10-10",
+  "seats": 2,
+  "seat_rule": "blind Claude seats that did not write the parser; read item/notice text + candidate only (Spec 129 §3/§12 step 5)",
+  "final_rule": "incorrect if either seat says incorrect (ambiguous counts as incorrect)",
+  "text_included": false,
+  "spec": "Spec 129 §10 / §12 step 5",
+  "n": 60,
+  "precision_all": 0.9333,
+  "precision_layer2": 0.9767,
+  "n_layer2": 43,
+  "items": [
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1096/16TEY|3",
+      "stratum": "other",
+      "target": "ambiguous",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0504/17TEY|1",
+      "stratum": "layer2",
+      "target": "building_depth_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0335/17TEY|2",
+      "stratum": "layer2",
+      "target": "building_depth_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0044/17EYK|9",
+      "stratum": "layer2",
+      "target": "building_length_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0783/17NY|5",
+      "stratum": "layer2",
+      "target": "building_length_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0784/17NY|10",
+      "stratum": "other",
+      "target": "driveway_width_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0187/17EYK|2",
+      "stratum": "other",
+      "target": "dwelling_units_max",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1124/16TEY|1",
+      "stratum": "layer2",
+      "target": "encroachment_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0257/17EYK|4",
+      "stratum": "layer2",
+      "target": "encroachment_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0908/17NY|4",
+      "stratum": "layer2",
+      "target": "front_landscaping_pct",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0283/17TEY|3",
+      "stratum": "layer2",
+      "target": "front_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0180/17EYK|3",
+      "stratum": "layer2",
+      "target": "front_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0753/17NY|2",
+      "stratum": "layer2",
+      "target": "front_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0877/17NY|3",
+      "stratum": "layer2",
+      "target": "front_soft_landscaping_pct",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0648/17NY|2",
+      "stratum": "layer2",
+      "target": "fsi",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0688/16EYK|3",
+      "stratum": "layer2",
+      "target": "fsi",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0861/16EYK|1",
+      "stratum": "layer2",
+      "target": "fsi",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0940/16EYK|1",
+      "stratum": "layer2",
+      "target": "fsi",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0470/17TEY|7",
+      "stratum": "layer2",
+      "target": "fsi",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1296/16TEY|6",
+      "stratum": "layer2",
+      "target": "fsi",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0192/17TEY|13",
+      "stratum": "layer2",
+      "target": "fsi",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1278/16TEY|2",
+      "stratum": "layer2",
+      "target": "gfa_m2",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0573/17NY|3",
+      "stratum": "layer2",
+      "target": "height_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1155/16TEY|11",
+      "stratum": "layer2",
+      "target": "height_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0129/17TEY|3",
+      "stratum": "layer2",
+      "target": "height_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0493/17TEY|6",
+      "stratum": "layer2",
+      "target": "height_storeys",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0443/17EYK|1",
+      "stratum": "layer2",
+      "target": "lot_coverage_pct",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0703/17NY|3",
+      "stratum": "layer2",
+      "target": "lot_coverage_pct",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0442/17TEY|1",
+      "stratum": "layer2",
+      "target": "lot_coverage_pct",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0410/17EYK|6",
+      "stratum": "layer2",
+      "target": "main_wall_height_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0211/17SC|3",
+      "stratum": "layer2",
+      "target": "main_wall_height_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0072/17TEY|2",
+      "stratum": "layer2",
+      "target": "main_wall_height_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0240/17EYK|4",
+      "stratum": "other",
+      "target": "parking_spaces",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0151/17TEY|7",
+      "stratum": "other",
+      "target": "parking_spaces",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0417/17EYK|1",
+      "stratum": "layer2",
+      "target": "platform_area_m2",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1241/16TEY|1",
+      "stratum": "layer2",
+      "target": "rear_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0867/16EYK|3",
+      "stratum": "layer2",
+      "target": "rear_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0278/17TEY|3",
+      "stratum": "layer2",
+      "target": "rear_soft_landscaping_pct",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0853/16EYK|2",
+      "stratum": "layer2",
+      "target": "required_lot_area_m2",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1282/16TEY|9",
+      "stratum": "layer2",
+      "target": "required_lot_area_m2",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0505/17NY|2",
+      "stratum": "layer2",
+      "target": "required_lot_frontage_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0672/17NY|14",
+      "stratum": "layer2",
+      "target": "required_lot_frontage_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0737/17NY|15",
+      "stratum": "layer2",
+      "target": "side_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "incorrect"
+      ],
+      "seat_classes": [
+        null,
+        "wrong_target"
+      ],
+      "verdict": "incorrect"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0078/17EYK|1",
+      "stratum": "layer2",
+      "target": "side_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0902/17NY|13",
+      "stratum": "layer2",
+      "target": "side_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0960/16EYK|2",
+      "stratum": "layer2",
+      "target": "side_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0777/17NY|2",
+      "stratum": "layer2",
+      "target": "side_setback_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0783/17NY|9",
+      "stratum": "layer2",
+      "target": "side_setback_street_m",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0978/16TEY|5",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "incorrect",
+        "incorrect"
+      ],
+      "seat_classes": [
+        "wrong_value",
+        "wrong_value"
+      ],
+      "verdict": "incorrect"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0897/16EYK|1",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1018/16TEY|8",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1198/16TEY|6",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0985/16EYK|5",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0902/16TEY|5",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "incorrect",
+        "incorrect"
+      ],
+      "seat_classes": [
+        "wrong_value",
+        "wrong_value"
+      ],
+      "verdict": "incorrect"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0361/17EYK|5",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1068/16TEY|2",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0132/17SC|3",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0371/17EYK|5",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "incorrect",
+        "incorrect"
+      ],
+      "seat_classes": [
+        "wrong_value",
+        "wrong_value"
+      ],
+      "verdict": "incorrect"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A0200/17SC|5",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "variance_key": "toronto_ca_decision_pdf|A1156/16TEY|2",
+      "stratum": "other",
+      "target": "unmapped",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    }
+  ],
+  "layer2_definition": "target-map.json target whose scripts/seeds/bylaw/vocab.json dsl_target aspect is envelope, lot or landscaping (Spec 129 §10, operator 2026-10-10: the law)"
+}
