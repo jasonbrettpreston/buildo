@@ -314,6 +314,20 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(map.rules.find((r) => r.id === 'R-KD')?.handbook_line).toBe('core.6');
     expect(map.rules.find((r) => r.id === 'R-KE')?.handbook_line).toBe('x-v3.3');
   });
+  it('CHAT-192 (batch 2026-10-26-s): the 17 permits-card answers PW1-Q1..Q17 are dated notes on R-EN, hosted on R-JB (R-EN sits in moved block §B24), with the section B-AM bullet', () => {
+    const S = '2026-10-26-batch-s#CHAT-192.PW1-Q';
+    const jb = rowOf(A, 'R-JB');
+    for (let q = 1; q <= 17; q++) expect(jb).toContain(S + q + '`');
+    const bam = A.split('\n').find((l) => l.startsWith('- **R-EN dated notes CHAT-192.PW1-Q1 to CHAT-192.PW1-Q17')) ?? '';
+    for (let q = 1; q <= 17; q++) expect(bam).toContain(S + q + '`');
+    expect(bam).toContain('PM-D3');
+    expect(bam).toContain('value re-based from measurement');
+    expect(bam).toContain('ratified per entry by this ruling');
+    expect(bam).toContain('dated ruling on the card answer');
+    expect(bam).toContain('no reader of the last permits load still reads `sync_runs`');
+    expect(jb).toContain('departed_status');
+    expect(jb).toContain('Spec 50 amendment');
+  });
   it('CHAT-187..188 (batch 2026-10-26-q): K2 add-on lands with the P3-7 night; account names in file paths are personal details; on M-169 and M-305', () => {
     const P = '2026-10-26-batch-q#';
     expect(rowOf(M, 'M-169')).toContain(P + 'CHAT-187.K2-LANDS-WITH-P3-7');
