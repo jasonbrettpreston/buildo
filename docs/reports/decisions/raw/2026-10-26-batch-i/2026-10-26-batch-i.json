@@ -1,0 +1,19 @@
+{
+ "source": "operator chat 2026-10-26 (morning)",
+ "operator_quote": "I agree with your recommendation C on D1 and C on R-DM",
+ "context": "Answers to the runner re-freeze cards ~/Buildo-scratch/rarms/CARD-RJZ-D1-consequences.md (options A, B, C) and ~/Buildo-scratch/rarms/CARD-RDM-row-error-class.md (options A, B, C), explained with examples (the load_coa lifecycle_status_history deadlock counted as a row error and lost; the deadlock retry double-counting inserted rows).",
+ "decisions": [
+  {
+   "id": "CHAT-167.RJZ-D1-HOLD",
+   "subject": "The ENRICHER derive arm (CHAT-153 A and the runner half of 1(i)) is held off the re-freeze night and designed together with CLP ②; validate refuses derive on an ENRICHER by name",
+   "decision": "approve",
+   "recommendation": "Option C: validate refuses `derive` on an ENRICHER with a named message (the refusal half of 1(i)). The re-freeze night (CHAT-149) ships the R-JZ list arm (one transaction per batch), the both-arm timeout rethrow, the per-attempt counter reset and the in-ruling fixes (R-JX F1, R-JY F3 / missing exports, docstrings). ENRICHER derive (CHAT-153 A, runner-owned prior read, D1 items 1-6: CLP write classes, deriveRows alerts, the list-arm alert savepoint, route refusals, Z-B(iii), the multi-root counting design) is designed once with CLP ② as its first user and ruled then. R-JZ's ENRICHER admission (124a:1001) is held, not retired. CARD-RJZ-alert-savepoint.md waits with the derive arm. Spec 132 enricher.2 and 124a:1522 are unchanged."
+  },
+  {
+   "id": "CHAT-168.RDM-ROW-ERROR-CLASS",
+   "subject": "A genuine row error inside a warn_row savepoint is SQLSTATE class 22 or 23 only; every other error aborts the batch and rethrows, in both arms; executeWrite's counters reset per transaction attempt",
+   "decision": "approve",
+   "recommendation": "Option C (allowlist): only class 22 (data exception) and class 23 (integrity constraint) are rolled back to the savepoint and counted. Everything else rolls the batch back and rethrows in both the ingest arm and the enrich arm: 57014, 55P03 (and the EP-PHASE-DEADLINE cancel), 40P01 (retried in ingest by pipeline.withTransaction), 40001, 42xxx, 53xxx, 08xxx, XX000, code-less errors and throw undefined. executeWrite resets its counters at each withTransaction attempt, fixing the live load_coa double count (inserted=2 for one row after a 40P01 retry). The 3 fixtures that count a code-less error gain code '23505' and keep their assertions. One predicate (write.js isRowError)."
+  }
+ ]
+}

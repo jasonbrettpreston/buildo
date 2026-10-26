@@ -216,6 +216,81 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(A, 'R-JY')).toContain('2026-10-25-batch-d#CHAT-147.RJY-Q1-Q2');
     expect(rowOf(A, 'R-JY')).toContain('buildStartCountsSql(descriptor)');
   });
+  it('CHAT-148..150 (batch 2026-10-25-e): re-pin on M-326, re-freeze night on R-JY, hook budget on R-IY', () => {
+    const E = '2026-10-25-batch-e#';
+    expect(rowOf(M, 'M-326')).toContain(E + 'CHAT-148.M326-REPIN');
+    expect(rowOf(A, 'R-JY')).toContain(E + 'CHAT-149.REFREEZE-NIGHT');
+    expect(rowOf(A, 'R-IY')).toContain(E + 'CHAT-150.HOOK-BUDGET');
+  });
+  it('CHAT-151 (batch 2026-10-25-f): the link_coa inheritance arm on R-JY', () => {
+    expect(rowOf(A, 'R-JY')).toContain('2026-10-25-batch-f#CHAT-151.INHERIT-ARM');
+  });
+  it('CHAT-152..159 (batch 2026-10-25-g): the seven cards and the WF3 cards', () => {
+    const G = '2026-10-25-batch-g#';
+    expect(rowOf(M, 'M-169')).toContain(G + 'CHAT-152.L2-USE-SCOPE');
+    expect(rowOf(A, 'R-JZ')).toContain(G + 'CHAT-153.RJZ-AMEND');
+    expect(rowOf(A, 'R-JQ')).toContain(G + 'CHAT-154.CLP-URGENT-CATCHUP');
+    expect(rowOf(A, 'R-HQ')).toContain(G + 'CHAT-155.CLP-RETIREMENTS');
+    expect(rowOf(M, 'M-326')).toContain(G + 'CHAT-156.M326-EXAMINED-FALLBACK');
+    expect(rowOf(M, 'M-321')).toContain(G + 'CHAT-157.SPLIT-DECISION-ROUND');
+    expect(rowOf(A, 'R-IY')).toContain(G + 'CHAT-158.HOOK-FIX-A');
+    expect(rowOf(A, 'R-JW')).toContain(G + 'CHAT-159.WF3-CARDS');
+  });
+  it('CHAT-160..166 (batch 2026-10-26-h): the scorer card answers', () => {
+    const H = '2026-10-26-batch-h#';
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-160.M326-PER-FIGURE');
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-161.M326-PARCEL-NOT-DISCLOSED');
+    expect(rowOf(M, 'M-313')).toContain(H + 'CHAT-162.M313-EVERY-SOURCE');
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-163.M326-SITE-PLAN');
+    expect(rowOf(M, 'M-321')).toContain(H + 'CHAT-164.UNKNOWN-SOURCE-ROUND');
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-165.HELD-UNREAD-DISCLOSED');
+    expect(rowOf(M, 'M-305')).toContain(H + 'CHAT-166.SCORER-OUTPUTS-KEPT');
+  });
+  it('CHAT-167..168 (batch 2026-10-26-i): ENRICHER derive held on R-JZ, row errors class 22/23 on R-JZ + a §B-AM bullet on R-DM', () => {
+    const I = '2026-10-26-batch-i#';
+    expect(rowOf(A, 'R-JZ')).toContain(I + 'CHAT-167.RJZ-D1-HOLD');
+    expect(rowOf(A, 'R-JZ')).toContain(I + 'CHAT-168.RDM-ROW-ERROR-CLASS');
+    expect(A.split('\n').some((l) => l.startsWith('- **R-DM: a genuine row error is class 22 or 23 only'))).toBe(true);
+  });
+  it('CHAT-169..170 (batch 2026-10-26-j): split round covers three wording families; precision samples carried forward, on M-321', () => {
+    const J = '2026-10-26-batch-j#';
+    expect(rowOf(M, 'M-321')).toContain(J + 'CHAT-169.SPLIT-THREE-FAMILIES');
+    expect(rowOf(M, 'M-321')).toContain(J + 'CHAT-170.PRECISION-CARRY-FORWARD');
+  });
+  it('CHAT-171 (batch 2026-10-26-k): net-new census equality covers the paths net-new reads, on R-IY + a §B-AM bullet on R-EC', () => {
+    const K = '2026-10-26-batch-k#';
+    expect(rowOf(A, 'R-IY')).toContain(K + 'CHAT-171.NETNEW-CENSUS-SCOPE');
+    expect(A.split('\n').some((l) => l.startsWith('- **R-EC: net-new\'s one-pass equality covers the paths net-new reads'))).toBe(true);
+  });
+  it('CHAT-172 (batch 2026-10-26-l): split parser reads conditions text up to the reasons, fail-closed; on M-321 + a dated note under Spec 129 (j)', () => {
+    const L = '2026-10-26-batch-l#';
+    expect(rowOf(M, 'M-321')).toContain(L + 'CHAT-172.SPLIT-CONDITIONS-READ');
+    const S = read('docs/specs/01-pipeline/129_source_coa_notices.md').split('\n');
+    const j = S.findIndex((l) => l.startsWith('  (j) The decision is read from the decision paragraph only.'));
+    expect(j).toBeGreaterThan(-1);
+    expect(S[j + 1]).toContain(L + 'CHAT-172.SPLIT-CONDITIONS-READ');
+  });
+  it('CHAT-173..181 (batch 2026-10-26-m): operator answers 1-5 (R-1 c, enricher.2 held note, WF3 parked, notice copies deleted, use-scope G1/G2/G5/review)', () => {
+    const N = '2026-10-26-batch-m#';
+    expect(rowOf(M, 'M-326')).toContain(N + 'CHAT-173.R1-NO-PARCEL-SHOWN');
+    expect(rowOf(A, 'R-JZ')).toContain(N + 'CHAT-174.ENRICHER2-HELD-NOTE');
+    const H = read('docs/specs/01-pipeline/132_step_standard_handbook.md').split('\n').find((l) => l.startsWith('- **enricher.2**')) ?? '';
+    expect(H).toContain(N + 'CHAT-174.ENRICHER2-HELD-NOTE');
+    expect(rowOf(A, 'R-JW')).toContain(N + 'CHAT-175.WF3-FORECASTS-PARKED');
+    expect(rowOf(A, 'R-JW')).toContain(N + 'CHAT-176.WF3-WSIB-PARKED');
+    expect(rowOf(M, 'M-305')).toContain(N + 'CHAT-177.NOTICE-COPIES-DELETED');
+    for (const id of ['CHAT-178.L2-G1-USE-KEYING-ROUND', 'CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND', 'CHAT-180.L2-G5-DISCLOSURE-ON-READ', 'CHAT-181.L2-REVIEW-UNITS-ELEMENT']) expect(rowOf(M, 'M-169')).toContain(N + id);
+  });
+  it('CHAT-182..183 (batch 2026-10-26-n): G3 use-list keying round on M-169 + M-182; CHAT-172 corrected per family on M-321 + a Spec 129 (j) note', () => {
+    const P = '2026-10-26-batch-n#';
+    expect(rowOf(M, 'M-169')).toContain(P + 'CHAT-182.L2-G3-USE-LIST-KEYING-ROUND');
+    expect(rowOf(M, 'M-182')).toContain(P + 'CHAT-182.L2-G3-USE-LIST-KEYING-ROUND');
+    expect(rowOf(M, 'M-321')).toContain(P + 'CHAT-183.SPLIT-CONDITIONS-PER-FAMILY');
+    const S = read('docs/specs/01-pipeline/129_source_coa_notices.md').split('\n');
+    const j = S.findIndex((l) => l.startsWith('  (j) The decision is read from the decision paragraph only.'));
+    expect(j).toBeGreaterThan(-1);
+    expect(S[j + 2]).toContain(P + 'CHAT-183.SPLIT-CONDITIONS-PER-FAMILY');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
