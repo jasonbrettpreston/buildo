@@ -1,0 +1,21 @@
+kind: mutation
+row: LCTP-D8
+lock: src/tests/steps/link_coa_to_parcels/ledger-locks.logic.test.ts -t "LCTP-D8"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/link_coa_to_parcels/ledger-locks.logic.test.ts -t "LCTP-D8" --reporter=json --outputFile=docs/reports/red-evidence/link_coa_to_parcels/ledger-LCTP-D8-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["LCTP-D8"]
+restore: scripts/link-coa-to-parcels.descriptor.json restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/link-coa-to-parcels.descriptor.json b/scripts/link-coa-to-parcels.descriptor.json
+index ced170ac..de22cf9e 100644
+--- a/scripts/link-coa-to-parcels.descriptor.json
++++ b/scripts/link-coa-to-parcels.descriptor.json
+@@ -357,7 +357,7 @@
+     "chains": "derived",
+     "shared": "derived",
+     "slug_forms": "derived",
+-    "varies_by_chain": { "checks": "none", "phase": { "coa": 4 }, "audit_table": "one", "scope": "none" },
++    "varies_by_chain": { "checks": "none", "phase": { "coa": 4 }, "audit_table": "per_path", "scope": "none" },
+     "on_contention": "self_skip"
+   },
+   "terminals": [
