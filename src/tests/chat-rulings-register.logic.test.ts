@@ -253,6 +253,11 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(M, 'M-321')).toContain(J + 'CHAT-169.SPLIT-THREE-FAMILIES');
     expect(rowOf(M, 'M-321')).toContain(J + 'CHAT-170.PRECISION-CARRY-FORWARD');
   });
+  it('CHAT-171 (batch 2026-10-26-k): net-new census equality covers the paths net-new reads, on R-IY + a §B-AM bullet on R-EC', () => {
+    const K = '2026-10-26-batch-k#';
+    expect(rowOf(A, 'R-IY')).toContain(K + 'CHAT-171.NETNEW-CENSUS-SCOPE');
+    expect(A.split('\n').some((l) => l.startsWith('- **R-EC: net-new\'s one-pass equality covers the paths net-new reads'))).toBe(true);
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');

@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-k/2026-10-26-batch-k.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-k",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Hokk census approved.",
+    "record": "operator chat 2026-10-26 (afternoon)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-k/2026-10-26-batch-k.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-171.NETNEW-CENSUS-SCOPE",
+      "question": "CHAT-158 part (2) 'every census path' means every path net-new reads: the script and descriptor of each legacy:\"none\" row, read live",
+      "recommendation": "Reading (a): the equality CHAT-158 (2) rests on is locked over every legacy:\"none\" row's script + descriptor, read live, so a new net-new row is covered when it is registered (8/8 SAME today). The 2 copy-class differences on other census paths (scripts/enrich-wsib.js, scripts/quality/assert-schema.descriptor.json; --follow follows a >=50 % copy, the one pass does not) are disclosed in the commit and the 124a as-built note; neither is a legacy:\"none\" row, no verdict moves and --all --fast stays line-identical. --diff-filter=AR stays as ruled; counting copies as legacy history (-C --diff-filter=ACR) would be a separate ruling. The optional pre-push range and fail-closed cards were not answered, so pre-push keeps the ruled HEAD~1..HEAD scope and today's failure handling (option A on both).",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    }
+  ]
+}
