@@ -1,0 +1,76 @@
+{
+ "$comment": "PLAN-scope v5 §5.0 / v6: the declared order of the use-scope lane's Layer 2 rounds, as data. Each round commits prereg-<r>.json (the attribution probe's expected from -> to) in its (a) commit and actual-<r>.json (the production path, from the a_sha and b_sha trees) in its (b) commit. R1 (bylaw-use-scope.logic.test.ts) reads only prereg files: the last round with an actual asserts its to; a round with a prereg and no actual asserts its from. bylaw-use-scope-prereg.infra.test.ts locks that each prereg is touched by exactly one commit, a strict ancestor of the commit adding its actual (F2-r). Location: scripts/analysis/bylaw-validation (not scripts/seeds/bylaw, whose every file is hashed into the Layer 2 table_version, so a pre-registration there would itself move the inputs and unpin the CoA lock). The CoA halves are coa-expected/prereg-use-scope-<r>.json (the prereg-coa-2026-d.json precedent).",
+ "order": [
+  "l2a",
+  "g1",
+  "g2",
+  "g3",
+  "g5",
+  "l2b",
+  "l2c"
+ ],
+ "rulings": {
+  "l2a": [
+   "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE",
+   "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+  ],
+  "g1": [
+   "2026-10-26-batch-m#CHAT-178.L2-G1-USE-KEYING-ROUND"
+  ],
+  "g2": [
+   "2026-10-26-batch-m#CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND"
+  ],
+  "g3": [
+   "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND",
+   "2026-10-26-batch-o#CHAT-184.L2-CR-USE-LISTS"
+  ],
+  "g5": [
+   "2026-10-26-batch-m#CHAT-180.L2-G5-DISCLOSURE-ON-READ"
+  ],
+  "l2b": [
+   "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+  ],
+  "l2c": [
+   "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+  ]
+ },
+ "variants": {
+  "l2a": [
+   "V0_today",
+   "L1_A"
+  ],
+  "g1": [
+   "L1_A",
+   "L2_A_G1"
+  ],
+  "g2": [
+   "L2_A_G1",
+   "L3_A_G12"
+  ],
+  "g3": [
+   "L3_A_G12",
+   "L4_A_G123"
+  ],
+  "g5": [
+   "L4_A_G123",
+   "L4_A_G123"
+  ],
+  "l2b": [
+   "L4_A_G123",
+   "L6_A_G123_B"
+  ],
+  "l2c": [
+   "L6_A_G123_B",
+   "L7_A_G123_B_C"
+  ]
+ },
+ "coa_round": {
+  "l2a": 2,
+  "g1": 3,
+  "g2": 4,
+  "g3": 5,
+  "g5": 6,
+  "l2b": 7,
+  "l2c": 8
+ }
+}

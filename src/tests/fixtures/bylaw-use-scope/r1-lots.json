@@ -1,0 +1,388 @@
+{
+ "$comment": "PLAN-scope (v3 §8, v5 §5.0) R1: the 10 named real lots (2 per zone RD / RM / RT / R / RS), as the step's own buildSourceSql() rows (values only), read READ ONLY on 2026-10-26; run_at bound to 2026-10-26T00:00:00Z. zone_list is logic_variables.resolve_bylaws_population_zone_classes.",
+ "zone_list": [
+  "R",
+  "RD",
+  "RS",
+  "RT",
+  "RM"
+ ],
+ "rows": [
+  {
+   "id": 5500,
+   "parcel_id": "5133346",
+   "zoning_class": "RS",
+   "zoning_zn_string": "RS (f18.0; a665)",
+   "exception_number": null,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RS",
+      "source_id": 4374,
+      "area_share": 1
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 2,
+     "height_max_m": 10
+    },
+    "lot_coverage_overlay": {
+     "applied": true,
+     "coverage_max_pct": 30
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "10.65",
+   "depth_m": "36.64",
+   "lot_size_sqm": "390.15",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 10,
+   "run_day": "20752"
+  },
+  {
+   "id": 210700,
+   "parcel_id": "5263757",
+   "zoning_class": "RM",
+   "zoning_zn_string": "RM (u4) (x253)",
+   "exception_number": 253,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RM",
+      "source_id": 11500,
+      "area_share": 1
+     },
+     {
+      "zn_zone": "RT",
+      "source_id": 3431,
+      "area_share": 0
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 3,
+     "height_max_m": 11
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "9.23",
+   "depth_m": "36.10",
+   "lot_size_sqm": "333.20",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 13,
+   "run_day": "20752"
+  },
+  {
+   "id": 222300,
+   "parcel_id": "5235788",
+   "zoning_class": "R",
+   "zoning_zn_string": "R (f9.0; u4; d0.6) (x954)",
+   "exception_number": 954,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "R",
+      "source_id": 11140,
+      "area_share": 1
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "height_max_m": 10
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "6.08",
+   "depth_m": "56.13",
+   "lot_size_sqm": "341.52",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 6,
+   "run_day": "20752"
+  },
+  {
+   "id": 241950,
+   "parcel_id": "5091339",
+   "zoning_class": "RS",
+   "zoning_zn_string": "RS (f15.0; a460) (x14)",
+   "exception_number": 14,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RS",
+      "source_id": 8304,
+      "area_share": 1
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 2,
+     "height_max_m": 10
+    },
+    "lot_coverage_overlay": {
+     "applied": true,
+     "coverage_max_pct": 30
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "9.13",
+   "depth_m": "25.94",
+   "lot_size_sqm": "236.75",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 5,
+   "run_day": "20752"
+  },
+  {
+   "id": 266150,
+   "parcel_id": "5021855",
+   "zoning_class": "RT",
+   "zoning_zn_string": "RT (au337.0)",
+   "exception_number": null,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RT",
+      "source_id": 3747,
+      "area_share": 1
+     },
+     {
+      "zn_zone": "RT",
+      "source_id": 6088,
+      "area_share": 0
+     },
+     {
+      "zn_zone": "ON",
+      "source_id": 5641,
+      "area_share": 0
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 3,
+     "height_max_m": 10.5
+    },
+    "lot_coverage_overlay": {
+     "applied": true,
+     "coverage_max_pct": 25
+    }
+   },
+   "on_policy_road": true,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "88.23",
+   "depth_m": "130.26",
+   "lot_size_sqm": "11492.07",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 10,
+   "run_day": "20752"
+  },
+  {
+   "id": 271300,
+   "parcel_id": "5002360",
+   "zoning_class": "RT",
+   "zoning_zn_string": "RT (x198)",
+   "exception_number": 198,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RT",
+      "source_id": 696,
+      "area_share": 1
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 2,
+     "height_max_m": 9
+    },
+    "lot_coverage_overlay": {
+     "applied": true,
+     "coverage_max_pct": 40
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "13.96",
+   "depth_m": "27.13",
+   "lot_size_sqm": "378.89",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": true,
+   "is_heritage_designated": false,
+   "geom_npoints": 12,
+   "run_day": "20752"
+  },
+  {
+   "id": 313500,
+   "parcel_id": "5089586",
+   "zoning_class": "RD",
+   "zoning_zn_string": "RD (f12.0; a370) (x1001)",
+   "exception_number": 1001,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RD",
+      "source_id": 5553,
+      "area_share": 1
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 2,
+     "height_max_m": 10
+    },
+    "lot_coverage_overlay": {
+     "applied": true,
+     "coverage_max_pct": 30
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "15.22",
+   "depth_m": "30.50",
+   "lot_size_sqm": "464.30",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 6,
+   "run_day": "20752"
+  },
+  {
+   "id": 358550,
+   "parcel_id": "5018801",
+   "zoning_class": "RM",
+   "zoning_zn_string": "RM (f18.0; a665; u4)",
+   "exception_number": null,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RM",
+      "source_id": 10501,
+      "area_share": 1
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 2,
+     "height_max_m": 10
+    },
+    "lot_coverage_overlay": {
+     "applied": true,
+     "coverage_max_pct": 30
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "9.76",
+   "depth_m": "36.17",
+   "lot_size_sqm": "352.93",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 11,
+   "run_day": "20752"
+  },
+  {
+   "id": 358700,
+   "parcel_id": "5035239",
+   "zoning_class": "RD",
+   "zoning_zn_string": "RD (f18.0; a690)",
+   "exception_number": null,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "RD",
+      "source_id": 7586,
+      "area_share": 1
+     },
+     {
+      "zn_zone": "RD",
+      "source_id": 5816,
+      "area_share": 0
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "stories": 2,
+     "height_max_m": 10
+    },
+    "lot_coverage_overlay": {
+     "applied": true,
+     "coverage_max_pct": 35
+    }
+   },
+   "on_policy_road": false,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "18.25",
+   "depth_m": "38.20",
+   "lot_size_sqm": "697.20",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 16,
+   "run_day": "20752"
+  },
+  {
+   "id": 451050,
+   "parcel_id": "5214404",
+   "zoning_class": "R",
+   "zoning_zn_string": "R (f7.5; d0.6)",
+   "exception_number": null,
+   "zoning_overlays": {
+    "base": [
+     {
+      "zn_zone": "R",
+      "source_id": 8121,
+      "area_share": 1
+     }
+    ],
+    "height_overlay": {
+     "applied": true,
+     "height_max_m": 11
+    }
+   },
+   "on_policy_road": true,
+   "is_corner_lot": false,
+   "is_through_lot": false,
+   "abuts_laneway": false,
+   "frontage_m": "7.70",
+   "depth_m": "26.87",
+   "lot_size_sqm": "206.86",
+   "zoning_is_ambiguous": false,
+   "in_sixplex_area": false,
+   "is_heritage_designated": false,
+   "geom_npoints": 9,
+   "run_day": "20752"
+  }
+ ]
+}
