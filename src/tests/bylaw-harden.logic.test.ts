@@ -29,7 +29,8 @@ const ABS = read('scripts/seeds/bylaw/absence-rulings.json');
 const EXT = read('scripts/seeds/bylaw/external.json');
 const UNITS: Json[] = read('src/tests/fixtures/bylaw/eval-units.json').units.filter((u: Json) => u.candidate);
 const VECTORS: Json[] = read('scripts/seeds/bylaw/eval-vectors.json').vectors;
-const EV = VO.evaluatorVocab ? VO.evaluatorVocab(PVOCAB) : {};
+// CHAT-152 A fixture policy (PLAN-scope v2 §8): the synthetic PERMIT / PROHIBIT ids declare their permission scope (use); no assertion changes
+const EV = VO.evaluatorVocab ? { ...VO.evaluatorVocab(PVOCAB), permission_scope: { ...PVOCAB.permission_scope, ...{ 'P#1': { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' }, 'Q#1': { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' } } } } : {};
 const ctx = (extra: Json = {}): Json => (E.makeContext ? E.makeContext(EV, { absences: ABS.rulings, ...extra }) : {});
 const C = ctx();
 const show = (r: Json): unknown => (r.status === 'value' ? r.value : `${r.status}:${r.reason}`);

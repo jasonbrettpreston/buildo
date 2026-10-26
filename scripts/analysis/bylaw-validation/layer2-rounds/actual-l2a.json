@@ -1,0 +1,1808 @@
+{
+ "$comment": "Layer 2 ACTUAL for round l2a (PLAN-scope v5 §5.0, v6 A3): both sides by the PRODUCTION path (the tree's own materializeBatch + permitted(), no probe), from at a_sha and to at the (b) commit that adds this file. Compared with prereg-l2a.json on cells, r1, eval_perf.golden_to and units; metadata is copied, not compared. Reality-Check regenerates from at a_sha and to at the adding commit with tool_path, and cmp's.",
+ "schema": "layer2-round-actual-v1",
+ "round": "l2a",
+ "a_sha": "05adc15ef24378dc3ce25859055b147c8d006ff3",
+ "b_sha": "the commit that adds this file (git log --diff-filter=A); the to-side ran on that tree before commit",
+ "tool_path": "~/Buildo-scratch/scope/build/l2-round-actual.cjs",
+ "tool_sha256": "bfc6d7c30ae1f01bc0287f659ac8fe73fed75f079348fad640bd22eeb96da8c5",
+ "from": {
+  "root_sha": "05adc15ef24378dc3ce25859055b147c8d006ff3",
+  "root_dirty": false,
+  "versions": {
+   "table_version": "81f50b78d131f26181d0eb6e1f3466e011929b860f6c6cea2833964647b0fceb",
+   "evaluator_version": "ae792552304d7c97bcf97fe6bf34fd4fc587730c4e9a72b6a6ede48c7b2b5629"
+  },
+  "db": {
+   "host": "192.168.97.7/32",
+   "db": "postgres",
+   "ro": "on",
+   "at": "2026-10-26 16:38:49.243561+00"
+  },
+  "sample": {
+   "where": "parcels.id % 50 = 0",
+   "run_at": "2026-10-26T00:00:00Z",
+   "rows": 9937,
+   "lots": 8786,
+   "id_list_sha256": "91aa3bce0af8eacbf2fe7075833d17fab1730a9110fe3b286d3fa45c8fab1057"
+  },
+  "cells": {
+   "RD|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "missing_input": 4363
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "missing_input": 4363
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "missing_input": 4363
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "missing_input": 4363
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "missing_input": 4363
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RM|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4,
+     "missing_input": 991
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4,
+     "missing_input": 991
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4,
+     "missing_input": 991
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4,
+     "missing_input": 991
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4,
+     "missing_input": 991
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RS|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1,
+     "missing_input": 503
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1,
+     "missing_input": 503
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1,
+     "missing_input": 503
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1,
+     "missing_input": 503
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1,
+     "missing_input": 503
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RT|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "exception_not_authored": 122,
+     "missing_input": 148
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "exception_not_authored": 122,
+     "missing_input": 148
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "exception_not_authored": 122,
+     "missing_input": 148
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "exception_not_authored": 122,
+     "missing_input": 148
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "exception_not_authored": 122,
+     "missing_input": 148
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "R|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "missing_input": 1931
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "missing_input": 1931
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "missing_input": 1931
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "missing_input": 1931
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "missing_input": 1931
+    },
+    "winners": {},
+    "zone": "R"
+   }
+  },
+  "r1": [
+   {
+    "parcel_id": "5002360",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "missing_input:proposed_height_m"
+    },
+    "winners": []
+   }
+  ]
+ },
+ "to": {
+  "root_sha": "05adc15ef24378dc3ce25859055b147c8d006ff3",
+  "root_dirty": true,
+  "versions": {
+   "table_version": "92455ef0c84ac644ad52af730a1373fa7a56aa217d7a1615f42cf872940fda08",
+   "evaluator_version": "633616a427d2da079d703a795602bc69e1db89080aecad92919d0fdeb945465f"
+  },
+  "db": {
+   "host": "192.168.97.7/32",
+   "db": "postgres",
+   "ro": "on",
+   "at": "2026-10-26 16:38:49.233812+00"
+  },
+  "sample": {
+   "where": "parcels.id % 50 = 0",
+   "run_at": "2026-10-26T00:00:00Z",
+   "rows": 9937,
+   "lots": 8786,
+   "id_list_sha256": "91aa3bce0af8eacbf2fe7075833d17fab1730a9110fe3b286d3fa45c8fab1057"
+  },
+  "cells": {
+   "RD|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "condition_unknown": 4361,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "map_area_not_held": 2
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "condition_unknown": 4361,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "map_area_not_held": 2
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "condition_unknown": 4361,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "map_area_not_held": 2
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "condition_unknown": 4361,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "map_area_not_held": 2
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RD|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 4786,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 4786,
+    "reasons": {
+     "ambiguous_zone": 8,
+     "condition_unknown": 4361,
+     "exception_not_authored": 403,
+     "lot_metric_missing": 12,
+     "map_area_not_held": 2
+    },
+    "winners": {},
+    "zone": "RD"
+   },
+   "RM|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "condition_unknown": 991,
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "condition_unknown": 991,
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "condition_unknown": 991,
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "condition_unknown": 991,
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RM|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 1058,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 1058,
+    "reasons": {
+     "condition_unknown": 991,
+     "exception_not_authored": 62,
+     "label_unparsed": 1,
+     "lot_metric_missing": 4
+    },
+    "winners": {},
+    "zone": "RM"
+   },
+   "RS|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "condition_unknown": 503,
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "condition_unknown": 503,
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "condition_unknown": 503,
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "condition_unknown": 503,
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RS|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 617,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 617,
+    "reasons": {
+     "condition_unknown": 503,
+     "exception_not_authored": 113,
+     "lot_metric_missing": 1
+    },
+    "winners": {},
+    "zone": "RS"
+   },
+   "RT|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "condition_unknown": 148,
+     "exception_not_authored": 122
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "condition_unknown": 148,
+     "exception_not_authored": 122
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "condition_unknown": 148,
+     "exception_not_authored": 122
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "condition_unknown": 148,
+     "exception_not_authored": 122
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "RT|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 270,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 270,
+    "reasons": {
+     "condition_unknown": 148,
+     "exception_not_authored": 122
+    },
+    "winners": {},
+    "zone": "RT"
+   },
+   "R|detached_house": {
+    "class": "detached_house",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "condition_unknown": 1916,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "map_area_not_held": 15
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|detached_houseplex": {
+    "class": "detached_houseplex",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "condition_unknown": 1916,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "map_area_not_held": 15
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|house_with_secondary_suite": {
+    "class": "house_with_secondary_suite",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "condition_unknown": 1916,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "map_area_not_held": 15
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|semi_detached_house": {
+    "class": "semi_detached_house",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "condition_unknown": 1916,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "map_area_not_held": 15
+    },
+    "winners": {},
+    "zone": "R"
+   },
+   "R|semi_detached_houseplex": {
+    "class": "semi_detached_houseplex",
+    "counts": {
+     "not_evaluated": 2055,
+     "permitted": 0,
+     "prohibited": 0
+    },
+    "n": 2055,
+    "reasons": {
+     "ambiguous_zone": 2,
+     "condition_unknown": 1916,
+     "exception_not_authored": 107,
+     "label_exception_mismatch": 2,
+     "lot_metric_missing": 13,
+     "map_area_not_held": 15
+    },
+    "winners": {},
+    "zone": "R"
+   }
+  },
+  "r1": [
+   {
+    "parcel_id": "5002360",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5002360",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5018801",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5021855",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5035239",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5089586",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5091339",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5133346",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5214404",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5235788",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "semi_detached_houseplex",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "semi_detached_house",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   },
+   {
+    "parcel_id": "5263757",
+    "class": "house_with_secondary_suite",
+    "word": {
+     "status": "not_evaluated",
+     "reason": "condition_unknown:abuts_named_street"
+    },
+    "winners": []
+   }
+  ]
+ },
+ "eval_perf": {
+  "golden_to": "3440a2845f40f4eb658e9b6eb84eb2bf61c0374b5f094d6d9b261a4343fe3770"
+ },
+ "units": {
+  "permission_scope_entries": 425,
+  "use": 144,
+  "element": 281,
+  "records": []
+ }
+}

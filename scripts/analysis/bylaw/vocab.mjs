@@ -27,7 +27,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { NOT_EVALUATED_CODES } from './evaluate.mjs';
+import { NOT_EVALUATED_CODES, refMatch } from './evaluate.mjs';
 
 export const VOCAB_REL = 'scripts/seeds/bylaw/vocab.json';
 
@@ -219,8 +219,61 @@ export function checkVocab(vocab) {
   for (const [name, t] of Object.entries(vocab.topic)) for (const p of (t && t.article_patterns) || []) if (!compiles(p)) v.push(`vocab_pattern_invalid: topic.${name} ${p}`);
   for (const x of vocab.slicer.anti_vacuity_exclusions || []) if (!isStr(x.kind) || !compiles(x.pattern, x.flags)) v.push(`vocab_pattern_invalid: slicer exclusion ${x.kind}`);
 
+  v.push(...checkPermissionScopeVocab(vocab));
+
   const checked = Object.keys(vocab.dsl_target).length + Object.keys(vocab.dsl_input).length + Object.keys(types).length + Object.keys(vocab.lot_condition).length;
   return { pass: v.length === 0, violations: v, checked };
+}
+
+/** The fields a vocab.permission_scope entry carries (PLAN-scope v3 §3, L1f): nothing else reaches committed vocab. */
+export const PERMISSION_SCOPE_FIELDS = Object.freeze(['aspect', 'attaches_to', 'reason', 'ruling', 'scope']);
+/**
+ * vocab.permission_scope (Spec 69a M-56 dated note 2026-10-25; 2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE A; CHAT-181): one entry per
+ * agreed PERMIT / PROHIBIT unit, {scope: use | element, aspect, attaches_to, reason, ruling}. Closed arms, distinct names. PURE.
+ * scope use <=> aspect use_permission, except an element entry whose attaches_to names a dsl_target: its aspect is that target's.
+ */
+export function checkPermissionScopeVocab(vocab) {
+  const v = [];
+  const ps = vocab && vocab.permission_scope;
+  if (ps === undefined) return v;
+  if (!isMap(ps)) return ['vocab_missing_field: permission_scope'];
+  const aspects = new Set((vocab.feeds && vocab.feeds.aspect) || []);
+  for (const id of Object.keys(ps).filter((k) => k !== '$comment').sort(cmpStr)) {
+    const e = ps[id];
+    if (!isMap(e)) { v.push(`vocab_permission_scope_value: ${id} is not an object`); continue; }
+    for (const k of Object.keys(e)) if (!PERMISSION_SCOPE_FIELDS.includes(k)) v.push(`vocab_permission_scope_field_unknown: ${id} ${k}`);
+    if (e.scope !== 'use' && e.scope !== 'element') v.push(`vocab_permission_scope_value: ${id} scope ${JSON.stringify(e.scope)}`);
+    if (!aspects.has(e.aspect)) v.push(`vocab_permission_scope_aspect: ${id} aspect ${JSON.stringify(e.aspect)}`);
+    const att = e.attaches_to === undefined ? null : e.attaches_to;
+    if (att !== null) {
+      const tg = vocab.dsl_target && vocab.dsl_target[att];
+      if (!tg) v.push(`vocab_permission_scope_use_aspect: ${id} attaches_to ${att} is not a dsl_target`);
+      else if (e.scope !== 'element' || e.aspect !== tg.aspect) v.push(`vocab_permission_scope_use_aspect: ${id} attaches_to ${att} needs scope element and aspect ${tg.aspect}`);
+    } else if ((e.scope === 'use') !== (e.aspect === 'use_permission')) v.push(`vocab_permission_scope_use_aspect: ${id} scope ${e.scope} with aspect ${e.aspect}`);
+    if (!isStr(e.reason) || !isStr(e.ruling)) v.push(`vocab_permission_scope_reason: ${id} reason or ruling is empty`);
+  }
+  return v;
+}
+
+/**
+ * permission_scope totality against the agreed units (CHAT-152 A; PLAN-scope v2 §4.3): every agreed PERMIT / PROHIBIT unit has
+ * exactly one entry (permission_scope_missing), every entry names an agreed PERMIT / PROHIBIT unit (permission_scope_stale),
+ * and no element unit displaces a use unit (permission_scope_displaces_use; units carry generated displaces[] when the
+ * caller has them). Not inside checkFeedsTotality, which also runs per unit and on fixtures. PURE.
+ */
+export function checkPermissionScope(units, vocab) {
+  const v = [];
+  const ps = (vocab && vocab.permission_scope) || {};
+  const pp = (units || []).filter((u) => u && (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT'));
+  const ids = new Set(pp.map((u) => u.unit_id));
+  for (const u of pp) if (!isMap(ps[u.unit_id])) v.push(`permission_scope_missing: ${u.unit_id}`);
+  for (const id of Object.keys(ps).filter((k) => k !== '$comment')) if (!ids.has(id)) v.push(`permission_scope_stale: ${id}`);
+  const useIds = pp.filter((u) => isMap(ps[u.unit_id]) && ps[u.unit_id].scope === 'use').map((u) => u.unit_id);
+  for (const u of pp) {
+    if (!isMap(ps[u.unit_id]) || ps[u.unit_id].scope !== 'element') continue;
+    for (const ref of u.displaces || []) for (const id of useIds) if (refMatch(ref, id) === 'full') v.push(`permission_scope_displaces_use: ${u.unit_id} displaces ${id}`);
+  }
+  return { pass: v.length === 0, violations: v.sort(cmpStr), checked: pp.length };
 }
 
 /**
@@ -238,6 +291,7 @@ export function evaluatorVocab(vocab) {
     exception_type_alias: vocab.exception_type_alias, // M-180(1): exception detached-house rules bind the houseplex
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
+    permission_scope: vocab.permission_scope, // CHAT-152 A (M-56 dated note): permitted() reads only use-scope PERMIT / PROHIBIT units
     map_area_unheld_reading: vocab.map_area_unheld_reading, // M-222 / M-224: literal reading while a map is not held
     specific_use: vocab.specific_use, // M-159(3) / M-244: a specific-use unit applies only on a lot that has the use
     unit_application: vocab.unit_application, // M-251: a unit the operator scoped to the residential building (by unit id)
@@ -284,7 +338,10 @@ export function feedsOf(unit, vocab) {
       else aspects.add(t.aspect);
     }
   } else {
-    const a = (vocab.feeds.aspect_without_target || {})[unit && unit.archetype] || null;
+    // CHAT-152 A: a target-none PERMIT / PROHIBIT with a permission_scope entry takes the entry's aspect (an element unit feeds its
+    // own target's aspect, as metadata only); no entry keeps aspect_without_target, and the gap is named by permission_scope_missing
+    const e = (unit && (unit.archetype === 'PERMIT' || unit.archetype === 'PROHIBIT') && vocab.permission_scope && isMap(vocab.permission_scope[unit.unit_id])) ? vocab.permission_scope[unit.unit_id] : null;
+    const a = e ? e.aspect : (vocab.feeds.aspect_without_target || {})[unit && unit.archetype] || null;
     if (a) aspects.add(a);
   }
   const pairs = [];

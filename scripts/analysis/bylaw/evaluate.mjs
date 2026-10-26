@@ -84,6 +84,9 @@ const ne = (code, detail) => ({ ne: detail === undefined ? code : `${code}:${det
 export function reasonCode(reason) { return String(reason).split(':')[0]; }
 
 // ---------------------------------------------------------------- context
+/** A named, fail-closed context / evaluation error (CHAT-152 A, PLAN-scope v2 §4.6): the code is the message; never a permissive default. */
+export class BylawContextError extends Error { constructor(code) { super(code); this.name = 'BylawContextError'; this.code = code; } }
+export class BylawEvalError extends Error { constructor(code) { super(code); this.name = 'BylawEvalError'; this.code = code; } }
 /**
  * Build the evaluation context from a vocab. Expected vocab fields (proposed for S5 vocab.json):
  * dsl_target / dsl_input {name:{unit}}, label_letter / overlay_code {key:{unit}}, zone [..],
@@ -91,7 +94,11 @@ export function reasonCode(reason) { return String(reason).split(':')[0]; }
  * lot_condition_threshold [..] (tokens whose truth comes from condition.if).
  */
 export function makeContext(vocab, extra = {}) {
+  // CHAT-152 A: a vocab that declares permission_scope (the evaluator vocab always carries the key) must hold a non-empty block
+  if (Object.hasOwn(vocab, 'permission_scope') && !(vocab.permission_scope && typeof vocab.permission_scope === 'object' && Object.keys(vocab.permission_scope).some((k) => k !== '$comment'))) throw new BylawContextError('permission_scope_absent');
   return {
+    // CHAT-152 A (M-56 dated note 2026-10-25): unit id -> {scope: use | element, …}; null when the vocab declares none
+    permissionScope: Object.hasOwn(vocab, 'permission_scope') ? vocabMap(vocab.permission_scope) : null,
     units: unitTable(vocab),
     zones: new Set(vocab.zone || []),
     residentialTypes: [...(vocab.building_type_residential || [])].sort(cmpStr), // order-free (red-team E8)
@@ -1338,6 +1345,14 @@ function argPaths(node, out = []) {
 }
 
 // ---------------------------------------------------------------- permitted()
+/** The declared permission scope of a PERMIT / PROHIBIT unit (CHAT-152 A): 'use' | 'element', or a named throw. */
+function permissionScopeOf(u, C) {
+  if (!C.permissionScope) throw new BylawEvalError('permission_scope_absent');
+  const e = C.permissionScope[u.unit_id];
+  if (!e) throw new BylawEvalError(`permission_scope_unit_undeclared:${u.unit_id}`);
+  if (typeof e !== 'object' || (e.scope !== 'use' && e.scope !== 'element')) throw new BylawEvalError(`permission_scope_value_invalid:${u.unit_id}`);
+  return e.scope;
+}
 /** §7.5 rules applied to PERMIT / PROHIBIT units for one building type (M-38 runs through it). */
 export function permitted(lot, buildingType, candidates, ctx) {
   const C = ctxOf(ctx);
@@ -1350,7 +1365,12 @@ export function permitted(lot, buildingType, candidates, ctx) {
   const L = { ...lot, building_type: buildingType };
   const trace = []; const reads = new Set(['zone', 'building_type', ...GATE_READS]);
   candidates = sortCandidates(candidates); // declared total order (order-free result)
-  const subjects = candidates.filter((u) => u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT');
+  // CHAT-152 A (Spec 69a M-56 dated note 2026-10-25): only a use-scope PERMIT / PROHIBIT is a use subject; an element-scope unit (a
+  // wall, a rooftop structure, parking, a lot fact) is "not a use subject" and decides nothing here. Fail closed: no entry, a
+  // malformed entry, or no declared block throws by name (never a permissive default).
+  const pp = candidates.filter((u) => u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT');
+  const subjects = pp.filter((u) => permissionScopeOf(u, C) === 'use');
+  if (pp.length > subjects.length) trace.push(`scope: ${pp.length - subjects.length} PERMIT/PROHIBIT units are not use subjects (CHAT-152)`);
   const procs = candidates.filter((u) => u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length);
   const disapply = candidates.filter((u) => u.archetype === 'DISAPPLY' && (u.displaces || []).some((r) => subjects.some((s) => refMatch(r, s.unit_id))));
   const A = []; const unknown = [];
@@ -1698,7 +1718,9 @@ const U = (o) => ({ layer: 'base', archetype: 'LIMIT', bound: 'min', displaces: 
 /** The §7.5 precedence fixtures (rules 0–7, 4a conflicts, M-38 permitted(), M-48 own-target + argument, M-49, M-50). */
 export function precedenceFixtures(vocab) {
   // the fixtures' exceptions are declared authored: ruling (d) blocks every target under an unauthored exception
-  const C = makeContext(vocab, { authored: { '900.3.10(254)': 'authored', '900.3.10(5)': 'authored', '900.3.10(1463)': 'authored' } });
+  // CHAT-152 A fixture policy (PLAN-scope v2 §8): the synthetic PERMIT / PROHIBIT ids declare their permission scope (use)
+  const fx = { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' };
+  const C = makeContext({ ...vocab, permission_scope: { ...(vocab.permission_scope || {}), '600.60.40(1)#(B)': fx, 'SYN#PROHIBIT': fx } }, { authored: { '900.3.10(254)': 'authored', '900.3.10(5)': 'authored', '900.3.10(1463)': 'authored' } });
   const lot = { zone: 'RD', label: { f: 9 }, overlays: { HT: 8.5 }, vars: { lot_frontage_m: 9.75, lot_depth_m: 33.56, lot_area_m2: 327.12 }, flags: { corner_lot: false, major_street: false }, building_type: 'detached_house', exception: null };
   const side = (p, v, c) => U({ unit_id: `10.20.40.70(3)#(${p})`, regulation_id: '10.20.40.70(3)', target: 'side_setback_m', numeric_expression: [`side_setback_m = ${v} m @(3)(${p})`], condition: { tokens: ['required_frontage_band'], if: c } });
   const band = [side('B', '0.9', 'required_lot_frontage_m ≥ 6.0 m and required_lot_frontage_m < 12.0 m'), side('C', '1.2', 'required_lot_frontage_m ≥ 12.0 m and required_lot_frontage_m < 15.0 m'), side('D', '1.5', 'required_lot_frontage_m ≥ 15.0 m and required_lot_frontage_m < 18.0 m')];

@@ -1267,5 +1267,2983 @@
     "mechanical_attic_excluded",
     "building_history_permission",
     "building_history_permission_undated"
-  ]
+  ],
+  "permission_scope": {
+    "$comment": "Spec 69a M-56 (2026-10-25 dated note) / 2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE (A): the use permission (evaluate.mjs permitted()) reads only PERMIT / PROHIBIT units whose subject is the permission of a building type for a use; an element-scope unit (a wall, a rooftop structure, parking, a lot fact) is not a use subject and attaches to its own target as feed metadata only. One entry per agreed PERMIT / PROHIBIT unit (checkPermissionScope, totality both ways); scope use <=> aspect use_permission, except an element entry whose attaches_to names a dsl_target, which takes that target's aspect. The 20 review units are element (2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT). Reviewed list: PLAN-scope (v2 §3, v3 §3).",
+    "10.10.20.10(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"...e permitted in the R zone: Dwelling Unit in a permitted residential building type in Clause 10.10.20.40. Municipal Shelter Park\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.20(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"...p (21) Short-term Rental (18) Take-out Eating Establishment (21) Tourist Home (16) Transportation Use (17) Wellness Centre (21)\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.40(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...ing Types - R Zone In the R zone, a dwelling unit is permitted in the following residential building types: (A) Detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.40(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...ypes - R Zone In the R zone, a dwelling unit is permitted in the following residential building types: (B) Semi-Detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.40(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...Building Types - R Zone In the R zone, a dwelling unit is permitted in the following residential building types: (C) Townhouse;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.40(1)#(1)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...Types - R Zone In the R zone, a dwelling unit is permitted in the following residential building types: (D) Detached Houseplex;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.40(1)#(1)(E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"... Zone In the R zone, a dwelling unit is permitted in the following residential building types: (E) Semi-Detached Houseplex; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.40(1)#(1)(G)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...Types - R Zone In the R zone, a dwelling unit is permitted in the following residential building types: (G) Apartment Building.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.40(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...lations for the R zone and all other requirements of this By-law, or is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.41(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a lawfully existing building type to more dwelling units: \"...dwelling units are contained entirely within the lawfully existing building, subject to regulations 10.10.20.41(3) and (4); and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.41(2)#(2)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a lawfully existing building type to more dwelling units: \"...nal dwelling units are contained entirely within the lawfully existing building, subject to regulations 10.10.20.41(3) and (4);\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.41(6)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "secondary suite in a converted building: \"...-detached house that has been converted to contain more than four dwelling units in accordance with regulations 10.10.20.41(2).\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.60(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "interior floor area converted to additional dwelling units (\"may not be converted to additional dwelling units\"); floor-area subject that limits the unit count: \"... variance: (B) interior floor area used for lawfully existing dwelling units may not be converted to additional dwelling units;\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.10.20.60(3)#(3)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "amenity space of a lawfully existing building: \"...ection 45 Planning Act minor variance: (C) the interior floor area used for lawfully existing amenity space may not be reduced;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.60(3)#(3)(D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking / bicycle space of a lawfully existing building: \"... the lawful number of visitor parking spaces and accessible parking spaces for a lawfully existing building may not be reduced;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.60(3)#(3)(E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking / bicycle space of a lawfully existing building: \"...e lawful number of 'long-term' and 'short-term' bicycle parking spaces for a lawfully existing building may not be reduced; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.20.60(3)#(3)(F)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "interior floor area converted to additional dwelling units (\"may not be converted to additional dwelling units\"); floor-area subject that limits the unit count: \"...ng building by one or more City agreements that are registered on title to the lands to the satisfaction of the City Solicitor.\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.10.40.1(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "buildings_on_lot",
+      "reason": "number of townhouse/apartment buildings on one lot (\"more than one townhouse or apartment building ... is permitted\"); building-type count, not the type itself: \"...A) above, more than one townhouse or apartment building, or combination thereof, is permitted on a lot abutting a major street;\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.10.40.1(5)#(5)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "siting of a building with dwelling units behind another building (\"is in the rear of another building\"); the card calls it element, the ruling list does not name it: \"...ot permitted if: (A) it has dwelling units and is in the rear of another building or the original part of the same building; or\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.10.40.1(5)#(5)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "siting of a building with dwelling units behind another building (\"is in the rear of another building\"); the card calls it element, the ruling list does not name it: \"...uilding, with dwelling units, so as to produce the condition of a building with dwelling units in the rear of another building.\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.10.40.1(9)#(9)(A)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...lawfully existing residential building, and no bedrooms are added that would increase the noncompliance after June 26, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.1(9)#(9)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to June 26, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.1(9)#(9)(C)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.10(10)#(10)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...uctures, or parts on the roof of the tower portion of the building cover no more than 450 square metres, measured horizontally;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.10(10)#(10)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...Towers In the R Zone: (B) chimneys, pipes, and vents, may further exceed the permitted maximum height in (A) by 3.0 metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.10(8)#(8)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop height allowance (named element in CHAT-152 / M-56 note): \"... with a height greater than 15.0 metres, may exceed the permitted maximum height for that building by 5.0 metres: (A) antennae;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.10(8)#(8)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop height allowance (named element in CHAT-152 / M-56 note): \"... a height greater than 15.0 metres, may exceed the permitted maximum height for that building by 5.0 metres: (B) flagpoles; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.10(8)#(8)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop height allowance (named element in CHAT-152 / M-56 note): \"...height greater than 15.0 metres, may exceed the permitted maximum height for that building by 5.0 metres: (C) satellite dishes.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.40(2)#(2)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "addition to the rear of a pre-1953 house: \"...ear of the building if: (A) the overall floor space index for the lot, including the addition, does not exceed a total of 0.69;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.40(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "addition to the rear of a pre-1953 house: \"...he side lot line than the shortest distance between the existing side main wall of the building and the same side lot line; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.40(2)#(2)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "addition to the rear of a pre-1953 house: \"...i-detached house may be enlarged by an addition to the rear of the building if: (C) any prior addition is at least 5 years old.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.40.61(1)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "reconstruction / roof alteration of a lawfully existing element: \"...ruction or replacement is within the same outer limits of the lawfully existing porch and there is no enlargement of the porch.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.80.1(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...(ii) a lot frontage greater than 7.6 metres, and the elevation of the floor of the vehicle entrance is below established grade;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.80.1(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...d no further parking space is required if : (B) the parking space is in a detached house, a semi-detached house or a townhouse;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.80.1(1)#(1)(D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...to the vehicle entrance in the building is removed, and any front yard depression in the ground is filled to established grade.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.80.1(2)#(2)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...d no further parking space is required if: (A) the parking space is in a residential building other than an apartment building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.80.1(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... further parking space is required if: (B) the vehicle entrance to the parking space is in the front main wall of the building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.10.80.40(1)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...tres or less, a vehicle entrance through the front main wall of a building, other than an ancillary building, is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.20.10(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"... permitted in the RD zone: Dwelling Unit in a permitted residential building type in Clause 10.20.20.40. Municipal Shelter Park\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.20.20(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"...e (13) Service Shop (19) Short-term Rental (15) Take-out Eating Establishment (19) Transportation Use (14) Wellness Centre (19)\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.20.40(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...g Types  RD Zone In the RD Zone, a dwelling unit is permitted in the following residential building types: (A) Detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.20.40(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...pes  RD Zone In the RD Zone, a dwelling unit is permitted in the following residential building types: (B) Detached Houseplex;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.20.40(1)#(1)(E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"..., a dwelling unit is permitted in the following residential building types: (E) Townhouse, if the lot abuts a major street; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.20.40(1)#(1)(F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...welling unit is permitted in the following residential building types: (F) Apartment Building, if the lot abuts a major street.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.20.40(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...ations for the RD zone and all other requirements of this By-law, or is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.40.1(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "buildings_on_lot",
+      "reason": "number of townhouse/apartment buildings on one lot (\"more than one townhouse or apartment building ... is permitted\"); building-type count, not the type itself: \"...A) above, more than one townhouse or apartment building, or combination thereof, is permitted on a lot abutting a major street;\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.20.40.1(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "siting of a building with dwelling units behind another building (\"is in the rear of another building\"); the card calls it element, the ruling list does not name it: \"...ot permitted if: (A) it has dwelling units and is in the rear of another building or the original part of the same building; or\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.20.40.1(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "siting of a building with dwelling units behind another building (\"is in the rear of another building\"); the card calls it element, the ruling list does not name it: \"...uilding, with dwelling units, so as to produce the condition of a building with dwelling units in the rear of another building;\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.20.40.1(9)#(9)(A)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...lawfully existing residential building, and no bedrooms are added that would increase the noncompliance after June 26, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.40.1(9)#(9)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to June 26, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.40.1(9)#(9)(C)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.40.50(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"...ed in (A) above for a detached houseplex on a corner lot may also be located on a main wall of a dwelling unit facing a street.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.40.70(4)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "side-yard shift (named element in CHAT-152): \"...the required minimum side yard setback on the other side of the permitted residential building is increased by the same amount.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.80.1(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...d no further parking space is required if: (A) the parking space is in a residential building other than an apartment building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.20.80.1(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... further parking space is required if: (B) the vehicle entrance to the parking space is in the front main wall of the building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.10(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"... permitted in the RS zone: Dwelling Unit in a permitted residential building type in Clause 10.40.20.40. Municipal Shelter Park\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.20(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"...e (13) Service Shop (19) Short-term Rental (15) Take-out Eating Establishment (19) Transportation Use (14) Wellness Centre (19)\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.40(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...g Types  RS Zone In the RS Zone, a dwelling unit is permitted in the following residential building types: (A) Detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.40(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...es  RS Zone In the RS Zone, a dwelling unit is permitted in the following residential building types: (B) Semi-detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.40(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...pes  RS Zone In the RS Zone, a dwelling unit is permitted in the following residential building types: (C) Detached Houseplex;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.40(1)#(1)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...Zone In the RS Zone, a dwelling unit is permitted in the following residential building types: (D) Semi-Detached Houseplex; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.40(1)#(1)(F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...e, a dwelling unit is permitted in the following residential building types: (F) Townhouse if the lot abuts a major street; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.40(1)#(1)(G)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...dwelling unit is permitted in the following residential building types: (G) Apartment Building if the lot abuts a major street.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.20.40(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...ations for the RS zone and all other requirements of this By-law, or is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.40.1(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "buildings_on_lot",
+      "reason": "number of townhouse/apartment buildings on one lot (\"more than one townhouse or apartment building ... is permitted\"); building-type count, not the type itself: \"...A) above, more than one townhouse or apartment building, or combination thereof, is permitted on a lot abutting a major street;\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "10.40.40.1(8)#(8)(A)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...lawfully existing residential building, and no bedrooms are added that would increase the noncompliance after June 26, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.40.1(8)#(8)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...final site plan approval, for which the complete application for site plan approval was filed on or prior to June 26, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.40.1(8)#(8)(C)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.40.50(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"...ed houseplex or semi- detached houseplex on a corner lot may also be located on a main wall of a dwelling unit facing a street.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.80.1(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...d no further parking space is required if: (A) the parking space is in a residential building other than an apartment building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.40.80.1(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... further parking space is required if: (B) the vehicle entrance to the parking space is in the front main wall of the building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.100.1(6)#(6)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "driveway: \"...driveway with two points of vehicle access to the same street, if: (A) the lot has a lot frontage greater than 18.0 metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.100.1(7)#(7)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "driveway: \"...h the front yard landscaping requirements of Clause 10.5.50.10 and: (A) the lot has a lot frontage greater than 18.0 metres; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.1(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "school use: \"...ced with a new school building that complies with Section 150.48 and the requirements for the zone in which the lot is located.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.40(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a lawfully existing building type to more dwelling units: \"...day prior to the issuance of a building permit for the additional dwelling units, subject to regulations 10.5.20.40(4) and (5).\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.40(2)#(2)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a lawfully existing building type to more dwelling units: \"...day prior to the issuance of a building permit for the additional dwelling units, subject to regulations 10.5.20.40(4) and (5);\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.40(2)#(2)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a lawfully existing building type to more dwelling units: \"...day prior to the issuance of a building permit for the additional dwelling units, subject to regulations 10.5.20.40(4) and (5).\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.40(3)#(3)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a lawfully existing building type to more dwelling units: \"...day prior to the issuance of a building permit for the additional dwelling units, subject to regulations 10.5.20.40(4) and (5);\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.40(6)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "secondary suite in a converted building: \"...detached house or townhouse converted to contain up to four dwelling units in accordance with regulations 10.5.20.40(2) or (3).\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.40(7)#(7)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...s to the lawful parking space is removed and landscaping is provided subject to regulations 10.5.50.10(1) and 10.5.50.10(2); or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.20.40(7)#(7)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...butting a street is permitted subject to regulation 10.5.80.10(3) or is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.30.1(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "townhouse / apartment building erected on a major-street lot: \"...ir appurtenances have adequate capacity to service the building, to the satisfaction of the General Manager, Toronto Water; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.30.11(3)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "building type on a vacant lawfully existing lot: \"...d houseplex must comply with all other regulations of this By-law or be authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.30.20(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "front lot line selection: \"...m a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.30.20(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "front lot line selection: \"...as the front lot line, if: (B) the lot line abuts a street where an adjacent lot has its front lot line on the same street; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(2)#(2)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...ing structures on the roof of a building may exceed the permitted maximum height for that building by 1.5 metres: (A) antennae;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...ng structures on the roof of a building may exceed the permitted maximum height for that building by 1.5 metres: (B) flagpoles;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(2)#(2)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"... the roof of a building may exceed the permitted maximum height for that building by 1.5 metres: (C) parapets for a green roof;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(2)#(2)(D)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...es on the roof of a building may exceed the permitted maximum height for that building by 1.5 metres: (D) satellite dishes; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(2)#(2)(E)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...tructures on the roof of a building may exceed the permitted maximum height for that building by 1.5 metres: (E) weather vanes.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...h as electrical, utility, mechanical and ventilation equipment, except that skylights may only exceed the height by 1.0 metres;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...osed stairwells, roof access, maintenance equipment storage, elevator shafts, chimneys, vents, and water supply facilities; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(3)#(3)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop height allowance (named element in CHAT-152 / M-56 note): \"... that enclose, screen or cover the elements listed in (A) and (B) above, if the building has a height greater than 15.0 metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(5)#(5)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop height allowance (named element in CHAT-152 / M-56 note): \"...r that building by 3.0 metres, if the structures are: (A) on the roof of a building with a height greater than 15.0 metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.10(5)#(5)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"... for that building by 3.0 metres, if the structures are: (B) no closer than 2.0 metres from the interior face of any main wall.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.11(3)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "reconstruction / roof alteration of a lawfully existing element: \"...existing building referred to in regulation 10.5.40.11(1) may be constructed to the maximum height in regulation 10.5.40.11(1).\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.11(7)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "reconstruction / roof alteration of a lawfully existing element: \"...n regulation 10.5.40.11(6) may have a first floor above established grade up to the maximum height in regulation 10.5.40.11(6).\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.60(2)#(2)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"...tion 10.5.40.60(1) may encroach into a required minimum building setback to the same extent as the platform it is covering; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.40.60(7)#(7)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "dormer / roof projection (named element in CHAT-152): \"... the surface of a roof may not have any wall of the dormer closer to a lot line than the required minimum building setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.1(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "living accommodation (suite use) in an ancillary building: \"...odation in Ancillary Buildings An ancillary building in the Residential Zone category may not be used for living accommodation.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.1(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "facilities inside an ancillary building: \"...reparation facilities and sanitary facilities if the ancillary building is for indoor amenity space required by this By-law; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.1(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "facilities inside an ancillary building: \"...es, but not both, if the ancillary building is used for any purpose other than an indoor amenity space required by this By-law.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.1(4)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "construction timing of an ancillary building: \"...re may be erected prior to the erection of the main walls and completion of the roof of a residential building on the same lot.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.10(1)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "location of an ancillary structure / utility equipment in a yard: \"...Permitted in Front Yard An ancillary building or structure in the Residential Zone category may not be located in a front yard.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.10(2)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "location of an ancillary structure / utility equipment in a yard: \"...an electrical transformer or other equipment necessary to connect to public utility services, may be located in the front yard.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.20(7)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...ing spaces for dwelling units on abutting lots in the Residential Zone category, it may be located on the common side lot line.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.40(5)#(5)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"...rm, such as a deck or similar structure, other than a green roof, may not be: (A) located on top of any ancillary building; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.60.40(5)#(5)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"...structure containing a parking space, if the platform is more than 1.2 metres above the ground at any point below the platform.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.75.1(1)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "energy device / solar canopy: \"...gory, a device producing renewable energy or cogeneration energy may not be in a front yard or a side yard that abuts a street.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.75.1(4)(B)@1075-2026#(4)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "energy device / solar canopy: \"...); and (b) the calculation of the area of the lot covered by ancillary buildings and structures in regulation 10.5.60.70(1)(B);\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.1(4)@1075-2026#(4)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... lot with an apartment building; and (F) the area of a solar parking canopy is not included in the calculation of lot coverage;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...g space located outside of a building in the Residential Zone category may not be used for: (A) commercially licensed vehicles;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... A parking space located outside of a building in the Residential Zone category may not be used for: (B) construction vehicles;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...d in Yards A parking space located outside of a building in the Residential Zone category may not be used for: (C) dump trucks;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... A parking space located outside of a building in the Residential Zone category may not be used for: (D) agricultural vehicles;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...arking space located outside of a building in the Residential Zone category may not be used for: (E) repair or towing vehicles;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...Yards A parking space located outside of a building in the Residential Zone category may not be used for: (F) tracked vehicles;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(G)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... space located outside of a building in the Residential Zone category may not be used for: (G) vehicles with a traction engine;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(H)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...ted outside of a building in the Residential Zone category may not be used for: (H) vehicles designed to run only on rails; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(10)#(10)(I)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... in the Residential Zone category may not be used for: (I) vehicles equipped with more than six wheels, excluding spare wheels.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(3)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...in the front yard is permitted by the City of Toronto under the authority of the City of Toronto Act, 2006, or its predecessor.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(4)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... leads directly to the dwelling unit, vehicles may be parked on the private portion of the driveway leading to a parking space.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(5)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"....10(3), in the Residential Zone category a parking space for a secondary suite may be in the front yard if it is on a driveway.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(8)#(8)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...are stored in: (i) a building; or (ii) a parking space in the area of the rear yard which is not required for soft landscaping.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(9)#(9)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...for a commercial vehicle, if: (A) an owner or tenant of a dwelling unit on the lot is the owner or operator of the vehicle; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.10(9)#(9)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...g space in the Residential Zone category may be used for a commercial vehicle, if: (B) it is within a wholly enclosed building.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.11(2)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...parking spaces may be located side-by-side on that driveway in the front yard if the driveway width does not exceed 6.0 metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.11(3)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...ay be entirely or partially in the front yard of that lot if approval is given under the City of Toronto Act, 2006, as amended.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.5.80.40(3)#(3)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...egory, vehicle access to a parking space on a lot must: (C) in all other cases, may be from the street on which the lot fronts.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.10(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"... permitted in the RT zone: Dwelling Unit in a permitted residential building type in Clause 10.60.20.40. Municipal Shelter Park\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.20(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"...eniors Community House (13) Service Shop (19) Short-term Rental (15) Take-out Eating Establishment (19) Transportation Use (14)\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.40(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...g Types  RT Zone In the RT Zone, a dwelling unit is permitted in the following residential building types: (A) Detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.40(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...es  RT Zone In the RT Zone, a dwelling unit is permitted in the following residential building types: (B) Semi-detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.40(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...ilding Types  RT Zone In the RT Zone, a dwelling unit is permitted in the following residential building types: (C) Townhouse;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.40(1)#(1)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...pes  RT Zone In the RT Zone, a dwelling unit is permitted in the following residential building types: (D) Detached Houseplex;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.40(1)#(1)(E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...Zone In the RT Zone, a dwelling unit is permitted in the following residential building types: (E) Semi-Detached Houseplex; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.40(1)#(1)(G)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...welling unit is permitted in the following residential building types: (G) Apartment Building, if the lot abuts a major street.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.20.40(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...ations for the RT zone and all other requirements of this By-law, or is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.40.1(7)#(7)(A)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...lawfully existing residential building, and no bedrooms are added that would increase the noncompliance after June 26, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.40.1(7)#(7)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to June 26, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.40.1(7)#(7)(C)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.80.1(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...d no further parking space is required if: (A) the parking space is in a residential building other than an apartment building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.60.80.1(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... further parking space is required if: (B) the vehicle entrance to the parking space is in the front main wall of the building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.10(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"... permitted in the RM zone: Dwelling Unit in a permitted residential building type in Clause 10.80.20.40. Municipal Shelter Park\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.20(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list: \"...eniors Community House (16) Service Shop (21) Short-term Rental (18) Take-out Eating Establishment (21) Transportation Use (17)\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.40(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...g Types - RM Zone In the RM zone, a dwelling unit is permitted in the following residential building types: (A) Detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.40(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...es - RM Zone In the RM zone, a dwelling unit is permitted in the following residential building types: (B) Semi-Detached House;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.40(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...pes - RM Zone In the RM zone, a dwelling unit is permitted in the following residential building types: (C) Detached Houseplex;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.40(1)#(1)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...Zone In the RM zone, a dwelling unit is permitted in the following residential building types: (D) Semi-Detached Houseplex; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.40(1)#(1)(F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"... letter 'u' in the zone label; and (iii) (i) and (ii) above do not apply to apartment buildings on lots abutting major streets;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.40(1)#(1)(G)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"... the zone label; and (iii) despite (i) and (ii) above, a townhouse is only permitted if it is on a lot abutting a major street.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.20.40(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type: \"...ations for the RM zone and all other requirements of this By-law, or is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.40.1(7)#(7)(A)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...lawfully existing residential building, and no bedrooms are added that would increase the noncompliance after June 26, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.40.1(7)#(7)(B)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"...iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to June 26, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.40.1(7)#(7)(C)": {
+      "scope": "element",
+      "aspect": "use_permission",
+      "attaches_to": "bedrooms",
+      "reason": "bedroom-count exemption (attaches to the bedroom limit): \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.80.1(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...d no further parking space is required if: (A) the parking space is in a residential building other than an apartment building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "10.80.80.1(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... further parking space is required if: (B) the vehicle entrance to the parking space is in the front main wall of the building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.10.20.1(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "secondary suite use: \"(1) Secondary Suite - Permitted in Certain Types of Residential Buildings A secondary suite may be in: (A) a detached house;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.10.20.1(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "secondary suite use: \"...condary Suite - Permitted in Certain Types of Residential Buildings A secondary suite may be in: (B) a semi-detached house; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.10.20.1(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "secondary suite use: \"(1) Secondary Suite - Permitted in Certain Types of Residential Buildings A secondary suite may be in: (C) a townhouse.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.10.20.1(4)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "secondary suite use: \"...a lawfully existing semi-detached house, or a lawfully existing townhouse in the RA, RAC, CL, CR, I, IH, IE, IS, and IPW zones.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.10.40.40(2)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "size of a secondary suite (whole basement): \"...condary suite located in the basement of a one storey detached house, the secondary suite may occupy the whole of the basement.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.13.20.1(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "short-term rental / home occupation use: \"...ction A short-term rental is permitted in a dwelling unit, secondary suite or bed-sitting room, if: (C) it is not in a vehicle.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.15.20.1(2)#(2)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "group home / correctional use: \"... the Residential Zone category, a group home may be in: (A) a building that was originally constructed as a detached house; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.15.20.1(2)#(2)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "group home / correctional use: \"... as a semi-detached house if: (i) the building is on a lot in the R zone; and (ii) the group home occupies the entire building.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.15.30.1(2)#(2)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "group home / correctional use: \"...on A group home or a residential care home used for correctional purposes must be on a lot that: (A) is not in the RD zone; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.25.20.1(3)#(3)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "multi-tenant house use: \"...lly constructed as a multi-tenant house; and (ii) a building type in which dwelling units are permitted in the applicable zone.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.25.20.1(4)#(4)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "multi-tenant house use: \"...lly constructed as a multi-tenant house; and (ii) a building type in which dwelling units are permitted in the applicable zone.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.25.20.1(5)#(5)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "multi-tenant house use: \"...lly constructed as a multi-tenant house; and (ii) a building type in which dwelling units are permitted in the applicable zone.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.30.20.1(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "seniors community house use: \"(1) Seniors Community House - Use Restriction A seniors community house: (B) may not be combined with another use; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.30.20.1(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "seniors community house use: \".... W., on the east by Dufferin St. and the rail lines, on the south by Lake Shore Blvd. W., and on the west by Roncesvalles Ave.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.20.1(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...ategory, a day nursery may be in an apartment building or a building with one or more of the following uses: (A) public school;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.20.1(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...tegory, a day nursery may be in an apartment building or a building with one or more of the following uses: (B) private school;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.20.1(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...gory, a day nursery may be in an apartment building or a building with one or more of the following uses: (C) place of worship;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.20.1(1)#(1)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...y, a day nursery may be in an apartment building or a building with one or more of the following uses: (D) community centre; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.20.1(1)#(1)(E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...Zone category, a day nursery may be in an apartment building or a building with one or more of the following uses: (E) library.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.20.1(2)#(2)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...as originally constructed as a detached house or a semi-detached house if: (A) the day nursery occupies the entire building; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.20.1(2)#(2)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...use if: (B) the day nursery is in combination with a dwelling unit that is the principal residence of the day nursery operator.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.45.50.1(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "landscaping",
+      "attaches_to": null,
+      "reason": "children's play area location: \"... area for a day nursery: (A) in the Residential Zone category, may not be in a front yard or a side yard abutting a street; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.48.20.1(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...as a private school or public school or in a building that was originally constructed as a private school or public school; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.48.20.1(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...ams delivered by district school boards; or (vi) Canadian citizenship preparation programs delivered by district school boards.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.48.20.1(2)#(2)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...ing that was originally constructed as a private school or a public school, if: (A) the day nursery is on the first storey; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.48.60.1(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...ool or private school if the portable classroom building complies with Section 150.48 and the zone in which the lot is located.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.50.20.1(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "day nursery / school / place-of-worship use: \"...e permitted if combined with a place of worship: (A) library or reading room if it is only accessible from inside the building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.20.1(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "living accommodation (suite use) in an ancillary building: \"...itted Uses (A) Despite regulation 10.5.60.1(2), an ancillary building may be used for living accommodation in one garden suite.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.20.1(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "facilities inside an ancillary building: \"...lation 10.5.60.1(3), an ancillary building may have both food preparation facilities and sanitary facilities in a garden suite.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.20.1(1)#(1)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "construction timing of an ancillary building: \"...te may be erected prior to the erection of the main walls and completion of the roof of a residential building on the same lot.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.20.1(1)#(1)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "short-term rental / home occupation use: \"...ly and separately occupied as a principal residence, applying the regulations of Section 150.5 as if it is a dwelling unit; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.20.1(1)#(1)(E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "short-term rental / home occupation use: \"...itted in an ancillary building if it is in a garden suite that is exclusively and separately occupied as a principal residence.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.21(2)#(2)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"...g is a lawfully existing garden suite, and no additions are added that would increase the noncompliance after July 24, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.21(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"...iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to July 24, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.21(2)#(2)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.51(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"...g is a lawfully existing garden suite, and no additions are added that would increase the noncompliance after July 24, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.51(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"...iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to July 24, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.51(1)#(1)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.60(2)#(2)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"... (A) the area of the platform, other than a green roof, is less than 10 percent of the interior floor area of the garden suite;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.60(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"... with the required minimum building setbacks and separation distances for the ancillary building containing a garden suite; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.7.60.60(2)#(2)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"...side yard are visually screened from an abutting lot by an opaque barrier with a vertical dimension of no less than 1.5 metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.20.1(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "living accommodation (suite use) in an ancillary building: \"...tted Uses (A) Despite regulation 10.5.60.1(2), an ancillary building may be used for living accommodation in one laneway suite.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.20.1(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "facilities inside an ancillary building: \"...ation 10.5.60.1(3), an ancillary building may have both food preparation facilities and sanitary facilities in a laneway suite.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.20.1(1)#(1)(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "short-term rental / home occupation use: \"...ly and separately occupied as a principal residence, applying the regulations of Section 150.5 as if it is a dwelling unit; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.20.1(1)#(1)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "short-term rental / home occupation use: \"...tted in an ancillary building if it is in a laneway suite that is exclusively and separately occupied as a principal residence.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.20.1(1)#(1)(E)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "construction timing of an ancillary building: \"...te may be erected prior to the erection of the main walls and completion of the roof of a residential building on the same lot.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...lary building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (A) antennae;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...ary building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (B) flagpoles;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(3)#(3)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...y 1.0 metres: (C) parapets for a green roof, if they are no closer than 0.5 metres to the main walls of the ancillary building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(3)#(3)(D)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...g containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (D) satellite dishes; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(3)#(3)(E)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (E) weather vanes.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(4)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...of of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 0.3 metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(5)#(5)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...ration of the ancillary building containing a laneway suite, such as electrical, utility, mechanical and ventilation equipment;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(5)#(5)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...ing, such as enclosed stairwells, roof access, maintenance equipment storage, chimneys, vents, and water supply facilities; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.40(5)#(5)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "rooftop structure height allowance: \"...ing by 1.5 metres, subject to (6) below: (C) structures that enclose, screen or cover the elements listed in (A) and (B) above.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.51(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"... is a lawfully existing laneway suite, and no additions are added that would increase the noncompliance after July 24, 2025; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.51(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"...iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to July 24, 2025; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.51(1)#(1)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "setback / floor-area exemption of a lawfully existing suite: \"... upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "150.8.60.60(2)#(2)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform / deck: \"...with the required minimum building setbacks and separation distances for the ancillary building containing a laneway suite; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.15.10.10(1)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...replaced by one accessible parking space which complies with all regulations for an accessible parking space in Section 200.15.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.15.10.11(1)#(1)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...fully Existing Building (C) The number of lawful accessible parking spaces for a lawfully existing building may not be reduced.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.15.10.11(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...n regulation 200.15.10.11(1) changes use: (A) the lawfully existing number of accessible parking spaces may not be reduced; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.1.10(2)#(2)(E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...res from a drive aisle from which vehicle access is provided, measured at right angles, and at least 1.0 metre from the ground.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.1.10(5)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...rking space may not be a tandem parking space, except when it is required for a secondary suite, group home or duplex building.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.1(11)#(11)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... following: (A) If it is not a parking space required for a residential occupant or is a required accessible parking space; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.1(13)@1075-2026#(13)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...rt structures, such as a wall, column, or pillar that is attached to a solar parking canopy and located within a parking space;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.1(4)#(4)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...Table 200.5.10.1 of this By-law, parking spaces may be provided for that use if: (A) the use is not listed on Table 200.5.10.1;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.1(4)#(4)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...spaces may be provided for that use if: (B) the parking spaces are used by the owner, occupant or visitors to the premises; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.1(4)#(4)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...ll uses on the lot by Table 200.5.10.1; and (ii) greater than the permitted maximum or all uses on the lot by Table 200.5.10.1.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.11(1)#(1)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...s for a Lawfully Existing Building (C) The number of lawful parking spaces for a lawfully existing building may not be reduced.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.11(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...eferred to in regulation 200.5.10.11(1) changes use: (A) the lawfully existing number of parking spaces may not be reduced; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.10.11(4)#(4)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"... spaces may be provided on another lot for that lawfully existing building, if those lawful parking spaces are not reduced; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "200.5.200.5(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...11(1) changes use: (A) the lawfully existing number of parking spaces equipped with an energized outlet may not be reduced; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "220.5.10.1(10)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "loading space: \"...ace is required if a building has less than 30 dwelling units and is on a lot with a lot area of less than 1,000 square metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "220.5.10.1(11)#(11)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "loading space: \"...ay satisfy the requirement for a Type 'C' loading space by providing instead one of the following loading spaces: (A) Type 'A';\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "220.5.10.1(11)#(11)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "loading space: \"...satisfy the requirement for a Type 'C' loading space by providing instead one of the following loading spaces: (B) Type 'B'; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "220.5.10.1(11)#(11)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "loading space: \"...y the requirement for a Type 'C' loading space by providing instead one of the following loading spaces: (C) a second Type 'G'.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.10.1.20(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"... category, a 'long-term' bicycle parking space for a dwelling unit in an apartment building may not be: (A) in a dwelling unit;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.10.1.20(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...one category, a 'long-term' bicycle parking space for a dwelling unit in an apartment building may not be: (B) on a balcony; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.10.1.20(1)#(1)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...category, a 'long-term' bicycle parking space for a dwelling unit in an apartment building may not be: (C) in a storage locker.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.1.10(10)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...ed Bicycle Parking Spaces 'Long-term' and 'short-term' bicycle parking spaces may be located in stacked bicycle parking spaces.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.1.10(13)#(13)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...g spaces and comply with the following: (B) an oversized bicycle parking space must not be a stacked bicycle parking space; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.1.10(13)#(13)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...ng: (C) an oversized bicycle parking space must not be placed in a vertical position on a wall, structure or mechanical device.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.1.10(16)#(16)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...ane and the areas used for bicycle parking spaces, in compliance with the following: (C) not located over soft landscaping; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.1.10(16)#(16)(D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...he following: (D) may include access ramps, bicycle elevators or other elevating devices to overcome a difference in elevation.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.1.10(9)#(9)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...the area of that level is occupied by bicycle parking spaces, until all required bicycle parking spaces have been provided; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.1.10(9)#(9)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"...the area of that level is occupied by bicycle parking spaces, until all required bicycle parking spaces have been provided; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "230.5.10.11(5)#(5)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "bicycle parking space: \"... to in regulations 230.5.10.11(1), 230.5.10.11(2) and 230.5.10.11(3): (C) no additional shower and change facility is required.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "40.10.20.10(1)#(1)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list (CR): \"...ondary School Production Studio Religious Education Use Software Development and Processing Veterinary Hospital Wellness Centre\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "40.10.20.10(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "zone use list (CR): \"...unicipal Shelter Nursing Home Religious Residence Residential Care Home Respite Care Facility Retirement Home Student Residence\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "40.10.40.10(5)#(5)(C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "first-storey height of dwelling units: \"...lation 40.10.40.10(5); and (ii) are within a single storey for the purposes of regulations 40.10.40.10 (4) and 40.10.40.10 (7).\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.1.30(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "location of a dwelling unit below grade (\"A dwelling unit may not be entirely below\"); dwelling-unit subject but regulates a design element: \"... may not be entirely below: (A) established grade in the Residential Zone category and Residential Apartment Zone category; and\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "5.10.1.30(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "location of a dwelling unit below grade (\"A dwelling unit may not be entirely below\"); dwelling-unit subject but regulates a design element: \"...g Unit Below Grade A dwelling unit may not be entirely below: (B) average grade in any other zone that permits a dwelling unit.\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "5.10.175.1(2)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence / setback compliance / repair of a damaged building: \"...s - Exemption from Building Setback Requirements A fence is not required to comply with the required minimum building setbacks.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.20.1(2)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "ancillary building / ancillary use permitted: \"... to a permitted use on the same lot, are permitted if they comply with the regulations of the zone in which the lot is located.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.30.1(2)#whole": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "any building on a lot not abutting a street (\"a building or structure may not be erected or used, on any lot that does not abut a street\"); lot-level bar on every use: \"...oes not apply to a lot separated from a street by a 0.3 metre reserve where vehicle access to the lot is available from a lane.\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "5.10.40.1(1)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence / setback compliance / repair of a damaged building: \"...t of matters beyond the control of the owner, it may be reconstructed or repaired if there is no increase in the noncompliance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.1(2)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence / setback compliance / repair of a damaged building: \"...lter the location of any part of the building or structure unless it is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.1(3)#(3)(A)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...limit or stable top-of-bank, unless it is: (A) an ancillary building or structure on a lot in the Residential Zone category; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.1(3)#(3)(B)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...limit or stable top-of-bank, unless it is: (B) for the purpose of conservation works, public utilities, or transportation uses.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.1(4)#whole": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...xisting building or structure, or its replacement in the same location, if its lawful height, length or width is not increased.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.70(1)#whole": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence / setback compliance / repair of a damaged building: \"(1) Compliance with Required Building Setback No part of a building or structure may be in a required minimum building setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.70(4)#(4)(A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence / setback compliance / repair of a damaged building: \"...ly with the required minimum building setbacks for a building on the lot, unless: (A) it is landscaping or a horticultural use;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.70(4)#(4)(B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence / setback compliance / repair of a damaged building: \"...ith the required minimum building setbacks for a building on the lot, unless: (B) it is a park or an outdoor recreation use; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.70(6)#(6)(A)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...limit or stable top-of-bank, unless it is: (A) an ancillary building or structure on a lot in the Residential Zone category; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.70(6)#(6)(B)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...limit or stable top-of-bank, unless it is: (B) for the purpose of conservation works, public utilities, or transportation uses.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.70(7)#whole": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...-of-bank than the existing building setback at every point along the main walls of the lawfully existing building or structure.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.80(1)#(1)(A)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...gion Conservation Authority, unless it is: (A) an ancillary building or structure on a lot in the Residential Zone category; or\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.80(1)#(1)(B)": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...gion Conservation Authority, unless it is: (B) for the purpose of conservation works, public utilities, or transportation uses.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.40.80(2)#whole": {
+      "scope": "element",
+      "aspect": "lot",
+      "attaches_to": null,
+      "reason": "shoreline / top-of-bank exemption (named element in CHAT-152): \"...able top-of-bank than the existing distance at every point along the main walls of the lawfully existing building or structure.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "5.10.60.1(1)#whole": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "ancillary building / ancillary use permitted: \"... to a permitted use on the same lot, are permitted if they comply with the regulations of the zone in which the lot is located.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "600.60.40(1)#(1)(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "permitted residential building type (fiveplex / sixplex): \"...idential Zone category and all other requirements of this By-law, or is authorized by a Section 45 Planning Act minor variance.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "600.60.40(3)#(3)(A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a lawfully existing building type to more dwelling units: \"...day prior to the issuance of a building permit for the additional dwelling units, subject to regulations 600.60.40(3)(B) and (©\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "600.60.40(3)#(3)(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "conversion of a building type to a fiveplex or sixplex: \"...-detached house or a townhouse may be converted to a fiveplex or sixplex through the construction of additional dwelling units.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(290)#(290)[SSP](A)(i)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...e. in 1992, a personal service shop is permitted, if: (i) the remaining portion of the building contains one dwelling unit; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(5)#(5)[SSP](A)(i)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"...a duplex, the following also applies: (i) a duplex may be attached to one other duplex on an adjacent lot in the same zone; and\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.2.10(5)#(5)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(604)#(604)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"(A) An apartment building is not a permitted building type.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(621)#(621)[SSP](D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...e (A), on the lands municipally known as 25 and 30 Thelma Ave., an apartment building is a permitted residential building type.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(7)#(7)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...hey comply with the specific conditions set out for each use below: Nursing Home; Retirement Home; and Religious Residence; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(730)#(730)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"(A) On the lands municipally known as 1615 Dufferin St. in 1992, office and retail store are permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(731)#(731)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"(A) On the lands municipally known as 861 Avenue Rd. in 1992, a vehicle fuel station is permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(735)#(735)[SSP](B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...n the R Zone an office that is not a medical office and software development and processing are also permitted uses on the lot.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(737)#(737)[SSP](B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...t be operated by a non-profit organization, or on behalf of, the City of Toronto, Province of Ontario, or Government of Canada.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(846)#(846)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "ancillary building permitted on the lot: \"(A) On the lands, an ancillary building or structure is not permitted on a lot with a lot frontage of less than 4.57 metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(847)#(847)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "ancillary building permitted on the lot: \"(A) On the lands, an ancillary building or structure is not permitted on a lot with a lot frontage of less than 4.57 metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(852)#(852)[SSP](B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"(B) On 60 Sussex Ave, a post-secondary school is permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(853)#(853)[SSP](B)(i)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"(B) On 25 Augusta Ave.: (i) a religious residence may be combined with other permitted uses on the lot;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(853)#(853)[SSP](B)(ii)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...terior floor area, and a community centre, are permitted if they are operated by or on behalf of a non-profit organization; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(900)#(900)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...rs community house are permitted if the building or additions to the building comply with the other regulations of this By-law.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(905)#(905)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "lot frontage / lot area of a semi: \".... in 1983, the minimum lot frontage for a dwelling unit in a semi-detached house may be less than is required in (B)(ii) above.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(929)#(929)[SSP](B)(i)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"...a duplex, the following also applies: (i) a duplex may be attached to one other duplex on an adjacent lot in the same zone; and\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.2.10(930)#(930)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...vehicle entrance through the front main wall of a residential building, other than an ancillary building, is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(930)#(930)[SSP](D)(iii)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...1.2 metres above established grade, must comply with the following: (iii) may not encroach into the required rear yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(931)#(931)[SSP](A)(ii)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...irement home maintained by the Salvation Army is permitted, if: (ii) no driveway to the lot is provided by way of Millwood Rd.;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(931)#(931)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...vehicle entrance through the front main wall of a residential building, other than an ancillary building, is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(931)#(931)[SSP](E)(iii)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...1.2 metres above established grade, must comply with the following: (iii) may not encroach into the required rear yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(933)#(933)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"(A) An apartment building is not a permitted building type; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(949)#(949)[SSP](D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...lling units in a triplex, fourplex or apartment building is permitted if the lot was used for such purpose on October 11, 1977;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(949)#(949)[SSP](E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...rtment building built after October 11, 1977 is permitted if the same building type existed on the lot on October 11, 1977; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(949)#(949)[SSP](F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...more secondary suites in compliance with Section 150.10 if the building has a minimum interior floor area of 140 square metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(954)#(954)[SSP](D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...ts in a townhouse, triplex, fourplex or apartment building is permitted if the lot was used for such purpose on March 13, 1978;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(954)#(954)[SSP](E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"... apartment building built after March 13, 1978 is permitted if the same building type existed on the lot on March 13, 1978; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(954)#(954)[SSP](F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...more secondary suites in compliance with Section 150.10 if the building has a minimum interior floor area of 140 square metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(956)#(956)[SSP](D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...ts in a townhouse, triplex, fourplex or apartment building is permitted if the lot was used for such purpose on March 13, 1978;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(956)#(956)[SSP](E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"... apartment building built after March 13, 1978 is permitted if the same building type existed on the lot on March 13, 1978; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10(956)#(956)[SSP](F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...more secondary suites in compliance with Section 150.10 if the building has a minimum interior floor area of 140 square metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10@1018-2026#(B)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "commercial / outdoor-sale / patio use on the lands (Baldwin St): \"...ay be only one retail store in the apartment building; and (ii) it may not be above the first storey of the apartment building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10@1018-2026#(C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "commercial / outdoor-sale / patio use on the lands (Baldwin St): \"...a warehouse for the distribution of goods or commodities; and (vi) a retail service may not include postal or courier services;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10@1018-2026#(D)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "commercial / outdoor-sale / patio use on the lands (Baldwin St): \"...ds or commodities may not be located in areas required by this By-law for parking, loading, driveways or outdoor amenity space;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.2.10@1018-2026#(E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "commercial / outdoor-sale / patio use on the lands (Baldwin St): \"...(B) On or between the even numbered addresses of 40-42 Baldwin Street, former city of Toronto By-laws 310-74, 342-74 and 38-75.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1001)#(1001)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...day nursery is permitted if it is located in a place of worship building or a building that is ancillary to a place of worship;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1026)#(1026)[SSP](H)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"...the elevation of the surface of the lowest floor of the parking structure and the elevation of grade at the front lot line; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1135)#(1135)[SSP](E)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "side-yard encroachment: \"(E) Nothing may encroach into a required side yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1142)#(1142)[SSP](E)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...62-2025(OLT), a townhouse or apartment building is not a permitted residential building type on a lot abutting Meadowvale Road.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(12)#(12)[SSP](F)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence: \"...ards or rear yards, and no fence is permitted to obstruct any maintenance easement within any rear yard that abuts a side yard;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1209)#(1209)[SSP](H)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1210)#(1210)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...itted in the zone, a medical and dental office is permitted if the dwelling unit is the place of residence of the practitioner;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1210)#(1210)[SSP](J)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1247)#(1247)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1249)#(1249)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1249)#(1249)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1257)#(1257)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"(A) On the lands, a dwelling unit in a duplex or in a detached house that is converted to allow two dwelling units, are permitted;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1257)#(1257)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1257)#(1257)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1281)#(1281)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1281)#(1281)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(13)#(13)[SSP](F)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence: \"...ards or rear yards, and no fence is permitted to obstruct any maintenance easement within any rear yard that abuts a side yard;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1321)#(1321)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1322)#(1322)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1322)#(1322)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1329)#(1329)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1329)#(1329)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1332)#(1332)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1332)#(1332)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1335)#(1335)[SSP](B)(i)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"... the basement or on the first floor of a detached dwelling which such physician or dentist uses as their private residence; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1335)#(1335)[SSP](D)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1335)#(1335)[SSP](E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1345)#(1345)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1351)#(1351)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1351)#(1351)[SSP](E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1389)#(1389)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1392)#(1392)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1397)#(1397)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1397)#(1397)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1401)#(1401)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1401)#(1401)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1402)#(1402)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1402)#(1402)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1403)#(1403)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1404)#(1404)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1406)#(1406)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1406)#(1406)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1409)#(1409)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1410)#(1410)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1410)#(1410)[SSP](C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1411)#(1411)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1413)#(1413)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1419)#(1419)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1419)#(1419)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1424)#(1424)[SSP](D)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1424)#(1424)[SSP](E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1427)#(1427)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1428)#(1428)[SSP](A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1428)#(1428)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1429)#(1429)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1430)#(1430)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1430)#(1430)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1432)#(1432)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1434)#(1434)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"... floor higher than the first floor of the building above established grade may not encroach into the required yard setback; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1434)#(1434)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...has a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1435)#(1435)[SSP](F)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1435)#(1435)[SSP](G)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1436)#(1436)[SSP](F)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1436)#(1436)[SSP](G)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1437)#(1437)[SSP](F)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1437)#(1437)[SSP](G)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1438)#(1438)[SSP](F)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1438)#(1438)[SSP](G)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "vehicle entrance: \"...a lot frontage of 7.6 metres or less, a vehicle entrance through the front wall of a residential building is not permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1460)#(1460)[SSP](F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"...e portion of building with a parking space may be located in a side yard, if it is at least 0.45 metres from the side lot line.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(1461)#(1461)[SSP](F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"...he portion of building with a parking space may be located in a side yard if it is at least 0.45 metres from the side lot line.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(18)#(18)[SSP](G)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "garage: \"(G) A garage with parking spaces for 3 or more vehicles is permitted on a lot with a lot frontage greater than 27.0 metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(197)#(197)[SSP](D)(i)(a)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...aximum lot coverage, required minimum building setbacks and permitted maximum height for a building in the RD zone: (a) Office;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(197)#(197)[SSP](D)(i)(b)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...overage, required minimum building setbacks and permitted maximum height for a building in the RD zone: (b) Medical Office; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(197)#(197)[SSP](D)(i)(c)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...aximum lot coverage, required minimum building setbacks and permitted maximum height for a building in the RD zone: (c) Clinic;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(197)#(197)[SSP](D)(ii)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"... Road the following applies: (ii) Despite regulation 10.20.20.10(1), a Dwelling Unit is permitted within a M ixed Use Building;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(197)#(197)[SSP](D)(vi)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"...ollowing applies: (vi) Despite regulation 10.5.80.40 (3) vehicle access to Parking Spaces on the lot may be from Kingston Road.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(2)#(2)[SSP](D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"(D) Front yard parking is permitted; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(21)#(21)[SSP](E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "garage: \"(E) A garage with parking spaces for 3 or more vehicles is permitted on a lot with a lot frontage greater than 27.0 metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(24)#(24)[SSP](A)(i)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"... less must comply with the following: (i) a detached house is not permitted on a lot with a lot frontage of 9.0 metres or less;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(28)#(28)[SSP](E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "garage: \"(E) A garage with parking spaces for 3 or more vehicles is permitted on a lot with a lot frontage of greater than 27.0 metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(285)#(285)[SSP](F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"...The portion of building with a parking space may be located in a side yard if it is at least 0.3 metres from the side lot line.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(286)#(286)[SSP](F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"... portion of a building with a parking space may be located in a side yard, if it is at least 0.3 metres from the side lot line.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(289)#(289)[SSP](F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"(F) The portion of a building with a parking space may be located at least 0.3 metres from a side lot line;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(315)#(315)[SSP](F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "garage: \"...loverleaf Gate and the odd numbered lots from 65 to 117 Lowcreast Blvd., a detached garage is not permitted in a rear yard; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(350)#(350)[SSP](F)(ii)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"...aving a minimum length of 4.65 metres may be located in the street yard if it is located beside and parallel with the driveway.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(365)#(365)[SSP](D)(i)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...ouse is on its own lot and that lot has a minimum lot frontage of 9.0 metres and the minimum lot area is 306 square metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(365)#(365)[SSP](D)(ii)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...house may be erected on the lot, if the lot has a minimum lot frontage of 9.0 metres and minimum lot area of 306 square metres;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(365)#(365)[SSP](F)(i)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...ed house is on its own lot and that lot has a minimum lot frontage of 7.5 metres and the minimum lot area is 255 square metres;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(365)#(365)[SSP](F)(ii)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...x may be erected on the lot, if the lot frontage is a minimum of 15.0 metres and the minimum lot area is 510 square metres; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(365)#(365)[SSP](F)(iii)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...house may be erected on the lot, if the lot has a minimum lot frontage of 7.5 metres and minimum lot area of 255 square metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(37)#(37)[SSP](E)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "garage: \"(E) A garage with parking spaces for 3 or more vehicles is permitted on a lot with a lot frontage greater than 27.0 metres.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(426)#(426)[SSP](F)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking: \"...The portion of building with a parking space may be located in a side yard if it is at least 0.3 metres from the side lot line.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(613)#(613)[SSP](C)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...25(OLT), a townhouse or apartment building is not a permitted residential building type on a lot abutting Lawrence Avenue East.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(713)#(713)[SSP](C)(iii)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "side-yard encroachment: \"(C) The minimum building setback from a side lot line is: (iii) nothing may encroach into the required side yard;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.3.10(961)#(961)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "platform encroachment: \"...th a floor higher than the first floor of the building above established grade may not encroach into the required yard setback.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.4.10(14)#(14)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"(A) The only permitted building type is semi-detached houses and ancillary structures;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.4.10(315)#(315)[SSP](A)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "side-yard setback: \"... along one side yard, a side yard setback of 0.0 metres if a maintenance easement of 1.0 metre is provided on the adjacent lot;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.4.10(98)#(98)[SSP](F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"...1 and 113 Leyton Avenue a green house use may continue and expand subject to the regulation of the zone in which it is located.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.5.10(297)#(297)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "side-yard encroachment: \"(C) Nothing may encroach into a required side yard setback;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.5.10(38)#(38)[SSP](B)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "side-yard setback: \"...han 1.2 metres if there are maintenance easements of 1.2 metres in width in the abutting side yards between adjacent buildings;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.5.10(38)#(38)[SSP](C)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "fence: \"...fence is permitted within any side yard of less than 1.2 metres and no fence is permitted to obstruct any maintenance easement;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.6.10(253)#(253)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...plex, or a townhouse with every dwelling unit fronting directly on a street, are the only residential building types permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.6.10(253)#(253)[SSP](G)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"(G) A duplex may be attached to one other duplex on an adjacent lot in the same zone; and\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.6.10(253)#(253)[SSP](H)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"(H) A triplex may be attached to one other triplex on an adjacent lot in the same zone.\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.6.10(263)#(263)[SSP](F)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "land use permitted on the lands: \"(F) A triplex, fourplex, or apartment building are not permitted.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.6.10(269)#(269)[SSP](G)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"(G) A duplex may be attached to one other duplex on an adjacent lot in the same zone; and\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.6.10(269)#(269)[SSP](H)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"(H) A triplex may be attached to one other triplex on an adjacent lot in the same zone.\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.6.10(475)#(475)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...every dwelling unit fronting directly on a street, and an apartment building are the only residential building types permitted;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "900.6.10(475)#(475)[SSP](G)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"(G) A duplex may be attached to one other duplex on an adjacent lot in the same zone; and\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.6.10(475)#(475)[SSP](H)": {
+      "scope": "element",
+      "aspect": "envelope",
+      "attaches_to": null,
+      "reason": "attachment of a duplex/triplex to one on the adjacent lot (\"may be attached to one other ... on an adjacent lot\"); building form, not the permission of the type: \"(H) A triplex may be attached to one other triplex on an adjacent lot in the same zone.\"",
+      "ruling": "2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT"
+    },
+    "900.6.10(92)#(92)[SSP](A)": {
+      "scope": "use",
+      "aspect": "use_permission",
+      "attaches_to": null,
+      "reason": "residential building type / dwelling use: \"...0.80.20.40 (1), a townhouse is a permitted building type subject to compliance with the applicable provisions of Section 10.60.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "970.10.15.10(2)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...ing spaces for dwelling units on abutting lots in the Residential Zone category, it may be located on the common side lot line.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "970.10.15.10(4)#whole": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...n the Residential Zone category a required parking space for a secondary suite may be in the front yard if it is on a driveway.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "970.10.15.10(6)#(6)(A)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...(ii) a lot frontage greater than 7.6 metres, and the elevation of the floor of the vehicle entrance is below established grade;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "970.10.15.10(6)#(6)(B)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...ther parking space is required if: (B) the required parking space is in a detached house, a semi-detached house or a townhouse;\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "970.10.15.10(6)#(6)(C)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...ble space and no further parking space is required if: (C) vehicle entrance to the parking space is in the front main wall; and\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    },
+    "970.10.15.10(6)#(6)(D)": {
+      "scope": "element",
+      "aspect": "parking_access",
+      "attaches_to": null,
+      "reason": "parking space / vehicle entrance / driveway: \"...to the vehicle entrance in the building is removed, and any front yard depression in the ground is filled to established grade.\"",
+      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+    }
+  }
 }

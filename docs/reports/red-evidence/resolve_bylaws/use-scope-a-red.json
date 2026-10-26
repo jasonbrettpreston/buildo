@@ -1,0 +1,66 @@
+{
+ "$comment": "Red evidence for C2b (PLAN-scope v6; CHAT-152 A + CHAT-181): src/tests/bylaw-use-scope.logic.test.ts run on the C2a tree (05adc15e, before part A's code). R1 l2a.from passes on the C2a tree by design (production = the pre-registered from-state). Paths written with ~/ (CHAT-188).",
+ "tree": "05adc15e",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 8,
+  "passed": 3
+ },
+ "tests": [
+  {
+   "test": "L1: vocab.permission_scope is total and closed (CHAT-152 A, CHAT-181) L1a: every agreed PERMIT / PROHIBIT unit has exactly one entry and every entry names one (425: 144 use, 281 element)",
+   "status": "failed",
+   "message": "TypeError: VO.checkPermissionScope is not a function"
+  },
+  {
+   "test": "L1: vocab.permission_scope is total and closed (CHAT-152 A, CHAT-181) L1b: a stale entry and a missing entry are named",
+   "status": "failed",
+   "message": "TypeError: VO.checkPermissionScope is not a function"
+  },
+  {
+   "test": "L1: vocab.permission_scope is total and closed (CHAT-152 A, CHAT-181) L1c / L1e / L1f: review scope, an unknown aspect, a use entry off use_permission, an unattached element on use_permission, an empty reason, an unknown field: each named",
+   "status": "failed",
+   "message": "TypeError: VO.checkPermissionScopeVocab is not a function"
+  },
+  {
+   "test": "L1: vocab.permission_scope is total and closed (CHAT-152 A, CHAT-181) L1d: no element unit displaces a use unit on the real units; a fixture element unit that does is named",
+   "status": "failed",
+   "message": "TypeError: VO.checkPermissionScope is not a function"
+  },
+  {
+   "test": "L2: the evaluator vocab carries permission_scope off disk (the allowlist line) body.evaluator_vocab.permission_scope deep-equals vocab.json; the five ruled rooftop units are element",
+   "status": "failed",
+   "message": "AssertionError: expected undefined to deeply equal {}"
+  },
+  {
+   "test": "S: an element unit is not a use subject; fail closed by name S1: on a real RD lot the dormer PROHIBIT 10.5.40.60(7)(A) (element) neither decides nor changes the detached-house word or winners",
+   "status": "failed",
+   "message": "TypeError: Cannot read properties of undefined (reading 'scope')"
+  },
+  {
+   "test": "S: an element unit is not a use subject; fail closed by name S4: a candidate PERMIT / PROHIBIT with no entry, and a malformed entry, throw by name (no permissive default)",
+   "status": "failed",
+   "message": "AssertionError: expected [Function] to throw an error"
+  },
+  {
+   "test": "S: an element unit is not a use subject; fail closed by name S4b: a generated evaluator vocab whose permission_scope is removed makes makeContext throw permission_scope_absent",
+   "status": "failed",
+   "message": "AssertionError: expected [Function] to throw an error"
+  },
+  {
+   "test": "R1: the 10 named real lots equal the committed round pre-registrations (known wrong in law until G3; the RD semi in the G4 sense after) the chain holds: each pre-registration starts where the previous one ends",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "R1: the 10 named real lots equal the committed round pre-registrations (known wrong in law until G3; the RD semi in the G4 sense after) round l2a: production equals prereg.r1[].from on all 50 lot-classes",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "R1: the 10 named real lots equal the committed round pre-registrations (known wrong in law until G3; the RD semi in the G4 sense after) every committed actual equals its prereg on the compared keys (cells, r1)",
+   "status": "passed",
+   "message": ""
+  }
+ ]
+}

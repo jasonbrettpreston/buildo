@@ -39,7 +39,7 @@ import { loadSnapshotPages, sliceSnapshot } from './slice.mjs';
 import { cmpSection, sha256 } from './snapshot.mjs';
 import { checkTextSlice, LOCK_FILE, selfTest as standardizedSelfTest } from './standardized.mjs';
 import { checkUniverse, readSpec69Rulings, universeInputs, selfTest as universeSelfTest } from './universe.mjs';
-import { checkFeedsTotality, checkVocab, evaluatorVocab, selfTest as vocabSelfTest } from './vocab.mjs';
+import { checkFeedsTotality, checkPermissionScope, checkVocab, evaluatorVocab, selfTest as vocabSelfTest } from './vocab.mjs';
 import { twinsFromUnits } from './twins.mjs';
 import { checkXref, displacesOf, selfTest as xrefSelfTest } from './xref.mjs';
 
@@ -450,6 +450,9 @@ export async function runGates(I) {
     return [
       fromCheck('vocab', v),
       f.checked === 0 ? arm('feeds_totality', 'vacuous', [], ['vacuous (0 agreed LIMIT/PERMIT/PROHIBIT units)']) : fromCheck('feeds_totality', f),
+      // CHAT-152 A (M-56 dated note 2026-10-25): every agreed PERMIT / PROHIBIT unit has exactly one vocab.permission_scope entry and
+      // every entry names one (missing / stale); no element unit displaces a use unit (PLAN-scope v2 §4.3)
+      fromCheck('permission_scope', checkPermissionScope(agreedUnits, I.vocab)),
       // Spec 68 §9 G-SHAPE ("JSON Schema on every seed and authored file; §7.3 shape per unit; every authored key
       // resolves to a row"), §4 (row_status folded from ALL gate results — G-SHAPE runs last among content gates).
       // checkShape returns gateResult + rows[{regulation_id, row_status, why}]; check() folds those into the table.

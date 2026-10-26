@@ -18,7 +18,9 @@ const load = (rel: string): Promise<Json> => import(pathToFileURL(path.join(proc
 const E = await load('scripts/analysis/bylaw/evaluate.mjs');
 const AU = await load('scripts/analysis/bylaw/authored.mjs');
 const read = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(process.cwd(), rel), 'utf8'));
-const VOCAB = read('src/tests/fixtures/bylaw/eval-vocab.json');
+// CHAT-152 A fixture policy (PLAN-scope v2 §8): the fixture vocab carries the committed permission_scope block plus the synthetic
+// exception PROHIBIT (use); no assertion changes
+const VOCAB = { ...read('src/tests/fixtures/bylaw/eval-vocab.json'), permission_scope: { ...read('scripts/seeds/bylaw/vocab.json').permission_scope, ...{ '900.2.10(604)#SSP(A)': { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' }, '600.60.40(1)#(B)': { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' }, 'SYN#SSP(A)': { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' } } } };
 const ALL_UNITS: Json[] = read('src/tests/fixtures/bylaw/eval-units.json').units;
 const UNITS = ALL_UNITS.filter((u) => u.candidate);
 const VECTORS: Json[] = read('scripts/seeds/bylaw/eval-vectors.json').vectors;

@@ -31,7 +31,9 @@ const PVOCAB = read('scripts/seeds/bylaw/vocab.json');
 const ABS = read('scripts/seeds/bylaw/absence-rulings.json');
 const UNITS: Json[] = read('src/tests/fixtures/bylaw/eval-units.json').units.filter((u: Json) => u.candidate);
 const VECTORS: Json[] = read('scripts/seeds/bylaw/eval-vectors.json').vectors;
-const EV = VO.evaluatorVocab ? VO.evaluatorVocab(PVOCAB) : {};
+// CHAT-152 A fixture policy (PLAN-scope v2 §8): the two fixture PERMIT / PROHIBIT ids of eval-units.json (the pre-split spellings of
+// 600.60.40(1)(B) and 900.2.10(604)(A)) declare their permission scope (use); no assertion changes
+const EV = VO.evaluatorVocab ? { ...VO.evaluatorVocab(PVOCAB), permission_scope: { ...PVOCAB.permission_scope, '600.60.40(1)#(B)': { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' }, '900.2.10(604)#SSP(A)': { scope: 'use', aspect: 'use_permission', attaches_to: null, reason: 'fixture', ruling: 'fixture' } } } : {};
 const C: Json = E.makeContext ? E.makeContext(EV, { absences: ABS.rulings }) : {};
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 const stable = (v: unknown): string => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort(cmp).map((y) => [y, x[y]])) : x));
