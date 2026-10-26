@@ -232,6 +232,16 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(A, 'R-IY')).toContain(G + 'CHAT-158.HOOK-FIX-A');
     expect(rowOf(A, 'R-JW')).toContain(G + 'CHAT-159.WF3-CARDS');
   });
+  it('CHAT-160..166 (batch 2026-10-26-h): the scorer card answers', () => {
+    const H = '2026-10-26-batch-h#';
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-160.M326-PER-FIGURE');
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-161.M326-PARCEL-NOT-DISCLOSED');
+    expect(rowOf(M, 'M-313')).toContain(H + 'CHAT-162.M313-EVERY-SOURCE');
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-163.M326-SITE-PLAN');
+    expect(rowOf(M, 'M-321')).toContain(H + 'CHAT-164.UNKNOWN-SOURCE-ROUND');
+    expect(rowOf(M, 'M-326')).toContain(H + 'CHAT-165.HELD-UNREAD-DISCLOSED');
+    expect(rowOf(M, 'M-305')).toContain(H + 'CHAT-166.SCORER-OUTPUTS-KEPT');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
