@@ -260,3 +260,75 @@ describe('G3: zone use lists defer to the building-type list; suite-subject unit
     expect(['ancillary', 'any', 'principal', 'suite'].map((s) => c[`${s}/use_permission`])).toEqual([9, 67, 150, 22]);
   });
 });
+
+// ---- B: M-169 in permitted() (2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE B; Spec 69a M-169(1); PLAN-scope v2 §6, v3 §7, v6) ----
+const UD = VOCAB.undetermined_condition_disclosure;
+const fixUnit = (unit_id: string, archetype: string, tokens: string[], o: Json = {}): Json => ({ unit_id, regulation_id: unit_id.split('#')[0], archetype, layer: 'base', target: 'none', bound: 'none', condition: { tokens }, applies_to: { part: 'whole', refs: [] }, application: { zones: ['RD'], building_types: ['any'], lot_conditions: tokens, uses: [], evidence: {} }, displaces: [], ...o });
+const ctxWith = (ids: string[], extra: Json = {}, ctxExtra: Json = {}): Json => E.makeContext({ ...INPUT.body.evaluator_vocab, permission_scope: { ...PS, ...Object.fromEntries(ids.map((id) => [id, entry('use', 'use_permission')])) }, ...extra }, { enactments: INPUT.body.enactments, absences: INPUT.body.absences, authored: INPUT.body.authored, ...ctxExtra });
+const rdHouse = (): Json => M.classLotFor(rowOf('5035239'), 'principal', 'detached_house', env);
+const permit = (L: Json, extraUnits: Json[], C: Json, bt = 'detached_house'): Json => E.permitted(L, bt, [...E.loadCandidates(L, INPUT.body.units).candidates, ...extraUnits], C);
+describe('B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1))', () => {
+  it('M1: on an RD lot with no frontage name a use PROHIBIT on abuts_named_street is set aside, with one disclosure; the type PERMIT decides', () => {
+    const u = fixUnit('FIX#M1-abuts', 'PROHIBIT', ['abuts_named_street']);
+    const p = permit(rdHouse(), [u], ctxWith(['FIX#M1-abuts']));
+    expect([p.status, p.winners, p.disclosures]).toEqual(['permitted', ['10.20.20.40(1)#(1)(A)'], [{ unit_id: 'FIX#M1-abuts', archetype: 'PROHIBIT', condition_token: 'abuts_named_street', condition_phrase: UD.lot_condition.abuts_named_street }]]);
+  });
+  it('M1b: the real 900.3.10(613)(C) on an RD Exception 613 lot (townhouse) is set aside the same way', () => {
+    const L = { ...rdHouse(), exception: '900.3.10(613)', building_type: 'townhouse' };
+    const C = ctxWith([], {}, { authored: { ...INPUT.body.authored, '900.3.10(613)': 'authored' } });
+    const p = E.permitted(L, 'townhouse', E.loadCandidates(L, INPUT.body.units).candidates, C);
+    expect(p.disclosures.map((d: Json) => [d.unit_id, d.condition_token])).toEqual([['900.3.10(613)#(613)[SSP](C)', 'abuts_named_street']]);
+    expect(p.status).not.toBe('not_evaluated');
+  });
+  it('M2 / M4: a data-filled flag (corner_lot) and an M-172 design token (all_units_front_street) are never folded: still undecided', () => {
+    for (const tok of ['corner_lot', 'all_units_front_street']) {
+      const u = fixUnit(`FIX#M2-${tok}`, 'PROHIBIT', [tok]);
+      const L = { ...rdHouse(), flags: { ...rdHouse().flags, [tok]: undefined } };
+      expect([tok, permit(L, [u], ctxWith([u.unit_id])).reason]).toEqual([tok, `condition_unknown:${tok}`]);
+    }
+  });
+  it('M2b: the named-street truth table through permitted(): no name -> folded; name + hit -> applies; name + miss on an interior lot -> false; name + miss with the corner flag unknown -> undecided (CHAT-100 L-INTERIOR)', () => {
+    const u = fixUnit('FIX#NS', 'PROHIBIT', ['abuts_named_street']);
+    const ns = { ...INPUT.body.evaluator_vocab.named_street, units: { ...INPUT.body.evaluator_vocab.named_street.units, 'FIX#NS': { streets: ['Baldwin Street'], line: 'any' } } };
+    const C = ctxWith(['FIX#NS'], { named_street: ns });
+    const lot = (name: string | undefined, flags: Json): Json => ({ ...rdHouse(), [ns.lot_field]: name, flags: { ...rdHouse().flags, ...flags } });
+    const row = (name: string | undefined, flags: Json): Json => { const p = permit(lot(name, flags), [u], C); return [p.status, p.reason || null, p.disclosures.length]; };
+    expect(row(undefined, {})).toEqual(['permitted', null, 1]);
+    expect(row('Baldwin Street', {})).toEqual(['prohibited', null, 0]);
+    expect(row('Other Street', { corner_lot: false, through_lot: false })).toEqual(['permitted', null, 0]);
+    expect(row('Other Street', { corner_lot: undefined, through_lot: false })).toEqual(['not_evaluated', 'condition_unknown:abuts_named_street', 0]);
+  });
+  it('M3: permitted() never folds the lot it was given, and effective() answers on the unfolded lot (byte-identical before and after)', () => {
+    const L = rdHouse(); const before = JSON.stringify(L); const cands = E.loadCandidates(L, INPUT.body.units).candidates;
+    const eff = (): string => JSON.stringify(E.effective(L, 'side_setback_m', cands, env.ctx));
+    const e0 = eff(); permit(L, [fixUnit('FIX#M1-abuts', 'PROHIBIT', ['abuts_named_street'])], ctxWith(['FIX#M1-abuts']));
+    expect([JSON.stringify(L), eff()]).toEqual([before, e0]);
+  });
+  it('M5: the fold set is the lot_condition tokens less not_folded_in_permission (M-241) and never a specialised token; a vocab that folds lawfully_existing throws by name', () => {
+    const fold = [...env.ctx.permissionFold].sort();
+    expect(fold).toEqual(Object.keys(UD.lot_condition).filter((k) => k !== '$comment' && k !== 'ancillary_contains_parking_space').sort());
+    expect(fold).toHaveLength(10);
+    for (const t of ['ancillary_contains_parking_space', 'lawfully_existing', 'lawfully_existing_status', 'existing_footprint_sqm']) expect([t, fold.includes(t)]).toEqual([t, false]);
+    const bad = { ...UD, lot_condition: { ...UD.lot_condition, lawfully_existing: 'x' } };
+    expect(() => E.makeContext({ ...INPUT.body.evaluator_vocab, undetermined_condition_disclosure: bad })).toThrow(/permission_fold_specialised:lawfully_existing/);
+  });
+  it('M6 / M7: disclosures are sorted, de-duplicated and identical on a second call; each has exactly {unit_id, archetype, condition_token, condition_phrase}, the phrase from condition_override else lot_condition', () => {
+    const us = [fixUnit('FIX#Z', 'PROHIBIT', ['abuts_named_street']), fixUnit('FIX#A', 'PERMIT', ['shoreline_or_top_of_bank'])];
+    const C = ctxWith(['FIX#Z', 'FIX#A']);
+    const a = permit(rdHouse(), us, C); const b = permit(rdHouse(), [...us].reverse(), C);
+    expect(a.disclosures.map((d: Json) => d.unit_id)).toEqual(['FIX#A', 'FIX#Z']);
+    expect(JSON.stringify(a.disclosures)).toBe(JSON.stringify(b.disclosures));
+    for (const d of a.disclosures) {
+      expect(Object.keys(d).sort()).toEqual(['archetype', 'condition_phrase', 'condition_token', 'unit_id']);
+      expect(d.condition_phrase).toBe((UD.condition_override && UD.condition_override[d.unit_id]) || UD.lot_condition[d.condition_token]);
+    }
+  });
+  it('G5-e: end to end, logicalRowsOf on a lot whose use unit is set aside gives one sentence in the CHAT-180 form', () => {
+    const u = fixUnit('FIX#M1-abuts', 'PROHIBIT', ['abuts_named_street']);
+    const body = { ...INPUT.body, units: [...INPUT.body.units, u], evaluator_vocab: { ...INPUT.body.evaluator_vocab, permission_scope: { ...PS, 'FIX#M1-abuts': entry('use', 'use_permission') } } };
+    const env2 = M.makeEnv({ body, map: MAP, scope: SCOPE, vocab: VOCAB, zoneList: R1.zone_list, versions: { table_version: INPUT.table_version, evaluator_version: INPUT.evaluator_version } });
+    const out = M.materializeBatch([rowOf('5035239')], env2);
+    const v = M.logicalRowsOf(rowOf('5035239'), out.rows.lots[0], LR.makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts }), env2);
+    expect(v.permission_disclosures.detached_house).toEqual([`If ${UD.lot_condition.abuts_named_street}: this use is not permitted, by FIX#M1-abuts.`]);
+  }, 60_000);
+});

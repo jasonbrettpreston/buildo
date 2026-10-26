@@ -789,6 +789,10 @@
       "5.10.40.70(5)#whole": "the rear yard setback is measured as a radius from the point where the side lot lines meet",
       "5.10.40.40(1)#whole": "the part of the lot below that line is not counted in the floor space index, so the permitted floor area is lower"
     },
+    "not_folded_in_permission": {
+      "$comment": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE (B; PLAN-scope v2 §6): the lot_condition tokens M-169(1) does NOT fold to false inside permitted(), each with the rule that keeps it undecided. M-241: while ancillary_contains_parking_space is unknown the answer is needs_user_input (69a:394). The specialised tokens (lawfully_existing, …) are not lot_condition tokens and are never folded (M-169(3), M-158).",
+      "ancillary_contains_parking_space": "M-241"
+    },
     "permission_effect": {
       "$comment": "Spec 69a M-169(1) {effect} of a set-aside PERMIT / PROHIBIT (target none: no measure, bound or value to generate from), one closed phrase per archetype; {clause} is the unit_id, as the stored prohibited clause (2026-10-26-batch-m#CHAT-180.L2-G5-DISCLOSURE-ON-READ (b); R-BZ). Recomputed on read in bylaw-materialize.js logicalRowsOf, never stored.",
       "PERMIT": "this use is also permitted by {clause}",

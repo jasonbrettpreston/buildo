@@ -1,0 +1,51 @@
+{
+ "$comment": "Red evidence for C7b (CHAT-152 B, M-169 in permitted()): the B tests of src/tests/bylaw-use-scope.logic.test.ts run on the C7a tree (before the fold). M2/M4 and M3 are locks whose red is the previous state. Paths written with ~/ (CHAT-188).",
+ "tree": "b405abd8",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 6,
+  "passed": 2
+ },
+ "tests": [
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M1: on an RD lot with no frontage name a use PROHIBIT on abuts_named_street is set aside, with one disclosure; the type PERMIT decides",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'not_evaluated', [], [] ] to deeply equal [ 'permitted', …(2) ]"
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M1b: the real 900.3.10(613)(C) on an RD Exception 613 lot (townhouse) is set aside the same way",
+   "status": "failed",
+   "message": "AssertionError: expected [] to deeply equal [ [ …(2) ] ]"
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M2 / M4: a data-filled flag (corner_lot) and an M-172 design token (all_units_front_street) are never folded: still undecided",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M2b: the named-street truth table through permitted(): no name -> folded; name + hit -> applies; name + miss on an interior lot -> false; name + miss with the corner flag unknown -> undecided (CHAT-100 L-INTERIOR)",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'not_evaluated', …(2) ] to deeply equal [ 'permitted', null, 1 ]"
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M3: permitted() never folds the lot it was given, and effective() answers on the unfolded lot (byte-identical before and after)",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M5: the fold set is the lot_condition tokens less not_folded_in_permission (M-241) and never a specialised token; a vocab that folds lawfully_existing throws by name",
+   "status": "failed",
+   "message": "TypeError: env.ctx.permissionFold is not iterable"
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) M6 / M7: disclosures are sorted, de-duplicated and identical on a second call; each has exactly {unit_id, archetype, condition_token, condition_phrase}, the phrase from condition_override else lot_condition",
+   "status": "failed",
+   "message": "AssertionError: expected [] to deeply equal [ 'FIX#A', 'FIX#Z' ]"
+  },
+  {
+   "test": "B: an undecidable site condition is taken as not holding inside permitted(), and disclosed (M-169(1)) G5-e: end to end, logicalRowsOf on a lot whose use unit is set aside gives one sentence in the CHAT-180 form",
+   "status": "failed",
+   "message": "AssertionError: expected [] to deeply equal [ Array(1) ]"
+  }
+ ]
+}

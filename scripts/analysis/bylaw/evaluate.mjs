@@ -102,6 +102,9 @@ export function makeContext(vocab, extra = {}) {
     // M-169 (CHAT-180 G5): the closed disclosure phrases (template, condition phrases, the permission {effect} per archetype); the
     // permission's set-aside disclosures are recomputed on read from these (bylaw-materialize.js logicalRowsOf), never stored
     undeterminedDisclosure: vocab.undetermined_condition_disclosure || null,
+    // CHAT-152 B (M-169(1) inside permitted() only): the lot_condition tokens taken as NOT holding when no data decides them, i.e. vocab
+    // undetermined_condition_disclosure.lot_condition minus not_folded_in_permission (M-241); never a specialised token (M-169(3), M-158)
+    permissionFold: permissionFoldOf(vocab.undetermined_condition_disclosure),
     units: unitTable(vocab),
     zones: new Set(vocab.zone || []),
     residentialTypes: [...(vocab.building_type_residential || [])].sort(cmpStr), // order-free (red-team E8)
@@ -155,6 +158,13 @@ export function makeContext(vocab, extra = {}) {
     // the lot gate reads it (ruling (d)). Nothing listed = not authored (Phase 1 has no authored exception yet).
     authored: extra.authored || {},
   };
+}
+function permissionFoldOf(ud) {
+  if (!ud || !ud.lot_condition) return new Set();
+  const keep = new Set(Object.keys(ud.not_folded_in_permission || {}).filter((k) => k !== '$comment'));
+  const fold = Object.keys(ud.lot_condition).filter((k) => k !== '$comment' && !keep.has(k));
+  for (const t of fold) if (ud.specialised && Object.hasOwn(ud.specialised, t)) throw new BylawContextError(`permission_fold_specialised:${t}`);
+  return new Set(fold);
 }
 function vocabMap(o) { return Object.fromEntries(Object.entries(o || {}).filter(([k]) => k !== '$comment')); }
 /**
@@ -1348,6 +1358,25 @@ function argPaths(node, out = []) {
 }
 
 // ---------------------------------------------------------------- permitted()
+const isBool = (v) => v === true || v === false;
+/**
+ * CHAT-152 B (Spec 69a M-169(1); PLAN-scope v2 §6): the lot permitted() shows one unit, with each fold-set token whose value is not
+ * boolean taken as false. abuts_named_street folds only in case (1) (no frontage name, or no table row for the unit); with a name and a
+ * row, namedStreetJoin decides and CHAT-100 L-INTERIOR keeps an unresolved line undecided. Known booleans are never overwritten.
+ */
+function foldedLots(L, C) {
+  const fold = (skip) => {
+    const flags = { ...(L.flags || {}) }; let moved = false;
+    for (const t of C.permissionFold || []) if (t !== skip && !isBool(flags[t])) { flags[t] = false; moved = true; }
+    return moved ? { ...L, flags } : L;
+  };
+  return { all: fold(null), keepNamed: fold('abuts_named_street') };
+}
+function foldForPermission(L, u, C, F) {
+  if (!C.permissionFold || !C.permissionFold.size) return L;
+  const ns = C.namedStreet; const row = ns && ns.units && ns.units[u.unit_id]; const name = ns ? L[ns.lot_field] : undefined;
+  return row && typeof name === 'string' && name.trim() ? F.keepNamed : F.all; // case (2): with a name and a row, CHAT-100 L-INTERIOR governs
+}
 /** The declared permission scope of a PERMIT / PROHIBIT unit (CHAT-152 A): 'use' | 'element', or a named throw. */
 function permissionScopeOf(u, C) {
   if (!C.permissionScope) throw new BylawEvalError('permission_scope_absent');
@@ -1382,16 +1411,27 @@ export function permitted(lot, buildingType, candidates, ctx) {
   const disapply = candidates.filter((u) => u.archetype === 'DISAPPLY' && (u.displaces || []).some((r) => subjects.some((s) => refMatch(r, s.unit_id))));
   const A = []; const unknown = [];
   const considered = new Set([...subjects, ...procs, ...disapply]);
+  const disclosures = []; const F = foldedLots(L, C);
   for (const u of candidates) {
     if (!considered.has(u)) continue;
     const t = [];
-    const a = applies(L, u, C, (name) => effective(L, name, candidates, C, { sorted: true }), reads, t);
+    // CHAT-152 B (M-169(1)): applies() sees the folded lot; the resolver keeps the UNFOLDED lot (effective() is untouched)
+    const Lu = foldForPermission(L, u, C, F);
+    const a = applies(Lu, u, C, (name) => effective(L, name, candidates, C, { sorted: true }), reads, t);
+    // set aside BY THE FOLD only: the token was folded for this unit (abuts_named_street only in case (1), where Lu is F.all), not decided by data
+    if (a.ok === false && Lu !== L && a.known_false_condition && C.permissionFold.has(a.known_false_condition) && !isBool(L.flags && L.flags[a.known_false_condition]) && (a.known_false_condition !== 'abuts_named_street' || Lu === F.all) && (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT')) {
+      const ud = C.undeterminedDisclosure || {};
+      const phrase = (ud.condition_override && ud.condition_override[u.unit_id]) || (ud.lot_condition && ud.lot_condition[a.known_false_condition]);
+      disclosures.push({ unit_id: u.unit_id, archetype: u.archetype, condition_token: a.known_false_condition, condition_phrase: phrase });
+      t.push(`M-169: ${a.known_false_condition} taken as not holding (no data)`);
+    }
     if (t.length) trace.push(`condition ${u.unit_id}: ${t.join(', ')} → ${a.ok === true ? 'applies' : a.ok === false ? `not applicable (${a.why})` : `undecided (${a.reason})`}`);
     if (a.ok === null) unknown.push({ u, reason: a.reason });
     if (a.ok) A.push(u);
   }
   const inputs = () => [...reads].sort(cmpStr);
-  if (unknown.length) { const reason = pickReason(unknown.map((x) => x.reason)); return { disclosures: [], status: 'not_evaluated', reason, winners: [], inputs: inputs(), trace: [...trace, ...unknown.map((x) => `applicability unknown: ${x.u.unit_id} (${x.reason})`)] }; }
+  const discl = () => [...new Map(disclosures.map((d) => [`${d.unit_id}\u0000${d.condition_token}`, d])).values()].sort((x, y) => cmpStr(x.unit_id, y.unit_id) || cmpStr(x.condition_token, y.condition_token)); // sorted, de-duplicated (M6)
+  if (unknown.length) { const reason = pickReason(unknown.map((x) => x.reason)); return { disclosures: discl(), status: 'not_evaluated', reason, winners: [], inputs: inputs(), trace: [...trace, ...unknown.map((x) => `applicability unknown: ${x.u.unit_id} (${x.reason})`)] }; }
   const immune = new Map(); const dropped = new Set();
   for (const u of A) for (const ref of u.displaces || []) {
     for (const p of procs) if (A.includes(p) && refMatch(ref, p.unit_id) === 'full') {
@@ -1401,7 +1441,7 @@ export function permitted(lot, buildingType, candidates, ctx) {
     for (const v of A) if (v !== u && v.archetype !== 'PROCEDURAL' && refMatch(ref, v.unit_id) === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${u.unit_id} drops ${v.unit_id}`); }
   }
   const T = A.filter((u) => (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT') && !dropped.has(u.unit_id));
-  if (!T.length) return { disclosures: [], status: 'not_evaluated', reason: 'no_candidate', winners: [], inputs: inputs(), trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
+  if (!T.length) return { disclosures: discl(), status: 'not_evaluated', reason: 'no_candidate', winners: [], inputs: inputs(), trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
   const rank = (u) => Math.max(LAYER_RANK[u.layer] ?? 0, immune.get(u.unit_id) ?? -1);
   const top = Math.max(...T.map(rank));
   const win = T.filter((u) => rank(u) === top);
@@ -1411,10 +1451,10 @@ export function permitted(lot, buildingType, candidates, ctx) {
   // permission the law may forbid; both clauses are named in the trace and the result goes to the M-29 expert sample
   if (kinds.size > 1) {
     const ids = (k) => win.filter((u) => u.archetype === k).map((u) => u.unit_id);
-    return { disclosures: [], status: 'prohibited', winners: ids('PROHIBIT'), overruled_permits: ids('PERMIT'), ruling: 'prohibit_over_permit_same_rank', expert_sample: true, inputs: inputs(),
+    return { disclosures: discl(), status: 'prohibited', winners: ids('PROHIBIT'), overruled_permits: ids('PERMIT'), ruling: 'prohibit_over_permit_same_rank', expert_sample: true, inputs: inputs(),
       trace: [...trace, `ruling (a): PERMIT ${ids('PERMIT').join(', ')} and PROHIBIT ${ids('PROHIBIT').join(', ')} at the same rank — PROHIBIT wins (never show a permission the law may forbid); M-29 expert sample`] };
   }
-  return { disclosures: [], status: kinds.has('PERMIT') ? 'permitted' : 'prohibited', winners: win.map((u) => u.unit_id), inputs: inputs(), trace };
+  return { disclosures: discl(), status: kinds.has('PERMIT') ? 'permitted' : 'prohibited', winners: win.map((u) => u.unit_id), inputs: inputs(), trace };
 }
 
 // ---------------------------------------------------------------- provincial units (external.json → candidates)
