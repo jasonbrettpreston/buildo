@@ -277,6 +277,16 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(M, 'M-305')).toContain(N + 'CHAT-177.NOTICE-COPIES-DELETED');
     for (const id of ['CHAT-178.L2-G1-USE-KEYING-ROUND', 'CHAT-179.L2-G2-LAWFULLY-EXISTING-ROUND', 'CHAT-180.L2-G5-DISCLOSURE-ON-READ', 'CHAT-181.L2-REVIEW-UNITS-ELEMENT']) expect(rowOf(M, 'M-169')).toContain(N + id);
   });
+  it('CHAT-182..183 (batch 2026-10-26-n): G3 use-list keying round on M-169 + M-182; CHAT-172 corrected per family on M-321 + a Spec 129 (j) note', () => {
+    const P = '2026-10-26-batch-n#';
+    expect(rowOf(M, 'M-169')).toContain(P + 'CHAT-182.L2-G3-USE-LIST-KEYING-ROUND');
+    expect(rowOf(M, 'M-182')).toContain(P + 'CHAT-182.L2-G3-USE-LIST-KEYING-ROUND');
+    expect(rowOf(M, 'M-321')).toContain(P + 'CHAT-183.SPLIT-CONDITIONS-PER-FAMILY');
+    const S = read('docs/specs/01-pipeline/129_source_coa_notices.md').split('\n');
+    const j = S.findIndex((l) => l.startsWith('  (j) The decision is read from the decision paragraph only.'));
+    expect(j).toBeGreaterThan(-1);
+    expect(S[j + 2]).toContain(P + 'CHAT-183.SPLIT-CONDITIONS-PER-FAMILY');
+  });
   it('CHAT-99 is row R-KB on core.12 with the CHAT-93 condition', () => {
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-t#CHAT-99.DB-RLS-1');
     expect(rowOf(A, 'R-KB')).toContain('2026-10-23-batch-n#CHAT-93.condition');
