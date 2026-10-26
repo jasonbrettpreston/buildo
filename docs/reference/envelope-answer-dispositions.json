@@ -4534,7 +4534,7 @@
     {
      "file": "src/tests/bylaw-suite-owed.logic.test.ts",
      "describe": "M-177(1)/(4) — the 150.10 secondary-suite scope units: the suite class, one suite per dwelling unit",
-     "it": "M-177: 150.10.20.1(1)(A) permits a suite in a detached house, and the house-with-suite class releases FSI in every zone",
+     "it": "M-177 / CHAT-182: 150.10.20.1(1)(A) binds the suite class (M-182 form), and the house-with-suite class releases FSI in every zone",
      "asserts": [
       "'150.10.20.1(1)#(1)(A)'",
       "has_secondary_suite"

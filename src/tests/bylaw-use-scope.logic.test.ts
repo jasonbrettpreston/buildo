@@ -36,11 +36,11 @@ const PS: Json = VOCAB.permission_scope || {};
 const entry = (scope: string, aspect: string, extra: Json = {}): Json => ({ scope, aspect, attaches_to: null, reason: 'fixture', ruling: 'fixture', ...extra });
 
 describe('L1: vocab.permission_scope is total and closed (CHAT-152 A, CHAT-181)', () => {
-  it('L1a: every agreed PERMIT / PROHIBIT unit has exactly one entry and every entry names one (425: 144 use, 281 element)', () => {
+  // the counts are pinned per round where they move: 425 / 144 / 281 after A (actual-l2a units), 419 / 138 / 281 after G3 (G3-e)
+  it('L1a: every agreed PERMIT / PROHIBIT unit has exactly one entry and every entry names one', () => {
     const r = VO.checkPermissionScope(INPUT.body.units, VOCAB);
-    expect([r.pass, r.checked, r.violations]).toEqual([true, 425, []]);
-    const n = (s: string): number => Object.entries(PS).filter(([k, v]) => k !== '$comment' && (v as Json).scope === s).length;
-    expect([n('use'), n('element')]).toEqual([144, 281]);
+    expect([r.pass, r.violations]).toEqual([true, []]);
+    expect(r.checked).toBe(Object.keys(PS).filter((k) => k !== '$comment').length);
   });
   it('L1b: a stale entry and a missing entry are named', () => {
     const extra = { ...VOCAB, permission_scope: { ...PS, 'X#stale': entry('use', 'use_permission') } };
@@ -217,5 +217,46 @@ describe('G2: the conversion clauses carry their lawfully_existing condition (CH
     const L = { ...L0, flags: { ...L0.flags, lawfully_existing: true } };
     const p = E.permitted(L, 'semi_detached_house', E.loadCandidates(L, INPUT.body.units).candidates, env.ctx);
     expect([p.status, p.winners]).toEqual(['prohibited', ['600.60.40(3)#(3)(D)']]);
+  });
+});
+
+// ---- G3 (2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; 2026-10-26-batch-o#CHAT-184.L2-CR-USE-LISTS; PLAN-scope v3 §5.3, v4 §5.3, v5 §5.3) ----
+const LISTS = ['10.10.20.10(1)#whole', '10.20.20.10(1)#whole', '10.40.20.10(1)#whole', '10.60.20.10(1)#whole', '10.80.20.10(1)#whole', '40.10.20.10(1)#(1)(B)'];
+describe('G3: zone use lists defer to the building-type list; suite-subject units bind the suite class (CHAT-182, CHAT-184)', () => {
+  it('G3-a: the five zone use lists and the CR "r" list are PROCEDURAL / informational and carry no permission_scope entry; a stale entry left behind is named', () => {
+    for (const id of LISTS) expect([id, unitOf(id).archetype, unitOf(id).calculation_handling.status, id in PS]).toEqual([id, 'PROCEDURAL', 'informational', false]);
+    const left = { ...VOCAB, permission_scope: { ...PS, '10.20.20.10(1)#whole': entry('use', 'use_permission') } };
+    expect(VO.checkPermissionScope(INPUT.body.units, left).violations).toEqual(['permission_scope_stale: 10.20.20.10(1)#whole']);
+  });
+  it('G3-b (the G4 lock): on R1 lot RD 5035239 the semi-detached house and houseplex read not_evaluated:no_candidate, never prohibited (G4 not ruled)', () => {
+    for (const cls of ['semi_detached_house', 'semi_detached_houseplex']) {
+      const L = M.classLotFor(rowOf('5035239'), 'principal', cls, env);
+      const p = E.permitted(L, env.classVectors[cls].building_type, E.loadCandidates(L, INPUT.body.units).candidates, env.ctx);
+      expect([cls, p.status, p.reason]).toEqual([cls, 'not_evaluated', 'no_candidate']);
+    }
+  });
+  it('G3-c twin: with 10.20.20.10(1) a PERMIT again (and declared use) the RD semi reads permitted: the use list was the permitter', () => {
+    const L = M.classLotFor(rowOf('5035239'), 'principal', 'semi_detached_house', env);
+    const units = INPUT.body.units.map((u: Json) => (u.unit_id === '10.20.20.10(1)#whole' ? { ...u, archetype: 'PERMIT' } : u));
+    const C2 = E.makeContext({ ...INPUT.body.evaluator_vocab, permission_scope: { ...PS, '10.20.20.10(1)#whole': entry('use', 'use_permission') } }, { enactments: INPUT.body.enactments, absences: INPUT.body.absences, authored: INPUT.body.authored });
+    const p = E.permitted(L, 'semi_detached_house', E.loadCandidates(L, units).candidates, C2);
+    expect([p.status, p.winners]).toEqual(['permitted', ['10.20.20.10(1)#whole']]);
+  });
+  it('G3-d: a suite-subject unit binds only the class with a secondary suite (M-182 form); with its host type it would bind the plain house (twin); 949 / 954 / 956 likewise', () => {
+    const lotOf = (pid: string, cls: string): Json => ({ ...M.classLotFor(rowOf(pid), 'principal', cls, env), building_type: env.classVectors[cls].building_type });
+    const ok = (L: Json, u: Json): boolean | null => E.applies(L, u, env.ctx, (n: string) => E.effective(L, n, E.loadCandidates(L, INPUT.body.units).candidates, env.ctx)).ok;
+    const A = unitOf('150.10.20.1(1)#(1)(A)');
+    expect(A.application.building_types).toEqual(['secondary_suite']);
+    expect([ok(lotOf('5214404', 'detached_house'), A), ok(lotOf('5214404', 'house_with_secondary_suite'), A)]).toEqual([false, true]);
+    expect(ok(lotOf('5214404', 'detached_house'), { ...A, application: { ...A.application, building_types: ['detached_house'] } })).toBe(true);
+    for (const id of ['900.2.10(949)#(949)[SSP](F)', '900.2.10(954)#(954)[SSP](F)', '900.2.10(956)#(956)[SSP](F)']) expect([id, unitOf(id).application.building_types]).toEqual([id, ['secondary_suite']]);
+  });
+  it('G3-e: permission_scope is 419 entries (138 use, 281 element); exactly the six lists left it', () => {
+    const n = (s: string): number => Object.values(PS).filter((v) => v && (v as Json).scope === s).length;
+    expect([Object.keys(PS).filter((k) => k !== '$comment').length, n('use'), n('element')]).toEqual([419, 138, 281]);
+  });
+  it('G3-f: feeds.counts equal the pre-registered map after G3 + CHAT-184 (use_permission 248)', () => {
+    const c = read('docs/reference/bylaw-provisions.json').feeds.counts;
+    expect(['ancillary', 'any', 'principal', 'suite'].map((s) => c[`${s}/use_permission`])).toEqual([9, 67, 150, 22]);
   });
 });

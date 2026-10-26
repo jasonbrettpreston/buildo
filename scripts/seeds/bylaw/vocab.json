@@ -1294,14 +1294,7 @@
     "building_history_permission_undated"
   ],
   "permission_scope": {
-    "$comment": "Spec 69a M-56 (2026-10-25 dated note) / 2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE (A): the use permission (evaluate.mjs permitted()) reads only PERMIT / PROHIBIT units whose subject is the permission of a building type for a use; an element-scope unit (a wall, a rooftop structure, parking, a lot fact) is not a use subject and attaches to its own target as feed metadata only. One entry per agreed PERMIT / PROHIBIT unit (checkPermissionScope, totality both ways); scope use <=> aspect use_permission, except an element entry whose attaches_to names a dsl_target, which takes that target's aspect. The 20 review units are element (2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT). Reviewed list: PLAN-scope (v2 §3, v3 §3).",
-    "10.10.20.10(1)#whole": {
-      "scope": "use",
-      "aspect": "use_permission",
-      "attaches_to": null,
-      "reason": "zone use list: \"...e permitted in the R zone: Dwelling Unit in a permitted residential building type in Clause 10.10.20.40. Municipal Shelter Park\"",
-      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
-    },
+    "$comment": "Spec 69a M-56 (2026-10-25 dated note) / 2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE (A): the use permission (evaluate.mjs permitted()) reads only PERMIT / PROHIBIT units whose subject is the permission of a building type for a use; an element-scope unit (a wall, a rooftop structure, parking, a lot fact) is not a use subject and attaches to its own target as feed metadata only. One entry per agreed PERMIT / PROHIBIT unit (checkPermissionScope, totality both ways); scope use <=> aspect use_permission, except an element entry whose attaches_to names a dsl_target, which takes that target's aspect. The 20 review units are element (2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT). Reviewed list: PLAN-scope (v2 §3, v3 §3). The five zone use lists 10.x.20.10(1)#whole (2026-10-26-batch-n#CHAT-182) and the CR \"r\" list 40.10.20.10(1)#(1)(B) (2026-10-26-batch-o#CHAT-184) are PROCEDURAL / informational and carry no entry.",
     "10.10.20.20(1)#whole": {
       "scope": "use",
       "aspect": "use_permission",
@@ -1561,13 +1554,6 @@
       "reason": "parking space / vehicle entrance / driveway: \"...tres or less, a vehicle entrance through the front main wall of a building, other than an ancillary building, is not permitted.\"",
       "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
     },
-    "10.20.20.10(1)#whole": {
-      "scope": "use",
-      "aspect": "use_permission",
-      "attaches_to": null,
-      "reason": "zone use list: \"... permitted in the RD zone: Dwelling Unit in a permitted residential building type in Clause 10.20.20.40. Municipal Shelter Park\"",
-      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
-    },
     "10.20.20.20(1)#whole": {
       "scope": "use",
       "aspect": "use_permission",
@@ -1678,13 +1664,6 @@
       "aspect": "parking_access",
       "attaches_to": null,
       "reason": "parking space / vehicle entrance / driveway: \"... further parking space is required if: (B) the vehicle entrance to the parking space is in the front main wall of the building;\"",
-      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
-    },
-    "10.40.20.10(1)#whole": {
-      "scope": "use",
-      "aspect": "use_permission",
-      "attaches_to": null,
-      "reason": "zone use list: \"... permitted in the RS zone: Dwelling Unit in a permitted residential building type in Clause 10.40.20.40. Municipal Shelter Park\"",
       "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
     },
     "10.40.20.20(1)#whole": {
@@ -2198,13 +2177,6 @@
       "reason": "parking space / vehicle entrance / driveway: \"...egory, vehicle access to a parking space on a lot must: (C) in all other cases, may be from the street on which the lot fronts.\"",
       "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
     },
-    "10.60.20.10(1)#whole": {
-      "scope": "use",
-      "aspect": "use_permission",
-      "attaches_to": null,
-      "reason": "zone use list: \"... permitted in the RT zone: Dwelling Unit in a permitted residential building type in Clause 10.60.20.40. Municipal Shelter Park\"",
-      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
-    },
     "10.60.20.20(1)#whole": {
       "scope": "use",
       "aspect": "use_permission",
@@ -2294,13 +2266,6 @@
       "aspect": "parking_access",
       "attaches_to": null,
       "reason": "parking space / vehicle entrance / driveway: \"... further parking space is required if: (B) the vehicle entrance to the parking space is in the front main wall of the building;\"",
-      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
-    },
-    "10.80.20.10(1)#whole": {
-      "scope": "use",
-      "aspect": "use_permission",
-      "attaches_to": null,
-      "reason": "zone use list: \"... permitted in the RM zone: Dwelling Unit in a permitted residential building type in Clause 10.80.20.40. Municipal Shelter Park\"",
       "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
     },
     "10.80.20.20(1)#whole": {
@@ -3015,13 +2980,6 @@
       "aspect": "use_permission",
       "attaches_to": null,
       "reason": "zone use list (CR): \"...ondary School Production Studio Religious Education Use Software Development and Processing Veterinary Hospital Wellness Centre\"",
-      "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
-    },
-    "40.10.20.10(1)#(1)(B)": {
-      "scope": "use",
-      "aspect": "use_permission",
-      "attaches_to": null,
-      "reason": "zone use list (CR): \"...unicipal Shelter Nursing Home Religious Residence Residential Care Home Respite Care Facility Retirement Home Student Residence\"",
       "ruling": "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
     },
     "40.10.40.10(5)#(5)(C)": {

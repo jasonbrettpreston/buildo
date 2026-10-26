@@ -1,0 +1,41 @@
+{
+ "$comment": "Red evidence for C5b (CHAT-182 + CHAT-184, G3): the G3 tests of src/tests/bylaw-use-scope.logic.test.ts run on the C5a tree (before the G3 records). G3-b red = the RD semi permitted (10.20.20.10(1) + 150.10.20.1(1)(A)). Paths written with ~/ (CHAT-188).",
+ "tree": "05927920",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 6,
+  "passed": 0
+ },
+ "tests": [
+  {
+   "test": "G3: zone use lists defer to the building-type list; suite-subject units bind the suite class (CHAT-182, CHAT-184) G3-a: the five zone use lists and the CR \"r\" list are PROCEDURAL / informational and carry no permission_scope entry; a stale entry left behind is named",
+   "status": "failed",
+   "message": "AssertionError: expected [ '10.10.20.10(1)#whole', …(3) ] to deeply equal [ '10.10.20.10(1)#whole', …(3) ]"
+  },
+  {
+   "test": "G3: zone use lists defer to the building-type list; suite-subject units bind the suite class (CHAT-182, CHAT-184) G3-b (the G4 lock): on R1 lot RD 5035239 the semi-detached house and houseplex read not_evaluated:no_candidate, never prohibited (G4 not ruled)",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'semi_detached_house', …(2) ] to deeply equal [ 'semi_detached_house', …(2) ]"
+  },
+  {
+   "test": "G3: zone use lists defer to the building-type list; suite-subject units bind the suite class (CHAT-182, CHAT-184) G3-c twin: with 10.20.20.10(1) a PERMIT again (and declared use) the RD semi reads permitted: the use list was the permitter",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'permitted', …(1) ] to deeply equal [ 'permitted', …(1) ]"
+  },
+  {
+   "test": "G3: zone use lists defer to the building-type list; suite-subject units bind the suite class (CHAT-182, CHAT-184) G3-d: a suite-subject unit binds only the class with a secondary suite (M-182 form); with its host type it would bind the plain house (twin); 949 / 954 / 956 likewise",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'detached_house' ] to deeply equal [ 'secondary_suite' ]"
+  },
+  {
+   "test": "G3: zone use lists defer to the building-type list; suite-subject units bind the suite class (CHAT-182, CHAT-184) G3-e: permission_scope is 419 entries (138 use, 281 element); exactly the six lists left it",
+   "status": "failed",
+   "message": "AssertionError: expected [ 425, 144, 281 ] to deeply equal [ 419, 138, 281 ]"
+  },
+  {
+   "test": "G3: zone use lists defer to the building-type list; suite-subject units bind the suite class (CHAT-182, CHAT-184) G3-f: feeds.counts equal the pre-registered map after G3 + CHAT-184 (use_permission 248)",
+   "status": "failed",
+   "message": "AssertionError: expected [ 9, 73, 157, 18 ] to deeply equal [ 9, 67, 150, 22 ]"
+  }
+ ]
+}

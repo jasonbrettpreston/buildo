@@ -57,8 +57,8 @@ describe('M-177(1)/(4) — the 150.10 secondary-suite scope units: the suite cla
     const u = unitOf('150.10.1(1)#whole');
     expect([u.archetype, u.target, u.application.building_types]).toEqual(['PROCEDURAL', 'none', ['secondary_suite']]);
   });
-  it('M-177: 150.10.20.1(1)(A) permits a suite in a detached house, and the house-with-suite class releases FSI in every zone', () => {
-    expect([unitOf('150.10.20.1(1)#(1)(A)').archetype, unitOf('150.10.20.1(1)#(1)(A)').application.building_types]).toEqual(['PERMIT', ['detached_house']]);
+  it('M-177 / CHAT-182: 150.10.20.1(1)(A) binds the suite class (M-182 form), and the house-with-suite class releases FSI in every zone', () => {
+    expect([unitOf('150.10.20.1(1)#(1)(A)').archetype, unitOf('150.10.20.1(1)#(1)(A)').application.building_types]).toEqual(['PERMIT', ['secondary_suite']]); // CHAT-182 (G3): the suite-subject unit binds the suite class in the M-182 form, not the host type
     for (const zone of ZONES) {
       const z = { R: '10', RD: '20', RS: '40', RT: '60', RM: '80' }[zone];
       expect(eff(lot(zone, 'detached_house', { flags: { has_secondary_suite: true } }), 'fsi').trace).toContain(`rule 2: 10.${z}.40.40(1)#(1)(C) drops 10.${z}.40.40(1)#(1)(A)`);

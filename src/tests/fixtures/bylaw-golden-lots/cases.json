@@ -31347,7 +31347,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5195536",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (ravine): applies true",
      "initial": {
@@ -31365,7 +31368,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5265152",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -31410,7 +31416,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5002998",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_cov): applies true",
      "initial": {
@@ -31428,7 +31437,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5011379",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_cov): applies true",
      "initial": {
@@ -31473,7 +31485,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5019870",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -31491,7 +31506,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5024691",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -31536,7 +31554,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "10594343",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (ravine): applies true",
      "initial": {
@@ -31554,7 +31575,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5009069",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (label_u_rt): applies true",
      "initial": {
@@ -31599,7 +31623,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5019578",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (plain_12_18): applies true",
      "initial": {
@@ -31617,7 +31644,10 @@
      "unit": "150.10.20.1(1)#(1)(A)",
      "lot": "5035013",
      "scenario": {
-      "building_type": "detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (plain_18p): applies true",
      "initial": {
@@ -31662,7 +31692,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5195536",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (ravine): applies true",
      "initial": {
@@ -31680,7 +31713,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5265152",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -31725,7 +31761,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5002998",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_cov): applies true",
      "initial": {
@@ -31743,7 +31782,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5011379",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_cov): applies true",
      "initial": {
@@ -31788,7 +31830,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5019870",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -31806,7 +31851,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5024691",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -31851,7 +31899,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "10594343",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (ravine): applies true",
      "initial": {
@@ -31869,7 +31920,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5009069",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (label_u_rt): applies true",
      "initial": {
@@ -31914,7 +31968,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5019578",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (plain_12_18): applies true",
      "initial": {
@@ -31932,7 +31989,10 @@
      "unit": "150.10.20.1(1)#(1)(B)",
      "lot": "5035013",
      "scenario": {
-      "building_type": "semi_detached_house"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (plain_18p): applies true",
      "initial": {
@@ -31978,7 +32038,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5195536",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (ravine): applies true",
      "initial": {
@@ -31996,7 +32059,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5265152",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -32039,7 +32105,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5002998",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_cov): applies true",
      "initial": {
@@ -32057,7 +32126,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5011379",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_cov): applies true",
      "initial": {
@@ -32100,7 +32172,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5019870",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -32118,7 +32193,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5024691",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (exc_m180): applies true",
      "initial": {
@@ -32161,7 +32239,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "10594343",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (ravine): applies true",
      "initial": {
@@ -32179,7 +32260,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5009069",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (label_u_rt): applies true",
      "initial": {
@@ -32222,7 +32306,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5019578",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (plain_12_18): applies true",
      "initial": {
@@ -32240,7 +32327,10 @@
      "unit": "150.10.20.1(1)#(1)(C)",
      "lot": "5035013",
      "scenario": {
-      "building_type": "townhouse"
+      "building_type": "detached_house",
+      "flags": {
+       "has_secondary_suite": true
+      }
      },
      "rationale": "affected lot (plain_18p): applies true",
      "initial": {
@@ -32584,7 +32674,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (ravine): applies true",
@@ -32605,7 +32696,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (exc_m180): applies true",
@@ -32650,7 +32742,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (exc_cov): applies true",
@@ -32671,7 +32764,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (exc_cov): applies true",
@@ -32716,7 +32810,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (exc_m180): applies true",
@@ -32737,7 +32832,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (exc_m180): applies true",
@@ -32782,7 +32878,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (ravine): applies true",
@@ -32803,7 +32900,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (label_u_rt): applies true",
@@ -32848,7 +32946,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (plain_12_18): applies true",
@@ -32869,7 +32968,8 @@
      "scenario": {
       "building_type": "detached_house",
       "flags": {
-       "lawfully_existing": true
+       "lawfully_existing": true,
+       "has_secondary_suite": true
       }
      },
      "rationale": "affected lot (plain_18p): applies true",

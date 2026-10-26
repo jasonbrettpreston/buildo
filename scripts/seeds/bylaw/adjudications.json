@@ -113948,6 +113948,356 @@
         "sixplex": "fiveplex or sixplex",
         "townhouse": "a townhouse"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.10.20.10(1)#whole/archetype",
+      "kind": "correction",
+      "reason": "A zone use list (\"Dwelling Unit in a permitted residential building type in Clause 10.10.20.40\"): it defers to the zone's building-type list and never PERMITs a type on its own (CHAT-182; the informational form).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.10.20.10(1)#whole",
+      "value": "PROCEDURAL"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.20.10(1)#whole/archetype",
+      "kind": "correction",
+      "reason": "A zone use list (\"Dwelling Unit in a permitted residential building type in Clause 10.20.20.40\"): it defers to the zone's building-type list and never PERMITs a type on its own (CHAT-182; the informational form).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.20.20.10(1)#whole",
+      "value": "PROCEDURAL"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.20.20.20(1)#whole/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): \"Secondary Suite\" is a use of this list; the suite class form of every zone copy (M-182(2)).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.20.20.20(1)#whole",
+      "value": {
+        "building_types": [
+          "garden_suite",
+          "laneway_suite",
+          "secondary_suite"
+        ],
+        "evidence": {
+          "RD": "the RD zone",
+          "garden_suite": "Garden Suite (17)",
+          "laneway_suite": "Laneway Suite (16)",
+          "secondary_suite": "Secondary Suite",
+          "secondary_suite_use": "Secondary Suite (12)"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": [
+          "RD"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.20.10(1)#whole/archetype",
+      "kind": "correction",
+      "reason": "A zone use list (\"Dwelling Unit in a permitted residential building type in Clause 10.40.20.40\"): it defers to the zone's building-type list and never PERMITs a type on its own (CHAT-182; the informational form).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.40.20.10(1)#whole",
+      "value": "PROCEDURAL"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-10.40.20.10(1)#whole/calculation_handling.status",
+      "kind": "correction",
+      "reason": "The informational form: the use list defers to the zone building-type list (no answer of its own).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.40.20.10(1)#whole",
+      "value": "informational"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.60.20.10(1)#whole/archetype",
+      "kind": "correction",
+      "reason": "A zone use list (\"Dwelling Unit in a permitted residential building type in Clause 10.60.20.40\"): it defers to the zone's building-type list and never PERMITs a type on its own (CHAT-182; the informational form).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.60.20.10(1)#whole",
+      "value": "PROCEDURAL"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.60.20.20(1)#whole/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): \"Secondary Suite\" is a use of this list; the suite class form of every zone copy (M-182(2)).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.60.20.20(1)#whole",
+      "value": {
+        "building_types": [
+          "garden_suite",
+          "laneway_suite",
+          "secondary_suite"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "garden_suite": "Garden Suite (17)",
+          "laneway_suite": "Laneway Suite (16)",
+          "secondary_suite": "Secondary Suite",
+          "secondary_suite_use": "Secondary Suite (12)"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": [
+          "RT"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.20.10(1)#whole/archetype",
+      "kind": "correction",
+      "reason": "A zone use list (\"Dwelling Unit in a permitted residential building type in Clause 10.80.20.40\"): it defers to the zone's building-type list and never PERMITs a type on its own (CHAT-182; the informational form).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.80.20.10(1)#whole",
+      "value": "PROCEDURAL"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-10.80.20.10(1)#whole/calculation_handling.status",
+      "kind": "correction",
+      "reason": "The informational form: the use list defers to the zone building-type list (no answer of its own).",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "10.80.20.10(1)#whole",
+      "value": "informational"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.10.20.1(1)#(1)(A)/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): a secondary-suite-subject unit binds the suite class in the M-182 form, not the host building type.",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "150.10.20.1(1)#(1)(A)",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "detached_house": "a detached house",
+          "secondary_suite": "Secondary Suite",
+          "secondary_suite_use": "A secondary suite may be"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.10.20.1(1)#(1)(B)/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): a secondary-suite-subject unit binds the suite class in the M-182 form, not the host building type.",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "150.10.20.1(1)#(1)(B)",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "secondary_suite": "Secondary Suite",
+          "secondary_suite_use": "A secondary suite may be",
+          "semi_detached_house": "a semi-detached house"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.10.20.1(1)#(1)(C)/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): a secondary-suite-subject unit binds the suite class in the M-182 form, not the host building type.",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "150.10.20.1(1)#(1)(C)",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "secondary_suite": "Secondary Suite",
+          "secondary_suite_use": "A secondary suite may be",
+          "townhouse": "a townhouse"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-150.10.20.1(4)#whole/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): a secondary-suite-subject unit binds the suite class in the M-182 form, not the host building type.",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "150.10.20.1(4)#whole",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "detached_house": "lawfully existing detached house",
+          "lawfully_existing": "a lawfully existing detached house",
+          "secondary_suite": "Secondary Suite",
+          "secondary_suite_use": "A secondary suite is permitted",
+          "semi_detached_house": "lawfully existing semi-detached house",
+          "townhouse": "lawfully existing townhouse"
+        },
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(949)#(949)[SSP](F)/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): a secondary-suite-subject unit binds the suite class in the M-182 form, not the host building type.",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "900.2.10(949)#(949)[SSP](F)",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "R": "Exception R 949",
+          "detached_house": "A detached house",
+          "secondary_suite": "two or more secondary suites",
+          "secondary_suite_use": "contain two or more secondary suites"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(956)#(956)[SSP](F)/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): a secondary-suite-subject unit binds the suite class in the M-182 form, not the host building type.",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "900.2.10(956)#(956)[SSP](F)",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "R": "Exception R 956",
+          "detached_house": "A detached house",
+          "secondary_suite": "more secondary suites",
+          "secondary_suite_use": "two or more secondary suites"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-900.2.10(954)#(954)[SSP](F)/application",
+      "kind": "correction",
+      "reason": "CHAT-182 (G3): a secondary-suite-subject unit binds the suite class in the M-182 form, not the host building type.",
+      "rule": "2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND; Spec 69a M-182 (suite form); M-75",
+      "unit": "900.2.10(954)#(954)[SSP](F)",
+      "value": {
+        "building_types": [
+          "secondary_suite"
+        ],
+        "evidence": {
+          "R": "Exception R 954",
+          "detached_house": "A detached house",
+          "secondary_suite": "more secondary suites",
+          "secondary_suite_use": "contain two or more secondary suites"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": [
+          "R"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-40.10.20.10(1)#(1)(B)/archetype",
+      "kind": "correction",
+      "reason": "A CR zone use list (\"Dwelling Unit in a permitted building type in Clause 40.10.20.40\"): the CHAT-182 informational form; it defers to the CR building-type list and never PERMITs a type on its own (CHAT-184; M-100 names (A) only).",
+      "rule": "2026-10-26-batch-o#CHAT-184.L2-CR-USE-LISTS; 2026-10-26-batch-n#CHAT-182 form; M-75",
+      "unit": "40.10.20.10(1)#(1)(B)",
+      "value": "PROCEDURAL"
+    },
+    {
+      "adjudicated_on": "2026-10-26",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-40.10.20.10(1)#(1)(B)/calculation_handling.status",
+      "kind": "correction",
+      "reason": "The informational form: the use list defers to the zone building-type list (no answer of its own).",
+      "rule": "2026-10-26-batch-o#CHAT-184.L2-CR-USE-LISTS; 2026-10-26-batch-n#CHAT-182 form; M-75",
+      "unit": "40.10.20.10(1)#(1)(B)",
+      "value": "informational"
     }
   ]
 }
