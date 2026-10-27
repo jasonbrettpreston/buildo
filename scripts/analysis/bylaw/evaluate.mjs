@@ -107,6 +107,8 @@ export function makeContext(vocab, extra = {}) {
     permissionFold: permissionFoldOf(vocab.undetermined_condition_disclosure),
     // CHAT-152 C (M-168): dsl_input -> {target, rule}; inside permitted() the input resolves the target (always an object)
     permissionInputBasis: vocabMap(vocab.permission_input_basis),
+    // CHAT-194.USO-Q1 (Q1e): exception id -> {clause, types}; the closure is read in permitted() only
+    typeListClosure: vocabMap(vocab.exception_type_list_closure), // includes $disclosure, the closed sentence
     units: unitTable(vocab),
     zones: new Set(vocab.zone || []),
     residentialTypes: [...(vocab.building_type_residential || [])].sort(cmpStr), // order-free (red-team E8)
@@ -1416,7 +1418,17 @@ export function permitted(lot, buildingType, candidates, ctx) {
   // wall, a rooftop structure, parking, a lot fact) is "not a use subject" and decides nothing here. Fail closed: no entry, a
   // malformed entry, or no declared block throws by name (never a permissive default).
   const pp = candidates.filter((u) => u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT');
-  const subjects = pp.filter((u) => permissionScopeOf(u, C) === 'use');
+  // CHAT-194.USO-Q1 (Q1e / Q1f / Q1g): on a lot under an exception that names the only permitted building type(s), a class whose type is not
+  // listed is closed: the zone type list 10.x.20.40(1) is not a use subject for it (10.x.20.40(2) still permits the houseplex despite
+  // exceptions), and the suite version of a closed principal type closes with it. Either way the answer is no_candidate:<exception>.
+  const closure = lot.exception && C.typeListClosure ? C.typeListClosure[lot.exception] : null;
+  const closedType = Boolean(closure && !closure.types.includes(buildingType));
+  if (closedType) { reads.add('exception'); reads.add('flags.has_secondary_suite'); }
+  const closedBy = closedType ? { exception: lot.exception, clause: closure.clause, types: [...closure.types] } : null; // the Q1e disclosure, rendered on read
+  if (closedType && lot.flags && lot.flags.has_secondary_suite === true) return { disclosures: [], closure: closedBy, status: 'not_evaluated', reason: `no_candidate:${lot.exception}`, winners: [], inputs: [...reads].sort(cmpStr), trace: [`closure: ${lot.exception} ${closure.clause} permits only ${closure.types.join(', ')}; the suite version of ${buildingType} closes with it (CHAT-194.USO-Q1g)`] };
+  const closes = (u) => closedType && u.layer === 'base' && /^10\.(10|20|40|60|80)\.20\.40\(1\)$/.test(String(u.regulation_id));
+  const subjects = pp.filter((u) => permissionScopeOf(u, C) === 'use' && !closes(u));
+  if (closedType) trace.push(`closure: ${lot.exception} ${closure.clause} permits only ${closure.types.join(', ')}; 10.x.20.40(1) is not a use subject for ${buildingType} (CHAT-194.USO-Q1)`);
   if (pp.length > subjects.length) trace.push(`scope: ${pp.length - subjects.length} PERMIT/PROHIBIT units are not use subjects (CHAT-152)`);
   const procs = candidates.filter((u) => u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length);
   const disapply = candidates.filter((u) => u.archetype === 'DISAPPLY' && (u.displaces || []).some((r) => subjects.some((s) => refMatch(r, s.unit_id))));
@@ -1456,7 +1468,7 @@ export function permitted(lot, buildingType, candidates, ctx) {
     for (const v of A) if (v !== u && v.archetype !== 'PROCEDURAL' && refMatch(ref, v.unit_id) === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${u.unit_id} drops ${v.unit_id}`); }
   }
   const T = A.filter((u) => (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT') && !dropped.has(u.unit_id));
-  if (!T.length) return { disclosures: discl(), status: 'not_evaluated', reason: 'no_candidate', winners: [], inputs: inputs(), trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
+  if (!T.length) return { disclosures: discl(), ...(closedType ? { closure: closedBy } : {}), status: 'not_evaluated', reason: closedType ? `no_candidate:${lot.exception}` : 'no_candidate', winners: [], inputs: inputs(), trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
   const rank = (u) => Math.max(LAYER_RANK[u.layer] ?? 0, immune.get(u.unit_id) ?? -1);
   const top = Math.max(...T.map(rank));
   const win = T.filter((u) => rank(u) === top);

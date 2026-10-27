@@ -1,0 +1,41 @@
+{
+ "$comment": "Red evidence for Q1b (CHAT-194 USO-Q1 closure): the USO-Q1 tests of src/tests/bylaw-use-scope.logic.test.ts run on the Q1a tree b0598400 (before the closure code). Paths written with ~/ (CHAT-188).",
+ "tree": "b0598400",
+ "invocation": "npx vitest run src/tests/bylaw-use-scope.logic.test.ts",
+ "summary": {
+  "failed": 3,
+  "passed": 3
+ },
+ "tests": [
+  {
+   "test": "USO-Q1: an exception that names the only permitted building type(s) closes the zone type list for every other class Q1-a: the vocab list is exactly the 19 census closures (900.3.10(200) is a count limit, Q1a); a bad type or id is named",
+   "status": "failed",
+   "message": "AssertionError: expected [] to deeply equal [ '900.2.10(50)', …(18) ]"
+  },
+  {
+   "test": "USO-Q1: an exception that names the only permitted building type(s) closes the zone type list for every other class Q1-b: on RS Exception 14 lot 5091339 the detached house and its suite version read no_candidate:900.4.10(14) (Q1g); the semi is permitted by 14(A); the houseplex by 10.40.20.40(2) (Q1f)",
+   "status": "failed",
+   "message": "AssertionError: expected [ 'permitted', null, …(1) ] to deeply equal [ 'not_evaluated', …(2) ]"
+  },
+  {
+   "test": "USO-Q1: an exception that names the only permitted building type(s) closes the zone type list for every other class Q1-f / Q1-g: the closure carries its closed disclosure, read back by logicalRowsOf; the suite of a LISTED principal type stays permitted (twin)",
+   "status": "failed",
+   "message": "AssertionError: expected [] to deeply equal [ Array(1) ]"
+  },
+  {
+   "test": "USO-Q1: an exception that names the only permitted building type(s) closes the zone type list for every other class Q1-c twin: with Exception 14 removed from the list the detached house and its suite read permitted again",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "USO-Q1: an exception that names the only permitted building type(s) closes the zone type list for every other class Q1-d: RM Exception 253 lot 5263757 stays condition_unknown:all_units_front_street in every class (Q1d; USO-Q2 deferred)",
+   "status": "passed",
+   "message": ""
+  },
+  {
+   "test": "USO-Q1: an exception that names the only permitted building type(s) closes the zone type list for every other class Q1-e: a lot under an unauthored closure exception keeps the exception_not_authored gate (the closure never pre-empts it)",
+   "status": "passed",
+   "message": ""
+  }
+ ]
+}

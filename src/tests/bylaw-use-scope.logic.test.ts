@@ -376,3 +376,48 @@ describe('C: inside permitted() proposed_height_m resolves height_m (M-168)', ()
     expect(reads.map((u: Json) => u.unit_id)).toEqual([]);
   });
 });
+
+// ---- USO-Q1 (2026-10-26-batch-u#CHAT-194.USO-Q1 + Q1a-d; batch v Q1e/Q1f; 2026-10-27-batch-w Q1g) ----
+const CLOSURES = VOCAB.exception_type_list_closure || {};
+describe('USO-Q1: an exception that names the only permitted building type(s) closes the zone type list for every other class', () => {
+  const CLOSED_IDS = ['900.2.10(50)', '900.2.10(688)', '900.3.10(389)', '900.4.10(14)', '900.4.10(326)', '900.4.10(35)', '900.5.10(16)', '900.5.10(173)', '900.5.10(281)', '900.5.10(361)', '900.5.10(61)', '900.5.10(93)', '900.6.10(253)', '900.6.10(266)', '900.6.10(351)', '900.6.10(365)', '900.6.10(379)', '900.6.10(475)', '900.6.10(51)'];
+  it('Q1-a: the vocab list is exactly the 19 census closures (900.3.10(200) is a count limit, Q1a); a bad type or id is named', () => {
+    expect(Object.keys(CLOSURES).filter((k) => !k.startsWith('$')).sort()).toEqual([...CLOSED_IDS].sort());
+    expect(VO.checkTypeListClosure(VOCAB)).toEqual([]);
+    expect(VO.checkTypeListClosure({ ...VOCAB, exception_type_list_closure: { '900.4.10(14)': { clause: '(A)', types: ['semi_house'], ruling: 'x' }, 'X(1)': { clause: '(A)', types: ['townhouse'], ruling: 'x' } } }))
+      .toEqual(['vocab_type_list_closure: $disclosure must name {exception} and {types}', 'vocab_type_list_closure: 900.4.10(14) type semi_house is not a building_type', 'vocab_type_list_closure: X(1) is not an exception id']);
+  });
+  const word = (pid: string, cls: string, C: Json = env.ctx): Json => { const L = M.classLotFor(rowOf(pid), 'principal', cls, env); const p = E.permitted(L, env.classVectors[cls].building_type, E.loadCandidates(L, INPUT.body.units).candidates, C); return [p.status, p.reason || null, p.winners]; };
+  it('Q1-b: on RS Exception 14 lot 5091339 the detached house and its suite version read no_candidate:900.4.10(14) (Q1g); the semi is permitted by 14(A); the houseplex by 10.40.20.40(2) (Q1f)', () => {
+    expect(word('5091339', 'detached_house')).toEqual(['not_evaluated', 'no_candidate:900.4.10(14)', []]);
+    expect(word('5091339', 'house_with_secondary_suite')).toEqual(['not_evaluated', 'no_candidate:900.4.10(14)', []]);
+    expect(word('5091339', 'semi_detached_house')).toEqual(['permitted', null, ['900.4.10(14)#(14)[SSP](A)']]);
+    expect(word('5091339', 'detached_houseplex')[0]).toBe('permitted');
+    expect(word('5091339', 'detached_houseplex')[2]).toContain('10.40.20.40(2)#whole');
+  });
+  it('Q1-f / Q1-g: the closure carries its closed disclosure, read back by logicalRowsOf; the suite of a LISTED principal type stays permitted (twin)', () => {
+    const out = M.materializeBatch([rowOf('5091339')], env);
+    const v = M.logicalRowsOf(rowOf('5091339'), out.rows.lots[0], LR.makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts }), env);
+    expect(v.permission_disclosures.detached_house).toEqual(['Exception 900.4.10(14) permits only semi_detached_house']);
+    expect(v.permission_disclosures.house_with_secondary_suite).toEqual(['Exception 900.4.10(14) permits only semi_detached_house']);
+    expect(v.permission_disclosures.semi_detached_house).toEqual([]);
+    const C2 = E.makeContext({ ...INPUT.body.evaluator_vocab, exception_type_list_closure: { ...CLOSURES, '900.4.10(14)': { clause: '(A)', types: ['detached_house'], ruling: 'fixture' } } }, { enactments: INPUT.body.enactments, absences: INPUT.body.absences, authored: INPUT.body.authored });
+    expect(word('5091339', 'house_with_secondary_suite', C2)[0]).toBe('permitted');
+    expect(word('5091339', 'semi_detached_house', C2)).toEqual(['permitted', null, ['900.4.10(14)#(14)[SSP](A)']]);
+  });
+  it('Q1-c twin: with Exception 14 removed from the list the detached house and its suite read permitted again', () => {
+    const { ['900.4.10(14)']: _x, ...rest } = CLOSURES; // eslint-disable-line @typescript-eslint/no-unused-vars
+    const C2 = E.makeContext({ ...INPUT.body.evaluator_vocab, exception_type_list_closure: rest }, { enactments: INPUT.body.enactments, absences: INPUT.body.absences, authored: INPUT.body.authored });
+    expect(word('5091339', 'detached_house', C2)[0]).toBe('permitted');
+    expect(word('5091339', 'house_with_secondary_suite', C2)[0]).toBe('permitted');
+  });
+  it('Q1-d: RM Exception 253 lot 5263757 stays condition_unknown:all_units_front_street in every class (Q1d; USO-Q2 deferred)', () => {
+    for (const cls of env.classes as string[]) expect([cls, word('5263757', cls)[1]]).toEqual([cls, 'condition_unknown:all_units_front_street']);
+  });
+  it('Q1-e: a lot under an unauthored closure exception keeps the exception_not_authored gate (the closure never pre-empts it)', () => {
+    const row = { ...rowOf('5091339'), exception_number: 35, zoning_zn_string: 'RS (f18.0; a665) (x35)' };
+    const L = M.classLotFor(row, 'principal', 'detached_house', env);
+    const p = E.permitted(L, 'detached_house', E.loadCandidates(L, INPUT.body.units).candidates, env.ctx);
+    expect([L.exception, p.status, String(p.reason).split(':')[0]]).toEqual(['900.4.10(35)', 'not_evaluated', 'exception_not_authored']);
+  });
+});

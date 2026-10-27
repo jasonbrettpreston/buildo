@@ -398,7 +398,13 @@ function permissionDisclosuresOf(parcelRow, storedLot, storedWords, env) {
       if (typeof d.condition_phrase !== 'string' || !d.condition_phrase) throw new PermissionDisclosureError(`permission_condition_phrase_missing:${d.unit_id}`);
       return tpl.replace('{condition}', () => d.condition_phrase).replace('{effect}', () => eff.replace('{clause}', () => d.unit_id)); // function replacers: no $ patterns
     };
-    out[cls] = [...new Set(p.disclosures.map(sentence))].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
+    const s = p.disclosures.map(sentence);
+    if (p.closure) { // CHAT-194.USO-Q1e: "Exception <n> permits only <types>", the closed sentence from vocab exception_type_list_closure.$disclosure
+      const cd = env.ctx.typeListClosure && env.ctx.typeListClosure.$disclosure;
+      if (typeof cd !== 'string' || !cd.includes('{exception}') || !cd.includes('{types}')) throw new PermissionDisclosureError('closure_disclosure_missing');
+      s.push(cd.replace('{exception}', () => p.closure.exception).replace('{types}', () => p.closure.types.join(', ')));
+    }
+    out[cls] = [...new Set(s)].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
   }
   return out;
 }

@@ -222,9 +222,31 @@ export function checkVocab(vocab) {
   v.push(...checkPermissionScopeVocab(vocab));
   v.push(...checkPermissionEffect(vocab));
   v.push(...checkPermissionInputBasis(vocab));
+  v.push(...checkTypeListClosure(vocab));
 
   const checked = Object.keys(vocab.dsl_target).length + Object.keys(vocab.dsl_input).length + Object.keys(types).length + Object.keys(vocab.lot_condition).length;
   return { pass: v.length === 0, violations: v, checked };
+}
+
+/**
+ * vocab.exception_type_list_closure (2026-10-26-batch-u#CHAT-194.USO-Q1; Q1e): each key a Chapter 900 exception id 900.<n>.10(<k>),
+ * each entry {clause, types (vocab building types, non-empty), ruling}. PURE.
+ */
+export function checkTypeListClosure(vocab) {
+  const b = vocab && vocab.exception_type_list_closure;
+  if (b === undefined) return [];
+  if (!isMap(b)) return ['vocab_type_list_closure: not an object'];
+  const v = [];
+  const d = b.$disclosure;
+  if (!isStr(d) || !d.includes('{exception}') || !d.includes('{types}')) v.push('vocab_type_list_closure: $disclosure must name {exception} and {types}');
+  for (const k of Object.keys(b).filter((x) => !x.startsWith('$')).sort(cmpStr)) {
+    const e = b[k];
+    if (!/^900\.[2-6]\.10\(\d+\)$/.test(k)) v.push(`vocab_type_list_closure: ${k} is not an exception id`);
+    if (!isMap(e) || !Array.isArray(e.types) || !e.types.length) { v.push(`vocab_type_list_closure: ${k} types missing`); continue; }
+    for (const t of e.types) if (!vocab.building_type || !Object.hasOwn(vocab.building_type, t)) v.push(`vocab_type_list_closure: ${k} type ${t} is not a building_type`);
+    if (!isStr(e.clause) || !isStr(e.ruling)) v.push(`vocab_type_list_closure: ${k} clause or ruling is empty`);
+  }
+  return v;
 }
 
 /**
@@ -331,6 +353,7 @@ export function evaluatorVocab(vocab) {
     exception_type_alias: vocab.exception_type_alias, // M-180(1): exception detached-house rules bind the houseplex
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
+    exception_type_list_closure: vocab.exception_type_list_closure, // CHAT-194.USO-Q1 (Q1e): the exception "only" type lists permitted() reads
     permission_input_basis: vocab.permission_input_basis, // CHAT-152 C (M-168): inside permitted() proposed_height_m resolves height_m
     permission_scope: vocab.permission_scope, // CHAT-152 A (M-56 dated note): permitted() reads only use-scope PERMIT / PROHIBIT units
     undetermined_condition_disclosure: vocab.undetermined_condition_disclosure, // M-169 / CHAT-180 (G5): the closed disclosure phrases, incl. permission_effect

@@ -4241,5 +4241,28 @@
   "permission_input_basis": {
     "$comment": "Spec 69a M-168 (69a:272); a mechanism choice inside M-168, not a ruling (2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE C): inside permitted() a use unit's condition that reads this dsl_input resolves the named dsl_target instead (the height of the building the scenario builds is the permitted height); an aliased target with no candidate answers not_evaluated:no_candidate:<target>. Its own block, never dsl_input (which reaches the keyer briefs, M-17).",
     "proposed_height_m": { "target": "height_m", "rule": "M-168" }
+  },
+  "exception_type_list_closure": {
+    "$comment": "2026-10-26-batch-u#CHAT-194.USO-Q1 (+ Q1a-d census; batch v Q1e: declared data read by permitted() in one place; Q1f: it reaches the zone type list 10.x.20.40(1) only, never 10.x.20.40(2), which permits the houseplex despite exceptions; batch w Q1g: the suite class of a closed principal type closes too). A Chapter 900 exception whose clause names the only permitted building type(s): on a lot under it, a class whose building type is not listed reads not_evaluated:no_candidate:<exception> (G4 not ruled). 900.3.10(200) is a count limit (Q1a), not listed. $disclosure is the closed sentence (Q1e) recomputed on read with the word (bylaw-materialize.js logicalRowsOf).",
+    "$disclosure": "Exception {exception} permits only {types}",
+    "900.2.10(50)": { "clause": "(F)", "types": ["townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.2.10(688)": { "clause": "(A)", "types": ["semi_detached_house"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.3.10(389)": { "clause": "(A)", "types": ["detached_house"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.4.10(14)": { "clause": "(A)", "types": ["semi_detached_house"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.4.10(326)": { "clause": "(B)", "types": ["semi_detached_house"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.4.10(35)": { "clause": "(C)", "types": ["semi_detached_house"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.5.10(16)": { "clause": "(A)", "types": ["townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.5.10(173)": { "clause": "(H)", "types": ["townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.5.10(281)": { "clause": "(A)", "types": ["townhouse","semi_detached_house"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.5.10(361)": { "clause": "(G)", "types": ["townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1; 2026-10-26-batch-u#CHAT-194.USO-Q1b" },
+    "900.5.10(61)": { "clause": "(F)", "types": ["townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.5.10(93)": { "clause": "(B), (D)", "types": ["townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.6.10(253)": { "clause": "(A)", "types": ["detached_house","semi_detached_house","duplex","triplex","townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1; 2026-10-26-batch-u#CHAT-194.USO-Q1d" },
+    "900.6.10(266)": { "clause": "(A)", "types": ["townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.6.10(351)": { "clause": "(A)", "types": ["detached_house","semi_detached_house","duplex"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.6.10(365)": { "clause": "(A)", "types": ["apartment_building"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1; 2026-10-26-batch-u#CHAT-194.USO-Q1c" },
+    "900.6.10(379)": { "clause": "(A)", "types": ["detached_house","townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
+    "900.6.10(475)": { "clause": "(A)", "types": ["detached_house","semi_detached_house","duplex","triplex","townhouse","apartment_building"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1; 2026-10-26-batch-u#CHAT-194.USO-Q1d" },
+    "900.6.10(51)": { "clause": "(B)", "types": ["apartment_building"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" }
   }
 }
