@@ -341,6 +341,20 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(m).toContain('DEFERRED, with no build until Phase 2/3 is complete');
     expect(m).toContain('routed as a card to the Oracle-B lane, no ruling on the build');
   });
+  it('CHAT-195.CLPD-Q4-TIMING and CHAT-194.USO-Q1g (batch 2026-10-27-w): the savepoint retirement lands as one unit in the night-4 patch (dated note on R-JZ); the closure extends to the suite class of a closed principal type (dated note on M-169)', () => {
+    const S = '2026-10-27-batch-w#';
+    const jz = rowOf(A, 'R-JZ');
+    expect(jz).toContain(S + 'CHAT-195.CLPD-Q4-TIMING`');
+    expect(jz).toContain('takes effect as one unit in the night-4 runner patch');
+    expect(jz).toContain('the savepoint moves unchanged to the runner\'s derived-history write');
+    expect(jz).toContain('so T4 is intermediate');
+    expect(jz).toContain('finding 6');
+    const m = rowOf(M, 'M-169');
+    expect(m).toContain(S + 'CHAT-194.USO-Q1g`');
+    expect(m).toContain('the CHAT-194 closure extends to the suite class of a closed principal type');
+    expect(m).toContain('house_with_secondary_suite');
+    expect(m).toContain('2026-10-26-batch-n#CHAT-182.L2-G3-USE-LIST-KEYING-ROUND');
+  });
   it('CHAT-194.USO-Q1e/Q1f (batch 2026-10-26-v): the closure is declared data read by permitted() (not M-75 keying alone) and reaches 10.x.20.40(1) only; dated note on M-169', () => {
     const S = '2026-10-26-batch-v#CHAT-194.USO-';
     const m = rowOf(M, 'M-169');
