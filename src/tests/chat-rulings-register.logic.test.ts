@@ -341,6 +341,16 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(m).toContain('DEFERRED, with no build until Phase 2/3 is complete');
     expect(m).toContain('routed as a card to the Oracle-B lane, no ruling on the build');
   });
+  it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
+    const jy = rowOf(A, 'R-JY');
+    expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
+    expect(jy).toContain('coa_plan_facts_cohort_bak_20261025t1457z');
+    expect(jy).toContain('a pre-existing defect, not a night-3 fault');
+    expect(jy).toContain('No tolerance is made');
+    expect(jy).toContain('the base and T4 are re-pinned with a review');
+    expect(jy).toContain('scripted OPERATOR-GO release that re-verifies the DB read-only');
+    expect(jy).toContain('night 3 is re-run from step 1');
+  });
   it('CHAT-195.CLPD-Q4-TIMING and CHAT-194.USO-Q1g (batch 2026-10-27-w): the savepoint retirement lands as one unit in the night-4 patch (dated note on R-JZ); the closure extends to the suite class of a closed principal type (dated note on M-169)', () => {
     const S = '2026-10-27-batch-w#';
     const jz = rowOf(A, 'R-JZ');

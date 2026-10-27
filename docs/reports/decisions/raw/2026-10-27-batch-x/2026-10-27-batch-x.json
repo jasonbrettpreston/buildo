@@ -1,0 +1,13 @@
+{
+ "source": "operator chat 2026-10-27",
+ "operator_quote": "catalog fix, as recommended",
+ "context": "Answers the frozen operator card ~/Buildo-scratch/rarms/CARD-catalog-fix.answered.md (sha256 24475b9f): night 3's byte-identity check of docs/reports/witness/_catalog.json STOPs because the committed base (ead2c4b2, and T4) lists coa_plan_facts_cohort_bak_20261025t1457z, a table created and dropped by the 2026-10-25 retake (commit 732bbe97) whose capture wrote the catalog while the table still existed; evidence in ~/Buildo-scratch/rarms/night-tools/state/diag-20261027/. The recommendation is recorded as the operator's. The compliance table ~/Buildo-scratch/rulings-1024/batch-x-compliance.md (1 COMPLIANT, none NOT COMPLIANT) is the check.",
+ "decisions": [
+  {
+   "id": "CHAT-196.CATALOG-FIX",
+   "subject": "The committed witness catalog lists a table that no longer exists: fix the file, do not tolerate the entry",
+   "decision": "approve",
+   "recommendation": "(1) Record it as a pre-existing defect. (2) Fix docs/reports/witness/_catalog.json in its own commit so it equals the DB truth, then re-pin the base and T4 with a review. (3) Add a read-only catalog-vs-DB check to 1-start, before the lock. (4) Release the lock through a scripted, OPERATOR-GO release that re-verifies the DB read-only. (5) Re-run night 3 from step 1. Alternative, not taken: exclude the entry from the comparison, which is a tolerance of the class the operator rejected in CHAT-193. Rule text changed: none."
+  }
+ ]
+}
