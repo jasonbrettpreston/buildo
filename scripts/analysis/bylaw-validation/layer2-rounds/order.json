@@ -8,7 +8,8 @@
   "g5",
   "l2b",
   "l2c",
-  "f1"
+  "f1",
+  "q1"
  ],
  "rulings": {
   "l2a": [
@@ -37,6 +38,12 @@
   "f1": [
    "2026-10-26-batch-m#CHAT-180.L2-G5-DISCLOSURE-ON-READ",
    "2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE"
+  ],
+  "q1": [
+   "2026-10-26-batch-u#CHAT-194.USO-Q1",
+   "2026-10-26-batch-v#CHAT-194.USO-Q1e",
+   "2026-10-26-batch-v#CHAT-194.USO-Q1f",
+   "2026-10-27-batch-w#CHAT-194.USO-Q1g"
   ]
  },
  "variants": {
@@ -71,6 +78,10 @@
   "f1": [
    "L7_A_G123_B_C",
    "L7_A_G123_B_C"
+  ],
+  "q1": [
+   "production d4787f46 (actual-f1 to)",
+   "production with the closure (measured 2026-10-27 11:42Z)"
   ]
  },
  "coa_round": {
@@ -81,6 +92,7 @@
   "g5": 6,
   "l2b": 7,
   "l2c": 8,
-  "f1": 9
+  "f1": 9,
+  "q1": 10
  }
 }

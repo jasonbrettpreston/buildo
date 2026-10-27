@@ -1,0 +1,19 @@
+{
+ "$comment": "M-321 pre-registration, CoA half, for the use-scope lane round q1 (CHAT-194.USO-Q1). Committed BEFORE the closure code. Expected moves are 0 by construction: coa-scorecard.mjs scores effective() only and the closure lives in permitted(). Run on the (b) tree with --prereg this file --baseline <the (a) tree scorecard>; then the CHAT-65.repin of coa-expected/expected-{172,4d}.json.",
+ "schema": "coa-round-prereg-v1",
+ "round": 10,
+ "lane_round": "q1",
+ "plan_ref": "~/Buildo-scratch/scope/PLAN-uso-q1.md; 2026-10-26-batch-u#CHAT-194.USO-Q1; 69a M-321; CHAT-65.repin",
+ "batch": "coa-data notices-all2.json / parcels-all2.json (the 172-notice set)",
+ "expected_moves": [],
+ "expected_totals": {
+  "BY-LAW CHANGED": 3,
+  "DATA": 24,
+  "DIFFER": 29,
+  "MATCH": 387,
+  "NO ANSWER": 46,
+  "NOT MODELLED": 96,
+  "NOT SCORABLE": 25,
+  "OWED": 88
+ }
+}
