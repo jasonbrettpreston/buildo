@@ -144,7 +144,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.6** The verdict comes only from check rows. Each row is PASS, WARN (through `warn_limit` / `warn_limit_from_config`) or its declared severity. `checks_failed` counts FAIL rows and `checks_warned` counts WARN rows. A metric that is never zero is WARN with a stated retighten condition; INFO is only for a purely descriptive counter. A uniqueness invariant is a check row, not a throw. A legacy exclusive ceiling becomes an inclusive `ceiling_max` with a declared deviation.
   *Why:* A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page.
-  Rules: `R-H` `R-Q` `R-AD` `R-CL` `Rule-10` `Rule-10-addendum-R-H` `GAP-G-5` `R-FD` `R-JV` · history: `W4A-R2`
+  Rules: `R-H` `R-Q` `R-AD` `R-CL` `Rule-10` `Rule-10-addendum-R-H` `GAP-G-5` `R-FD` `R-JV` `R-KD` · history: `W4A-R2`
 
 - **core.7** A rule kept inside compute is still written down: as a check's `why`, or as an Intent Ledger row naming where it lives, never only as a code comment (`checkPreservedInComputeHasWhy`).
   *Why:* Nothing about a step's behaviour may live only in code.
@@ -262,7 +262,7 @@ Adds derived columns to rows another step owns, in scoped passes.
   *Why:* An ENRICHER that skips whole runs hides rows that changed upstream.
   Rules: `R-AR` `R-AR.1`
 
-- **enricher.2** `runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.)
+- **enricher.2** `runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.) (Dated note 2026-10-26, `2026-10-26-batch-r#CHAT-189.CLPD-Q4`, `2026-10-26-batch-r#CHAT-189.CLPD-Q5`: the ENRICHER derive arm is ruled for CLP ②; the list form's SAVEPOINT per warn_row statement is retired (a named refusal; the savepoint is the runner's derived-history write), and in an ENRICHER that declares derived rows `ctx.exec`, `joinUpdate` and `retract` refuse its root and history tables.)
   *Why:* Writes stay behind the runner seam, and counters are not double-counted.
   Rules: `R-AK` `R-AT` `R-CI` `R-CJ` `R-CK` `R-JZ`
 
@@ -406,7 +406,7 @@ What `standard=V3` means and how it is enforced.
 
 - **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
   *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
-  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU`
+  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU` `R-KE`
 
 ### Rulings protocol and the resolution ladder
 
@@ -503,7 +503,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 392 mapped ids: 277 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 394 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|

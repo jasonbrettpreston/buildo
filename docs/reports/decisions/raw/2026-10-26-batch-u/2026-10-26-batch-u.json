@@ -1,0 +1,72 @@
+{
+ "source": "operator chat 2026-10-26 (evening)",
+ "operator_quote": "are these handbook compliant - ie standardized, observable, scalable, accurate and understandable (simple no scope creep) then proceed",
+ "context": "Answers the frozen operator card ~/Buildo-scratch/scope/CARD-use-scope-output-findings.answered.md (USO-Q1..Q6, sha256 d2654909, \"which decide night D\"), on condition each is handbook compliant and meets the five words with no scope creep. The orchestrator's reading given to the operator: Q1 = A, rule now (night D waits for the keying round); Q2 to Q5 recorded as recommended on the card but DEFERRED (no build until Phase 2/3 is complete, none gates night D); Q6 routed as a card to the Oracle-B lane with no ruling on the build. The compliance table ~/Buildo-scratch/rulings-1024/batch-u-compliance.md (7 COMPLIANT, 3 COMPLIANT-WITH-DISCLOSED-RULE-CHANGE, none NOT COMPLIANT) is the check. Second answer (same evening): operator_quote_2, on the frozen census card ~/Buildo-scratch/scope/CARD-uso-q1-census.answered.md (sha256 5e9aeb95): USO-Q1a to Q1d as recommended.",
+ "operator_quote_2": "USO-Q1a–d as recommended",
+ "decisions": [
+  {
+   "id": "CHAT-194.USO-Q1",
+   "subject": "An exception that lists the \"only permitted building type\" (RS Exception 14): does its list close the base type list?",
+   "decision": "approve",
+   "recommendation": "(A) Rule before night D: a Chapter 900 exception whose clause names the only permitted building type(s) closes the base type list for every other class. Those classes read not_evaluated:no_candidate with a disclosure, the same honest answer as the RD semi, and read prohibited only once G4 is ruled. Applied as an M-75 keying of each such exception unit, with its own M-321 pre-registration; night D waits for that round. Rule text changed (disclosed): a dated note on M-34."
+  },
+  {
+   "id": "CHAT-194.USO-Q2",
+   "subject": "RM Exceptions 253 / 475: a condition that qualifies only the townhouse",
+   "decision": "deferred",
+   "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): an M-75 correction that splits the unit so the fronting condition binds only the townhouse, pre-registered under M-321. Cost: 2 units, 10 sample lots. Rule text changed: none."
+  },
+  {
+   "id": "CHAT-194.USO-Q3",
+   "subject": "The houseplex cites 600.60.40(1)(B) on lots outside the Sixplex Overlay",
+   "decision": "deferred",
+   "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): rule Q-E, 600.60 units bind only lots in the Sixplex Overlay, with a gate in applies() under its own PLAN; the citation then drops on those lots and no word moves. Rule text changed (disclosed, at the build): the Q-E line of layer2-scope.json:2 from \"drafted for ruling\" to ruled."
+  },
+  {
+   "id": "CHAT-194.USO-Q4",
+   "subject": "The description of 10.20.20.40(2)#whole contradicts its keying",
+   "decision": "deferred",
+   "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): an M-75 description correction (wording only). Cost: one record, 0 values. Rule text changed: none."
+  },
+  {
+   "id": "CHAT-194.USO-Q5",
+   "subject": "The same lots carry a different undecided reason in different classes",
+   "decision": "deferred",
+   "recommendation": "Recorded as recommended, DEFERRED (no build until Phase 2/3 is complete; does not gate night D): one reason precedence across classes, a lot-level gate reason such as named_lots_only outranks the class-level no_candidate; a small evaluator change that moves evaluator_version and needs a restamp night. Rule text changed (disclosed, at the build): the precedence comment at evaluate.mjs:814 and a dated note on Spec 68 section 7.5 rule 7."
+  },
+  {
+   "id": "CHAT-194.USO-Q6",
+   "subject": "Oracle B's own permitted() ignores the permission scope",
+   "decision": "pointer",
+   "recommendation": "Routed as a card to the Oracle-B lane (give oracle B the same scope rule before any A/B comparison of permitted() is added). No ruling on the build. Rule text changed: none."
+  },
+  {
+   "id": "CHAT-194.USO-Q1a",
+   "subject": "900.3.10(200) (RD): a count limit or a type-list closure?",
+   "decision": "approve",
+   "recommendation": "Read it as a count limit (one house per lot on the named lots), not a type-list closure; it is named_lots_only anyway. Cost: none.",
+   "quote_ref": "operator_quote_2"
+  },
+  {
+   "id": "CHAT-194.USO-Q1b",
+   "subject": "900.5.10(361)(G) (RT): \"only dwelling units located in a townhouse are permitted on the lot\"",
+   "decision": "approve",
+   "recommendation": "A closure to townhouse: it names the type through \"dwelling units located in a townhouse\" and displaces the base type list.",
+   "quote_ref": "operator_quote_2"
+  },
+  {
+   "id": "CHAT-194.USO-Q1c",
+   "subject": "900.6.10(365)(A) (RM): \"only dwelling units in an apartment building and a nursing home are permitted\"",
+   "decision": "approve",
+   "recommendation": "A closure to apartment building; the nursing home is a use, not a building type.",
+   "quote_ref": "operator_quote_2"
+  },
+  {
+   "id": "CHAT-194.USO-Q1d",
+   "subject": "900.6.10(253)(A) and (475)(A) against the deferred USO-Q2",
+   "decision": "approve",
+   "recommendation": "Key the closure now: the detached and semi-detached houseplex classes are not named, so they close. Leave the unit's whole-unit fronting condition untouched, so these lots stay undecided (condition_unknown) until USO-Q2. Cost: none on night-D values.",
+   "quote_ref": "operator_quote_2"
+  }
+ ]
+}

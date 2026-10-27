@@ -1,0 +1,19 @@
+{
+ "source": "operator chat 2026-10-27",
+ "operator_quote": "approved as long as they are in compliance with the governing handbook",
+ "context": "Answers two frozen operator cards pasted against the quote: ~/Buildo-scratch/rarms/CARD-clpd-q4-timing.answered.md (CHAT-195.CLPD-Q4-TIMING, sha256 6c7e0800) and ~/Buildo-scratch/scope/CARD-uso-q1g.answered.md (CHAT-194.USO-Q1g, sha256 305d1b8e), each as recommended, on condition it is compliant with the governing handbook. The compliance table ~/Buildo-scratch/rulings-1024/batch-w-compliance.md (1 COMPLIANT, 1 COMPLIANT-WITH-DISCLOSED-RULE-CHANGE, none NOT COMPLIANT), made through the DeepSeek spec lens and adjudicated against the files, is the check. The Q1g card cites CHAT-184 for binding suite-subject units to the suite class; the ruling that does so is CHAT-182.L2-G3-USE-LIST-KEYING-ROUND, and the record cites that.",
+ "decisions": [
+  {
+   "id": "CHAT-195.CLPD-Q4-TIMING",
+   "subject": "CLPD-Q4 timing: the flushBatch list-arm savepoint branch kept in T4 (frozen 11:34, before CHAT-189 was imported at 13:24)",
+   "decision": "approve",
+   "recommendation": "Option A: land night 3 with T4 as frozen, and implement CLPD-Q4 as one unit in the night-4 runner patch (CLP ② bundle); add a dated note in the landing steps and in QUEUE. The branch is unreachable (CHAT-167); CLPD-Q4 moves the savepoint to the runner's derived-history write in that bundle. Option B (remove the branch now) would re-freeze and re-review T4 and split one ruling across two nights. Rule text changed: none; this is timing of an existing ruling."
+  },
+  {
+   "id": "CHAT-194.USO-Q1g",
+   "subject": "USO-Q1: the suite version of a closed principal building type (house_with_secondary_suite on Exception 14 lots)",
+   "decision": "approve",
+   "recommendation": "As recommended: when a closure removes the principal building type, the suite version of that type closes with it and reads not_evaluated:no_candidate, with a disclosure. This applies the 150.10 suite permission attaching to a dwelling of a permitted type, and the binding of suite-subject units to the suite class. Cost: one more moved cell on the 6 sample lots plus one evaluator line. Alternative: leave it permitted and disclose a known false permit, about 300 lots citywide (an estimate). Rule text: a dated note on M-169 extending the CHAT-194 closure to the suite class of a closed principal type."
+  }
+ ]
+}

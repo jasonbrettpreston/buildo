@@ -1,0 +1,19 @@
+{
+ "source": "operator chat 2026-10-26 (evening)",
+ "operator_quote": "proceed if compliant with handbook - cite compliance rules - USO-Q1e/f; - more broadly everything should be standardized, observable, scalable, accurate and understandable - ie simple and … ensure to use spec 08 deepseek lane to save tokens",
+ "context": "Answers the frozen operator card ~/Buildo-scratch/scope/CARD-uso-q1ef.answered.md (USO-Q1e, USO-Q1f, the exact text of ~/Buildo-scratch/scope/PLAN-uso-q1.md sections 2 and 3, sha256 0efb0199): the recommendations, on condition they are compliant with the handbook and meet the five words. The compliance table ~/Buildo-scratch/rulings-1024/batch-v-compliance.md (1 COMPLIANT, 1 COMPLIANT-WITH-DISCLOSED-RULE-CHANGE, none NOT COMPLIANT), made through the DeepSeek spec lens and adjudicated against the files (two NOT COMPLIANT verdicts overruled), is the check. The rule-text change the card disclosed for Q1e (the mechanism wording of CHAT-194.USO-Q1, from applied by M-75 keying to applied as declared data read by permitted()) is recorded as the operator's approval.",
+ "decisions": [
+  {
+   "id": "CHAT-194.USO-Q1e",
+   "subject": "USO-Q1 mechanism: how a base PERMIT drops out when an exception closes the type list",
+   "decision": "approve",
+   "recommendation": "(A) R-BZ data plus one evaluator read: a vocab block exception_type_list_closure declares all 19 \"only\"-list closures, and permitted() reads it in one place; on a lot whose exception is in the block, a base-layer permission that is not a listed type is not a use subject on this lot, and the other classes read not_evaluated:no_candidate with the closed disclosure \"Exception <n> permits only <types>\". A checkVocab arm validates each key (a 900.x exception) and each type (a building_type). Cost: one evaluator rule (moves evaluator_version), a vocab block and the checkVocab arm. Rule text changed (disclosed): the mechanism wording of CHAT-194.USO-Q1 becomes \"applied as declared data read by permitted()\"; keying cannot drop a base PERMIT because displaces[] is generated, never keyed (xref.mjs:9)."
+  },
+  {
+   "id": "CHAT-194.USO-Q1f",
+   "subject": "USO-Q1: which base type list the closure reaches",
+   "decision": "approve",
+   "recommendation": "The closure reaches 10.x.20.40(1) only. 10.x.20.40(2) permits the houseplex \"despite 900.1.10(3)/(4)(A)\", i.e. despite exceptions, and stays as the by-law text says. Cost: none beyond USO-Q1e. The alternative, closing (2) too, contradicts the clause's own \"Despite\" wording and changes 12 sample lot-classes."
+  }
+ ]
+}

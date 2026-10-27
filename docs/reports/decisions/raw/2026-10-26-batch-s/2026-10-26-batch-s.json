@@ -1,0 +1,109 @@
+{
+ "source": "operator chat 2026-10-26 (evening)",
+ "operator_quote": "PW1-Q1–Q17 proceed as long as we are in compliance and meet the objective standardized, observale, scalable, accurate and understandable - simple and no scope creep. Mcdonadl's Airtight V3 compliant. ensure use deepseek lane to conserve tokens",
+ "context": "Answers the frozen operator card ~/Buildo-scratch/permits-w1/CARD-permits-w1.answered.md (PW1-Q1..Q17, sha256 91d18191): every recommendation (Q11 = b1, Q13 = A, Q12 = A (191,000), Q9 = A, Q15 = A1, Q16 = A, Q17 = A; every other question = A), on condition each is compliant with the handbooks, meets the five words with no scope creep, and is V3-compliant. The compliance table ~/Buildo-scratch/rulings-1024/batch-s-compliance.md (11 COMPLIANT, 6 COMPLIANT-WITH-DISCLOSED-RULE-CHANGE; none NOT COMPLIANT), made through the DeepSeek spec lens and adjudicated against the files, is the check. Rule-text changes the card disclosed are recorded as the operator's approval: Q3 (schema enum and x-ruling, Spec 122 section 8, the R-EN note), Q12 (PM-D3 value re-based from measurement), Q15 (the Spec 50 amendment). Q9 and Q11 are the dated rulings the card named. The Q5 reading of D-P1 (retiring the block leaves no sync_runs reader of the last permits load) is recorded as the operator's.",
+ "decisions": [
+  {
+   "id": "CHAT-192.PW1-Q1",
+   "subject": "Fix permits that come back to the feed but stay Pending Closed?",
+   "decision": "approve",
+   "recommendation": "(A) Port unchanged, file PM-D10 with an it.fails lock (REOPEN-1), and decide a fix separately. Rule text changed: none. Scope: one ledger row and one test. Cost: a rare live-but-closed permit stays possible, visible through the lock. (B) fix inline would need an R-HQ ratification of this entry."
+  },
+  {
+   "id": "CHAT-192.PW1-Q2",
+   "subject": "Change how the 30-day grace is anchored when the feed supplies a completion date?",
+   "decision": "approve",
+   "recommendation": "(A) Port unchanged (COALESCE(completed_date, CURRENT_DATE)), PIN, no new counter (CHAT-110: as simple as possible). Rule text changed: none. Scope: one PIN line. Cost: none today (exposure 0)."
+  },
+  {
+   "id": "CHAT-192.PW1-Q3",
+   "subject": "Approve the shape of the new retract value departed_status?",
+   "decision": "approve",
+   "recommendation": "(A) Add departed_status with a seven-field block {column, pending_value, closed_value, clear_columns, anchor_column, grace_days_from_config, abort_pct_from_config}; names checked against the declared columns at run time, values bound. Rule text changed (disclosed): the schema enum with an x-ruling; schema-baseline.json and template-freeze.json (orchestrator); the Spec 122 section 8 entry; the R-EN register note. Scope: night 4, sharing the schema hand-off with CLP. Cost: one enum value and one block; the night-4 fleet recapture is shared with CLP."
+  },
+  {
+   "id": "CHAT-192.PW1-Q4",
+   "subject": "Keep link_coa's touch-last_seen_at bump as it is, now that it has been measured?",
+   "decision": "approve",
+   "recommendation": "(A) Keep the bump under CHAT-93.Q-H1 until its end condition; the joint commit (CHAT-96.CLP-Q3) stays. Rule text changed: none. Cost: about 434 mostly redundant writes a run."
+  },
+  {
+   "id": "CHAT-192.PW1-Q5",
+   "subject": "Retire the permits block of seed-pipeline-runs.js at the swap?",
+   "decision": "approve",
+   "recommendation": "(A) Retire the permits block in the swap commit (the reading of D-P1 under which the re-point is moot). Rule text changed: none. Scope: one file. Cost: none. (B) leaving it would contradict D-P1's text."
+  },
+  {
+   "id": "CHAT-192.PW1-Q6",
+   "subject": "Do the permits swap and the classify_permit_phase swap on one night, after ALPD's branch merges?",
+   "decision": "approve",
+   "recommendation": "(A) One swap night for W1 and W2, after ALPD's branch merges, with W2's scope merged in before the build. The swap also renumbers 11 steps' chain positions (20 more recaptures; where those go is PW1-Q17). Rule text changed: none. Cost: a long DB night."
+  },
+  {
+   "id": "CHAT-192.PW1-Q7",
+   "subject": "Confirm the order: night 4 before permits 2, with the orchestrator editing the frozen and reserved files?",
+   "decision": "approve",
+   "recommendation": "(A) PRE, then night 4, then permits 2, then the swap, with both orchestrator hand-offs. Rule text changed: none. Scope: two orchestrator hand-offs. Cost: permits 2 waits for night 4."
+  },
+  {
+   "id": "CHAT-192.PW1-Q8",
+   "subject": "Archive and remove the ownerless wf2/p4-w1-permits worktree?",
+   "decision": "approve",
+   "recommendation": "(A) The orchestrator writes the 20 uncommitted paths to scratch as a patch plus copies of the 4 untracked files; the operator runs git worktree remove --force for that one path, or authorizes --force for it. Rule text changed: none. Cost: none; the content is kept."
+  },
+  {
+   "id": "CHAT-192.PW1-Q9",
+   "subject": "When the fold holds back closures, mark the load's run WARN (not FAIL)?",
+   "decision": "approve",
+   "recommendation": "(A) WARN for the mass-guard and empty-feed rows, and for the dirty-load row if PW1-Q11 creates one. Conditions: only if PW1-Q11 = a, b1 or b2; the row carries candidates, percent and bound and its why names the acknowledgement (raise stale_closure_abort_pct and re-run); the records_fetched floor row stays FAIL. Rule text changed: none; it needs a dated ruling on this card answer (the mass-guard row changes a legacy severity; the empty-feed and dirty-load rows are new). R-HQ does not apply. Cost: a suppressed closure shows as WARN, not red."
+  },
+  {
+   "id": "CHAT-192.PW1-Q10",
+   "subject": "Skip the close_stale before capture, and rely on a differential test instead?",
+   "decision": "approve",
+   "recommendation": "(A) No close_stale capture. The legacy behaviour is witnessed by the oracle pins, the PRE-session read-only baseline and the differential test DIFF-1/2/3, now with a past-grace row in every fixture. Rule text changed: none. Cost: no golden for a step that is about to disappear."
+  },
+  {
+   "id": "CHAT-192.PW1-Q11",
+   "subject": "After a load that was short or had row errors, still close permits, and at which stage?",
+   "decision": "approve",
+   "recommendation": "(b1) Fence stage 1 only; stage 2 always runs. Rule text changed: none; it needs a dated ruling accepting one named difference: in the stuck regime on a dirty night the fold promotes due rows where legacy promoted nothing (plan explained-diff class 5). Also accepted: on a night whose lifecycle-history write records a warn_row error the fold closes as normal (benign, an audit table). Cost: the stuck-regime difference, never seen in the record."
+  },
+  {
+   "id": "CHAT-192.PW1-Q12",
+   "subject": "Lower the permits minimum-rows-fetched floor from 200,000 to 191,000?",
+   "decision": "approve",
+   "recommendation": "(A) Seed 191,000 (200,724 minus 90 days of shrinkage, 9,513, rounded down), re-measured at every PRE or swap night and raised when headroom exceeds 5 percent; take the PRE before about 2026-11-01. Rule text changed (disclosed): PM-D3's \"value unchanged\" becomes \"value re-based from measurement\", plus a register note. Scope: the seed in permits 2's migration and one ledger row."
+  },
+  {
+   "id": "CHAT-192.PW1-Q13",
+   "subject": "Refuse a load below the floor entirely (nothing written), or write it and then mark FAIL as today?",
+   "decision": "approve",
+   "recommendation": "(A) Keep the floor post-write, as legacy does; closures on a short feed are handled by the PW1-Q11 fence, not by refusing the write. Rule text changed: none. Scope: a descriptor check with phase post_write; FLOOR-1A test. Cost: a short feed's rows are still upserted, which is legacy behaviour."
+  },
+  {
+   "id": "CHAT-192.PW1-Q14",
+   "subject": "Should the fold's guard rows be produced by the shared library, or declared in permits' descriptor?",
+   "decision": "approve",
+   "recommendation": "(A) Library renderer, as departed_mark does: one way for every retract arm; the rows still come from declared severities (PW1-Q9). Rule text changed: none. Scope: a renderer in night 4's index.js. Cost: the rows are not listed in permits' descriptor."
+  },
+  {
+   "id": "CHAT-192.PW1-Q15",
+   "subject": "When CKAN's column list changes, stop or carry on, and what happens when a column the loader needs disappears?",
+   "decision": "approve",
+   "recommendation": "(A1) guards.schema_drift = propagate; the critical-field check runs before writing with blocking: true (the chain stops, as legacy). Rule text changed (disclosed): a Spec 50 amendment, one sentence added to Edge Cases (anchor \"schema drift: the run fails before any write\") plus the reword of line 85, which documents what legacy already did; plus a dated ruling for the choice of propagate. The line-85 correction is made whatever is answered. Cost: none against legacy on a missing critical column; an added column gives a WARN row."
+  },
+  {
+   "id": "CHAT-192.PW1-Q16",
+   "subject": "Accept that the new loader stops the chain on two kinds of CKAN trouble that legacy loaded through, or plan a follow-on?",
+   "decision": "approve",
+   "recommendation": "(A) Accept these halts for permits 2, record them as a named difference (plan class 5(vii)), and open a follow-on lane to decide a retry on package_show and a legacy-like posture for short pages, for all CKAN loaders. Rule text changed: none now; the follow-on would propose a RE-FREEZE amending RE-FREEZE #30 part 0y and Y-I1. Cost: a transient CKAN fault costs one night of permits loads, closures, notifications and the backup until the follow-on lands."
+  },
+  {
+   "id": "CHAT-192.PW1-Q17",
+   "subject": "Retake the swap's 20 extra recaptures on the swap night itself, or move the swap onto a night that already re-records everything?",
+   "decision": "approve",
+   "recommendation": "(A) Retake all of them on the swap night (about 34 recordings plus permits' own, in the swap commit), each explained as \"fingerprint only: chain position changed, no output value moved\". Rule text changed: none. Cost: a long DB night; depends on the night-tools lane building a generalised night gate set."
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-27-batch-w/2026-10-27-batch-w.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-27-batch-w",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "approved as long as they are in compliance with the governing handbook",
+    "record": "operator chat 2026-10-27",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-27-batch-w/2026-10-27-batch-w.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-195.CLPD-Q4-TIMING",
+      "question": "CLPD-Q4 timing: the flushBatch list-arm savepoint branch kept in T4 (frozen 11:34, before CHAT-189 was imported at 13:24)",
+      "recommendation": "Option A: land night 3 with T4 as frozen, and implement CLPD-Q4 as one unit in the night-4 runner patch (CLP ② bundle); add a dated note in the landing steps and in QUEUE. The branch is unreachable (CHAT-167); CLPD-Q4 moves the savepoint to the runner's derived-history write in that bundle. Option B (remove the branch now) would re-freeze and re-review T4 and split one ruling across two nights. Rule text changed: none; this is timing of an existing ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-27"
+    },
+    {
+      "id": "CHAT-194.USO-Q1g",
+      "question": "USO-Q1: the suite version of a closed principal building type (house_with_secondary_suite on Exception 14 lots)",
+      "recommendation": "As recommended: when a closure removes the principal building type, the suite version of that type closes with it and reads not_evaluated:no_candidate, with a disclosure. This applies the 150.10 suite permission attaching to a dwelling of a permitted type, and the binding of suite-subject units to the suite class. Cost: one more moved cell on the 6 sample lots plus one evaluator line. Alternative: leave it permitted and disclose a known false permit, about 300 lots citywide (an estimate). Rule text: a dated note on M-169 extending the CHAT-194 closure to the suite class of a closed principal type.",
+      "decision": "approve",
+      "decided_at": "2026-10-27"
+    }
+  ]
+}

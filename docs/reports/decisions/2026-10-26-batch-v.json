@@ -1,0 +1,34 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-26-batch-v/2026-10-26-batch-v.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-26-batch-v",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "proceed if compliant with handbook - cite compliance rules - USO-Q1e/f; - more broadly everything should be standardized, observable, scalable, accurate and understandable - ie simple and … ensure to use spec 08 deepseek lane to save tokens",
+    "record": "operator chat 2026-10-26 (evening)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-26-batch-v/2026-10-26-batch-v.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-194.USO-Q1e",
+      "question": "USO-Q1 mechanism: how a base PERMIT drops out when an exception closes the type list",
+      "recommendation": "(A) R-BZ data plus one evaluator read: a vocab block exception_type_list_closure declares all 19 \"only\"-list closures, and permitted() reads it in one place; on a lot whose exception is in the block, a base-layer permission that is not a listed type is not a use subject on this lot, and the other classes read not_evaluated:no_candidate with the closed disclosure \"Exception <n> permits only <types>\". A checkVocab arm validates each key (a 900.x exception) and each type (a building_type). Cost: one evaluator rule (moves evaluator_version), a vocab block and the checkVocab arm. Rule text changed (disclosed): the mechanism wording of CHAT-194.USO-Q1 becomes \"applied as declared data read by permitted()\"; keying cannot drop a base PERMIT because displaces[] is generated, never keyed (xref.mjs:9).",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    },
+    {
+      "id": "CHAT-194.USO-Q1f",
+      "question": "USO-Q1: which base type list the closure reaches",
+      "recommendation": "The closure reaches 10.x.20.40(1) only. 10.x.20.40(2) permits the houseplex \"despite 900.1.10(3)/(4)(A)\", i.e. despite exceptions, and stays as the by-law text says. Cost: none beyond USO-Q1e. The alternative, closing (2) too, contradicts the clause's own \"Despite\" wording and changes 12 sample lot-classes.",
+      "decision": "approve",
+      "decided_at": "2026-10-26"
+    }
+  ]
+}
