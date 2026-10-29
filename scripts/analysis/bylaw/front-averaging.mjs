@@ -116,3 +116,16 @@ export function resolveFrontAveraging(neighbours, config, lot, user) {
   if (fya === 'fya_one' || fya === 'fya_two') return needsSurvey; // M-256: an excluded estimate
   return { ...base, basis: 'zone_default_needs_survey', front_setback_m: zoneDefault, needs_survey: true, disclosures: ['front_yard_not_measured'] };
 }
+
+/**
+ * Card FS-SB1 (operator 2026-10-29, refines CHAT-198.NN-Q4): "The neighbours' front setbacks are the user's figures, else the building-footprint estimate plus the M-245
+ * allowance of 1.0 m (both neighbours averaged, one side if only one is found), else 6.0 m; every estimated or default value is flagged needs survey."
+ * The ONE entry point for the product model path and the scorer. The allowance fya_porch_allowance_m (M-245) is read from the logic-variable table
+ * (the shape of scripts/seeds/logic_variables.json, {name: {default}}, or {name: number}); this module holds no value of its own, and a table without it is refused.
+ */
+export function resolveFrontSetback(neighbours, logicVariables, lot, user) {
+  const entry = logicVariables == null ? undefined : logicVariables.fya_porch_allowance_m;
+  const value = entry != null && typeof entry === 'object' ? entry.default : entry;
+  if (value === undefined) throw new Error('fya_porch_allowance_m is missing from the logic-variable table (M-245)');
+  return resolveFrontAveraging(neighbours, { fya_porch_allowance_m: value }, lot, user);
+}

@@ -63,7 +63,10 @@ function figureRole(req, val) {
   if (/(encroach|project|extend|into)[^.]{0,40}$/i.test(before)) return 'encroachment';
   return null;
 }
-const FYA_ALLOWANCE = Number(process.env.FYA_ALLOWANCE || 1.0); // logic_variables fya_porch_allowance_m (migration 276 seed 1.0)
+// M-245 (card FS-SB1): the allowance is the logic variable fya_porch_allowance_m, read from the one table the product path reads; FYA_ALLOWANCE overrides it for an experiment only
+const LOGIC_VARS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/logic_variables.json'), 'utf8')); // logic_variables.json
+const FYA_ALLOWANCE = process.env.FYA_ALLOWANCE ? Number(process.env.FYA_ALLOWANCE) : LOGIC_VARS.fya_porch_allowance_m.default;
+const FYA_TABLE = { fya_porch_allowance_m: FYA_ALLOWANCE };
 
 // ---------- label parsing (pull-lots.cjs:9-15, verbatim logic) ----------
 const EXC_CH = { R: 2, RD: 3, RS: 4, RT: 5, RM: 6 };
@@ -273,7 +276,7 @@ function runNotice(n, surveyOn, rows, lots) {
   // CHAT-198 (2026-10-29-batch-aa): the applicant's own figures from the plan facts feed the model's inputs where held (validation only; the product is unchanged, M-286).
   const AF = LF.applicantFigures(pf);
   const MG = MB.resolveMainBuildingGfa({ plan_gfa_m2: AF.existing_gfa_m2, max_build_gfa_m2: p ? p.max_buildable_gfa_sqm : null }); // NN-Q3: plan facts, then the user's footprint and storeys (none in a scorer run), then the maximum build
-  const UFA = AF.neighbour_front_setbacks_m.length ? FA.resolveFrontAveraging([], { fya_porch_allowance_m: FYA_ALLOWANCE }, { zone_default_m: 0 }, { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m }) : null; // NN-Q4
+  const UFA = AF.neighbour_front_setbacks_m.length ? FA.resolveFrontSetback([], FYA_TABLE, { zone_default_m: 0 }, { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m }) : null; // NN-Q4
   const applicantInputs = (bt) => {
     const vars = {}; const flags = {}; const basis = {};
     if (MG.value != null) { vars.main_building_gfa_m2 = MG.value; basis.main_building_gfa_m2 = MG.basis; }
@@ -393,7 +396,7 @@ function runNotice(n, surveyOn, rows, lots) {
       const plainOff = evalTarget({ ...lot, flags: { ...lot.flags, front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false } }, target);
       row.front_zone_default = plainOff;
       const zd = typeof plainOff.value === 'number' ? plainOff.value : 6.0;
-      let fa = null; try { fa = FA.resolveFrontAveraging(p.abutments || [], { fya_porch_allowance_m: FYA_ALLOWANCE }, { zone_default_m: zd }, UFA ? { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m } : undefined); } catch (e) { fa = { error: e.message }; }
+      let fa = null; try { fa = FA.resolveFrontSetback(p.abutments || [], FYA_TABLE, { zone_default_m: zd }, UFA ? { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m } : undefined); } catch (e) { fa = { error: e.message }; }
       if (fa && !fa.error) {
         const rf = evalTarget({ ...lot, flags: { ...lot.flags, ...fa.flags }, vars: { ...lot.vars, ...fa.vars } }, target);
         row.front_fa = { basis: fa.basis, qualifying: fa.qualifying, averaged_m: fa.averaged_m, floor_applied: fa.floor_applied, resolved_m: fa.front_setback_m, eval: rf,
