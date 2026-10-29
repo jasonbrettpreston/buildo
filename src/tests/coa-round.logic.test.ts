@@ -156,11 +156,11 @@ describe.skipIf(!have172)('scorer wiring (172 notices)', () => {
     const before = crypto.createHash('sha256').update(fs.readFileSync(floorsFile)).digest('hex');
     const base = run(['--floors', floorsFile]);
     // CHAT-164 round b: A0562#4 (corner read true, operator-corrected) leaves NO ANSWER; 10.5.50 answered 83.3 % meets its floor 83 %, so the 172 set passes.
-    // Batch 2026-10-29-aa (CHAT-198): 150.8.60 now has 10 or more scored rows (the suite height / separation rows are answered) and has no floor; leaving the pool also moves
-    // the 172-set pooled accuracy from 97.0 to 95.8 % (floor 96). The floors file is unchanged: a floor is added only through --accept --ruling (M-322) and the batch-aa
-    // ruling is not a RATIFIED register id, so the door refuses it. The FAIL list below is that finding, not a pass.
-    expect(base.code).toBe(1);
-    expect(base.so).toMatch(/^FLOORS FAIL: article 150\.8\.60 has 10 or more scored rows and no floor \(add it with --accept --ruling\); pooled articles accuracy 95\.8 % is below its floor 96 %$/m);
+    // P2C-Q2 (M-360, 69a_mcbylaw_register.md:495): "A test never asserts a red floor result; it stays red until a ruling moves the floor." The d01e1458 edit that asserted the red FAIL list is undone.
+    // Strict again: exit 0 and the floors line is FLOORS OK, which (M-343/MB-06) is printed only when every line is PASS or OWED: "FLOORS OK (OWED: n, listed)" when owing rows exist.
+    expect(base.code).toBe(0);
+    expect(base.so).toMatch(/^FLOORS OK(?: \(OWED: \d+, listed\))?/m);
+    expect(base.so).not.toMatch(/FLOORS FAIL/);
     expect(crypto.createHash('sha256').update(fs.readFileSync(floorsFile)).digest('hex')).toBe(before);
     const hi = path.join(tmp, 'hi.json');
     const f = JSON.parse(fs.readFileSync(floorsFile, 'utf8')); f.articles['10.20.40'].accuracy = 99; fs.writeFileSync(hi, JSON.stringify(f));

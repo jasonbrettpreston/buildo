@@ -42,10 +42,14 @@
   "900.3.10": {
    "accuracy": 86,
    "answered": 81
+  },
+  "150.8.60": {
+   "accuracy": 100,
+   "answered": 93
   }
  },
  "pooled": {
-  "accuracy": 96,
+  "accuracy": 95,
   "answered": 68
  },
  "rulings": [
@@ -56,6 +60,31 @@
     "answered": 71
    },
    "note": "initial floors: overall as ruled (92/71), per article from the run at b9c43b09 after C-3; pending decision-log import"
+  },
+  {
+   "ruling": "M-360",
+   "lines": [
+    {
+     "line": "article 150.8.60",
+     "from": {
+      "accuracy": null,
+      "answered": null
+     },
+     "to": {
+      "accuracy": 100,
+      "answered": 93
+     }
+    },
+    {
+     "line": "pooled articles accuracy",
+     "from": {
+      "accuracy": 96
+     },
+     "to": {
+      "accuracy": 95
+     }
+    }
+   ]
   }
  ]
 }
