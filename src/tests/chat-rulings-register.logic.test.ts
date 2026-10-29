@@ -446,6 +446,30 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(r).toContain('Dated note 2026-10-29 (M-369; operator MB-45f re-route');
     expect(r).toContain("A run-time column is excluded from a step's golden table_state only when declared excluded-with-reason in its Spec 121 #151a inventory before the first diff.");
   });
+  it('CHAT-203 (batch 2026-10-29-ae): MB-53 rule text and dated note on M-285', () => {
+    const r = rowOf(M, 'M-285');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-203.MB-53`');
+    expect(r).toContain('Dated note 2026-10-29 (M-285; operator MB-53');
+    expect(r).toContain("The lot's frontage street name is a Layer 2 lot fact; clauses that name a street are evaluated from it.");
+  });
+  it('CHAT-204 (batch 2026-10-29-ae): MB-54 rule text and dated note on M-245', () => {
+    const r = rowOf(M, 'M-245');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-204.MB-54`');
+    expect(r).toContain('Dated note 2026-10-29 (M-245; operator MB-54');
+    expect(r).toContain("Front-yard averaging and the abutting-building clauses read the neighbours from parcel_abutments through the FS-SB1/FS-SB2 chain.");
+  });
+  it('CHAT-205 (batch 2026-10-29-ae): MB-55 rule text and dated note on M-213', () => {
+    const r = rowOf(M, 'M-213');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-205.MB-55`');
+    expect(r).toContain('Dated note 2026-10-29 (M-213; operator MB-55');
+    expect(r).toContain("By-law overlays that change the building (building setback overlay, holding symbol) are applied in Layer 2 and the max build; parking overlays feed the parking lot checks; use-only overlays and the irregular-lot flag are disclosed.");
+  });
+  it('CHAT-206 (batch 2026-10-29-ae): MB-56 rule text and dated note on M-158', () => {
+    const r = rowOf(M, 'M-158');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-206.MB-56`');
+    expect(r).toContain('Dated note 2026-10-29 (M-158; operator MB-56');
+    expect(r).toContain("Lawfully existing status is never inferred from footprint data; it is disclosed on ordinary lots and taken from a user input in the renovation scenario.");
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');

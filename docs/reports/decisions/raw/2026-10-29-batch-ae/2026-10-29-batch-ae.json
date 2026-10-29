@@ -1,0 +1,35 @@
+{
+  "source": "operator chat 2026-10-29",
+  "operator_quote": "Mb-53 needs wiring / definitely for all recommended. Add to the queue to ensure completiion and ensure compliance / Mb-56 - our current building footprint data isnt great - this is just a disclosure - for the renovation scenario - we need a user input",
+  "context": "Answers the frozen operator card ~/Buildo-scratch/p2close/CARD-lotfacts.answered.md (MB-53, MB-54, MB-55, MB-56); evidence ~/Buildo-scratch/p2close/AUDIT-lot-facts.md. Compliance table ~/Buildo-scratch/rulings-1024/batch-ae-compliance.md.",
+  "decisions": [
+    {
+      "id": "CHAT-203.MB-53",
+      "subject": "MB-53: street name into the lot vector",
+      "decision": "approve",
+      "operator_quote": "Mb-53 needs wiring",
+      "recommendation": "Wire `parcels.primary_frontage_street_name` into the resolve_bylaws lot vector so `abuts_named_street` units decide. Rule text: The lot's frontage street name is a Layer 2 lot fact; clauses that name a street are evaluated from it."
+    },
+    {
+      "id": "CHAT-204.MB-54",
+      "subject": "MB-54: neighbour data (parcel_abutments) for front-yard averaging",
+      "decision": "approve",
+      "operator_quote": "definitely for all recommended. Add to the queue to ensure completiion and ensure compliance",
+      "recommendation": "Wire parcel_abutments into Layer 2 and the max build as the FS-SB1/FS-SB2 neighbour front-setback input (one shared function) plus the abutting tokens; its costing use is separate. Rule text: Front-yard averaging and the abutting-building clauses read the neighbours from parcel_abutments through the FS-SB1/FS-SB2 chain."
+    },
+    {
+      "id": "CHAT-205.MB-55",
+      "subject": "MB-55: overlays",
+      "decision": "approve",
+      "operator_quote": "definitely for all recommended. Add to the queue to ensure completiion and ensure compliance",
+      "recommendation": "Building setback overlay (15,296 lots) and the holding (H) symbol (105 lots) are wired into Layer 2 and the max build; policy area (29,757) and parking zone (73,778) feed the parking lot checks (MR-Q7); rooming house overlay (109,743) and the irregular-lot flag (127,115, our own) are disclosures. Rule text: By-law overlays that change the building (building setback overlay, holding symbol) are applied in Layer 2 and the max build; parking overlays feed the parking lot checks; use-only overlays and the irregular-lot flag are disclosed."
+    },
+    {
+      "id": "CHAT-206.MB-56",
+      "subject": "MB-56: lawfully existing status",
+      "decision": "approve",
+      "operator_quote": "Mb-56 - our current building footprint data isnt great - this is just a disclosure - for the renovation scenario - we need a user input",
+      "recommendation": "Not derived from building footprints (not reliable enough). On ordinary lots: a disclosure that the existing-building allowance may apply and is not evaluated. In the renovation scenario: a user input (\"is the existing building lawful?\") that the model applies. Rule text: Lawfully existing status is never inferred from footprint data; it is disclosed on ordinary lots and taken from a user input in the renovation scenario."
+    }
+  ]
+}
