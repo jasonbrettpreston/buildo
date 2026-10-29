@@ -1,0 +1,14 @@
+{
+  "source": "operator chat 2026-10-29",
+  "operator_quote": "FS-Q1 - this is easy to calculate the required number 3 times the number of units. what is the issue? even though it didnt include the number",
+  "context": "Answers the frozen operator card ~/Buildo-scratch/p2close/CARD-mb59.answered.md (MB-59). Compliance table ~/Buildo-scratch/rulings-1024/batch-ag-compliance.md.",
+  "decisions": [
+    {
+      "id": "CHAT-208.MB59-FSQ1",
+      "subject": "MB-59 / FS-Q1: a requirement the notice prints no figure for, that the rule calculates, is calculated and scored as answered",
+      "decision": "approve",
+      "operator_quote": "FS-Q1 - this is easy to calculate the required number 3 times the number of units. what is the issue? even though it didnt include the number",
+      "recommendation": "Amend FS-Q1 (CHAT-197): where the notice prints no required figure but the keyed rule calculates it (e.g. maximum bedrooms = 3 x dwelling units, 10.20.40.1(8)(B); A0055/26SC#1), the model calculates the requirement and the row is scored ANSWERED (CHAT-198.NN-Q1 class) with its verdict against the applicant's figure; it is neither NOT MODELLED nor NO ANSWER. Rule text: Where the notice prints no required figure but the keyed rule calculates it (e.g. maximum bedrooms = 3 x units), the model calculates it and the row is scored as answered."
+    }
+  ]
+}

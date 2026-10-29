@@ -480,6 +480,12 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(r).toContain('Dated note 2026-10-29 (M-172; operator M172-AM');
     expect(r).toContain("Abutting-lot facts are read from the Spec 130 neighbour relation where it holds the neighbour, and remain user-supplied site facts where it does not (amends M-172(2)).");
   });
+  it('CHAT-208 (batch 2026-10-29-ag): MB-59 amends FS-Q1, rule text and dated note on M-322', () => {
+    const r = rowOf(M, 'M-322');
+    expect(r).toContain('2026-10-29-batch-ag#CHAT-208.MB59-FSQ1`');
+    expect(r).toContain('Dated note 2026-10-29 (M-322; operator MB-59');
+    expect(r).toContain('Where the notice prints no required figure but the keyed rule calculates it (e.g. maximum bedrooms = 3 x units), the model calculates it and the row is scored as answered.');
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');

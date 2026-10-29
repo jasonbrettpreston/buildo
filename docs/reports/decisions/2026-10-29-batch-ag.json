@@ -1,0 +1,28 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-29-batch-ag/2026-10-29-batch-ag.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-29-batch-ag",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "FS-Q1 - this is easy to calculate the required number 3 times the number of units. what is the issue? even though it didnt include the number",
+    "record": "operator chat 2026-10-29",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-29-batch-ag/2026-10-29-batch-ag.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-208.MB59-FSQ1",
+      "question": "MB-59 / FS-Q1: a requirement the notice prints no figure for, that the rule calculates, is calculated and scored as answered",
+      "recommendation": "Amend FS-Q1 (CHAT-197): where the notice prints no required figure but the keyed rule calculates it (e.g. maximum bedrooms = 3 x dwelling units, 10.20.40.1(8)(B); A0055/26SC#1), the model calculates the requirement and the row is scored ANSWERED (CHAT-198.NN-Q1 class) with its verdict against the applicant's figure; it is neither NOT MODELLED nor NO ANSWER. Rule text: Where the notice prints no required figure but the keyed rule calculates it (e.g. maximum bedrooms = 3 x units), the model calculates it and the row is scored as answered.",
+      "decision": "approve",
+      "decided_at": "2026-10-29",
+      "operator_quote": "FS-Q1 - this is easy to calculate the required number 3 times the number of units. what is the issue? even though it didnt include the number"
+    }
+  ]
+}
