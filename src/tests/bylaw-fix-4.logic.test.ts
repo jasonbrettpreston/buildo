@@ -252,7 +252,7 @@ describe('F-SC-11/12 / M-254 — platforms meet the zone setbacks; stair, ramp a
 
   it('10.5.40.50(2) is a LIMIT list referencing the zone setbacks', () => {
     const u = unitOf('10.5.40.50(2)#whole');
-    expect([u.archetype, [].concat(u.numeric_expression).sort()]).toEqual(['LIMIT', ['platform_front_setback_m = front_setback_m @(2)', 'platform_rear_setback_m = rear_setback_m @(2)', 'platform_side_setback_m = side_setback_m @(2)']]);
+    expect([u.archetype, [].concat(u.numeric_expression).sort()]).toEqual(['LIMIT', ['platform_front_setback_m = front_setback_m @(2)', 'platform_rear_setback_m = rear_setback_m @(2)', 'platform_side_setback_m = side_setback_m @(2)', 'platform_side_setback_street_m = side_setback_street_m @(2)']]); // MB-18: + the street side (bylaw-mb18.logic.test.ts));
   });
 
   it('11 Westchester Rd: the platform side setback is the zone side yard, 1.2 m; rear 25 % of depth / 7.5 m', () => {

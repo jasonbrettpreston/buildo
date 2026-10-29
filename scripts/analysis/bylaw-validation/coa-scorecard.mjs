@@ -461,6 +461,12 @@ function runNotice(n, surveyOn, rows, lots) {
           else { ck.class = 'NO ANSWER'; ck.why = `${rr.status}: ${rr.reason || ''}`; }
           return ck;
         });
+        // MB-18 (platform setbacks per side and street side; missing-rules card rank 4): on a corner lot a named side limit may be the street side's, so a side check the interior side does not meet is read against the street-side target; it MATCHES only when the street-side value equals the City limit
+        if (lot.flags && lot.flags.corner_lot === true) for (const k of row.checks) {
+          if ((k.class !== 'DIFFER' && k.class !== 'NO ANSWER') || k.role !== 'setback:side' || k.target !== 'platform_side_setback_m' || !targets.includes('platform_side_setback_street_m')) continue;
+          const sr = evalTarget(lot, 'platform_side_setback_street_m', new Set(matched.map((u) => u.unit_id)));
+          if (sr.status === 'value' && typeof sr.value === 'number' && Math.abs(sr.value - k.value) <= tol(k.unit) + 1e-9) { k.class = 'MATCH'; k.street_side = true; k.ours = sr.value; k.why = 'same value as the street-side setback of this corner lot (MB-18)'; }
+        }
         // one lot-wide side setback is all the model holds: when the notice sets a different limit for each named side, and the model equals one of them, the others have NO ANSWER (neither a mismatch nor a match); none equal: DIFFER stays
         for (const k of row.checks) if (k.class === 'DIFFER' && /^setback:side$/.test(k.role || '') && row.checks.some((o) => o !== k && o.role === k.role && o.target === k.target && o.value !== k.value && o.class === 'MATCH')) { k.class = 'NO ANSWER'; k.why = 'the model holds one side setback for the lot; the notice sets a limit per named side and another side\'s limit equals it, so this side has no model answer'; }
         const decided = row.checks.filter((k) => k.class !== 'NOT MODELLED');

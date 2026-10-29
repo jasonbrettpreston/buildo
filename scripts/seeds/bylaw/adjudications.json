@@ -114468,6 +114468,83 @@
       "value": [
         "driveway_width_m = min(6.0 m @(1)(C)(i); parking_width_m @(1)(C)(iii)) @(1)(C)"
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-mb18",
+      "field": "target",
+      "id": "COR-10.5.40.50(2)#whole/target~s1",
+      "kind": "correction",
+      "reason": "MB-18 platform setbacks keyed per side and street side (blind-25 A0578: \"1.2 m on the north side and 3 m on the south side\", the south side being the street side of a corner lot). 10.5.40.50(2): \"a platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 metres of a building, must comply with the required minimum building setbacks for the zone\". The zone's required minimum building setbacks include the street-side setback (side_setback_street_m, e.g. 10.20.40.70(6) 3.0 m), so the platform has a street-side target as well as the side, rear and front ones.",
+      "rule": "Missing-rules card rank 4 (~/Buildo-scratch/p2close/CARD-missing-rules.md:15, \"Platform setbacks: street-side and per-side ... Existing (platform follows setback; correction under M-75)\"); MB-18 (~/Buildo/.cursor/MCBYLAWS-QUEUE.md:128, \"platform setbacks keyed per side and street side (33 rows on 10.5.40.50(2))\"); Spec 69a M-254 (1) (the platform's own setback targets equal the zone's setbacks); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/target",
+      "unit": "10.5.40.50(2)#whole",
+      "value": [
+        "platform_side_setback_m",
+        "platform_side_setback_street_m",
+        "platform_rear_setback_m",
+        "platform_front_setback_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-mb18",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.50(2)#whole/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "MB-18: the platform street-side setback equals the zone's street-side setback, as the side, rear and front ones equal the zone's (see the target correction of the same date).",
+      "rule": "Missing-rules card rank 4 (~/Buildo-scratch/p2close/CARD-missing-rules.md:15); MB-18 (~/Buildo/.cursor/MCBYLAWS-QUEUE.md:128); Spec 69a M-254 (1); M-75",
+      "supersedes": "COR-10.5.40.50(2)#whole/numeric_expression",
+      "unit": "10.5.40.50(2)#whole",
+      "value": [
+        "platform_side_setback_m = side_setback_m @(2)",
+        "platform_side_setback_street_m = side_setback_street_m @(2)",
+        "platform_rear_setback_m = rear_setback_m @(2)",
+        "platform_front_setback_m = front_setback_m @(2)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-mb18",
+      "field": "numeric_expression",
+      "id": "COR-10.5.100.1(1)#(1)(D)/numeric_expression",
+      "kind": "correction",
+      "reason": "MB-18 driveway 10.5.100.1(1)(D) arms. Pinned text (docs/reference/bylaw-provisions.md:395): \"(D) for lots with a lot frontage greater than 23.0 metres, a maximum driveway width the lesser of: (i) 9.0 metres; (ii) the cumulative width of side-by-side parking spaces behind the front main wall if there is at least one parking space behind the front main wall but not in the rear yard; or (iii) 2.6 metres if all parking spaces are in the rear yard\". The sealed expression min(9.0; 2.6) is always 2.6 m, although arm (iii) applies only when all parking is in the rear yard (the 2.6 m literal stays in literals_not_expressed as threshold_used_in_application) and arm (ii) is the parking width, exactly as the (C) correction of the same date range keeps the parking-width arm (COR-10.5.100.1(1)#(1)(C)/numeric_expression, lane-nn-chat198).",
+      "rule": "MB-18 (~/Buildo/.cursor/MCBYLAWS-QUEUE.md:128, \"driveway 10.5.100.1(1)(D) arms\"); missing-rules card rank 8 (~/Buildo-scratch/p2close/CARD-missing-rules.md:15); Spec 68 §9 G-CLAUSE (every literal accounted); Spec 133 §m.75 (M-75 correction form); the form of COR-10.5.100.1(1)#(1)(C)/numeric_expression",
+      "unit": "10.5.100.1(1)#(1)(D)",
+      "value": [
+        "driveway_width_m = min(9.0 m @(1)(D)(i); parking_width_m @(1)(D)(ii)) @(1)(D)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-mb18",
+      "field": "calculation_handling",
+      "id": "COR-10.5.100.1(1)#(1)(D)/calculation_handling",
+      "kind": "correction",
+      "reason": "MB-18: the (D) description said \"modelled as 9.0 m\" while the expression gave 2.6 m; it now says what the corrected expression does (lesser of 9.0 m and the parking width), as the (C) description does.",
+      "rule": "MB-18 (~/Buildo/.cursor/MCBYLAWS-QUEUE.md:128); Spec 133 §m.75 (M-75 correction form)",
+      "unit": "10.5.100.1(1)#(1)(D)",
+      "value": {
+        "description": "Maximum driveway width is the lesser of 9.0 m, the cumulative width of side-by-side spaces behind the front main wall, and 2.6 m if all parking is in the rear yard; modelled as the lesser of 9.0 m and the parking space width.",
+        "gaps": "The all-parking-in-rear-yard 2.6 m arm is not modelled; the parking width is an input the lot does not hold.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-mb18",
+      "field": "disclosure",
+      "id": "COR-10.5.100.1(1)#(1)(D)/disclosure",
+      "kind": "correction",
+      "reason": "MB-18: the (D) disclosure said the modelled cap is 9.0 m; the corrected expression is the lesser of 9.0 m and the parking width.",
+      "rule": "MB-18 (~/Buildo/.cursor/MCBYLAWS-QUEUE.md:128); Spec 133 §m.75 (M-75 correction form)",
+      "unit": "10.5.100.1(1)#(1)(D)",
+      "value": "The 2.6 m arm for lots with all parking in the rear yard is not evaluated; the modelled cap is the lesser of 9.0 m and the parking space width."
     }
   ]
 }

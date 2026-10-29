@@ -351,6 +351,7 @@ export function evaluatorVocab(vocab) {
     accessory_structure_use: vocab.accessory_structure_use, // M-175: applies() scopes accessory-structure units out
     article_application: vocab.article_application, // M-219: x.40.1(1) excludes ancillary buildings from Article x.40
     exception_type_alias: vocab.exception_type_alias, // M-180(1): exception detached-house rules bind the houseplex
+    exception_type_binding: vocab.exception_type_binding, // M-252 dated note 2026-10-29 (MB17-Q1): an exception applies only to the building types it names
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
     exception_type_list_closure: vocab.exception_type_list_closure, // CHAT-194.USO-Q1 (Q1e): the exception "only" type lists permitted() reads

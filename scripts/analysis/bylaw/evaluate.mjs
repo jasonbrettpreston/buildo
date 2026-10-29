@@ -156,6 +156,9 @@ export function makeContext(vocab, extra = {}) {
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
     // M-180(1): zone → {exception building type → the houseplex class it also binds}, read for exception-layer units only
     exceptionTypeAlias: vocabMap(vocab.exception_type_alias),
+    // M-252 dated note 2026-10-29 (MB17-Q1, MB-18): an exception-layer unit binds only the building types it names (no parent inheritance, no M-180(1) alias)
+    exceptionNamedOnly: Boolean(vocab.exception_type_binding && vocab.exception_type_binding.mode === 'named_only'),
+    exceptionNamedOnlyTargets: new Set((vocab.exception_type_binding && vocab.exception_type_binding.targets) || []),
     enactments: extra.enactments || {},
     absences: [...(extra.absences || [])].sort((a, b) => cmpStr(String(a.id), String(b.id))), // absence-rulings.json (M-54 note)
     // exception id -> 'authored' | {status: 'authored'} | {status: 'partial', targets: [...]} (the G-AGREE outcome);
@@ -171,6 +174,13 @@ function permissionFoldOf(ud) {
   return new Set(fold);
 }
 function vocabMap(o) { return Object.fromEntries(Object.entries(o || {}).filter(([k]) => k !== '$comment')); }
+/** M-252 dated note 2026-10-29 (MB17-Q1, MB-18): true when the unit is read by the named building type alone (vocab.exception_type_binding). */
+function namedOnlyFor(u, C) {
+  if (!u || u.layer !== 'exception' || C.exceptionNamedOnly !== true) return false;
+  const ts = [].concat(u.target || []).filter((x) => x && x !== 'none');
+  // only a unit whose every target is listed (the setbacks, vocab.exception_type_binding.targets) is read by the named type alone
+  return ts.length > 0 && ts.every((x) => C.exceptionNamedOnlyTargets.has(x));
+}
 /**
  * M-252 (operator approved 2026-10-21, F-SC-8): an exception written before By-law 648-2025 names a duplex or triplex; on
  * the lot that is a detached houseplex of 2 or 3 dwelling units (vocab.exception_type_alias.by_unit_count). The name the
@@ -218,7 +228,7 @@ export function evaluate(expr, lot, ctx) {
   }
   const trace = [];
   const reads = new Set();
-  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {}, byTypeAlias: (ctx && ctx.byTypeAlias) || null, byTypeCount: (ctx && ctx.byTypeCount) || null };
+  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {}, byTypeAlias: (ctx && ctx.byTypeAlias) || null, byTypeCount: (ctx && ctx.byTypeCount) || null, namedOnly: Boolean(ctx && ctx.namedOnly) };
   const r = ev(ast, env);
   const inputs = [...reads].sort(cmpStr);
   if (r.ne) return { value: null, unit: r.unit ?? null, not_evaluated: r.ne, trace, inputs };
@@ -287,7 +297,7 @@ function ev(e, env) {
       const viaAlias = env.byTypeAlias ? e.entries.find((x) => env.byTypeAlias[x.key] === bt) : null;
       // M-252: an exception table's duplex / triplex entry binds the 2- / 3-unit houseplex (vocab.exception_type_alias.by_unit_count)
       const viaCount = env.byTypeCount ? e.entries.find((x) => x.key === env.byTypeCount) : null;
-      const hit = e.entries.find((x) => x.key === bt) || viaCount || e.entries.find((x) => x.key === C.typeParent[bt]) || viaAlias || e.entries.find((x) => x.key === 'other');
+      const hit = e.entries.find((x) => x.key === bt) || viaCount || (env.namedOnly ? null : e.entries.find((x) => x.key === C.typeParent[bt])) || viaAlias || e.entries.find((x) => x.key === 'other');
       if (!hit) return ne('by_type_unlisted', bt);
       trace.push(hit === viaCount && hit.key !== bt ? `by_type ${hit.key} (M-252: binds ${bt} of ${lot.vars.dwelling_units} units)` : hit === viaAlias ? `by_type ${hit.key} (M-180(1): binds ${bt})` : `by_type ${hit.key}`);
       return ev(hit.expr, env);
@@ -587,14 +597,15 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     if (types.includes('secondary_suite')) { reads.add('flags.has_secondary_suite'); suite = Boolean(lot.flags && lot.flags.has_secondary_suite === true); }
     // M-180(1): on an exception lot a Chapter 900 rule for a detached (semi-detached) house also binds the detached
     // (semi-detached) houseplex, where the zone's own "Applicable … Requirements" clause says so
-    const alias = u.layer === 'exception' && bt && C.exceptionTypeAlias && C.exceptionTypeAlias[lot.zone];
+    const namedOnly = namedOnlyFor(u, C);
+    const alias = !namedOnly && u.layer === 'exception' && bt && C.exceptionTypeAlias && C.exceptionTypeAlias[lot.zone];
     const aliased = Boolean(alias && types.some((t) => alias[t] === bt));
     // M-252: an exception clause naming a duplex / triplex binds the 2- / 3-unit houseplex as its own type
     const counted = u.layer === 'exception' && bt ? unitCountType(lot, C, reads) : null;
     if (counted && types.includes(counted)) trace.push(`M-252: ${u.unit_id} binds ${bt} of ${lot.vars.dwelling_units} units as its ${counted} rule`);
     else if (!suite && !aliased) {
       if (!bt) unknown = 'needs_user_input:building_type';
-      else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
+      else if (!types.includes(bt) && (namedOnly || !types.includes(C.typeParent[bt]))) return { ok: false, why: 'building_type' };
     }
     if (aliased) trace.push(`M-180(1): ${u.unit_id} binds ${bt} as its ${types.find((t) => alias[t] === bt)} rule`);
   }
@@ -1237,7 +1248,8 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
 
   // evaluate + rule 4a
   const ev1 = (s, args, u) => {
-    const alias = u && u.layer === 'exception' && C.exceptionTypeAlias ? C.exceptionTypeAlias[lot.zone] || null : null;
+    const namedOnly = Boolean(u && namedOnlyFor(u, C));
+    const alias = u && u.layer === 'exception' && !namedOnly && C.exceptionTypeAlias ? C.exceptionTypeAlias[lot.zone] || null : null;
     const count = u && u.layer === 'exception' ? unitCountType(lot, C, reads) : null;
     // M-259 (CHAT-33): on an accessory structure's own element target, the principal-building targets the statement
     // references are read under the structure's vocab reference_flags (a platform has no side wall: blank_side_wall false)
@@ -1246,7 +1258,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
       : null;
     if (accUse) trace.push(`M-259: ${u.unit_id} reads its references with ${Object.entries(C.accessoryReferenceFlags[accUse]).map(([k, v]) => `${k}=${v}`).join(', ')} (${accUse})`);
     const rv = accUse ? resolveVariableWith(C.accessoryReferenceFlags[accUse]) : resolveVariable;
-    const r = evaluate(s, lot, { ...C, resolveVariable: rv, argEdits: args, byTypeAlias: alias, byTypeCount: count });
+    const r = evaluate(s, lot, { ...C, resolveVariable: rv, argEdits: args, byTypeAlias: alias, byTypeCount: count, namedOnly });
     addAll(reads, r.inputs);
     return r;
   };

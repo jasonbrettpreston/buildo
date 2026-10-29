@@ -1,0 +1,11 @@
+# MB-18 red run at e4c8b520 (src/tests/bylaw-mb18.logic.test.ts copied into a clean worktree, written before the change), 2026-10-29
+   × MB-18 / 10.5.40.50(2): a platform meets the zone setbacks per side and on the street side (M-254 (1), missing-rules card rank 4) > the unit is a LIMIT list over side, street side, rear and front,
+   × MB-18 / 10.5.40.50(2): a platform meets the zone setbacks per side and on the street side (M-254 (1), missing-rules card rank 4) > a corner RD lot: interior side 1.2 m, street side 3.0 m (10.20.4
+   × MB-18 / MB17-Q1: an exception applies only to the building types it names (M-252 dated note 2026-10-29) > the rule is data: vocab.exception_type_binding names the mode and the setback targets it 
+   × MB-18 / MB17-Q1: an exception applies only to the building types it names (M-252 dated note 2026-10-29) > A0399: RM exception 23 (900.6.10(23)(D)(i): 0.6 m for a detached house) sets the detached
+   × MB-18 / 10.5.100.1(1)(D): the driveway of a lot wider than 23.0 m is the lesser of 9.0 m and the parking width (as (C)) > the expression keeps the parking-width arm; the 2.6 m all-parking-in-the-
+   × MB-18 / scorer: the street side of a corner lot (172 notices) > A0578/26TEY (corner lot): the 3 m south side is the street-side setback, so the row is MATCH (was NO ANSWER: one lot-wide side setb
+   × MB-18 / scorer: the street side of a corner lot (172 notices) > A0090/26SC: 3.6 m south and 0.45 m north, the south side being the street side: MATCH (was NO ANSWER) 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  7 failed | 5 passed (12)
