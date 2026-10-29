@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 387** (319 M-rows, 68 LC-rows): 384 in force (84 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 405** (337 M-rows, 68 LC-rows): 402 in force (99 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -38,6 +38,10 @@ First clause cited: 10.10.20.20.
 ### 20.40 — Permitted Building Types
 
 First clause cited: 10.20.20.40.
+
+- **m.369** Four use-scope output findings: split RM 253/475, 600.60 units bind only the Sixplex Overlay, one description corrected, one reason precedence.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-369` (Spec 69a)
 
 - **lc.17** Semi-detached houseplex only on half of an existing semi
   Status: RULED · OWED · Enforced by: P5.13 vector; O-4 sample
@@ -259,6 +263,10 @@ First clause cited: 10.20.40.70, 10.10.40.70, 10.80.40.70, x.40.70.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-17 / M-289"
   Rules: `M-289` (Spec 69a)
 
+- **m.373** OWED to Phase 3: cumulative 10.80.40 answered.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-373` (Spec 69a)
+
 ### 40.71 — Setbacks Exemptions
 
 First clause cited: 10.10.40.71.
@@ -310,6 +318,10 @@ First clause cited: 5.10.40.70.
 - **m.170** Triangular lots get a lot-condition token; a DEFINE unit's M-169 disclosure is a closed per-unit sentence.
   Status: RATIFIED 2026-10-15 · Enforced by: vocab lot_condition.no_rear_lot_line, undetermined_condition_disclosure.{define_effect, condition_override,…
   Rules: `M-170` (Spec 69a)
+
+- **m.376** Phase 3 scope and model values: semis and townhouses are a recorded future build, engine choices are checked against their clause, every model value is a keyed by-law value or an externalized variable.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-376` (Spec 69a) · +1 dated note
 
 ### 5.10.175.1
 
@@ -407,6 +419,10 @@ First clause cited: 10.5.40.50.
   Status: RULED 2026-10-21 · Enforced by: scorer copy ~/Buildo-scratch/fix-round-4d/B/scorer
   Rules: `M-290` (Spec 69a)
 
+- **m.365** Missing rules MR-Q1 to MR-Q4: one verdict per side, both arms for unknown design facts, platform wall input, landscaping share of a base.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-365` (Spec 69a)
+
 ### 10.5.40.60 — Permitted Encroachments
 
 First clause cited: 10.5.40.60.
@@ -450,6 +466,10 @@ First clause cited: 10.5.40.71.
 - **m.211** Renovation corrections. (1) Up room: 10.5.40.71(3) relieves setbacks only; the up-storey plate still meets the depth / length caps (additions must comply, 10.5.40.21(2), 10.5.40.31(2)) and, where FSI applies, also fsi × lot − existing GFA; the smaller cap binds.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
   Rules: `M-211` (Spec 69a) · +1 dated note
+
+- **m.372** OWED to Phase 3: cumulative 10.5.40 accuracy.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-372` (Spec 69a)
 
 ### 10.5.50.10 — Landscaping
 
@@ -518,6 +538,14 @@ First clause cited: 10.5.80.1.
 - **m.225** Keying defect being fixed: 10.5.80.1(2)(A) leaks into the suite separation citywide.
   Status: APPLIED 2026-10-18 · Enforced by: INV-18: bylaw-evaluator-fixes.logic.test.ts › "INV-18 — …" › "M-225: …" (green 2026-10-20; red at a0d5b41e^)
   Rules: `M-225` (Spec 69a) · +1 dated note
+
+### 10.5.100.1 — General
+
+First clause cited: 10.5.100.1.
+
+- **m.366** Missing rules MR-Q5 to MR-Q9 and the ancillary floor area target.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-366` (Spec 69a)
 
 ### Chapter 150
 
@@ -618,6 +646,10 @@ First clause cited: 150.15, 150.7, 150.50, 150.48, 150.10, 150.8.
 - **m.288** Further clauses: the laneway platform floor level is keyed; the rest are held with a reason.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-15 / M-288"
   Rules: `M-288` (Spec 69a)
+
+- **m.360** Floor discipline: a test never asserts a red floor, the --accept door counts RULED rows, a pool re-base for one cause, accept moves only named lines, merge order.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-360` (Spec 69a)
 
 - **lc.22** The rear suite is jointly optimized with the main building:
   Status: RULED · OWED · Enforced by: P5.11 suite_lt_main, coverage_consistent
@@ -774,6 +806,10 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6, 900.4.
 - **m.357** Each new CoA notice batch is scored blind first, then folded into one cumulative headline set.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED: the cumulative set and the blind-round door, built when the next batch arrives)
   Rules: `M-357` (Spec 69a)
+
+- **m.374** OWED to Phase 3: cumulative pooled articles answered.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-374` (Spec 69a)
 
 ### General / cross-cutting
 
@@ -1491,6 +1527,46 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-24 · OWED · Enforced by: none yet (OWED: the worked-example suite and its operator-checked spreadsheet)
   Rules: `M-358` (Spec 69a) · +1 dated note
 
+- **m.359** Phase 2 closes on six items (amends the P2 meaning in M-331).
+  Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-359` (Spec 69a)
+
+- **m.361** Maximum build edge cases: no cap only where the zone has no article, a past-date lot is today's lot, no storey limit leaves height alone.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-361` (Spec 69a)
+
+- **m.362** Phase 3 closes on the max build achieved for the case's own building type, plus fixed thresholds set before the results.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-362` (Spec 69a)
+
+- **m.363** P3-HOLD-1 ends: the engine and its 40-test lock return together at MB-14.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-363` (Spec 69a)
+
+- **m.364** The blind harness scores by six rules, fixed before any run.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-364` (Spec 69a)
+
+- **m.367** Old hard-coded zoning values are not shown until each field group is switched.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-367` (Spec 69a)
+
+- **m.368** The night restore disables triggers on the tables it restores, inside the restore transaction.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-368` (Spec 69a)
+
+- **m.370** The notice requirement figure is the number tied to the limit word.
+  Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-370` (Spec 69a)
+
+- **m.371** Every product zoning number comes from a keyed by-law clause.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-371` (Spec 69a)
+
+- **m.375** P-2 scope check notes: Spec 58 §13 consumers, user inputs, in_force_basis.
+  Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-375` (Spec 69a)
+
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
   Rules: `LC-1` (Spec 131)
@@ -1719,7 +1795,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
   Rules: `LC-68` (Spec 131)
 
-## 3. Rows with an OWED marker (84 in force)
+## 3. Rows with an OWED marker (99 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -1774,6 +1850,21 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-356 | m.356 | RULED 2026-10-23 · OWED |
 | M-357 | m.357 | RULED 2026-10-23 · OWED |
 | M-358 | m.358 | RULED 2026-10-24 · OWED |
+| M-360 | m.360 | RULED 2026-10-29 · OWED |
+| M-361 | m.361 | RULED 2026-10-29 · OWED |
+| M-362 | m.362 | RULED 2026-10-29 · OWED |
+| M-363 | m.363 | RULED 2026-10-29 · OWED |
+| M-364 | m.364 | RULED 2026-10-29 · OWED |
+| M-365 | m.365 | RULED 2026-10-29 · OWED |
+| M-366 | m.366 | RULED 2026-10-29 · OWED |
+| M-367 | m.367 | RULED 2026-10-29 · OWED |
+| M-368 | m.368 | RULED 2026-10-29 · OWED |
+| M-369 | m.369 | RULED 2026-10-29 · OWED |
+| M-371 | m.371 | RULED 2026-10-29 · OWED |
+| M-372 | m.372 | RULED 2026-10-29 · OWED |
+| M-373 | m.373 | RULED 2026-10-29 · OWED |
+| M-374 | m.374 | RULED 2026-10-29 · OWED |
+| M-376 | m.376 | RULED 2026-10-29 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |

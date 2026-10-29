@@ -1,0 +1,41 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-29-batch-y/2026-10-29-batch-y.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-29-batch-z",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "NOT CHOSEN. The rows stay NO ANSWER and keep counting. These by-law rules matter and must be built, not reclassified.",
+    "record": "operator chat 2026-10-29",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-29-batch-z/2026-10-29-batch-z.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-197.FS-Q1",
+      "question": "Rows where the notice gives no numeric requirement (19 rows, NO ANSWER today)",
+      "recommendation": "Not chosen: check the no-number test before the clause-not-keyed tests so these rows become NOT MODELLED and leave the answered denominator. The rows stay NO ANSWER and keep counting; these by-law rules must be built, not reclassified (examples: the garden-suite rule that compares the suite with the main building; setbacks that depend on the neighbours' buildings, front-yard averaging and abutting setbacks, where the input may come from density data or from the user). Rule text: A by-law requirement the notice states without a number stays NO ANSWER until the evaluator answers it; the scorer never reclassifies it to leave the denominator. Follow-up: plan the relative-rule evaluation and the neighbour-setback input (density data or user input).",
+      "decision": "approve",
+      "decided_at": "2026-10-29"
+    },
+    {
+      "id": "CHAT-197.FS-Q2",
+      "question": "10.5.50.10(4) and (5): apartment-only provisions",
+      "recommendation": "Agreed: the clauses are out of scope (apartments) and no unit exists, so the scorer calls them clause not keyed (NO ANSWER) today; mark them NOT MODELLED with the reason apartment-only provision, out of scope. Rule text: A clause that applies only to a building type outside McBylaws scope (apartments) is NOT MODELLED with that reason, never NO ANSWER.",
+      "decision": "approve",
+      "decided_at": "2026-10-29"
+    },
+    {
+      "id": "CHAT-197.FS-Q3",
+      "question": "490 Arlington (A0562): corner lot or not",
+      "recommendation": "Corner lot: the street bends at less than a right angle; 800.50(150)(B). Applied to the golden page 2026-10-29 (v87) and read in round b (b21f5b56).",
+      "decision": "approve",
+      "decided_at": "2026-10-29"
+    }
+  ]
+}

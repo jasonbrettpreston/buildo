@@ -1,0 +1,37 @@
+{
+ "source": "operator chat 2026-10-29",
+ "operator_quote": "1. y 2. y 3. we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area 4. yes our building footprint data 5. seperate round",
+ "context": "Answers the frozen operator card ~/Buildo-scratch/p2close/CARD-no-number-rules.answered.md (NN-Q1 A, NN-Q2 A, NN-Q3 partly, NN-Q4 A, NN-Q5 separate round); operator context: our model needs to use them, the scorer is the check.",
+ "decisions": [
+  {
+   "id": "CHAT-198.NN-Q1",
+   "subject": "Score class for a row we answer but the notice gives no number to compare",
+   "decision": "approve",
+   "recommendation": "Option A as recommended: the parser takes the figure the notice prints for the other building as the City figure when the clause compares two buildings; a row with no figure anywhere, once answered, gets the new class ANSWERED (no City figure): counts in the answered numerator and denominator, left out of accuracy, listed by name. Rule text: A row the evaluator answers but the notice gives no figure for counts as answered and is left out of accuracy; where the notice prints the other building's figure, that figure is the comparator."
+  },
+  {
+   "id": "CHAT-198.NN-Q2",
+   "subject": "Suite height and separation in the scorer",
+   "decision": "approve",
+   "recommendation": "Option A as recommended: in the scorer only, the applicant's height and separation are taken from the plan facts when held; otherwise the row stays OWED; product behaviour (max build) is unchanged. Rule text: For validation against a notice the suite height and separation are the applicant's plan figures when held; the product still derives them from the maximum build (M-286)."
+  },
+  {
+   "id": "CHAT-198.NN-Q3",
+   "subject": "New vocabulary for the main building's floor area and dwelling rooms",
+   "decision": "approve",
+   "recommendation": "Partly: add the dsl_input for the main building's floor area (house or semi-detached house) for the suite-floor-area-vs-main-building rule. Do NOT add dsl_target dwelling_rooms (the input is never filled in); the dwelling-rooms rows stay NO ANSWER. Rule text: A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build."
+  },
+  {
+   "id": "CHAT-198.NN-Q4",
+   "subject": "Neighbour front setbacks (the density data or the individual question)",
+   "decision": "approve",
+   "recommendation": "Option A: density data means the building footprint data (parcel_abutments, Spec 56). User-supplied neighbour front setbacks override the footprint estimate; the estimate stays the flagged fallback. Rule text: Where the user supplies the neighbours' front setbacks they replace the footprint estimate; the estimate remains the fallback and is flagged needs survey. Extended by the operator in chat 2026-10-29 (\"We should use the building footprint or 6M as the default.\"): The front setback from averaging reads the user's neighbour setbacks, then the building-footprint estimate flagged needs survey, then a 6.0 m default flagged as a default; a missing neighbour figure never stops the calculation. Refined by the operator, FS-SB1 (card ~/Buildo-scratch/p2close/CARD-front-setback.answered.md, 2026-10-29, \"I agree. let's use it and record it.\"), which builds M-245 into the model path: The neighbours' front setbacks are the user's figures, else the building-footprint estimate plus the M-245 allowance of 1.0 m (both neighbours averaged, one side if only one is found), else 6.0 m; every estimated or default value is flagged needs survey. Refined again by the operator, FS-SB2 (card ~/Buildo-scratch/p2close/CARD-front-setback-placeholder.answered.md, 2026-10-29, \"FS-SB2 yes\"), step three: Where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own building front setback plus 1.0 m and the median of the footprint estimates plus 1.0 m of other lots on the same street within the placeholder radius (one of the two if only one exists), else the same-zone median within the zone radius, else 6.0 m; always flagged needs survey, and never replaces a user figure or a neighbour estimate."
+  },
+  {
+   "id": "CHAT-198.NN-Q5",
+   "subject": "Phase and the two lines that cannot lift",
+   "decision": "approve",
+   "recommendation": "A separate round for the 10.5.40 measurement mismatches and the 5 site-plan re-reads, so Phase 2 closes on real fixes. Rule text: Rules that need the neighbours' buildings are Phase 3 work; a floor line that depends on them is owed to Phase 3 by a ratified row, not reclassified."
+  }
+ ]
+}

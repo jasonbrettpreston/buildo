@@ -1,0 +1,27 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-27-batch-x/2026-10-27-batch-x.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-27-batch-x",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "catalog fix, as recommended",
+    "record": "operator chat 2026-10-27",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-27-batch-x/2026-10-27-batch-x.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-196.CATALOG-FIX",
+      "question": "The committed witness catalog lists a table that no longer exists: fix the file, do not tolerate the entry",
+      "recommendation": "(1) Record it as a pre-existing defect. (2) Fix docs/reports/witness/_catalog.json in its own commit so it equals the DB truth, then re-pin the base and T4 with a review. (3) Add a read-only catalog-vs-DB check to 1-start, before the lock. (4) Release the lock through a scripted, OPERATOR-GO release that re-verifies the DB read-only. (5) Re-run night 3 from step 1. Alternative, not taken: exclude the entry from the comparison, which is a tolerance of the class the operator rejected in CHAT-193. Rule text changed: none.",
+      "decision": "approve",
+      "decided_at": "2026-10-27"
+    }
+  ]
+}

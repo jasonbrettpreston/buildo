@@ -345,6 +345,145 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(m).toContain('DEFERRED, with no build until Phase 2/3 is complete');
     expect(m).toContain('routed as a card to the Oracle-B lane, no ruling on the build');
   });
+  it('CHAT-164.READ-SOURCE and CHAT-164.CONTRADICTED (batch 2026-10-29-y): a keyed confirmed figure counts as read, its source recorded per figure and auto-filled only where one document prints the value; a contradicting keyed value is read and the other figure stays disclosed; dated note on M-321', () => {
+    const S = '2026-10-29-batch-y#CHAT-164.';
+    const m = rowOf(M, 'M-321');
+    expect(m).toContain(S + 'READ-SOURCE`');
+    expect(m).toContain(S + 'CONTRADICTED`');
+    expect(m).toContain('A keyed figure with status confirmed counts as read against the case\'s documents');
+    expect(m).toContain('auto-filled only where exactly one document prints the value');
+    expect(m).toContain('any mismatch goes to the operator');
+    expect(m).toContain('No page number is required');
+    expect(m).toContain('Where a keyed value contradicts an unknown-source figure, the keyed value is read and the other figure stays disclosed.');
+  });
+  it('CHAT-197.FS-Q1..FS-Q3 (batch 2026-10-29-z): no-number rows stay NO ANSWER, apartment-only clauses are NOT MODELLED, A0562 is a corner lot; dated note on M-322', () => {
+    const S = '2026-10-29-batch-z#CHAT-197.';
+    const m = rowOf(M, 'M-322');
+    expect(m).toContain(S + 'FS-Q1`');
+    expect(m).toContain(S + 'FS-Q2`');
+    expect(m).toContain(S + 'FS-Q3`');
+    expect(m).toContain('A by-law requirement the notice states without a number stays NO ANSWER until the evaluator answers it; the scorer never reclassifies it to leave the denominator.');
+    expect(m).toContain('A clause that applies only to a building type outside McBylaws scope (apartments) is NOT MODELLED with that reason, never NO ANSWER.');
+    expect(m).toContain('800.50(150)(B)');
+  });
+  it('CHAT-198.NN-Q1..NN-Q5 (batch 2026-10-29-aa): ANSWERED class, plan-fact suite height and separation, main-building floor area input, user neighbour setbacks, separate round; dated notes on M-322, M-286, M-82, M-256', () => {
+    const S = '2026-10-29-batch-aa#CHAT-198.';
+    const q = rowOf(M, 'M-322');
+    expect(q).toContain(S + 'NN-Q1`');
+    expect(q).toContain(S + 'NN-Q5`');
+    expect(q).toContain("A row the evaluator answers but the notice gives no figure for counts as answered and is left out of accuracy; where the notice prints the other building's figure, that figure is the comparator.");
+    expect(q).toContain("Rules that need the neighbours' buildings are Phase 3 work; a floor line that depends on them is owed to Phase 3 by a ratified row, not reclassified.");
+    const h = rowOf(M, 'M-286');
+    expect(h).toContain(S + 'NN-Q2`');
+    expect(h).toContain('For validation against a notice the suite height and separation are the applicant\'s plan figures when held; the product still derives them from the maximum build (M-286).');
+    const g = rowOf(M, 'M-82');
+    expect(g).toContain(S + 'NN-Q3`');
+    expect(g).toContain("A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build.");
+    const n = rowOf(M, 'M-256');
+    expect(n).toContain(S + 'NN-Q4`');
+    expect(n).toContain("Where the user supplies the neighbours' front setbacks they replace the footprint estimate; the estimate remains the fallback and is flagged needs survey.");
+    expect(n).toContain("The front setback from averaging reads the user's neighbour setbacks, then the building-footprint estimate flagged needs survey, then a 6.0 m default flagged as a default; a missing neighbour figure never stops the calculation.");
+    expect(n).toContain("The neighbours' front setbacks are the user's figures, else the building-footprint estimate plus the M-245 allowance of 1.0 m (both neighbours averaged, one side if only one is found), else 6.0 m; every estimated or default value is flagged needs survey.");
+    expect(rowOf(M, 'M-245')).toContain("The neighbours' front setbacks are the user's figures, else the building-footprint estimate plus the M-245 allowance of 1.0 m (both neighbours averaged, one side if only one is found), else 6.0 m; every estimated or default value is flagged needs survey.");
+    expect(n).toContain("Where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own building front setback plus 1.0 m and the median of the footprint estimates plus 1.0 m of other lots on the same street within the placeholder radius (one of the two if only one exists), else the same-zone median within the zone radius, else 6.0 m; always flagged needs survey, and never replaces a user figure or a neighbour estimate.");
+    expect(rowOf(M, 'M-245')).toContain("Where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own building front setback plus 1.0 m and the median of the footprint estimates plus 1.0 m of other lots on the same street within the placeholder radius (one of the two if only one exists), else the same-zone median within the zone radius, else 6.0 m; always flagged needs survey, and never replaces a user figure or a neighbour estimate.");
+  });
+  it('CHAT-199 (batch 2026-10-29-ab): Phase 2 close, Gap 1, Phase 3 exit, engine hold, harness, missing rules, hidden numbers, night restore, use-scope findings, notice figure, by-law replacement; owed floor lines; P-2 notes', () => {
+    const S = '2026-10-29-batch-ab#CHAT-199.';
+    const want: Array<[string, string[], string]> = [
+      ['M-359', ['P2C-Q1'], "Phase 2 closes on six items: overall floors, article floors met or owed to Phase 3 by a ratified row, use permission landed, the 25-case blind record, the P-2 scope check, and a merged full verify; the CoA link gate, SC-5 target, P-1 report test and §5a owed parts are Phase 3."],
+      ['M-360', ['P2C-Q2', 'P2C-Q3', 'P2C-Q4', 'P2C-Q5', 'P2C-Q6'], "A test never asserts a red floor result; it stays red until a ruling moves the floor."],
+      ['M-361', ['G1-Q1', 'G1-Q2', 'G1-Q3'], "An exception that sets no storey limit leaves the building limited by height alone."],
+      ['M-362', ['MB13-PRIMARY', 'MB13-EXIT'], "no threshold is set after the results it judges."],
+      ['M-363', ['P3H'], "P3-HOLD-1 ends: the max-build engine and its 40-test lock return to the branch together at MB-14."],
+      ['M-364', ['HR'], "The blind harness scores by these six rules, fixed before any run."],
+      ['M-365', ['MR-Q1', 'MR-Q2', 'MR-Q3', 'MR-Q4'], "When a design fact is unknown the evaluator computes both arms and shows both; it never fills the fact with a default."],
+      ['M-366', ['MR-Q5', 'MR-Q6', 'MR-Q7', 'MR-Q8', 'MR-Q9', 'MR-ANC'], "Parking count and bicycle facilities are evaluated and reported as lot checks; they do not size the building envelope."],
+      ['M-367', ['MB37'], "Until MB-38..MB-41 switch each field group, the old hard-coded values are not shown; the field reads 'being recalculated from the by-law'."],
+      ['M-368', ['MB30'], "The night restore disables triggers on the tables it restores, within the restore transaction, and re-enables them before commit."],
+      ['M-369', ['USO-Q2', 'USO-Q3', 'USO-Q4', 'USO-Q5'], "a lot-level gate reason such as named_lots_only outranks the class-level no_candidate"],
+      ['M-370', ['MB03-Q1'], "where a sentence stays ambiguous the first figure is kept and the row is flagged for the operator."],
+      ['M-371', ['MB48'], "Every product zoning number comes from a keyed by-law clause; an old constant with no clause found returns to the operator, never stays in use."],
+      ['M-372', ['P2C-Q1'], 'OWED to Phase 3: cumulative 10.5.40 accuracy'],
+      ['M-373', ['P2C-Q1'], 'OWED to Phase 3: cumulative 10.80.40 answered'],
+      ['M-374', ['P2C-Q1'], 'OWED to Phase 3: cumulative pooled articles answered'],
+      ['M-375', ['P2C-Q1'], 'in_force_basis'],
+      ['M-376', ['SC-Q1', 'SC-Q2', 'SC-Q3'], "Every model value is a keyed by-law value or an externalized variable that is changeable, logged as a ruling and observable; a value citing a unit counts as keyed only when a test proves the unit holds it."],
+    ];
+    for (const [id, ids, text] of want) {
+      const r = rowOf(M, id);
+      for (const d of ids) expect(r).toContain(S + d + '`');
+      expect(r).toContain(text);
+    }
+    expect(rowOf(M, 'M-327')).toContain(S + 'MB04`');
+    expect(rowOf(M, 'M-327')).toContain(S + 'MB04-C`');
+    expect(M).toContain('*Dated note 2026-10-29 (M-63; operator SC-Q1');
+    expect(rowOf(M, 'M-376')).toContain('Semi-detached, semi houseplex and townhouse max-build scenarios are a recorded future build, not part of the current Phase 3 scope.');
+    expect(rowOf(M, 'M-331')).toContain(S + 'P2C-Q1`');
+    expect(rowOf(M, 'M-172')).toContain(S + 'MR-Q2`');
+    for (const id of ['M-372', 'M-373', 'M-374']) expect(rowOf(M, id)).toMatch(/OWED to Phase 3 \(MB-\d+/);
+  });
+  it('CHAT-200 (batch 2026-10-29-ac): one check per stated limit, a condition figure is a condition; a definition figure is disclosed when relied on; dated note on M-370', () => {
+    const S = '2026-10-29-batch-ac#CHAT-200.';
+    const r = rowOf(M, 'M-370');
+    expect(r).toContain(S + 'MB03-Q2`');
+    expect(r).toContain(S + 'MB03-Q2-A`');
+    expect(r).toContain('Dated note 2026-10-29 (M-370; operator MB03-Q2');
+    expect(r).toContain('A requirement sentence yields one check per stated limit; a figure that defines when the rule applies is a condition, and when it is met every limit in the sentence applies.');
+    expect(r).toContain('A definition figure that decides whether a rule applies (e.g. within 0.3 m of a building) is not a limit; when the build relies on it, the result discloses the definition and its clause.');
+    expect(rowOf(M, 'M-376')).toContain(S + 'SC-Q4`');
+    expect(rowOf(M, 'M-376')).toContain('Ravine provisions that change the maximum building are applied from keyed clauses and a TRCA top-of-bank source step, like corner and heritage lot facts; where the line is not held the result says so; Ch.658 is disclosed where it applies.');
+  });
+  it('CHAT-201 (batch 2026-10-29-ad): the maximum build is calculated for every design option and each result is shown with its option; dated note on M-172, OPEN wording in M-365 updated', () => {
+    const S = '2026-10-29-batch-ad#CHAT-201.';
+    const r = rowOf(M, 'M-172');
+    expect(r).toContain(S + 'MR-Q2-P`');
+    expect(r).toContain('Dated note 2026-10-29 (M-172; operator MR-Q2-P');
+    expect(r).toContain("For each design choice the by-law treats differently (e.g. flat roof or not), the maximum build is calculated for every option and each result is shown with its option; M-172(3)'s silent default no longer applies to the maximum build.");
+    expect(r).not.toContain('is OPEN and goes to the operator');
+    expect(rowOf(M, 'M-365')).toContain(S + 'MR-Q2-P`');
+    expect(rowOf(M, 'M-365')).not.toContain('OPEN, returned to the operator');
+  });
+  it('CHAT-202 (batch 2026-10-29-ad): a run-time column leaves a golden table_state only when declared excluded-with-reason in its Spec 121 #151a inventory before the first diff; dated note on M-369', () => {
+    const r = rowOf(M, 'M-369');
+    expect(r).toContain('2026-10-29-batch-ad#CHAT-202.MB45F-ROUTE`');
+    expect(r).toContain('Dated note 2026-10-29 (M-369; operator MB-45f re-route');
+    expect(r).toContain("A run-time column is excluded from a step's golden table_state only when declared excluded-with-reason in its Spec 121 #151a inventory before the first diff.");
+  });
+  it('CHAT-203 (batch 2026-10-29-ae): MB-53 rule text and dated note on M-285', () => {
+    const r = rowOf(M, 'M-285');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-203.MB-53`');
+    expect(r).toContain('Dated note 2026-10-29 (M-285; operator MB-53');
+    expect(r).toContain("The lot's frontage street name is a Layer 2 lot fact; clauses that name a street are evaluated from it.");
+  });
+  it('CHAT-204 (batch 2026-10-29-ae): MB-54 rule text and dated note on M-245', () => {
+    const r = rowOf(M, 'M-245');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-204.MB-54`');
+    expect(r).toContain('Dated note 2026-10-29 (M-245; operator MB-54');
+    expect(r).toContain("Front-yard averaging and the abutting-building clauses read the neighbours from parcel_abutments through the FS-SB1/FS-SB2 chain.");
+  });
+  it('CHAT-205 (batch 2026-10-29-ae): MB-55 rule text and dated note on M-213', () => {
+    const r = rowOf(M, 'M-213');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-205.MB-55`');
+    expect(r).toContain('Dated note 2026-10-29 (M-213; operator MB-55');
+    expect(r).toContain("By-law overlays that change the building (building setback overlay, holding symbol) are applied in Layer 2 and the max build; parking overlays feed the parking lot checks; use-only overlays and the irregular-lot flag are disclosed.");
+  });
+  it('CHAT-206 (batch 2026-10-29-ae): MB-56 rule text and dated note on M-158', () => {
+    const r = rowOf(M, 'M-158');
+    expect(r).toContain('2026-10-29-batch-ae#CHAT-206.MB-56`');
+    expect(r).toContain('Dated note 2026-10-29 (M-158; operator MB-56');
+    expect(r).toContain("Lawfully existing status is never inferred from footprint data; it is disclosed on ordinary lots and taken from a user input in the renovation scenario.");
+  });
+  it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
+    const jy = rowOf(A, 'R-JY');
+    expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
+    expect(jy).toContain('coa_plan_facts_cohort_bak_20261025t1457z');
+    expect(jy).toContain('a pre-existing defect, not a night-3 fault');
+    expect(jy).toContain('No tolerance is made');
+    expect(jy).toContain('the base and T4 are re-pinned with a review');
+    expect(jy).toContain('scripted OPERATOR-GO release that re-verifies the DB read-only');
+    expect(jy).toContain('night 3 is re-run from step 1');
+  });
   it('CHAT-195.CLPD-Q4-TIMING and CHAT-194.USO-Q1g (batch 2026-10-27-w): the savepoint retirement lands as one unit in the night-4 patch (dated note on R-JZ); the closure extends to the suite class of a closed principal type (dated note on M-169)', () => {
     const S = '2026-10-27-batch-w#';
     const jz = rowOf(A, 'R-JZ');

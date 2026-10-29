@@ -1,0 +1,52 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-29-batch-ae/2026-10-29-batch-ae.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-29-batch-ae",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Mb-53 needs wiring / definitely for all recommended. Add to the queue to ensure completiion and ensure compliance / Mb-56 - our current building footprint data isnt great - this is just a disclosure - for the renovation scenario - we need a user input",
+    "record": "operator chat 2026-10-29",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-29-batch-ae/2026-10-29-batch-ae.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-203.MB-53",
+      "question": "MB-53: street name into the lot vector",
+      "recommendation": "Wire `parcels.primary_frontage_street_name` into the resolve_bylaws lot vector so `abuts_named_street` units decide. Rule text: The lot's frontage street name is a Layer 2 lot fact; clauses that name a street are evaluated from it.",
+      "decision": "approve",
+      "decided_at": "2026-10-29",
+      "operator_quote": "Mb-53 needs wiring"
+    },
+    {
+      "id": "CHAT-204.MB-54",
+      "question": "MB-54: neighbour data (parcel_abutments) for front-yard averaging",
+      "recommendation": "Wire parcel_abutments into Layer 2 and the max build as the FS-SB1/FS-SB2 neighbour front-setback input (one shared function) plus the abutting tokens; its costing use is separate. Rule text: Front-yard averaging and the abutting-building clauses read the neighbours from parcel_abutments through the FS-SB1/FS-SB2 chain.",
+      "decision": "approve",
+      "decided_at": "2026-10-29",
+      "operator_quote": "definitely for all recommended. Add to the queue to ensure completiion and ensure compliance"
+    },
+    {
+      "id": "CHAT-205.MB-55",
+      "question": "MB-55: overlays",
+      "recommendation": "Building setback overlay (15,296 lots) and the holding (H) symbol (105 lots) are wired into Layer 2 and the max build; policy area (29,757) and parking zone (73,778) feed the parking lot checks (MR-Q7); rooming house overlay (109,743) and the irregular-lot flag (127,115, our own) are disclosures. Rule text: By-law overlays that change the building (building setback overlay, holding symbol) are applied in Layer 2 and the max build; parking overlays feed the parking lot checks; use-only overlays and the irregular-lot flag are disclosed.",
+      "decision": "approve",
+      "decided_at": "2026-10-29",
+      "operator_quote": "definitely for all recommended. Add to the queue to ensure completiion and ensure compliance"
+    },
+    {
+      "id": "CHAT-206.MB-56",
+      "question": "MB-56: lawfully existing status",
+      "recommendation": "Not derived from building footprints (not reliable enough). On ordinary lots: a disclosure that the existing-building allowance may apply and is not evaluated. In the renovation scenario: a user input (\"is the existing building lawful?\") that the model applies. Rule text: Lawfully existing status is never inferred from footprint data; it is disclosed on ordinary lots and taken from a user input in the renovation scenario.",
+      "decision": "approve",
+      "decided_at": "2026-10-29",
+      "operator_quote": "Mb-56 - our current building footprint data isnt great - this is just a disclosure - for the renovation scenario - we need a user input"
+    }
+  ]
+}

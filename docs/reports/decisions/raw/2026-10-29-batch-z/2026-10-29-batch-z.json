@@ -1,0 +1,25 @@
+{
+ "source": "operator chat 2026-10-29",
+ "operator_quote": "NOT CHOSEN. The rows stay NO ANSWER and keep counting. These by-law rules matter and must be built, not reclassified.",
+ "context": "Answers the frozen operator card ~/Buildo-scratch/p2close/CARD-floor-scorer.answered.md (FS-Q1 not chosen, FS-Q2 agreed, FS-Q3 corner lot; cause census ~/Buildo-scratch/p2close/floor-causes.md).",
+ "decisions": [
+  {
+   "id": "CHAT-197.FS-Q1",
+   "subject": "Rows where the notice gives no numeric requirement (19 rows, NO ANSWER today)",
+   "decision": "approve",
+   "recommendation": "Not chosen: check the no-number test before the clause-not-keyed tests so these rows become NOT MODELLED and leave the answered denominator. The rows stay NO ANSWER and keep counting; these by-law rules must be built, not reclassified (examples: the garden-suite rule that compares the suite with the main building; setbacks that depend on the neighbours' buildings, front-yard averaging and abutting setbacks, where the input may come from density data or from the user). Rule text: A by-law requirement the notice states without a number stays NO ANSWER until the evaluator answers it; the scorer never reclassifies it to leave the denominator. Follow-up: plan the relative-rule evaluation and the neighbour-setback input (density data or user input)."
+  },
+  {
+   "id": "CHAT-197.FS-Q2",
+   "subject": "10.5.50.10(4) and (5): apartment-only provisions",
+   "decision": "approve",
+   "recommendation": "Agreed: the clauses are out of scope (apartments) and no unit exists, so the scorer calls them clause not keyed (NO ANSWER) today; mark them NOT MODELLED with the reason apartment-only provision, out of scope. Rule text: A clause that applies only to a building type outside McBylaws scope (apartments) is NOT MODELLED with that reason, never NO ANSWER."
+  },
+  {
+   "id": "CHAT-197.FS-Q3",
+   "subject": "490 Arlington (A0562): corner lot or not",
+   "decision": "approve",
+   "recommendation": "Corner lot: the street bends at less than a right angle; 800.50(150)(B). Applied to the golden page 2026-10-29 (v87) and read in round b (b21f5b56)."
+  }
+ ]
+}

@@ -1,0 +1,36 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-29-batch-ad/2026-10-29-batch-ad.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-29-batch-ad",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "yes compute both ways flat and not flat for example / yes double check its a compliant decisions",
+    "record": "operator chat 2026-10-29",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-29-batch-ad/2026-10-29-batch-ad.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-201.MR-Q2-P",
+      "question": "MR-Q2-P: design choices in the product's maximum build",
+      "recommendation": "Where a by-law treats a design choice differently (e.g. flat roof vs not flat; garage facing the street or not; side wall with or without openings), the maximum build is calculated for each option and each result is shown labelled with its option. No option is chosen silently. This replaces M-172(3)'s silent default for the maximum build (the interaction left OPEN in batch ab, M-365 and the M-172 note). Rule text: For each design choice the by-law treats differently (e.g. flat roof or not), the maximum build is calculated for every option and each result is shown with its option; M-172(3)'s silent default no longer applies to the maximum build.",
+      "decision": "approve",
+      "decided_at": "2026-10-29",
+      "operator_quote": "yes compute both ways flat and not flat for example"
+    },
+    {
+      "id": "CHAT-202.MB45F-ROUTE",
+      "question": "MB-45f re-route: run-time columns in the Layer 2 snapshot fingerprint",
+      "recommendation": "YES to the compliant route: declare `resolved_at` (the run timestamp) as excluded-with-reason in the Spec 121 #151a inventory for resolve_bylaws BEFORE its first diff, plus the harness change that honours that inventory for table_state. Conditional on the recording seat and an independent seat confirming every governing rule permits it as written; the recording seat's check is ~/Buildo-scratch/rulings-1024/batch-ad-compliance.md. Build work, not done here: capture-step-golden.js:739 keeps table_state must-match-exactly until the harness honours the inventory, and step.schema.json has no declaration home for the inventory. Rule text: A run-time column is excluded from a step's golden table_state only when declared excluded-with-reason in its Spec 121 #151a inventory before the first diff.",
+      "decision": "approve",
+      "decided_at": "2026-10-29",
+      "operator_quote": "yes double check its a compliant decisions"
+    }
+  ]
+}
