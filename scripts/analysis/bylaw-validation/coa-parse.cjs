@@ -123,6 +123,18 @@
     return out;
   }
 
+  // CHAT-198.NN-Q1 (operator 2026-10-29): "where the notice prints the other building's figure, that figure is the comparator." A requirement that prints no figure and
+  // compares the building with the residential (main) building ("must be less than the gross floor area of the residential building on a lot") takes the figure the
+  // proposal prints in brackets for that other building ("... than the gross floor area of the residential building on the lot (86.02 m²)"). Null when it does not apply.
+  function referentFigure(requirement, proposal) {
+    var rq = String(requirement || ''), pr = String(proposal || '');
+    if (!rq || measures(rq).length) return null;
+    if (!/\b(?:less|smaller|greater|larger|more|fewer)\s+than\s+the\b[^.]*\b(?:residential|main|principal)\s+(?:building|dwelling|house)\b/i.test(rq)) return null;
+    var m = /\b(?:residential|main|principal)\s+(?:building|dwelling|house)\b[^()]*\(\s*([^()]*?)\s*\)/i.exec(pr);
+    var got = m ? measures(m[1]) : [];
+    return got.length === 1 ? got[0] : null;
+  }
+
   // Whichever limit word comes first governs ("A minimum of 85% ... a walkway which may have a maximum width" is a minimum).
   function limitKind(req) {
     var mx = req.search(/\bmaximum\b|may not exceed|not exceed|no more than/i);
@@ -191,6 +203,7 @@
         if (same.length > 1 && !paren.length) check = true;
         if (pr.filter(function (m) { return m.unit === prp.unit; }).length > 1) check = true;
       }
+      if (!req) { var rf = referentFigure(requirement, proposal); if (rf) req = rf; }
       if (!req || !prp) check = true;
       return {
         n: v.n, amended: v.amended, clause: v.clause, bylaw: v.bylaw,
@@ -277,7 +290,7 @@
 
   function docId(fileNumber) { return String(fileNumber || '').replace(/\//g, '-'); }
 
-  var api = { parse: parse, docId: docId, measures: measures, PARSER_VERSION: PARSER_VERSION };
+  var api = { parse: parse, docId: docId, measures: measures, referentFigure: referentFigure, PARSER_VERSION: PARSER_VERSION };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.CoaParse = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

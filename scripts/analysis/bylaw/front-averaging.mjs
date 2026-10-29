@@ -1,7 +1,8 @@
 // SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-205(1) (+ dated note 2026-10-19), M-245 (no floor, 2026-10-20);
 //            docs/specs/01-pipeline/131_lot_configuration_policy.md LC-58;
 //            docs/specs/01-pipeline/130_link_parcel_abutments.md §Applicability Belongs to McBylaw, Q-B1, Q-B2;
-//            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.10 main_front_setback_basis, P5.12
+//            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.10 main_front_setback_basis, P5.12;
+//            docs/specs/01-pipeline/69a_mcbylaw_register.md M-256 (dated note 2026-10-29, 2026-10-29-batch-aa#CHAT-198.NN-Q4)
 //
 // Front-yard averaging (10.5.40.70(1)), derived ON READ from parcel_abutments rows, under the operator's ruling
 // of 2026-10-19, amended 2026-10-20 (69a M-245, CHAT-21: no zone-default floor under the averaged front yard; x.40.70(1)'s
@@ -16,9 +17,20 @@
 // or no qualifying neighbour while an abutting residential lot on the street is held whose street, building or distance is
 // not known — front_setback_m answers needs survey (no value; front_averaging_not_applicable undecided, so no layer answers
 // the zone default; front_yard_survey_required). Three or more neighbours (Q-B2) keep the zone default.
+// CHAT-198.NN-Q4 (operator 2026-10-29): "Where the user supplies the neighbours' front setbacks they replace the footprint estimate; the estimate remains the
+// fallback and is flagged needs survey." One or two supplied setbacks (the user input neighbour_front_setbacks_m, metres) are the neighbours' front setbacks:
+// the front setback is their average, no porch allowance (they are measured, not estimated), basis user_supplied, no survey flag. None supplied (or three or
+// more, Q-B2): the estimate path below, unchanged.
+// CHAT-198.NN-Q4 as extended by the operator ruling of 2026-10-29 ("We should use the building footprint or 6M as the default."): "The front setback from averaging reads the
+// user's neighbour setbacks, then the building-footprint estimate flagged needs survey, then a 6.0 m default flagged as a default; a missing neighbour figure never stops
+// the calculation." Where averaging may apply but neither a user figure nor a usable estimate exists (M-256's undecided case), the front setback is DEFAULT_FRONT_SETBACK_M,
+// basis default_6_0, default_used true, instead of the owed answer.
 
 /** 10.5.40.70(1): a building "in whole or in part, 15.0 metres or less from the subject lot". By-law literal. */
 export const FYA_NEIGHBOUR_MAX_DIST_M = 15.0;
+
+/** CHAT-198.NN-Q4 (operator 2026-10-29): the front setback used when averaging may apply and no neighbour figure exists, flagged as a default. */
+export const DEFAULT_FRONT_SETBACK_M = 6.0;
 
 /** Every est_status of Spec 130's closed set except `estimated`; none of them may feed an average. */
 export const EXCLUDED_STATUSES = Object.freeze([
@@ -33,6 +45,15 @@ function finiteNonNegative(v, name) {
   return n;
 }
 
+/** The user's neighbour front setbacks (metres): one or two finite figures >= 0 are used; none, or three or more (Q-B2), are not. */
+function suppliedSetbacks(user) {
+  const raw = user == null ? undefined : user.neighbour_front_setbacks_m;
+  if (raw == null) return null;
+  if (!Array.isArray(raw)) throw new Error('neighbour_front_setbacks_m must be a list of metres');
+  const v = raw.map((x, i) => finiteNonNegative(x, `neighbour_front_setbacks_m[${i}]`));
+  return v.length === 1 || v.length === 2 ? v : null;
+}
+
 function qualifies(r) {
   return r.neighbour_residential === true && r.same_frontage_street === true
     && r.neighbour_building_id != null && r.bldg_to_subject_m != null
@@ -44,20 +65,33 @@ const round2 = (x) => Math.round(x * 100) / 100;
 /**
  * neighbours: the subject's parcel_abutments rows (ordered pair, subject → neighbour).
  * config: { fya_porch_allowance_m }. lot: { zone_default_m } — the zone's x.40.70(1) front setback for this lot.
+ * user (optional): { neighbour_front_setbacks_m: [m, m?] } — the user's figures replace the estimate (CHAT-198.NN-Q4).
  * Returns the evaluator flags and vars for the subject lot, the front setback, the P5.10 basis and the P5.12 codes.
  */
-export function resolveFrontAveraging(neighbours, config, lot) {
+export function resolveFrontAveraging(neighbours, config, lot, user) {
   const allowance = finiteNonNegative(config == null ? undefined : config.fya_porch_allowance_m, 'fya_porch_allowance_m');
   const zoneDefault = finiteNonNegative(lot == null ? undefined : lot.zone_default_m, 'zone_default_m');
+  const supplied = suppliedSetbacks(user);
+  if (supplied) {
+    const k = supplied.length; const avg = round2(supplied.reduce((t, x) => t + x, 0) / k);
+    return {
+      fya: k === 1 ? 'fya_one' : 'fya_two', qualifying: k, averaged_m: avg, front_setback_m: avg,
+      flags: { front_averaging_not_applicable: false, one_abutting_building_within_15_m: k === 1, two_abutting_buildings_within_15_m: k === 2 },
+      vars: { abutting_front_setback_m: avg }, basis: 'user_supplied', needs_survey: false, disclosures: [],
+    };
+  }
   const qualifying = (neighbours || []).filter(qualifies);
   const n = qualifying.length;
   const fya = n === 0 ? 'fya_none' : n === 1 ? 'fya_one' : n === 2 ? 'fya_two' : 'fya_ambiguous_multi';
   const allEstimated = n > 0 && qualifying.every((r) => r.est_status === 'estimated' && r.front_setback_est_m != null);
   const off = { front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false };
   const base = { fya, qualifying: n, averaged_m: null, flags: off, vars: {} };
-  // M-256: averaging is undecided — the evaluator owes the front setback rather than answer the zone default
-  const undecided = { front_averaging_not_applicable: null, one_abutting_building_within_15_m: null, two_abutting_buildings_within_15_m: null };
-  const needsSurvey = { ...base, flags: undecided, basis: 'needs_survey', front_setback_m: null, needs_survey: true, disclosures: ['front_yard_survey_required'] };
+  // M-256 (amended by CHAT-198.NN-Q4): averaging may apply but no neighbour figure exists — the flagged default answers, the calculation never stops
+  const needsSurvey = {
+    ...base, averaged_m: null, front_setback_m: DEFAULT_FRONT_SETBACK_M, basis: 'default_6_0', needs_survey: true, default_used: true, disclosures: ['front_yard_survey_required'],
+    flags: { front_averaging_not_applicable: false, one_abutting_building_within_15_m: true, two_abutting_buildings_within_15_m: false },
+    vars: { abutting_front_setback_m: DEFAULT_FRONT_SETBACK_M },
+  };
 
   if (fya === 'fya_none') {
     // M-256: an abutting residential lot on the street (or one whose street is not known) whose building or distance is not

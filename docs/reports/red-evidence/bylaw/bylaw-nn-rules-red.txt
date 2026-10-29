@@ -1,0 +1,34 @@
+# batch 2026-10-29-aa red run at 73abac61 (src/tests/bylaw-no-number-rules.logic.test.ts, written before the change), 2026-10-29
+   × NN-Q3: main_building_gfa_m2, plan facts then footprint x storeys then the maximum build > resolveMainBuildingGfa takes the first source that holds a figure 3ms
+     → Failed to load url ~/Buildo-wt-b10fix/scripts/analysis/bylaw/main-building-gfa.mjs (resolved id: ~/Buildo-wt-b10fix/scripts/analysis/bylaw/main-building-gfa.mjs). Does the
+   × NN-Q3: main_building_gfa_m2, plan facts then footprint x storeys then the maximum build > the declared input maps to Ch.800 800.50(320) and carries its input fidelity 3ms
+     → expected undefined to match object { unit: 'm2', …(1) }
+   × NN-Q3: main_building_gfa_m2, plan facts then footprint x storeys then the maximum build > 150.7.60.50(2) and 150.8.60.50(2) are LIMIT max gfa_m2 valued by the input, and the evaluator answers with it 1753ms
+     → expected [ 'UNUSUAL', 'none', 'none' ] to deeply equal [ 'LIMIT', 'gfa_m2', 'max' ]
+   × audit defect 2: 10.5.100.1(1)(C) driveway width keeps the parking-width arm > the unit is the lesser of 6.0 m and the parking width, not always 2.6 m 1347ms
+     → expected 2.6 to be 3.66 // Object.is equality
+   × NN-Q4: the user's neighbour front setbacks replace the footprint estimate > one or two supplied figures are averaged, no porch allowance, no survey flag; the estimate is the flagged fallback 2ms
+     → expected [ 'averaged_one', 13.5, true, …(3) ] to deeply equal [ 'user_supplied', 13.42, false, …(3) ]
+   × NN-Q4: the user's neighbour front setbacks replace the footprint estimate > the user input is declared 1ms
+     → expected [ 'building_type', …(22) ] to include 'neighbour_front_setbacks_m'
+   × applicantFigures reads the applicant's own plan-fact figures (NN-Q2, NN-Q3, NN-Q4) > suite height and separation, main building floor area, neighbour setbacks in both record shapes 2ms
+     → L.applicantFigures is not a function
+   × NN-Q1: the other building's figure is the City comparator; ANSWERED is in the answered rate and out of accuracy > referentFigure takes the bracketed figure of the residential building from the proposal 0ms
+     → CP.referentFigure is not a function
+   × NN-Q1: the other building's figure is the City comparator; ANSWERED is in the answered rate and out of accuracy > the parser itself returns the figure for a notice that compares two buildings 2ms
+     → expected null to deeply equal { value: 86.02, unit: 'm²' }
+   × NN-Q1: the other building's figure is the City comparator; ANSWERED is in the answered rate and out of accuracy > statsOf: ANSWERED counts in the answered numerator and denominator and not in accuracy 8ms
+     → expected [ 2, undefined, 0.5, 0.5 ] to deeply equal [ 2, 1, 0.5, 0.6 ]
+   ✓ no-number rules on the 172-notice set (batch 2026-10-29-aa) > runs 3269ms
+   × no-number rules on the 172-notice set (batch 2026-10-29-aa) > NN-Q2: the applicant's suite height and separation from the plan facts answer the suite height and separation rows 0ms
+     → expected [ 'A0428/26TEY', 7, 'OWED', null ] to deeply equal [ 'A0428/26TEY', 7, 'MATCH', 4 ]
+   × no-number rules on the 172-notice set (batch 2026-10-29-aa) > NN-Q3 + NN-Q1: A0457/25EYK#1 compares the suite with the house floor area from the plan facts (86.02) and matches the printed comparator 0ms
+     → Cannot read properties of null (reading 'value')
+   × no-number rules on the 172-notice set (batch 2026-10-29-aa) > NN-Q4: plan-fact neighbour setbacks answer A0096/26SC#1 (13.42) and A0428/26TEY#1 (5.91); the estimate is not promoted elsewhere 0ms
+     → expected [ 'OWED', null ] to deeply equal [ 'MATCH', 13.42 ]
+   × no-number rules on the 172-notice set (batch 2026-10-29-aa) > NN-Q1: an answered row with no City figure is ANSWERED, listed by name; dwelling rooms stay NO ANSWER 0ms
+     → Cannot read properties of null (reading 'status')
+      Tests  14 failed | 1 passed (15)
+# addendum (operator ruling "We should use the building footprint or 6M as the default.", second pre-registration e63eceac): the default step was proven red by the pre-existing
+# M-256 locks, which asserted the owed answer and failed 13 times (needs_survey / null / condition_unknown) when resolveFrontAveraging answered the flagged 6.0 m default; they were
+# then updated to the ruled behaviour (bylaw-fix-3, bylaw-fix-4, bylaw-front-setback-reliability), and the three-step order is locked in bylaw-no-number-rules.logic.test.ts.

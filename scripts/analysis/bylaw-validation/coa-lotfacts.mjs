@@ -101,3 +101,18 @@ export function readRecordFor(rr, caseId) {
   for (const f of (rr && rr.figures) || []) if (f.case === caseId) out[f.key] = { value: f.value, document: f.document };
   return Object.keys(out).length ? out : null;
 }
+
+// CHAT-198 (2026-10-29-batch-aa; Spec 69a M-286 / M-82 / M-256 dated notes 2026-10-29): the applicant's own figures in one plan-facts record, for validation against a notice.
+// Values only. A figure that is not a finite number is not held; a floor area and a suite height must be above zero, a separation or a setback may be zero.
+export function applicantFigures(pf) {
+  const out = { suite_height_m: null, suite_separation_m: null, existing_gfa_m2: null, neighbour_front_setbacks_m: [] };
+  if (!pf || typeof pf !== 'object') return out;
+  const num = (x, min, strict) => (typeof x === 'number' && Number.isFinite(x) && (strict ? x > min : x >= min) ? x : null);
+  const a = pf.ancillary && typeof pf.ancillary === 'object' ? pf.ancillary : {};
+  out.suite_height_m = num(a.height_m, 0, true);
+  out.suite_separation_m = num(a.separation_to_house_m, 0, false);
+  out.existing_gfa_m2 = num(pf.existing_gfa_m2, 0, true);
+  const nb = Array.isArray(pf.neighbour_front_setbacks_m) ? pf.neighbour_front_setbacks_m : [];
+  out.neighbour_front_setbacks_m = nb.map((x) => num(x && typeof x === 'object' ? x.value : x, 0, false)).filter((x) => x != null);
+  return out;
+}

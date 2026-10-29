@@ -40,7 +40,7 @@ const unitOf = (id: string): Json => {
 const lot = (zone: string, buildingType: string, extra: Json = {}): Json => ({
   zone, label: { f: 12, d: 0.6 }, overlays: {}, map_areas: [], building_type: buildingType,
   flags: { lawfully_existing: false, corner_lot: false, through_lot: false, front_averaging_not_applicable: true, abuts_lane: false, suite_wall_openings: false, flat_or_shallow_roof: false, ...(extra.flags ?? {}) },
-  vars: { lot_frontage_m: 12, lot_depth_m: 40, proposed_height_m: 4, distance_to_residential_m: 5, ...(extra.vars ?? {}) },
+  vars: { lot_frontage_m: 12, lot_depth_m: 40, proposed_height_m: 4, distance_to_residential_m: 5, main_building_gfa_m2: 500, ...(extra.vars ?? {}) }, // main_building_gfa_m2: the third source of the value order (the maximum build) always holds a figure in the product (CHAT-198.NN-Q3)
 });
 const eff = (l: Json, t: string): Json => E.effective(l, t, E.loadCandidates(l, units).candidates, C);
 const ZONES = ['R', 'RD', 'RS', 'RT', 'RM'];
@@ -105,7 +105,9 @@ describe('M-177(1)/(2) — the garden-suite caps answer on every lot from class 
     expect([u.archetype, u.target, u.application.building_types]).toEqual(['DEFINE', 'gfa_m2', ['garden_suite']]);
   });
   it('M-177(2): 150.7.60.50(2) the garden suite is kept smaller than the house, disclosed, never an unchecked comparison', () => {
-    expect(unitOf('150.7.60.50(2)#whole').disclosure).toBe('A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.');
+    // CHAT-198.NN-Q3 (2026-10-29-batch-aa): the comparison is now evaluated through main_building_gfa_m2; the disclosure names where the main building's floor area comes from
+    expect(unitOf('150.7.60.50(2)#whole').disclosure).toBe("A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.");
+    expect([unitOf('150.7.60.50(2)#whole').archetype, unitOf('150.7.60.50(2)#whole').numeric_expression]).toEqual(['LIMIT', ['gfa_m2 = main_building_gfa_m2 @(2)']]);
   });
   it('M-177(2) / M-198: 150.7.60.40(1) the garden suite is 4.0 m below 7.5 m from the house and 6.3 m at 7.5 m or more', () => {
     for (const zone of ZONES) {
@@ -216,7 +218,8 @@ describe('M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation a
     expect([unitOf('150.8.60.50(1)#whole').archetype, unitOf('150.8.60.50(1)#whole').target]).toEqual(['DEFINE', 'gfa_m2']);
   });
   it('M-177(2): 150.8.60.50(2) the laneway suite is kept smaller than the house, disclosed', () => {
-    expect(unitOf('150.8.60.50(2)#whole').disclosure).toBe('A laneway suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.');
+    expect(unitOf('150.8.60.50(2)#whole').disclosure).toBe("A laneway suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build."); // CHAT-198.NN-Q3
+    expect(unitOf('150.8.60.50(2)#whole').numeric_expression).toEqual(['gfa_m2 = main_building_gfa_m2 @(2)']);
   });
   it('M-177: 150.8.60.50(3) the general ancillary floor-area cap 10.5.60.50(2) does not apply to a laneway suite', () => {
     expect([unitOf('150.8.60.50(3)#whole').archetype, unitOf('150.8.60.50(3)#whole').calculation_handling.description]).toEqual(['DISAPPLY', expect.stringMatching(/10\.5\.60\.50\(2\)/)]);

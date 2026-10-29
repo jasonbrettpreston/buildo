@@ -124,7 +124,8 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     }
     expect(rowsOf('A0562/26TEY').find((x: any) => x.n === 5).class).toBe('NO ANSWER'); // 10.5.50.10(2)(B): a clause that is in scope, stays NO ANSWER
     const noNum = sc.rows.filter((x: any) => x.why === 'notice states no numeric requirement').length;
-    expect(noNum).toBe(7); // the order of the no-number check is unchanged (FS-Q1 not chosen)
+    expect(noNum).toBe(1); // the order of the no-number check is unchanged (FS-Q1 not chosen); of the 7, the 6 the evaluator answers are the class ANSWERED since batch 2026-10-29-aa (CHAT-198.NN-Q1)
+    expect(sc.rows.filter((x: any) => x.class === 'ANSWERED').length).toBe(6);
   });
   it('floor-scorer round: A0467/26TEY#1 and A0167/26EYK#2 are scored on the corrected clause, with the evidence on the row', () => {
     const at = (f: string, n: number) => rowsOf(f).find((x: any) => x.n === n);

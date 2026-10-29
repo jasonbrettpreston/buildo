@@ -103,8 +103,8 @@ describe('excluded estimates answer needs survey (M-256); the ambiguous case kee
   for (const status of FA.EXCLUDED_STATUSES as string[]) {
     it(`a qualifying neighbour with est_status ${status} never feeds an average`, () => {
       const r = FA.resolveFrontAveraging([nb({ front_setback_est_m: 9.0 }), nb({ est_status: status, front_setback_est_m: null })], CFG, LOT);
-      expect([r.basis, r.front_setback_m, r.needs_survey, r.disclosures]).toEqual(['needs_survey', null, true, ['front_yard_survey_required']]);
-      expect(r.flags.front_averaging_not_applicable).toBe(null);
+      expect([r.basis, r.front_setback_m, r.needs_survey, r.disclosures]).toEqual(['default_6_0', 6, true, ['front_yard_survey_required']]); // CHAT-198.NN-Q4: the flagged default, never an owed answer
+      expect([r.default_used, r.flags.front_averaging_not_applicable]).toEqual([true, false]);
     });
   }
   it('the closed exclusion list is the step\'s whole non-estimated vocabulary', () => {
@@ -138,7 +138,7 @@ describe('evaluator, production units: the resolved lot gives the same front set
       expect([z.status, z.value]).toEqual(['value', 6.0]);
       expect(String(z.winner).startsWith(unit)).toBe(true);
       const e = front(zone, FA.resolveFrontAveraging([nb(), nb({ est_status: 'estimate_negative', front_setback_est_m: null })], CFG, LOT));
-      expect([e.status, e.reason]).toEqual(['not_evaluated', 'condition_unknown:front_averaging_not_applicable']);
+      expect([e.status, e.value]).toEqual(['value', 6.0]); // CHAT-198.NN-Q4 (operator 2026-10-29): the 6.0 m default flagged as a default answers; the max-build scenarios evaluate
     });
   }
   it('averaging applies: the averaged value wins through 10.5.40.70(1)(B), above and below the zone default (M-245)', () => {

@@ -43199,7 +43199,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -43261,7 +43261,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -43323,7 +43323,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -43385,7 +43385,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -43447,7 +43447,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -43518,6 +43518,9 @@
      "lot": "5403712",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": false
       }
@@ -43526,7 +43529,7 @@
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284; the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43538,6 +43541,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43570,6 +43574,9 @@
      "lot": "5118342",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": false
       }
@@ -43578,7 +43585,7 @@
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284; the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43590,6 +43597,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43622,6 +43630,9 @@
      "lot": "5124393",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": false
       }
@@ -43630,7 +43641,7 @@
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284; the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43642,6 +43653,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43674,6 +43686,9 @@
      "lot": "5071329",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": false
       }
@@ -43682,7 +43697,7 @@
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284; the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43694,6 +43709,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43726,6 +43742,9 @@
      "lot": "5059565",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": false
       }
@@ -43734,7 +43753,7 @@
      "expect": {
       "value": 120
      },
-     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284)",
+     "rationale": "garden-suite maximum GFA 120 m² (two storeys, M-284; the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43746,6 +43765,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43778,6 +43798,9 @@
      "lot": "5403712",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": true
       }
@@ -43786,7 +43809,7 @@
      "expect": {
       "value": 60
      },
-     "rationale": "one-storey garden suite: 60 m²",
+     "rationale": "one-storey garden suite: 60 m² (the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43798,6 +43821,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -43830,6 +43854,9 @@
      "lot": "5118342",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": true
       }
@@ -43838,7 +43865,7 @@
      "expect": {
       "value": 60
      },
-     "rationale": "one-storey garden suite: 60 m²",
+     "rationale": "one-storey garden suite: 60 m² (the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43850,6 +43877,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -43882,6 +43910,9 @@
      "lot": "5124393",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": true
       }
@@ -43890,7 +43921,7 @@
      "expect": {
       "value": 60
      },
-     "rationale": "one-storey garden suite: 60 m²",
+     "rationale": "one-storey garden suite: 60 m² (the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43902,6 +43933,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -43934,6 +43966,9 @@
      "lot": "5071329",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": true
       }
@@ -43942,7 +43977,7 @@
      "expect": {
       "value": 60
      },
-     "rationale": "one-storey garden suite: 60 m²",
+     "rationale": "one-storey garden suite: 60 m² (the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -43954,6 +43989,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -43986,6 +44022,9 @@
      "lot": "5059565",
      "scenario": {
       "building_type": "garden_suite",
+      "vars": {
+       "main_building_gfa_m2": 500
+      },
       "flags": {
        "suite_one_storey": true
       }
@@ -43994,7 +44033,7 @@
      "expect": {
       "value": 60
      },
-     "rationale": "one-storey garden suite: 60 m²",
+     "rationale": "one-storey garden suite: 60 m² (the main building is larger, CHAT-198.NN-Q3)",
      "initial": {
       "pass": true,
       "observed": {
@@ -44006,6 +44045,7 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
+        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -60710,7 +60750,7 @@
    "zone": "R",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A laneway suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A laneway suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -60772,7 +60812,7 @@
    "zone": "RD",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A laneway suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A laneway suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -60834,7 +60874,7 @@
    "zone": "RS",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A laneway suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A laneway suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -60896,7 +60936,7 @@
    "zone": "RT",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A laneway suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A laneway suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {
@@ -60958,7 +60998,7 @@
    "zone": "RM",
    "class": "OWED",
    "owed_field": "suite_gfa_sqm (< principal GFA, cross-structure)",
-   "keyed_disclosure": "A laneway suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.",
+   "keyed_disclosure": "A laneway suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.",
    "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
    "checks": [
     {

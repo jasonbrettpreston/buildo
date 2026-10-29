@@ -3,7 +3,7 @@
 //
 // CoA scorecard. READ-ONLY: reads the tree at --root, parser-shaped notices, a frozen parcels snapshot; writes a scorecard JSON.
 // Assembly = assembly.mjs loadRealLotAssembly (what eval-lots.mjs and the golden-lot helper use) + vocab design_choice_disclosure.default_overrides.
-// Classes: MATCH / DIFFER / NO ANSWER / OWED / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
+// Classes: MATCH / DIFFER / NO ANSWER / OWED / ANSWERED (no City figure; CHAT-198.NN-Q1: in the answered numerator and denominator, out of accuracy, listed by name) / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
 // Lot figures in --plan-facts are read in M-326 order (CHAT-156 / CHAT-163; coa-lotfacts.mjs); a parcel row >5% off the figure used is flagged (M-308, F-4D-8/9/14); held-but-unread plan figures are shown in lot_held_unread (CHAT-165). Calculator survey override is drafted, not built (owed).
 // Scorer fixes marked "4D-S<n>" (S1-S7) came from the four-district run at ac78d5dd.
 // Classes also: BY-LAW CHANGED (C-3: the cited provision has an amendment tag with a VERIFIED in-force date after the hearing; in neither percentage). A tag with no verified date leaves the class and sets amendment_status 'unverified'.
@@ -20,6 +20,8 @@ import { checkExplainedDifferences, explainRow } from './coa-explained.mjs';
 import * as RD from './coa-round.mjs';
 import * as LF from './coa-lotfacts.mjs';
 import { readSpec69Rulings, parseRulings } from '../bylaw/universe.mjs';
+import { createRequire } from 'node:module';
+const CP = createRequire(import.meta.url)('./coa-parse.cjs'); // referentFigure (CHAT-198.NN-Q1)
 
 const arg = (k, d = null) => { const i = process.argv.indexOf('--' + k); return i >= 0 ? process.argv[i + 1] : d; };
 const ROOT = path.resolve(arg('root', path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')));
@@ -30,6 +32,7 @@ const REGISTER_IDS = new Set((fs.readFileSync(path.join(ROOT, 'docs/specs/01-pip
 const EXPLAINED_BAD = checkExplainedDifferences(I.vocab, REGISTER_IDS);
 if (EXPLAINED_BAD.length) { console.error('vocab.explained_differences is invalid:\n  ' + EXPLAINED_BAD.join('\n  ')); process.exit(2); }
 const FA = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/front-averaging.mjs')).href);
+const MB = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/main-building-gfa.mjs')).href); // CHAT-198.NN-Q3
 const defaults = {}; for (const [k, v] of Object.entries((I.vocab.design_choice_disclosure || {}).default_overrides || {})) if (k !== '$comment' && v && typeof v.taken_as === 'boolean') defaults[k] = v.taken_as;
 const SCU = I.vocab.scenario_class_units || {};
 const PROV_BY = new Map(JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-provisions.json'), 'utf8')).rows.map((r) => [r.regulation_id, r]));
@@ -253,6 +256,7 @@ function applySurvey(base, sv) {
   const vars = { ...base.vars }; if (sv.frontage_m != null) vars.lot_frontage_m = sv.frontage_m; if (sv.depth_m != null) vars.lot_depth_m = sv.depth_m; if (sv.area_m2 != null) vars.lot_area_m2 = sv.area_m2;
   return { ...base, vars, flags: sv.corner != null ? { ...base.flags, corner_lot: sv.corner } : base.flags };
 }
+const ANSWERED = RD.ANSWERED_CLASS;
 const rows = []; const lots = {};
 function runNotice(n, surveyOn, rows, lots) {
   const P = parcels[n.file_number] || { parcels: [] };
@@ -266,6 +270,20 @@ function runNotice(n, surveyOn, rows, lots) {
   const pf = planFacts(n); const rrec = LF.readRecordFor(READ_RECORD, n.file_number); const sv = LF.lotFigures(pf, rrec); const svc = surveyCheck(sv, p);
   const base = p ? (surveyOn ? applySurvey(lotFromParcel(p), sv) : lotFromParcel(p)) : null;
   const openings = openingsEvidence(n);
+  // CHAT-198 (2026-10-29-batch-aa): the applicant's own figures from the plan facts feed the model's inputs where held (validation only; the product is unchanged, M-286).
+  const AF = LF.applicantFigures(pf);
+  const MG = MB.resolveMainBuildingGfa({ plan_gfa_m2: AF.existing_gfa_m2, max_build_gfa_m2: p ? p.max_buildable_gfa_sqm : null }); // NN-Q3: plan facts, then the user's footprint and storeys (none in a scorer run), then the maximum build
+  const UFA = AF.neighbour_front_setbacks_m.length ? FA.resolveFrontAveraging([], { fya_porch_allowance_m: FYA_ALLOWANCE }, { zone_default_m: 0 }, { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m }) : null; // NN-Q4
+  const applicantInputs = (bt) => {
+    const vars = {}; const flags = {}; const basis = {};
+    if (MG.value != null) { vars.main_building_gfa_m2 = MG.value; basis.main_building_gfa_m2 = MG.basis; }
+    if (['garden_suite', 'laneway_suite'].includes(bt)) { // NN-Q2: M-291 keeps a non-suite ancillary building owed
+      if (AF.suite_height_m != null) { vars.proposed_height_m = AF.suite_height_m; basis.proposed_height_m = 'plan_facts'; }
+      if (AF.suite_separation_m != null) { vars.distance_to_residential_m = AF.suite_separation_m; basis.distance_to_residential_m = 'plan_facts'; }
+    }
+    if (UFA && UFA.basis === 'user_supplied') { Object.assign(vars, UFA.vars); Object.assign(flags, UFA.flags); basis.abutting_front_setback_m = 'plan_facts neighbour_front_setbacks_m'; }
+    return { vars, flags, basis };
+  };
   const LS = LF.lotSourceOf(surveyOn ? sv : null, p); const LD = LF.lotDisclosure(LS); // CHAT-156: lot_source on every row; non-survey disclosed
   const LU = LF.lotHeldUnread(pf, p, rrec); // CHAT-165: plan figures held but not read (values only; no class or value moves)
   lots[n.file_number] = { address: n.address, city_label: n.zoning?.label, kind: n.kind, hearing_date: n.hearing_date, purpose: n.purpose, main_type: main,
@@ -291,6 +309,9 @@ function runNotice(n, surveyOn, rows, lots) {
       const lim = [...String(v.requirement).matchAll(/(\d+(?:\.\d+)?) ?m(?![\w²2])(?! above)/g)].map((m) => Number(m[1])).filter((x, i) => !(i === 0 && x === 0.3)).pop();
       s5 = lim != null ? `definition figure 0.3 m (main wall) dropped; City figure taken as ${lim} m` : 'definition figure 0.3 m (main wall) dropped; no numeric limit stated'; cityVal = lim ?? null; if (lim == null) cityUnit = null;
     }
+    // NN-Q1: where the notice prints the other building's figure, that figure is the City comparator (parser: coa-parse.cjs referentFigure)
+    let referentNote = null;
+    if (cityVal == null && cityUnit == null) { const rf = CP.referentFigure(v.requirement, v.proposal); if (rf) { cityVal = rf.value; cityUnit = rf.unit; referentNote = `the notice prints the other building's figure: ${rf.value} ${rf.unit} is the City comparator (CHAT-198.NN-Q1)`; } }
     let target = pickTarget(targets, cityUnit, c, matched);
     // the notice names the lot line: a setback clause keyed to several setback targets follows it
     let lineNote = null;
@@ -326,7 +347,7 @@ function runNotice(n, surveyOn, rows, lots) {
     const row = { notice: n.file_number, address: n.address, city_label: n.zoning?.label || null, our_label: p?.zoning_zn_string || null, parcel_id: p?.parcel_id || null, parcel_row_id: p?.id || null,
       n: v.n, clause: v.clause, clause_norm: c.norm, cited_reg: c.reg, cited_path: c.path, clause_note: c.note || null, limit: v.limit, requirement: v.requirement, city_value: cityVal, city_unit: cityUnit,
       building_type: bt, dwelling_units: SUITE_TYPES.includes(bt) ? 1 : main.units, keyed_units: matched.map((u) => `${u.unit_id}:${u.archetype}:${[].concat(u.target || []).join('+')}`), target,
-      family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null, lot_source: LS, lot_disclosure: LD, lot_held_unread: LU };
+      family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, referent_note: referentNote, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null, lot_source: LS, lot_disclosure: LD, lot_held_unread: LU };
     const oos = outOfScope(c, v);
     if (nonRes) { row.class = 'NOT SCORABLE'; row.why = `zone ${n.zoning.zone} is not a 569-2013 residential zone (former by-law zone or non-residential): not scorable`; /* F-4D-20 */ rows.push(row); continue; }
     if (!p) { row.class = 'NOT SCORABLE'; row.why = 'no parcel match for the notice address: not scorable'; /* F-4D-20 */ rows.push(row); continue; }
@@ -339,7 +360,7 @@ function runNotice(n, surveyOn, rows, lots) {
     if (!target) { row.class = 'NO ANSWER'; row.why = `clause keyed without a target (${[...new Set(matched.map((u) => u.archetype))].join('/')})`;
       if (/^10\.5\.40\.50\(2\)/.test(c.norm) && cityUnit === 'm') { row.platform_probe = evalTarget(makeLot(base, bt, row.dwelling_units), 'platform_side_setback_m'); const pr = evalTarget(makeLot(base, bt, row.dwelling_units), 'side_setback_m'); row.proxy = { via: 'side_setback_m (10.5.40.50(2): the zone building setback)', ...pr, delta: typeof pr.value === 'number' ? Math.round((pr.value - cityVal) * 1000) / 1000 : null }; }
       rows.push(row); continue; }
-    if (cityVal == null) { row.class = 'NOT MODELLED'; row.why = 'notice states no numeric requirement'; rows.push(row); continue; }
+    const noFigure = cityVal == null; // NN-Q1: evaluated below; answered = ANSWERED (no City figure), else NOT MODELLED as before
 
     // EXC-W2-APPLY complement (verify-37 7): a pct SHARE target keyed with one bound ("at least 70% of each side main wall", vocab bound min) that the
     // City quotes from the other side ("a maximum of 30% may be higher") is the same fact: 100 - 30 = 70. Generic over any pct target whose vocab bound differs from the stated limit.
@@ -348,7 +369,8 @@ function runNotice(n, surveyOn, rows, lots) {
       const shareDirection = (req, val, lim) => { const t = String(req || ''); return new RegExp(`(no less than|not less than|at least|minimum of)\\s*${val}\\s*%`, 'i').test(t) ? 'min' : /maximum/i.test(t) ? 'max' : lim; };
       if (T && T.unit === 'pct' && (T.bound === 'min' || T.bound === 'max') && cityUnit === '%' && typeof cityVal === 'number' && shareDirection(v.requirement, cityVal, row.limit) !== T.bound) {
         row.complement_of = cityVal; cityVal = Math.round((100 - cityVal) * 1000) / 1000; row.scorer_fix = row.scorer_fix || 'EXC-W2-complement'; } }
-    const lot = makeLot(base, bt, row.dwelling_units);
+    const AI = applicantInputs(bt); if (Object.keys(AI.basis).length) row.applicant_inputs = AI.basis;
+    const lot = makeLot(base, bt, row.dwelling_units, { vars: AI.vars, flags: AI.flags });
     const only = ELEMENT_TARGETS.has(target) ? new Set(matched.map((u) => u.unit_id)) : null;
     let r = evalTarget(lot, target, only);
     // roof: if the plain vector is undecided on roof, take the arm whose winner is the cited clause (else pitched); record both
@@ -371,11 +393,11 @@ function runNotice(n, surveyOn, rows, lots) {
       const plainOff = evalTarget({ ...lot, flags: { ...lot.flags, front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false } }, target);
       row.front_zone_default = plainOff;
       const zd = typeof plainOff.value === 'number' ? plainOff.value : 6.0;
-      let fa = null; try { fa = FA.resolveFrontAveraging(p.abutments || [], { fya_porch_allowance_m: FYA_ALLOWANCE }, { zone_default_m: zd }); } catch (e) { fa = { error: e.message }; }
+      let fa = null; try { fa = FA.resolveFrontAveraging(p.abutments || [], { fya_porch_allowance_m: FYA_ALLOWANCE }, { zone_default_m: zd }, UFA ? { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m } : undefined); } catch (e) { fa = { error: e.message }; }
       if (fa && !fa.error) {
         const rf = evalTarget({ ...lot, flags: { ...lot.flags, ...fa.flags }, vars: { ...lot.vars, ...fa.vars } }, target);
         row.front_fa = { basis: fa.basis, qualifying: fa.qualifying, averaged_m: fa.averaged_m, floor_applied: fa.floor_applied, resolved_m: fa.front_setback_m, eval: rf,
-          delta_vs_city: typeof rf.value === 'number' ? Math.round((rf.value - cityVal) * 100) / 100 : null, raw_avg_delta: fa.averaged_m != null ? Math.round((fa.averaged_m - cityVal) * 100) / 100 : null };
+          delta_vs_city: typeof rf.value === 'number' && !noFigure ? Math.round((rf.value - cityVal) * 100) / 100 : null, raw_avg_delta: fa.averaged_m != null && !noFigure ? Math.round((fa.averaged_m - cityVal) * 100) / 100 : null };
       } else row.front_fa = fa;
       if (r.status !== 'value' && /map_area_not_held/.test(r.reason || '')) {
         row.ours_map_areas_empty = evalTarget({ ...lot, map_areas: [] }, target);
@@ -383,7 +405,9 @@ function runNotice(n, surveyOn, rows, lots) {
       }
     }
 
-    if (r.status === 'value') {
+    if (r.status === 'value' && noFigure) { row.class = ANSWERED; row.why = `ANSWERED (no City figure): ours ${r.value}; the notice states no figure to compare; winner ${r.winner}`; row.delta = null; }
+    else if (noFigure) { row.class = 'NOT MODELLED'; row.why = 'notice states no numeric requirement'; }
+    else if (r.status === 'value') {
       if (typeof r.value === 'number') {
         const d = Math.round((r.value - cityVal) * 1000) / 1000; row.delta = d;
         row.class = Math.abs(d) <= tol(cityUnit) + 1e-9 ? 'MATCH' : 'DIFFER';
@@ -433,8 +457,9 @@ for (const r of rows) {
   if (r.target === 'front_setback_m' && r.front_fa && r.front_fa.floor_applied && ((r.front_fa.delta_vs_city > 0.01) || (r.front_fa_map_areas_empty && r.front_fa_map_areas_empty.delta_vs_city > 0.01))) r.in_flight = 'M-205(1)';
   if (r.in_flight) r.in_flight_note = 'fix in flight (approved; lane bylaw-fix-3)';
 }
-fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allowance_m: FYA_ALLOWANCE, defaults, lots, rows }, null, 1));
+fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allowance_m: FYA_ALLOWANCE, defaults, answered_no_city_figure: rows.filter((x) => x.class === ANSWERED).map((x) => `${x.notice}#${x.n} ${x.clause}`), lots, rows }, null, 1));
 const by = {}; for (const r of rows) by[r.class] = (by[r.class] || 0) + 1;
+for (const r of rows.filter((x) => x.class === ANSWERED)) console.log('ANSWERED (no City figure): ' + r.notice + ' #' + r.n + ' ' + r.clause + ' ours ' + (r.ours && r.ours.value));
 console.log('rows', rows.length, JSON.stringify(by), 'amendment status unverified', rows.filter((r) => r.amendment_status === 'unverified').length);
 // C-5 floors and C-4 pre-registration (see coa-round.mjs). Both are read-only on the data; --accept is the only writer and needs a RATIFIED ruling.
 const STATS = RD.statsOf(rows);
@@ -464,7 +489,7 @@ if (arg('prereg')) {
 // --pin FILE writes the expected file for this run at this tree (the integrate step re-pins; a moved input is a finding to re-pin, not a silent pass).
 const here = path.dirname(fileURLToPath(import.meta.url));
 const shaOf = (fl) => { const h = crypto.createHash('sha256'); for (const x of fl) h.update(fs.readFileSync(path.join(here, x))); return h.digest('hex').slice(0, 16); };
-const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs', 'coa-lotfacts.mjs', 'coa-expected/read-record-chat164.json']) }; };
+const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs', 'coa-lotfacts.mjs', 'coa-parse.cjs', 'coa-round.mjs', '../bylaw/main-building-gfa.mjs', '../bylaw/front-averaging.mjs', 'coa-expected/read-record-chat164.json']) }; };
 if (arg('pin')) {
   const head = execFileSync('git', ['-C', ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim().slice(0, 8);
   fs.writeFileSync(arg('pin'), JSON.stringify({ commit: head, notices: notices.length, variances: rows.length, totals: by, inputs: treeInputs(), note: 'pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree' }, null, 1) + '\n');

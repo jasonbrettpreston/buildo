@@ -112538,6 +112538,176 @@
       "rule": "CHAT-96.NAMED-FAM (operator 2026-10-23 'NAMED-FAM y: close the named-road family in one pass'; held pending CHAT-96 import; CHAT-93.condition): the 44 named-road units and their word-for-word twins read by the clause's wording — front lot line / front yard / fronts on: computed by the M-285 join (row line front); a lot line that abuts a street: computed (row line any); side lot line: UNUSUAL, disclosed (the CHAT-95.X-4 form, the side street is not held); every computed unit reads partially_modelled / needs_data_we_lack with no stale street-test text; M-350 (CHAT-84.NAMED-1b: a road that cannot be determined is disclosed); Spec 133 §m.285 (M-285), §m.82 (M-75 correction form); identical text, one reading (Spec 133 §m.317 (M-317), CHAT-84.TWIN-1)",
       "unit": "900.3.10(1169)#(1169)[SSP](C)(ii)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "archetype",
+      "id": "COR-150.7.60.50(2)#whole/archetype",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "unit": "150.7.60.50(2)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "target",
+      "id": "COR-150.7.60.50(2)#whole/target",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "unit": "150.7.60.50(2)#whole",
+      "value": "gfa_m2"
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "bound",
+      "id": "COR-150.7.60.50(2)#whole/bound",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "unit": "150.7.60.50(2)#whole",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "archetype",
+      "id": "COR-150.8.60.50(2)#whole/archetype~s1",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "supersedes": "COR-150.8.60.50(2)#whole/archetype",
+      "unit": "150.8.60.50(2)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "target",
+      "id": "COR-150.8.60.50(2)#whole/target~s1",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "supersedes": "COR-150.8.60.50(2)#whole/target",
+      "unit": "150.8.60.50(2)#whole",
+      "value": "gfa_m2"
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "bound",
+      "id": "COR-150.8.60.50(2)#whole/bound~s1",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "supersedes": "COR-150.8.60.50(2)#whole/bound",
+      "unit": "150.8.60.50(2)#whole",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.50(2)#whole/numeric_expression",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "unit": "150.7.60.50(2)#whole",
+      "value": [
+        "gfa_m2 = main_building_gfa_m2 @(2)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.50(2)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "unit": "150.7.60.50(2)#whole",
+      "value": {
+        "description": "The gross floor area of an ancillary building containing a garden suite must be less than the gross floor area of the main building (the residential building on the lot: house or semi-detached house); the limit is the main building's gross floor area read from main_building_gfa_m2.",
+        "gaps": "The by-law bound is strict (less than); the limit is reported as the main building's gross floor area. main_building_gfa_m2 is filled from plan facts, then the user's footprint and storeys, then the maximum build, so it approximates the Ch.800 gross floor area (input fidelity 800.50(320)); where none is held the rule is owed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "disclosure",
+      "id": "COR-150.7.60.50(2)#whole/disclosure~s1",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "supersedes": "COR-150.7.60.50(2)#whole/disclosure",
+      "unit": "150.7.60.50(2)#whole",
+      "value": "A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build."
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "numeric_expression",
+      "id": "COR-150.8.60.50(2)#whole/numeric_expression",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "unit": "150.8.60.50(2)#whole",
+      "value": [
+        "gfa_m2 = main_building_gfa_m2 @(2)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "calculation_handling",
+      "id": "COR-150.8.60.50(2)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "unit": "150.8.60.50(2)#whole",
+      "value": {
+        "description": "The gross floor area of an ancillary building containing a laneway suite must be less than the gross floor area of the main building (the residential building on the lot: house or semi-detached house); the limit is the main building's gross floor area read from main_building_gfa_m2.",
+        "gaps": "The by-law bound is strict (less than); the limit is reported as the main building's gross floor area. main_building_gfa_m2 is filled from plan facts, then the user's footprint and storeys, then the maximum build, so it approximates the Ch.800 gross floor area (input fidelity 800.50(320)); where none is held the rule is owed.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_laneway_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "disclosure",
+      "id": "COR-150.8.60.50(2)#whole/disclosure~s1",
+      "kind": "correction",
+      "reason": "NN-Q3: 150.7/150.8.60.50(2) require the gross floor area of the ancillary building to be less than the gross floor area of the residential building on a lot (pinned text, docs/reference/bylaw-provisions.md); the sealed draft could not express it because no input held the main building's floor area; the declared dsl_input main_building_gfa_m2 (800.50(320)) now does",
+      "rule": "CHAT-198.NN-Q3 (operator 2026-10-29, chat '3 we shouldn't use dwelling rooms because this input never got filled in - suite floor area vs. the house or semi floor area'; batch 2026-10-29-aa; held pending CHAT-198 import): A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build; Spec 133 §m.75 (M-75 correction form), §m.82 (M-82 Q5 new dsl_input), Spec 68 §9 G-READ",
+      "supersedes": "COR-150.8.60.50(2)#whole/disclosure",
+      "unit": "150.8.60.50(2)#whole",
+      "value": "A laneway suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build."
+    },
+    {
+      "adjudicated_on": "2026-10-29",
+      "adjudicator": "lane-nn-chat198",
+      "field": "numeric_expression",
+      "id": "COR-10.5.100.1(1)#(1)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "Audit defect 2 (model-understanding-audit 2026-10-29): the sealed expression min(6.0; 2.6) is always 2.6 m. Pinned text 10.5.100.1(1)(C): \"a maximum driveway width the lesser of: (i) 6.0 metres; (ii) the cumulative width of side-by-side parking spaces behind the front main wall, but not in the rear yard; or (iii) the width of a single parking spaces behind the front main wall, but not in the rear yard; or (iv) 2.6 metres if all parking spaces are in the rear yard\". Arm (iv) applies only when all parking is in the rear yard (the 2.6 m literal stays in literals_not_expressed as threshold_used_in_application); arm (iii) is the parking width, as in the unit 10.5.100.1(2)(B); the operator's 2026-10-09 adjudication caveat records that B omits the non-literal arms (ii)/(iii)",
+      "rule": "Spec 68 §9 G-CLAUSE (every literal accounted); Spec 133 §m.75 (M-75 correction form); operator adjudication ADJ-disagreement-10.5.100.1(1)#(1)(C)-numeric_expression (2026-10-09, caveat: B omits the non-literal args (ii)/(iii) of the lesser-of); the form of 10.5.100.1(2)(B)",
+      "unit": "10.5.100.1(1)#(1)(C)",
+      "value": [
+        "driveway_width_m = min(6.0 m @(1)(C)(i); parking_width_m @(1)(C)(iii)) @(1)(C)"
+      ]
     }
   ]
 }

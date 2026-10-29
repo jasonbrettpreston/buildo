@@ -3,6 +3,7 @@
 //
 // Pure helpers the CoA scorer (coa-scorecard.mjs) calls; no IO except the ruling reader the table pins already use.
 //   C-3  bylawStatusAtDecision   a verified in-force date after the decision date -> 'changed'; a tag without one -> 'unverified'; nothing guessed
+//   CHAT-198.NN-Q1  ANSWERED (no City figure): the evaluator answers, the notice prints no figure to compare: in the answered numerator and denominator, out of accuracy
 //   C-5  statsOf / floorsFrom / checkFloors / acceptFloors   floors per article (>= 10 scored rows) + pooled rest + overall; moved only by --accept --ruling
 //   C-4  diffMoves / checkPrereg / checkPreregShape   expected moves and totals registered before a round; an unexpected move is a finding
 import { lawAtHearing, pathCompatible } from '../bylaw/oracle-c.mjs';
@@ -38,14 +39,16 @@ export function bylawStatusAtDecision(tags, statuses, date, clausePath) {
 /** The article of a normalised clause: its first three dotted numbers (10.20.40.70(1) -> 10.20.40). */
 export const articleOf = (norm) => (/^(\d+\.\d+\.\d+)/.exec(String(norm || '')) || [])[1] || 'other';
 
-const blank = () => ({ match: 0, differ: 0, na: 0, ow: 0 });
+export const ANSWERED_CLASS = 'ANSWERED';
+const blank = () => ({ match: 0, differ: 0, na: 0, ow: 0, an: 0 });
 const rates = (c) => {
   const scored = c.match + c.differ;
-  return { ...c, scored, accuracy: scored ? c.match / scored : null, answered: scored + c.na + c.ow ? scored / (scored + c.na + c.ow) : null };
+  const ans = scored + c.an; // answered rows: scored plus ANSWERED (no City figure)
+  return { ...c, scored, accuracy: scored ? c.match / scored : null, answered: ans + c.na + c.ow ? ans / (ans + c.na + c.ow) : null };
 };
-const KEY = { MATCH: 'match', DIFFER: 'differ', 'NO ANSWER': 'na', OWED: 'ow' };
+const KEY = { MATCH: 'match', DIFFER: 'differ', 'NO ANSWER': 'na', OWED: 'ow', [ANSWERED_CLASS]: 'an' };
 
-/** accuracy = MATCH/(MATCH+DIFFER); answered = (MATCH+DIFFER)/(MATCH+DIFFER+NO ANSWER+OWED). Every other class is in neither. */
+/** accuracy = MATCH/(MATCH+DIFFER); answered = (MATCH+DIFFER+ANSWERED)/(MATCH+DIFFER+ANSWERED+NO ANSWER+OWED) (CHAT-198.NN-Q1). Every other class is in neither. */
 export function statsOf(rows) {
   const overall = blank();
   const art = {};
@@ -62,7 +65,7 @@ export function statsOf(rows) {
 
 const down = (x) => (x == null ? null : Math.floor(x * 100 + 1e-9)); // percent, rounded down
 const floorOf = (s) => ({ accuracy: down(s.accuracy), answered: down(s.answered) });
-const pool = (list) => rates(list.reduce((t, s) => ({ match: t.match + s.match, differ: t.differ + s.differ, na: t.na + s.na, ow: t.ow + s.ow }), blank()));
+const pool = (list) => rates(list.reduce((t, s) => ({ match: t.match + s.match, differ: t.differ + s.differ, na: t.na + s.na, ow: t.ow + s.ow, an: t.an + s.an }), blank()));
 
 /** Floors from a run: overall, one per article with >= FLOOR_MIN_SCORED scored rows, one pooled floor for the rest. */
 export function floorsFrom(stats) {
