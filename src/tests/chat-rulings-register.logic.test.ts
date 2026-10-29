@@ -352,6 +352,16 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(m).toContain('No page number is required');
     expect(m).toContain('Where a keyed value contradicts an unknown-source figure, the keyed value is read and the other figure stays disclosed.');
   });
+  it('CHAT-197.FS-Q1..FS-Q3 (batch 2026-10-29-z): no-number rows stay NO ANSWER, apartment-only clauses are NOT MODELLED, A0562 is a corner lot; dated note on M-322', () => {
+    const S = '2026-10-29-batch-z#CHAT-197.';
+    const m = rowOf(M, 'M-322');
+    expect(m).toContain(S + 'FS-Q1`');
+    expect(m).toContain(S + 'FS-Q2`');
+    expect(m).toContain(S + 'FS-Q3`');
+    expect(m).toContain('A by-law requirement the notice states without a number stays NO ANSWER until the evaluator answers it; the scorer never reclassifies it to leave the denominator.');
+    expect(m).toContain('A clause that applies only to a building type outside McBylaws scope (apartments) is NOT MODELLED with that reason, never NO ANSWER.');
+    expect(m).toContain('800.50(150)(B)');
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
