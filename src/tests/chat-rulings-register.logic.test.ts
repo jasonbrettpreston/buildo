@@ -378,6 +378,7 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     const n = rowOf(M, 'M-256');
     expect(n).toContain(S + 'NN-Q4`');
     expect(n).toContain("Where the user supplies the neighbours' front setbacks they replace the footprint estimate; the estimate remains the fallback and is flagged needs survey.");
+    expect(n).toContain("The front setback from averaging reads the user's neighbour setbacks, then the building-footprint estimate flagged needs survey, then a 6.0 m default flagged as a default; a missing neighbour figure never stops the calculation.");
   });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
