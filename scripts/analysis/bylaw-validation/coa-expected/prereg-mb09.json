@@ -1,0 +1,94 @@
+{
+ "$comment": "M-321 pre-registration, round MB-09 (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-09), committed alone before the floors move. Rules: P2C-Q2 (69a_mcbylaw_register.md:495, M-360) \"A test never asserts a red floor result; it stays red until a ruling moves the floor.\"; P2C-Q4 (:495, M-360) \"When an article reaches 10 scored rows and leaves the pool, it gets its own floor at its measured value and the pooled floor is re-based by ruling for that cause only.\"; P2C-Q5 (:495) \"An accepted floor change moves only the lines the ruling names.\"; M-343 (:477) \"A register row whose status starts RULED is authority for `--accept --ruling`.\" Change: floors-172.json only, through coa-scorecard.mjs --floors --accept --ruling=M-360 --line=... (the one door). Scorer effect: NONE EXPECTED; no row moves on the 172, 4d or cumulative sets, totals equal prereg-mb06.json. Floor lines expected to change, and no others (measured at wf1/mcbylaws-p2-merge 46e46429, identical on the 172 and the cumulative set): (1) article 150.8.60 accuracy: none -> 100 (14 MATCH, 0 DIFFER); (2) article 150.8.60 answered: none -> 93 (15 of 16 rows, 14 MATCH + 1 ANSWERED over 1 NO ANSWER; 93.75 rounded down); (3) pooled articles accuracy: 96 -> 95 (the ruling states 95; measured 95.83 on the 172 set and 96.43 on the cumulative set once 150.8.60 leaves the pool). Arithmetic for line (3), 172 set: the pool without 150.8.60 is 23 MATCH, 1 DIFFER = 95.83 %; with 150.8.60 (14 MATCH, 0 DIFFER) it was 37 of 38 = 97.37 %; the drop to 95.83 is only 150.8.60 leaving, the 24 remaining pooled rows unchanged. The pooled answered floor (68), overall, and every other article line do not change.",
+ "schema": "coa-round-prereg-v1",
+ "round": 11,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-09; ~/Buildo-scratch/p2close/CARD-phase2-close.answered.md P2C-Q2, P2C-Q4, P2C-Q5; prereg-mb06.json",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_floor_changes": [
+  {
+   "line": "article 150.8.60 accuracy",
+   "from": null,
+   "to": 100
+  },
+  {
+   "line": "article 150.8.60 answered",
+   "from": null,
+   "to": 93
+  },
+  {
+   "line": "pooled articles accuracy",
+   "from": 96,
+   "to": 95
+  }
+ ],
+ "expected_moves": [],
+ "expected_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 401,
+  "DIFFER": 29,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 401,
+  "DIFFER": 29,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 281,
+  "DIFFER": 23,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 281,
+  "DIFFER": 23,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 453,
+  "DIFFER": 35,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 453,
+  "DIFFER": 35,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_blind25": []
+}
