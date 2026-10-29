@@ -1,0 +1,77 @@
+{
+ "$comment": "M-321 pre-registration, front-setback round (card FS-SB1, refines CHAT-198.NN-Q4, recorded at 3942c7d0 on wf1/rulings-rec3), committed alone before the change it covers. Rule text: \"The neighbours' front setbacks are the user's figures, else the building-footprint estimate plus the M-245 allowance of 1.0 m (both neighbours averaged, one side if only one is found), else 6.0 m; every estimated or default value is flagged needs survey.\" Change: the allowance fya_porch_allowance_m (M-245, a logic variable, 1.0) is read from ONE place by the product model path and the scorer. front-averaging.mjs gains resolveFrontSetback(neighbours, logicVariables, lot, user), which takes the allowance from the logic-variable table and has no default of its own; coa-scorecard.mjs drops its own FYA_ALLOWANCE literal 1.0 and calls that function with the table from scripts/seeds/logic_variables.json. The product behaviour (user figures, else estimate + 1.0, one side if one is found, else 6.0 flagged) already holds in resolveFrontAveraging since d01e1458 and is pinned by red-first tests on the new entry point. Scorer effect: NONE EXPECTED. The scorer already applies estimate + 1.0 (coa-scorecard.mjs:66/396, value 1.0) and the seed value is the same 1.0, so no row moves on the 172 set, the 4d set or the cumulative set, and none on the blind-25 golden set (same function, same value). Expected totals equal those of prereg-nn2.json (verified by running the unchanged scorer at d01e1458 before this file was written: 172, 4d and cumulative totals identical). The cumulative set is below its committed floors at that baseline (article 10.5.40 accuracy 91.2 vs 94, 10.80.40 answered 86.4 vs 89, 150.8.60 no floor, pooled answered 58.3 vs 68); the floors result must be identical after the change; any floor falling further or any unlisted move is a STOP. Only scorer_sha in the 172 and 4d pins changes.",
+ "schema": "coa-round-prereg-v1",
+ "round": 7,
+ "plan_ref": "~/Buildo-scratch/p2close/CARD-front-setback.answered.md (FS-SB1); ~/Buildo-scratch/p2close/front-setback-calibration.md; docs/reports/decisions/2026-10-29-batch-aa.json CHAT-198.NN-Q4 (branch wf1/rulings-rec3 @3942c7d0); prereg-nn2.json",
+ "batch": "coa-2026-a,b,c (172 set); 4d set, cumulative set and blind-25 golden set checked",
+ "expected_moves": [],
+ "expected_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 399,
+  "DIFFER": 31,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 399,
+  "DIFFER": 31,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 451,
+  "DIFFER": 37,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 451,
+  "DIFFER": 37,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_blind25": []
+}
