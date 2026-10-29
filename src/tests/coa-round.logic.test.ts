@@ -155,9 +155,9 @@ describe.skipIf(!have172)('scorer wiring (172 notices)', () => {
     // CHAT-163: pooled accuracy now passes; 10.5.50 answered fails until the fix rounds (M-322).
     const before = crypto.createHash('sha256').update(fs.readFileSync(floorsFile)).digest('hex');
     const base = run(['--floors', floorsFile]);
-    expect(base.code).toBe(1);
-    expect((base.so.match(/^FLOORS FAIL: (.*)$/m)?.[1] ?? '').split('; ')).toEqual([
-      'article 10.5.50 answered 81.4 % is below its floor 83 %']);
+    // CHAT-164 round b: A0562#4 (corner read true, operator-corrected) leaves NO ANSWER; 10.5.50 answered 83.3 % meets its floor 83 %, so the 172 set passes.
+    expect(base.code).toBe(0);
+    expect(base.so).toMatch(/^FLOORS OK/m);
     expect(crypto.createHash('sha256').update(fs.readFileSync(floorsFile)).digest('hex')).toBe(before);
     const hi = path.join(tmp, 'hi.json');
     const f = JSON.parse(fs.readFileSync(floorsFile, 'utf8')); f.articles['10.20.40'].accuracy = 99; fs.writeFileSync(hi, JSON.stringify(f));

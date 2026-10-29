@@ -1,10 +1,10 @@
 {
- "$comment": "CHAT-164 read-record (decision log CHAT-164.READ-SOURCE and CHAT-164.CONTRADICTED, recorded at rulrec3 b50eca7b; Spec 133 M-321 dated note 2026-10-27). A keyed golden figure with status confirmed counts as read against its case's documents; no page number is required; the document is recorded per figure. Where a keyed value contradicts the unknown-source plan figure, the keyed value is read and the plan figure stays disclosed in lot_held_unread. Only the 25 golden cases can be read; every other unknown-source figure stays unread. Values only; figures are the plan-facts figures with an unknown or missing lot_source, nothing else. 'document' is the golden record's source label for the figure; 'printed_in' is the set of documents (notice, plan-facts, parcel) that print the value, from the source check (values only, none for a corner label). Golden: ~/Buildo-scratch/golden/keyed-final-20261027b (SHA256SUMS verified).",
+ "$comment": "CHAT-164 read-record (decision log CHAT-164.READ-SOURCE and CHAT-164.CONTRADICTED, recorded at rulrec3 b50eca7b; Spec 133 M-321 dated note 2026-10-27). A keyed golden figure with status confirmed counts as read against its case's documents; no page number is required; the document is recorded per figure. Where a keyed value contradicts the unknown-source plan figure, the keyed value is read and the plan figure stays disclosed in lot_held_unread. Only the 25 golden cases can be read; every other unknown-source figure stays unread. Values only; figures are the plan-facts figures with an unknown or missing lot_source, nothing else. 'document' is the golden record's source label for the figure; 'printed_in' is the set of documents (notice, plan-facts, parcel) that print the value, from the source check (values only, none for a corner label). Golden: ~/Buildo-scratch/golden/keyed-final-20261029 (SHA256SUMS verified).",
  "schema": "coa-read-record-v1",
  "rule": "docs/reports/decisions/2026-10-27 CHAT-164.READ-SOURCE; CHAT-164.CONTRADICTED",
  "golden": {
-  "dir": "keyed-final-20261027b",
-  "sha256sums_prefix": "0f3f08e103dcbce4",
+  "dir": "keyed-final-20261029",
+  "sha256sums_prefix": "bc842b6a10f02af3",
   "cases": 25
  },
  "keys": {
@@ -290,11 +290,10 @@
   {
    "case": "A0562/26TEY",
    "key": "corner",
-   "value": false,
-   "status": "confirmed",
-   "document": "parcel",
-   "printed_in": [],
-   "contradicts_held": true
+   "value": true,
+   "status": "corrected",
+   "document": "site plan (800.50(150)(B): street bends 135 degrees or less)",
+   "printed_in": []
   },
   {
    "case": "A0578/26TEY",

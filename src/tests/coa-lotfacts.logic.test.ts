@@ -150,7 +150,7 @@ describe("coa-lotfacts: the CHAT-164 read-record", () => {
     expect([sv2.area_m2, sv2.corner]).toEqual([null, false]);
     expect(M.lotHeldUnread(UNK, PUNK, { corner: { value: false, document: "parcel" } })).toBe("lot figure held, not read: area_m2 488 (source unknown)");
   });
-  it("R-3 (CHAT-164.CONTRADICTED, A0562 corner, A0578 area): the keyed value is read and the plan figure stays disclosed", async () => {
+  it("R-3 (CHAT-164.CONTRADICTED, a corner held true against keyed none, A0578 area): the keyed value is read and the plan figure stays disclosed", async () => {
     const M = await load();
     const a562 = F.A0562; const rec = { corner: { value: false, document: "parcel" } };
     expect(M.lotFigures(a562.pf, rec).corner).toBe(false);
@@ -178,7 +178,7 @@ describe("coa-lotfacts: the CHAT-164 read-record", () => {
     const bad = { schema: "coa-read-record-v1", figures: [{ case: "A1/26X", key: "area_m2", value: 1, status: "confirmed", document: "", page: 3 }, { case: "A1/26X", key: "area_m2", value: null, status: "keyed", document: "x" }] };
     expect(M.checkReadRecord(bad).length).toBeGreaterThanOrEqual(4);
   });
-  it("R-6: the committed read-record: 32 figures, value + document each, no page, four contradicted, only golden-status confirmed or contradicting", async () => {
+  it("R-6: the committed read-record: 32 figures, value + document each, no page, three contradicted, golden status confirmed, or operator-corrected", async () => {
     const M = await load();
     const rr = JSON.parse(fs.readFileSync(RR_FILE, "utf8"));
     expect(M.checkReadRecord(rr)).toEqual([]);
@@ -186,9 +186,9 @@ describe("coa-lotfacts: the CHAT-164 read-record", () => {
     for (const f of rr.figures) {
       expect(typeof f.document === "string" && f.document.length > 0).toBe(true);
       expect("page" in f).toBe(false);
-      expect(f.status === "confirmed" || (f.contradicts_held !== undefined && f.contradicts_held !== f.value)).toBe(true);
+      expect(["confirmed", "corrected"].includes(f.status) || (f.contradicts_held !== undefined && f.contradicts_held !== f.value)).toBe(true);
     }
-    expect(rr.figures.filter((f: Json) => f.contradicts_held !== undefined).map((f: Json) => f.case + " " + f.key)).toEqual(["A0277/26NY area_m2", "A0399/24EYK corner", "A0562/26TEY corner", "A0578/26TEY area_m2"]);
+    expect(rr.figures.filter((f: Json) => f.contradicts_held !== undefined).map((f: Json) => f.case + " " + f.key)).toEqual(["A0277/26NY area_m2", "A0399/24EYK corner", "A0578/26TEY area_m2"]);
     expect(new Set(rr.figures.map((f: Json) => f.case)).size).toBeLessThanOrEqual(25);
   });
 });

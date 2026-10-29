@@ -104,7 +104,7 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     // survey_preferred (legacy name, PLAN v3 C-4) = a survey-sourced figure is read: false on every no-parcel lot (B5 F-3)
     for (const [f, l] of Object.entries<any>(sc.lots)) expect([f, l.survey_preferred]).toEqual([f, !!l.parcel && Object.values(l.lot_source).includes('survey')]);
   });
-  it('CHAT-156 / CHAT-163 rows: four restored by the examined figures (A0375#1 by the site plan); A0205#9 value only; A0562#4 waits for the CHAT-164 round', () => {
+  it('CHAT-156 / CHAT-163 rows: four restored by the examined figures (A0375#1 by the site plan); A0205#9 value only; A0562#4 read in CHAT-164 round b', () => {
     const at = (f: string, n: number) => rowsOf(f).find((x: any) => x.n === n);
     const a118 = at('A0118/26TEY', 3);
     expect([a118.class, a118.class_on_survey, a118.ours.value, a118.city_value]).toEqual(['DATA', 'MATCH', 60, 60]);
@@ -114,7 +114,7 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     expect([a375.class, a375.class_on_survey, a375.ours.value, a375.city_value]).toEqual(['DATA', 'MATCH', 85, 85]); // CHAT-163: site-plan frontage read
     const a205 = at('A0205/26NY', 9);
     expect([a205.class, a205.ours.value, a205.city_value]).toEqual(['DIFFER', 10.9275, 10.8]);
-    expect(at('A0562/26TEY', 4).class).toBe('NO ANSWER'); // unknown-source corner not read (CHAT-164 round)
+    expect(at('A0562/26TEY', 4).class).toBe('DATA'); // CHAT-164 round b: the corrected keyed corner (true) is read
   });
   it('CHAT-165: held-but-unread plan figures are shown, values only', () => {
     // Data pins: these counts move only under the CHAT-164 round or a plan-facts change.
@@ -125,17 +125,18 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     const figs = shown.flatMap((l) => l.lot_held_unread.slice(PRE.length).split(/, (?=(?:frontage_m|depth_m|area_m2|corner) )/));
     const why: Record<string, number> = {}; for (const x of figs) { const w = x.match(/\(([^)]*)\)$/)?.[1] ?? '?'; why[w] = (why[w] || 0) + 1; }
     const contradicted = figs.filter((x) => /; contradicted by keyed value /.test(x)).length; for (const k of Object.keys(why)) if (k.includes(';')) { why['source unknown'] = (why['source unknown'] || 0) + (why[k] ?? 0); delete why[k]; }
-    expect([shown.length, figs.length, why, contradicted]).toEqual([62, 109, { 'source unknown': 100, 'curved front': 3, 'no parcel': 6 }, 4]); // S-4 (no-parcel reading (c)); CHAT-164: 32 figures read, 4 of them contradicted and still disclosed (137 - 28 = 109; 128 - 28 = 100)
+    expect([shown.length, figs.length, why, contradicted]).toEqual([61, 108, { 'source unknown': 99, 'curved front': 3, 'no parcel': 6 }, 3]); // S-4 (no-parcel reading (c)); CHAT-164: 32 figures read, 4 of them contradicted and still disclosed (137 - 29 = 108; 128 - 29 = 99); round b: A0562 corner keyed true agrees, so it is read and not contradicted
     expect(figs.filter((x) => /site_plan/.test(x))).toEqual([]);
-    expect([sc.lots['A0562/26TEY'].lot_held_unread, sc.lots['A0562/26TEY'].lot_source.corner]).toEqual(['lot figure held, not read: corner true (source unknown; contradicted by keyed value false)', 'read_record']); // S-5, CHAT-164.CONTRADICTED: the keyed value (not a corner) is read, the plan figure stays disclosed
+    expect([sc.lots['A0562/26TEY'].lot_held_unread, sc.lots['A0562/26TEY'].lot_source.corner]).toEqual([null, 'read_record']); // S-5: the operator-corrected keyed corner (true, site plan) agrees with the plan figure and is read
   });
-  it('CHAT-164 round: read-record figures are read (source read_record); A0170#2 gfa 243.47 -> 244 stays MATCH; A0562#4 stays NO ANSWER; contradicted figures stay disclosed', () => {
+  it('CHAT-164 round: read-record figures are read (source read_record); A0170#2 gfa 243.47 -> 244 stays MATCH; A0562#4 NO ANSWER to DATA (round b); contradicted figures stay disclosed', () => {
     const at = (f: string, n: number) => rowsOf(f).find((x: any) => x.n === n);
     const a170 = at('A0170/26EYK', 2);
     expect([a170.class, a170.ours.value, a170.city_value]).toEqual(['MATCH', 244, 244]);
     expect(sc.lots['A0170/26EYK'].lot_source.area_m2).toBe('read_record');
     expect(sc.lots['A0170/26EYK'].lot_held_unread).toBeNull();
-    expect(at('A0562/26TEY', 4).class).toBe('NO ANSWER'); // clause keying, not the lot figure
+    expect([at('A0562/26TEY', 4).class, at('A0562/26TEY', 4).ours.value]).toEqual(['DATA', 60]); // round b: corner read true against a parcel that holds not-corner; City 60
+    expect(at('A0562/26TEY', 5).class).toBe('NO ANSWER'); // clause keying, not the lot figure
     expect([sc.lots['A0388/26TEY'].lot_source.area_m2, sc.lots['A0388/26TEY'].lot_held_unread]).toEqual(['read_record', null]);
     expect(sc.lots['A0578/26TEY'].lot_source.area_m2).toBe('read_record');
     expect(sc.lots['A0578/26TEY'].lot_held_unread).toBe('lot figure held, not read: area_m2 356.65 (source unknown; contradicted by keyed value 345.22)');
