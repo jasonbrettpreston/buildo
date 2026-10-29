@@ -1,0 +1,81 @@
+{
+ "$comment": "M-321 pre-registration, round MB-54 (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md:273), committed alone before the change. Rules: MB-54 / CHAT-204 (recorded 74258684) and M172-AM / CHAT-207 (recorded fec1d070; \"Abutting-lot facts are read from the Spec 130 neighbour relation where it holds the neighbour, and remain user-supplied site facts where it does not (amends M-172(2))\"): parcel_abutments enters the resolve_bylaws lot vector (source SQL lateral aggregate, buildLotVector) through the one FS-SB1/SB2 function (front-averaging.mjs resolveFrontSetback), giving front_averaging_not_applicable, one_abutting_building_within_15_m, two_abutting_buildings_within_15_m, abutting_front_setback_m and adjacent_lot_fronts_flanking_street; where the relation holds no neighbour the tokens stay absent. The default that front-averaging.mjs:121 hard-codes (one_abutting_building_within_15_m true and front_averaging_not_applicable false when no neighbour figure exists) is not taken by Layer 2 (Spec 134 I10: a missing input is never defaulted); the product path and the scorer keep the flagged 6.0 m default of CHAT-198.NN-Q4. The CoA scorer does not read the Layer 2 lot vector and its own front-setback path is unchanged, so 0 rows move on the 172, 4d and cumulative sets and no floor falls. Expected Layer 2 effect, measured at the night and not here (no DB): the front_setback_m cells of the lots with abutting residential lots on their street (about 195,264 cells, Spec 130 section 1) move from not_evaluated:condition_unknown to a value (one or two estimated neighbours) or to the zone default (no qualifying neighbour, three or more); the lots whose neighbours carry no usable estimate stay not_evaluated with front_yard_survey_required; the 10.20.40.70(6)(B) and 150.7.60.20(6)(A) street-side cells of corner lots decide on adjacent_lot_fronts_flanking_street (about 28,560 cells).",
+ "schema": "coa-round-prereg-v1",
+ "round": 17,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-54; ~/Buildo-scratch/p2close/CARD-m172-amend.answered.md; docs/specs/01-pipeline/130_link_parcel_abutments.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
