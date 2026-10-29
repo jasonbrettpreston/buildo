@@ -1,0 +1,81 @@
+{
+ "$comment": "M-321 pre-registration, round MB-58 (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md), committed alone before the change. Rule: MB-58 / CHAT-166 (no personal names in files): coa-parse.cjs treats the Applicant label as a header label like Agent and Owner(s), so an applicant name never stays in the address or any field. The 172 stored notices carry no Applicant label (0 of 172, MB-10 panel), and the scorer reads figures not names: 0 rows move on the 172, 4d and cumulative sets, totals unchanged, floors hold.",
+ "schema": "coa-round-prereg-v1",
+ "round": 15,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-58",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 398,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 41,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 398,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 41,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 279,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 28,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 279,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 28,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 450,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 57,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 450,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 57,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; 172 and cumulative floors file result stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
