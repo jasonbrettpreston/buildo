@@ -1,0 +1,77 @@
+{
+ "$comment": "M-321 second pre-registration, front-setback round (card FS-SB2, refines step three of FS-SB1, recorded at 85b665ac on wf1/rulings-rec3), committed alone before the placeholder blend is built and in addition to prereg-fsb1.json (ffe4f2b9, met at b2b7d622). Rule text: \"Where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own building front setback plus 1.0 m and the median of the footprint estimates plus 1.0 m of other lots on the same street within the placeholder radius (one of the two if only one exists), else the same-zone median within the zone radius, else 6.0 m; always flagged needs survey, and never replaces a user figure or a neighbour estimate.\" Change: resolveFrontSetback (scripts/analysis/bylaw/front-averaging.mjs) takes an optional placeholder context {own_est_m, street_pool [{est_m, dist_m}], zone_pool [{est_m, dist_m}]} and, where the default 6.0 m answered, answers the blend with basis placeholder_blend (needs survey); radii and minimum counts are four new logic variables (fya_placeholder_street_radius_m 200, fya_placeholder_street_min_n 3, fya_placeholder_zone_radius_m 500, fya_placeholder_zone_min_n 5), backed by ~/Buildo-scratch/p2close/front-setback-placeholder.md; with no context the answer is 6.0 m as before. Scorer effect: NONE EXPECTED. The scorer reads frozen parcel snapshots that carry no same-street or same-zone pool and no own-house figure, so it passes no context and every row that answers 6.0 m today still answers 6.0 m; the blend is exercised by the product tests (red first) on the audit's worked example (A0246/17EYK: own 7.71 and street median 7.87 give 8.79, City 8.05), not by the scorer. No row moves on the 172 set, the 4d set, the cumulative set or the blind-25 golden set; totals equal prereg-fsb1.json and prereg-nn2.json; the cumulative floors result is identical to the baseline (the same four floor lines below their floors as before); any unlisted move or a floor falling further is a STOP. The pins change in table_version and scorer_sha only (new logic variables change the generated Layer 2 input through the hashed files).",
+ "schema": "coa-round-prereg-v1",
+ "round": 8,
+ "plan_ref": "~/Buildo-scratch/p2close/CARD-front-setback-placeholder.answered.md (FS-SB2); ~/Buildo-scratch/p2close/front-setback-placeholder.md; docs/reports/decisions/2026-10-29-batch-aa.json CHAT-198.NN-Q4 (branch wf1/rulings-rec3 @85b665ac); prereg-fsb1.json",
+ "batch": "coa-2026-a,b,c (172 set); 4d set, cumulative set and blind-25 golden set checked",
+ "expected_moves": [],
+ "expected_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 399,
+  "DIFFER": 31,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 399,
+  "DIFFER": 31,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 451,
+  "DIFFER": 37,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 451,
+  "DIFFER": 37,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_blind25": []
+}
