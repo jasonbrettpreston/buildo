@@ -1,0 +1,124 @@
+{
+ "$comment": "M-321 pre-registration, round MB-18 (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md:127-129), committed alone before the change. Rules: (1) platform setbacks per side and street side: 10.5.40.50(2) \"a platform without main walls ... must comply with the required minimum building setbacks for the zone\" (docs/reference/bylaw-provisions.md) gains a street-side target (platform_side_setback_street_m = side_setback_street_m) by an M-75 correction (missing-rules card rank 4, ~/Buildo-scratch/p2close/CARD-missing-rules.md:15, \"Existing: platform follows setback; correction under M-75\"; M-254 (1)), and the scorer reads a corner lot's second named side limit against the street side; (2) MB17-Q1 (M-252 dated note 2026-10-29, 2026-10-29-batch-ah#CHAT-209.MB17-Q1, \"An exception applies only to the building types it names\"): an exception written for a detached house does not set the setback of a detached houseplex (A0399, base 1.2 m, not 0.6 m), data in vocab.exception_type_binding, read for the four setback targets only; lot minimums keep the M-180(1) substitution (RM 252, A0289 kept); (3) 10.5.100.1(1)(D) driveway: the lesser of 9.0 m and the parking width, as the (C) correction (the sealed min(9.0; 2.6) was always 2.6 m). Expected: two 172-set rows move NO ANSWER to MATCH (A0090/26SC #3 and A0578/26TEY #3, both 10.5.40.50(2), corner lots whose second named side is the street side); A0090 is also in the 4d set; the cumulative set holds both. Items (2) and (3) move no scorer row (the houseplex and the lots wider than 23 m are not in the scored rows). No floor line falls. Lot minimums not applied to existing lots (the first MB-18 item) is not built here: it needs a ruling on where the comparison lives (see the held-patch README).",
+ "schema": "coa-round-prereg-v1",
+ "round": 15,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-18; ~/Buildo-scratch/p2close/CARD-missing-rules.md; ~/Buildo-scratch/p2close/CARD-mb17.answered.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0090/26SC",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "MB-18: the second named side limit equals the street-side setback of this corner lot (platform_side_setback_street_m)"
+  },
+  {
+   "notice": "A0578/26TEY",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "MB-18: the second named side limit equals the street-side setback of this corner lot (platform_side_setback_street_m)"
+  }
+ ],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 398,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 41,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [
+  {
+   "notice": "A0090/26SC",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "MB-18: the second named side limit equals the street-side setback of this corner lot (platform_side_setback_street_m)"
+  }
+ ],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 279,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 28,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0090/26SC",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "MB-18: the second named side limit equals the street-side setback of this corner lot (platform_side_setback_street_m)"
+  },
+  {
+   "notice": "A0578/26TEY",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "MB-18: the second named side limit equals the street-side setback of this corner lot (platform_side_setback_street_m)"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 450,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 57,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
