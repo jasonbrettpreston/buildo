@@ -430,6 +430,22 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(M, 'M-376')).toContain(S + 'SC-Q4`');
     expect(rowOf(M, 'M-376')).toContain('Ravine provisions that change the maximum building are applied from keyed clauses and a TRCA top-of-bank source step, like corner and heritage lot facts; where the line is not held the result says so; Ch.658 is disclosed where it applies.');
   });
+  it('CHAT-201 (batch 2026-10-29-ad): the maximum build is calculated for every design option and each result is shown with its option; dated note on M-172, OPEN wording in M-365 updated', () => {
+    const S = '2026-10-29-batch-ad#CHAT-201.';
+    const r = rowOf(M, 'M-172');
+    expect(r).toContain(S + 'MR-Q2-P`');
+    expect(r).toContain('Dated note 2026-10-29 (M-172; operator MR-Q2-P');
+    expect(r).toContain("For each design choice the by-law treats differently (e.g. flat roof or not), the maximum build is calculated for every option and each result is shown with its option; M-172(3)'s silent default no longer applies to the maximum build.");
+    expect(r).not.toContain('is OPEN and goes to the operator');
+    expect(rowOf(M, 'M-365')).toContain(S + 'MR-Q2-P`');
+    expect(rowOf(M, 'M-365')).not.toContain('OPEN, returned to the operator');
+  });
+  it('CHAT-202 (batch 2026-10-29-ad): a run-time column leaves a golden table_state only when declared excluded-with-reason in its Spec 121 #151a inventory before the first diff; dated note on M-369', () => {
+    const r = rowOf(M, 'M-369');
+    expect(r).toContain('2026-10-29-batch-ad#CHAT-202.MB45F-ROUTE`');
+    expect(r).toContain('Dated note 2026-10-29 (M-369; operator MB-45f re-route');
+    expect(r).toContain("A run-time column is excluded from a step's golden table_state only when declared excluded-with-reason in its Spec 121 #151a inventory before the first diff.");
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
