@@ -1,0 +1,19 @@
+{
+ "source": "operator chat 2026-10-27",
+ "operator_quote": "READ-SOURCE revised, CONTRADICTED as recommended",
+ "context": "Answers the frozen operator card ~/Buildo-scratch/p2close/CARD-chat164.answered.md (CHAT-164.READ-SOURCE revised, CHAT-164.CONTRADICTED as recommended; plan ~/Buildo-scratch/p2close/PLAN-chat164.md). The compliance table ~/Buildo-scratch/rulings-1024/batch-y-compliance.md is the check. The disclosed rule-text changes to CHAT-164 are recorded as the operator's approval.",
+ "decisions": [
+  {
+   "id": "CHAT-164.READ-SOURCE",
+   "subject": "Plan-facts figures with an unknown source: what counts as a read against the case's documents (CHAT-164 revised)",
+   "decision": "approve",
+   "recommendation": "Revised rule (A0388 area 230.1 keyed confirmed; plan facts source unknown; parcel 211.74; City-implied area within 0.75 %): A keyed figure with status confirmed counts as read against the case's documents; its source is recorded per figure and auto-filled only where exactly one document prints the value; any mismatch goes to the operator. No page number is required; the document is recorded per figure. Alternative, not chosen: re-read each figure from its PDF in the round, keyed values not used (one document read per figure). Cost: a per-figure source check (script) and a read-record; no page capture. Rule text changed (disclosed): the CHAT-164 wording \"re-read against their documents, values only, and reclassified in their own pre-registered round; until then they are not read\" is replaced by this line."
+  },
+  {
+   "id": "CHAT-164.CONTRADICTED",
+   "subject": "A keyed value that contradicts an unknown-source figure",
+   "decision": "approve",
+   "recommendation": "Golden value wins (A0399 corner plan facts true, golden none; A0578 area 356.65 vs golden 345.22): Where a keyed value contradicts an unknown-source figure, the keyed value is read and the other figure stays disclosed. Alternative, not chosen: stay unread until a document read. Cost: none beyond the read-record; 2 lots known. Rule text changed (disclosed): the CHAT-164 words \"are not read\" until the round no longer hold for a figure that a keyed value contradicts."
+  }
+ ]
+}

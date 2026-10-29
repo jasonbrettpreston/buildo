@@ -341,6 +341,17 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(m).toContain('DEFERRED, with no build until Phase 2/3 is complete');
     expect(m).toContain('routed as a card to the Oracle-B lane, no ruling on the build');
   });
+  it('CHAT-164.READ-SOURCE and CHAT-164.CONTRADICTED (batch 2026-10-29-y): a keyed confirmed figure counts as read, its source recorded per figure and auto-filled only where one document prints the value; a contradicting keyed value is read and the other figure stays disclosed; dated note on M-321', () => {
+    const S = '2026-10-29-batch-y#CHAT-164.';
+    const m = rowOf(M, 'M-321');
+    expect(m).toContain(S + 'READ-SOURCE`');
+    expect(m).toContain(S + 'CONTRADICTED`');
+    expect(m).toContain('A keyed figure with status confirmed counts as read against the case\'s documents');
+    expect(m).toContain('auto-filled only where exactly one document prints the value');
+    expect(m).toContain('any mismatch goes to the operator');
+    expect(m).toContain('No page number is required');
+    expect(m).toContain('Where a keyed value contradicts an unknown-source figure, the keyed value is read and the other figure stays disclosed.');
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
