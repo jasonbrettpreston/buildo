@@ -1529,7 +1529,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **m.359** Phase 2 closes on six items (amends the P2 meaning in M-331).
   Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-359` (Spec 69a)
+  Rules: `M-359` (Spec 69a) · +1 dated note
 
 - **m.361** Maximum build edge cases: no cap only where the zone has no article, a past-date lot is today's lot, no storey limit leaves height alone.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
