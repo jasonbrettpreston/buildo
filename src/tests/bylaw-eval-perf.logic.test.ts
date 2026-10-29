@@ -96,11 +96,13 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     const lots = [...new Set(VECTORS.map((v) => stable(v.lot)))].sort(cmp).map((s) => JSON.parse(s));
     const targets = Object.keys(PVOCAB.dsl_target).sort(cmp);
     const h = crypto.createHash('sha256');
+    const hLeftOut = crypto.createHash('sha256'); // the same walk with the dsl_targets added since the 2026-10-26 pin left out
+    const NEW_TARGETS = new Set(['platform_side_setback_street_m']);
     for (const L of lots) {
       for (const lot of [L, { ...L, building_type: null }, { ...L, flags: {} }, { ...L, building_type: null, flags: {} }]) {
         const cands = E.loadCandidates(lot, UNITS).candidates;
-        for (const t of targets) h.update(stable(noLosers(E.effective(lot, t, cands, C))));
-        for (const bt of EV.building_type_residential) h.update(stable(noLosers(E.permitted(lot, bt, cands, C))));
+        for (const t of targets) { const s = stable(noLosers(E.effective(lot, t, cands, C))); h.update(s); if (!NEW_TARGETS.has(t)) hLeftOut.update(s); }
+        for (const bt of EV.building_type_residential) { const s = stable(noLosers(E.permitted(lot, bt, cands, C))); h.update(s); hLeftOut.update(s); }
       }
     }
     expect(lots.length).toBe(35);
@@ -158,6 +160,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // scripts/analysis/bylaw-validation/layer2-rounds/prereg-g5.json): every permitted() result gains the key disclosures: [] (its 7 return
     // sites; the M-169 set-asides are recomputed on read). With permitted()'s disclosures key removed the hash is the previous pin
     // 3440a284…3770 exactly (bylaw-permission-disclosure.logic.test.ts G5-p: 840 calls, no status, winner, reason or input moved).
-    expect(h.digest('hex')).toBe('3f191431a61e72f49858998677f28b68007bc684e4b850eb1319bbc51bbf2d66');
+    // re-pinned 2026-10-29 (MB-18, platform_side_setback_street_m, a new dsl_target): its 140 cells are not_evaluated, and with it left out the hash is
+    // the previous pin 3f191431…2d66 exactly, so no existing cell moved (the platform street-side correction, MB17-Q1 setbacks and the (D) driveway move none either).
+    expect(h.digest('hex')).toBe('de34d132b277830008ee639852edc2a66c495fe16224a07ba6e053cef288a4b0');
+    expect(hLeftOut.digest('hex')).toBe('3f191431a61e72f49858998677f28b68007bc684e4b850eb1319bbc51bbf2d66');
   }, 60_000);
 });

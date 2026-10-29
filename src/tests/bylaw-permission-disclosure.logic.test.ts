@@ -109,7 +109,8 @@ const stable = (v: unknown): string => JSON.stringify(v, (_k, x) => (x && typeof
 const noLosers = (x: unknown): unknown => JSON.parse(JSON.stringify(x, (k, v) => (k === 'losers' ? undefined : v)));
 function corpusHash(permittedOf: (lot: Json, bt: string, cands: Json[]) => Json): { hash: string; bad: string[] } {
   const lots = [...new Set(VECTORS.map((v) => stable(v.lot)))].sort(cmp).map((s) => JSON.parse(s));
-  const targets = Object.keys(PVOCAB.dsl_target).sort(cmp);
+  // dsl_targets added after the g5 pre-registration are left out, as in the eval-perf re-pins (their cells are not_evaluated and move no existing cell): MB-18 platform_side_setback_street_m
+  const targets = Object.keys(PVOCAB.dsl_target).filter((k) => !['platform_side_setback_street_m'].includes(k)).sort(cmp);
   const h = crypto.createHash('sha256'); const bad: string[] = [];
   for (const L of lots) for (const lot of [L, { ...L, building_type: null }, { ...L, flags: {} }, { ...L, building_type: null, flags: {} }]) {
     const cands = E.loadCandidates(lot, UNITS).candidates;
