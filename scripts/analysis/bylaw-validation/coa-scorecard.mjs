@@ -147,6 +147,9 @@ function mainType(purpose) {
     const two = /two residential dwelling units in this dwelling/.test(p);
     return two ? { bt: 'semi_detached_houseplex', units: 2 } : { bt: 'semi_detached_house', units: 1 };
   }
+  // MB-59 (FS-Q1): "convert the existing 2 unit dwelling to 3 units" is a three-unit detached houseplex, so the unit-count rules (maximum bedrooms 3 x units, 10.20.40.1(8)(B)) have their input
+  const conv = /\bconvert[^.]{0,80}?\bto (\w+) (?:dwelling )?units?\b/.exec(p);
+  if (conv && num(conv[1]) >= 2) return { bt: 'detached_houseplex', units: num(conv[1]) };
   return { bt: 'detached_house', units: within ? num(within[1]) : 1 };
 }
 const SUITE_TYPES = ['garden_suite', 'laneway_suite', 'ancillary_building'];
@@ -412,7 +415,10 @@ function runNotice(n, surveyOn, rows, lots) {
       }
     }
 
-    if (r.status === 'value' && noFigure) { row.class = ANSWERED; row.why = `ANSWERED (no City figure): ours ${r.value}; the notice states no figure to compare; winner ${r.winner}`; row.delta = null; }
+    if (r.status === 'value' && noFigure) { row.class = ANSWERED; row.why = `ANSWERED (no City figure): ours ${r.value}; the notice states no figure to compare; winner ${r.winner}`; row.delta = null;
+      // MB-59: the verdict against the applicant's figure for a count the rule calculates (maximum bedrooms = 3 x units): the City lists the variance when the proposal exceeds the calculated limit
+      const pb = target === 'bedrooms' ? /(\d+)\s+bedrooms?\b/i.exec(v.proposal || '') : null;
+      if (pb && typeof r.value === 'number') { row.verdict = { proposed: Number(pb[1]), limit: r.value, exceeds: Number(pb[1]) > r.value }; row.why += `; the proposal (${pb[1]}) ${row.verdict.exceeds ? 'exceeds' : 'is within'} the calculated limit, ${row.verdict.exceeds ? 'a variance is needed' : 'no variance is needed'}`; } }
     else if (noFigure) { row.class = 'NOT MODELLED'; row.why = 'notice states no numeric requirement'; }
     else if (r.status === 'value') {
       if (typeof r.value === 'number') {
