@@ -788,7 +788,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=282 |
+| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=283 |
 | 2 | refresh_snapshot | PASS | 10 declared, missing from seeds: none |
 | 3 | refresh_snapshot | PASS | retired=0 overlap-with-declared=none |
 | 7 | refresh_snapshot | PASS | SPEC LINK header present=true |
@@ -836,11 +836,12 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 - compare ran: true · diffs found: 1009 · unexplained: 0
 
 ### Test suite (item iii)
-- 3459/3459 passed (suite success=true)
-- harvested: 138 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 3512/3513 passed (suite success=false)
+- harvested: 140 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

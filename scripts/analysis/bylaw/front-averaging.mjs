@@ -62,13 +62,40 @@ function qualifies(r) {
 
 const round2 = (x) => Math.round(x * 100) / 100;
 
+/** Names of the placeholder logic variables (card FS-SB2); radii in metres, minimum counts in lots. */
+export const PLACEHOLDER_VARS = Object.freeze(['fya_placeholder_street_radius_m', 'fya_placeholder_street_min_n', 'fya_placeholder_zone_radius_m', 'fya_placeholder_zone_min_n']);
+
+const median = (v) => { const a = [...v].sort((x, y) => x - y); const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+
+/**
+ * Card FS-SB2: the placeholder where neighbours exist but cannot be measured. placeholder = { own_est_m, street_pool: [{est_m, dist_m}], zone_pool: [...] } — the subject lot's own
+ * footprint front setback, and the footprint estimates of OTHER lots (the subject's abutters excluded by the data layer) on the same street / in the same zone with their
+ * distance in metres. Mean of (own + allowance) and (street median + allowance) when the street pool within the radius has at least the minimum count; one of the two if only
+ * one exists; else the same-zone median + allowance within the zone radius (minimum count); else null (the 6.0 m default answers). Radii and counts are logic variables.
+ */
+function placeholderFor(config, placeholder, allowance) {
+  if (placeholder == null) return null;
+  const c = (k) => finiteNonNegative(config == null ? undefined : config[k], k);
+  const sr = c('fya_placeholder_street_radius_m'); const sn = c('fya_placeholder_street_min_n'); const zr = c('fya_placeholder_zone_radius_m'); const zn = c('fya_placeholder_zone_min_n');
+  const within = (pool, r) => (pool || []).filter((x) => x && Number.isFinite(Number(x.est_m)) && Number.isFinite(Number(x.dist_m)) && Number(x.dist_m) <= r).map((x) => Number(x.est_m));
+  const own = placeholder.own_est_m != null && Number.isFinite(Number(placeholder.own_est_m)) ? Number(placeholder.own_est_m) + allowance : null;
+  const st = within(placeholder.street_pool, sr);
+  const street = st.length >= sn && st.length > 0 ? median(st) + allowance : null;
+  if (own != null && street != null) return { value: round2((own + street) / 2), source: 'own+street' };
+  if (own != null) return { value: round2(own), source: 'own' };
+  if (street != null) return { value: round2(street), source: 'street' };
+  const zp = within(placeholder.zone_pool, zr);
+  if (zp.length >= zn && zp.length > 0) return { value: round2(median(zp) + allowance), source: 'zone' };
+  return null;
+}
+
 /**
  * neighbours: the subject's parcel_abutments rows (ordered pair, subject → neighbour).
  * config: { fya_porch_allowance_m }. lot: { zone_default_m } — the zone's x.40.70(1) front setback for this lot.
  * user (optional): { neighbour_front_setbacks_m: [m, m?] } — the user's figures replace the estimate (CHAT-198.NN-Q4).
  * Returns the evaluator flags and vars for the subject lot, the front setback, the P5.10 basis and the P5.12 codes.
  */
-export function resolveFrontAveraging(neighbours, config, lot, user) {
+export function resolveFrontAveraging(neighbours, config, lot, user, placeholder) {
   const allowance = finiteNonNegative(config == null ? undefined : config.fya_porch_allowance_m, 'fya_porch_allowance_m');
   const zoneDefault = finiteNonNegative(lot == null ? undefined : lot.zone_default_m, 'zone_default_m');
   const supplied = suppliedSetbacks(user);
@@ -87,10 +114,12 @@ export function resolveFrontAveraging(neighbours, config, lot, user) {
   const off = { front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false };
   const base = { fya, qualifying: n, averaged_m: null, flags: off, vars: {} };
   // M-256 (amended by CHAT-198.NN-Q4): averaging may apply but no neighbour figure exists — the flagged default answers, the calculation never stops
+  const ph = placeholderFor(config, placeholder, allowance); // card FS-SB2: the blend replaces the 6.0 m default where the context yields one
   const needsSurvey = {
-    ...base, averaged_m: null, front_setback_m: DEFAULT_FRONT_SETBACK_M, basis: 'default_6_0', needs_survey: true, default_used: true, disclosures: ['front_yard_survey_required'],
+    ...base, averaged_m: null, front_setback_m: ph ? ph.value : DEFAULT_FRONT_SETBACK_M, basis: ph ? 'placeholder_blend' : 'default_6_0', needs_survey: true,
+    ...(ph ? { placeholder_source: ph.source } : { default_used: true }), disclosures: ['front_yard_survey_required'],
     flags: { front_averaging_not_applicable: false, one_abutting_building_within_15_m: true, two_abutting_buildings_within_15_m: false },
-    vars: { abutting_front_setback_m: DEFAULT_FRONT_SETBACK_M },
+    vars: { abutting_front_setback_m: ph ? ph.value : DEFAULT_FRONT_SETBACK_M },
   };
 
   if (fya === 'fya_none') {
@@ -123,9 +152,11 @@ export function resolveFrontAveraging(neighbours, config, lot, user) {
  * The ONE entry point for the product model path and the scorer. The allowance fya_porch_allowance_m (M-245) is read from the logic-variable table
  * (the shape of scripts/seeds/logic_variables.json, {name: {default}}, or {name: number}); this module holds no value of its own, and a table without it is refused.
  */
-export function resolveFrontSetback(neighbours, logicVariables, lot, user) {
-  const entry = logicVariables == null ? undefined : logicVariables.fya_porch_allowance_m;
-  const value = entry != null && typeof entry === 'object' ? entry.default : entry;
-  if (value === undefined) throw new Error('fya_porch_allowance_m is missing from the logic-variable table (M-245)');
-  return resolveFrontAveraging(neighbours, { fya_porch_allowance_m: value }, lot, user);
+export function resolveFrontSetback(neighbours, logicVariables, lot, user, placeholder) {
+  const read = (k) => { const e = logicVariables == null ? undefined : logicVariables[k]; return e != null && typeof e === 'object' ? e.default : e; };
+  const allowance = read('fya_porch_allowance_m');
+  if (allowance === undefined) throw new Error('fya_porch_allowance_m is missing from the logic-variable table (M-245)');
+  const config = { fya_porch_allowance_m: allowance };
+  if (placeholder != null) for (const k of PLACEHOLDER_VARS) { const v = read(k); if (v === undefined) throw new Error(`${k} is missing from the logic-variable table (card FS-SB2)`); config[k] = v; }
+  return resolveFrontAveraging(neighbours, config, lot, user, placeholder);
 }

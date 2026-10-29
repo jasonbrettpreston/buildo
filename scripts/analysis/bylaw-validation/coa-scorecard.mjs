@@ -66,7 +66,7 @@ function figureRole(req, val) {
 // M-245 (card FS-SB1): the allowance is the logic variable fya_porch_allowance_m, read from the one table the product path reads; FYA_ALLOWANCE overrides it for an experiment only
 const LOGIC_VARS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/logic_variables.json'), 'utf8')); // logic_variables.json
 const FYA_ALLOWANCE = process.env.FYA_ALLOWANCE ? Number(process.env.FYA_ALLOWANCE) : LOGIC_VARS.fya_porch_allowance_m.default;
-const FYA_TABLE = { fya_porch_allowance_m: FYA_ALLOWANCE };
+const FYA_TABLE = { ...LOGIC_VARS, fya_porch_allowance_m: FYA_ALLOWANCE }; // the scorer holds no same-street pool, so it passes no placeholder context and the 6.0 m default answers (prereg-fsb2.json)
 
 // ---------- label parsing (pull-lots.cjs:9-15, verbatim logic) ----------
 const EXC_CH = { R: 2, RD: 3, RS: 4, RT: 5, RM: 6 };

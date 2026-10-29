@@ -193,6 +193,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'resolve_bylaws_class_cap',
   'resolve_bylaws_scenario_axis_warn_max',
   'resolve_bylaws_not_evaluated_warn_pct',
+  'fya_placeholder_street_radius_m', // front setback placeholder (operator ruling 2026-10-29, card FS-SB2)
+  'fya_placeholder_street_min_n', // front setback placeholder (operator ruling 2026-10-29, card FS-SB2)
+  'fya_placeholder_zone_radius_m', // front setback placeholder (operator ruling 2026-10-29, card FS-SB2)
+  'fya_placeholder_zone_min_n', // front setback placeholder (operator ruling 2026-10-29, card FS-SB2)
   'fya_porch_allowance_m', // front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) note; Spec 131 LC-58)
   'abut_parcels_with_abutments_warn_pct', // H6 QA ruling 2026-10-16 item 2 — the abutment-share WARN floor
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate

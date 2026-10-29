@@ -7133,6 +7133,38 @@
     "description": "Front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) dated note; Spec 131 LC-58). Where 10.5.40.70(1) averaging applies, the front setback is max(averaged neighbour estimate + this allowance, the zone default of x.40.70(1)), always flagged needs survey. The neighbour estimates are measured to building outlines that take in porches and steps; against 219 CoA notices they sit at or below the examiner's figure 89 % of the time. At 1.0 m: mean error 1.39 m, 55 % within 1 m, 22 % below the examiner (6.0 m alone: 2.53 m, 64 %). CONSUMED by scripts/analysis/bylaw/front-averaging.mjs and scripts/analysis/bylaw-validation/front-setback-oracle.cjs.",
     "admin": { "group": "Source Ingestion" }
   },
+  "fya_placeholder_street_radius_m": {
+    "default": 200,
+    "type": "number",
+    "min": 10,
+    "max": 1000,
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: radius (metres) within which other lots on the same street feed the same-street median. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "fya_placeholder_street_min_n": {
+    "default": 3,
+    "type": "number",
+    "min": 1,
+    "max": 20,
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: minimum number of other same-street lots within that radius for the same-street median to count. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "fya_placeholder_zone_radius_m": {
+    "default": 500,
+    "type": "number",
+    "min": 50,
+    "max": 3000,
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: radius (metres) within which same-zone lots feed the zone median. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "fya_placeholder_zone_min_n": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 50,
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: minimum number of same-zone lots within that radius for the zone median to count. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "admin": { "group": "Source Ingestion" }
+  },
   "abut_parcels_with_abutments_warn_pct": {
     "default": 50,
     "type": "number",

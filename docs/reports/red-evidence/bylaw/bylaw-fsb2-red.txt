@@ -1,0 +1,15 @@
+   × FS-SB2: the placeholder where neighbours exist but cannot be measured > the four placeholder variables are in the logic-variable table, bounded, with their fit basis (200 m, 3, 500 m, 5) 2ms
+   × FS-SB2: the placeholder where neighbours exist but cannot be measured > the worked example (A0246/17EYK): own 7.71 and street median 7.87, each plus 1.0, average 8.79, flagged needs survey 4ms
+   × FS-SB2: the placeholder where neighbours exist but cannot be measured > one of the two when only one exists: own alone, or the street median alone 0ms
+   × FS-SB2: the placeholder where neighbours exist but cannot be measured > a lot outside the street radius does not count; the radius and minimum are read from the table 0ms
+   × FS-SB2: the placeholder where neighbours exist but cannot be measured > neither own nor street: the same-zone median within the zone radius (at least 5 lots), plus 1.0 m 0ms
+   × FS-SB2: the placeholder where neighbours exist but cannot be measured > a context with a table that lacks a placeholder variable is refused, naming it 2ms
+   × FS-SB2: the placeholder where neighbours exist but cannot be measured > the scorer passes the same table to the same function (no copy of the blend) 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+      const r = all.find((x) => x.unit === '× lot area' || x.unit === '%'); const a = all.find((x) => x.unit === 'm²');
+  const byU = (t) => unit === '× lot area' ? t === 'fsi' : unit === '%' ? /_pct$/.test(t) : unit === 'm²' ? /_m2$/.test(t) : unit === 'storeys' ? t === 'height_storeys' : unit === 'm' ? /_m$/.test(t) : true;
+  const byUnit = (t) => unit === '× lot area' ? t === 'fsi' : unit === '%' ? /_pct$/.test(t) : unit === 'm²' ? /_m2$/.test(t) : unit === 'storeys' ? t === 'height_storeys' : unit === 'm' ? /_m$/.test(t) : true;
+const tol = (unit) => unit === '%' ? 0.5 : unit === 'm²' ? 1 : unit === '× lot area' ? 0.005 : unit === 'storeys' ? 0 : 0.01;
+    // 4D-S6: the target is a % or × lot area limit but the parser picked the m² companion: take the matching figure
+    if (target && cityUnit === 'm²' && (/_pct$/.test(target) || target === 'fsi')) { const want = target === 'fsi' ? '× lot area' : '%'; const alt = (v.required_all || []).find((x) => x.unit === want); if (alt) { s6 = `figure ${cityVal} m² → ${alt.value} ${want}`; cityVal = alt.value; cityUnit = want; } }
+      Tests  7 failed | 2 passed (9)
