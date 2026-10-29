@@ -1,0 +1,14 @@
+{
+  "source": "operator chat 2026-10-29",
+  "operator_quote": "amend M-172(2) approved",
+  "context": "Answers the frozen operator card ~/Buildo-scratch/p2close/CARD-m172-amend.answered.md (M172-AM). Compliance table ~/Buildo-scratch/rulings-1024/batch-af-compliance.md.",
+  "decisions": [
+    {
+      "id": "CHAT-207.M172-AM",
+      "subject": "M172-AM: abutting-lot facts read from the neighbour relation",
+      "decision": "approve",
+      "operator_quote": "amend M-172(2) approved",
+      "recommendation": "Amend M-172(2): where parcel_abutments (Spec 130) holds the neighbour, the abutting-lot facts (neighbouring lot is a park, a lane, holds a building) are read from it; where it does not, they stay site facts the user can supply. Rule text: Abutting-lot facts are read from the Spec 130 neighbour relation where it holds the neighbour, and remain user-supplied site facts where it does not (amends M-172(2))."
+    }
+  ]
+}
