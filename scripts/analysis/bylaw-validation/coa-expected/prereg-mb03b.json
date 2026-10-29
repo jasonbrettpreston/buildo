@@ -1,0 +1,257 @@
+{
+ "$comment": "M-321 pre-registration, notice-reader and scorer round MB-03b (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md), committed alone before the parser or scorer change. Rule: MB03-Q2 and its addendum (recorded fc117484, batch 2026-10-29-ac; ~/Buildo-scratch/p2close/CARD-mb03-q2.answered.md): \"A requirement sentence yields one check per stated limit; a figure that defines when the rule applies is a condition, and when it is met every limit in the sentence applies.\" and \"A definition figure that decides whether a rule applies (e.g. within 0.3 m of a building) is not a limit; when the build relies on it, the result discloses the definition and its clause.\" Change: coa-parse.cjs classifies each figure of a requirement sentence as limit, condition, definition, derived or proposal text (requirementLimits), reads the thousands separator (5,400 m2 is 5400) and never scrubs the word project; a sentence whose only figure is the definition states no limit (A0262#10/#11, A0349#8, A0330#2 City figure none); coa-scorecard.mjs makes one check per limit (row.checks), a row is DIFFER if any checked limit differs, else the first OWED/NO ANSWER, else MATCH; a limit with no keyed target is listed and does not decide the row; a named compass lot line is a side lot line; where the notice sets a different limit per named side and the model's one side setback equals one of them, the other sides have NO ANSWER; the definition is carried as a disclosure (code attached_platform_definition). Stored notices are re-derived (values only; *.pre-mb03b kept) and the word project restored in 2 sentences (A0203/26EYK#2). Expected class moves are listed per set; every other row keeps class and City figure. The 5 floor lines below hold.",
+ "schema": "coa-round-prereg-v1",
+ "round": 12,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-03b; ~/Buildo-scratch/p2close/mb03/ambiguous-rows.txt (68 rows); ~/Buildo-scratch/p3model/ (dry runs)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0090/26SC",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "DIFFER",
+   "to": "NO ANSWER",
+   "reason": "MB-03b: 3.6 m south and 0.45 m north are both side limits (operator: the 0.3 m is the condition); the model holds one side setback (0.45 m), so the 3.6 m side has no model answer"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 1,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "DIFFER",
+   "reason": "MB-03b: second limit 10.88 m rear setback is checked; the model gives 10.9275 m (Exception RD5 figure differs by 0.05 m): a real difference now visible"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 2,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "DIFFER",
+   "reason": "MB-03b: second limit 10.88 m rear setback is checked; the model gives 10.9275 m (Exception RD5 figure differs by 0.05 m): a real difference now visible"
+  },
+  {
+   "notice": "A0396/26TEY",
+   "n": 6,
+   "clause": "10.5.40.60(1)(A)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "MB-03b: the side clearance 0.45 m is a limit and is checked; the model gives 0.9 m"
+  },
+  {
+   "notice": "A0578/26TEY",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "NO ANSWER",
+   "reason": "MB-03b: 1.2 m north and 3 m south are both side limits; the model holds one side setback (1.2 m), so the 3 m side has no model answer"
+  }
+ ],
+ "expected_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 398,
+  "DIFFER": 31,
+  "NO ANSWER": 41,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 401,
+  "DIFFER": 29,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_figure_changes": [
+  {
+   "notice": "A0349/25EYK",
+   "n": 8,
+   "clause": "10.5.40.60(1)(F)",
+   "class_before": "NOT SCORABLE",
+   "class_after": "NOT SCORABLE",
+   "city_before": 0.3,
+   "city_after": null,
+   "unit": "m"
+  }
+ ],
+ "expected_moves_4d": [
+  {
+   "notice": "A0090/26SC",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "DIFFER",
+   "to": "NO ANSWER",
+   "reason": "MB-03b: 3.6 m south and 0.45 m north are both side limits (operator: the 0.3 m is the condition); the model holds one side setback (0.45 m), so the 3.6 m side has no model answer"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 1,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "DIFFER",
+   "reason": "MB-03b: second limit 10.88 m rear setback is checked; the model gives 10.9275 m (Exception RD5 figure differs by 0.05 m): a real difference now visible"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 2,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "DIFFER",
+   "reason": "MB-03b: second limit 10.88 m rear setback is checked; the model gives 10.9275 m (Exception RD5 figure differs by 0.05 m): a real difference now visible"
+  }
+ ],
+ "expected_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 279,
+  "DIFFER": 24,
+  "NO ANSWER": 28,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 281,
+  "DIFFER": 23,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_figure_changes_4d": [
+  {
+   "notice": "A0349/25EYK",
+   "n": 8,
+   "clause": "10.5.40.60(1)(F)",
+   "class_before": "NOT SCORABLE",
+   "class_after": "NOT SCORABLE",
+   "city_before": 0.3,
+   "city_after": null,
+   "unit": "m"
+  }
+ ],
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0090/26SC",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "DIFFER",
+   "to": "NO ANSWER",
+   "reason": "MB-03b: 3.6 m south and 0.45 m north are both side limits (operator: the 0.3 m is the condition); the model holds one side setback (0.45 m), so the 3.6 m side has no model answer"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 1,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "DIFFER",
+   "reason": "MB-03b: second limit 10.88 m rear setback is checked; the model gives 10.9275 m (Exception RD5 figure differs by 0.05 m): a real difference now visible"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 2,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "DIFFER",
+   "reason": "MB-03b: second limit 10.88 m rear setback is checked; the model gives 10.9275 m (Exception RD5 figure differs by 0.05 m): a real difference now visible"
+  },
+  {
+   "notice": "A0396/26TEY",
+   "n": 6,
+   "clause": "10.5.40.60(1)(A)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "MB-03b: the side clearance 0.45 m is a limit and is checked; the model gives 0.9 m"
+  },
+  {
+   "notice": "A0578/26TEY",
+   "n": 3,
+   "clause": "10.5.40.50(2)",
+   "from": "MATCH",
+   "to": "NO ANSWER",
+   "reason": "MB-03b: 1.2 m north and 3 m south are both side limits; the model holds one side setback (1.2 m), so the 3 m side has no model answer"
+  },
+  {
+   "notice": "A0262/26NY",
+   "n": 10,
+   "clause": "10.5.40.50(2)",
+   "from": "DIFFER",
+   "to": "ANSWERED",
+   "reason": "MB-03b addendum: the 0.3 m is a definition, not a limit; the requirement states no figure, so the row is ANSWERED with the model's value (NN-Q1 class)"
+  },
+  {
+   "notice": "A0262/26NY",
+   "n": 11,
+   "clause": "10.5.40.50(2)",
+   "from": "DIFFER",
+   "to": "ANSWERED",
+   "reason": "MB-03b addendum: the 0.3 m is a definition, not a limit; the requirement states no figure, so the row is ANSWERED with the model's value (NN-Q1 class)"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 450,
+  "DIFFER": 35,
+  "NO ANSWER": 57,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 8
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 453,
+  "DIFFER": 35,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_figure_changes_cumulative": [
+  {
+   "notice": "A0349/25EYK",
+   "n": 8,
+   "clause": "10.5.40.60(1)(F)",
+   "class_before": "NOT SCORABLE",
+   "class_after": "NOT SCORABLE",
+   "city_before": 0.3,
+   "city_after": null,
+   "unit": "m"
+  },
+  {
+   "notice": "A0325/26NY",
+   "n": 1,
+   "clause": "900.7.10–",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 400,
+   "city_after": 5400,
+   "unit": "m²"
+  },
+  {
+   "notice": "A0330/26NY",
+   "n": 2,
+   "clause": "10.5.40.50(4)(B)",
+   "class_before": "NO ANSWER",
+   "class_after": "NO ANSWER",
+   "city_before": 0.3,
+   "city_after": null,
+   "unit": "m"
+  }
+ ],
+ "expected_floors": "no floor line falls; 172 and cumulative floors file result stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
