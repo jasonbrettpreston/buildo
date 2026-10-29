@@ -27,7 +27,7 @@
       });
   }
 
-  var HEADER_LABELS = /\s+(?=(?:File Number|Property Address|Legal Description|Agent|Owner\(s\)|Zoning|Ward|Community|Heritage):?(?:\s|$))/g;
+  var HEADER_LABELS = /\s+(?=(?:File Number|Property Address|Legal Description|Agent|Applicant|Owner\(s\)|Zoning|Ward|Community|Heritage):?(?:\s|$))/g;
   function splitHeader(lines) {
     var out = [], inHeader = true;
     lines.forEach(function (l) {
