@@ -1,0 +1,314 @@
+{
+ "$comment": "M-321 pre-registration, floor-scorer round (batch 2026-10-29-z: CHAT-197.FS-Q1 not chosen, FS-Q2 agreed, FS-Q3 corner; cause census ~/Buildo-scratch/p2close/floor-causes.md). Committed BEFORE any change to the scorer. Baseline = the scorer at b21f5b56 (172 set 698 rows, 4d set 496 rows, cumulative 821 rows; totals equal the pins). Changes registered: (1) FS-Q2: clauses 10.5.50.10(4) and (5) go through outOfScope() with the reason 'apartment-only provision, out of scope', so the 8 rows that cite them (building type apartment) move NO ANSWER to NOT MODELLED. (2) Case-data corrections recorded on the row with their evidence (values only, from the notice record and the by-law unit): A0262/26NY#4 and #5 (printed 10.10.40(2)A) read as 10.10.40.10(2)(A)), A0467/26TEY#1 (printed 10.10.40.10(2)(iii) read as 10.10.40.10(2)(B)(iii)), A0167/26EYK#2 (cited 10.20.40.10(1)(A) height, figure is a floor space index; read as 10.20.40.40(1)(A)), A0302/26NY#2 (required 18 is the frontage condition; the building length limit in the same notice text is 17). Each correction was tried in a scratch copy of the scorer and gave MATCH (floor-causes.md, marked E). NOT changed (FS-Q1 not chosen): the order of the no-number check; no row reclassifies to leave the denominator. EXPECTED MOVES by set are listed in expected_moves (172 set), expected_moves_4d and expected_moves_cumulative; every other row on every set must stay in its class. Value changes expected: none beyond the moved rows. Floors: only rise; none may fall; any rise is accepted only by --accept --ruling citing the batch-z ruling (M-322 dated note, 2026-10-29-batch-z#CHAT-197). The pins expected-172.json and expected-4d.json move with this round and are re-pinned after the check. No tolerances, no allowlists.",
+ "schema": "coa-round-prereg-v1",
+ "round": 4,
+ "plan_ref": "docs/reports/decisions/2026-10-29-batch-z.json CHAT-197.FS-Q1..FS-Q3; ~/Buildo-scratch/p2close/CARD-floor-scorer.answered.md; ~/Buildo-scratch/p2close/floor-causes.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set checked",
+ "expected_moves": [
+  {
+   "notice": "A0201/26EYK",
+   "n": 8,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 4,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 5,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0426/26TEY",
+   "n": 7,
+   "clause": "10.5.50.10(4)(A)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0426/26TEY",
+   "n": 8,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0467/26TEY",
+   "n": 1,
+   "clause": "10.10.40.10(2)(B)(iii)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "case-data correction: printed clause 10.10.40.10(2)(iii) lacks (B); the notice requirement (8.5 m for 40 % of front and rear main wall widths) is the by-law 10.10.40.10(2)(B)(iii) figure"
+  },
+  {
+   "notice": "A0167/26EYK",
+   "n": 2,
+   "clause": "10.20.40.40(1)(A)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "case-data correction: the cited 10.20.40.10(1)(A) is the height clause; the notice requirement is a floor space index of 0.45 times the lot area (232.43 m2), which is 10.20.40.40(1)(A)"
+  }
+ ],
+ "expected_totals": {
+  "NOT MODELLED": 101,
+  "MATCH": 389,
+  "DIFFER": 28,
+  "NO ANSWER": 40,
+  "OWED": 88,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 96,
+  "MATCH": 387,
+  "DIFFER": 29,
+  "NO ANSWER": 46,
+  "OWED": 88,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_moves_4d": [
+  {
+   "notice": "A0201/26EYK",
+   "n": 8,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 4,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 5,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0426/26TEY",
+   "n": 7,
+   "clause": "10.5.50.10(4)(A)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0426/26TEY",
+   "n": 8,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0167/26EYK",
+   "n": 2,
+   "clause": "10.20.40.40(1)(A)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "case-data correction: the cited 10.20.40.10(1)(A) is the height clause; the notice requirement is a floor space index of 0.45 times the lot area (232.43 m2), which is 10.20.40.40(1)(A)"
+  }
+ ],
+ "expected_totals_4d": {
+  "NOT MODELLED": 75,
+  "MATCH": 278,
+  "DIFFER": 22,
+  "NO ANSWER": 28,
+  "OWED": 56,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 70,
+  "MATCH": 277,
+  "DIFFER": 23,
+  "NO ANSWER": 33,
+  "OWED": 56,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0201/26EYK",
+   "n": 8,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 4,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 5,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0426/26TEY",
+   "n": 7,
+   "clause": "10.5.50.10(4)(A)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0426/26TEY",
+   "n": 8,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0222/26EYK",
+   "n": 3,
+   "clause": "10.5.50.10(4)(A)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0222/26EYK",
+   "n": 4,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0254/26EYK",
+   "n": 8,
+   "clause": "10.5.50.10(5)",
+   "from": "NO ANSWER",
+   "to": "NOT MODELLED",
+   "reason": "FS-Q2: 10.5.50.10(4)/(5) are apartment-only provisions, out of scope (batch 2026-10-29-z CHAT-197.FS-Q2)"
+  },
+  {
+   "notice": "A0467/26TEY",
+   "n": 1,
+   "clause": "10.10.40.10(2)(B)(iii)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "case-data correction: printed clause 10.10.40.10(2)(iii) lacks (B); the notice requirement (8.5 m for 40 % of front and rear main wall widths) is the by-law 10.10.40.10(2)(B)(iii) figure"
+  },
+  {
+   "notice": "A0167/26EYK",
+   "n": 2,
+   "clause": "10.20.40.40(1)(A)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "case-data correction: the cited 10.20.40.10(1)(A) is the height clause; the notice requirement is a floor space index of 0.45 times the lot area (232.43 m2), which is 10.20.40.40(1)(A)"
+  },
+  {
+   "notice": "A0262/26NY",
+   "n": 4,
+   "clause": "10.10.40.10(2)(A)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "case-data correction: printed 10.10.40(2)A) has no article; the notice requirement (7.5 m for side main walls, at least 70 %) is 10.10.40.10(2)(A)"
+  },
+  {
+   "notice": "A0262/26NY",
+   "n": 5,
+   "clause": "10.10.40.10(2)(A)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "case-data correction: same as A0262/26NY#4 (west main wall)"
+  },
+  {
+   "notice": "A0302/26NY",
+   "n": 2,
+   "clause": "10.20.40.20(1)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "case-data correction: the parser read the frontage condition 18.0 m as the requirement; the notice requirement is a building length of 17.0 m (required_all holds 17)"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 136,
+  "MATCH": 440,
+  "DIFFER": 34,
+  "NO ANSWER": 57,
+  "OWED": 93,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 128,
+  "MATCH": 435,
+  "DIFFER": 36,
+  "NO ANSWER": 68,
+  "OWED": 93,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_unchanged": [
+  {
+   "notice": "A0262/26NY",
+   "n": 10,
+   "clause": "10.5.40.50(2)",
+   "class": "DIFFER",
+   "tier": "C",
+   "note": "parse and side-setback value cause; not corrected in this round"
+  },
+  {
+   "notice": "A0262/26NY",
+   "n": 11,
+   "clause": "10.5.40.50(2)",
+   "class": "DIFFER",
+   "tier": "C"
+  },
+  {
+   "notice": "A0300/26NY",
+   "n": 1,
+   "clause": "10.5.55.1(1)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "note": "out-of-scope provision outside the FS-Q2 ruling; stays NO ANSWER"
+  },
+  {
+   "notice": "A0175/26EYK",
+   "n": 2,
+   "clause": "10.20.40.50(1)(B)",
+   "class": "DIFFER",
+   "tier": "C",
+   "note": "miscite becomes OWED if re-keyed; not corrected in this round"
+  }
+ ]
+}

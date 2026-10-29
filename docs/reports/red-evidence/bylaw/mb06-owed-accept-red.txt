@@ -1,0 +1,165 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-b10fix
+
+file:///Users/brettpreston_macmini/Buildo-wt-b10fix/scripts/analysis/bylaw-validation/coa-round.mjs:104
+  if (rulings.get(ruling) !== 'RATIFIED') throw new Error(`floors: ruling ${ruling} is not RATIFIED (${rulings.get(ruling) || 'absent'})`);
+                                                ^
+
+Error: floors: ruling M-99999 is not RATIFIED (absent)
+    at Module.acceptFloors (file:///Users/brettpreston_macmini/Buildo-wt-b10fix/scripts/analysis/bylaw-validation/coa-round.mjs:104:49)
+    at file:///Users/brettpreston_macmini/Buildo-wt-b10fix/scripts/analysis/bylaw-validation/coa-scorecard.mjs:475:21
+
+Node.js v24.22.0
+fatal: '../../../var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/coaround-NFqHwE/prereg-x.json' is outside repository at '/Users/brettpreston_macmini/Buildo-wt-b10fix'
+ ❯ src/tests/coa-round.logic.test.ts (29 tests | 8 failed) 40843ms
+   ✓ scorer wiring (172 notices) > C-3: A0573/24NY (heard 2025-01-23, 10.20.40.30(1) amended by 648-2025, in force 2025-06-26) is BY-LAW CHANGED, in neither percentage 10604ms
+   ✓ scorer wiring (172 notices) > C-5: the committed floors are checked on the 172-notice set (--floors): the CHAT-148 ruled FAIL list, floors file unchanged; a raised floor fails 21317ms
+   ✓ scorer wiring (172 notices) > C-5: --accept without a RATIFIED --ruling refuses and leaves the floors file unchanged 5506ms
+   ✓ scorer wiring (172 notices) > C-4: an uncommitted pre-registration is a finding; a registered round-0 file matches expected against actual 3403ms
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > M-343: parseRulings reads a status starting RULED as RULED (was UNKNOWN) 3ms
+     → expected [ [ 'M-343', 'UNKNOWN' ], …(2) ] to deeply equal [ [ 'M-343', 'RULED' ], …(2) ]
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > M-343: acceptFloors takes a RULED row as authority and still refuses PROPOSED, UNKNOWN and absent 0ms
+     → floors: ruling M-343 is not RATIFIED (RULED)
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > M-343: acceptUniverse takes a RULED row; PROPOSED is still refused 2ms
+     → ruling_not_ratified: --ruling=M-343 is UNKNOWN in Spec 69
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > P2C-Q5: --accept moves only the named lines, to the measured value or the value the ruling states, and records them 0ms
+     → floors: ruling M-1 is not RATIFIED (RULED)
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > P2C-Q5: --accept with no line, an unknown line or a bad value refuses and changes nothing 1ms
+     → expected [Function] to throw error matching /names no line/ but got 'floors: ruling M-1 is not RATIFIED (R…'
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > OWED: a failing line named by an owing row is OWED (row, tasks, date), in its own section, exit 0 only when no other line fails 0ms
+     → R.reportFloors is not a function
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > OWED: any FAIL line keeps exit 1 and the FAIL line text; only lines named by an owing row are OWED 0ms
+     → R.reportFloors is not a function
+   × MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > OWED: a row absent from the register, not in the OWED form, or naming a line that passes never makes OWED 0ms
+     → R.reportFloors is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > M-343: parseRulings reads a status starting RULED as RULED (was UNKNOWN)
+AssertionError: expected [ [ 'M-343', 'UNKNOWN' ], …(2) ] to deeply equal [ [ 'M-343', 'RULED' ], …(2) ]
+
+- Expected
++ Received
+
+  Array [
+    Array [
+      "M-343",
+-     "RULED",
++     "UNKNOWN",
+    ],
+    Array [
+      "M-372",
+-     "RULED",
++     "UNKNOWN",
+    ],
+    Array [
+      "M-9",
+      "PROPOSED",
+    ],
+  ]
+
+ ❯ src/tests/coa-round.logic.test.ts:195:30
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > M-343: acceptFloors takes a RULED row as authority and still refuses PROPOSED, UNKNOWN and absent
+Error: floors: ruling M-343 is not RATIFIED (RULED)
+ ❯ Module.acceptFloors scripts/analysis/bylaw-validation/coa-round.mjs:104:49
+    102| export function acceptFloors(floors, stats, ruling, rulings) {
+    103|   if (!ruling) throw new Error('floors: a change needs --accept --ruli…
+    104|   if (rulings.get(ruling) !== 'RATIFIED') throw new Error(`floors: rul…
+       |                                                 ^
+    105|   const next = floorsFrom(stats);
+    106|   return { ...floors, ...next, rulings: [...(floors.rulings || []), { …
+ ❯ src/tests/coa-round.logic.test.ts:200:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > M-343: acceptUniverse takes a RULED row; PROPOSED is still refused
+UniverseError: ruling_not_ratified: --ruling=M-343 is UNKNOWN in Spec 69
+ ❯ Module.acceptUniverse scripts/analysis/bylaw/universe.mjs:478:49
+    476|   if (!isStr(inputs.adoptionId)) throw new UniverseError('universe_loc…
+    477|   const rulings = parseRulings(inputs.spec69Text);
+    478|   if (rulings.get(ruling) !== 'RATIFIED') throw new UniverseError('rul…
+       |                                                 ^
+    479|   if (!inputs.spec69Text.includes(`**${ruling}**`)) throw new Universe…
+    480|   const r = checkUniverse({ ...inputs, lock: null });
+ ❯ src/tests/coa-round.logic.test.ts:210:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > P2C-Q5: --accept moves only the named lines, to the measured value or the value the ruling states, and records them
+Error: floors: ruling M-1 is not RATIFIED (RULED)
+ ❯ Module.acceptFloors scripts/analysis/bylaw-validation/coa-round.mjs:104:49
+    102| export function acceptFloors(floors, stats, ruling, rulings) {
+    103|   if (!ruling) throw new Error('floors: a change needs --accept --ruli…
+    104|   if (rulings.get(ruling) !== 'RATIFIED') throw new Error(`floors: rul…
+       |                                                 ^
+    105|   const next = floorsFrom(stats);
+    106|   return { ...floors, ...next, rulings: [...(floors.rulings || []), { …
+ ❯ src/tests/coa-round.logic.test.ts:216:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > P2C-Q5: --accept with no line, an unknown line or a bad value refuses and changes nothing
+AssertionError: expected [Function] to throw error matching /names no line/ but got 'floors: ruling M-1 is not RATIFIED (R…'
+
+- Expected: 
+/names no line/
+
++ Received: 
+"floors: ruling M-1 is not RATIFIED (RULED)"
+
+ ❯ src/tests/coa-round.logic.test.ts:232:60
+    230|     const rulings = new Map([['M-1', 'RULED']]);
+    231|     const s = R.statsOf(all);
+    232|     expect(() => R.acceptFloors(f, s, 'M-1', rulings, [])).toThrow(/na…
+       |                                                            ^
+    233|     expect(() => R.acceptFloors(f, s, 'M-1', rulings, ['article 7.7.7 …
+    234|     expect(() => R.acceptFloors(f, s, 'M-1', rulings, ['article 10.20.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > OWED: a failing line named by an owing row is OWED (row, tasks, date), in its own section, exit 0 only when no other line fails
+TypeError: R.reportFloors is not a function
+ ❯ src/tests/coa-round.logic.test.ts:239:19
+    237|   it('OWED: a failing line named by an owing row is OWED (row, tasks, …
+    238|     const f = R.floorsFrom(R.statsOf(all));
+    239|     const rep = R.reportFloors(f, worse, [OWING, OWING2].join('\n'));
+       |                   ^
+    240|     expect(rep.code).toBe(0);
+    241|     expect(rep.text.split('\n')[0]).toBe('FLOORS OK (OWED: 2, listed)'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > OWED: any FAIL line keeps exit 1 and the FAIL line text; only lines named by an owing row are OWED
+TypeError: R.reportFloors is not a function
+ ❯ src/tests/coa-round.logic.test.ts:250:19
+    248|   it('OWED: any FAIL line keeps exit 1 and the FAIL line text; only li…
+    249|     const f = R.floorsFrom(R.statsOf(all));
+    250|     const rep = R.reportFloors(f, worse, OWING); // 10.20.40 accuracy …
+       |                   ^
+    251|     expect(rep.code).toBe(1);
+    252|     expect(rep.text.split('\n')[0]).toMatch(/^FLOORS FAIL: overall acc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/tests/coa-round.logic.test.ts > MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines > OWED: a row absent from the register, not in the OWED form, or naming a line that passes never makes OWED
+TypeError: R.reportFloors is not a function
+ ❯ src/tests/coa-round.logic.test.ts:258:14
+    256|   it('OWED: a row absent from the register, not in the OWED form, or n…
+    257|     const f = R.floorsFrom(R.statsOf(all));
+    258|     expect(R.reportFloors(f, worse, '').code).toBe(1); // register wit…
+       |              ^
+    259|     const notOwed = OWING.replace('OWED to Phase 3 (MB-21 (with MB-20 …
+    260|     expect(R.reportFloors(f, worse, notOwed).owed).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 21 passed (29)
+   Start at  14:02:10
+   Duration  41.31s (transform 114ms, setup 45ms, collect 115ms, tests 40.84s, environment 0ms, prepare 33ms)
+

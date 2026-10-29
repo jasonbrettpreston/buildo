@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-125; DRAFT RULING pending (see coa-parse.cjs). Values only.
-// Rebuilds parser-shaped notices.json from per-notice JSON docs (intake DB export), re-deriving required_all/proposed_all with coa-parse.cjs measures().
+// Rebuilds parser-shaped notices.json from per-notice JSON docs (intake DB export), re-deriving required, proposed, check, required_all and proposed_all with coa-parse.cjs readFigures() (MB-03).
 // Usage: node scripts/analysis/bylaw-validation/coa-notices-from-docs.cjs <docs-dir> <out notices.json> [<scrubbed samples dir> to parity-check the parser]
 const fs = require('fs'), path = require('path');
 const P = require('./coa-parse.cjs');
@@ -11,7 +11,7 @@ const out = []; let cmp = 0, diff = 0;
 for (const f of fs.readdirSync(DOCS).filter((x) => x.endsWith('.json')).sort()) {
   const d = JSON.parse(fs.readFileSync(path.join(DOCS, f), 'utf8'));
   const rec = { ...d }; delete rec.plan_facts; delete rec.filed_at; delete rec.examiner_review;
-  rec.variances = d.variances.map((v) => ({ ...v, required_all: P.measures(v.requirement), proposed_all: P.measures(v.proposal) }));
+  rec.variances = d.variances.map((v) => { const f = P.readFigures(v.requirement, v.proposal); return { ...v, required: f.required, check: f.check, proposed: f.proposed, required_all: f.required_all, proposed_all: f.proposed_all }; }); // MB-03: required/check/proposed come from the same reader as parse()
   const fn = f.replace('.json', ''); const txt = SAMPLES && path.join(SAMPLES, fn + '.txt');
   if (txt && fs.existsSync(txt)) {
     const r = P.parse(fs.readFileSync(txt, 'utf8')).record; cmp++;

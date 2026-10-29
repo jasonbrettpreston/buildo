@@ -1,0 +1,14 @@
+   × FS-SB1: the product path reads the neighbour front setback in the ruled order > two neighbours: the average of the footprint estimates plus the allowance, flagged needs survey 3ms
+   × FS-SB1: the product path reads the neighbour front setback in the ruled order > one side only: that side plus the allowance, flagged needs survey 0ms
+   × FS-SB1: the product path reads the neighbour front setback in the ruled order > no figure anywhere while averaging may apply: 6.0 m, flagged needs survey and as a default 0ms
+   × FS-SB1: the product path reads the neighbour front setback in the ruled order > the user's figures win over the estimate, no allowance, no survey flag 0ms
+   × FS-SB1: the product path reads the neighbour front setback in the ruled order > the allowance comes from the table, not from a literal: another table value moves the result; a table without it is refused 0ms
+   × FS-SB1: the product path reads the neighbour front setback in the ruled order > the scorer shares the one implementation: it calls resolveFrontSetback with the table and carries no allowance literal of its own 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+      const r = all.find((x) => x.unit === '× lot area' || x.unit === '%'); const a = all.find((x) => x.unit === 'm²');
+  const byU = (t) => unit === '× lot area' ? t === 'fsi' : unit === '%' ? /_pct$/.test(t) : unit === 'm²' ? /_m2$/.test(t) : unit === 'storeys' ? t === 'height_storeys' : unit === 'm' ? /_m$/.test(t) : true;
+  const byUnit = (t) => unit === '× lot area' ? t === 'fsi' : unit === '%' ? /_pct$/.test(t) : unit === 'm²' ? /_m2$/.test(t) : unit === 'storeys' ? t === 'height_storeys' : unit === 'm' ? /_m$/.test(t) : true;
+const tol = (unit) => unit === '%' ? 0.5 : unit === 'm²' ? 1 : unit === '× lot area' ? 0.005 : unit === 'storeys' ? 0 : 0.01;
+    // 4D-S6: the target is a % or × lot area limit but the parser picked the m² companion: take the matching figure
+    if (target && cityUnit === 'm²' && (/_pct$/.test(target) || target === 'fsi')) { const want = target === 'fsi' ? '× lot area' : '%'; const alt = (v.required_all || []).find((x) => x.unit === want); if (alt) { s6 = `figure ${cityVal} m² → ${alt.value} ${want}`; cityVal = alt.value; cityUnit = want; } }
+      Tests  6 failed | 1 passed (7)

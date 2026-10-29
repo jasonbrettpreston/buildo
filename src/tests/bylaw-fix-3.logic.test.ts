@@ -323,7 +323,7 @@ describe('M-205(1)-floor / M-245 — no zone-default floor under the averaged fr
   it('the zone default applies only where averaging does not: no qualifying neighbour, three or more neighbours; an excluded estimate needs a survey (M-256)', () => {
     const cfg = { fya_porch_allowance_m: 1.0 }; const z = { zone_default_m: 6.0 };
     expect(FA.resolveFrontAveraging([], cfg, z).front_setback_m).toBe(6.0);
-    expect(FA.resolveFrontAveraging([nb(2.0), { ...nb(2.0), est_status: 'estimate_negative', front_setback_est_m: null }], cfg, z).front_setback_m).toBe(null);
+    expect(FA.resolveFrontAveraging([nb(2.0), { ...nb(2.0), est_status: 'estimate_negative', front_setback_est_m: null }], cfg, z).front_setback_m).toBe(6.0); // CHAT-198.NN-Q4: the flagged 6.0 m default, not an owed answer
     expect(FA.resolveFrontAveraging([nb(2.0), nb(2.0), nb(2.0)], cfg, z).front_setback_m).toBe(6.0);
   });
 });

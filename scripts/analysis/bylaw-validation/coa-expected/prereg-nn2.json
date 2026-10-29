@@ -1,0 +1,451 @@
+{
+ "$comment": "M-321 second pre-registration, no-number-rules round (batch 2026-10-29-aa), committed alone before the change it covers and in addition to prereg-nn.json (73abac61). It covers the operator ruling given after that file was committed, recorded as part of CHAT-198.NN-Q4: \"We should use the building footprint or 6M as the default.\" Rule text: \"The front setback from averaging reads the user's neighbour setbacks, then the building-footprint estimate flagged needs survey, then a 6.0 m default flagged as a default; a missing neighbour figure never stops the calculation.\" Change: resolveFrontAveraging (scripts/analysis/bylaw/front-averaging.mjs) answers 6.0 m with basis default_6_0 and default_used true where averaging may apply and no user figure or usable estimate exists (the M-256 undecided case, which returned the owed answer); the max-build scenarios then evaluate. Scorer effect: NONE. The scorer reads user figures from the plan facts only; it does not promote the estimate or the default, so every row stays in its class and the expected moves and totals below equal those of prereg-nn.json (all other registrations of that file stand, including the four DIFFER findings and the rule that no floor may fall). Verified before this file was committed by running the scorer on the 172 set and the cumulative set with the change in the working tree: 0 rows differ from the run registered by prereg-nn.json. Product tests (red first) cover the three-step value order and the max-build evaluation.\n\n",
+ "schema": "coa-round-prereg-v1",
+ "round": 6,
+ "plan_ref": "docs/reports/decisions/2026-10-29-batch-aa.json CHAT-198.NN-Q1..NN-Q5 (branch wf1/rulings-rec3 @fb845fb5); ~/Buildo-scratch/p2close/CARD-no-number-rules.answered.md; ~/Buildo-scratch/p2close/PLAN-no-number-rules.md; ~/Buildo-scratch/p2close/model-understanding-audit.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set checked",
+ "expected_moves": [
+  {
+   "notice": "A0096/26SC",
+   "n": 1,
+   "clause": "10.5.40.70(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0457/25EYK",
+   "n": 1,
+   "clause": "150.7.60.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "NN-Q3 (+NN-Q1 comparator where the notice prints only the main building figure): 150.7/150.8.60.50(2) is keyed to the declared input main_building_gfa_m2, filled from plan facts, then the max build (batch 2026-10-29-aa CHAT-198.NN-Q3, NN-Q1)"
+  },
+  {
+   "notice": "A0491/26TEY",
+   "n": 2,
+   "clause": "10.20.40.70(1)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0573/24NY",
+   "n": 3,
+   "clause": "10.20.40.50(1)(A)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 4,
+   "clause": "150.8.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 5,
+   "clause": "150.8.60.40(1)(A)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0428/26TEY",
+   "n": 1,
+   "clause": "10.5.40.70(1)(A)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0428/26TEY",
+   "n": 7,
+   "clause": "150.7.60.40(1)(A)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0428/26TEY",
+   "n": 8,
+   "clause": "150.8.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0486/26TEY",
+   "n": 1,
+   "clause": "10.10.40.10(1)(A)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0486/26TEY",
+   "n": 6,
+   "clause": "150.7.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0486/26TEY",
+   "n": 7,
+   "clause": "150.7.60.40(1)(A)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0488/26TEY",
+   "n": 1,
+   "clause": "150.8.60.40(1)(B)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0497/26TEY",
+   "n": 7,
+   "clause": "150.7.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0221/26TEY",
+   "n": 8,
+   "clause": "150.8.60.40(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0396/26TEY",
+   "n": 3,
+   "clause": "10.10.40.70(3)(A)(iii)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0567/26TEY",
+   "n": 1,
+   "clause": "10.10.40.10(2)(A)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0583/26TEY",
+   "n": 1,
+   "clause": "10.5.40.50(2)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  }
+ ],
+ "expected_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 399,
+  "DIFFER": 31,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 101,
+  "MATCH": 389,
+  "DIFFER": 28,
+  "NO ANSWER": 40,
+  "OWED": 88,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_moves_4d": [
+  {
+   "notice": "A0096/26SC",
+   "n": 1,
+   "clause": "10.5.40.70(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0457/25EYK",
+   "n": 1,
+   "clause": "150.7.60.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "NN-Q3 (+NN-Q1 comparator where the notice prints only the main building figure): 150.7/150.8.60.50(2) is keyed to the declared input main_building_gfa_m2, filled from plan facts, then the max build (batch 2026-10-29-aa CHAT-198.NN-Q3, NN-Q1)"
+  },
+  {
+   "notice": "A0491/26TEY",
+   "n": 2,
+   "clause": "10.20.40.70(1)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0573/24NY",
+   "n": 3,
+   "clause": "10.20.40.50(1)(A)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  }
+ ],
+ "expected_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 75,
+  "MATCH": 278,
+  "DIFFER": 22,
+  "NO ANSWER": 28,
+  "OWED": 56,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0096/26SC",
+   "n": 1,
+   "clause": "10.5.40.70(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0457/25EYK",
+   "n": 1,
+   "clause": "150.7.60.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "NN-Q3 (+NN-Q1 comparator where the notice prints only the main building figure): 150.7/150.8.60.50(2) is keyed to the declared input main_building_gfa_m2, filled from plan facts, then the max build (batch 2026-10-29-aa CHAT-198.NN-Q3, NN-Q1)"
+  },
+  {
+   "notice": "A0491/26TEY",
+   "n": 2,
+   "clause": "10.20.40.70(1)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0573/24NY",
+   "n": 3,
+   "clause": "10.20.40.50(1)(A)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 4,
+   "clause": "150.8.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 5,
+   "clause": "150.8.60.40(1)(A)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0428/26TEY",
+   "n": 1,
+   "clause": "10.5.40.70(1)(A)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q4: the scorer reads the neighbours' front setbacks from the plan facts where held, replacing the footprint estimate (batch 2026-10-29-aa CHAT-198.NN-Q4)"
+  },
+  {
+   "notice": "A0428/26TEY",
+   "n": 7,
+   "clause": "150.7.60.40(1)(A)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0428/26TEY",
+   "n": 8,
+   "clause": "150.8.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0486/26TEY",
+   "n": 1,
+   "clause": "10.10.40.10(1)(A)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0486/26TEY",
+   "n": 6,
+   "clause": "150.7.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0486/26TEY",
+   "n": 7,
+   "clause": "150.7.60.40(1)(A)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0488/26TEY",
+   "n": 1,
+   "clause": "150.8.60.40(1)(B)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0497/26TEY",
+   "n": 7,
+   "clause": "150.7.60.30(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0221/26TEY",
+   "n": 8,
+   "clause": "150.8.60.40(1)(B)",
+   "from": "OWED",
+   "to": "MATCH",
+   "reason": "NN-Q2: the scorer reads the applicant suite height and separation from the plan facts where held (batch 2026-10-29-aa CHAT-198.NN-Q2)"
+  },
+  {
+   "notice": "A0396/26TEY",
+   "n": 3,
+   "clause": "10.10.40.70(3)(A)(iii)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0567/26TEY",
+   "n": 1,
+   "clause": "10.10.40.10(2)(A)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0583/26TEY",
+   "n": 1,
+   "clause": "10.5.40.50(2)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "NN-Q1: the evaluator answers, the notice prints no figure: new class ANSWERED (no City figure), in the answered numerator and denominator, out of accuracy, listed by name (batch 2026-10-29-aa CHAT-198.NN-Q1)"
+  },
+  {
+   "notice": "A0298/26NY",
+   "n": 1,
+   "clause": "150.7.60.50(2)",
+   "from": "NO ANSWER",
+   "to": "MATCH",
+   "reason": "NN-Q3 (+NN-Q1 comparator where the notice prints only the main building figure): 150.7/150.8.60.50(2) is keyed to the declared input main_building_gfa_m2, filled from plan facts, then the max build (batch 2026-10-29-aa CHAT-198.NN-Q3, NN-Q1)"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 451,
+  "DIFFER": 37,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 136,
+  "MATCH": 440,
+  "DIFFER": 34,
+  "NO ANSWER": 57,
+  "OWED": 93,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_unchanged": [
+  {
+   "notice": "A0079/26SC",
+   "n": 2,
+   "clause": "150.7.60.40(1)(A)",
+   "class": "OWED",
+   "note": "notice parser kept the threshold 4 / 7.5 as the City figure (first-number defect, coa-parse.cjs:182/:190); not fixed in this round"
+  },
+  {
+   "notice": "A0071/26SC",
+   "n": 1,
+   "clause": "150.25.20.1(3)(B)",
+   "class": "NO ANSWER",
+   "note": "at most 6 dwelling rooms: NN-Q3 adds no dwelling_rooms target; stays NO ANSWER"
+  },
+  {
+   "notice": "A0265/26NY",
+   "n": 2,
+   "clause": "150.25.20.1(3)(B)",
+   "class": "NO ANSWER",
+   "note": "dwelling rooms: no target (NN-Q3); stays NO ANSWER"
+  }
+ ]
+}

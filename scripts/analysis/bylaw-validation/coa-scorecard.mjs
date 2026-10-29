@@ -3,22 +3,25 @@
 //
 // CoA scorecard. READ-ONLY: reads the tree at --root, parser-shaped notices, a frozen parcels snapshot; writes a scorecard JSON.
 // Assembly = assembly.mjs loadRealLotAssembly (what eval-lots.mjs and the golden-lot helper use) + vocab design_choice_disclosure.default_overrides.
-// Classes: MATCH / DIFFER / NO ANSWER / OWED / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
-// Survey dimensions in --plan-facts are preferred; a parcel row >5% off the survey is flagged (F-4D-8/9/14). Calculator survey override is drafted, not built (owed).
+// Classes: MATCH / DIFFER / NO ANSWER / OWED / ANSWERED (no City figure; CHAT-198.NN-Q1: in the answered numerator and denominator, out of accuracy, listed by name) / NOT MODELLED / DATA (explained data flag) / NOT SCORABLE (non-569 zone or unmatched address; F-4D-20; excluded from both percentages).
+// Lot figures in --plan-facts are read in M-326 order (CHAT-156 / CHAT-163; coa-lotfacts.mjs); a parcel row >5% off the figure used is flagged (M-308, F-4D-8/9/14); held-but-unread plan figures are shown in lot_held_unread (CHAT-165). Calculator survey override is drafted, not built (owed).
 // Scorer fixes marked "4D-S<n>" (S1-S7) came from the four-district run at ac78d5dd.
 // Classes also: BY-LAW CHANGED (C-3: the cited provision has an amendment tag with a VERIFIED in-force date after the hearing; in neither percentage). A tag with no verified date leaves the class and sets amendment_status 'unverified'.
 // Usage: node scripts/analysis/bylaw-validation/coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]
 //   --pin FILE: write the expected file for this run at this tree ({commit, totals, inputs}).
-//   --floors FILE: fail (exit 1) when accuracy / answered fall below the committed floors (C-5); with --accept --ruling=<RATIFIED id> the floors are re-derived from this run and rewritten (the one door, Spec 133 m.56).
+//   --floors FILE: fail (exit 1) when accuracy / answered fall below the committed floors (C-5); a failing line named by an owing register row (M-372..M-374) prints as OWED, in its own section, never PASS (exit 0 only when every line is PASS or OWED); with --accept --ruling=<RATIFIED or RULED id> --line="article 150.8.60" (repeatable, optional =value) only the named lines are rewritten from this run (the one door, Spec 133 m.56; P2C-Q5).
 //   --prereg FILE [--baseline SCORECARD.json]: record expected against actual moves and totals (C-4); an unexpected move, a missing move, a totals difference or an uncommitted file is a FINDING (exit 1).
 //   --check: after scoring, compare the class totals with EXPECTED.json {commit, totals}; exit 1 on a mismatch when --root is at that commit,
 //            otherwise print the diff as information only (the evaluator moved on; a changed total is a finding, not a failure).
 import crypto from 'node:crypto'; import fs from 'node:fs'; import path from 'node:path'; import { pathToFileURL, fileURLToPath } from 'node:url';
-import { normClause, unitsForClause } from './coa-clausemap.mjs';
+import { normClause, unitsForClause, correctionFor } from './coa-clausemap.mjs';
 import { execFileSync } from 'node:child_process';
 import { checkExplainedDifferences, explainRow } from './coa-explained.mjs';
 import * as RD from './coa-round.mjs';
+import * as LF from './coa-lotfacts.mjs';
 import { readSpec69Rulings, parseRulings } from '../bylaw/universe.mjs';
+import { createRequire } from 'node:module';
+const CP = createRequire(import.meta.url)('./coa-parse.cjs'); // referentFigure (CHAT-198.NN-Q1)
 
 const arg = (k, d = null) => { const i = process.argv.indexOf('--' + k); return i >= 0 ? process.argv[i + 1] : d; };
 const ROOT = path.resolve(arg('root', path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')));
@@ -29,12 +32,17 @@ const REGISTER_IDS = new Set((fs.readFileSync(path.join(ROOT, 'docs/specs/01-pip
 const EXPLAINED_BAD = checkExplainedDifferences(I.vocab, REGISTER_IDS);
 if (EXPLAINED_BAD.length) { console.error('vocab.explained_differences is invalid:\n  ' + EXPLAINED_BAD.join('\n  ')); process.exit(2); }
 const FA = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/front-averaging.mjs')).href);
+const MB = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/main-building-gfa.mjs')).href); // CHAT-198.NN-Q3
 const defaults = {}; for (const [k, v] of Object.entries((I.vocab.design_choice_disclosure || {}).default_overrides || {})) if (k !== '$comment' && v && typeof v.taken_as === 'boolean') defaults[k] = v.taken_as;
 const SCU = I.vocab.scenario_class_units || {};
 const PROV_BY = new Map(JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-provisions.json'), 'utf8')).rows.map((r) => [r.regulation_id, r]));
 const AMD_STATUSES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/amendments.json'), 'utf8')).statuses;
 const notices = JSON.parse(fs.readFileSync(NOT, 'utf8')); const parcels = JSON.parse(fs.readFileSync(PAR, 'utf8'));
 const PF_DIR = arg('plan-facts', process.env.PLAN_FACTS || null);
+// CHAT-164: the read-record (default: the committed file beside the pins); --read-record none switches it off. A malformed record stops the run.
+const RR_PATH = arg('read-record', path.join(ROOT, 'scripts/analysis/bylaw-validation/coa-expected/read-record-chat164.json'));
+const READ_RECORD = RR_PATH !== 'none' && fs.existsSync(RR_PATH) ? JSON.parse(fs.readFileSync(RR_PATH, 'utf8')) : null;
+if (READ_RECORD) { const bad = LF.checkReadRecord(READ_RECORD); if (bad.length) { console.error('read-record is invalid:\n  ' + bad.join('\n  ')); process.exit(2); } }
 // 4D-S4: openings evidence (notice text or plan facts) → take the blank_side_wall:false arm
 const OPEN_RE = /\b(windows?|openings?|doors?)\s+(in|on)\s+(the\s+)?(\w+\s+)?(side|main)\s+walls?|(?<!no\s)openings to dwelling units|side wall (has|with) (windows|openings)/i;
 function openingsEvidence(n) {
@@ -55,7 +63,10 @@ function figureRole(req, val) {
   if (/(encroach|project|extend|into)[^.]{0,40}$/i.test(before)) return 'encroachment';
   return null;
 }
-const FYA_ALLOWANCE = Number(process.env.FYA_ALLOWANCE || 1.0); // logic_variables fya_porch_allowance_m (migration 276 seed 1.0)
+// M-245 (card FS-SB1): the allowance is the logic variable fya_porch_allowance_m, read from the one table the product path reads; FYA_ALLOWANCE overrides it for an experiment only
+const LOGIC_VARS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/logic_variables.json'), 'utf8')); // logic_variables.json
+const FYA_ALLOWANCE = process.env.FYA_ALLOWANCE ? Number(process.env.FYA_ALLOWANCE) : LOGIC_VARS.fya_porch_allowance_m.default;
+const FYA_TABLE = { ...LOGIC_VARS, fya_porch_allowance_m: FYA_ALLOWANCE }; // the scorer holds no same-street pool, so it passes no placeholder context and the 6.0 m default answers (prereg-fsb2.json)
 
 // ---------- label parsing (pull-lots.cjs:9-15, verbatim logic) ----------
 const EXC_CH = { R: 2, RD: 3, RS: 4, RT: 5, RM: 6 };
@@ -160,6 +171,7 @@ function outOfScope(c, v) {
   if (/^10\.5\.40\.60\(3\)\(a\)\(ii\)/i.test(s)) return 'stairs width';
   if (/^5\.10\./.test(s)) return 'shoreline / ravine (Ch.5 TRCA hazard)';
   if (/^10\.5\.60\.1\(3\)/.test(s)) return 'ancillary-building use (food preparation / sanitary facilities)';
+  if (/^10\.5\.50\.10\([45]\)/.test(s)) return 'apartment-only provision, out of scope'; // CHAT-197.FS-Q2
   return null;
 }
 const ELEMENT_TARGETS_OLD = new Set(['encroachment_m', 'encroachment_clearance_m', 'element_width_pct', 'platform_height_m', 'height_projection_m']);
@@ -235,34 +247,19 @@ function evalTarget(lot, target, onlyUnits) {
 }
 
 // ---------- main ----------
-// F-4D-8/9/14 (data-quality flag): survey dimensions (plan facts) are preferred when held; a parcel row that disagrees with the survey by more than 5% is flagged.
-const SURVEY_TOL = 0.05;
-const CURVED_FRONT_RE = /\bfrontage\b[^.;]*\barc\b|\bfront arc\b|\bcurved frontage\b|\bstreet line\b[^.;]*\barc\b/i;
-function surveyFacts(n) {
+// F-4D-8/9/14 + CHAT-156 / CHAT-163 (amends CHAT-145 C): lot figures in M-326 order from coa-lotfacts.mjs; a parcel row >5% off the figure used is flagged (M-308).
+// planFacts: the parsed plan-facts record, or null when absent or unparseable (the F-4D-8/9/14 fence); lotFigures is total on any JSON value.
+function planFacts(n) {
   if (!PF_DIR) return null;
-  try { const pf = JSON.parse(fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8'));
-    const g = (k) => (typeof pf[k] === 'number' && pf[k] > 0 ? pf[k] : null);
-    // CHAT-46 (2026-10-21-batch-o): a frontage measured along a CURVED front lot line is not the by-law measure, so the survey value is not preferred and the calculated frontage stays.
-    // By-law 800.50(445): Lot Frontage is "measured along a straight line drawn perpendicular to the lot centreline at the required minimum front yard setback" (a straight-line width, not the arc length).
-    // The curved front is read from the plan facts where the lane recorded it (lot_shape_note: "frontage ... is an arc A=14.60 (C=14.22 ...)", "curved frontage", "front arc").
-    const curvedFront = CURVED_FRONT_RE.test(String(pf.lot_shape_note || ''));
-    const sv = { frontage_m: curvedFront ? null : g('lot_frontage_m'), curved_front: curvedFront, depth_m: g('lot_depth_m'), area_m2: g('lot_area_m2'), corner: typeof pf.corner_lot === 'boolean' ? pf.corner_lot : null };
-    return [sv.frontage_m, sv.depth_m, sv.area_m2, sv.corner].some((x) => x != null) ? sv : null; } catch { return null; }
+  try { return JSON.parse(fs.readFileSync(path.join(PF_DIR, n.file_number.replace('/', '-') + '.json'), 'utf8')); } catch { return null; }
 }
-function surveyCheck(sv, p) {
-  if (!sv || !p) return { held: sv, flag: false, disagree: [] };
-  const dis = [];
-  for (const [k, pv, label] of [['frontage_m', p.frontage_m, 'frontage'], ['depth_m', p.depth_m, 'depth'], ['area_m2', p.lot_size_sqm, 'area']]) {
-    if (sv[k] != null && pv != null && Math.abs(pv - sv[k]) / sv[k] > SURVEY_TOL) dis.push(`${label} parcel ${pv} vs survey ${sv[k]} (${Math.round(((pv - sv[k]) / sv[k]) * 1000) / 10}%)`);
-  }
-  if (sv.corner != null && p.is_corner_lot != null && !!p.is_corner_lot !== sv.corner) dis.push(`corner parcel ${!!p.is_corner_lot} vs survey ${sv.corner}`);
-  return { held: sv, flag: dis.length > 0, disagree: dis };
-}
+const surveyCheck = LF.lotCheck;
 function applySurvey(base, sv) {
   if (!sv) return base;
   const vars = { ...base.vars }; if (sv.frontage_m != null) vars.lot_frontage_m = sv.frontage_m; if (sv.depth_m != null) vars.lot_depth_m = sv.depth_m; if (sv.area_m2 != null) vars.lot_area_m2 = sv.area_m2;
   return { ...base, vars, flags: sv.corner != null ? { ...base.flags, corner_lot: sv.corner } : base.flags };
 }
+const ANSWERED = RD.ANSWERED_CLASS;
 const rows = []; const lots = {};
 function runNotice(n, surveyOn, rows, lots) {
   const P = parcels[n.file_number] || { parcels: [] };
@@ -273,22 +270,40 @@ function runNotice(n, surveyOn, rows, lots) {
   const lc = p ? labelCompare(n.zoning, p.zoning_zn_string) : null;
   const areaGapPct = p && ia ? Math.round(((p.lot_size_sqm - ia.area) / ia.area) * 1000) / 10 : null;
   const nonRes = n.zoning && n.zoning.zone && !['R', 'RD', 'RS', 'RT', 'RM'].includes(n.zoning.zone);
-  const sv = surveyFacts(n); const svc = surveyCheck(sv, p);
+  const pf = planFacts(n); const rrec = LF.readRecordFor(READ_RECORD, n.file_number); const sv = LF.lotFigures(pf, rrec); const svc = surveyCheck(sv, p);
   const base = p ? (surveyOn ? applySurvey(lotFromParcel(p), sv) : lotFromParcel(p)) : null;
   const openings = openingsEvidence(n);
+  // CHAT-198 (2026-10-29-batch-aa): the applicant's own figures from the plan facts feed the model's inputs where held (validation only; the product is unchanged, M-286).
+  const AF = LF.applicantFigures(pf);
+  const MG = MB.resolveMainBuildingGfa({ plan_gfa_m2: AF.existing_gfa_m2, max_build_gfa_m2: p ? p.max_buildable_gfa_sqm : null }); // NN-Q3: plan facts, then the user's footprint and storeys (none in a scorer run), then the maximum build
+  const UFA = AF.neighbour_front_setbacks_m.length ? FA.resolveFrontSetback([], FYA_TABLE, { zone_default_m: 0 }, { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m }) : null; // NN-Q4
+  const applicantInputs = (bt) => {
+    const vars = {}; const flags = {}; const basis = {};
+    if (MG.value != null) { vars.main_building_gfa_m2 = MG.value; basis.main_building_gfa_m2 = MG.basis; }
+    if (['garden_suite', 'laneway_suite'].includes(bt)) { // NN-Q2: M-291 keeps a non-suite ancillary building owed
+      if (AF.suite_height_m != null) { vars.proposed_height_m = AF.suite_height_m; basis.proposed_height_m = 'plan_facts'; }
+      if (AF.suite_separation_m != null) { vars.distance_to_residential_m = AF.suite_separation_m; basis.distance_to_residential_m = 'plan_facts'; }
+    }
+    if (UFA && UFA.basis === 'user_supplied') { Object.assign(vars, UFA.vars); Object.assign(flags, UFA.flags); basis.abutting_front_setback_m = 'plan_facts neighbour_front_setbacks_m'; }
+    return { vars, flags, basis };
+  };
+  const LS = LF.lotSourceOf(surveyOn ? sv : null, p); const LD = LF.lotDisclosure(LS); // CHAT-156: lot_source on every row; non-survey disclosed
+  const LU = LF.lotHeldUnread(pf, p, rrec); // CHAT-165: plan figures held but not read (values only; no class or value moves)
   lots[n.file_number] = { address: n.address, city_label: n.zoning?.label, kind: n.kind, hearing_date: n.hearing_date, purpose: n.purpose, main_type: main,
     parcel: p ? { id: p.id, parcel_id: p.parcel_id, label: p.zoning_zn_string, frontage_m: p.frontage_m, depth_m: p.depth_m, lot_area_m2: p.lot_size_sqm, lot_size_basis: p.lot_size_basis, lot_size_confidence: p.lot_size_confidence,
       corner: p.is_corner_lot, lane: p.abuts_laneway, major: p.on_policy_road, geog_area: p.geog_area, n_parcels: uniq.length } : null,
-    match_how: P.how, label_check: lc, survey_check: svc, survey_preferred: !!(surveyOn && sv), implied_area: ia, area_gap_pct: areaGapPct, non_residential: !!nonRes,
+    match_how: P.how, label_check: lc, survey_check: svc, survey_preferred: !!(surveyOn && LF.surveyRead(sv)), lot_source: LS, lot_disclosure: LD, lot_held_unread: LU, implied_area: ia, area_gap_pct: areaGapPct, non_residential: !!nonRes,
     legacy: p ? { max_buildable_gfa_sqm: p.max_buildable_gfa_sqm, max_buildable_gfa_basis: p.max_buildable_gfa_basis, max_build_fsi: p.max_build_fsi, bylaw_max_fsi: p.bylaw_max_fsi,
       bylaw_max_coverage_pct: p.bylaw_max_coverage_pct, max_buildable_footprint_sqm: p.max_buildable_footprint_sqm, max_build_height_m: p.max_build_height_m, max_build_stories: p.max_build_stories, max_build_basis: p.max_build_basis } : null };
 
   for (const v of n.variances) {
-    const c = normClause(v.clause);
+    const cc = correctionFor(n.file_number, v); // case-data correction (M-75 form): recorded on the row with its evidence, the printed record untouched
+    const c = normClause(cc && cc.clause ? cc.clause : v.clause);
+    if (cc) c.note = `case-data correction: printed "${v.clause}"${cc.clause ? ` read as ${cc.clause}` : ''}${cc.required_value !== undefined ? `; required figure ${v.required.value} read as ${cc.required_value}` : ''}. Evidence: ${cc.evidence}`;
     if (c.norm === '10.20.40.20') { c.reg = '10.20.40.20(1)'; c.path = '(1)'; c.note = 'notice omits the subsection; read as (1)'; }
     const matched = unitsForClause(c, units);
     const targets = [...new Set(matched.flatMap((u) => [].concat(u.target || [])).filter((t) => t && t !== 'none'))];
-    let cityUnit = v.required?.unit ?? null; let cityVal = v.required?.value ?? null;
+    let cityUnit = v.required?.unit ?? null; let cityVal = cc && cc.required_value !== undefined ? cc.required_value : (v.required?.value ?? null);
     // 4D-S5: platform clauses open with the definition "attached to or less than 0.3 m from a building"; that 0.3 m is not the limit. Take the next figure.
     let s5 = null; const ra = (v.required_all || []).filter((x) => x.unit === 'm');
     if (cityUnit === 'm' && cityVal === 0.3 && /(less than|within) 0\.3 ?m (from|of) a building/i.test(v.requirement || '') && ra.length > 1) { s5 = `definition figure 0.3 m dropped; City figure taken as ${ra[1].value} m`; cityVal = ra[1].value; }
@@ -297,6 +312,11 @@ function runNotice(n, surveyOn, rows, lots) {
       const lim = [...String(v.requirement).matchAll(/(\d+(?:\.\d+)?) ?m(?![\w²2])(?! above)/g)].map((m) => Number(m[1])).filter((x, i) => !(i === 0 && x === 0.3)).pop();
       s5 = lim != null ? `definition figure 0.3 m (main wall) dropped; City figure taken as ${lim} m` : 'definition figure 0.3 m (main wall) dropped; no numeric limit stated'; cityVal = lim ?? null; if (lim == null) cityUnit = null;
     }
+    // MB-03: the reader now skips the 0.3 m definition itself; the row still records that the definition was in the sentence and was not the limit.
+    if (!s5 && cityUnit === 'm' && cityVal !== 0.3 && /(less than|within|attached to or within) 0\.3 ?m (from|of) (a building|the (\w+ )?main wall)/i.test(v.requirement || '')) s5 = `definition figure 0.3 m skipped by the notice reader; City figure ${cityVal} m`;
+    // NN-Q1: where the notice prints the other building's figure, that figure is the City comparator (parser: coa-parse.cjs referentFigure)
+    let referentNote = null;
+    if (cityVal == null && cityUnit == null) { const rf = CP.referentFigure(v.requirement, v.proposal); if (rf) { cityVal = rf.value; cityUnit = rf.unit; referentNote = `the notice prints the other building's figure: ${rf.value} ${rf.unit} is the City comparator (CHAT-198.NN-Q1)`; } }
     let target = pickTarget(targets, cityUnit, c, matched);
     // the notice names the lot line: a setback clause keyed to several setback targets follows it
     let lineNote = null;
@@ -305,11 +325,12 @@ function runNotice(n, surveyOn, rows, lots) {
       const want = /\bside\b[^.]{0,20}lot line|side yard/i.test(pt) ? 'side_setback_m' : /\brear\b[^.]{0,20}lot line|rear yard/i.test(pt) ? 'rear_setback_m' : null;
       if (want && want !== target && !(want === 'side_setback_m' && target === 'side_setback_street_m')) { lineNote = `notice names the ${want.split('_')[0]} lot line; clause keyed to ${targets.join('+')}`; target = want; }
     }
+    // MB-03: the parser now returns the figure after the "within 0.3 m of a building" definition itself (s5 stays null), so the line words are read after the definition whether or not s5 fired.
     // 4D-S1: 10.5.40.50(2) is the platform setback; score it on the platform target named by the lot line
     let scorerFix = null;
     if (/^10\.5\.40\.50\(2\)/.test(c.norm) && cityUnit === 'm' && targets.includes('platform_side_setback_m')) {
       const pt = `${v.requirement || ''} ${v.proposal || ''}`;
-      const after = s5 ? (String(v.requirement).split(/within 0\.3 ?m of a building|less than 0\.3 ?m from a building/i)[1] || '') : ''; const fig = after.search(new RegExp(String(cityVal).replace('.', '\\.') + '\\s*m'));
+      const after = (String(v.requirement).split(/within 0\.3 ?m of a building|less than 0\.3 ?m from a building/i)[1] || ''); const fig = after.search(new RegExp(String(cityVal).replace('.', '\\.') + '\\s*m'));
       const near = fig >= 0 ? after.slice(Math.max(0, after.lastIndexOf('.', fig - 1) + 1, fig - 70), fig) : ''; // the clause of the figure: the words before it name the line (M-290)
       // when the words before the figure name no line, the words after it do ("1.8m from the side lot lines ... and 10.88m from the rear"): the first line word up to the next figure (A0205/26NY, a regression of the M-290 label found at integrate-21)
       const nextWords = fig >= 0 ? (after.slice(fig).replace(/^[\d.]+\s*m/, '').split(/\d/)[0] || '').slice(0, 40) : '';
@@ -332,7 +353,7 @@ function runNotice(n, surveyOn, rows, lots) {
     const row = { notice: n.file_number, address: n.address, city_label: n.zoning?.label || null, our_label: p?.zoning_zn_string || null, parcel_id: p?.parcel_id || null, parcel_row_id: p?.id || null,
       n: v.n, clause: v.clause, clause_norm: c.norm, cited_reg: c.reg, cited_path: c.path, clause_note: c.note || null, limit: v.limit, requirement: v.requirement, city_value: cityVal, city_unit: cityUnit,
       building_type: bt, dwelling_units: SUITE_TYPES.includes(bt) ? 1 : main.units, keyed_units: matched.map((u) => `${u.unit_id}:${u.archetype}:${[].concat(u.target || []).join('+')}`), target,
-      family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null };
+      family: family(c, target, bt), line_note: lineNote, scorer_fix: scorerFix || (s5 ? '4D-S5' : null) || (s6 ? '4D-S6' : null), s5_note: s5, s6_note: s6, city_value_raw: v.required?.value ?? null, referent_note: referentNote, openings, ours: null, ours_alt: null, class: null, why: null, in_flight: null, lot_source: LS, lot_disclosure: LD, lot_held_unread: LU };
     const oos = outOfScope(c, v);
     if (nonRes) { row.class = 'NOT SCORABLE'; row.why = `zone ${n.zoning.zone} is not a 569-2013 residential zone (former by-law zone or non-residential): not scorable`; /* F-4D-20 */ rows.push(row); continue; }
     if (!p) { row.class = 'NOT SCORABLE'; row.why = 'no parcel match for the notice address: not scorable'; /* F-4D-20 */ rows.push(row); continue; }
@@ -345,7 +366,7 @@ function runNotice(n, surveyOn, rows, lots) {
     if (!target) { row.class = 'NO ANSWER'; row.why = `clause keyed without a target (${[...new Set(matched.map((u) => u.archetype))].join('/')})`;
       if (/^10\.5\.40\.50\(2\)/.test(c.norm) && cityUnit === 'm') { row.platform_probe = evalTarget(makeLot(base, bt, row.dwelling_units), 'platform_side_setback_m'); const pr = evalTarget(makeLot(base, bt, row.dwelling_units), 'side_setback_m'); row.proxy = { via: 'side_setback_m (10.5.40.50(2): the zone building setback)', ...pr, delta: typeof pr.value === 'number' ? Math.round((pr.value - cityVal) * 1000) / 1000 : null }; }
       rows.push(row); continue; }
-    if (cityVal == null) { row.class = 'NOT MODELLED'; row.why = 'notice states no numeric requirement'; rows.push(row); continue; }
+    const noFigure = cityVal == null; // NN-Q1: evaluated below; answered = ANSWERED (no City figure), else NOT MODELLED as before
 
     // EXC-W2-APPLY complement (verify-37 7): a pct SHARE target keyed with one bound ("at least 70% of each side main wall", vocab bound min) that the
     // City quotes from the other side ("a maximum of 30% may be higher") is the same fact: 100 - 30 = 70. Generic over any pct target whose vocab bound differs from the stated limit.
@@ -354,7 +375,8 @@ function runNotice(n, surveyOn, rows, lots) {
       const shareDirection = (req, val, lim) => { const t = String(req || ''); return new RegExp(`(no less than|not less than|at least|minimum of)\\s*${val}\\s*%`, 'i').test(t) ? 'min' : /maximum/i.test(t) ? 'max' : lim; };
       if (T && T.unit === 'pct' && (T.bound === 'min' || T.bound === 'max') && cityUnit === '%' && typeof cityVal === 'number' && shareDirection(v.requirement, cityVal, row.limit) !== T.bound) {
         row.complement_of = cityVal; cityVal = Math.round((100 - cityVal) * 1000) / 1000; row.scorer_fix = row.scorer_fix || 'EXC-W2-complement'; } }
-    const lot = makeLot(base, bt, row.dwelling_units);
+    const AI = applicantInputs(bt); if (Object.keys(AI.basis).length) row.applicant_inputs = AI.basis;
+    const lot = makeLot(base, bt, row.dwelling_units, { vars: AI.vars, flags: AI.flags });
     const only = ELEMENT_TARGETS.has(target) ? new Set(matched.map((u) => u.unit_id)) : null;
     let r = evalTarget(lot, target, only);
     // roof: if the plain vector is undecided on roof, take the arm whose winner is the cited clause (else pitched); record both
@@ -377,11 +399,11 @@ function runNotice(n, surveyOn, rows, lots) {
       const plainOff = evalTarget({ ...lot, flags: { ...lot.flags, front_averaging_not_applicable: true, one_abutting_building_within_15_m: false, two_abutting_buildings_within_15_m: false } }, target);
       row.front_zone_default = plainOff;
       const zd = typeof plainOff.value === 'number' ? plainOff.value : 6.0;
-      let fa = null; try { fa = FA.resolveFrontAveraging(p.abutments || [], { fya_porch_allowance_m: FYA_ALLOWANCE }, { zone_default_m: zd }); } catch (e) { fa = { error: e.message }; }
+      let fa = null; try { fa = FA.resolveFrontSetback(p.abutments || [], FYA_TABLE, { zone_default_m: zd }, UFA ? { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m } : undefined); } catch (e) { fa = { error: e.message }; }
       if (fa && !fa.error) {
         const rf = evalTarget({ ...lot, flags: { ...lot.flags, ...fa.flags }, vars: { ...lot.vars, ...fa.vars } }, target);
         row.front_fa = { basis: fa.basis, qualifying: fa.qualifying, averaged_m: fa.averaged_m, floor_applied: fa.floor_applied, resolved_m: fa.front_setback_m, eval: rf,
-          delta_vs_city: typeof rf.value === 'number' ? Math.round((rf.value - cityVal) * 100) / 100 : null, raw_avg_delta: fa.averaged_m != null ? Math.round((fa.averaged_m - cityVal) * 100) / 100 : null };
+          delta_vs_city: typeof rf.value === 'number' && !noFigure ? Math.round((rf.value - cityVal) * 100) / 100 : null, raw_avg_delta: fa.averaged_m != null && !noFigure ? Math.round((fa.averaged_m - cityVal) * 100) / 100 : null };
       } else row.front_fa = fa;
       if (r.status !== 'value' && /map_area_not_held/.test(r.reason || '')) {
         row.ours_map_areas_empty = evalTarget({ ...lot, map_areas: [] }, target);
@@ -389,7 +411,9 @@ function runNotice(n, surveyOn, rows, lots) {
       }
     }
 
-    if (r.status === 'value') {
+    if (r.status === 'value' && noFigure) { row.class = ANSWERED; row.why = `ANSWERED (no City figure): ours ${r.value}; the notice states no figure to compare; winner ${r.winner}`; row.delta = null; }
+    else if (noFigure) { row.class = 'NOT MODELLED'; row.why = 'notice states no numeric requirement'; }
+    else if (r.status === 'value') {
       if (typeof r.value === 'number') {
         const d = Math.round((r.value - cityVal) * 1000) / 1000; row.delta = d;
         row.class = Math.abs(d) <= tol(cityUnit) + 1e-9 ? 'MATCH' : 'DIFFER';
@@ -417,7 +441,7 @@ for (const n of notices) {
     r.parcel_dims_class = q.class;
     if (r.class === 'MATCH' && (q.class === 'DIFFER' || q.class === 'NO ANSWER')) {
       r.class = 'DATA'; r.survey_flag = true; r.class_on_survey = 'MATCH';
-      r.why = `explained data flag: parcel row disagrees with the survey (${svc.disagree.join('; ')}); on survey dimensions ours matches the City (${r.ours?.value}); on parcel dimensions it was ${q.class}`;
+      r.why = `explained data flag: parcel row disagrees with the M-326 lot figure (${svc.disagree.join('; ')}); on M-326 lot figures ours matches the City (${r.ours?.value}); on parcel dimensions it was ${q.class}`;
     }
   });
 }
@@ -439,19 +463,20 @@ for (const r of rows) {
   if (r.target === 'front_setback_m' && r.front_fa && r.front_fa.floor_applied && ((r.front_fa.delta_vs_city > 0.01) || (r.front_fa_map_areas_empty && r.front_fa_map_areas_empty.delta_vs_city > 0.01))) r.in_flight = 'M-205(1)';
   if (r.in_flight) r.in_flight_note = 'fix in flight (approved; lane bylaw-fix-3)';
 }
-fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allowance_m: FYA_ALLOWANCE, defaults, lots, rows }, null, 1));
+fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allowance_m: FYA_ALLOWANCE, defaults, answered_no_city_figure: rows.filter((x) => x.class === ANSWERED).map((x) => `${x.notice}#${x.n} ${x.clause}`), lots, rows }, null, 1));
 const by = {}; for (const r of rows) by[r.class] = (by[r.class] || 0) + 1;
+for (const r of rows.filter((x) => x.class === ANSWERED)) console.log('ANSWERED (no City figure): ' + r.notice + ' #' + r.n + ' ' + r.clause + ' ours ' + (r.ours && r.ours.value));
 console.log('rows', rows.length, JSON.stringify(by), 'amendment status unverified', rows.filter((r) => r.amendment_status === 'unverified').length);
-// C-5 floors and C-4 pre-registration (see coa-round.mjs). Both are read-only on the data; --accept is the only writer and needs a RATIFIED ruling.
+// C-5 floors and C-4 pre-registration (see coa-round.mjs). Both are read-only on the data; --accept is the only writer and needs a RATIFIED or RULED ruling.
 const STATS = RD.statsOf(rows);
 if (arg('floors')) {
   const fp = arg('floors'); const floors = JSON.parse(fs.readFileSync(fp, 'utf8'));
   if (process.argv.includes('--accept')) {
-    const next = RD.acceptFloors(floors, STATS, (process.argv.find((a) => a.startsWith('--ruling=')) || '').slice(9), parseRulings(readSpec69Rulings(ROOT)));
-    fs.writeFileSync(fp, JSON.stringify(next, null, 1) + '\n'); console.log('FLOORS ACCEPTED ' + fp + ' ' + JSON.stringify(next.overall));
+    const lines = process.argv.filter((a) => a.startsWith('--line=')).map((a) => a.slice(7));
+    const next = RD.acceptFloors(floors, STATS, (process.argv.find((a) => a.startsWith('--ruling=')) || '').slice(9), parseRulings(readSpec69Rulings(ROOT)), lines);
+    fs.writeFileSync(fp, JSON.stringify(next, null, 1) + '\n'); console.log('FLOORS ACCEPTED ' + fp + ' lines ' + JSON.stringify(next.rulings.at(-1).lines));
   } else {
-    const bad = RD.checkFloors(floors, STATS);
-    if (bad.length) { console.log('FLOORS FAIL: ' + bad.join('; ')); process.exitCode = 1; } else console.log('FLOORS OK: overall ' + JSON.stringify(floors.overall) + ', ' + Object.keys(floors.articles).length + ' article floors + pooled');
+    const rep = RD.reportFloors(floors, STATS, readSpec69Rulings(ROOT)); console.log(rep.text); if (rep.code) process.exitCode = 1;
   }
 }
 if (arg('prereg')) {
@@ -466,11 +491,11 @@ if (arg('prereg')) {
   if (res.verdict !== 'ok' || bad.length) process.exitCode = 1;
 }
 // The regression lock. An expected file is {commit, notices, variances, totals, inputs?}. It is PINNED (a changed total fails, exit 1) when --root is at its commit,
-// or when its inputs key equals the tree's: the Layer 2 input table_version (every Layer 1 input hash), its evaluator_version and the sha of this scorer's three files. Otherwise the diff is information only.
+// or when its inputs key equals the tree's: the Layer 2 input table_version (every Layer 1 input hash), its evaluator_version and the sha of this scorer's four files. Otherwise the diff is information only.
 // --pin FILE writes the expected file for this run at this tree (the integrate step re-pins; a moved input is a finding to re-pin, not a silent pass).
 const here = path.dirname(fileURLToPath(import.meta.url));
 const shaOf = (fl) => { const h = crypto.createHash('sha256'); for (const x of fl) h.update(fs.readFileSync(path.join(here, x))); return h.digest('hex').slice(0, 16); };
-const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs']) }; };
+const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs', 'coa-lotfacts.mjs', 'coa-parse.cjs', 'coa-round.mjs', '../bylaw/main-building-gfa.mjs', '../bylaw/front-averaging.mjs', 'coa-expected/read-record-chat164.json']) }; };
 if (arg('pin')) {
   const head = execFileSync('git', ['-C', ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim().slice(0, 8);
   fs.writeFileSync(arg('pin'), JSON.stringify({ commit: head, notices: notices.length, variances: rows.length, totals: by, inputs: treeInputs(), note: 'pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree' }, null, 1) + '\n');

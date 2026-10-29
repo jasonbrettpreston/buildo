@@ -1,0 +1,308 @@
+{
+ "$comment": "CHAT-164 read-record (decision log CHAT-164.READ-SOURCE and CHAT-164.CONTRADICTED, recorded at rulrec3 b50eca7b; Spec 133 M-321 dated note 2026-10-27). A keyed golden figure with status confirmed counts as read against its case's documents; no page number is required; the document is recorded per figure. Where a keyed value contradicts the unknown-source plan figure, the keyed value is read and the plan figure stays disclosed in lot_held_unread. Only the 25 golden cases can be read; every other unknown-source figure stays unread. Values only; figures are the plan-facts figures with an unknown or missing lot_source, nothing else. 'document' is the golden record's source label for the figure; 'printed_in' is the set of documents (notice, plan-facts, parcel) that print the value, from the source check (values only, none for a corner label). Golden: ~/Buildo-scratch/golden/keyed-final-20261029 (SHA256SUMS verified).",
+ "schema": "coa-read-record-v1",
+ "rule": "docs/reports/decisions/2026-10-27 CHAT-164.READ-SOURCE; CHAT-164.CONTRADICTED",
+ "golden": {
+  "dir": "keyed-final-20261029",
+  "sha256sums_prefix": "bc842b6a10f02af3",
+  "cases": 25
+ },
+ "keys": {
+  "frontage_m": "lot_frontage",
+  "depth_m": "lot_depth",
+  "area_m2": "lot_area",
+  "corner": "corner_through (none = false, corner = true)"
+ },
+ "figures": [
+  {
+   "case": "A0067/26SC",
+   "key": "area_m2",
+   "value": 580.6,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0067/26SC",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0094/26SC",
+   "key": "area_m2",
+   "value": 512.6,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0094/26SC",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0097/26SC",
+   "key": "area_m2",
+   "value": 487.68,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0097/26SC",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0170/26EYK",
+   "key": "area_m2",
+   "value": 488,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0170/26EYK",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0175/26NY",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0182/26EYK",
+   "key": "area_m2",
+   "value": 637.51,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0193/26EYK",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0203/26NY",
+   "key": "area_m2",
+   "value": 647,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0203/26NY",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0205/26NY",
+   "key": "area_m2",
+   "value": 659.5,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0205/26NY",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0229/26NY",
+   "key": "frontage_m",
+   "value": 18.29,
+   "status": "confirmed",
+   "document": "survey",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0229/26NY",
+   "key": "depth_m",
+   "value": 51.82,
+   "status": "confirmed",
+   "document": "survey",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0229/26NY",
+   "key": "area_m2",
+   "value": 947.61,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "notice",
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0229/26NY",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0277/26NY",
+   "key": "area_m2",
+   "value": 696.01,
+   "status": "corrected",
+   "document": "site plan",
+   "printed_in": [],
+   "contradicts_held": 696.04
+  },
+  {
+   "case": "A0277/26NY",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0289/26TEY",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0354/26TEY",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0388/26TEY",
+   "key": "area_m2",
+   "value": 230.1,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0399/24EYK",
+   "key": "corner",
+   "value": false,
+   "status": "corrected",
+   "document": "parcel",
+   "printed_in": [],
+   "contradicts_held": true
+  },
+  {
+   "case": "A0457/25EYK",
+   "key": "area_m2",
+   "value": 274.09,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0457/25EYK",
+   "key": "corner",
+   "value": false,
+   "status": "confirmed",
+   "document": "parcel",
+   "printed_in": []
+  },
+  {
+   "case": "A0561/26TEY",
+   "key": "frontage_m",
+   "value": 5.4,
+   "status": "confirmed",
+   "document": "survey",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0561/26TEY",
+   "key": "depth_m",
+   "value": 37.39,
+   "status": "confirmed",
+   "document": "survey",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0561/26TEY",
+   "key": "area_m2",
+   "value": 204.92,
+   "status": "confirmed",
+   "document": "plan-facts",
+   "printed_in": [
+    "plan-facts"
+   ]
+  },
+  {
+   "case": "A0562/26TEY",
+   "key": "corner",
+   "value": true,
+   "status": "corrected",
+   "document": "site plan (800.50(150)(B): street bends 135 degrees or less)",
+   "printed_in": []
+  },
+  {
+   "case": "A0578/26TEY",
+   "key": "area_m2",
+   "value": 345.22,
+   "status": "corrected",
+   "document": "site plan",
+   "printed_in": [],
+   "contradicts_held": 356.65
+  }
+ ]
+}

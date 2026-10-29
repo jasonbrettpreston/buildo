@@ -626,7 +626,7 @@
       "scripts/lib/coa-notices/target-map.json",
       "scripts/lib/coa-notices/vocab.json"
     ],
-    "logic_version": "coa-extractor-3",
+    "logic_version": "coa-extractor-4",
     "on_fingerprint_change": "run",
     "on_prior_run_error": "fail_step",
     "on_prior_run_error_why": {
@@ -1088,10 +1088,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-25T15:38:03.512Z",
-        "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
+        "at": "2026-10-26T21:31:55.583Z",
+        "commit": "58d492156bb6c3ebe8ee023d0534f0c1dc9a665e",
         "cost_ms": 4,
-        "sample_n": 20,
+        "sample_n": 30,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -1108,20 +1108,20 @@
     },
     {
       "id": "decision_disagree",
-      "sql": "SELECT count(DISTINCT v.application_number)::int FROM coa_notice_variances v JOIN coa_applications a ON a.application_number = v.application_number WHERE v.retired_at IS NULL AND (v.decision = 'refused') IS DISTINCT FROM (a.decision ILIKE '%refus%')",
+      "sql": "SELECT count(DISTINCT n.application_number)::int FROM (SELECT v.application_number, bool_and(v.decision = 'refused') FILTER (WHERE v.decision NOT IN ('pending', 'unknown')) AS notice_refused FROM coa_notice_variances v WHERE v.retired_at IS NULL GROUP BY v.application_number HAVING NOT bool_or(v.decision = 'pending') AND count(*) FILTER (WHERE v.decision NOT IN ('pending', 'unknown')) > 0) n JOIN coa_applications a ON a.application_number = n.application_number WHERE a.decision IS NOT NULL AND n.notice_refused <> (a.decision ILIKE '%refus%')",
       "bound": "viol == 0",
       "severity": "WARN",
       "blocking": false,
       "when": "post",
       "source": "plausibility",
       "frequency": "every_run",
-      "retighten_when": "zero rows",
+      "retighten_when": "the explained list covers every counted application (CHAT-144: the notice decision outranks CKAN, M-326; each counted application is re-read against its source document and listed with its reason); until then a non-zero count is the standing set of real disagreements, not a defect",
       "last_measured": {
-        "value": 29,
-        "at": "2026-10-25T15:38:03.512Z",
-        "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
-        "cost_ms": 43,
-        "sample_n": 20,
+        "value": 3,
+        "at": "2026-10-26T21:31:55.583Z",
+        "commit": "58d492156bb6c3ebe8ee023d0534f0c1dc9a665e",
+        "cost_ms": 11,
+        "sample_n": 30,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -1148,10 +1148,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 1,
-        "at": "2026-10-25T15:38:03.512Z",
-        "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
-        "cost_ms": 40,
-        "sample_n": 20,
+        "at": "2026-10-26T21:31:55.583Z",
+        "commit": "58d492156bb6c3ebe8ee023d0534f0c1dc9a665e",
+        "cost_ms": 37,
+        "sample_n": 30,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -1178,10 +1178,10 @@
       "retighten_when": "zero rows",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-25T15:38:03.512Z",
-        "commit": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
-        "cost_ms": 6,
-        "sample_n": 20,
+        "at": "2026-10-26T21:31:55.583Z",
+        "commit": "58d492156bb6c3ebe8ee023d0534f0c1dc9a665e",
+        "cost_ms": 5,
+        "sample_n": 30,
         "source_run": {
           "run_id": null,
           "chain": "coa_notices",
@@ -1228,6 +1228,11 @@
         "citation_multi": 0,
         "consent_items_skipped": 0,
         "qualified_items": 0,
+        "split_decisions": {
+          "notices": 0,
+          "refs_unresolved": 0,
+          "notices_unknown": 0
+        },
         "manifest_sha256": null,
         "extractor_version": null,
         "vocab_version": null

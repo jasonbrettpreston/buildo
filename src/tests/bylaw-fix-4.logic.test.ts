@@ -202,6 +202,7 @@ describe('F-SC-9 / M-253 — garden-suite lots: the 20 % all-ancillary cap, the 
 // `2026-10-21-chat-batch-g#CHAT-29.Front-yard-accuracy`): keep M-245 (no floor); where averaging may apply but a neighbour's
 // estimate is missing or excluded, front_setback_m answers needs_survey — never the zone default.
 describe('front yard / M-256 — a missing or excluded neighbour estimate answers needs survey, never the zone default', () => {
+  // CHAT-198.NN-Q4 (operator 2026-10-29, "We should use the building footprint or 6M as the default."): where no neighbour figure exists the flagged 6.0 m default answers; the calculation never stops.
   const nb = (o: Json): Json => ({ neighbour_residential: true, same_frontage_street: true, neighbour_building_id: 1, bldg_to_subject_m: 3, front_setback_est_m: 5, est_status: 'estimated', ...o });
   const res = (rows: Json[]): Json => FA.resolveFrontAveraging(rows, { fya_porch_allowance_m: 1.0 }, { zone_default_m: 6.0 });
   const NS = (r: Json): unknown[] => [r.basis, r.front_setback_m, r.needs_survey, r.disclosures, r.flags.front_averaging_not_applicable];
@@ -210,13 +211,13 @@ describe('front yard / M-256 — a missing or excluded neighbour estimate answer
     expect(page('ch10_20')).toContain('If regulation 10.5.40.70(1) does not apply, the required minimum front yard setback in the RD zone is 6.0 metres');
   });
 
-  it('two qualifying neighbours, an estimate excluded (30 Sunvale Dr, 50 Melville Ave): needs survey, no value', () => {
-    expect(NS(res([nb({}), nb({ front_setback_est_m: null, est_status: 'estimate_out_of_bounds' })]))).toEqual(['needs_survey', null, true, ['front_yard_survey_required'], null]);
+  it('two qualifying neighbours, an estimate excluded (30 Sunvale Dr, 50 Melville Ave): needs survey, the flagged 6.0 m default (CHAT-198.NN-Q4)', () => {
+    expect(NS(res([nb({}), nb({ front_setback_est_m: null, est_status: 'estimate_out_of_bounds' })]))).toEqual(['default_6_0', 6, true, ['front_yard_survey_required'], false]);
   });
 
   it('no qualifying neighbour, but an abutting residential lot whose street or building is not known (24 Balding Crt): needs survey', () => {
-    expect(NS(res([nb({ same_frontage_street: null, front_setback_est_m: null, est_status: 'no_frontage_street', bldg_to_subject_m: 4.46 })]))).toEqual(['needs_survey', null, true, ['front_yard_survey_required'], null]);
-    expect(NS(res([nb({ neighbour_building_id: null, bldg_to_subject_m: null, front_setback_est_m: null, est_status: 'no_building' })]))[0]).toBe('needs_survey');
+    expect(NS(res([nb({ same_frontage_street: null, front_setback_est_m: null, est_status: 'no_frontage_street', bldg_to_subject_m: 4.46 })]))).toEqual(['default_6_0', 6, true, ['front_yard_survey_required'], false]);
+    expect(NS(res([nb({ neighbour_building_id: null, bldg_to_subject_m: null, front_setback_est_m: null, est_status: 'no_building' })]))[0]).toBe('default_6_0');
   });
 
   it('averaging provably does not apply (no abutting residential lot on the street, or its building beyond 15.0 m): the zone default', () => {

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-coa-notices.js",
   "chain": "coa_notices",
-  "source_fingerprint": "244dd9966f45a2c806d276eeef08aabd3e1941da54f3baa55fdcdb051ee53a4e",
-  "git_head": "53c666199bed9d1f8737e7c404bb58a54b424d1c",
+  "source_fingerprint": "5f9be8da53cf99b5a434a0ef96ae64765618a69ef8c9646bc180c98de542828d",
+  "git_head": "58d492156bb6c3ebe8ee023d0534f0c1dc9a665e",
   "header": {
     "processes": 1,
     "calls": 41,
     "distinct": 24,
     "utility": 11,
-    "tracer_self_ms": 38.858,
-    "wall_ms": 276019
+    "tracer_self_ms": 37.205,
+    "wall_ms": 271133
   },
   "statements": [
     {
@@ -75,7 +75,7 @@
       "fingerprint": "402ceeb8a2eeeca3",
       "kind": "write",
       "count": 1,
-      "rowCount": 25,
+      "rowCount": 0,
       "reads": {
         "coa_plan_facts": [
           "corner_lot",
@@ -160,30 +160,10 @@
       "fingerprint": "42d0a18705ff42a2",
       "kind": "read",
       "count": 5,
-      "rowCount": 10789,
+      "rowCount": 10912,
       "reads": {
         "coa_notice_variances": [
           "variance_key"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "44c04e85b23078d0",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "coa_applications": [
-          "application_number",
-          "decision"
-        ],
-        "coa_notice_variances": [
-          "application_number",
-          "decision",
-          "retired_at"
         ]
       },
       "writes": {},
@@ -350,6 +330,26 @@
       "error": null
     },
     {
+      "fingerprint": "b248fdf36a1f4583",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "decision"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "decision",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "b8a78071c7561d75",
       "kind": "read",
       "count": 1,
@@ -416,7 +416,7 @@
       "fingerprint": "fe80d914e95ad33a",
       "kind": "write",
       "count": 5,
-      "rowCount": 123,
+      "rowCount": 72,
       "reads": {
         "coa_notice_variances": [
           "application_number",
@@ -487,7 +487,7 @@
   ],
   "transactions": [
     {
-      "client": "91822:3",
+      "client": "56113:3",
       "write_fingerprints": [
         "21fa2e43cda219b6",
         "402ceeb8a2eeeca3",

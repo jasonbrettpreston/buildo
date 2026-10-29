@@ -1,0 +1,91 @@
+{
+ "$comment": "M-321 pre-registration, CHAT-164 round b (re-read after the operator corrected three golden cases; snapshot keyed-final-20261029, SHA256SUMS verified, field-level diff against keyed-final-20261027b: A0562 corner_through none -> corner (site plan, by-law 800.50(150)(B)), A0561 p_front 4.9 -> 1.74 and p_depth 17 -> 19.11, A0229 p_front/p_depth/p_length source plan-facts -> site plan; nothing else). Committed BEFORE any scorer run on the changed read-record. Baseline = the round-a result at 0bdcfa80 (class totals equal to the pre-round pins). Effect on the read-record: A0562 corner is now keyed true (status corrected, document site plan), agreeing with the held plan figure, so it is read and no longer contradicted; the parcel holds not-corner, so the lot figure used changes from false to true (the only figure used that changes). A0561 p_front/p_depth and A0229 p_front/p_depth/p_length are proposed-building figures on the golden rows, not lot figures; the scorer takes proposals from the notice, never from the golden snapshot, so no A0561 or A0229 row is expected to change (the 3-storey-addition front/depth are not read by any scorer path). EXPECTED MOVE (causal link known): A0562/26TEY#4 10.5.50.10(2)(A) side_street_landscaping_pct, City 60: NO ANSWER (no_candidate on a non-corner) -> DATA (a candidate exists on a corner; the row is then answered on the read figure and the parcel disagrees on the corner, so the F-4D-8 explained data flag applies). TIER B (conditional, not asserted): A0562 rows #2 10.80.40.30(1) and #3 10.80.40.70(2)(A) are MATCH today and may be affected by a corner flag; if either moves it is a finding. TIER C (expected not to move): A0562#5 (clause keyed without a target); every other row on every set; A0399#3 (corner still contradicted). Value change expected: none beyond round a. Floors: 10.5.50 answered on the 172 set: A0562#4 leaves NO ANSWER, so (MATCH+DIFFER) is unchanged if DATA is not counted as answered; if DATA is counted as answered the line rises; either way nothing may fall (M-322). Cumulative set: same single move. No tolerances, no allowlists (CHAT-193).",
+ "schema": "coa-round-prereg-v1",
+ "round": 3,
+ "plan_ref": "docs/reports/decisions/2026-10-27 CHAT-164.READ-SOURCE, CHAT-164.CONTRADICTED; operator golden correction 2026-10-29; prereg-chat164.json (round a, met at 0bdcfa80)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set checked",
+ "expected_moves": [
+  {
+   "notice": "A0562/26TEY",
+   "n": 4,
+   "clause": "10.5.50.10(2)(A)",
+   "from": "NO ANSWER",
+   "to": "DATA",
+   "reason": "corner read true (site plan) against a parcel that holds not-corner; City 60"
+  }
+ ],
+ "expected_totals": {
+  "NOT MODELLED": 96,
+  "MATCH": 387,
+  "DIFFER": 29,
+  "NO ANSWER": 46,
+  "OWED": 88,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 96,
+  "MATCH": 387,
+  "DIFFER": 29,
+  "NO ANSWER": 47,
+  "OWED": 88,
+  "DATA": 23,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_totals_4d": {
+  "NOT MODELLED": 70,
+  "MATCH": 277,
+  "DIFFER": 23,
+  "NO ANSWER": 33,
+  "OWED": 56,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 128,
+  "MATCH": 435,
+  "DIFFER": 36,
+  "NO ANSWER": 68,
+  "OWED": 93,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "conditional_moves": [
+  {
+   "notice": "A0562/26TEY",
+   "n": 2,
+   "clause": "10.80.40.30(1)",
+   "tier": "B",
+   "note": "MATCH today; not expected to move"
+  },
+  {
+   "notice": "A0562/26TEY",
+   "n": 3,
+   "clause": "10.80.40.70(2)(A)",
+   "tier": "B",
+   "note": "MATCH today; not expected to move"
+  }
+ ],
+ "expected_unchanged": [
+  {
+   "notice": "A0562/26TEY",
+   "n": 5,
+   "clause": "10.5.50.10(2)(B)",
+   "class": "NO ANSWER",
+   "tier": "C"
+  },
+  {
+   "notice": "A0399/24EYK",
+   "n": 3,
+   "clause": "10.80.40.70(2)(A)",
+   "class": "DIFFER",
+   "tier": "C"
+  }
+ ],
+ "figures_read": 32,
+ "contradicted_figures": 3
+}

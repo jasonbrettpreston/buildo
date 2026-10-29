@@ -13,7 +13,7 @@
 //   universeCounts(scoped, toc)                   → the counts universe.lock.json pins
 //   checkUniverse({...})                          → {status: pass|fail|not_run, pass, violations, checked, counts}
 //   acceptUniverse({root, ruling})                → writes universe.lock.json + a ratchet-exceptions.json row
-//   parseRulings(spec69Text)                      → Map(id → 'RATIFIED' | 'PROPOSED' | 'RETIRED')
+//   parseRulings(spec69Text)                      → Map(id → 'RATIFIED' | 'RULED' | 'PROPOSED' | 'RETIRED' | 'UNKNOWN')   (RULED: M-343, authority for --accept like RATIFIED)
 //   readSpec69Rulings(root)                       → the 69a register + Spec 69 text every ruling reader parses (M19)
 //   selfTest()
 //
@@ -53,6 +53,9 @@ export const SPEC69_REL = 'docs/specs/01-pipeline/69_mcbylaw_policy.md';
 export const SPEC69A_REL = 'docs/specs/01-pipeline/69a_mcbylaw_register.md';
 
 /** The text every Spec 69 ruling reader parses: the 69a register, then Spec 69 (P-rows). Throws if either is missing. */
+/** M-343: a row whose status starts RULED is authority for --accept --ruling, the same as RATIFIED. */
+export const isAcceptAuthority = (status) => status === 'RATIFIED' || status === 'RULED';
+
 export function readSpec69Rulings(root) {
   return [SPEC69A_REL, SPEC69_REL].map((rel) => fs.readFileSync(path.join(root, rel), 'utf8')).join('\n');
 }
@@ -112,7 +115,7 @@ export function parseRulings(text) {
     }
     const cells = line.split('|').map((c) => c.trim()).filter((c, i, a) => i > 0 && i < a.length - 1);
     const status = cells[cells.length - 1] || '';
-    out.set(m[1], /^RATIFIED\b/.test(status) ? 'RATIFIED' : /^PROPOSED\b/.test(status) ? 'PROPOSED' : /^RETIRED\b/.test(status) ? 'RETIRED' : 'UNKNOWN');
+    out.set(m[1], /^RATIFIED\b/.test(status) ? 'RATIFIED' : /^RULED\b/.test(status) ? 'RULED' : /^PROPOSED\b/.test(status) ? 'PROPOSED' : /^RETIRED\b/.test(status) ? 'RETIRED' : 'UNKNOWN');
   }
   return out;
 }
@@ -436,7 +439,7 @@ export function checkUniverse({ rows, pages, pageSet, universe, vocab, spec69Tex
     const pins = ((ledger && ledger.rows) || []).filter((r) => r.kind === 'universe_pin');
     const last = pins[pins.length - 1];
     if (!last || last.ruling !== lock.ruling || last.in_scope_ids_sha256 !== lock.in_scope_ids_sha256 || last.adoption_id !== lock.adoption_id) violations.push('universe_ledger_mismatch: the latest universe_pin row does not match universe.lock.json');
-    if (rulings.get(lock.ruling) !== 'RATIFIED') violations.push(`ruling_not_ratified: universe.lock.json cites ${lock.ruling}`);
+    if (!isAcceptAuthority(rulings.get(lock.ruling))) violations.push(`ruling_not_ratified: universe.lock.json cites ${lock.ruling}`);
     status = violations.length ? 'fail' : 'pass';
   }
   const checked = sc.rows.length + toc.entries.length;
@@ -467,7 +470,7 @@ export function universeInputs({ root, slice, pages, adoptionId }) {
 }
 
 /**
- * `--accept --ruling=<id>` for the universe (Spec 68 §8 rule 7): refuse unless <id> is a RATIFIED Spec 69 row, every
+ * `--accept --ruling=<id>` for the universe (Spec 68 §8 rule 7): refuse unless <id> is a RATIFIED or RULED Spec 69 row (M-343), every
  * gate violation other than the lock comparison is clear, and nothing awaits a ruling (no judgment rule or page rule
  * without a ruling). Then write universe.lock.json and append a `universe_pin` row to ratchet-exceptions.json
  * (row shape and literal-anchor citation copied from gates/ledger.mjs semantics). Atomic writes, sorted keys, LF.
@@ -475,7 +478,7 @@ export function universeInputs({ root, slice, pages, adoptionId }) {
 export function acceptUniverse({ root, ruling, inputs }) {
   if (!isStr(inputs.adoptionId)) throw new UniverseError('universe_lock_mismatch', 'refused: no current adoption id');
   const rulings = parseRulings(inputs.spec69Text);
-  if (rulings.get(ruling) !== 'RATIFIED') throw new UniverseError('ruling_not_ratified', `--ruling=${ruling} is ${rulings.get(ruling) || 'absent'} in Spec 69`);
+  if (!isAcceptAuthority(rulings.get(ruling))) throw new UniverseError('ruling_not_ratified', `--ruling=${ruling} is ${rulings.get(ruling) || 'absent'} in Spec 69 (not RATIFIED or RULED)`);
   if (!inputs.spec69Text.includes(`**${ruling}**`)) throw new UniverseError('ruling_not_ratified', `Spec 69 does not cite **${ruling}** literally`);
   const r = checkUniverse({ ...inputs, lock: null });
   const blocking = r.violations.filter((x) => !x.startsWith('universe_'));

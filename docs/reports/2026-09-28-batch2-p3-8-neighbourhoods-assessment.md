@@ -998,7 +998,7 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=282 |
+| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=283 |
 | 2 | neighbourhoods | PASS | 4 declared, missing from seeds: none |
 | 3 | neighbourhoods | PASS | retired=0 overlap-with-declared=none |
 | 7 | neighbourhoods | PASS | SPEC LINK header present=true |
@@ -1046,11 +1046,14 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 - compare ran: true · diffs found: 116 · unexplained: 0
 
 ### Test suite (item iii)
-- 3459/3459 passed (suite success=true)
-- harvested: 138 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 3510/3513 passed (suite success=false)
+- harvested: 140 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (3):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

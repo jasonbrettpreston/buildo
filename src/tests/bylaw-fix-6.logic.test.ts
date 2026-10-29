@@ -30,7 +30,7 @@ const lot = (zone: string, buildingType: string, extra: Json = {}): Json => ({
   zone, label: { f: 12, d: 0.6 }, overlays: {}, map_areas: [], building_type: buildingType, exception: null,
   flags: { lawfully_existing: false, corner_lot: false, through_lot: false, major_street: false, front_averaging_not_applicable: true, abuts_lane: false,
     suite_wall_openings: false, flat_or_shallow_roof: false, ...(extra.flags ?? {}) },
-  vars: { lot_frontage_m: 12, lot_depth_m: 40, lot_area_m2: 480, proposed_height_m: 4, distance_to_residential_m: 5, ...(extra.vars ?? {}) },
+  vars: { lot_frontage_m: 12, lot_depth_m: 40, lot_area_m2: 480, proposed_height_m: 4, distance_to_residential_m: 5, main_building_gfa_m2: 500, ...(extra.vars ?? {}) }, // main_building_gfa_m2: the third source of the value order (the maximum build) always holds a figure in the product (CHAT-198.NN-Q3)
   ...Object.fromEntries(Object.entries(extra).filter(([k]) => k !== 'flags' && k !== 'vars')),
 });
 const eff = (l: Json, t: string): Json => E.effective(l, t, E.loadCandidates(l, units).candidates, C);

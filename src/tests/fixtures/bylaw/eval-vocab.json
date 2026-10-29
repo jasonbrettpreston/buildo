@@ -86,6 +86,7 @@
     "lawfully_existing_status",
     "main_wall_openings",
     "main_wall_openings_each",
+    "neighbour_front_setbacks_m",
     "pool",
     "primary_windows",
     "roof_type",

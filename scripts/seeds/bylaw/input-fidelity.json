@@ -51,6 +51,13 @@
       "status": "approximates",
       "why": "The by-law measures lot frontage between the side lot lines, perpendicular to the lot centreline, AT THE REQUIRED MINIMUM FRONT YARD SETBACK. frontage_m is the short side of the parcel's minimum bounding rectangle scaled by sqrt(true area / MBR area); it is not street-oriented (Spec 68 §6.2; R-13).",
       "evidence_ref": "scripts/lib/compute/load-parcels.js#estimateLotDimensions; docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2"
+    },
+    "800.50(320)": {
+      "input": "main_building_gfa_m2",
+      "our_field": "plan facts existing_gfa_m2; else existing_footprint_sqm x current_stories; else the maximum-build gross floor area (scripts/lib/max-build.js)",
+      "status": "approximates",
+      "why": "The by-law's gross floor area is the sum of the area of each floor level above and below ground, measured from the exterior of the main wall. A plan-facts figure is what the applicant's plans state; footprint x storeys leaves out basements and differing floor plates; the maximum build is a rule-derived figure, not the house on the lot (CHAT-198.NN-Q3).",
+      "evidence_ref": "docs/reference/bylaw-provisions.md (800.50(320)); docs/specs/01-pipeline/69a_mcbylaw_register.md M-82 dated note 2026-10-29"
     }
   }
 }

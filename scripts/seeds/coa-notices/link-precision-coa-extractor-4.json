@@ -1,0 +1,665 @@
+{
+  "extractor_version": "coa-extractor-4",
+  "carried_from": {"extractor_version":"coa-extractor-3","ruling":"2026-10-26-batch-j#CHAT-170.PRECISION-CARRY-FORWARD","overlap":"0 of the 72 moved keys in the 60-item pair sample; 1 split application (A0910/17NY #1, unmoved) among the 50 link-sample notices; neither sample judges decision"},
+  "seed": "coa-extractor-3|spec129-s12-step5|2026-10-10",
+  "drawn": "2026-10-10",
+  "seats": 2,
+  "seat_rule": "blind Claude seats that did not write the parser; read item/notice text + candidate only (Spec 129 §3/§12 step 5)",
+  "final_rule": "incorrect if either seat says incorrect (ambiguous counts as incorrect)",
+  "text_included": false,
+  "spec": "Spec 129 §10 / §12 step 5 (consumer link path application_number -> coa_applications.lead_id -> lead_parcels)",
+  "n": 50,
+  "precision": 0.94,
+  "items": [
+    {
+      "application_number": "A0413/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0413/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0334/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0334/17TEY|1",
+      "seat_verdicts": [
+        "incorrect",
+        "incorrect"
+      ],
+      "seat_classes": [
+        "ambiguous",
+        "wrong_parcel"
+      ],
+      "verdict": "incorrect"
+    },
+    {
+      "application_number": "A0192/17SC",
+      "variance_key": "toronto_ca_decision_pdf|A0192/17SC|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0366/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0366/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0328/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0328/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0887/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0887/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A1007/16TEY",
+      "variance_key": "toronto_ca_decision_pdf|A1007/16TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0936/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0936/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0658/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0658/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0427/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0427/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0021/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0021/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0111/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0111/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0029/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0029/17EYK|1",
+      "seat_verdicts": [
+        "incorrect",
+        "incorrect"
+      ],
+      "seat_classes": [
+        "wrong_parcel",
+        "wrong_parcel"
+      ],
+      "verdict": "incorrect"
+    },
+    {
+      "application_number": "A0737/16TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0737/16TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0086/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0086/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0055/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0055/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0643/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0643/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0825/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0825/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0222/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0222/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A1012/16TEY",
+      "variance_key": "toronto_ca_decision_pdf|A1012/16TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0760/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0760/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0758/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0758/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A1126/16NY",
+      "variance_key": "toronto_ca_decision_pdf|A1126/16NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0789/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0789/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0740/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0740/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0501/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0501/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0246/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0246/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0982/16EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0982/16EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A1202/16TEY",
+      "variance_key": "toronto_ca_decision_pdf|A1202/16TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0936/16EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0936/16EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A1252/16TEY",
+      "variance_key": "toronto_ca_decision_pdf|A1252/16TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A1217/16TEY",
+      "variance_key": "toronto_ca_decision_pdf|A1217/16TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0343/17SC",
+      "variance_key": "toronto_ca_decision_pdf|A0343/17SC|1",
+      "seat_verdicts": [
+        "incorrect",
+        "incorrect"
+      ],
+      "seat_classes": [
+        "ambiguous",
+        "ambiguous"
+      ],
+      "verdict": "incorrect"
+    },
+    {
+      "application_number": "A0091/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0091/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0120/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0120/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0211/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0211/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0321/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0321/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0886/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0886/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0817/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0817/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0910/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0910/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0067/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0067/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A1000/16EYK",
+      "variance_key": "toronto_ca_decision_pdf|A1000/16EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0141/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0141/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0181/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0181/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0938/17NY",
+      "variance_key": "toronto_ca_decision_pdf|A0938/17NY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0078/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0078/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0543/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0543/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0186/17TEY",
+      "variance_key": "toronto_ca_decision_pdf|A0186/17TEY|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0025/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0025/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    },
+    {
+      "application_number": "A0221/17EYK",
+      "variance_key": "toronto_ca_decision_pdf|A0221/17EYK|1",
+      "seat_verdicts": [
+        "correct",
+        "correct"
+      ],
+      "seat_classes": [
+        null,
+        null
+      ],
+      "verdict": "correct"
+    }
+  ]
+}

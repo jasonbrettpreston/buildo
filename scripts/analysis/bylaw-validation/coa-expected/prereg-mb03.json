@@ -1,0 +1,357 @@
+{
+ "$comment": "M-321 pre-registration, notice-reader round MB-03 (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md), committed alone before the parser or scorer change. Rule: Spec 129 line 93 (b) (a figure after a conditional marker is a CONDITION used only when the main clause holds no value; a figure that restates where the rule applies is context) and Spec 133 / register M-357 CHAT-136.B10-PARSER (\"a qualifying phrase's first number read as the requirement\" is a known parser miss fixed in its own pre-registered round). Change: coa-parse.cjs reads the requirement figure from the sentence with the qualifier phrases (\"attached to or within 0.3 m of a building\", \"less than 7.5 m from the residential building\", \"beginning from a height of 4 m\", lot-frontage and drive-aisle qualifiers) removed and the part after a condition word set aside, then takes the only figure a limit word (maximum, minimum, required, permitted, no less/more than) introduces, else the first; where several different figures of the unit remain the row keeps the first and stays marked check (operator review), never guessed. The scorer's 4D-S1 line-word reader reads the words around the figure in the requirement text whether or not the parser had to skip the 0.3 m definition. Expected class moves: A0450/26TEY#4 and A0375/26TEY#5 DIFFER to MATCH (the City limit was 4 m and 7.5 m, the thresholds; it is 1.5 m and 4 m). Expected City-figure changes with no class change are listed in expected_figure_changes* (informational; the runner checks classes and totals). No other row moves; a falling floor or an unlisted move is a STOP. The 172 and 4d pins change in totals, table_version unchanged, scorer_sha only. Measured by a dry run of the proposed rule on a scratch copy of the stored notices at 2b8dac34 (nothing in the tree changed).",
+ "schema": "coa-round-prereg-v1",
+ "round": 9,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-03; ~/Buildo-scratch/p2close/parser-first-number-rows.txt (101 rows); ~/Buildo-scratch/p2close/mb03/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "MB-03: the City figure is the one the limit word governs (4 m read, 1.5 m is the requirement); the scorer now compares the evaluator with that figure"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 5,
+   "clause": "150.8.60.40(1)(A)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "MB-03: the City figure is the one the limit word governs (7.5 m read, 4 m is the requirement); the scorer now compares the evaluator with that figure"
+  }
+ ],
+ "expected_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 401,
+  "DIFFER": 29,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 399,
+  "DIFFER": 31,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_4d": [
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "MB-03: the City figure is the one the limit word governs (4 m read, 1.5 m is the requirement); the scorer now compares the evaluator with that figure"
+  }
+ ],
+ "expected_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 281,
+  "DIFFER": 23,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "MB-03: the City figure is the one the limit word governs (4 m read, 1.5 m is the requirement); the scorer now compares the evaluator with that figure"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 5,
+   "clause": "150.8.60.40(1)(A)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "MB-03: the City figure is the one the limit word governs (7.5 m read, 4 m is the requirement); the scorer now compares the evaluator with that figure"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 453,
+  "DIFFER": 35,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 451,
+  "DIFFER": 37,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_figure_changes": [
+  {
+   "notice": "A0194/26EYK",
+   "n": 2,
+   "clause": "10.5.40.50(4)(C)",
+   "class_before": "NO ANSWER",
+   "class_after": "NO ANSWER",
+   "city_before": 0.3,
+   "city_after": 2.5,
+   "unit": "m"
+  },
+  {
+   "notice": "A0203/26EYK",
+   "n": 2,
+   "clause": "900.3.10(35)(B)",
+   "class_before": "NO ANSWER",
+   "class_after": "NO ANSWER",
+   "city_before": 15.3,
+   "city_after": 0.6,
+   "unit": "m"
+  },
+  {
+   "notice": "A0251/26TEY",
+   "n": 3,
+   "clause": "10.5.40.71(4)(A)",
+   "class_before": "OWED",
+   "class_after": "OWED",
+   "city_before": 9,
+   "city_after": 0.76,
+   "unit": "m"
+  },
+  {
+   "notice": "A0252/26NY",
+   "n": 5,
+   "clause": "10.5.100.1(1)(C)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 3.51,
+   "unit": "m"
+  },
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "class_before": "DIFFER",
+   "class_after": "MATCH",
+   "city_before": 4,
+   "city_after": 1.5,
+   "unit": "m"
+  },
+  {
+   "notice": "A0573/24NY",
+   "n": 2,
+   "clause": "10.5.100.1(1)(C)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 5.95,
+   "unit": "m"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 5,
+   "clause": "150.8.60.40(1)(A)",
+   "class_before": "DIFFER",
+   "class_after": "MATCH",
+   "city_before": 7.5,
+   "city_after": 4,
+   "unit": "m"
+  }
+ ],
+ "expected_figure_changes_4d": [
+  {
+   "notice": "A0194/26EYK",
+   "n": 2,
+   "clause": "10.5.40.50(4)(C)",
+   "class_before": "NO ANSWER",
+   "class_after": "NO ANSWER",
+   "city_before": 0.3,
+   "city_after": 2.5,
+   "unit": "m"
+  },
+  {
+   "notice": "A0203/26EYK",
+   "n": 2,
+   "clause": "900.3.10(35)(B)",
+   "class_before": "NO ANSWER",
+   "class_after": "NO ANSWER",
+   "city_before": 15.3,
+   "city_after": 0.6,
+   "unit": "m"
+  },
+  {
+   "notice": "A0251/26TEY",
+   "n": 3,
+   "clause": "10.5.40.71(4)(A)",
+   "class_before": "OWED",
+   "class_after": "OWED",
+   "city_before": 9,
+   "city_after": 0.76,
+   "unit": "m"
+  },
+  {
+   "notice": "A0252/26NY",
+   "n": 5,
+   "clause": "10.5.100.1(1)(C)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 3.51,
+   "unit": "m"
+  },
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "class_before": "DIFFER",
+   "class_after": "MATCH",
+   "city_before": 4,
+   "city_after": 1.5,
+   "unit": "m"
+  },
+  {
+   "notice": "A0573/24NY",
+   "n": 2,
+   "clause": "10.5.100.1(1)(C)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 5.95,
+   "unit": "m"
+  }
+ ],
+ "expected_figure_changes_cumulative": [
+  {
+   "notice": "A0194/26EYK",
+   "n": 2,
+   "clause": "10.5.40.50(4)(C)",
+   "class_before": "NO ANSWER",
+   "class_after": "NO ANSWER",
+   "city_before": 0.3,
+   "city_after": 2.5,
+   "unit": "m"
+  },
+  {
+   "notice": "A0203/26EYK",
+   "n": 2,
+   "clause": "900.3.10(35)(B)",
+   "class_before": "NO ANSWER",
+   "class_after": "NO ANSWER",
+   "city_before": 15.3,
+   "city_after": 0.6,
+   "unit": "m"
+  },
+  {
+   "notice": "A0251/26TEY",
+   "n": 3,
+   "clause": "10.5.40.71(4)(A)",
+   "class_before": "OWED",
+   "class_after": "OWED",
+   "city_before": 9,
+   "city_after": 0.76,
+   "unit": "m"
+  },
+  {
+   "notice": "A0252/26NY",
+   "n": 5,
+   "clause": "10.5.100.1(1)(C)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 3.51,
+   "unit": "m"
+  },
+  {
+   "notice": "A0450/26TEY",
+   "n": 4,
+   "clause": "150.8.60.20(3)(C)",
+   "class_before": "DIFFER",
+   "class_after": "MATCH",
+   "city_before": 4,
+   "city_after": 1.5,
+   "unit": "m"
+  },
+  {
+   "notice": "A0573/24NY",
+   "n": 2,
+   "clause": "10.5.100.1(1)(C)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 5.95,
+   "unit": "m"
+  },
+  {
+   "notice": "A0375/26TEY",
+   "n": 5,
+   "clause": "150.8.60.40(1)(A)",
+   "class_before": "DIFFER",
+   "class_after": "MATCH",
+   "city_before": 7.5,
+   "city_after": 4,
+   "unit": "m"
+  },
+  {
+   "notice": "A0244/26NY",
+   "n": 6,
+   "clause": "6A(3)(a)(i)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 2.6,
+   "unit": "m"
+  },
+  {
+   "notice": "A0244/26NY",
+   "n": 8,
+   "clause": "6A(3)(a)(ii)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 3,
+   "unit": "m"
+  },
+  {
+   "notice": "A0280/26NY",
+   "n": 2,
+   "clause": "10.5.100.1(1)(C)",
+   "class_before": "NOT MODELLED",
+   "class_after": "NOT MODELLED",
+   "city_before": 6,
+   "city_after": 3.61,
+   "unit": "m"
+  }
+ ],
+ "expected_floors": "no floor line falls; 172 overall accuracy 92.79 to 93.26; cumulative overall accuracy 92.42 to 92.83; the failing lines are the same lines as before",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}

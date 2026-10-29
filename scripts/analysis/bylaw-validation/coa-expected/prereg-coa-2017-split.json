@@ -1,0 +1,734 @@
+{
+ "$comment": "M-321 pre-registration for the CHAT-157 split-decision parser round (decision log 2026-10-25-batch-g#CHAT-157.SPLIT-DECISION-ROUND, imported at rulrec3@d8306917, merged into wf1/b10-fix at dc704128 (the merge of rulrec3@0d447407, which contains 2d7ba79d); scope of all three wording families 2026-10-26-batch-j#CHAT-169.SPLIT-THREE-FAMILIES; the CHAT-142 parser round, category \"split decision\"; Spec 133 m.321 (M-321), m.357 (M-357)). Committed BEFORE the extractor change. The class of this round is the item decision of coa_notice_variances (batch coa-2017-decisions): expected_moves are {notice, n, clause, from, to, category, family}, from/to = decision. clause = regulation_id_as_cited, else \"(none; by-law <cited_bylaw, or none>)\". The round runner matches on (notice, n, from, to) set equality, not on coa-round.mjs checkPrereg alone (checkPrereg matches clause/from/to and cannot see a wrong-item move). The coa-scorecard and oracle-c classes do not move (neither reads an item decision). 40 of the 72 moves come from the EYK/SC (F2) and NY (F3) wordings (all A/AWC -> R in 19 applications); CHAT-169 rules that the round covers F1, F2 and F3 and that all 72 go ahead. Values only.",
+ "schema": "coa-round-prereg-v1",
+ "round": 1,
+ "plan_ref": "docs/reports/decisions/2026-10-25-batch-g.json CHAT-157.SPLIT-DECISION-ROUND (rulrec3@d8306917); Spec 133 m.321 dated note 2026-10-25; Spec 129 :49 (refused wins per item, carried to the PDF family by CHAT-157) and :101 (j); census: this file's census key (read-only count); 2026-10-26-batch-j#CHAT-169.SPLIT-THREE-FAMILIES (the F1/F2/F3 scope, all 72 moves) and #CHAT-170.PRECISION-CARRY-FORWARD (the -coa-extractor-4 precision samples carried forward) (rulrec3@2d7ba79d); plan: L-PARSE PLAN.v8 (lane plan, kept outside git)",
+ "batch": "coa-2017-decisions",
+ "expected_moves": [
+  {
+   "notice": "A0354/17TEY",
+   "n": 1,
+   "clause": "10.20.40.20(1)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0354/17TEY",
+   "n": 2,
+   "clause": "10.20.30.40(1)(A)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0354/17TEY",
+   "n": 3,
+   "clause": "10.20.40.30(1)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0354/17TEY",
+   "n": 6,
+   "clause": "(none; by-law 6752)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0354/17TEY",
+   "n": 7,
+   "clause": "(none; by-law 6752)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0354/17TEY",
+   "n": 8,
+   "clause": "(none; by-law 6752)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0910/17NY",
+   "n": 2,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0910/17NY",
+   "n": 7,
+   "clause": "(none; by-law 7625)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0931/17NY",
+   "n": 2,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0931/17NY",
+   "n": 8,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0948/17NY",
+   "n": 3,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0546/17EYK",
+   "n": 2,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A0019/17TEY",
+   "n": 1,
+   "clause": "10.10.40.30(1)(A)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0019/17TEY",
+   "n": 2,
+   "clause": "10.10.40.70(1)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0019/17TEY",
+   "n": 3,
+   "clause": "10.5.40.60(3)(A)(ii)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0019/17TEY",
+   "n": 5,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0019/17TEY",
+   "n": 6,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0215/17SC",
+   "n": 3,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A0332/17SC",
+   "n": 7,
+   "clause": "(none; by-law 10010)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A0781/17NY",
+   "n": 5,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0781/17NY",
+   "n": 6,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0781/17NY",
+   "n": 8,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0781/17NY",
+   "n": 9,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0800/17NY",
+   "n": 1,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0383/17TEY",
+   "n": 1,
+   "clause": "10.10.40.40(1)(A)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0383/17TEY",
+   "n": 3,
+   "clause": "200.5.10.1(1)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0383/17TEY",
+   "n": 4,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0383/17TEY",
+   "n": 6,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0172/17TEY",
+   "n": 1,
+   "clause": "10.20.30.40(1)(A)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0172/17TEY",
+   "n": 2,
+   "clause": "10.5.40.60(1)(A)(i)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0172/17TEY",
+   "n": 4,
+   "clause": "10.20.40.40(1)(A)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0172/17TEY",
+   "n": 5,
+   "clause": "10.20.40.70(3)(B)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0172/17TEY",
+   "n": 8,
+   "clause": "(none; by-law 6752)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0172/17TEY",
+   "n": 9,
+   "clause": "(none; by-law 6752)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0172/17TEY",
+   "n": 10,
+   "clause": "(none; by-law 6752)",
+   "from": "refused",
+   "to": "approved",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1288/16TEY",
+   "n": 1,
+   "clause": "10.10.60.20(1)(A)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1288/16TEY",
+   "n": 2,
+   "clause": "10.5.60.30(2)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0698/17NY",
+   "n": 2,
+   "clause": "10.20.40.70(3)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0698/17NY",
+   "n": 7,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0863/17NY",
+   "n": 1,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0863/17NY",
+   "n": 6,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0879/17NY",
+   "n": 4,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0879/17NY",
+   "n": 5,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0879/17NY",
+   "n": 8,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0879/17NY",
+   "n": 9,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0882/17NY",
+   "n": 1,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0882/17NY",
+   "n": 2,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0882/17NY",
+   "n": 3,
+   "clause": "10.5.40.50",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0088/17EYK",
+   "n": 2,
+   "clause": "(none; by-law none)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 1,
+   "clause": "10.10.40.40(1)(A)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 2,
+   "clause": "10.5.40.10(5)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 4,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 5,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 6,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 7,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 8,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A1294/16TEY",
+   "n": 9,
+   "clause": "(none; by-law 438-86)",
+   "from": "refused",
+   "to": "approved_with_conditions",
+   "category": "split decision",
+   "family": "F1"
+  },
+  {
+   "notice": "A0853/17NY",
+   "n": 4,
+   "clause": "10.20.40.70(3)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0853/17NY",
+   "n": 5,
+   "clause": "10.20.40.70(3)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0853/17NY",
+   "n": 9,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0853/17NY",
+   "n": 10,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0810/17NY",
+   "n": 7,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0810/17NY",
+   "n": 9,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0127/17SC",
+   "n": 2,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A0127/17SC",
+   "n": 3,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A0128/17SC",
+   "n": 1,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A0128/17SC",
+   "n": 2,
+   "clause": "(none; by-law 569-2013)",
+   "from": "approved",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F2"
+  },
+  {
+   "notice": "A0743/17NY",
+   "n": 3,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0749/17NY",
+   "n": 3,
+   "clause": "10.20.40.70(3)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0749/17NY",
+   "n": 4,
+   "clause": "10.20.40.70(3)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0749/17NY",
+   "n": 13,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  },
+  {
+   "notice": "A0749/17NY",
+   "n": 14,
+   "clause": "(none; by-law 7625)",
+   "from": "approved_with_conditions",
+   "to": "refused",
+   "category": "split decision",
+   "family": "F3"
+  }
+ ],
+ "expected_totals": {
+  "approved": 3016,
+  "approved_with_conditions": 5490,
+  "refused": 1519,
+  "unknown": 73
+ },
+ "expected_before_totals": {
+  "approved": 3014,
+  "approved_with_conditions": 5500,
+  "refused": 1511,
+  "unknown": 73
+ },
+ "expected_checks": {
+  "decision_disagree": {
+   "before": 9,
+   "after": 3,
+   "after_list": [
+    "A0144/17SC",
+    "A0203/26NY",
+    "A0271/17TEY"
+   ]
+  },
+  "apps_with_more_than_one_item_decision": {
+   "before": 0,
+   "after": 25
+  },
+  "rows_updated": 72,
+  "rows_inserted": 0,
+  "rows_retired": 0,
+  "split_decisions": {
+   "notices": 25,
+   "refs_unresolved": 0,
+   "notices_unknown": 0
+  },
+  "nonzero_brackets": {
+   "coa_notice_variances_deleted_reinserted": 50,
+   "coa_plan_facts_deleted_reinserted": 50,
+   "moved_rows_in_brackets": 0
+  },
+  "forced_and_standalone_rerun_writes": 0
+ },
+ "expected_unchanged": [
+  "every other coa-2017-decisions application (1,677 of 1,702; 9,909 rows): 0 decision moves",
+  "coa-2026-a/b/c/d (aic_values_batch, 814 rows): 0 moves; itemSignature change measured on 195 batch notices: 0 duplicate groups, 0 dedup changes",
+  "coa_plan_facts: 0",
+  "A0144/17SC refused x11 (notice stands, M-326; CKAN differs)",
+  "A0203/26NY approved_with_conditions x7, batch coa-2026-a (notice stands, M-326; CKAN differs)",
+  "A0271/17TEY approved_with_conditions x6 (unresolved: minutes or AIC record by hand, never past the captcha)",
+  "A0237/17SC, A0238/17SC: no items (no_variance_section), nothing written",
+  "A0508/17EYK (4 items), A0917/16EYK (5 items): no decision anchor, stay unknown",
+  "A0172/17TEY #3 and #7 stay refused (refused wins; the as-filed height was refused, the amended figure was approved; disclosed)"
+ ],
+ "clause_label": "regulation_id_as_cited ?? `(none; by-law ${cited_bylaw ?? \"none\"})`",
+ "census": {
+  "source": "read-only count (lane census), re-derived three ways (lane prototype, Integration, Reality-Check)",
+  "split_in_source": 27,
+  "with_rows": 25,
+  "recorded_split_before": 0,
+  "all_refused_before": 6,
+  "all_approved_before": 19,
+  "no_items": [
+   "A0237/17SC",
+   "A0238/17SC"
+  ]
+ },
+ "expected_stamp_moves": {
+  "rows": 72,
+  "extractor_version": {
+   "from": "coa-extractor-3",
+   "to": "coa-extractor-4"
+  },
+  "vocab_version": {
+   "from": "coa-vocab-3",
+   "to": "coa-vocab-4"
+  },
+  "note": "the guard excludes the stamps (descriptor :294); only the 72 rewritten rows take the current stamps; the other 10,026 rows keep coa-extractor-3 / coa-vocab-3"
+ }
+}

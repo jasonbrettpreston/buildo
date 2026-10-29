@@ -1,0 +1,170 @@
+{
+ "$comment": "M-321 pre-registration for the CHAT-164 unknown-source round (decision log CHAT-164.READ-SOURCE and CHAT-164.CONTRADICTED; Spec 133 m.321, m.322, m.326). Committed BEFORE any scorer run on the new code. Read-record: coa-expected/read-record-chat164.json, 32 figures on 25 golden cases (13 lots with an area, frontage or depth figure, plus corner figures on 15 lots). Derivation (no scorer run on the new code): a class can only move on a row whose input changes, so only lots whose read figure differs from the parcel figure used today can move; of the 32 figures, all 15 corner reads equal the parcel corner (no change), 14 area/dimension reads differ from the parcel by under 1 % (value changes only, class moves not expected) and 3 differ by more (A0388 area +8.67 %, A0561 area +2.80 %, A0578 area +7.66 %). Every row on A0388 and A0561 is already MATCH or OWED, so no class move is asserted. TIER A (expected class moves, causal link known): none. The plan tier A item A0562#4 (NO ANSWER -> DATA on a corner read true) is WITHDRAWN: the keyed value for that lot is not a corner (golden none, confirmed), it contradicts the held corner true, the keyed value is read, and the parcel already holds not-corner, so nothing changes; the NO ANSWER cause on A0562#4/#5 is clause keying, not the lot figure. TIER A value change (class stays MATCH): A0170/26EYK#2 900.3.10(38)(A) gfa_m2 243.47 -> 244 (area 488 read, 0.5 x 488). TIER B (conditional, not asserted; if it moves it moves this way only): A0578/26TEY#1 900.3.10(1397)(A)(i) DIFFER -> MATCH, only if its gap is area-driven (area 345.22 read against parcel 320.66); not otherwise expected. TIER C (expected NOT to move, watch): the listed NO ANSWER and DIFFER rows on read lots. Every other row moving is a finding. Floors: nothing is expected to lift and none may fall (M-322); the 172-set line 10.5.50 answered (81.4 < 83) is NOT expected to lift because A0562#4/#5 and A0277#4/#5 are clause-keying NO ANSWER rows. The six cumulative-set failing lines are re-measured on the cumulative set with the same expectation (totals unchanged). No tolerances, no allowlists (CHAT-193).",
+ "schema": "coa-round-prereg-v1",
+ "round": 2,
+ "plan_ref": "docs/reports/decisions/2026-10-27 CHAT-164.READ-SOURCE, CHAT-164.CONTRADICTED (rulrec3 b50eca7b); ~/Buildo-scratch/p2close/PLAN-chat164.md sections 3-6 as revised by CARD-chat164.answered.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set checked for unchanged totals",
+ "expected_moves": [],
+ "expected_totals": {
+  "NOT MODELLED": 96,
+  "MATCH": 387,
+  "DIFFER": 29,
+  "NO ANSWER": 47,
+  "OWED": 88,
+  "DATA": 23,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 96,
+  "MATCH": 387,
+  "DIFFER": 29,
+  "NO ANSWER": 47,
+  "OWED": 88,
+  "DATA": 23,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_value_changes": [
+  {
+   "notice": "A0170/26EYK",
+   "n": 2,
+   "clause": "900.3.10(38)(A)",
+   "field": "ours.value",
+   "from": 243.47,
+   "to": 244,
+   "class_stays": "MATCH",
+   "tier": "A"
+  }
+ ],
+ "conditional_moves": [
+  {
+   "notice": "A0578/26TEY",
+   "n": 1,
+   "clause": "900.3.10(1397)(A)(i)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "tier": "B",
+   "condition": "only if the gap is area-driven"
+  }
+ ],
+ "expected_unchanged": [
+  {
+   "notice": "A0562/26TEY",
+   "n": 4,
+   "clause": "10.5.50.10(2)(A)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "corner read false (golden none, confirmed) contradicts the held corner true; the parcel also holds false, so the figure used does not change. The plan's tier A expectation (NO ANSWER -> DATA on a corner read true) is withdrawn."
+  },
+  {
+   "notice": "A0562/26TEY",
+   "n": 5,
+   "clause": "10.5.50.10(2)(B)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "same lot; clause keyed without a target"
+  },
+  {
+   "notice": "A0399/24EYK",
+   "n": 3,
+   "clause": "10.80.40.70(2)(A)",
+   "class": "DIFFER",
+   "tier": "C",
+   "why": "corner contradicted (held true, keyed none); parcel holds false; no change in the figure used"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 3,
+   "clause": "10.20.20.40(1)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "clause keyed without a target; not lot-driven"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 4,
+   "clause": "10.5.50.10(5)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "clause not keyed; not lot-driven"
+  },
+  {
+   "notice": "A0277/26NY",
+   "n": 5,
+   "clause": "10.5.50.10(5)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "clause not keyed; not lot-driven"
+  },
+  {
+   "notice": "A0457/25EYK",
+   "n": 1,
+   "clause": "150.7.60.50(2)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "clause keyed without a target"
+  },
+  {
+   "notice": "A0229/26NY",
+   "n": 1,
+   "clause": "10.5.40.50(4)(C)",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "clause keyed without a target"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 3,
+   "clause": "150.7.50.10",
+   "class": "NO ANSWER",
+   "tier": "C",
+   "why": "clause not keyed"
+  },
+  {
+   "notice": "A0182/26EYK",
+   "n": 2,
+   "clause": "10.20.40.70(2)(B)",
+   "class": "DIFFER",
+   "tier": "C",
+   "why": "rear setback is depth-driven; depth is not an unknown-source figure on this lot"
+  },
+  {
+   "notice": "A0205/26NY",
+   "n": 9,
+   "clause": "10.20.40.70(2)(A)",
+   "class": "DIFFER",
+   "tier": "C",
+   "why": "rear setback is depth-driven; depth is not an unknown-source figure on this lot"
+  }
+ ],
+ "expected_totals_4d": {
+  "NOT MODELLED": 70,
+  "MATCH": 277,
+  "DIFFER": 23,
+  "NO ANSWER": 33,
+  "OWED": 56,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 128,
+  "MATCH": 435,
+  "DIFFER": 36,
+  "NO ANSWER": 69,
+  "OWED": 93,
+  "DATA": 23,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "figures_read": 32,
+ "expected_floors": "no floor lifts and none falls; floors-172.json unchanged unless a measured line rises",
+ "census": {
+  "rows_on_read_lots": 107,
+  "rows_on_lots_with_area_or_dimension_read": 76,
+  "lots_with_area_or_dimension_read": 13,
+  "corner_reads_equal_to_parcel": 15,
+  "contradicted_figures": 4
+ }
+}

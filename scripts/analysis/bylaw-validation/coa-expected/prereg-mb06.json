@@ -1,0 +1,77 @@
+{
+ "$comment": "M-321 pre-registration, round MB-06 (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-06), committed alone before any change. Rules (rulings branch wf1/rulings-rec3 @2adb5671, docs/specs/01-pipeline/69a_mcbylaw_register.md): M-343 :477 \"A register row whose status starts RULED is authority for `--accept --ruling`.\"; M-322 :456 \"A floor rises when a round beats it by a ruling that cites its row, and never falls without an `--accept --ruling` entry, the same door as the Phase 1 pins.\"; M-372 :507 (also M-373 :508, M-374 :509) \"an OWED line is a hard FAIL again at Phase 3 close (MB-46) if not fixed\"; ~/Buildo-scratch/p2close/CARD-phase2-close.answered.md :11 (P2C-Q3) \"build M-343 (RULED counts) so ruled rows are accepted; no new id form.\" and :17 (P2C-Q5) \"An accepted floor change moves only the lines the ruling names.\". Change: tooling only. parseRulings reads RULED; the --accept doors (coa-round.mjs acceptFloors, universe.mjs acceptUniverse) accept RATIFIED or RULED; the floors check reports a failing line named by an owing register row as OWED (its own section, never PASS; exit 0 only when every line is PASS or OWED); --accept moves only the lines named. Scorer effect: NONE EXPECTED. No class is computed differently, so no row moves on the 172 set, the 4d set or the cumulative set; the totals below equal the totals at 54ac0b34 (prereg-mb03.json after-totals). No floor value changes and no floors file changes.",
+ "schema": "coa-round-prereg-v1",
+ "round": 10,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-06; ~/Buildo-scratch/p2close/CARD-phase2-close.answered.md P2C-Q3, P2C-Q5; prereg-mb03.json",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 401,
+  "DIFFER": 29,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 401,
+  "DIFFER": 29,
+  "NO ANSWER": 39,
+  "OWED": 76,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 281,
+  "DIFFER": 23,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 281,
+  "DIFFER": 23,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 453,
+  "DIFFER": 35,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 453,
+  "DIFFER": 35,
+  "NO ANSWER": 55,
+  "OWED": 81,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_moves_blind25": []
+}
