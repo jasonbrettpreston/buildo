@@ -115,12 +115,61 @@
     if (/^dwelling/.test(u)) return 'dwelling units';
     return u;
   }
-  function measures(s) {
-    var out = [], m; UNIT_RE.lastIndex = 0;
+  function numberWords(s) {
     // "a maximum height of one storey" / "two storeys"
-    s = String(s || '').replace(/number of storeys is (\d+)/gi, '$1 storeys').replace(/\b(one|two|three|four)\s+(storeys?)\b/gi, function (_, w, u) { return { one: 1, two: 2, three: 3, four: 4 }[w.toLowerCase()] + ' ' + u; });
-    while ((m = UNIT_RE.exec(s))) out.push({ value: Number(m[1]), unit: unitName(m[2]) });
+    return String(s || '').replace(/number of storeys is (\d+)/gi, '$1 storeys').replace(/\b(one|two|three|four)\s+(storeys?)\b/gi, function (_, w, u) { return { one: 1, two: 2, three: 3, four: 4 }[w.toLowerCase()] + ' ' + u; });
+  }
+  function measuresAt(s) {
+    var out = [], m; UNIT_RE.lastIndex = 0;
+    while ((m = UNIT_RE.exec(s))) out.push({ value: Number(m[1]), unit: unitName(m[2]), at: m.index, end: m.index + m[0].length });
     return out;
+  }
+  function measures(s) {
+    return measuresAt(numberWords(s)).map(function (m) { return { value: m.value, unit: m.unit }; });
+  }
+
+  // MB-03 (69a CHAT-136.B10-PARSER "a qualifying phrase's first number read as the requirement"; Spec 129:93(b): a figure after a conditional marker is a
+  // CONDITION, used only when the main clause holds none; a figure that restates where the rule applies is context). The requirement figure is the one
+  // the limit word governs. Phrases below carry a number that says WHERE or WHEN the rule applies, never the limit.
+  var N_ = '\\d+(?:\\.\\d+)?\\s*m\\b';
+  var QUALIFIERS = [
+    // "attached to or within 0.3 m of a building", "less than 7.5 m from the residential building" (not "no less than 7.5 m from ...", which is the limit)
+    new RegExp('(?:attached to or\\s+|located\\s+)?(?<!\\bno\\s)(?<!\\bnot\\s)\\b(?:within|less than|(?:more|greater) than)\\s+' + N_ + '\\s+(?:of|from)\\s*:?\\s*(?:\\([A-Za-z]\\)\\s*)?(?:a|an|the)\\s+(?:\\w+\\s+){0,2}?(?:building|main wall)\\b', 'gi'),
+    new RegExp('\\bbeginning from a height of\\s+' + N_ + ',?', 'gi'),
+    new RegExp('\\bat a height (?:greater|higher|more) than\\s+' + N_ + '(?:\\s+above (?:established )?grade)?', 'gi'),
+    new RegExp(',?\\s*which (?:are|is) (?:greater|higher|more) than\\s+' + N_ + '[^,]*,', 'gi'),
+    // "on a lot with a lot frontage of less than 9 m", "with a minimum required lot frontage of 18.0 m or less", "for lots with a lot frontage of 6.0 m to 23.0 m inclusive"
+    new RegExp('\\b(?:for\\s+)?(?:on\\s+a\\s+)?lots?\\s+with\\s+(?:a\\s+)?(?:lot\\s+)?frontage\\s+of\\s+(?:(?:less|more|greater) than\\s+|at least\\s+)?' + N_ + '(?:\\s+to\\s+' + N_ + '(?:\\s+inclusive)?|\\s+or\\s+(?:less|more))?,?', 'gi'),
+    new RegExp('\\bwith\\s+a\\s+(?:minimum\\s+required\\s+)?lot\\s+frontage\\s+of\\s+' + N_ + '(?:\\s+or\\s+(?:less|more))?,?', 'gi'),
+    new RegExp('\\bon a lot with a lot frontage of (?:less|more|greater) than\\s+' + N_, 'gi'),
+    // "accessed by a one-way or two-way drive aisle having a width of 6.0 m or more,"
+    /,?\s*accessed by\b[^,]*,/gi,
+    new RegExp('\\bor\\s+a\\s+townhouse\\s+dwelling\\s+unit\\s+at\\s+least\\s+' + N_ + '\\s+wide,?', 'gi')
+  ];
+  var CONDITION_RE = /\b(?:if|provided(?:\s+that)?|except(?:\s+where)?|unless|including\s+(?:a|the)\s+total)\b/i;
+  var LIMIT_WORD_RE = /\b(?:maximum|minimum|required|permitted|no\s+(?:less|more|greater)\s+than)\b/i;
+
+  // The figures of the requirement sentence that can be the limit, in reading order, with a flag for the ones a limit word introduces.
+  function requirementFigures(requirement) {
+    var s = numberWords(requirement);
+    QUALIFIERS.forEach(function (re) { s = s.replace(re, ' '); });
+    var c = s.search(CONDITION_RE), main = c > 0 ? s.slice(0, c) : s;
+    var ms = measuresAt(main);
+    if (!ms.length) { main = s; ms = measuresAt(s); }
+    return {
+      figures: ms.map(function (m) { return { value: m.value, unit: m.unit }; }),
+      anchored: ms.map(function (m, i) { return LIMIT_WORD_RE.test(main.slice(i ? ms[i - 1].end : 0, m.at)); })
+    };
+  }
+  // One figure among those in `unit` (all units when null): the only one a limit word introduces, else the first. ambiguous = another value competes.
+  function pickFigure(rf, unit) {
+    var idx = [];
+    rf.figures.forEach(function (m, i) { if (!unit || m.unit === unit) idx.push(i); });
+    if (!idx.length) return { figure: null, ambiguous: false };
+    var anch = idx.filter(function (i) { return rf.anchored[i]; });
+    var at = anch.length === 1 ? anch[0] : idx[0];
+    var f = rf.figures[at];
+    return { figure: f, ambiguous: idx.some(function (i) { return rf.figures[i].value !== f.value; }) };
   }
 
   // CHAT-198.NN-Q1 (operator 2026-10-29): "where the notice prints the other building's figure, that figure is the comparator." A requirement that prints no figure and
@@ -157,6 +206,29 @@
     return s;
   }
 
+
+  // The requirement and proposed figures of one variance, from its two sentences. Also the re-parse entry point for stored notices.
+  function readFigures(requirement, proposal) {
+    var rq = measures(requirement), pr = measures(proposal);
+    var rf = requirementFigures(requirement);
+    if (!rf.figures.length) rf = { figures: rq, anchored: rq.map(function () { return false; }) };
+    var req = pickFigure(rf, null).figure || rq[0] || null, check = false;
+    // The proposed figure is the first one in a unit the requirement also uses ("6 parking spaces with a width of 2.6 m" -> 2.6 m).
+    var prp = pr.filter(function (m) { return rq.some(function (r) { return r.unit === m.unit; }); })[0] || pr[0] || null;
+    if (prp) {
+      var pk = pickFigure(rf, prp.unit);
+      // "must comply with the required minimum building setbacks for the zone (0.9 m)": the bracketed figure governs
+      var paren = measures((requirement.match(/(?:\(\s*|;\s*|\bzone,?\s*(?:which is\s*)?)(\d+(?:\.\d+)?\s*(?:m²|m2|m|%))\s*\)?\s*\.?\s*$/) || ['', ''])[1]).filter(function (m) { return m.unit === prp.unit; });
+      if (paren.length) req = paren[0];
+      else if (pk.figure) req = pk.figure;
+      if (pk.ambiguous && !paren.length) check = true;
+      if (pr.filter(function (m) { return m.unit === prp.unit; }).length > 1) check = true;
+    }
+    if (!req) { var rfg = referentFigure(requirement, proposal); if (rfg) req = rfg; }
+    if (!req || !prp) check = true;
+    return { required: req, required_all: rq, proposed: prp, proposed_all: pr, check: check };
+  }
+
   function variances(lines) {
     var start = -1, end = lines.length;
     for (var i = 0; i < lines.length; i++) if (/REQUESTED VARIANCE/i.test(lines[i])) { start = i + 1; break; }
@@ -190,27 +262,13 @@
       if (p < 0 && sents.length > 1) p = sents.length - 1;
       var requirement = (p < 0 ? sents : sents.slice(0, p)).join(' ');
       var proposal = p < 0 ? '' : sents.slice(p).join(' ');
-      var rq = measures(requirement), pr = measures(proposal);
-      var req = rq[0] || null, check = false;
-      // The proposed figure is the first one in a unit the requirement also uses ("6 parking spaces with a width of 2.6 m" -> 2.6 m).
-      var prp = pr.filter(function (m) { return rq.some(function (r) { return r.unit === m.unit; }); })[0] || pr[0] || null;
-      if (prp) {
-        var same = rq.filter(function (m) { return m.unit === prp.unit; });
-        // "must comply with the required minimum building setbacks for the zone (0.9 m)": the bracketed figure governs
-        var paren = measures((requirement.match(/(?:\(\s*|;\s*|\bzone,?\s*(?:which is\s*)?)(\d+(?:\.\d+)?\s*(?:m²|m2|m|%))\s*\)?\s*\.?\s*$/) || ['', ''])[1]).filter(function (m) { return m.unit === prp.unit; });
-        if (paren.length) req = paren[0];
-        else if (same.length) req = same[0];
-        if (same.length > 1 && !paren.length) check = true;
-        if (pr.filter(function (m) { return m.unit === prp.unit; }).length > 1) check = true;
-      }
-      if (!req) { var rf = referentFigure(requirement, proposal); if (rf) req = rf; }
-      if (!req || !prp) check = true;
+      var f = readFigures(requirement, proposal);
       return {
         n: v.n, amended: v.amended, clause: v.clause, bylaw: v.bylaw,
         limit: limitKind(requirement),
         requirement: requirement, proposal: proposal,
-        required: req, required_all: rq, check: check,
-        proposed: prp, proposed_all: pr,
+        required: f.required, required_all: f.required_all, check: f.check,
+        proposed: f.proposed, proposed_all: f.proposed_all,
         result: '', approved: null
       };
     });
@@ -290,7 +348,7 @@
 
   function docId(fileNumber) { return String(fileNumber || '').replace(/\//g, '-'); }
 
-  var api = { parse: parse, docId: docId, measures: measures, referentFigure: referentFigure, PARSER_VERSION: PARSER_VERSION };
+  var api = { parse: parse, docId: docId, measures: measures, referentFigure: referentFigure, readFigures: readFigures, requirementFigures: requirementFigures, PARSER_VERSION: PARSER_VERSION };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.CoaParse = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

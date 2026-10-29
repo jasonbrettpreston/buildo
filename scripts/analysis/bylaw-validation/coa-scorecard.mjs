@@ -312,6 +312,8 @@ function runNotice(n, surveyOn, rows, lots) {
       const lim = [...String(v.requirement).matchAll(/(\d+(?:\.\d+)?) ?m(?![\w²2])(?! above)/g)].map((m) => Number(m[1])).filter((x, i) => !(i === 0 && x === 0.3)).pop();
       s5 = lim != null ? `definition figure 0.3 m (main wall) dropped; City figure taken as ${lim} m` : 'definition figure 0.3 m (main wall) dropped; no numeric limit stated'; cityVal = lim ?? null; if (lim == null) cityUnit = null;
     }
+    // MB-03: the reader now skips the 0.3 m definition itself; the row still records that the definition was in the sentence and was not the limit.
+    if (!s5 && cityUnit === 'm' && cityVal !== 0.3 && /(less than|within|attached to or within) 0\.3 ?m (from|of) (a building|the (\w+ )?main wall)/i.test(v.requirement || '')) s5 = `definition figure 0.3 m skipped by the notice reader; City figure ${cityVal} m`;
     // NN-Q1: where the notice prints the other building's figure, that figure is the City comparator (parser: coa-parse.cjs referentFigure)
     let referentNote = null;
     if (cityVal == null && cityUnit == null) { const rf = CP.referentFigure(v.requirement, v.proposal); if (rf) { cityVal = rf.value; cityUnit = rf.unit; referentNote = `the notice prints the other building's figure: ${rf.value} ${rf.unit} is the City comparator (CHAT-198.NN-Q1)`; } }
@@ -323,11 +325,12 @@ function runNotice(n, surveyOn, rows, lots) {
       const want = /\bside\b[^.]{0,20}lot line|side yard/i.test(pt) ? 'side_setback_m' : /\brear\b[^.]{0,20}lot line|rear yard/i.test(pt) ? 'rear_setback_m' : null;
       if (want && want !== target && !(want === 'side_setback_m' && target === 'side_setback_street_m')) { lineNote = `notice names the ${want.split('_')[0]} lot line; clause keyed to ${targets.join('+')}`; target = want; }
     }
+    // MB-03: the parser now returns the figure after the "within 0.3 m of a building" definition itself (s5 stays null), so the line words are read after the definition whether or not s5 fired.
     // 4D-S1: 10.5.40.50(2) is the platform setback; score it on the platform target named by the lot line
     let scorerFix = null;
     if (/^10\.5\.40\.50\(2\)/.test(c.norm) && cityUnit === 'm' && targets.includes('platform_side_setback_m')) {
       const pt = `${v.requirement || ''} ${v.proposal || ''}`;
-      const after = s5 ? (String(v.requirement).split(/within 0\.3 ?m of a building|less than 0\.3 ?m from a building/i)[1] || '') : ''; const fig = after.search(new RegExp(String(cityVal).replace('.', '\\.') + '\\s*m'));
+      const after = (String(v.requirement).split(/within 0\.3 ?m of a building|less than 0\.3 ?m from a building/i)[1] || ''); const fig = after.search(new RegExp(String(cityVal).replace('.', '\\.') + '\\s*m'));
       const near = fig >= 0 ? after.slice(Math.max(0, after.lastIndexOf('.', fig - 1) + 1, fig - 70), fig) : ''; // the clause of the figure: the words before it name the line (M-290)
       // when the words before the figure name no line, the words after it do ("1.8m from the side lot lines ... and 10.88m from the rear"): the first line word up to the next figure (A0205/26NY, a regression of the M-290 label found at integrate-21)
       const nextWords = fig >= 0 ? (after.slice(fig).replace(/^[\d.]+\s*m/, '').split(/\d/)[0] || '').slice(0, 40) : '';
