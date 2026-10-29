@@ -362,6 +362,23 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(m).toContain('A clause that applies only to a building type outside McBylaws scope (apartments) is NOT MODELLED with that reason, never NO ANSWER.');
     expect(m).toContain('800.50(150)(B)');
   });
+  it('CHAT-198.NN-Q1..NN-Q5 (batch 2026-10-29-aa): ANSWERED class, plan-fact suite height and separation, main-building floor area input, user neighbour setbacks, separate round; dated notes on M-322, M-286, M-82, M-256', () => {
+    const S = '2026-10-29-batch-aa#CHAT-198.';
+    const q = rowOf(M, 'M-322');
+    expect(q).toContain(S + 'NN-Q1`');
+    expect(q).toContain(S + 'NN-Q5`');
+    expect(q).toContain("A row the evaluator answers but the notice gives no figure for counts as answered and is left out of accuracy; where the notice prints the other building's figure, that figure is the comparator.");
+    expect(q).toContain("Rules that need the neighbours' buildings are Phase 3 work; a floor line that depends on them is owed to Phase 3 by a ratified row, not reclassified.");
+    const h = rowOf(M, 'M-286');
+    expect(h).toContain(S + 'NN-Q2`');
+    expect(h).toContain('For validation against a notice the suite height and separation are the applicant\'s plan figures when held; the product still derives them from the maximum build (M-286).');
+    const g = rowOf(M, 'M-82');
+    expect(g).toContain(S + 'NN-Q3`');
+    expect(g).toContain("A rule that compares a suite with the main building (house or semi-detached house) reads the main building's floor area from a declared input, filled from plan facts, then the user's footprint and storeys, then the maximum build.");
+    const n = rowOf(M, 'M-256');
+    expect(n).toContain(S + 'NN-Q4`');
+    expect(n).toContain("Where the user supplies the neighbours' front setbacks they replace the footprint estimate; the estimate remains the fallback and is flagged needs survey.");
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
