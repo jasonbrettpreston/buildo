@@ -14,7 +14,7 @@
 //   --check: after scoring, compare the class totals with EXPECTED.json {commit, totals}; exit 1 on a mismatch when --root is at that commit,
 //            otherwise print the diff as information only (the evaluator moved on; a changed total is a finding, not a failure).
 import crypto from 'node:crypto'; import fs from 'node:fs'; import path from 'node:path'; import { pathToFileURL, fileURLToPath } from 'node:url';
-import { normClause, unitsForClause } from './coa-clausemap.mjs';
+import { normClause, unitsForClause, correctionFor } from './coa-clausemap.mjs';
 import { execFileSync } from 'node:child_process';
 import { checkExplainedDifferences, explainRow } from './coa-explained.mjs';
 import * as RD from './coa-round.mjs';
@@ -165,6 +165,7 @@ function outOfScope(c, v) {
   if (/^10\.5\.40\.60\(3\)\(a\)\(ii\)/i.test(s)) return 'stairs width';
   if (/^5\.10\./.test(s)) return 'shoreline / ravine (Ch.5 TRCA hazard)';
   if (/^10\.5\.60\.1\(3\)/.test(s)) return 'ancillary-building use (food preparation / sanitary facilities)';
+  if (/^10\.5\.50\.10\([45]\)/.test(s)) return 'apartment-only provision, out of scope'; // CHAT-197.FS-Q2
   return null;
 }
 const ELEMENT_TARGETS_OLD = new Set(['encroachment_m', 'encroachment_clearance_m', 'element_width_pct', 'platform_height_m', 'height_projection_m']);
@@ -275,11 +276,13 @@ function runNotice(n, surveyOn, rows, lots) {
       bylaw_max_coverage_pct: p.bylaw_max_coverage_pct, max_buildable_footprint_sqm: p.max_buildable_footprint_sqm, max_build_height_m: p.max_build_height_m, max_build_stories: p.max_build_stories, max_build_basis: p.max_build_basis } : null };
 
   for (const v of n.variances) {
-    const c = normClause(v.clause);
+    const cc = correctionFor(n.file_number, v); // case-data correction (M-75 form): recorded on the row with its evidence, the printed record untouched
+    const c = normClause(cc && cc.clause ? cc.clause : v.clause);
+    if (cc) c.note = `case-data correction: printed "${v.clause}"${cc.clause ? ` read as ${cc.clause}` : ''}${cc.required_value !== undefined ? `; required figure ${v.required.value} read as ${cc.required_value}` : ''}. Evidence: ${cc.evidence}`;
     if (c.norm === '10.20.40.20') { c.reg = '10.20.40.20(1)'; c.path = '(1)'; c.note = 'notice omits the subsection; read as (1)'; }
     const matched = unitsForClause(c, units);
     const targets = [...new Set(matched.flatMap((u) => [].concat(u.target || [])).filter((t) => t && t !== 'none'))];
-    let cityUnit = v.required?.unit ?? null; let cityVal = v.required?.value ?? null;
+    let cityUnit = v.required?.unit ?? null; let cityVal = cc && cc.required_value !== undefined ? cc.required_value : (v.required?.value ?? null);
     // 4D-S5: platform clauses open with the definition "attached to or less than 0.3 m from a building"; that 0.3 m is not the limit. Take the next figure.
     let s5 = null; const ra = (v.required_all || []).filter((x) => x.unit === 'm');
     if (cityUnit === 'm' && cityVal === 0.3 && /(less than|within) 0\.3 ?m (from|of) a building/i.test(v.requirement || '') && ra.length > 1) { s5 = `definition figure 0.3 m dropped; City figure taken as ${ra[1].value} m`; cityVal = ra[1].value; }

@@ -116,6 +116,23 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     expect([a205.class, a205.ours.value, a205.city_value]).toEqual(['DIFFER', 10.9275, 10.8]);
     expect(at('A0562/26TEY', 4).class).toBe('DATA'); // CHAT-164 round b: the corrected keyed corner (true) is read
   });
+  it('floor-scorer round (CHAT-197.FS-Q2): 10.5.50.10(4) and (5) are NOT MODELLED, apartment-only provision, out of scope; FS-Q1 not chosen: no-number rows and other out-of-scope clauses are untouched', () => {
+    const at = (f: string, n: number) => rowsOf(f).find((x: any) => x.n === n);
+    for (const [f, n] of [['A0201/26EYK', 8], ['A0277/26NY', 4], ['A0277/26NY', 5], ['A0426/26TEY', 7], ['A0426/26TEY', 8]] as [string, number][]) {
+      const r = at(f, n);
+      expect([f, n, r.class, r.why, r.family]).toEqual([f, n, 'NOT MODELLED', 'apartment-only provision, out of scope', 'not modelled']);
+    }
+    expect(rowsOf('A0562/26TEY').find((x: any) => x.n === 5).class).toBe('NO ANSWER'); // 10.5.50.10(2)(B): a clause that is in scope, stays NO ANSWER
+    const noNum = sc.rows.filter((x: any) => x.why === 'notice states no numeric requirement').length;
+    expect(noNum).toBe(7); // the order of the no-number check is unchanged (FS-Q1 not chosen)
+  });
+  it('floor-scorer round: A0467/26TEY#1 and A0167/26EYK#2 are scored on the corrected clause, with the evidence on the row', () => {
+    const at = (f: string, n: number) => rowsOf(f).find((x: any) => x.n === n);
+    const a467 = at('A0467/26TEY', 1); const a167 = at('A0167/26EYK', 2);
+    expect([a467.class, a467.clause_norm, a467.clause]).toEqual(['MATCH', '10.10.40.10(2)(B)(iii)', '10.10.40.10(2)(iii)']); // the printed clause stays on the row
+    expect([a167.class, a167.clause_norm, a167.clause]).toEqual(['MATCH', '10.20.40.40(1)(A)', '10.20.40.10(1)(A)']);
+    expect(a467.clause_note).toMatch(/case-data correction/); expect(a167.clause_note).toMatch(/case-data correction/);
+  });
   it('CHAT-165: held-but-unread plan figures are shown, values only', () => {
     // Data pins: these counts move only under the CHAT-164 round or a plan-facts change.
     for (const r of sc.rows) { expect('lot_held_unread' in r).toBe(true); expect(r.lot_held_unread).toBe(sc.lots[r.notice].lot_held_unread); } // S-3
@@ -217,6 +234,23 @@ describe('vocab.explained_differences consumer (coa-explained.mjs)', () => {
   it('the clause alias table reads the notice typo 10.50.60.70 as 10.5.60.70(1) and leaves real clauses alone (F-4D-SC-245)', () => {
     expect(CM.normClause('10.50.60.70').norm).toBe('10.5.60.70(1)');
     expect(CM.normClause('10.5.60.70(1)(B)').norm).toBe('10.5.60.70(1)(B)');
+  });
+  it('floor-scorer round (batch 2026-10-29-z): five case-data corrections, each naming its evidence, applied only when the printed record equals the printed value on file', () => {
+    const mk = (clause: string, req: number | null) => ({ clause, required: req == null ? null : { value: req, unit: 'm' } });
+    const C = (fn: string, n: number, v: object) => CM.correctionFor(fn, { n, ...v });
+    expect(C('A0262/26NY', 4, mk('10.10.40(2)A)', 7.5))?.clause).toBe('10.10.40.10(2)(A)');
+    expect(C('A0262/26NY', 5, mk('10.10.40(2)A)', 7.5))?.clause).toBe('10.10.40.10(2)(A)');
+    expect(C('A0467/26TEY', 1, mk('10.10.40.10(2)(iii)', 8.5))?.clause).toBe('10.10.40.10(2)(B)(iii)');
+    expect(C('A0167/26EYK', 2, mk('10.20.40.10(1)(A)', 0.45))?.clause).toBe('10.20.40.40(1)(A)');
+    expect(C('A0302/26NY', 2, mk('10.20.40.20(1)', 18))?.required_value).toBe(17);
+    for (const [fn, n] of [['A0262/26NY', 4], ['A0262/26NY', 5], ['A0467/26TEY', 1], ['A0167/26EYK', 2], ['A0302/26NY', 2]] as [string, number][]) {
+      const e = CM.CASE_DATA_CORRECTIONS[fn + '#' + n];
+      expect(typeof e.evidence === 'string' && e.evidence.length > 20).toBe(true); // the document and the value are named
+    }
+    // a record that differs from the one the correction was made for is left alone, and so is every other row
+    expect(C('A0262/26NY', 4, mk('10.10.40.10(2)(A)', 7.5))).toBeNull();
+    expect(C('A0302/26NY', 2, mk('10.20.40.20(1)', 17))).toBeNull();
+    expect(C('A0167/26EYK', 3, mk('10.20.40.10(1)(A)', 0.45))).toBeNull();
   });
   it('explainRow needs the clause, target, our figure and the City figure to equal the entry', () => {
     expect(X.explainRow(good, '10.5.60.70(1)(B)', 'ancillary_coverage_pct', 5, 10)).toBeTruthy();
