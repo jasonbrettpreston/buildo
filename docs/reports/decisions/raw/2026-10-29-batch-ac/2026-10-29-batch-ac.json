@@ -1,0 +1,28 @@
+{
+  "source": "operator chat 2026-10-29",
+  "operator_quote": "Obviously, the .3m is the condition - the condition has been met so the two setbacks apply 3.6M south and .45 North - your proposal for A0090 and A0205 are wrong. Yes, the honest fix is correct . same for the eaves / .3M is the deifnition - this needs to be a disclosure - if this is used in the build / We need to include the ravine bylaws that impact the max build ? In the same way that a corner lot or a heritage building impact the max build. That's why we have these data sources as a step in the process",
+  "context": "Answers the frozen operator cards ~/Buildo-scratch/p2close/CARD-mb03-q2.answered.md (MB03-Q2) and its addendum ~/Buildo-scratch/p2close/CARD-mb03-q2.addendum.answered.md, and ~/Buildo-scratch/p2close/CARD-sc-q4.answered.md (SC-Q4). Compliance table ~/Buildo-scratch/rulings-1024/batch-ac-compliance.md.",
+  "decisions": [
+    {
+      "id": "CHAT-200.MB03-Q2",
+      "subject": "MB03-Q2: requirement sentences that state more than one limit",
+      "decision": "approve",
+      "operator_quote": "Obviously, the .3m is the condition - the condition has been met so the two setbacks apply 3.6M south and .45 North - your proposal for A0090 and A0205 are wrong. Yes, the honest fix is correct . same for the eaves",
+      "recommendation": "A figure that defines when the rule applies (e.g. a platform \"attached to or within 0.3 m of a building\") is a CONDITION; when met, every limit in the sentence applies. Each limit is its own check: A0090#3 -> side setback 3.6 m south AND 0.45 m north; A0205#1 -> 1.8 m from the side lot lines AND 10.88 m from the rear lot line; eaves (e.g. A0182#6) -> projection maximum 0.9 m AND no closer than 0.3 m to a lot line. The previous reading that kept one figure per row (3.6, 1.8, 0.9) is wrong and is replaced. Rule text: A requirement sentence yields one check per stated limit; a figure that defines when the rule applies is a condition, and when it is met every limit in the sentence applies."
+    },
+    {
+      "id": "CHAT-200.MB03-Q2-A",
+      "subject": "MB03-Q2 addendum: the 0.3 m figure is a definition and is disclosed when used",
+      "decision": "approve",
+      "operator_quote": ".3M is the deifnition - this needs to be a disclosure - if this is used in the build",
+      "recommendation": "The 0.3 m figure (\"attached to or within 0.3 m of a building\") is a DEFINITION that decides whether the platform rule applies; it is not a limit and is not scored as one. Whenever the max-build (or any verdict) relies on it, i.e. a platform or structure is treated as attached to / within 0.3 m of the building and the platform setbacks therefore apply, the output carries a DISCLOSURE naming the definition and its clause. Rule text: A definition figure that decides whether a rule applies (e.g. within 0.3 m of a building) is not a limit; when the build relies on it, the result discloses the definition and its clause."
+    },
+    {
+      "id": "CHAT-200.SC-Q4",
+      "subject": "SC-Q4: ravine by-laws in the max build",
+      "decision": "approve",
+      "operator_quote": "We need to include the ravine bylaws that impact the max build ? In the same way that a corner lot or a heritage building impact the max build. That's why we have these data sources as a step in the process",
+      "recommendation": "Answered yes. Every ravine provision that changes the maximum building is applied to the lot exactly as corner-lot and heritage facts are: a lot fact produced by a data-source pipeline step, read by Layer 2, applied by the Phase 3 engine. Provisions: 569-2013 5.10.40.70(6) and 5.10.40.80(1) (10 m from the shoreline hazard limit or stable top-of-bank), 5.10.40.40(1) (floor-area treatment), the ravine exceptions 900.3.10(4) and (729), and any other ravine clause the table holds; each keyed with a measurable target (today target \"none\", not_modelled). Data: acquire the TRCA top-of-bank / shoreline hazard line as a source step under the step handbook (Spec 132), producing the lot's distance to the line; the ravine polygon flag already held stays. Toronto Municipal Code Ch.658 (Ravine and Natural Feature Protection) sets no 10 m figure in our pinned text; where it applies to a lot it is a DISCLOSURE (a permit may be required), not a dimensional limit, unless a keyed clause says otherwise. Where the line is not held for a lot in the ravine area, the result reads \"may exceed: TRCA line needed\", never a guess. The old RAVINE_SETBACK_M constant (mislabelled Ch.658) is deleted. Rule text: Ravine provisions that change the maximum building are applied from keyed clauses and a TRCA top-of-bank source step, like corner and heritage lot facts; where the line is not held the result says so; Ch.658 is disclosed where it applies."
+    }
+  ]
+}

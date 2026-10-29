@@ -319,6 +319,10 @@ First clause cited: 5.10.40.70.
   Status: RATIFIED 2026-10-15 · Enforced by: vocab lot_condition.no_rear_lot_line, undetermined_condition_disclosure.{define_effect, condition_override,…
   Rules: `M-170` (Spec 69a)
 
+- **m.376** Phase 3 scope and model values: semis and townhouses are a recorded future build, engine choices are checked against their clause, every model value is a keyed by-law value or an externalized variable.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+  Rules: `M-376` (Spec 69a) · +1 dated note
+
 ### 5.10.175.1
 
 First clause cited: 5.10.175.1.
@@ -1562,10 +1566,6 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **m.375** P-2 scope check notes: Spec 58 §13 consumers, user inputs, in_force_basis.
   Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
   Rules: `M-375` (Spec 69a)
-
-- **m.376** Phase 3 scope and model values: semis and townhouses are a recorded future build, engine choices are checked against their clause, every model value is a keyed by-law value or an externalized variable.
-  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-376` (Spec 69a) · +1 dated note
 
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts

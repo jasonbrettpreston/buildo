@@ -419,6 +419,17 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(rowOf(M, 'M-172')).toContain(S + 'MR-Q2`');
     for (const id of ['M-372', 'M-373', 'M-374']) expect(rowOf(M, id)).toMatch(/OWED to Phase 3 \(MB-\d+/);
   });
+  it('CHAT-200 (batch 2026-10-29-ac): one check per stated limit, a condition figure is a condition; a definition figure is disclosed when relied on; dated note on M-370', () => {
+    const S = '2026-10-29-batch-ac#CHAT-200.';
+    const r = rowOf(M, 'M-370');
+    expect(r).toContain(S + 'MB03-Q2`');
+    expect(r).toContain(S + 'MB03-Q2-A`');
+    expect(r).toContain('Dated note 2026-10-29 (M-370; operator MB03-Q2');
+    expect(r).toContain('A requirement sentence yields one check per stated limit; a figure that defines when the rule applies is a condition, and when it is met every limit in the sentence applies.');
+    expect(r).toContain('A definition figure that decides whether a rule applies (e.g. within 0.3 m of a building) is not a limit; when the build relies on it, the result discloses the definition and its clause.');
+    expect(rowOf(M, 'M-376')).toContain(S + 'SC-Q4`');
+    expect(rowOf(M, 'M-376')).toContain('Ravine provisions that change the maximum building are applied from keyed clauses and a TRCA top-of-bank source step, like corner and heritage lot facts; where the line is not held the result says so; Ch.658 is disclosed where it applies.');
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
