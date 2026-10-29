@@ -76,12 +76,12 @@ describe('C-5: floors through the pin door', () => {
     const grown = R.statsOf([...all, ...rows('10.10.40', 8, 2)]);
     expect(R.checkFloors(f, grown).join()).toMatch(/article 10\.10\.40 has 10 or more scored rows and no floor/);
   });
-  it('the accept door refuses a ruling that is not a RATIFIED register id, and records the ruling when it is', () => {
+  it('the accept door refuses a ruling that is not a RATIFIED or RULED register id, and records the ruling and the named lines when it is', () => {
     const rulings = new Map([['M-1', 'RATIFIED'], ['M-2', 'PROPOSED']]);
     const f = R.floorsFrom(R.statsOf(all));
-    expect(() => R.acceptFloors(f, R.statsOf(all), 'M-2', rulings)).toThrow(/not RATIFIED/);
-    expect(() => R.acceptFloors(f, R.statsOf(all), '', rulings)).toThrow(/--ruling/);
-    const g = R.acceptFloors(f, R.statsOf(all), 'M-1', rulings);
+    expect(() => R.acceptFloors(f, R.statsOf(all), 'M-2', rulings, ['overall accuracy'])).toThrow(/not RATIFIED/);
+    expect(() => R.acceptFloors(f, R.statsOf(all), '', rulings, ['overall accuracy'])).toThrow(/--ruling/);
+    const g = R.acceptFloors(f, R.statsOf(all), 'M-1', rulings, ['overall accuracy']);
     expect(g.rulings.at(-1)).toMatchObject({ ruling: 'M-1' });
   });
   it('the committed floors file equals the 92 / 71 overall floors of CHAT-63.C5 and is not above the measured lock', () => {
@@ -180,4 +180,93 @@ describe.skipIf(!have172)('scorer wiring (172 notices)', () => {
     expect(r.code).toBe(1);
     expect(r.so).toMatch(/PREREG FINDING.*not committed at HEAD/);
   }, 120000);
+});
+
+// MB-06 (M-343, P2C-Q3, P2C-Q5, P2C-Q1 item 2, M-372..M-374). The register rows live on wf1/rulings-rec3 until MB-08 merges; these tests use fixture rows of the same shape.
+describe('MB-06: RULED rows are accept authority; OWED floor lines; --accept moves only the named lines', () => {
+  const all = [...rows('10.20.40', 18, 2, 5, 5), ...rows('10.10.40', 6, 0, 1, 1), ...rows('900.3.10', 2, 0)];
+  const worse = R.statsOf([...rows('10.20.40', 15, 5, 5, 5), ...rows('10.10.40', 6, 0, 1, 1), ...rows('900.3.10', 2, 0)]);
+  const OWING = '| **M-372** | **OWED to Phase 3: cumulative 10.20.40 accuracy.** Ratified by P2C-Q1. | M-322 | x | RULED 2026-10-29 (operator, P2C-Q1); OWED to Phase 3 (MB-21 (with MB-20 for MR-Q1)) since 2026-10-29 |';
+  const OWING2 = '| **M-373** | **OWED to Phase 3: overall accuracy.** x | M-322 | x | RULED 2026-10-29 (operator, P2C-Q1); OWED to Phase 3 (MB-18) since 2026-10-29 |';
+  const OWING_POOL = '| **M-374** | **OWED to Phase 3: cumulative pooled articles answered.** x | M-322 | x | RULED 2026-10-29 (operator, P2C-Q1); OWED to Phase 3 (MB-20) since 2026-10-29 |';
+
+  it('M-343: parseRulings reads a status starting RULED as RULED (was UNKNOWN)', () => {
+    const m = U.parseRulings('| **M-343** | a | b | c | RULED 2026-10-22 (operator); build OWED |\n| **M-372** | a | b | c | RULED 2026-10-29 (operator, P2C-Q1); OWED to Phase 3 (MB-21) since 2026-10-29 |\n| **M-9** | a | b | c | PROPOSED |');
+    expect([...m.entries()]).toEqual([['M-343', 'RULED'], ['M-372', 'RULED'], ['M-9', 'PROPOSED']]);
+  });
+  it('M-343: acceptFloors takes a RULED row as authority and still refuses PROPOSED, UNKNOWN and absent', () => {
+    const f = R.floorsFrom(R.statsOf(all));
+    const rulings = new Map([['M-343', 'RULED'], ['M-9', 'PROPOSED'], ['M-8', 'UNKNOWN']]);
+    expect(R.acceptFloors(f, R.statsOf(all), 'M-343', rulings, ['overall accuracy']).rulings.at(-1)).toMatchObject({ ruling: 'M-343' });
+    for (const id of ['M-9', 'M-8', 'M-0']) expect(() => R.acceptFloors(f, R.statsOf(all), id, rulings, ['overall accuracy'])).toThrow(/not RATIFIED or RULED/);
+  });
+  it('M-343: acceptUniverse takes a RULED row; PROPOSED is still refused', () => {
+    const i = U.fixtureInputs();
+    i.universe.scope_rules[2].ruling = 'M-31';
+    i.universe.page_rules[0].ruling = 'M-47';
+    i.spec69Text += '\n| **M-343** | x | y | G-UNIVERSE | RULED 2026-10-22 (operator); build OWED |';
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mb06-accept-'));
+    expect(() => U.acceptUniverse({ root, ruling: 'M-90', inputs: i })).toThrow(/ruling_not_ratified/);
+    expect(U.acceptUniverse({ root, ruling: 'M-343', inputs: i }).lock).toBeTruthy();
+  });
+  it('P2C-Q5: --accept moves only the named lines, to the measured value or the value the ruling states, and records them', () => {
+    const f = R.floorsFrom(R.statsOf(all));
+    const rulings = new Map([['M-1', 'RULED']]);
+    const grown = R.statsOf([...rows('10.20.40', 19, 1, 5, 5), ...rows('10.10.40', 5, 1, 1, 1), ...rows('900.3.10', 2, 0), ...rows('150.8.60', 10, 0)]);
+    const g = R.acceptFloors(f, grown, 'M-1', rulings, ['article 10.20.40 accuracy', 'article 150.8.60', 'pooled articles accuracy=95']);
+    const before = JSON.parse(JSON.stringify(f));
+    expect(g.articles['10.20.40'].accuracy).toBe(95);
+    expect(g.articles['10.20.40'].answered).toBe(before.articles['10.20.40'].answered);
+    expect(g.articles['150.8.60']).toEqual({ accuracy: 100, answered: 100 });
+    expect(g.pooled.accuracy).toBe(95);
+    expect(g.pooled.answered).toBe(before.pooled.answered);
+    expect(g.overall).toEqual(before.overall);
+    expect(g.articles['10.10.40']).toEqual(before.articles['10.10.40']); // measured 83 % now, untouched: nobody named it
+    expect(g.articles['900.3.10']).toEqual(before.articles['900.3.10']);
+    expect(g.rulings.at(-1).lines.map((x: any) => x.line)).toEqual(['article 10.20.40 accuracy', 'article 150.8.60', 'pooled articles accuracy']);
+  });
+  it('P2C-Q5: --accept with no line, an unknown line or a bad value refuses and changes nothing', () => {
+    const f = R.floorsFrom(R.statsOf(all));
+    const rulings = new Map([['M-1', 'RULED']]);
+    const s = R.statsOf(all);
+    expect(() => R.acceptFloors(f, s, 'M-1', rulings, [])).toThrow(/names no line/);
+    expect(() => R.acceptFloors(f, s, 'M-1', rulings, ['article 7.7.7 accuracy'])).toThrow(/no floor|not a line/);
+    expect(() => R.acceptFloors(f, s, 'M-1', rulings, ['article 10.20.40 colour'])).toThrow(/not a line/);
+    expect(() => R.acceptFloors(f, s, 'M-1', rulings, ['overall accuracy=abc'])).toThrow(/value/);
+  });
+  it('OWED: a failing line named by an owing row is OWED (row, tasks, date), in its own section, exit 0 only when no other line fails', () => {
+    const f = R.floorsFrom(R.statsOf(all));
+    const rep = R.reportFloors(f, worse, [OWING, OWING2].join('\n'));
+    expect(rep.code).toBe(0);
+    expect(rep.text.split('\n')[0]).toBe('FLOORS OK (OWED: 2, listed)');
+    expect(rep.text).toMatch(/OWED \(not counted as PASS\)/);
+    expect(rep.text).toMatch(/article 10\.20.40 accuracy .*M-372.*MB-21, MB-20.*since 2026-10-29/);
+    expect(rep.text).toMatch(/overall accuracy .*M-373.*MB-18.*since 2026-10-29/);
+    expect(rep.owed.map((x: any) => x.line)).toEqual(['overall accuracy', 'article 10.20.40 accuracy']);
+    expect(rep.fail).toEqual([]);
+  });
+  it('OWED: any FAIL line keeps exit 1 and the FAIL line text; only lines named by an owing row are OWED', () => {
+    const f = R.floorsFrom(R.statsOf(all));
+    const rep = R.reportFloors(f, worse, OWING); // 10.20.40 accuracy owed, overall accuracy not named
+    expect(rep.code).toBe(1);
+    expect(rep.text.split('\n')[0]).toMatch(/^FLOORS FAIL: overall accuracy \d+\.\d % is below its floor \d+ %$/);
+    expect(rep.owed.map((x: any) => x.line)).toEqual(['article 10.20.40 accuracy']);
+    expect(rep.text).toMatch(/OWED \(not counted as PASS\)/);
+  });
+  it('OWED: a row absent from the register, not in the OWED form, or naming a line that passes never makes OWED', () => {
+    const f = R.floorsFrom(R.statsOf(all));
+    expect(R.reportFloors(f, worse, '').code).toBe(1); // register without the row (b10fix until MB-08)
+    const notOwed = OWING.replace('OWED to Phase 3 (MB-21 (with MB-20 for MR-Q1)) since 2026-10-29', 'RATIFIED 2026-10-29');
+    expect(R.reportFloors(f, worse, notOwed).owed).toEqual([]);
+    const noTask = OWING.replace('MB-21 (with MB-20 for MR-Q1)', 'later');
+    expect(R.reportFloors(f, worse, noTask).owed).toEqual([]);
+    const ok = R.reportFloors(f, R.statsOf(all), OWING_POOL); // pooled answered passes: not listed, not OWED
+    expect(ok.owed).toEqual([]);
+    expect(ok.code).toBe(0);
+    expect(ok.text).toMatch(/^FLOORS OK: overall/);
+  });
+  it('OWED: a line below its floor and owed stays out of checkFloors-as-PASS: checkFloors still lists it (callers cannot count it as PASS)', () => {
+    const f = R.floorsFrom(R.statsOf(all));
+    expect(R.checkFloors(f, worse).join('\n')).toMatch(/article 10\.20\.40 accuracy/);
+  });
 });

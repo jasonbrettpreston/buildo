@@ -9,7 +9,7 @@
 // Classes also: BY-LAW CHANGED (C-3: the cited provision has an amendment tag with a VERIFIED in-force date after the hearing; in neither percentage). A tag with no verified date leaves the class and sets amendment_status 'unverified'.
 // Usage: node scripts/analysis/bylaw-validation/coa-scorecard.mjs --notices N.json --parcels P.json --out O.json [--root R] [--plan-facts DIR] [--check EXPECTED.json]
 //   --pin FILE: write the expected file for this run at this tree ({commit, totals, inputs}).
-//   --floors FILE: fail (exit 1) when accuracy / answered fall below the committed floors (C-5); with --accept --ruling=<RATIFIED id> the floors are re-derived from this run and rewritten (the one door, Spec 133 m.56).
+//   --floors FILE: fail (exit 1) when accuracy / answered fall below the committed floors (C-5); a failing line named by an owing register row (M-372..M-374) prints as OWED, in its own section, never PASS (exit 0 only when every line is PASS or OWED); with --accept --ruling=<RATIFIED or RULED id> --line="article 150.8.60" (repeatable, optional =value) only the named lines are rewritten from this run (the one door, Spec 133 m.56; P2C-Q5).
 //   --prereg FILE [--baseline SCORECARD.json]: record expected against actual moves and totals (C-4); an unexpected move, a missing move, a totals difference or an uncommitted file is a FINDING (exit 1).
 //   --check: after scoring, compare the class totals with EXPECTED.json {commit, totals}; exit 1 on a mismatch when --root is at that commit,
 //            otherwise print the diff as information only (the evaluator moved on; a changed total is a finding, not a failure).
@@ -467,16 +467,16 @@ fs.writeFileSync(OUT, JSON.stringify({ root: ROOT, units: units.length, fya_allo
 const by = {}; for (const r of rows) by[r.class] = (by[r.class] || 0) + 1;
 for (const r of rows.filter((x) => x.class === ANSWERED)) console.log('ANSWERED (no City figure): ' + r.notice + ' #' + r.n + ' ' + r.clause + ' ours ' + (r.ours && r.ours.value));
 console.log('rows', rows.length, JSON.stringify(by), 'amendment status unverified', rows.filter((r) => r.amendment_status === 'unverified').length);
-// C-5 floors and C-4 pre-registration (see coa-round.mjs). Both are read-only on the data; --accept is the only writer and needs a RATIFIED ruling.
+// C-5 floors and C-4 pre-registration (see coa-round.mjs). Both are read-only on the data; --accept is the only writer and needs a RATIFIED or RULED ruling.
 const STATS = RD.statsOf(rows);
 if (arg('floors')) {
   const fp = arg('floors'); const floors = JSON.parse(fs.readFileSync(fp, 'utf8'));
   if (process.argv.includes('--accept')) {
-    const next = RD.acceptFloors(floors, STATS, (process.argv.find((a) => a.startsWith('--ruling=')) || '').slice(9), parseRulings(readSpec69Rulings(ROOT)));
-    fs.writeFileSync(fp, JSON.stringify(next, null, 1) + '\n'); console.log('FLOORS ACCEPTED ' + fp + ' ' + JSON.stringify(next.overall));
+    const lines = process.argv.filter((a) => a.startsWith('--line=')).map((a) => a.slice(7));
+    const next = RD.acceptFloors(floors, STATS, (process.argv.find((a) => a.startsWith('--ruling=')) || '').slice(9), parseRulings(readSpec69Rulings(ROOT)), lines);
+    fs.writeFileSync(fp, JSON.stringify(next, null, 1) + '\n'); console.log('FLOORS ACCEPTED ' + fp + ' lines ' + JSON.stringify(next.rulings.at(-1).lines));
   } else {
-    const bad = RD.checkFloors(floors, STATS);
-    if (bad.length) { console.log('FLOORS FAIL: ' + bad.join('; ')); process.exitCode = 1; } else console.log('FLOORS OK: overall ' + JSON.stringify(floors.overall) + ', ' + Object.keys(floors.articles).length + ' article floors + pooled');
+    const rep = RD.reportFloors(floors, STATS, readSpec69Rulings(ROOT)); console.log(rep.text); if (rep.code) process.exitCode = 1;
   }
 }
 if (arg('prereg')) {
