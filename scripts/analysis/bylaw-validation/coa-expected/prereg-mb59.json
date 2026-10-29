@@ -1,0 +1,108 @@
+{
+ "$comment": "M-321 pre-registration, notice-reader and scorer round MB-59 (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md), committed alone before the scorer change. Rule: MB-59 / FS-Q1 (operator 2026-10-29, ~/Buildo-scratch/p2close/CARD-mb59.answered.md): \"Where the notice prints no required figure but the keyed rule calculates it (e.g. maximum bedrooms = 3 x units), the model calculates it and the row is scored as answered.\" Change: coa-scorecard.mjs mainType reads \"convert the existing 2 unit dwelling to 3 units\" as a three-unit detached houseplex, so 10.20.40.1(8)(B) calculates 3 x 3 = 9 bedrooms; the row is ANSWERED (CHAT-198.NN-Q1 class) and carries a verdict against the applicant's 16 bedrooms. One row moves; every other row keeps class and City figure.",
+ "schema": "coa-round-prereg-v1",
+ "round": 13,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-59; ~/Buildo-scratch/p2close/CARD-mb59.answered.md; ~/Buildo-scratch/p3model/mb59 (dry run)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0055/26SC",
+   "n": 1,
+   "clause": "10.20.40.1(8)(B)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "MB-59: the notice prints no required figure; the rule calculates 3 x 3 units = 9 bedrooms (10.20.40.1(8)(B)); ANSWERED with the verdict (proposed 16 exceeds 9)"
+  }
+ ],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 398,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 41,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "NOT MODELLED": 95,
+  "MATCH": 398,
+  "DIFFER": 31,
+  "NO ANSWER": 41,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 6
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [
+  {
+   "notice": "A0055/26SC",
+   "n": 1,
+   "clause": "10.20.40.1(8)(B)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "MB-59: the notice prints no required figure; the rule calculates 3 x 3 units = 9 bedrooms (10.20.40.1(8)(B)); ANSWERED with the verdict (proposed 16 exceeds 9)"
+  }
+ ],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 279,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 28,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "NOT MODELLED": 74,
+  "MATCH": 279,
+  "DIFFER": 24,
+  "NO ANSWER": 28,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 1
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0055/26SC",
+   "n": 1,
+   "clause": "10.20.40.1(8)(B)",
+   "from": "NOT MODELLED",
+   "to": "ANSWERED",
+   "reason": "MB-59: the notice prints no required figure; the rule calculates 3 x 3 units = 9 bedrooms (10.20.40.1(8)(B)); ANSWERED with the verdict (proposed 16 exceeds 9)"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 450,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 57,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "NOT MODELLED": 130,
+  "MATCH": 450,
+  "DIFFER": 35,
+  "NO ANSWER": 57,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3,
+  "ANSWERED": 8
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; 172 and cumulative floors file result stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
