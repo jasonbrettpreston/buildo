@@ -384,6 +384,41 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(n).toContain("Where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own building front setback plus 1.0 m and the median of the footprint estimates plus 1.0 m of other lots on the same street within the placeholder radius (one of the two if only one exists), else the same-zone median within the zone radius, else 6.0 m; always flagged needs survey, and never replaces a user figure or a neighbour estimate.");
     expect(rowOf(M, 'M-245')).toContain("Where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own building front setback plus 1.0 m and the median of the footprint estimates plus 1.0 m of other lots on the same street within the placeholder radius (one of the two if only one exists), else the same-zone median within the zone radius, else 6.0 m; always flagged needs survey, and never replaces a user figure or a neighbour estimate.");
   });
+  it('CHAT-199 (batch 2026-10-29-ab): Phase 2 close, Gap 1, Phase 3 exit, engine hold, harness, missing rules, hidden numbers, night restore, use-scope findings, notice figure, by-law replacement; owed floor lines; P-2 notes', () => {
+    const S = '2026-10-29-batch-ab#CHAT-199.';
+    const want: Array<[string, string[], string]> = [
+      ['M-359', ['P2C-Q1'], "Phase 2 closes on six items: overall floors, article floors met or owed to Phase 3 by a ratified row, use permission landed, the 25-case blind record, the P-2 scope check, and a merged full verify; the CoA link gate, SC-5 target, P-1 report test and §5a owed parts are Phase 3."],
+      ['M-360', ['P2C-Q2', 'P2C-Q3', 'P2C-Q4', 'P2C-Q5', 'P2C-Q6'], "A test never asserts a red floor result; it stays red until a ruling moves the floor."],
+      ['M-361', ['G1-Q1', 'G1-Q2', 'G1-Q3'], "An exception that sets no storey limit leaves the building limited by height alone."],
+      ['M-362', ['MB13-PRIMARY', 'MB13-EXIT'], "no threshold is set after the results it judges."],
+      ['M-363', ['P3H'], "P3-HOLD-1 ends: the max-build engine and its 40-test lock return to the branch together at MB-14."],
+      ['M-364', ['HR'], "The blind harness scores by these six rules, fixed before any run."],
+      ['M-365', ['MR-Q1', 'MR-Q2', 'MR-Q3', 'MR-Q4'], "When a design fact is unknown the evaluator computes both arms and shows both; it never fills the fact with a default."],
+      ['M-366', ['MR-Q5', 'MR-Q6', 'MR-Q7', 'MR-Q8', 'MR-Q9', 'MR-ANC'], "Parking count and bicycle facilities are evaluated and reported as lot checks; they do not size the building envelope."],
+      ['M-367', ['MB37'], "Until MB-38..MB-41 switch each field group, the old hard-coded values are not shown; the field reads 'being recalculated from the by-law'."],
+      ['M-368', ['MB30'], "The night restore disables triggers on the tables it restores, within the restore transaction, and re-enables them before commit."],
+      ['M-369', ['USO-Q2', 'USO-Q3', 'USO-Q4', 'USO-Q5'], "a lot-level gate reason such as named_lots_only outranks the class-level no_candidate"],
+      ['M-370', ['MB03-Q1'], "where a sentence stays ambiguous the first figure is kept and the row is flagged for the operator."],
+      ['M-371', ['MB48'], "Every product zoning number comes from a keyed by-law clause; an old constant with no clause found returns to the operator, never stays in use."],
+      ['M-372', ['P2C-Q1'], 'OWED to Phase 3: cumulative 10.5.40 accuracy'],
+      ['M-373', ['P2C-Q1'], 'OWED to Phase 3: cumulative 10.80.40 answered'],
+      ['M-374', ['P2C-Q1'], 'OWED to Phase 3: cumulative pooled articles answered'],
+      ['M-375', ['P2C-Q1'], 'in_force_basis'],
+      ['M-376', ['SC-Q1', 'SC-Q2', 'SC-Q3'], "Every model value is a keyed by-law value or an externalized variable that is changeable, logged as a ruling and observable; a value citing a unit counts as keyed only when a test proves the unit holds it."],
+    ];
+    for (const [id, ids, text] of want) {
+      const r = rowOf(M, id);
+      for (const d of ids) expect(r).toContain(S + d + '`');
+      expect(r).toContain(text);
+    }
+    expect(rowOf(M, 'M-327')).toContain(S + 'MB04`');
+    expect(rowOf(M, 'M-327')).toContain(S + 'MB04-C`');
+    expect(M).toContain('*Dated note 2026-10-29 (M-63; operator SC-Q1');
+    expect(rowOf(M, 'M-376')).toContain('Semi-detached, semi houseplex and townhouse max-build scenarios are a recorded future build, not part of the current Phase 3 scope.');
+    expect(rowOf(M, 'M-331')).toContain(S + 'P2C-Q1`');
+    expect(rowOf(M, 'M-172')).toContain(S + 'MR-Q2`');
+    for (const id of ['M-372', 'M-373', 'M-374']) expect(rowOf(M, id)).toMatch(/OWED to Phase 3 \(MB-\d+/);
+  });
   it('CHAT-196 (batch 2026-10-27-x): the committed witness catalog is fixed to the DB truth, never tolerated; dated note on R-JY (R-CZ sits in moved block §B16)', () => {
     const jy = rowOf(A, 'R-JY');
     expect(jy).toContain('2026-10-27-batch-x#CHAT-196.CATALOG-FIX`');
