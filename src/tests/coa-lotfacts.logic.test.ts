@@ -125,3 +125,70 @@ describe('coa-lotfacts: lot figures in M-326 order (CHAT-156)', () => {
       .toBe('lot figure held, not read: depth_m 30 (source unrecognised), area_m2 100 (source not recorded), corner true (source unrecognised)');
   });
 });
+
+// CHAT-164 round (decision log CHAT-164.READ-SOURCE, CHAT-164.CONTRADICTED): an unknown-source figure is read only when the read-record names it
+// (value + document, no page); where the keyed value contradicts the plan figure the keyed value is read and the plan figure stays disclosed.
+const RR_FILE = path.join(process.cwd(), "scripts/analysis/bylaw-validation/coa-expected/read-record-chat164.json");
+const UNK = { lot_area_m2: 488, lot_frontage_m: null, lot_depth_m: null, corner_lot: false, lot_source: { lot_area_m2: "unknown", corner_lot: "unknown" } };
+const PUNK = { frontage_m: 14.55, depth_m: 33.53, lot_size_sqm: 486.94, is_corner_lot: false };
+describe("coa-lotfacts: the CHAT-164 read-record", () => {
+  it("R-1: an unknown-source figure is unread without a record and read with one (value, document); the source token is read_record", async () => {
+    const M = await load();
+    expect(M.lotFigures(UNK)).toBeNull();
+    const rec = { area_m2: { value: 488, document: "plan-facts" }, corner: { value: false, document: "parcel" } };
+    const sv = M.lotFigures(UNK, rec);
+    expect([sv.area_m2, sv.corner, sv.source.area_m2, sv.source.corner, sv.frontage_m]).toEqual([488, false, "read_record", "read_record", null]);
+    expect(M.lotSourceOf(sv, PUNK)).toEqual({ frontage_m: "parcel", depth_m: "parcel", area_m2: "read_record", corner: "read_record" });
+    expect(M.lotDisclosure(M.lotSourceOf(sv, PUNK))).toBe("lot figure not from a survey: area_m2 read_record, corner read_record");
+  });
+  it("R-2: the record never displaces a ranked figure, and a key the record does not name stays unread", async () => {
+    const M = await load();
+    const syn = { lot_area_m2: 400, lot_frontage_m: 10, lot_depth_m: 40, corner_lot: false, lot_source: { lot_area_m2: "survey", lot_frontage_m: "survey", lot_depth_m: "zoning_notice", corner_lot: "decision_notice" } };
+    const sv = M.lotFigures(syn, { area_m2: { value: 999, document: "plan-facts" } });
+    expect([sv.area_m2, sv.source.area_m2]).toEqual([400, "survey"]);
+    const sv2 = M.lotFigures(UNK, { corner: { value: false, document: "parcel" } });
+    expect([sv2.area_m2, sv2.corner]).toEqual([null, false]);
+    expect(M.lotHeldUnread(UNK, PUNK, { corner: { value: false, document: "parcel" } })).toBe("lot figure held, not read: area_m2 488 (source unknown)");
+  });
+  it("R-3 (CHAT-164.CONTRADICTED, A0562 corner, A0578 area): the keyed value is read and the plan figure stays disclosed", async () => {
+    const M = await load();
+    const a562 = F.A0562; const rec = { corner: { value: false, document: "parcel" } };
+    expect(M.lotFigures(a562.pf, rec).corner).toBe(false);
+    expect(M.lotHeldUnread(a562.pf, a562.p, rec)).toBe("lot figure held, not read: corner true (source unknown; contradicted by keyed value false)");
+    const a578 = { lot_area_m2: 356.65, lot_source: { lot_area_m2: "unknown" } };
+    const r578 = { area_m2: { value: 345.22, document: "site plan" } };
+    expect(M.lotFigures(a578, r578).area_m2).toBe(345.22);
+    expect(M.lotHeldUnread(a578, { lot_size_sqm: 320.66 }, r578)).toBe("lot figure held, not read: area_m2 356.65 (source unknown; contradicted by keyed value 345.22)");
+  });
+  it("R-4 (lock): lot_held_unread drops by exactly the re-read figures; no parcel keeps the no-parcel reason", async () => {
+    const M = await load();
+    const pf = { lot_area_m2: 488, lot_depth_m: 33, corner_lot: false, lot_source: { lot_area_m2: "unknown", lot_depth_m: "unknown", corner_lot: "unknown" } };
+    const p = { frontage_m: 14, depth_m: 33, lot_size_sqm: 488, is_corner_lot: false };
+    expect(M.lotHeldUnread(pf, p)).toBe("lot figure held, not read: depth_m 33 (source unknown), area_m2 488 (source unknown), corner false (source unknown)");
+    expect(M.lotHeldUnread(pf, p, { area_m2: { value: 488, document: "plan-facts" } })).toBe("lot figure held, not read: depth_m 33 (source unknown), corner false (source unknown)");
+    expect(M.lotHeldUnread(pf, p, { area_m2: { value: 488, document: "plan-facts" }, depth_m: { value: 33, document: "survey" }, corner: { value: false, document: "parcel" } })).toBeNull();
+    expect(M.lotHeldUnread(pf, null, { area_m2: { value: 488, document: "plan-facts" } })).toBe("lot figure held, not read: depth_m 33 (no parcel), area_m2 488 (no parcel), corner false (no parcel)");
+  });
+  it("R-5: the index of a read-record file keys figures by case and key; a figure without a document or value is refused", async () => {
+    const M = await load();
+    const ok = { schema: "coa-read-record-v1", figures: [{ case: "A1/26X", key: "area_m2", value: 1, status: "confirmed", document: "plan-facts" }] };
+    expect(M.checkReadRecord(ok)).toEqual([]);
+    expect(M.readRecordFor(ok, "A1/26X")).toEqual({ area_m2: { value: 1, document: "plan-facts" } });
+    expect(M.readRecordFor(ok, "A2/26X")).toBeNull();
+    const bad = { schema: "coa-read-record-v1", figures: [{ case: "A1/26X", key: "area_m2", value: 1, status: "confirmed", document: "", page: 3 }, { case: "A1/26X", key: "area_m2", value: null, status: "keyed", document: "x" }] };
+    expect(M.checkReadRecord(bad).length).toBeGreaterThanOrEqual(4);
+  });
+  it("R-6: the committed read-record: 32 figures, value + document each, no page, four contradicted, only golden-status confirmed or contradicting", async () => {
+    const M = await load();
+    const rr = JSON.parse(fs.readFileSync(RR_FILE, "utf8"));
+    expect(M.checkReadRecord(rr)).toEqual([]);
+    expect(rr.figures.length).toBe(32);
+    for (const f of rr.figures) {
+      expect(typeof f.document === "string" && f.document.length > 0).toBe(true);
+      expect("page" in f).toBe(false);
+      expect(f.status === "confirmed" || (f.contradicts_held !== undefined && f.contradicts_held !== f.value)).toBe(true);
+    }
+    expect(rr.figures.filter((f: Json) => f.contradicts_held !== undefined).map((f: Json) => f.case + " " + f.key)).toEqual(["A0277/26NY area_m2", "A0399/24EYK corner", "A0562/26TEY corner", "A0578/26TEY area_m2"]);
+    expect(new Set(rr.figures.map((f: Json) => f.case)).size).toBeLessThanOrEqual(25);
+  });
+});

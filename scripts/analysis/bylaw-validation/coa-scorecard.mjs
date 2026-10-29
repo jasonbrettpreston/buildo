@@ -36,6 +36,10 @@ const PROV_BY = new Map(JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/referen
 const AMD_STATUSES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/amendments.json'), 'utf8')).statuses;
 const notices = JSON.parse(fs.readFileSync(NOT, 'utf8')); const parcels = JSON.parse(fs.readFileSync(PAR, 'utf8'));
 const PF_DIR = arg('plan-facts', process.env.PLAN_FACTS || null);
+// CHAT-164: the read-record (default: the committed file beside the pins); --read-record none switches it off. A malformed record stops the run.
+const RR_PATH = arg('read-record', path.join(ROOT, 'scripts/analysis/bylaw-validation/coa-expected/read-record-chat164.json'));
+const READ_RECORD = RR_PATH !== 'none' && fs.existsSync(RR_PATH) ? JSON.parse(fs.readFileSync(RR_PATH, 'utf8')) : null;
+if (READ_RECORD) { const bad = LF.checkReadRecord(READ_RECORD); if (bad.length) { console.error('read-record is invalid:\n  ' + bad.join('\n  ')); process.exit(2); } }
 // 4D-S4: openings evidence (notice text or plan facts) → take the blank_side_wall:false arm
 const OPEN_RE = /\b(windows?|openings?|doors?)\s+(in|on)\s+(the\s+)?(\w+\s+)?(side|main)\s+walls?|(?<!no\s)openings to dwelling units|side wall (has|with) (windows|openings)/i;
 function openingsEvidence(n) {
@@ -258,11 +262,11 @@ function runNotice(n, surveyOn, rows, lots) {
   const lc = p ? labelCompare(n.zoning, p.zoning_zn_string) : null;
   const areaGapPct = p && ia ? Math.round(((p.lot_size_sqm - ia.area) / ia.area) * 1000) / 10 : null;
   const nonRes = n.zoning && n.zoning.zone && !['R', 'RD', 'RS', 'RT', 'RM'].includes(n.zoning.zone);
-  const pf = planFacts(n); const sv = LF.lotFigures(pf); const svc = surveyCheck(sv, p);
+  const pf = planFacts(n); const rrec = LF.readRecordFor(READ_RECORD, n.file_number); const sv = LF.lotFigures(pf, rrec); const svc = surveyCheck(sv, p);
   const base = p ? (surveyOn ? applySurvey(lotFromParcel(p), sv) : lotFromParcel(p)) : null;
   const openings = openingsEvidence(n);
   const LS = LF.lotSourceOf(surveyOn ? sv : null, p); const LD = LF.lotDisclosure(LS); // CHAT-156: lot_source on every row; non-survey disclosed
-  const LU = LF.lotHeldUnread(pf, p); // CHAT-165: plan figures held but not read (values only; no class or value moves)
+  const LU = LF.lotHeldUnread(pf, p, rrec); // CHAT-165: plan figures held but not read (values only; no class or value moves)
   lots[n.file_number] = { address: n.address, city_label: n.zoning?.label, kind: n.kind, hearing_date: n.hearing_date, purpose: n.purpose, main_type: main,
     parcel: p ? { id: p.id, parcel_id: p.parcel_id, label: p.zoning_zn_string, frontage_m: p.frontage_m, depth_m: p.depth_m, lot_area_m2: p.lot_size_sqm, lot_size_basis: p.lot_size_basis, lot_size_confidence: p.lot_size_confidence,
       corner: p.is_corner_lot, lane: p.abuts_laneway, major: p.on_policy_road, geog_area: p.geog_area, n_parcels: uniq.length } : null,
@@ -457,7 +461,7 @@ if (arg('prereg')) {
 // --pin FILE writes the expected file for this run at this tree (the integrate step re-pins; a moved input is a finding to re-pin, not a silent pass).
 const here = path.dirname(fileURLToPath(import.meta.url));
 const shaOf = (fl) => { const h = crypto.createHash('sha256'); for (const x of fl) h.update(fs.readFileSync(path.join(here, x))); return h.digest('hex').slice(0, 16); };
-const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs', 'coa-lotfacts.mjs']) }; };
+const treeInputs = () => { const l2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-layer2-input.json'), 'utf8')); return { table_version: l2.table_version, evaluator_version: l2.evaluator_version, scorer_sha: shaOf(['coa-scorecard.mjs', 'coa-clausemap.mjs', 'coa-explained.mjs', 'coa-lotfacts.mjs', 'coa-expected/read-record-chat164.json']) }; };
 if (arg('pin')) {
   const head = execFileSync('git', ['-C', ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim().slice(0, 8);
   fs.writeFileSync(arg('pin'), JSON.stringify({ commit: head, notices: notices.length, variances: rows.length, totals: by, inputs: treeInputs(), note: 'pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree' }, null, 1) + '\n');

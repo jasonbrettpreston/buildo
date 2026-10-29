@@ -89,6 +89,7 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
       const pf = JSON.parse(fs.readFileSync(path.join(DATA, 'plan-facts', f.replace('/', '-') + '.json'), 'utf8'));
       for (const [k, pk] of SV) if (h[k] != null) {
         held += 1;
+        if (l.lot_source[k] === 'read_record') { expect(ORDER).not.toContain(pf.lot_source?.[pk]); continue; } // CHAT-164: an unknown-source figure read through the read-record
         expect(ORDER).toContain(pf.lot_source?.[pk]);
         expect(`${f} ${k} ${l.lot_source[k]}`).toBe(`${f} ${k} ${pf.lot_source[pk]}`);
       }
@@ -123,16 +124,30 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     const shown = Object.values<any>(sc.lots).filter((l) => l.lot_held_unread != null);
     const figs = shown.flatMap((l) => l.lot_held_unread.slice(PRE.length).split(/, (?=(?:frontage_m|depth_m|area_m2|corner) )/));
     const why: Record<string, number> = {}; for (const x of figs) { const w = x.match(/\(([^)]*)\)$/)?.[1] ?? '?'; why[w] = (why[w] || 0) + 1; }
-    expect([shown.length, figs.length, why]).toEqual([76, 137, { 'source unknown': 128, 'curved front': 3, 'no parcel': 6 }]); // S-4 (no-parcel reading (c))
+    const contradicted = figs.filter((x) => /; contradicted by keyed value /.test(x)).length; for (const k of Object.keys(why)) if (k.includes(';')) { why['source unknown'] = (why['source unknown'] || 0) + (why[k] ?? 0); delete why[k]; }
+    expect([shown.length, figs.length, why, contradicted]).toEqual([62, 109, { 'source unknown': 100, 'curved front': 3, 'no parcel': 6 }, 4]); // S-4 (no-parcel reading (c)); CHAT-164: 32 figures read, 4 of them contradicted and still disclosed (137 - 28 = 109; 128 - 28 = 100)
     expect(figs.filter((x) => /site_plan/.test(x))).toEqual([]);
-    expect([sc.lots['A0562/26TEY'].lot_held_unread, sc.lots['A0562/26TEY'].lot_source.corner]).toEqual(['lot figure held, not read: corner true (source unknown)', 'parcel']); // S-5
+    expect([sc.lots['A0562/26TEY'].lot_held_unread, sc.lots['A0562/26TEY'].lot_source.corner]).toEqual(['lot figure held, not read: corner true (source unknown; contradicted by keyed value false)', 'read_record']); // S-5, CHAT-164.CONTRADICTED: the keyed value (not a corner) is read, the plan figure stays disclosed
+  });
+  it('CHAT-164 round: read-record figures are read (source read_record); A0170#2 gfa 243.47 -> 244 stays MATCH; A0562#4 stays NO ANSWER; contradicted figures stay disclosed', () => {
+    const at = (f: string, n: number) => rowsOf(f).find((x: any) => x.n === n);
+    const a170 = at('A0170/26EYK', 2);
+    expect([a170.class, a170.ours.value, a170.city_value]).toEqual(['MATCH', 244, 244]);
+    expect(sc.lots['A0170/26EYK'].lot_source.area_m2).toBe('read_record');
+    expect(sc.lots['A0170/26EYK'].lot_held_unread).toBeNull();
+    expect(at('A0562/26TEY', 4).class).toBe('NO ANSWER'); // clause keying, not the lot figure
+    expect([sc.lots['A0388/26TEY'].lot_source.area_m2, sc.lots['A0388/26TEY'].lot_held_unread]).toEqual(['read_record', null]);
+    expect(sc.lots['A0578/26TEY'].lot_source.area_m2).toBe('read_record');
+    expect(sc.lots['A0578/26TEY'].lot_held_unread).toBe('lot figure held, not read: area_m2 356.65 (source unknown; contradicted by keyed value 345.22)');
+    // a case outside the record is untouched
+    expect(sc.lots['A0090/26SC']?.lot_source?.area_m2 ?? null).not.toBe('read_record');
   });
   it('CHAT-165: the held-unread field moves no class or value (no-move lock)', () => {
     const tw = fs.mkdtempSync(path.join(os.tmpdir(), 'coalu-'));
     try {
       for (const d of ['bylaw', 'bylaw-validation']) fs.cpSync(path.join(ROOT, 'scripts/analysis', d), path.join(tw, 'scripts/analysis', d), { recursive: true });
       const lf = path.join(tw, TOOLS, 'coa-lotfacts.mjs'); const src = fs.readFileSync(lf, 'utf8');
-      const A = 'export function lotHeldUnread(pf, p) {';
+      const A = 'export function lotHeldUnread(pf, p, rec = null) {';
       if (src.split(A).length !== 2) throw new Error('twin anchor not found once');
       fs.writeFileSync(lf, src.replace(A, 'export function lotHeldUnread() { return null; }\nfunction lotHeldUnreadOff(pf, p) {'));
       const args = (o: string) => ['--root', ROOT, '--notices', path.join(DATA, 'notices-all2.json'), '--parcels', path.join(DATA, 'parcels-all2.json'), '--plan-facts', path.join(DATA, 'plan-facts'), '--out', o];
