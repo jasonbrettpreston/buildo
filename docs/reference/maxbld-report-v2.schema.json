@@ -2141,6 +2141,7 @@
       "enum": [
         "addition_above_existing",
         "ancillary_coverage_all_buildings",
+        "attached_platform_definition",
         "attic_outside_gfa",
         "basement_becomes_storey",
         "basement_excluded",
@@ -2227,6 +2228,12 @@
     },
     "ancillary_coverage_all_buildings": {
       "template": "If all buildings on the lot together cover no more than 45 % of it, the limit on ancillary building coverage does not apply to a lot with a houseplex or a secondary suite.",
+      "slots": [],
+      "importance": "normal",
+      "mandatory": false
+    },
+    "attached_platform_definition": {
+      "template": "A deck, porch or similar platform counts with the building when it is attached to the building or within 0.3 m of it, and the building's setbacks then apply to it. The 0.3 m is a definition, not a limit.",
       "slots": [],
       "importance": "normal",
       "mandatory": false

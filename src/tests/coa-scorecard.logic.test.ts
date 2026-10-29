@@ -194,8 +194,8 @@ describe.skipIf(!have172)('CoA scorecard 4D fixes (172 notices)', () => {
     const r = rowsOf('A0180/26TEY').find((x: any) => /^10\.5\.60\.70\(1\)\(B\)/.test(x.clause));
     expect([r.class, r.explained_by]).toEqual(['DIFFER', 'M-287']);
   });
-  it('M-290 label: a platform figure whose line is named AFTER it ("1.8m from the side lot lines ... and 10.88m from the rear") scores on the side target (A0205/26NY stays MATCH)', () => {
-    for (const r of rowsOf('A0205/26NY').filter((x: any) => x.clause === '10.5.40.50(2)')) expect([r.target, r.class, r.ours.value]).toEqual(['platform_side_setback_m', 'MATCH', 1.8]);
+  it('M-290 label: a platform figure whose line is named AFTER it ("1.8m from the side lot lines ... and 10.88m from the rear") scores on the side target (A0205/26NY: the side check stays MATCH; since MB-03b / MB03-Q2 the rear 10.88 m is its own check and the row is DIFFER, prereg-mb03b.json)', () => {
+    for (const r of rowsOf('A0205/26NY').filter((x: any) => x.clause === '10.5.40.50(2)')) { expect([r.target, r.ours.value, r.checks[0].class]).toEqual(['platform_side_setback_m', 1.8, 'MATCH']); expect(r.class).toBe('DIFFER'); }
   });
   it('complement share (EXC-W2-APPLY, verify-37 7): 10.20.40.10(2)(A) is "at least 70%" and the City quotes "a maximum of 30% may be higher"; the scorer compares the complement, so ours 70 MATCHES City 30 (A0120/26SC x2, A0354/26TEY)', () => {
     const rows = [...rowsOf('A0120/26SC'), ...rowsOf('A0354/26TEY')].filter((x: any) => /^10\.20\.40\.10\(2\)\(A\)/.test(x.clause));

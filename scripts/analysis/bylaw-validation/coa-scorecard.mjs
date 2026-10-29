@@ -334,7 +334,8 @@ function runNotice(n, surveyOn, rows, lots) {
       const near = fig >= 0 ? after.slice(Math.max(0, after.lastIndexOf('.', fig - 1) + 1, fig - 70), fig) : ''; // the clause of the figure: the words before it name the line (M-290)
       // when the words before the figure name no line, the words after it do ("1.8m from the side lot lines ... and 10.88m from the rear"): the first line word up to the next figure (A0205/26NY, a regression of the M-290 label found at integrate-21)
       const nextWords = fig >= 0 ? (after.slice(fig).replace(/^[\d.]+\s*m/, '').split(/\d/)[0] || '').slice(0, 40) : '';
-      const lineWord = (near.match(/\b(front|rear|side)\b/gi) || []).pop() || (nextWords.match(/\b(front|rear|side)\b/i) || [])[0];
+      const lineRaw = (near.match(/\b(front|rear|side|north|south|east|west)\b/gi) || []).pop() || (nextWords.match(/\b(front|rear|side|north|south|east|west)\b/i) || [])[0];
+      const lineWord = /^(north|south|east|west)$/i.test(lineRaw || '') ? 'side' : lineRaw; // MB-03b: a named compass lot line is a side lot line (MB03-Q2: 3.6 m south AND 0.45 m north)
       if (lineWord) target = /^rear$/i.test(lineWord) ? 'platform_rear_setback_m' : /^front$/i.test(lineWord) ? 'platform_front_setback_m' : 'platform_side_setback_m'; else
       target = /rear (yard|lot line)/i.test(pt) ? 'platform_rear_setback_m' : /front (yard|lot line)/i.test(pt) ? 'platform_front_setback_m' : 'platform_side_setback_m'; scorerFix = '4D-S1';
     }
@@ -425,7 +426,46 @@ function runNotice(n, surveyOn, rows, lots) {
     } else if (r.status === 'not_evaluated') {
       row.class = owedOrNoAnswer(r.reason); row.why = r.reason;
     } else { row.class = 'NO ANSWER'; row.why = `${r.status}: ${r.reason || ''}`; }
-    { const ex = row.class === 'DIFFER' ? explainRow(I.vocab, c.norm, target, r.value, cityVal, { notice: n.file_number, n: v.n, parcelId: p && p.parcel_id }) : null; if (ex) { row.explained_by = ex.ruling; row.explained_note = ex.reading; if (ex.class === 'DATA') { row.class = 'DATA'; row.why = `explained data flag (R5-5, ${ex.ruling}): ${ex.reading}`; } } } // M-287: the table is validated at load (coa-explained.mjs)
+
+    // MB-03b (MB03-Q2, recorded fc117484): one check per stated limit. A figure that says when the rule applies is a condition, never a limit; the "within 0.3 m of a building"
+    // definition decides whether the platform rule applies, is not scored, and is disclosed when the result relies on it (code attached_platform_definition, Spec 78 P5.12).
+    // The row is MATCH only when every limit that has a keyed target matches; a limit with no keyed target is listed (checks, class NOT MODELLED) and does not decide the row.
+    const primaryClass = row.class;
+    if (!cc) {
+      const lims = CP.requirementLimits(v.requirement || ''); const limitList = lims.filter((l) => l.kind === 'limit'); const allM = limitList.length > 1 && limitList.every((l) => l.unit === 'm') && v.required && v.required.unit === 'm';
+      const pIdx = limitList.findIndex((l) => v.required && l.value === v.required.value && l.unit === v.required.unit);
+      const roleTarget = (l) => {
+        if (!l.role) return l === limitList[pIdx] ? target : pickTarget(targets, l.unit, c, matched);
+        if (l.role.startsWith('setback:')) { const ln = l.role.slice(8); return targets.find((t) => t === 'platform_' + ln + '_setback_m') || targets.find((t) => new RegExp('(^|_)' + ln + '_setback_m$').test(t)) || null; }
+        const want = { clearance: (t) => /_clearance_m$/.test(t) && !/vertical/.test(t), encroachment: (t) => /_encroachment_m$/.test(t), width: (t) => /_width_m$/.test(t), length: (t) => /(_length_m|building_length)/.test(t), vertical_clearance: (t) => /vertical_clearance_m$/.test(t) }[l.role];
+        return want ? targets.find(want) || null : null;
+      };
+      if (allM && pIdx >= 0 && ['MATCH', 'DIFFER', 'OWED', 'NO ANSWER'].includes(row.class)) {
+        row.checks = limitList.map((l, i) => {
+          const tg = i === pIdx && (!l.role || roleTarget(l) === target) ? target : roleTarget(l);
+          const ck = { value: l.value, unit: l.unit, role: l.role, target: tg || null, class: null, ours: null, why: null };
+          if (!tg || (!l.role && i !== pIdx)) { ck.target = null; ck.class = 'NOT MODELLED'; ck.why = 'no keyed target for this limit'; return ck; }
+          if (i === pIdx && tg === target) { ck.class = primaryClass; ck.ours = r.status === 'value' ? r.value : null; ck.why = row.why; ck.primary = true; return ck; }
+          const ol = ELEMENT_TARGETS.has(tg) ? new Set(matched.map((u) => u.unit_id)) : null;
+          let rr = evalTarget(lot, tg, ol);
+          if (rr.status !== 'value') { const pit = evalTarget({ ...lot, flags: { ...lot.flags, flat_or_shallow_roof: false } }, tg, ol); if (pit.status === 'value') rr = pit; }
+          ck.ours = rr.status === 'value' ? rr.value : null;
+          if (rr.status === 'value' && typeof rr.value === 'number') { const d = Math.round((rr.value - l.value) * 1000) / 1000; ck.class = Math.abs(d) <= tol(l.unit) + 1e-9 ? 'MATCH' : 'DIFFER'; ck.why = ck.class === 'MATCH' ? 'same value' : `ours ${rr.value} vs City ${l.value} (Δ ${d})`; }
+          else if (rr.status === 'not_evaluated') { ck.class = owedOrNoAnswer(rr.reason); ck.why = rr.reason; }
+          else { ck.class = 'NO ANSWER'; ck.why = `${rr.status}: ${rr.reason || ''}`; }
+          return ck;
+        });
+        // one lot-wide side setback is all the model holds: when the notice sets a different limit for each named side, and the model equals one of them, the others have NO ANSWER (neither a mismatch nor a match); none equal: DIFFER stays
+        for (const k of row.checks) if (k.class === 'DIFFER' && /^setback:side$/.test(k.role || '') && row.checks.some((o) => o !== k && o.role === k.role && o.target === k.target && o.value !== k.value && o.class === 'MATCH')) { k.class = 'NO ANSWER'; k.why = 'the model holds one side setback for the lot; the notice sets a limit per named side and another side\'s limit equals it, so this side has no model answer'; }
+        const decided = row.checks.filter((k) => k.class !== 'NOT MODELLED');
+        if (decided.length) {
+          const next = decided.some((k) => k.class === 'DIFFER') ? 'DIFFER' : (decided.find((k) => k.class === 'OWED' || k.class === 'NO ANSWER') || {}).class || 'MATCH';
+          if (next !== row.class) { row.class_before_checks = row.class; row.class = next; row.why = `${row.why} | checks: ${row.checks.map((k) => `${k.value} ${k.unit} ${k.role || ''} ${k.class}`).join('; ')}`; }
+        }
+      }
+      if (lims.some((l) => l.kind === 'definition') && row.checks && /^10\.5\.40\.50\(2\)/.test(c.norm)) { const dfn = lims.find((l) => l.kind === 'definition'); row.disclosures = [{ code: 'attached_platform_definition', figure: `${dfn.value} ${dfn.unit}`, clause: '10.5.40.50(2)' }]; }
+    }
+    { const ex = primaryClass === 'DIFFER' && row.class === 'DIFFER' ? explainRow(I.vocab, c.norm, target, r.value, cityVal, { notice: n.file_number, n: v.n, parcelId: p && p.parcel_id }) : null; if (ex) { row.explained_by = ex.ruling; row.explained_note = ex.reading; if (ex.class === 'DATA') { row.class = 'DATA'; row.why = `explained data flag (R5-5, ${ex.ruling}): ${ex.reading}`; } } } // M-287: the table is validated at load (coa-explained.mjs)
     rows.push(row);
   }
 }

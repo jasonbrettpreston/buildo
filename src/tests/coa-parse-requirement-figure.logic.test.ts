@@ -40,7 +40,7 @@ describe('MB-03: the requirement figure is the one the limit word governs', () =
     expect(read('For a detached house, a driveway that is located in or passes through the front yard may be for lots with a lot frontage of 6.0 m to 23.0 m inclusive, or a townhouse dwelling unit at least 6.0 m wide, a maximum of 3.61 m wide.', 'The driveway width will be 5.04 m.').required.value).toBe(3.61);
     const p = read('The minimum dimensions of a parking space, accessed by a one-way or two-way drive aisle having a width of 6.0 m or more, is 2.6 m wide by 5.6 m long.', 'The aisle will be 6.0 m wide.');
     expect(p.required.value).toBe(2.6);
-    expect(p.check).toBe(true); // width and length both bind: left for the operator, not guessed
+    expect(p.check).toBe(false); // MB-03b (MB03-Q2 replaces the one-figure reading): width and length are two stated limits, two checks (coa-limits.logic.test.ts)
   });
   it('shapes that already read right stay as they were (limit first, condition after)', () => {
     expect(read('Roof eaves may project a maximum of 0.9 m provided that they are no closer than 0.3 m to a lot line.', 'The eaves will project 1.65 m.').required.value).toBe(0.9);
@@ -49,11 +49,11 @@ describe('MB-03: the requirement figure is the one the limit word governs', () =
     expect(read('Roof eaves (including gutters) may project a maximum of 0.9 m provided that they are no closer than 0.3 m to a lot line.', 'The eaves will project 0.26 m.').required.value).toBe(0.9);
     expect(read('The maximum permitted building length is 19.0 m, provided the extension to the building is located 3.0 m from each side lot line.', 'The building length will be 19.51 m.').required.value).toBe(19);
   });
-  it('several different figures of the unit keep the first and stay marked for the operator (A0090/26SC#3, A0396/26TEY#1, A0255/26NY#2)', () => {
+  it('several different figures of the unit keep the first as the requirement; since MB-03b each is its own check, none waits for the operator (A0090/26SC#3, A0396/26TEY#1, A0255/26NY#2)', () => {
     const r = read('A platform without main walls, such as a deck, porch, balcony or similar structure, attached to or within 0.3 m of a building, must comply with the required minimum building setbacks for the zone (3.6 m South and 0.45 m North).', 'The platform will be 2 m from the south lot line.');
     expect(r.required.value).toBe(3.6);
-    expect(r.check).toBe(true);
-    expect(read('Despite Regulation 10.20.40.70(3), the minimum required side yard setback is 0.9 m for one side yard setback and 1.2 m for the other side yard.', 'The setback will be 1.22 m.').check).toBe(true);
+    expect(r.check).toBe(false); // MB03-Q2 (recorded fc117484)
+    expect(read('Despite Regulation 10.20.40.70(3), the minimum required side yard setback is 0.9 m for one side yard setback and 1.2 m for the other side yard.', 'The setback will be 1.22 m.').check).toBe(false); // MB03-Q2
   });
   it('the full parser returns the same figure for a printed notice', () => {
     const text = ['PURPOSE OF THE APPLICATION', 'To construct a laneway suite.', 'REQUESTED VARIANCE(S) TO THE ZONING BY-LAW', '1. Section 150.8.60.40(1)(A), By-law 569-2013',
@@ -68,7 +68,7 @@ describe('MB-03: the requirement figure is the one the limit word governs', () =
 const DATA = process.env.COA_DATA || path.join(os.homedir(), 'Buildo-scratch/coa-data');
 const have = fs.existsSync(path.join(DATA, 'parcels-all2.json')) && fs.existsSync(path.join(DATA, 'notices-all2.json'));
 describe.skipIf(!have)('MB-03 on the 172-notice set re-read with the new rule', () => {
-  it('A0450#4 and A0375#5 now MATCH, A0205#1 and #2 keep MATCH on the side setback, no City limit is a qualifier', () => {
+  it('A0450#4 and A0375#5 now MATCH, A0205#1 and #2 keep the side setback as their first check, no City limit is a qualifier', () => {
     const notices = JSON.parse(fs.readFileSync(path.join(DATA, 'notices-all2.json'), 'utf8'));
     for (const n of notices) for (const v of n.variances) { const f = CP.readFigures(v.requirement || '', v.proposal || ''); if (v.required) { v.required = f.required; v.required_all = f.required_all; v.check = f.check; } }
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mb03-')); const inp = path.join(dir, 'n.json'); const out = path.join(dir, 's.json');
@@ -77,7 +77,7 @@ describe.skipIf(!have)('MB-03 on the 172-notice set re-read with the new rule', 
     const rows: Json[] = JSON.parse(fs.readFileSync(out, 'utf8')).rows; const get = (a: string, n: number) => rows.find((r) => r.notice === a && r.n === n) as Json;
     expect(get('A0450/26TEY', 4)).toMatchObject({ class: 'MATCH', city_value: 1.5 });
     expect(get('A0375/26TEY', 5)).toMatchObject({ class: 'MATCH', city_value: 4 });
-    expect(get('A0205/26NY', 1)).toMatchObject({ class: 'MATCH', city_value: 1.8, target: 'platform_side_setback_m' });
-    expect(get('A0205/26NY', 2)).toMatchObject({ class: 'MATCH', city_value: 1.8, target: 'platform_side_setback_m' });
+    expect(get('A0205/26NY', 1)).toMatchObject({ city_value: 1.8, target: 'platform_side_setback_m' }); // class: MB-03b checks the rear 10.88 m too (coa-limits.logic.test.ts)
+    expect(get('A0205/26NY', 2)).toMatchObject({ city_value: 1.8, target: 'platform_side_setback_m' });
   }, 120000);
 });

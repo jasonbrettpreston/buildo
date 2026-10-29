@@ -391,6 +391,7 @@ Every field has exactly one source: `lineage:` (docs/reference/maxbld-field-line
 |---|---|---|---|---|
 | `addition_above_existing` | normal |  |  | On a lot of 12.2 m or less, an addition above the house keeps its setbacks (achieved if the house is lawfully existing). |
 | `ancillary_coverage_all_buildings` | normal |  |  | If all buildings on the lot together cover no more than 45 % of it, the limit on ancillary building coverage does not apply to a lot with a houseplex or a secondary suite. |
+| `attached_platform_definition` | normal |  |  | A deck, porch or similar platform counts with the building when it is attached to the building or within 0.3 m of it, and the building's setbacks then apply to it. The 0.3 m is a definition, not a limit. |
 | `attic_outside_gfa` | normal |  | {A} | The attic ({A} m²) is livable but not counted in the City's floor-area total (GFA): it does not meet the headroom and size test. |
 | `basement_becomes_storey` | normal |  |  | If the lowest level is raised so its midpoint is above the ground level the City measures from (established grade), it becomes a storey and counts in the floor-area total (GFA). |
 | `basement_excluded` | normal |  | {A} | The basement ({A} m²) is livable but not counted in the City's floor-area total (GFA). |

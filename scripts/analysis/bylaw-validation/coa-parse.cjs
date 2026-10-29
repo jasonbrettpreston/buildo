@@ -8,7 +8,7 @@
   'use strict';
   var PARSER_VERSION = 'coa-parse/1';
   var MONTHS = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-  var NAME_STOP = { THE: 1, AND: 1, INC: 1, LTD: 1, CORP: 1, LIMITED: 1, OF: 1, FOR: 1, TRUSTEE: 1, ESTATE: 1 };
+  var NAME_STOP = { THE: 1, AND: 1, INC: 1, LTD: 1, CORP: 1, LIMITED: 1, OF: 1, FOR: 1, TRUSTEE: 1, ESTATE: 1, PROJECT: 1 }; // MB-03b: "project" is a verb in the variance text ("eaves may project"), never a name
 
   function clean(text) {
     return String(text || '')
@@ -103,7 +103,7 @@
     return z;
   }
 
-  var UNIT_RE = /(\d+(?:\.\d+)?)\s*(m²|m2|sq\.?\s?m\b|m\b|%|times the (?:area of the lot|lot area)|storeys?\b|parking spaces?\b|dwelling units?\b)/gi;
+  var UNIT_RE = /(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(m²|m2|sq\.?\s?m\b|m\b|%|times the (?:area of the lot|lot area)|storeys?\b|parking spaces?\b|dwelling units?\b)/gi;
   function unitName(u) {
     u = u.toLowerCase();
     if (u === 'm²' || u === 'm2' || /^sq/.test(u)) return 'm²';
@@ -121,7 +121,7 @@
   }
   function measuresAt(s) {
     var out = [], m; UNIT_RE.lastIndex = 0;
-    while ((m = UNIT_RE.exec(s))) out.push({ value: Number(m[1]), unit: unitName(m[2]), at: m.index, end: m.index + m[0].length });
+    while ((m = UNIT_RE.exec(s))) out.push({ value: Number(m[1].replace(/,/g, '')), unit: unitName(m[2]), at: m.index, end: m.index + m[0].length });
     return out;
   }
   function measures(s) {
@@ -170,6 +170,58 @@
     var at = anch.length === 1 ? anch[0] : idx[0];
     var f = rf.figures[at];
     return { figure: f, ambiguous: idx.some(function (i) { return rf.figures[i].value !== f.value; }) };
+  }
+
+
+  // MB-03b (MB03-Q2, recorded fc117484): a requirement sentence yields one check per stated limit. Every figure is a limit, a condition (says when the rule applies),
+  // a definition ("attached to or within 0.3 m of a building": decides whether the rule applies, disclosed when relied on) or proposal text that spilled into the sentence.
+  var DEF_RE = new RegExp('(?:attached to or\\s+(?:located\\s+)?)?(?<!\\bno\\s)(?<!\\bnot\\s)\\b(?:within|less than)\\s+' + N_ + '\\s+(?:of|from)\\s*:?\\s*(?:\\([A-Za-z]\\)\\s*)?(?:a|an|the)\\s+(?:\\w+\\s+){0,2}?(?:building|main wall)\\b', 'gi');
+  function spansOf(s, res) {
+    var out = [];
+    res.forEach(function (re) { re.lastIndex = 0; var m; while ((m = re.exec(s))) { out.push({ at: m.index, end: m.index + m[0].length, text: m[0] }); if (m[0].length === 0) re.lastIndex++; } });
+    return out;
+  }
+  function lineWord(t) {
+    var m = /\b(front|rear|side|north|south|east|west)\b/i.exec(t || ''); if (!m) return null;
+    return /^(north|south|east|west)$/i.test(m[1]) ? 'side' : m[1].toLowerCase();
+  }
+  function requirementLimits(requirement) {
+    var s = numberWords(requirement), ms = measuresAt(s), out = [];
+    var defSpans = spansOf(s, [DEF_RE]);
+    var condSpans = spansOf(s, QUALIFIERS.slice(1));
+    var pm = /(?:^|[.;]\s+)(?:and\s+)?with the addition\b/i.exec(s) || /\bThe proposed\b/.exec(s), proposalAt = pm ? pm.index : -1;
+    ms.forEach(function (m, i) {
+      var prev = i ? ms[i - 1].end : 0, L = s.slice(prev, m.at), R = s.slice(m.end, i + 1 < ms.length ? ms[i + 1].at : s.length);
+      var kind = 'limit', role = null;
+      var inDef = defSpans.some(function (d) { return m.at >= d.at && m.end <= d.end; });
+      var defSp = defSpans.filter(function (d) { return m.at >= d.at && m.end <= d.end; })[0];
+      if (proposalAt >= 0 && m.at >= proposalAt) kind = 'proposal';
+      else if (/\b(?:with the addition|proposed)\b[^.;]*$/i.test(L) && /\bproposed\b/i.test(L)) kind = 'proposal';
+      else if (inDef && (/^attached to or/i.test(defSp.text) || m.value <= 0.3)) kind = 'definition';
+      else if (inDef || condSpans.some(function (d) { return m.at >= d.at && m.end <= d.end; })) kind = 'condition';
+      else if (/\b(?:height|frontage|width|depth)\b[^.;]*\b(?:greater|higher|more|taller|less|lower|smaller)\s+than\s*$/i.test(L)) kind = 'condition';
+      else if (/\blocated\s+(?:less|more)\s+than\s*$/i.test(L)) kind = 'condition';
+      else if (/\bif\b[^.;:]*\bno\s+higher\s+than\s*$/i.test(L) && /^\s*above\b/i.test(R)) kind = 'condition';
+      else if (/\bif\b[^.;:]*\b(?:within|located)\s*$/i.test(L)) kind = 'condition';
+      else if (/^\s*(?:m\s+)?or\s+(?:less|more)\b/i.test(R)) kind = 'condition';
+      else if (/\bfor every\s*$/i.test(L)) kind = 'condition';
+      else if (/\(\s*$/.test(L) && /^\s*\)/.test(R)) kind = 'derived'; // "10 % of the lot frontage, to a maximum of 3 m (1.68 m)": the bracketed figure is the worked result of the limit
+      if (kind === 'limit') {
+        var L2 = L.slice(-60), R1 = R.split(/[.;]/)[0].slice(0, 45);
+        if (/\bcloser\b/i.test(L)) role = 'clearance';
+        else if (/vertical clearance/i.test(R1) || /vertical clearance[^.]*$/i.test(L2)) role = 'vertical_clearance';
+        else if (/^\s*(?:m\s*)?(?:wide|in width)\b/i.test(R1) || /\bwidth\s+of\s*$/i.test(L2) || /^\s*in width/i.test(R1)) role = 'width';
+        else if (/^\s*(?:m\s*)?(?:long|in length)\b/i.test(R1) || /\b(?:building |minimum )?length\s+(?:of|is)\s*$/i.test(L2)) role = 'length';
+        else if (/(project|encroach)/i.test(L)) role = 'encroachment';
+        else {
+          var lw = /^\s*(?:from|on)\b/i.test(R1) ? lineWord(R1) : (lineWord(L.slice(-50)) || lineWord(R1));
+          if (lw && m.unit === 'm') role = 'setback:' + lw;
+        }
+        if (!role && /\b(?:length|depth)\b/i.test(L2) && !/setback/i.test(L2)) role = 'length';
+      }
+      out.push({ value: m.value, unit: m.unit, kind: kind, role: role });
+    });
+    return out;
   }
 
   // CHAT-198.NN-Q1 (operator 2026-10-29): "where the notice prints the other building's figure, that figure is the comparator." A requirement that prints no figure and
@@ -221,9 +273,12 @@
       var paren = measures((requirement.match(/(?:\(\s*|;\s*|\bzone,?\s*(?:which is\s*)?)(\d+(?:\.\d+)?\s*(?:m²|m2|m|%))\s*\)?\s*\.?\s*$/) || ['', ''])[1]).filter(function (m) { return m.unit === prp.unit; });
       if (paren.length) req = paren[0];
       else if (pk.figure) req = pk.figure;
-      if (pk.ambiguous && !paren.length) check = true;
+      // MB-03b (MB03-Q2): several stated limits are several checks, so a second figure of the unit no longer waits for the operator; only the proposed side can still be ambiguous
       if (pr.filter(function (m) { return m.unit === prp.unit; }).length > 1) check = true;
     }
+    // MB-03b (MB03-Q2 addendum): a sentence whose only figure is the definition ("attached to or within 0.3 m of a building") states no limit; the definition is never the requirement
+    var lims = requirementLimits(requirement);
+    if (lims.length && lims.some(function (l) { return l.kind === 'definition'; }) && !lims.some(function (l) { return l.kind === 'limit' || l.kind === 'derived'; })) req = null;
     if (!req) { var rfg = referentFigure(requirement, proposal); if (rfg) req = rfg; }
     if (!req || !prp) check = true;
     return { required: req, required_all: rq, proposed: prp, proposed_all: pr, check: check };
@@ -348,7 +403,7 @@
 
   function docId(fileNumber) { return String(fileNumber || '').replace(/\//g, '-'); }
 
-  var api = { parse: parse, docId: docId, measures: measures, referentFigure: referentFigure, readFigures: readFigures, requirementFigures: requirementFigures, PARSER_VERSION: PARSER_VERSION };
+  var api = { parse: parse, docId: docId, measures: measures, referentFigure: referentFigure, readFigures: readFigures, requirementFigures: requirementFigures, requirementLimits: requirementLimits, PARSER_VERSION: PARSER_VERSION };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.CoaParse = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

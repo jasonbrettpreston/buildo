@@ -1261,6 +1261,7 @@
     "existing_roof_alteration",
     "decks_platforms_not_modelled",
     "setback_encroachments",
+    "attached_platform_definition",
     "r_roof_slope",
     "lawfully_existing_relief",
     "existing_ancillary_setbacks",

@@ -5,6 +5,7 @@
 export type DisclosureCode =
   | "addition_above_existing"
   | "ancillary_coverage_all_buildings"
+  | "attached_platform_definition"
   | "attic_outside_gfa"
   | "basement_becomes_storey"
   | "basement_excluded"
