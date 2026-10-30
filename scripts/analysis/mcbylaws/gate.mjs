@@ -125,6 +125,43 @@ function staged(cwd) {
   ];
 }
 
+/**
+ * The dense combined form: one path per file that differs from EVERY parent (a clean merge yields nothing). git
+ * writes a NUL per path and, from git 2.42, a NUL before each path too; both give the same path list here.
+ */
+function combinedPaths(raw) {
+  const text = raw.startsWith('\0') ? raw.slice(1) : raw;
+  return text.split('\0').filter(Boolean);
+}
+
+/**
+ * O67-02 (`evil` merge): a merge is judged by its own combined diff, through the same arms as a commit — so a
+ * conflict resolved OFF Layer 2/3 (what `--no-merges` hides, and what a clean merge cannot show) still fails.
+ */
+function mergeArms({ cwd, base, tip }) {
+  const merges = git(cwd, ['rev-list', '--merges', '--reverse', `${base}..${tip}`]);
+  if (merges.status !== 0) return ['FAIL:C:cannot-decide'];
+  const out = [];
+  for (const sha of merges.stdout.split('\n').filter(Boolean)) {
+    const raw = git(cwd, ['diff-tree', '-r', '-z', '--name-only', '-c', '--no-commit-id', sha]);
+    if (raw.status !== 0) { out.push(`FAIL:C:cannot-decide:${sha}`); continue; }
+    const entries = combinedPaths(raw.stdout).map((p) => ({ status: 'M', score: null, path: p, oldPath: null }));
+    if (entries.length === 0) continue;
+    const parentRev = `${sha}^1`;
+    const res = resolvePolicy(cwd, parentRev, { ownRev: sha, entries });
+    if (!res.ok) { out.push(`FAIL:H:cannot-decide:${sha}`); continue; }
+    const message = git(cwd, ['log', '-1', '--format=%B', sha]);
+    if (message.status !== 0) { out.push(`FAIL:C:cannot-decide:${sha}`); continue; }
+    const inputs = citeInputs(cwd, parentRev) || { owed: new Set(), rows: new Map() };
+    out.push(
+      ...holdForCommit({ cwd, policy: res.policy, entries, parentRev, sha, onDiskApproved: false }),
+      ...citeForCommit({ cwd, policy: res.policy, entries, message: message.stdout, parentRev, ownRev: sha, sha, ...inputs }),
+      ...panelForCommit({ cwd, policy: res.policy, entries, message: message.stdout, ownRev: sha, sha }),
+    );
+  }
+  return out;
+}
+
 /** One ref's arms: per commit H, C, P over the range, then L over the range's in-scope files from `git archive`. */
 function rangeArms({ cwd, base, tip }) {
   const shas = git(cwd, ['rev-list', '--no-merges', '--reverse', `${base}..${tip}`]);
@@ -164,6 +201,7 @@ function rangeArms({ cwd, base, tip }) {
       ...panelForCommit({ cwd, policy: res.policy, entries, message, ownRev: sha, sha }),
     );
   }
+  out.push(...mergeArms({ cwd, base, tip }));
   const diff = git(cwd, ['diff', '--name-only', '-z', '-M', base, tip]);
   const files = diff.status !== 0 ? null : diff.stdout.split('\0').filter(Boolean)
     .filter((p) => classify(last, p).literalScope);

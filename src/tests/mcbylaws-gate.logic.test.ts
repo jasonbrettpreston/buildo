@@ -214,3 +214,44 @@ describe('W4: the CI mode judges each commit of the range from the event base (a
     expect(yml).toContain('fetch-depth: 0');
   });
 });
+
+describe('O67-02: a merge commit is judged by its own combined diff (an "evil" merge cannot hide from --no-merges)', () => {
+  it('a conflict resolved off Layer 2/3 fails on the merge sha; a clean merge adds no H failure', () => {
+    const evil = mk();
+    seed(evil);
+    const branch = evil.git(['branch', '--show-current']);
+    const base = evil.git(['rev-parse', 'HEAD']);
+    evil.git(['checkout', '-q', '-b', 'side']);
+    evil.write('scripts/analysis/bylaw/seed.mjs', 'a\n');
+    evil.commit('MB-67 side: seed = a');
+    evil.git(['checkout', '-q', branch]);
+    evil.write('scripts/analysis/bylaw/seed.mjs', 'b\n');
+    evil.commit('MB-67 main: seed = b');
+    try { evil.git(['merge', 'side']); } catch { /* the conflict is the point */ }
+    evil.write('scripts/analysis/bylaw/seed.mjs', 'c\n');
+    evil.stage('scripts/analysis/bylaw/seed.mjs');
+    evil.git(['commit', '-q', '-m', 'Merge side']);
+    const merge = evil.git(['rev-parse', 'HEAD']);
+    const red = run(evil, ['--ci', '--base', base]);
+    expect(red.status).toBe(1);
+    expect(red.out).toContain(`FAIL:H:no-approved:${merge}`);
+
+    const clean = mk();
+    seed(clean);
+    const branch2 = clean.git(['branch', '--show-current']);
+    const base2 = clean.git(['rev-parse', 'HEAD']);
+    clean.git(['checkout', '-q', '-b', 'side']);
+    clean.write('docs/x.md', '# x\n');
+    clean.commit('MB-67 side: docs');
+    clean.git(['checkout', '-q', branch2]);
+    clean.write('docs/y.md', '# y\n');
+    clean.commit('MB-67 main: docs');
+    clean.git(['merge', '--no-edit', 'side']);
+    const cleanMerge = clean.git(['rev-parse', 'HEAD']);
+    expect(cleanMerge).not.toBe(base2);
+    const green = run(clean, ['--ci', '--base', base2]);
+    expect(green.out).not.toContain(cleanMerge);
+    expect(green.out.split('\n').filter((l) => l.startsWith('FAIL:H'))).toEqual([]);
+    done();
+  });
+});

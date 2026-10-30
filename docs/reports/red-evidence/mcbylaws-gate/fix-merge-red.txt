@@ -1,0 +1,9 @@
+# red: fix-merge, old scripts/analysis/mcbylaws/gate.mjs with the new test
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 722ms
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:H:no-approved:fc40c4cedf828ec020…'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > O67-02: a merge commit is judged by its own combined diff (an "evil" merge cannot hide from --no-merges) > a conflict resolved off Layer 2/3 fails on the merge sha; a clean merge adds no H failure
+AssertionError: expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:H:no-approved:fc40c4cedf828ec020…'
+- FAIL:H:no-approved:fc40c4cedf828ec020cbc8a7124eedbd89a40b3f
++ FAIL:H:no-approved:74550b6191adeacb709034ae5a2e5356df38e4c8
++ FAIL:C:cannot-decide:74550b6191adeacb709034ae5a2e5356df38e4c8
