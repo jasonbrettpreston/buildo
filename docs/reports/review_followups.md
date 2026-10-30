@@ -3,6 +3,67 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Triage — 2026-10-30
+_Automated weekly triage per `docs/specs/00-architecture/05_knowledge_operating_model.md §6`._
+_last_reviewed: 2026-10-30 · triage_after: 2026-11-27_
+_Coverage note: ~56 % of file read this session (lines 1–2441, rows 1–291+). Lines 2441–4346 rolled forward as DEFER; next triage must start there._
+
+### Statistics
+
+| Metric | Count |
+|--------|-------|
+| Sections read | ~45 |
+| Numbered rows in read portion | ~291 |
+| Zombies (no `last_reviewed` field, section date before 2026-10-02) | **ALL** — file has no per-item `last_reviewed` fields |
+| PROMOTE | 16 |
+| KILL | ~50 |
+| DEFER | ~215 |
+| CONVERT | 2 |
+
+### PROMOTE → file as WF3 (or WF1 where noted)
+
+| Ref | Section date | Sev | Item | Action |
+|-----|-------------|-----|------|--------|
+| Spec 126 (combined) | 2026-09-15 | HIGH×4 | Public `/parcels` route, `/builders/entity_contacts` route, 11 admin routes missing `verifyAdminAuth`, 7 admin mutations missing audit log | **WF3 — security bundle** |
+| EP-PHASE-DEADLINE | 2026-09-15 | HIGH | Ten converted pipeline steps with no `step_timeout` wired | **WF3** |
+| EP-PHASE-DEADLINE | 2026-09-15 | HIGH | `existing_structure` 4.5× performance regression undiagnosed | **WF3** |
+| cross-step ledger | 2026-09-03 | MED | `telemetry_tables` two metric omissions | **WF3** |
+| cross-step ledger | 2026-09-03 | MED | False ordering-lock in `chain.logic.test.ts` | **WF3** |
+| cross-step ledger | 2026-09-03 | MED | Snapshot freshness: no standing gate | **WF3** |
+| Pilot 8 | 2026-08-31 | HIGH | `captureDataQualitySnapshot()` duplicate implementation with race condition | **WF3** |
+| chain_sources WARN | 2026-08-25 | MED | `parcels_null_address_pct` gate permanently unsatisfiable | **WF3** |
+| chain_sources WARN | 2026-08-25 | MED | `massing_zero_link_ghost` founding comment wrong | **WF3** |
+| Spec 122 §P0 | 2026-08-23 | HIGH | `*_dataset_version_when_enriched` stamps: no trigger invalidator | **WF3** |
+| Parcel-sanity-audit | 2026-07-02 | HIGH | Live massing-mislink poisoning $105.24M cost estimates | **WF3** (long-standing) |
+| Row 119 (WF3 #3) | 2026-05-20 | HIGH | CoA UNION arm: no GIST spatial index on `coa_applications` (4.4 s seq scan) — blocks killswitch | **WF3 — gate for CoA killswitch** |
+| Row 122 (Spec 79 §7a) | 2026-05-21 | CRIT | Spec 79 §3 halt-conditions: C4 references wrong check (`audit_table.verdict`; should be C3) | **WF3 — spec typo fix** |
+| Row 145 (Spec 83 Finding D) | 2026-05-21 | CRIT | `computeSurgicalTotal` sums raw vals; `tradeValues` stores rounded — Liar's Gate slice sum ≠ reportedCost | **WF3 — financial correctness** |
+| Row 191 (WF3 #15 Spec 84) | 2026-05-22 | CRIT | P3 phase-code collision: CoA "P3=CoA Approved" vs Permit "P3=Permit Review" — contaminates forecasting + scoring | **WF3** |
+| Row 203 (§7a Cycle 2) | 2026-05-22 | HIGH | Parcels CSV schema drift: 3 CKAN columns dropped; `assert-schema.js` expected-column list stale → UNKNOWN verdicts | **WF3 — operational gap** |
+
+### KILL → close (already resolved, refuted, or superseded)
+
+- All items marked **`FOLDED inline`** or **`FIX INLINE`** — fixed before commit, no open action
+- All items marked **`✅ CLOSED`**, **`RESOLVED`**, **`DONE`**, **`FIXED`** — already resolved
+- All items marked **`REJECT`**, **`MISREAD`**, **`HALLUCINATION`**, **`false positive`**, **`DEFENSIBLE`** with no open action
+- Row 153 (`✅ CLOSED (Phase 4)`) — mig 161 ships DB-level CHECK constraint
+- Rows 204–213 (WF3 #16 retrospective) — post-hoc review confirmed 0 real findings; production verified (200K writes)
+- "Phase F.3 close-out" / "Phase I.1.1a" / "Phase I.1.1b" / Phase 2a–2d close-out narrative blocks — informational, no open items
+- "Phase F.2 close-out" / "Phase F.3 close-out" blocks — delivered, informational only
+
+### CONVERT → `tasks/lessons.md`
+
+| Item | Lesson |
+|------|--------|
+| Row 214 — WF3 #16 ceremony skip (PLAN LOCKED gate + adversarial review bypassed on §7a WF3) | `CRITICAL` lesson: broad-auth "approve all actions" does NOT override ceremony gates; the §7a adversarial-by-default exception is unconditional. Add `Lesson-routing: tasks/lessons.md` footer. |
+| Row 107 — Independent v2 missed DeepSeek's hoisting CRIT | `HIGH` lesson: parallel adversarial review mandate exists precisely because each reviewer has independent blind spots; a passing Independent review is not sufficient to skip DeepSeek. |
+
+### DEFER → triage_after 2026-11-27
+
+All remaining open DEFER items from the read portion (rows 82–89, 91, 93–95, 97–106, 108–118, 120–121, 123–144, 146–192, 194–202, 204–213, 215–287) with severity LOW/MED/HIGH not promoted above, plus all items in unread lines 2441–4346. No status change to individual rows this cycle; see next triage.
+
+---
+
 ## 2026-09-27 — engine-fence panel residue (wf2/engine-fence)
 
 Source: the WF2 engine-fence output panel (DeepSeek security lens on `scripts/deepseek-exec.js` + `scripts/lib/exec-tools.js`, grounded by Claude; Integration seat). Fixed on the branch: F1–F5, F4b, the prototype-key crash, sibling fence-module self-protection, G1–G4. Filed here by orchestrator ruling:
