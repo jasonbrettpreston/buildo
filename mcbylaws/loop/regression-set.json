@@ -1,0 +1,41 @@
+{
+  "groups": [
+    {
+      "id": "coa172",
+      "introduced_in": "baseline",
+      "kind": "coa-scorecard",
+      "producer": {
+        "kind": "coa-scorecard",
+        "data_dir": "~/Buildo-scratch/coa-data",
+        "notices": "notices-all2.json",
+        "parcels": "parcels-all2.json",
+        "plan_facts": "plan-facts",
+        "floors": "scripts/analysis/bylaw-validation/coa-expected/floors-172.json",
+        "pin": "scripts/analysis/bylaw-validation/coa-expected/expected-172.json"
+      },
+      "fast": true,
+      "external": true,
+      "split": "none",
+      "ids_sha256": "97185594ef3ee43f658824fcbc0f24a2877f9ea9ccf056891e25bc44e56d8498"
+    },
+    {
+      "id": "coa4d",
+      "introduced_in": "baseline",
+      "kind": "coa-scorecard",
+      "producer": {
+        "kind": "coa-scorecard",
+        "data_dir": "~/Buildo-scratch/coa-data",
+        "notices": "notices.json",
+        "parcels": "parcels.json",
+        "plan_facts": "plan-facts",
+        "pin": "scripts/analysis/bylaw-validation/coa-expected/expected-4d.json"
+      },
+      "fast": false,
+      "external": true,
+      "split": "none",
+      "ids_sha256": "bfe1753d7bea282984f91f389ebbc55582f7228f6c9db59f18938f43b854e85e"
+    }
+  ],
+  "pending": [],
+  "removals": []
+}

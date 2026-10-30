@@ -494,7 +494,6 @@ export async function runCommand(parsed, write, deps = {}) {
   } catch {
     run = null; // a run that cannot go covers no group
   }
-  console.log('TEMPDEBUG run', JSON.stringify({ write: parsed && parsed.write, writeIds: parsed && parsed.writeIds, increment: parsed && parsed.increment, findings: parsed && parsed.findings, runGroups: run && run.groups, cases: run && run.cases.map((c) => [c.id, c.status]), covers: coversAllGroups(run, regression), regressionGroups: regression.groups.map((g) => g.id) }));
   if (!coversAllGroups(run, regression)) return { violations: ['run_needs_mode_push_or_full'], notes: [] };
 
   const idsByGroup = new Map();
@@ -567,9 +566,7 @@ export async function runCommand(parsed, write, deps = {}) {
     Object.assign(inputs, pinInputs(pins), dataInputs(root, regression));
     const round = nextRound(recordPathsOnDisk(root), increment);
     const record = recordFor({ increment, round, decision, reason, findings, run, inputs });
-    console.log('TEMPDEBUG record', JSON.stringify({ findings, cases: record.cases.map((c) => [c.id, c.status]) }));
     const written = writeRecordExclusive(root, record);
-    console.log('TEMPDEBUG disk', JSON.stringify(JSON.parse(fs.readFileSync(path.join(root, written), 'utf8')).cases.map((c) => c.status)));
     say(`record written ${written}`);
     return { violations: [], notes: [] };
   }

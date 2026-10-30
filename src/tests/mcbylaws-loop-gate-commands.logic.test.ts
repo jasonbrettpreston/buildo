@@ -237,7 +237,6 @@ describe('runCommand --write: the record is written by this tool (PR-68-1)', () 
     });
     expect(res.violations).toEqual([]);
     const rec = readJsonAt(root, 'docs/reports/loop-records/1/round-01.json') as { cases: { id: string; status: string }[]; accepted_findings: unknown[] };
-    console.log('TEMPDEBUG test', JSON.stringify({ file: path.join(root, 'docs/reports/loop-records/1/round-01.json'), statuses: rec.cases.map((c) => c.status) }));
     expect(rec.cases.map((c) => c.status)).toEqual(['pass', 'accepted', 'pass', 'pass', 'pass', 'fail', 'fail', 'fail', 'fail', 'pending']);
     expect(rec.accepted_findings).toHaveLength(1);
   });
