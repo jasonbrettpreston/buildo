@@ -480,6 +480,37 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     expect(r).toContain('Dated note 2026-10-29 (M-172; operator M172-AM');
     expect(r).toContain("Abutting-lot facts are read from the Spec 130 neighbour relation where it holds the neighbour, and remain user-supplied site facts where it does not (amends M-172(2)).");
   });
+  it('CHAT-210 (batch 2026-10-30-ai): seven rulings, each a rule text and a dated note on its governing row; MB17-Q1 withdrawn on M-180', () => {
+    let r;
+    r = rowOf(M, 'M-180');
+    expect(r).toContain('2026-10-30-batch-ai#CHAT-210.MB17-Q1R`');
+    expect(r).toContain('Dated note 2026-10-30 (M-180; operator ');
+    expect(r).toContain("An exception applies to the building types it names and to those the by-law's applicability clause extends it to (M-180); MB17-Q1 is withdrawn.");
+    r = rowOf(M, 'M-158');
+    expect(r).toContain('2026-10-30-batch-ai#CHAT-210.MB18-R1`');
+    expect(r).toContain('Dated note 2026-10-30 (M-158; operator ');
+    expect(r).toContain("Existing-lot minimums are judged in the verdict layer, never as a Layer 2 failure of an existing lot (M-158).");
+    r = rowOf(M, 'M-256');
+    expect(r).toContain('2026-10-30-batch-ai#CHAT-210.MB54-Q`');
+    expect(r).toContain('Dated note 2026-10-30 (M-256; operator ');
+    expect(r).toContain("Layer 2 leaves front-yard averaging undecided where neighbour data is absent; Phase 3 applies the FS-SB chain, flagged.");
+    r = rowOf(M, 'M-213');
+    expect(r).toContain('2026-10-30-batch-ai#CHAT-210.MB55-Q`');
+    expect(r).toContain('Dated note 2026-10-30 (M-213; operator ');
+    expect(r).toContain("600.10.10 District A is keyed in its own round; the holding symbol is normalised to one stored form from its source.");
+    r = rowOf(M, 'M-369');
+    expect(r).toContain('2026-10-30-batch-ai#CHAT-210.MB45D-Q3U`');
+    expect(r).toContain('Dated note 2026-10-30 (M-369; operator ');
+    expect(r).toContain("A lot whose Sixplex Overlay membership is not held is undecided for 600.60 units.");
+    r = rowOf(M, 'M-364');
+    expect(r).toContain('2026-10-30-batch-ai#CHAT-210.MB17-T`');
+    expect(r).toContain('Dated note 2026-10-30 (M-364; operator ');
+    expect(r).toContain("The applicant is compared, per measure, against the maximum across our options for its building type.");
+    r = rowOf(M, 'M-209');
+    expect(r).toContain('2026-10-30-batch-ai#CHAT-210.MB-57-LANE`');
+    expect(r).toContain('Dated note 2026-10-30 (M-209; operator ');
+    expect(r).toContain("Lane abutting length is computed from the lot and lane geometry; the along-lane distance is a cited figure, logged as a ruling.");
+  });
   it('CHAT-208 (batch 2026-10-29-ag): MB-59 amends FS-Q1, rule text and dated note on M-322', () => {
     const r = rowOf(M, 'M-322');
     expect(r).toContain('2026-10-29-batch-ag#CHAT-208.MB59-FSQ1`');

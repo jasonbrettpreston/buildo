@@ -1,0 +1,76 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-30-batch-ai/2026-10-30-batch-ai.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-30-batch-ai",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Q1 yes, Mb-57 yes and the rest proceed with your recommendations",
+    "record": "operator chat 2026-10-30",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-30-batch-ai/2026-10-30-batch-ai.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-210.MB17-Q1R",
+      "question": "MB17-Q1R: exception building types; MB17-Q1 is withdrawn",
+      "recommendation": "MB17-Q1 (2026-10-29, \"an exception applies only to the building types it names\") is WITHDRAWN: it contradicts M-180(1), which follows the by-law's own x.40.1 \"Applicable\" clause and x.30.1(1): a lot exception's unit for a detached house also applies to the detached houseplex; M-180(2) the more permissive regulation prevails. Rule text: An exception applies to the building types it names and to those the by-law's applicability clause extends it to (M-180); MB17-Q1 is withdrawn.",
+      "decision": "approve",
+      "decided_at": "2026-10-30",
+      "operator_quote": "Q1 yes"
+    },
+    {
+      "id": "CHAT-210.MB18-R1",
+      "question": "MB18-R1: existing-lot minimums are judged in the verdict layer",
+      "recommendation": "Lot-size and frontage minimums apply to creating a lot, not to an existing lot (M-158). The check lives in the verdict layer (blind harness and Phase 3 report), not Layer 2; exception carve-outs kept. Rule text: Existing-lot minimums are judged in the verdict layer, never as a Layer 2 failure of an existing lot (M-158).",
+      "decision": "approve",
+      "decided_at": "2026-10-30",
+      "operator_quote": "the rest proceed with your recommendations"
+    },
+    {
+      "id": "CHAT-210.MB54-Q",
+      "question": "MB54-Q: neighbour data in Layer 2",
+      "recommendation": "Layer 2 uses no defaults (Spec 134 I10): a lot without neighbour data stays undecided in Layer 2; Phase 3 applies the FS-SB1/SB2 chain with its \"needs survey\" flags. Rule text: Layer 2 leaves front-yard averaging undecided where neighbour data is absent; Phase 3 applies the FS-SB chain, flagged.",
+      "decision": "approve",
+      "decided_at": "2026-10-30",
+      "operator_quote": "the rest proceed with your recommendations"
+    },
+    {
+      "id": "CHAT-210.MB55-Q",
+      "question": "MB55-Q: Building Setback Overlay District A and the holding symbol",
+      "recommendation": "The Building Setback Overlay District A (600.10.10) gets a small keying round (it is outside the keyed scope today). The holding symbol's stored values ('H' in one place, 'Y' in another) are checked read-only and normalised to one form, with the source cited. Rule text: 600.10.10 District A is keyed in its own round; the holding symbol is normalised to one stored form from its source.",
+      "decision": "approve",
+      "decided_at": "2026-10-30",
+      "operator_quote": "the rest proceed with your recommendations"
+    },
+    {
+      "id": "CHAT-210.MB45D-Q3U",
+      "question": "MB45d-Q3U: a blank Sixplex membership reads as undecided for 600.60 units",
+      "recommendation": "Where parcels.in_sixplex_area is blank, the 600.60 unit reads \"undecided\", not the earlier unscoped reading. Fact (read-only 2026-10-30): blank on 7,748 parcels, all COMMON (7,046) or CONDO (702); no ordinary house lot. Rule text: A lot whose Sixplex Overlay membership is not held is undecided for 600.60 units.",
+      "decision": "approve",
+      "decided_at": "2026-10-30",
+      "operator_quote": "the rest proceed with your recommendations"
+    },
+    {
+      "id": "CHAT-210.MB17-T",
+      "question": "MB17-T: the harness headline on a tie",
+      "recommendation": "The harness compares the applicant's figure against our largest value across the options, per measure (GFA, height, storeys, footprint, units), not against one headline option chosen by a tie-break. Rule text: The applicant is compared, per measure, against the maximum across our options for its building type.",
+      "decision": "approve",
+      "decided_at": "2026-10-30",
+      "operator_quote": "the rest proceed with your recommendations"
+    },
+    {
+      "id": "CHAT-210.MB-57-LANE",
+      "question": "MB-57-LANE: lane abutting length is computed from the lot and lane geometry (computation decision only)",
+      "recommendation": "Compute, from the held lot polygon and the City lane centreline (toronto_centreline feature \"Laneway\"), the length of each lot's rear and side lot lines along a lane, for 150.8.30.20(1) (3.5 m) and 10.5.30.20(2)(B). Lane width is not held: disclosed. Lands on a DB night (operator go). Recorded here: the computation only. The along-lane distance is not set by this ruling; no by-law or City figure was found, so it returns to the operator on ~/Buildo-scratch/p2close/CARD-lane-distance.md before build. Rule text: Lane abutting length is computed from the lot and lane geometry; the along-lane distance is a cited figure, logged as a ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-30",
+      "operator_quote": "Mb-57 yes"
+    }
+  ]
+}
