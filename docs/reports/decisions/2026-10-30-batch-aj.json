@@ -259,7 +259,7 @@
     {
       "id": "CHAT-211.IDEAL-SPLIT",
       "question": "IDEAL-SPLIT: M-403",
-      "recommendation": "Operator words quoted in the queue only. Rule text: The rear suite and main house are split at the best breakpoint (total floor area = main + suite, both piecewise-linear in the main house depth); the candidate splits are the catalogue rows of M-390, scored by the evaluator, with the split disclosed and no search helper; a tie goes to the larger main (LC-22).",
+      "recommendation": "operator words on CARD-operator-words-2026-10-30. Rule text: The rear suite and main house are split at the best breakpoint (total floor area = main + suite, both piecewise-linear in the main house depth); the candidate splits are the catalogue rows of M-390, scored by the evaluator, with the split disclosed and no search helper; a tie goes to the larger main (LC-22).",
       "decision": "approve",
       "decided_at": "2026-10-30",
       "operator_quote": "approve all recommendations"
@@ -291,7 +291,7 @@
     {
       "id": "CHAT-211.SHAPE",
       "question": "SHAPE: LC-69",
-      "recommendation": "Operator words quoted in the queue only. Rule text: The footprint is a box, disclosed \"box shape assumed; entrances and projections not modelled\"; it reads lv(footprint_shape_factor) = 1.0 (setting to be seeded by MB-31) with the switch shape_calibration = off (M-378); no other value is set now.",
+      "recommendation": "operator words on CARD-operator-words-2026-10-30. Rule text: The footprint is a box, disclosed \"box shape assumed; entrances and projections not modelled\"; it reads lv(footprint_shape_factor) = 1.0 (setting to be seeded by MB-31) with the switch shape_calibration = off (M-378); no other value is set now.",
       "decision": "approve",
       "decided_at": "2026-10-30",
       "operator_quote": "approve all recommendations"
