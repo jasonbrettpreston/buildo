@@ -16,7 +16,7 @@ import { git, readAt, listTracked } from './git-util.mjs';
 import { parseNameStatusZ, allPaths } from './name-status.mjs';
 import { classify, POLICY_PATH } from './paths.mjs';
 import { resolvePolicy } from './policy-resolve.mjs';
-import { holdForCommit, holdForRange, deadGlobLines } from './hold.mjs';
+import { holdForCommit, deadGlobLines } from './hold.mjs';
 import { parseOwedTable, parseRegisterRows } from './cite-parse.mjs';
 import { citeForCommit } from './cite-arms.mjs';
 import { panelForCommit } from './panel.mjs';
@@ -126,30 +126,47 @@ function staged(cwd) {
 }
 
 /** One ref's arms: per commit H, C, P over the range, then L over the range's in-scope files from `git archive`. */
-function rangeArms({ cwd, base, tip, policy }) {
-  const res = resolvePolicy(cwd, base);
-  if (!res.ok) return ['FAIL:H:cannot-decide', 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
-  const inputs = citeInputs(cwd, tip) || { owed: new Set(), rows: new Map() }; // empty sentinels: arm C then fails closed on a Layer 2/3 commit only
-  const out = holdForRange({ cwd, policy: res.policy, base, tip });
+function rangeArms({ cwd, base, tip }) {
   const shas = git(cwd, ['rev-list', '--no-merges', '--reverse', `${base}..${tip}`]);
-  if (shas.status !== 0) return [...out, 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
-  for (const sha of shas.stdout.split('\n').filter(Boolean)) {
+  if (shas.status !== 0) return ['FAIL:H:cannot-decide', 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
+  const commits = shas.stdout.split('\n').filter(Boolean);
+  if (commits.length === 0) return []; // an empty range has nothing to judge and no literal scan
+  const cache = new Map();
+  const inputsFor = (rev) => {
+    if (!cache.has(rev)) cache.set(rev, citeInputs(cwd, rev) || { owed: new Set(), rows: new Map() });
+    return cache.get(rev);
+  };
+  const out = [];
+  let last = null; // the policy of the LAST resolved commit, used only by the literal scan
+  for (const sha of commits) {
     const changes = git(cwd, ['diff-tree', '-r', '-z', '-M', '--name-status', '--no-commit-id', '--root', sha]);
     const entries = changes.status === 0 ? parseNameStatusZ(changes.stdout) : null;
+    if (entries === null) {
+      out.push(`FAIL:H:cannot-decide:${sha}`, `FAIL:C:cannot-decide:${sha}`, `FAIL:P:cannot-decide:${sha}`);
+      continue;
+    }
+    // O67-04: every commit is judged by its OWN parent's policy (a root commit's `sha^` reads as absent).
+    const res = resolvePolicy(cwd, `${sha}^`, { ownRev: sha, entries });
+    if (!res.ok) {
+      out.push(`FAIL:H:cannot-decide:${sha}`);
+      continue;
+    }
+    last = res.policy;
     const msg = git(cwd, ['log', '-1', '--format=%B', sha]);
-    if (entries === null || msg.status !== 0) {
+    if (msg.status !== 0) {
       out.push(`FAIL:C:cannot-decide:${sha}`, `FAIL:P:cannot-decide:${sha}`);
       continue;
     }
     const message = msg.stdout;
     out.push(
-      ...citeForCommit({ cwd, policy: res.policy, entries, message, parentRev: `${sha}^`, ownRev: sha, sha, ...inputs }),
+      ...holdForCommit({ cwd, policy: res.policy, entries, parentRev: `${sha}^`, sha, onDiskApproved: false }),
+      ...citeForCommit({ cwd, policy: res.policy, entries, message, parentRev: `${sha}^`, ownRev: sha, sha, ...inputsFor(`${sha}^`) }),
       ...panelForCommit({ cwd, policy: res.policy, entries, message, ownRev: sha, sha }),
     );
   }
   const diff = git(cwd, ['diff', '--name-only', '-z', '-M', base, tip]);
   const files = diff.status !== 0 ? null : diff.stdout.split('\0').filter(Boolean)
-    .filter((p) => classify(res.policy, p).literalScope);
+    .filter((p) => classify(last, p).literalScope);
   if (files === null) return [...out, 'FAIL:L:cannot-decide'];
   if (files.length === 0) return out;
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-archive-'));
@@ -159,7 +176,7 @@ function rangeArms({ cwd, base, tip, policy }) {
       ? spawnSync('tar', ['-x', '-C', tmp], { input: tar.stdout, maxBuffer: 64 * 1024 * 1024 })
       : { status: -1 };
     if (ex.status !== 0) return [...out, 'FAIL:L:cannot-decide'];
-    return [...out, ...literalLines({ root: tmp, cwd, rev: tip, files, policy: res.policy })];
+    return [...out, ...literalLines({ root: tmp, cwd, rev: tip, files, policy: last })];
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
@@ -184,14 +201,17 @@ function summaryInput({ cwd, refs, ci }) {
     const base = zero ? git(cwd, ['merge-base', r.localSha, defaultBase]) : { status: 0, stdout: r.remoteSha };
     if (base.status !== 0 || base.stdout.trim() === '') {
       arms.push(CANNOT);
-      out.push({ kind: 'unknown' });
+      out.push({ kind: 'unknown', ref: r.ref });
       continue;
     }
     const b = base.stdout.trim();
-    const res = resolvePolicy(cwd, b);
-    if (!res.ok) { arms.push('FAIL:H:cannot-decide'); out.push({ kind: 'unknown' }); continue; }
+    // O67-04: the summary only DISPLAYS; judging is per commit in `rangeArms`. A base without a policy is
+    // shown through the tip's copy (the range bootstraps the policy); only when both fail is it undecidable.
+    let res = resolvePolicy(cwd, b);
+    if (!res.ok) res = resolvePolicy(cwd, r.localSha);
+    if (!res.ok) { arms.push('FAIL:H:cannot-decide'); out.push({ kind: 'unknown', ref: r.ref }); continue; }
     const collected = collectRef({ cwd, ref: r.ref, localSha: r.localSha, remoteSha: zero ? '' : r.remoteSha, policy: res.policy, defaultBase });
-    if (collected.error) { arms.push(CANNOT); out.push({ kind: 'unknown' }); continue; }
+    if (collected.error) { arms.push(CANNOT); out.push({ kind: 'unknown', ref: r.ref }); continue; }
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy }));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
     let tipLimit = res.policy.held_limit;

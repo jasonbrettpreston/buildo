@@ -159,6 +159,53 @@ describe('W4: the CI mode judges each commit of the range from the event base (a
     expect(run(green.repo, ['--ci', '--base', green.base]).out).not.toContain('FAIL:H:');
     done();
   });
+  it('O67-04: a range whose base has no policy passes when its first commit is the policy alone, and fails when it is not', () => {
+    const bootstrap = (withDoc: boolean) => {
+      const repo = mk();
+      repo.write('docs/note.md', '# note\n');
+      const base = repo.commit('MB-67 root: docs only');
+      if (withDoc) repo.write('docs/boot.md', '# boot\n');
+      repo.write('mcbylaws/protected-paths.json', policy());
+      const first = repo.commit('MB-67 add the policy');
+      repo.write('docs/later.md', '# later\n');
+      repo.commit('MB-67 later docs');
+      return { repo, base, first };
+    };
+    const ok = bootstrap(false);
+    const r = run(ok.repo, ['--ci', '--base', ok.base]);
+    expect(r.out).not.toContain('FAIL:H:cannot-decide');
+    expect(r.status).toBe(0);
+    const bad = bootstrap(true);
+    const b = run(bad.repo, ['--ci', '--base', bad.base]);
+    expect(b.status).toBe(1);
+    expect(b.out).toContain('FAIL:H:cannot-decide:');
+    expect(b.out).toContain(`:${bad.first}`);
+    done();
+  });
+
+  it('O67-20: arm C reads the register in each commit\'s PARENT; a later RATIFIED row does not rescue an earlier cite', () => {
+    const REG = (m190: string) => `| **M-180** | x | y | z | RATIFIED 2026-10-18 |\n| **M-190** | x | y | z | ${m190} |\n`;
+    const SPEC = '## 3. Rows with an OWED marker\n\n| M-361 | m.361 | RULED 2026-10-29 · OWED |\n| LC-15 | lc.15 | RULED · OWED |\n';
+    const repo = mk();
+    const D = 'docs/specs/01-pipeline';
+    seed(repo);
+    repo.write(`${D}/133_bylaw_handbook.md`, SPEC);
+    repo.write(`${D}/69a_mcbylaw_register.md`, REG('OWED -> MB-9'));
+    repo.write(`${D}/124a_step_standard_policy_appendix.md`, '');
+    repo.write(`${D}/131_lot_configuration_policy.md`, '');
+    const base = repo.commit('MB-67 registers');
+    repo.write('scripts/analysis/bylaw-validation/coa-expected/prereg-mb-67.json', JSON.stringify({ task: 'MB-67', rules: ['M-190'] }));
+    repo.commit('MB-67 prereg for M-190');
+    repo.write('scripts/analysis/bylaw/evaluate.mjs', 'export const evaluate = 1;\n');
+    const citing = repo.commit('MB-67 cites M-190\n\nMcBylaws-Task: MB-67\n');
+    repo.write(`${D}/69a_mcbylaw_register.md`, REG('RATIFIED 2026-11-01'));
+    repo.commit('MB-67 M-190 RATIFIED');
+    const r = run(repo, ['--ci', '--base', base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain(`FAIL:C:not-ruled:M-190:${citing}`);
+    done();
+  });
+
   it('the workflow runs the gate once with the event base and never turns it off', () => {
     const yml = fs.readFileSync(path.resolve(__dirname, '../../.github/workflows/test.yml'), 'utf8');
     expect(yml.split('gate.mjs --ci --base "$BASE"').length - 1).toBe(1);
