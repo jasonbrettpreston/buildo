@@ -129,7 +129,7 @@ function staged(cwd) {
 function rangeArms({ cwd, base, tip, policy }) {
   const res = resolvePolicy(cwd, base);
   if (!res.ok) return ['FAIL:H:cannot-decide', 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
-  const inputs = citeInputs(cwd, tip);
+  const inputs = citeInputs(cwd, tip) || { owed: new Set(), rows: new Map() }; // empty sentinels: arm C then fails closed on a Layer 2/3 commit only
   const out = holdForRange({ cwd, policy: res.policy, base, tip });
   const shas = git(cwd, ['rev-list', '--no-merges', '--reverse', `${base}..${tip}`]);
   if (shas.status !== 0) return [...out, 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
@@ -137,7 +137,7 @@ function rangeArms({ cwd, base, tip, policy }) {
     const changes = git(cwd, ['diff-tree', '-r', '-z', '-M', '--name-status', '--no-commit-id', '--root', sha]);
     const entries = changes.status === 0 ? parseNameStatusZ(changes.stdout) : null;
     const msg = git(cwd, ['log', '-1', '--format=%B', sha]);
-    if (entries === null || msg.status !== 0 || inputs === null) {
+    if (entries === null || msg.status !== 0) {
       out.push(`FAIL:C:cannot-decide:${sha}`, `FAIL:P:cannot-decide:${sha}`);
       continue;
     }
@@ -228,26 +228,29 @@ function askTty() {
 
 const isProtected = (policy, p) => { const c = classify(policy, p); return c.layer23 || c.protected || c.literalScope; };
 
+// A FAIL verdict whose lines carry no FAIL: prefix (a PANEL MISSING line, say) must still exit 1.
+const failClosed = (summary, lines) => (summary.verdict === 'FAIL' && !lines.some((l) => String(l).startsWith('FAIL:')) ? [...lines, 'FAIL:S:summary'] : lines);
+
 function push(cwd, stdin) {
-  const refs = parseRefLines(stdin);
+  const refs = parseRefLines(stdin).map((r) => ({ ...r, ref: r.localRef }));
   if (refs.length === 0) return [CANNOT];
   const input = summaryInput({ cwd, refs, ci: false });
   const summary = buildSummary(input);
-  const lines = [...summary.lines.map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice(11) : l))];
-  if (summary.verdict === 'FAIL') return lines;
+  const lines = [...summary.lines.map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice('MCBYLAWS: '.length) : l))];
+  if (summary.verdict === 'FAIL') return failClosed(summary, lines);
   const protectedChange = input.refs.some((r) => (r.changes || []).some((c) => isProtected(input.policy, c.path)
     || (c.oldPath && isProtected(input.policy, c.oldPath))));
   if (!protectedChange) return lines;
   const ask = askTty();
-  return ask === '' ? [...lines, 'GATE OK'] : [...lines, ask];
+  return ask === '' ? lines : [...lines, ask];
 }
 
 function ci(cwd, baseRev) {
   const res = resolvePolicy(cwd, 'HEAD');
   const input = summaryInput({ cwd, refs: [{ ref: 'refs/heads/HEAD', localSha: 'HEAD', remoteSha: baseRev }], ci: true });
   const summary = buildSummary(input);
-  const lines = [...summary.lines.map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice(11) : l)), 'held, worktree and tty: not evaluated in CI'];
-  return { verdict: summary.verdict, lines, ok: res.ok };
+  const lines = [...summary.lines.map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice('MCBYLAWS: '.length) : l)), 'held, worktree and tty: not evaluated in CI'];
+  return { verdict: summary.verdict, lines: failClosed(summary, lines), ok: res.ok };
 }
 
 function run(argv) {

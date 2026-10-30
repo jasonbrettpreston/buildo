@@ -137,3 +137,33 @@ describe('mcbylaws gate CLI', () => {
     expect(parsed.held_limit).toBeGreaterThan(0);
   });
 });
+
+describe('W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught)', () => {
+  const threeCommits = (withApproved: boolean) => {
+    const repo = mk();
+    seed(repo);
+    if (withApproved) approve(repo);
+    const base = repo.git(['rev-parse', 'HEAD']);
+    repo.write('scripts/analysis/bylaw/evaluate.mjs', 'export const evaluate = 1;\n');
+    const second = repo.commit('MB-67 second: a Layer 2/3 change');
+    repo.write('docs/note.md', '# note\n');
+    repo.commit('MB-67 third: docs');
+    return { repo, base, second };
+  };
+  it('red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED', () => {
+    const red = threeCommits(false);
+    const r = run(red.repo, ['--ci', '--base', red.base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain(`FAIL:H:no-approved:${red.second}`);
+    const green = threeCommits(true);
+    expect(run(green.repo, ['--ci', '--base', green.base]).out).not.toContain('FAIL:H:');
+    done();
+  });
+  it('the workflow runs the gate once with the event base and never turns it off', () => {
+    const yml = fs.readFileSync(path.resolve(__dirname, '../../.github/workflows/test.yml'), 'utf8');
+    expect(yml.split('gate.mjs --ci --base "$BASE"').length - 1).toBe(1);
+    expect(yml).toContain('BASE="origin/$BASE_REF"');
+    expect(yml).toContain('BEFORE_SHA: ${{ github.event.before }}');
+    expect(yml).toContain('fetch-depth: 0');
+  });
+});

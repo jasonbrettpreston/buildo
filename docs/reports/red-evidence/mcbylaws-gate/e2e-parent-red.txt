@@ -1,0 +1,10 @@
+# mode: parent   hooks: none
+--- commit of a Layer 2/3 file, no APPROVED
+commit exit:        2 commits in log
+aa45360 feat(124a_step_standard_policy_appendix): a by-law change
+f929313 seed
+--- push of that commit (commit made with --no-verify when the hook refused it, to reach the pre-push check)
+push exit: 0
+To ../remote.git
+   f929313..aa45360  main -> main
+aa453607
