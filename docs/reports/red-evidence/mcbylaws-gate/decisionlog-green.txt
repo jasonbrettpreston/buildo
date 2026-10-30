@@ -1,0 +1,3 @@
+# green: decision-log.mjs with arm K
+      Tests  14 passed (14)
+[decision-log] clean — 117 log(s), 655 decision(s), 333 register row(s), 1054 ci

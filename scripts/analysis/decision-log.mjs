@@ -50,6 +50,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import { checkRow } from './mcbylaws/register-conflicts.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -67,6 +69,23 @@ const ID_RE = /^[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*$/;
 const CITATION_RE = /\b(\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*)#([A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)/g;
 // A register row: a table row whose first cell is a register id, bold or not.
 export const REGISTER_ROW_RE = /^\|\s*\*{0,2}([A-Z]{1,4}-[A-Z0-9]+(?:\.[0-9]+)?)\*{0,2}\s*\|/;
+
+// MB-67 arm K (M-381, R-KZ; Claude seat W3): every register row ADDED in the staged diff of 69a, 124a or 131 needs a
+// "Conflict check" paragraph naming every id the register search returns, each with a verdict (register-conflicts.mjs).
+// Added rows only: an edit to an older row (a status move, a lock record) is not a new ruling and is not re-judged.
+// File-only: reads `git diff --cached` and the 69a text; no staged register file means no work and no problem.
+const K_SPECS = ['69a_mcbylaw_register.md', '124a_step_standard_policy_appendix.md', '131_lot_configuration_policy.md'].map((n) => `docs/specs/01-pipeline/${n}`);
+export function stagedRowConflictProblems(root, git = (args) => spawnSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 })) {
+  const diff = git(['diff', '--cached', '-U0', '--', ...K_SPECS]);
+  if (diff.status !== 0) return ['FAIL:K:cannot-decide'];
+  const lines = String(diff.stdout).split('\n');
+  const removed = new Set(lines.filter((l) => l.startsWith('-') && REGISTER_ROW_RE.test(l.slice(1))).map((l) => REGISTER_ROW_RE.exec(l.slice(1))[1]));
+  const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++') && REGISTER_ROW_RE.test(l.slice(1))).map((l) => l.slice(1)).filter((l) => !removed.has(REGISTER_ROW_RE.exec(l)[1]));
+  if (added.length === 0) return [];
+  const reg = git(['show', `:${K_SPECS[0]}`]);
+  if (reg.status !== 0) return ['FAIL:K:cannot-decide'];
+  return added.flatMap((rowText) => checkRow({ rowText, registerText: String(reg.stdout) }).map((v) => `${v}:${REGISTER_ROW_RE.exec(rowText)[1]}`));
+}
 
 export const MODES = Object.freeze(['--check', '--write', '--import']);
 const VALUE_FLAGS = Object.freeze({
@@ -578,6 +597,7 @@ if (isMain) {
     } else {
       const { logs, specs, io } = loadTree(root);
       const r = checkDecisionLogs(logs, specs, { io });
+      if (mode === '--check') r.problems.push(...stagedRowConflictProblems(root));
       if (mode === '--write') {
         const text = r.missing.length ? skeletons(r.missing) : '';
         if (values['--out']) {

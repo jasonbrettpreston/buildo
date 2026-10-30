@@ -11,6 +11,8 @@ import {
   conflictCandidates,
   searchKeys,
 } from '../../scripts/analysis/mcbylaws/register-conflicts.mjs';
+import { makeRepo } from './fixtures/mcbylaws-gate/repo-helper';
+import { stagedRowConflictProblems } from '../../scripts/analysis/decision-log.mjs';
 
 const FIX = path.resolve(__dirname, 'fixtures/mcbylaws-gate');
 const read = (name: string): string => fs.readFileSync(path.join(FIX, name), 'utf8');
@@ -82,5 +84,36 @@ describe('checkCard (K4) and the CLI shim', () => {
     const r = spawnSync(process.execPath, [cli, '--text', path.join(FIX, 'mb17q1-draft.txt')], { encoding: 'utf8', env: env as NodeJS.ProcessEnv });
     expect(r.status).toBe(0);
     expect(r.stdout.trim().split('\n')).toEqual(TEN);
+  });
+});
+
+describe('decision-log --check gains arm K (W3): a register row ADDED in the staged diff needs its Conflict check', () => {
+  const SPEC = 'docs/specs/01-pipeline/69a_mcbylaw_register.md';
+  const stageRow = (rowText: string) => {
+    const repo = makeRepo();
+    try {
+      repo.write(SPEC, `${REGISTER}\n`);
+      repo.commit('register');
+      repo.write(SPEC, `${REGISTER}\n${rowText.replace(/\n+/g, ' ')}\n`);
+      repo.stage(SPEC);
+      return stagedRowConflictProblems(repo.dir);
+    } finally {
+      repo.cleanup();
+    }
+  };
+  it('red: the MB17-Q1 draft row with no paragraph, and one that omits M-180', () => {
+    expect(stageRow(row('M-500', DRAFT))).toContain('FAIL:K:no-conflict-check:M-500');
+    expect(stageRow(row('M-500', `${DRAFT}\n\n**Conflict check.** ${paragraph(OMITS_M180)}`))).toContain('FAIL:K:omits:M-180:M-500');
+  });
+  it('green: the row naming all ten with M-180 amends, and a staged diff with no register row', () => {
+    expect(stageRow(greenTwin())).toEqual([]);
+    const repo = makeRepo();
+    try {
+      repo.write('docs/note.md', 'x\n');
+      repo.stage('docs/note.md');
+      expect(stagedRowConflictProblems(repo.dir)).toEqual([]);
+    } finally {
+      repo.cleanup();
+    }
   });
 });
