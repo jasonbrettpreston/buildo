@@ -136,4 +136,12 @@ describe('incrementGreen: every in-scope case green, floors held, canary red', (
     const cases: Case[] = [{ id: 'c1', group: 'g-base', status: 'pass' }, { id: 'c3', group: 'g-3', status: 'fail' }];
     expect(M.incrementGreen({ ...ok, cases })).toEqual({ green: true, reasons: [] });
   });
+  // O68-17: an increment outside the closed set is not a round at all: every group would look out of scope and the round would
+  // read green on `empty_set` alone, so it is refused by name.
+  it('an increment that is not one known id is refused (O68-17)', () => {
+    const cases: Case[] = [{ id: 'c1', group: 'g-base', status: 'pass' }];
+    expect(M.incrementGreen({ ...ok, cases, increment: '11' })).toEqual({ green: false, reasons: ['increment_not_one_id'] });
+    expect(M.incrementGreen({ ...ok, cases, increment: ['2', '3'] })).toEqual({ green: false, reasons: ['increment_not_one_id'] });
+    expect(M.incrementGreen({ ...ok, cases, increment: '' })).toEqual({ green: false, reasons: ['increment_not_one_id'] });
+  });
 });

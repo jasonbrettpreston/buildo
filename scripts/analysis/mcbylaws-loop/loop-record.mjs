@@ -83,8 +83,23 @@ export function gotSha({ status, value, reason } = {}) {
   return sha256({ reason: member(reason), status: member(status), value: member(value) });
 }
 
-/** docs/reports/loop-records/<increment>/round-<nn>.json */
+/**
+ * The one id form a record path may hold (O68-14): letters, digits, `.`, `_` and `-`, and never `.` or `..` alone. An increment or
+ * a round id outside it would escape docs/reports/loop-records (a `../../escape` writes outside the root), so it throws.
+ */
+export const SAFE_ID_RE = /^[A-Za-z0-9._-]+$/;
+
+export function assertSafeId(id, label = 'id') {
+  if (typeof id !== 'string' || !SAFE_ID_RE.test(id) || id === '.' || id === '..') {
+    throw new Error(`unsafe_id:${label}:${String(id)}`);
+  }
+  return id;
+}
+
+/** docs/reports/loop-records/<increment>/round-<nn>.json. Throws `unsafe_id:` for an increment or a round id outside SAFE_ID_RE (O68-14). */
 export function recordPath(increment, n) {
+  assertSafeId(increment, 'increment');
+  assertSafeId(String(n), 'round');
   return `${RECORD_DIR}${increment}/round-${String(n).padStart(2, '0')}.json`;
 }
 
@@ -190,11 +205,24 @@ export function checkRecordsAddOnly(nameStatus = []) {
   return out;
 }
 
-/** Writes the record exclusively (flag wx) under root; an existing file throws. Returns the relative path. */
+/**
+ * Writes the record exclusively under root and returns its relative path.
+ * O68-21: the bytes go to a temp name in the SAME directory (a rename across filesystems is not atomic), then `fs.linkSync` claims the
+ * round name (link fails with EEXIST when the round exists, so the add-only door is unchanged), then the temp is unlinked: a reader never
+ * sees a zero-length round-NN.json. O68-14: the resolved file must stay under root (`path.relative`) or this throws.
+ */
 export function writeRecordExclusive(root, rec) {
   const rel = recordPath(rec.increment, rec.round);
   const file = path.join(root, rel);
+  const fromRoot = path.relative(root, file);
+  if (!fromRoot || fromRoot.startsWith('..') || path.isAbsolute(fromRoot)) throw new Error(`unsafe_id:outside_root:${rel}`);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, `${JSON.stringify(rec, null, 2)}\n`, { flag: 'wx' });
+  const tmp = `${file}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
+  try {
+    fs.writeFileSync(tmp, `${JSON.stringify(rec, null, 2)}\n`, { flag: 'wx' });
+    fs.linkSync(tmp, file); // EEXIST when the round already exists: the record is never rewritten
+  } finally {
+    fs.rmSync(tmp, { force: true }); // never leave the temp behind, on the link error path too
+  }
   return rel;
 }

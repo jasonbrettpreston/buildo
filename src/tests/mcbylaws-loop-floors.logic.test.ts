@@ -74,6 +74,12 @@ describe('flattenFloors: every floor line as "<line>" -> n', () => {
     c['coa172 cases'] = 1;
     expect(count().lines['coa172 cases']).toBe(172); // a copy, not the file
   });
+  // O68-11: an OWED baseline is a floor too: lowering or deleting it needs a ruling.
+  it('a count file exposes its owed_baseline keys as "owed_baseline <line>"', () => {
+    const f = { ...count(), owed_baseline: { 'coa172 cases': 171.4 } };
+    expect(M.flattenFloors(f)).toEqual({ 'coa172 cases': 172, 'coa172 accuracy': 92, 'owed_baseline coa172 cases': 171.4 });
+    expect(M.flattenFloors(count())).toEqual({ 'coa172 cases': 172, 'coa172 accuracy': 92 }); // no baseline: no extra line
+  });
 });
 
 describe('checkFloorEdit: a floor fall blocks the commit unless a ruling names the line (M-322, M-330)', () => {
@@ -115,6 +121,65 @@ describe('checkFloorEdit: a floor fall blocks the commit unless a ruling names t
     const b = percent({ rulings: [{ ruling: 'M-322', lines: [{ line: 'overall accuracy' }] }] });
     expect(M.checkFloorEdit(b, percent({ rulings: [] }), rulings([['M-322', 'RULED']]))).toEqual(['rulings_history_shortened']);
     expect(M.checkFloorEdit(count(), count({ lines: { 'coa172 cases': 150, 'coa172 accuracy': 92 } }), rulings([]))).toEqual(['floor_lowered_without_ruling:coa172 cases']);
+  });
+  // O68-13: a named line must be a floor key exactly, or a key minus its metric suffix. A bare prefix such as "article" or
+  // "overall" names no floor: it is ruling_line_unknown and excuses nothing.
+  it('a RULED entry naming the bare line "article" cannot excuse lowering every article (O68-13)', () => {
+    const two = percent({ articles: { '10.20.40': { accuracy: 91, answered: 78 }, '10.5.40': { accuracy: 94, answered: 56 } } });
+    const lowered = percent({
+      articles: { '10.20.40': { accuracy: 50, answered: 78 }, '10.5.40': { accuracy: 50, answered: 56 } },
+      rulings: [{ ruling: 'M-322', lines: [{ line: 'article' }] }],
+    });
+    expect(M.checkFloorEdit(two, lowered, rulings([['M-322', 'RULED']]))).toEqual([
+      'ruling_line_unknown:article',
+      'floor_lowered_without_ruling:article 10.20.40 accuracy',
+      'floor_lowered_without_ruling:article 10.5.40 accuracy',
+    ]);
+    // the same fall named by the exact article line is excused (the green twin)
+    const exact = percent({
+      articles: { '10.20.40': { accuracy: 50, answered: 78 }, '10.5.40': { accuracy: 94, answered: 56 } },
+      rulings: [{ ruling: 'M-322', lines: [{ line: 'article 10.20.40 accuracy' }] }],
+    });
+    expect(M.checkFloorEdit(two, exact, rulings([['M-322', 'RULED']]))).toEqual([]);
+  });
+  it('a key minus its metric suffix names that one line; a bare "article" or an unknown line names nothing (O68-13)', () => {
+    const r = rulings([['M-322', 'RULED']]);
+    const withEntry = (line: string, overall: PercentLine = { accuracy: 50, answered: 71 }): PercentFloors =>
+      percent({ overall, rulings: [{ ruling: 'M-322', lines: [{ line }] }] });
+    // "overall" names the overall lines (it is a key minus its suffix), but it never excuses a fall: only the exact key does
+    expect(M.checkFloorEdit(base, withEntry('overall'), r)).toEqual(['floor_lowered_without_ruling:overall accuracy']);
+    expect(M.checkFloorEdit(base, withEntry('pooled articles'), r)).toEqual(['floor_lowered_without_ruling:overall accuracy']);
+    // a bare prefix that is no key minus a suffix is unknown, and excuses nothing
+    expect(M.checkFloorEdit(base, withEntry('article'), r)).toEqual([
+      'ruling_line_unknown:article',
+      'floor_lowered_without_ruling:overall accuracy',
+    ]);
+    expect(M.checkFloorEdit(base, withEntry('article 10.20.40'), r)).toEqual(['floor_lowered_without_ruling:overall accuracy']); // a real suffixless line: names it, excuses nothing else
+    expect(M.checkFloorEdit(base, withEntry('article 10.99.99'), r)).toEqual([
+      'ruling_line_unknown:article 10.99.99',
+      'floor_lowered_without_ruling:overall accuracy',
+    ]);
+    expect(M.checkFloorEdit(base, withEntry('coa172 cases'), r)).toEqual([
+      'ruling_line_unknown:coa172 cases',
+      'floor_lowered_without_ruling:overall accuracy',
+    ]);
+    // the full key excuses it; the suffixless form names the line but only its own metric
+    expect(M.checkFloorEdit(base, withEntry('overall accuracy'), r)).toEqual([]);
+    expect(M.checkFloorEdit(base, withEntry('overall answered', { accuracy: 92, answered: 60 }), r)).toEqual([]);
+    expect(M.checkFloorEdit(base, withEntry('overall', { accuracy: 92, answered: 60 }), r)).toEqual(['floor_lowered_without_ruling:overall answered']);
+  });
+  // O68-11: an OWED baseline is a floor line of its own.
+  it('lowering or deleting an owed_baseline needs a ruling naming "owed_baseline <line>" (O68-11)', () => {
+    const r = rulings([['M-322', 'RULED']]);
+    const b = { ...count(), owed_baseline: { 'coa172 cases': 171.4 } };
+    const lowered = { ...b, owed_baseline: { 'coa172 cases': 100 }, rulings: [{ ruling: 'M-322', lines: [{ line: 'coa172 cases' }] }] };
+    expect(M.checkFloorEdit(b, lowered, r)).toEqual(['floor_lowered_without_ruling:owed_baseline coa172 cases']);
+    const deleted = { ...b, owed_baseline: undefined, rulings: [] };
+    expect(M.checkFloorEdit(b, deleted, r)).toEqual(['floor_lowered_without_ruling:owed_baseline coa172 cases']);
+    // the green twin: the line named exactly is excused; a raise needs nothing
+    const named = { ...b, owed_baseline: { 'coa172 cases': 100 }, rulings: [{ ruling: 'M-322', lines: [{ line: 'owed_baseline coa172 cases' }] }] };
+    expect(M.checkFloorEdit(b, named, r)).toEqual([]);
+    expect(M.checkFloorEdit(b, { ...b, owed_baseline: { 'coa172 cases': 172 } }, rulings([]))).toEqual([]);
   });
 });
 

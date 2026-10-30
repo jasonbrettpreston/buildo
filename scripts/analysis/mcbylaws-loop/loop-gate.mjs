@@ -202,10 +202,21 @@ export function rangeNameStatus(root, base, tip) {
   return nameStatusZOf(git(root, ['diff', '--name-status', '-z', '-M', `${base}..${tip}`]));
 }
 
-/** One name-status list per commit of `base..tip`, oldest first, merge commits skipped. */
+/**
+ * One name-status list per commit of `base..tip`, oldest first. O68-22: merge commits are kept as one list each, and the oracle-first
+ * check gets them through the range name-status the context appends; a merge's own list is the combined diff (nothing for a clean
+ * merge, the resolution's files when the resolution touched them), falling back to its diff against the first parent when the
+ * combined diff is empty.
+ */
 export function perCommitNameStatus(root, base, tip) {
-  const shas = git(root, ['rev-list', '--reverse', '--no-merges', `${base}..${tip}`]).split('\n').map((s) => s.trim()).filter(Boolean);
-  return shas.map((sha) => nameStatusZOf(git(root, ['show', '--name-status', '-z', '-M', '--format=', sha])));
+  const shas = git(root, ['rev-list', '--reverse', `${base}..${tip}`]).split('\n').map((s) => s.trim()).filter(Boolean);
+  return shas.map((sha) => {
+    const shown = nameStatusZOf(git(root, ['show', '--name-status', '-z', '-M', '--format=', sha]));
+    if (shown.length) return shown;
+    const parents = git(root, ['rev-list', '--parents', '-n', '1', sha]).split('\n')[0].split(' ').slice(1).filter(Boolean);
+    if (parents.length < 2) return shown;
+    return nameStatusZOf(git(root, ['diff', '--name-status', '-z', '-M', `${parents[0]}..${sha}`]));
+  });
 }
 
 /** The merge base of HEAD and `targetRef`; '' when there is none (unrelated histories, absent ref). */

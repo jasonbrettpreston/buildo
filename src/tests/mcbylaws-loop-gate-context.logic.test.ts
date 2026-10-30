@@ -81,6 +81,7 @@ type Ctx = {
   cardExists: (id: string) => boolean;
   latest: Latest;
   newRecords: { path: string; rec: LoopRec }[];
+  unparsable: string[];
   firstRoundOfIncrement: boolean;
   greenHistory: string[];
   prereg: Prereg | null;
@@ -554,7 +555,9 @@ describe('buildContext: commit mode', () => {
     // stageRound1 writes the BASE set again and removes the g-b ids file: the round stages no g-b ids file at all.
     expect(paths).not.toContain(`A ${IDS_B_REL}`);
     expect(paths).not.toContain(`D ${IDS_B_REL}`);
+    // commit mode reads the one staged list: there is no per-commit range to append
     expect(ctx.commits).toEqual([ctx.nameStatus]);
+    expect(ctx.unparsable).toEqual([]);
 
     expect(ctx.classify(CATALOGUE_NEXT)).toBe('code');
     expect(ctx.classify(SET_REL)).toBe('generated');
@@ -630,9 +633,11 @@ describe('buildContext: push and ci mode', () => {
     const ctx = await buildContext({ mode: 'push', root: dir, base, target: '' }, await deps());
 
     expect(ctx.nameStatus.map((p) => p.p)).toEqual(expect.arrayContaining([PREREG_REL, RECORD_2_1, CATALOGUE_NEXT]));
-    expect(ctx.commits.length).toBe(2);
+    // O68-22: the per-commit lists (oldest first, no merge to skip here), then the WHOLE range as one extra list at the end.
+    expect(ctx.commits.length).toBe(3);
     expect(ctx.commits[0]?.map((r) => r.p)).toEqual([PREREG_REL]);
     expect(ctx.commits[1]?.map((r) => r.p)).toEqual(expect.arrayContaining([RECORD_2_1, CATALOGUE_NEXT]));
+    expect(ctx.commits[2]).toEqual(ctx.nameStatus);
     expect(ctx.newRecords.map((r) => r.path)).toEqual([RECORD_2_1]);
     expect(ctx.preregHistory).not.toBeNull();
     expect(ctx.preregHistory?.preregCommits.length).toBe(1);
@@ -695,7 +700,8 @@ describe('buildContext: push and ci mode', () => {
 
     const { buildContext } = await loadContext();
     const ctx = await buildContext({ mode: 'push', root: dir, base: '', target: 'main' }, await deps());
-    expect(ctx.commits.length).toBe(2);
+    // two per-commit lists, then the whole range (O68-22)
+    expect(ctx.commits.length).toBe(3);
     expect(gitQ(dir, ['merge-base', 'HEAD', 'main'])).toBe(base);
   });
 

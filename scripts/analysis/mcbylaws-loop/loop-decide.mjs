@@ -38,7 +38,8 @@ function checkFindings(rec, rulings, cardExists) {
     }
     const id = finding.finding_id;
     if (!isRegisterFindingId(id, rulings) && !isRegisterCardId(id, cardExists)) {
-      out.push(`finding_id_not_in_register:${hasCase ? finding.case : ''}`);
+      // A finding with no case binds nothing: the id line carries an empty detail (never `finding_id_not_in_register:`).
+      out.push(hasCase ? `finding_id_not_in_register:${finding.case}` : 'finding_id_not_in_register');
     }
   }
   return out;
@@ -67,12 +68,32 @@ function checkAcceptCases(rec) {
   return out;
 }
 
+/**
+ * O68-12: an accepted finding must be bound to a case OF THIS RECORD. A finding naming a case the record does not carry accepts
+ * nothing (it would cover an id no rule ever checks), so it is `finding_case_unknown:<case>`.
+ */
+function checkFindingCases(rec) {
+  const out = [];
+  const cases = new Set();
+  for (const entry of Array.isArray(rec.cases) ? rec.cases : []) {
+    if (entry && typeof entry.id === 'string') cases.add(entry.id);
+  }
+  const findings = Array.isArray(rec.accepted_findings) ? rec.accepted_findings : [];
+  for (const item of findings) {
+    const finding = item && typeof item === 'object' ? item : {};
+    if (typeof finding.case !== 'string' || finding.case.length === 0) continue;
+    if (!cases.has(finding.case)) out.push(`finding_case_unknown:${finding.case}`);
+  }
+  return out;
+}
+
 export function checkDecision(rec, rulings, cardExists = () => false) {
   const record = rec && typeof rec === 'object' ? rec : {};
   if (record.decision !== ACCEPT && record.decision !== REVERT) return ['decision_missing'];
   const out = [];
   if (record.decision === ACCEPT && !longEnough(record.reason)) out.push('accept_without_reason');
   out.push(...checkFindings(record, rulings, cardExists));
+  out.push(...checkFindingCases(record));
   if (record.decision === ACCEPT) out.push(...checkAcceptCases(record));
   return out;
 }
@@ -109,7 +130,7 @@ export function mutateExpected(value) {
   if (value !== null && typeof value === 'object') {
     const copy = { ...value };
     const keys = Object.keys(copy).sort();
-    if (keys.length === 0) return copy;
+    if (keys.length === 0) return { __canary__: true };
     copy[keys[0]] = mutateExpected(copy[keys[0]]);
     return copy;
   }
@@ -121,10 +142,13 @@ export function mutateExpected(value) {
 
 export function runCanary(cases, compare) {
   const list = Array.isArray(cases) ? cases : [];
-  const pick = list.find((c) => c && compare(c.expected, c.got) === 'pass');
-  if (!pick) return { id: null, observed: 'none' };
-  const observed = compare(mutateExpected(pick.expected), pick.got) === 'fail' ? 'fail' : 'pass';
-  return { id: pick.id, observed };
+  const passing = list.filter((c) => c && compare(c.expected, c.got) === 'pass');
+  if (passing.length === 0) return { id: null, observed: 'none' };
+  // O68-20: try each passing case until one whose mutated expected value the comparison actually catches; none caught = observed none (the gate stays red).
+  for (const c of passing) {
+    if (compare(mutateExpected(c.expected), c.got) === 'fail') return { id: c.id, observed: 'fail' };
+  }
+  return { id: passing[0].id, observed: 'pass' };
 }
 
 export function roundsSinceThresholds(records) {

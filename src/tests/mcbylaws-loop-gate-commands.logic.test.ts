@@ -70,7 +70,7 @@ type VerifyEntry = {
   canary_ok: boolean | null;
   red_twins_ok: boolean | null;
   rounds_since_thresholds: number | null;
-  cases: { id: string; status: string; artifact: string | null }[];
+  cases: { id: string; status: string; record_says: string | null; artifact: string | null }[];
 };
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-loop-gate-commands-'));
@@ -360,7 +360,8 @@ describe('verifyCommand: derived values are computed here, never read from the r
     expect(entry?.canary_ok).toBe(true);
     expect(entry?.red_twins_ok).toBe(true);
     expect(entry?.rounds_since_thresholds).toBe(0);
-    expect(entry?.cases).toEqual([{ id: qid('A0001|1'), status: 'pass', artifact: IDS_REL }]);
+    // O68-10: the fresh run says pass and the record says pass, so there is no record_says beside the status
+    expect(entry?.cases).toEqual([{ id: qid('A0001|1'), status: 'pass', record_says: null, artifact: IDS_REL }]);
   });
 
   it('a record whose bound file changed on disk reads bound_ok: false (the blob from the index no longer matches)', async () => {
@@ -415,8 +416,29 @@ describe('verifyCommand: derived values are computed here, never read from the r
     expect(redRun.find((e) => e.increment === '2')?.rounds_since_thresholds).toBe(2);
   });
 
-  it('without --json prints a one-line summary and no JSON', async () => {
-    const root = makeRepo('verify-summary');
+  it('O68-10: the case status is the FRESH run status, never the record: a hand-set pass over a failing run reads fail, with record_says', async () => {
+    const root = makeRepo('verify-fresh');
+    resetLines();
+    // a record whose three cases are ALL hand-set to pass (and bound so the shape holds): the record claims a green round
+    const claimed = [qid('A0001|1'), qid('A0002|1'), qid('A0003|1')].map((id) => ({ id, status: 'pass', got_sha: 'a'.repeat(64) }));
+    writeRecord(root, 'docs/reports/loop-records/1/round-01.json', {
+      schema: 'loop-record-v1', increment: '1', round: 1, decision: 'accept', reason: 'the record claims every case of the group passes',
+      accepted_findings: [], cases: claimed, inputs: {},
+    });
+    // the fresh run disagrees: MATCH (pass), DIFFER (fail), NO ANSWER (fail)
+    await verifyCmd(parsedFor(root, { command: 'verify', json: true }), capture(), { computeRun: fakeComputeRun(fakeRun()) });
+    const out = JSON.parse(lines[0] ?? '') as VerifyEntry[];
+    const cases = out[0]?.cases ?? [];
+    // red first: the status is read off the fresh run, so the two failing cases do NOT read the record's pass
+    expect(cases.map((c) => c.status)).toEqual(['pass', 'fail', 'fail']);
+    expect(cases.map((c) => c.id)).toEqual([qid('A0001|1'), qid('A0002|1'), qid('A0003|1')]);
+    // the record's claim rides beside it only where it differs: a green twin shows record_says null on the agreeing case
+    expect(cases.map((c) => c.record_says)).toEqual([null, 'pass', 'pass']);
+    // the increment is not green: the fresh run carries failing cases
+    expect(out[0]?.increment_green).toBe(false);
+  });
+
+  it('without --json prints a one-line summary and no JSON', async () => {    const root = makeRepo('verify-summary');
     resetLines();
     await verifyCmd(parsedFor(root, { command: 'verify' }), capture(), { computeRun: fakeComputeRun(fakeRun()) });
     expect(lines).toHaveLength(1);

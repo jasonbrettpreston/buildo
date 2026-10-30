@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { checkPercentFloors } from './loop-floors.mjs';
 import { runCanary, roundsSinceThresholds } from './loop-decide.mjs';
 import { canon, gotSha, bindRecord, writeRecordExclusive, checkBound, nextRound, recordPath, sha256, RECORD_RE, CLASS_STATUS, statusOf } from './loop-record.mjs';
@@ -217,6 +218,29 @@ export function computeRun({ root, regression, mode, registerText, deps = {} }) 
 
 // The bylaw register text (69a + 69) every ruling reader parses (M19). Read here, not in loop-gate-context (B7b), so `run` needs no context.
 const REGISTER_FILES = ['docs/specs/01-pipeline/69a_mcbylaw_register.md', 'docs/specs/01-pipeline/69_mcbylaw_policy.md'];
+
+// O68-18: the ONE register parser. `parseRulings` of scripts/analysis/bylaw/universe.mjs is the reader acceptFloors uses (struck
+// `~~M-n~~` -> RETIRED included), so the register is never parsed two ways. Loaded lazily by file URL: this module must load without it.
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const REGISTER_MODULE = path.join(HERE, '../bylaw/universe.mjs');
+let universeMod = null;
+async function registerModule() {
+  if (!universeMod) universeMod = await import(pathToFileURL(REGISTER_MODULE).href);
+  return universeMod;
+}
+
+/** The register text + the ruling map of the tree under root, through universe.mjs (the one parser). IO. */
+async function rulingsOf(root, deps = {}) {
+  if (deps.rulings instanceof Map) return deps.rulings;
+  const mod = await registerModule();
+  let text = '';
+  try {
+    text = mod.readSpec69Rulings(root);
+  } catch {
+    text = registerTextOf(root); // an unreadable register is an empty text: no ruling is found, so every ruling is refused
+  }
+  return mod.parseRulings(text);
+}
 
 /** The scorer class -> the record status, from the ONE vocabulary of loop-record.mjs (O68-01); re-exported for existing importers. PURE. */
 export { CLASS_STATUS, statusOf };
@@ -703,6 +727,10 @@ export async function verifyCommand(parsed, write, deps = {}) {
   });
   const thresholds = roundsSinceThresholds(thresholdsHistory);
 
+  // O68-10: every status verify prints comes from the FRESH run, never from the record (one map, built before the loop).
+  const freshById = new Map();
+  if (run && Array.isArray(run.cases)) for (const c of run.cases) if (c && typeof c.id === 'string') freshById.set(c.id, c);
+
   const out = [];
   for (const r of latest) {
     const rec = r.rec && typeof r.rec === 'object' ? r.rec : {};
@@ -715,14 +743,16 @@ export async function verifyCommand(parsed, write, deps = {}) {
       if (id) treeBlobs[p] = id;
       else missing.push(p);
     }
+    // O68-10: the status is the FRESH run's status of that id (pass / fail / accepted / pending); a recorded status that differs
+    // rides beside it as `record_says`, so verify echoes the record's claim instead of passing it off as the derived value.
     const cases = (Array.isArray(rec.cases) ? rec.cases : []).map((c) => {
       const id = c && typeof c.id === 'string' ? c.id : '';
-      return { id, status: c && typeof c.status === 'string' ? c.status : '', artifact: artifactOf(regression, id) };
+      const recorded = c && typeof c.status === 'string' ? c.status : '';
+      const fresh = freshById.get(id);
+      const status = fresh ? statusOf(fresh.status) : '';
+      return { id, status, record_says: recorded !== status ? recorded : null, artifact: artifactOf(regression, id) };
     });
     const isCurrent = current !== null && r.increment === current.increment;
-    // derived here: the case status comes from the fresh run's case of that id (accept / accepted / pass / fail), never from the record
-    const freshById = new Map();
-    if (run && Array.isArray(run.cases)) for (const c of run.cases) if (c && typeof c.id === 'string') freshById.set(c.id, c);
     out.push({
       record: r.record,
       increment: r.increment,
@@ -825,7 +855,7 @@ export async function removeCommand(parsed, write, deps = {}) {
   if (!group) missing.push('--group');
   if (!ids.length) missing.push('--ids');
   if (missing.length) return { violations: [`removal_needs:${missing.join('|')}`], notes: [] };
-  const rulings = deps.rulings instanceof Map ? deps.rulings : parseRulingsOf(root);
+  const rulings = await rulingsOf(root, deps);
   const set = loadRegression(root);
   const res = removeCases(set, group, ids, ruling, rulings);
   if (res.violations.length) return { violations: res.violations, notes: [] };
@@ -835,16 +865,3 @@ export async function removeCommand(parsed, write, deps = {}) {
   return { violations: [], notes: [] };
 }
 
-/** Map(id -> status) of the register; an unreadable register is an empty map (so every ruling is refused, never trusted). PURE-ish (reads two docs). */
-function parseRulingsOf(root) {
-  const out = new Map();
-  for (const line of registerTextOf(root).split(/\r?\n/)) {
-    const m = /^\|\s*\*\*(M-\d+|P-\d+)\*\*\s*\|/.exec(line);
-    if (!m) continue;
-    const cells = line.split('|').map((c) => c.trim()).filter((c, i, a) => i > 0 && i < a.length - 1);
-    const status = cells[cells.length - 1] || '';
-    const key = m[1] === undefined ? '' : m[1];
-    out.set(key, /^RATIFIED\b/.test(status) ? 'RATIFIED' : /^RULED\b/.test(status) ? 'RULED' : /^PROPOSED\b/.test(status) ? 'PROPOSED' : /^RETIRED\b/.test(status) ? 'RETIRED' : 'UNKNOWN');
-  }
-  return out;
-}

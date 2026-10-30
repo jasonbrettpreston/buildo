@@ -211,7 +211,10 @@ export async function buildContext(parsed = {}, deps = {}) {
   rev = commit ? ':index' : 'HEAD';
   if (!commit) {
     nameStatus = git.rangeNameStatus(root, base, 'HEAD');
-    commits = git.perCommitNameStatus(root, base, 'HEAD');
+    // O68-22: the per-commit lists skip merge commits, so a hand-oracle edit made only in a merge's conflict resolution would never
+    // be seen. The whole range name-status (git diff merges everything, a merge's resolution included) is appended as ONE extra list:
+    // checkOracleFirst then sees that edit, while the per-commit lists themselves stay as the reader hands them.
+    commits = [...asArray(git.perCommitNameStatus(root, base, 'HEAD')), asArray(nameStatus)];
   }
 
   // 2. The policy is the BASE copy (a round cannot widen its own classes), the classes and the closed increment set.
@@ -229,20 +232,24 @@ export async function buildContext(parsed = {}, deps = {}) {
   // 4. The records at `rev`: the new ones (an `A` row of the range) pick the round; the last record sorts by increment, then round.
   const records = listRecords(git, root, rev, nameStatus, parseRecord, RECORD_RE);
   const baseRecords = listRecords(git, root, base, [], parseRecord, RECORD_RE);
+  // O68-15: a record that does not parse at the round's revision is named; the rules below only read the parsed ones.
+  const unparsable = unparsableRecords(records);
+  const parsedNow = parsedRecords(records);
+  const parseableBase = parsedRecords(baseRecords);
   const added = new Set(nameStatus.filter((row) => row && row.s === 'A').map((row) => row.p));
-  const newRecords = records.filter((entry) => added.has(entry.path));
+  const newRecords = parsedNow.filter((entry) => added.has(entry.path));
   const order = byIncrementThenRound(incrementIds);
   // The round under judgement is the last NEW record (the whole set at HEAD also holds the earlier commits of the range).
   const last = newRecords.length ? [...newRecords].sort(order)[newRecords.length - 1] : null;
-  const latest = last || pickLatest(records, order);
+  const latest = last || pickLatest(parsedNow, order);
   const increment = latest ? latest.rec.increment : null;
   const round = latest ? latest.rec.round : null;
   // The first round of an increment: no record of that increment landed at the base.
-  const firstRoundOfIncrement = increment === null ? false : !baseRecords.some((entry) => entry.rec.increment === increment);
+  const firstRoundOfIncrement = increment === null ? false : !parseableBase.some((entry) => entry.rec.increment === increment);
   // An accepted record can only have landed through a green gate: the accept door refuses a red round, so an accept in the base
   // history is proof the increment was green there. The green history is therefore the distinct increments of the accepted records.
-  const greenHistory = distinct(baseRecords.filter((entry) => entry.rec.decision === 'accept').map((entry) => entry.rec.increment));
-  const prev = increment === null ? null : previousRound(records, increment, round);
+  const greenHistory = distinct(parseableBase.filter((entry) => entry.rec.decision === 'accept').map((entry) => entry.rec.increment));
+  const prev = increment === null ? null : previousRound(parsedNow, increment, round);
   const prevCases = {};
   if (prev) {
     for (const item of asArray(prev.rec.cases)) {
@@ -298,7 +305,9 @@ export async function buildContext(parsed = {}, deps = {}) {
     countBase: countFileBase ? readJson(git.readAt(root, base, countFileBase)) : null,
     countCur: countFileCur ? readJson(git.readAt(root, rev, countFileCur)) : null,
   };
-  const owed = floors.countCur && isObject(floors.countCur.owed_baseline) ? floors.countCur.owed_baseline : {};
+  // O68-11: the OWED baseline is a PREREG-side fact: it is read from the BASE copy of the count-floors file, so a round cannot raise
+  // its own baseline (that would widen the ratchet it is measured against). No base file, or no baseline in it, is `{}`.
+  const owed = floors.countBase && isObject(floors.countBase.owed_baseline) ? floors.countBase.owed_baseline : {};
 
   // 8. The run: only CI may answer null (the external groups do not run there). No prereg rows = no baseline to diff moves against.
   // A computeRun that supplied its own base rows keeps them (O68-04): forcing null here is why moves were never compared.
@@ -317,6 +326,7 @@ export async function buildContext(parsed = {}, deps = {}) {
     cardExists,
     latest,
     newRecords,
+    unparsable,
     firstRoundOfIncrement,
     greenHistory,
     prereg,
@@ -371,19 +381,27 @@ const gitReaders = (mod) => ({
   readAt: mod.readAt,
 });
 
-/** The records of a revision, parsed: {path, rec}; a file that does not parse is skipped (record_shape reports it at `rev`). */
+/**
+ * The records of a revision, parsed: {path, rec}. O68-15: a record file that does not parse is KEPT with `rec: null` (the gate emits
+ * `record_unparsable:<path>` for it; dropping it silently would let the round fall back to the previous round's record).
+ */
 function listRecords(git, root, rev, _nameStatus, parseRecord, RECORD_RE) {
   const files = listFiles(git, root, rev, RECORD_DIR_REL).filter((rel) => RECORD_RE.test(rel)).sort();
   const out = [];
   for (const rel of files) {
     const text = git.readAt(root, rev, rel);
     const rec = readJson(text);
-    if (!isObject(rec)) continue;
     void parseRecord;
-    out.push({ path: rel, rec });
+    out.push({ path: rel, rec: isObject(rec) ? rec : null });
   }
   return out;
 }
+
+/** Every record path that does not parse, at the round's revision (O68-15: `record_unparsable:<path>` each). */
+const unparsableRecords = (records) => records.filter((entry) => !isObject(entry.rec)).map((entry) => entry.path);
+
+/** The records that DID parse: the ones every record rule reads (an unparsable one is already a violation of its own). */
+const parsedRecords = (records) => records.filter((entry) => isObject(entry.rec));
 
 /** The highest round of the newest increment, as the ctx's `latest`. */
 function pickLatest(records, order) {

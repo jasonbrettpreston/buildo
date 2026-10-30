@@ -73,6 +73,7 @@ type Ctx = {
   cardExists: (id: string) => boolean;
   latest: Latest;
   newRecords: { path: string; rec: LoopRec }[];
+  unparsable: string[];
   firstRoundOfIncrement: boolean;
   greenHistory: string[];
   prereg: Prereg | null;
@@ -225,6 +226,7 @@ function goodCtx(): Ctx {
     cardExists: (id: string) => id === 'MB-333',
     latest: { path: RECORD_FILE, rec },
     newRecords: [{ path: RECORD_FILE, rec }],
+    unparsable: [],
     firstRoundOfIncrement: true,
     greenHistory: greenHistory(),
     prereg: preregOf(),
@@ -563,7 +565,75 @@ describe('O68-01 operator fix 2: a commit that only ADDS a prereg file needs no 
   });
 });
 
-// ---- stage 2: records, oracle-first, record_missing ------------------------
+// ---- O68-15: a malformed record is a finding, never a fallback ------------
+
+describe('O68-15: a record that does not parse is record_unparsable and the record stage stops', () => {
+  it('a record beside a code edit makes the gate name it (red)', () => {
+    const v = verdictOf((c) => {
+      // The round's record file is there but does not parse: the context reports it, the newest record would be the PREVIOUS round.
+      c.unparsable = [RECORD_FILE];
+      c.latest = null;
+      c.newRecords = [];
+    });
+    expect(v.violations).toContain(`record_unparsable:${RECORD_FILE}`);
+    // It never falls back to the previous round's record: the run's stages are not judged for it.
+    expect(v.violations).not.toContain('record_missing');
+  });
+
+  it('the green twin: no unparsable record, no record_unparsable', () => {
+    const v = verdictOf();
+    expect(v.violations.filter((x) => x.startsWith('record_unparsable'))).toEqual([]);
+  });
+});
+
+// ---- O68-12 (engine half): an accepted case must have been failing ------
+
+describe('O68-12: an accepted case the fresh run did not see fail is bound to nothing', () => {
+  const acceptedFactory = (runStatus: string) => (c: Ctx): void => {
+    const cases = latestOf(c).rec.cases.map((x) => (x.id === PASS_CASE ? { ...x, status: 'accepted' } : x));
+    c.latest = {
+      path: RECORD_FILE,
+      rec: goodRecord({
+        cases,
+        accepted_findings: [
+          { case: PASS_CASE, finding_id: RULING, reason: 'the clause differs and the ruling accepts it' },
+        ],
+      }),
+    };
+    // The accepted case is NOT failing in the fresh run: the previous round's passing value, under the record's status.
+    c.prevCases = { ...clone(c.prevCases), [PASS_CASE]: { status: 'accepted', got_sha: sha(11) } };
+    runOrThrow(c).cases = runOrThrow(c).cases.map((x) => (x.id === PASS_CASE ? { ...x, status: runStatus } : x));
+  };
+
+  it('a case accepted in the record that the run reports pass is red', () => {
+    const v = verdictOf(acceptedFactory('pass'));
+    expect(v.violations).toContain(`accepted_case_was_not_failing:${PASS_CASE}`);
+  });
+
+  it('the green twin: the run reports that case fail (the finding covers a red value)', () => {
+    const v = verdictOf(acceptedFactory('fail'));
+    expect(v.violations.filter((x) => x.startsWith('accepted_case_was_not_failing'))).toEqual([]);
+  });
+
+  it('a case of a group the run never ran has nothing to compare and is not judged', () => {
+    const v = verdictOf((c) => {
+      const cases = latestOf(c).rec.cases.map((x) => (x.id === ACCEPTED_CASE ? { ...x, status: 'accepted' } : x));
+      c.latest = {
+        path: RECORD_FILE,
+        rec: goodRecord({
+          cases,
+          accepted_findings: [
+            { case: ACCEPTED_CASE, finding_id: RULING, reason: 'the clause differs and the ruling accepts it' },
+          ],
+        }),
+      };
+      c.prevCases = { ...clone(c.prevCases), [ACCEPTED_CASE]: { status: 'accepted', got_sha: sha(12) } };
+      runOrThrow(c).cases = runOrThrow(c).cases.filter((x) => x.id !== ACCEPTED_CASE);
+    });
+    expect(v.violations.filter((x) => x.startsWith('accepted_case_was_not_failing'))).toEqual([]);
+  });
+});
+
 
 describe('stage 2: checkRecordsAddOnly, checkOracleFirst, recordMissing', () => {
   it('a modified record is refused by path', () => {

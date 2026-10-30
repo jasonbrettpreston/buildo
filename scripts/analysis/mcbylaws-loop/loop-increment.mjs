@@ -63,8 +63,14 @@ export function greenIncrements(records) {
   return [...seen];
 }
 
+/**
+ * The current increment is green when every case in scope reaches it is green, the floors hold and the canary went red. O68-17: an
+ * increment that is not exactly one known id is refused by name (an unknown id would put every group out of scope and read green).
+ * PURE.
+ */
 export function incrementGreen({ increment, ids, groups, cases, floorsOk, canaryOk }) {
   const at = ids.indexOf(increment);
+  if (!isIncrementId(increment, ids)) return { green: false, reasons: ['increment_not_one_id'] };
   const inScope = new Set();
   for (const g of groups) {
     if (g.introduced_in === 'baseline' || (at >= 0 && ids.indexOf(g.introduced_in) >= 0 && ids.indexOf(g.introduced_in) <= at)) {

@@ -2,12 +2,40 @@
 // SPEC LINK: ~/Buildo-scratch/mcbylaws/MB-68/plan.md section 3 (the regression set ratchet, G68-01 case_missing, G68-02 ruling lookup)
 // Pure functions return string[] of violation codes (empty = green); a code with a detail is `code:detail`.
 // The only disk access is mcbylaws/loop/regression-set.json and mcbylaws/loop/data/ids-<group>.json, resolved under the root passed in.
+// O68-14: a group id outside SAFE_ID_RE (or `.` / `..`) throws on load and save; O68-21: every write is temp name + rename, ids first.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const SET_REL = 'mcbylaws/loop/regression-set.json';
 const IDS_DIR_REL = 'mcbylaws/loop/data';
+
+/**
+ * The one id form an ids file may hold (O68-14): letters, digits, `.`, `_` and `-`, and never `.` or `..` alone. A group id outside it
+ * would escape mcbylaws/loop/data (`ids-../../escape.json`), so load and save both throw on it.
+ */
+const SAFE_ID_RE = /^[A-Za-z0-9._-]+$/;
+
+export function assertSafeGroupId(id) {
+  if (typeof id !== 'string' || !SAFE_ID_RE.test(id) || id === '.' || id === '..') {
+    throw new Error(`unsafe_id:group:${String(id)}`);
+  }
+  return id;
+}
+
+/** The ids file of one group under root, after the id guard. */
+const idsFileOf = (root, groupId) => path.join(root, IDS_DIR_REL, `ids-${assertSafeGroupId(groupId)}.json`);
+
+/** O68-21: the bytes reach the name only once whole (temp name in the same directory, then rename over it). */
+function writeAtomic(file, text) {
+  const tmp = `${file}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
+  try {
+    fs.writeFileSync(tmp, text, { flag: 'wx' });
+    fs.renameSync(tmp, file);
+  } finally {
+    fs.rmSync(tmp, { force: true });
+  }
+}
 
 /** M-343: a ruling whose register status is RATIFIED or RULED is authority, the same as --accept --ruling. PURE. */
 export function isAuthorityStatus(status) {
@@ -69,7 +97,8 @@ export function loadRegression(root, readText = (p) => fs.readFileSync(p, 'utf8'
   }
   if (!parsed || !Array.isArray(parsed.groups)) throw new Error(`data_missing: ${file}`);
   const groups = parsed.groups.map((g) => {
-    const groupFile = path.join(root, IDS_DIR_REL, `ids-${g.id}.json`);
+    // O68-14: the group id names the ids file, so an id that could escape the data dir throws before any read
+    const groupFile = idsFileOf(root, g && g.id);
     let ids;
     try {
       ids = JSON.parse(readText(groupFile));
@@ -87,14 +116,18 @@ export function loadRegression(root, readText = (p) => fs.readFileSync(p, 'utf8'
   };
 }
 
-/** Write the set (without ids) and one ids file per group under `root`, creating directories. */
+/**
+ * Write the set (without ids) and one ids file per group under `root`, creating directories.
+ * O68-21: the ids files go FIRST, then the set, each whole-or-absent (temp name + rename): a crash leaves the set that still names the
+ * ids as they were, never ids that name a set the run never wrote. O68-14: a group id that could escape the data dir throws (the whole
+ * set is refused before a byte is written, so the guard runs over every group first).
+ */
 export function saveRegression(root, set) {
+  const groups = set.groups.map((g) => ({ id: assertSafeGroupId(g && g.id), ids: g.ids }));
   fs.mkdirSync(path.join(root, IDS_DIR_REL), { recursive: true });
   const onDisk = { ...set, groups: set.groups.map(({ ids, ...rest }) => rest) };
-  fs.writeFileSync(path.join(root, SET_REL), JSON.stringify(onDisk, null, 2) + '\n');
-  for (const g of set.groups) {
-    fs.writeFileSync(path.join(root, IDS_DIR_REL, `ids-${g.id}.json`), JSON.stringify(g.ids) + '\n');
-  }
+  for (const g of groups) writeAtomic(idsFileOf(root, g.id), JSON.stringify(g.ids) + '\n');
+  writeAtomic(path.join(root, SET_REL), JSON.stringify(onDisk, null, 2) + '\n');
 }
 
 /** The ratchet: internal integrity, active-vs-pending, and nothing lost against `base` except by an authority removal. PURE. */

@@ -145,6 +145,40 @@ describe('checkDecision: accept / revert and the findings it carries', () => {
     );
     expect(v).toEqual([]);
   });
+
+  // O68-12: an accepted finding must be bound to a case OF THIS RECORD.
+  it('a finding whose case is not one of the record cases is finding_case_unknown (red)', () => {
+    const v = M.checkDecision(
+      rec({
+        cases: [{ id: 'c-5', status: 'accepted' }],
+        accepted_findings: [{ case: 'c-404', finding_id: 'M-323', reason: LONG }],
+      }),
+      RULINGS,
+    );
+    expect(v).toContain('finding_case_unknown:c-404');
+    // the accepted case it was meant to cover is still unbacked
+    expect(v).toContain('accepted_case_without_finding:c-5');
+  });
+  it('the green twin: a finding naming a record case raises no finding_case_unknown', () => {
+    const v = M.checkDecision(
+      rec({
+        cases: [{ id: 'c-5', status: 'accepted' }],
+        accepted_findings: [{ case: 'c-5', finding_id: 'M-323', reason: LONG }],
+      }),
+      RULINGS,
+    );
+    expect(v.filter((x: string) => x.startsWith('finding_case_unknown'))).toEqual([]);
+  });
+  it('a case-less finding raises finding_case_missing and a dangling-colon-free id line, never finding_case_unknown', () => {
+    const v = M.checkDecision(
+      rec({ accepted_findings: [{ finding_id: 'zzz', reason: LONG }] }),
+      RULINGS,
+    );
+    expect(v).toContain('finding_case_missing');
+    expect(v).toContain('finding_id_not_in_register');
+    expect(v).not.toContain('finding_id_not_in_register:');
+    expect(v.filter((x: string) => x.startsWith('finding_case_unknown'))).toEqual([]);
+  });
 });
 
 describe('checkRun: no empty runs, no skips, no green-looking canary', () => {
@@ -253,11 +287,10 @@ describe('mutateExpected: one mutation per value type', () => {
     expect(out).toEqual({ a: 2, b: 2 });
     expect(src).toEqual({ b: 2, a: 1 });
   });
-  it('an empty object is left empty and is a copy', () => {
+  it('an empty object becomes the canary marker, so the canary never compares it to itself unchanged (O68-20)', () => {
     const src: Record<string, unknown> = {};
-    const out = M.mutateExpected(src);
-    expect(out).toEqual({});
-    expect(out).not.toBe(src);
+    expect(M.mutateExpected(src)).toEqual({ __canary__: true });
+    expect(src).toEqual({});
   });
 });
 
@@ -286,6 +319,48 @@ describe('runCanary: the gate runs it, it is never stored', () => {
   });
   it('an empty case list observes none', () => {
     expect(M.runCanary([], strict)).toEqual({ id: null, observed: 'none' });
+  });
+  // O68-20: the canary picks the first case whose mutated value DIFFERS from the original (by the run's own canon compare),
+  // not merely the first case that passes: a case whose expected value cannot be mutated would always read green.
+  it('the first case whose expected value {} still mutates gives observed fail (O68-20)', () => {
+    const can: Compare = (expected, got) => (JSON.stringify(expected) === got ? 'pass' : 'fail');
+    const cases: CanaryCase[] = [{ id: 'c-0', expected: {}, got: '{}' }];
+    expect(M.runCanary(cases, can)).toEqual({ id: 'c-0', observed: 'fail' });
+    expect(M.runCanary(cases, strict)).toEqual({ id: null, observed: 'none' });
+  });
+  it('a first case that passes but cannot be mutated is skipped for the next one that can (O68-20)', () => {
+    const can: Compare = (expected, got) => (JSON.stringify(expected) === got ? 'pass' : 'fail');
+    const mk = (s: string): unknown => JSON.parse(s);
+    const cases: CanaryCase[] = [
+      { id: 'c-0', expected: mk('{"a":{"b":{}}}'), got: '{"a":{"b":{}}}' }, // passes, but canon({a:{b:{}}}) can still differ: mutated differs
+      { id: 'c-1', expected: mk('{"a":1}'), got: '{"a":1}' },
+    ];
+    const out = M.runCanary(cases, can);
+    expect(out.observed).toBe('fail');
+    expect(['c-0', 'c-1']).toContain(out.id);
+  });
+  it('a compare whose canon ignores the mutation skips to a case it does catch, and all-ignoring observes pass (O68-20)', () => {
+    // canon drops the `__canary__` key and the trailing tilde: the first case's mutation is invisible, the second is not
+    const partial: Compare = (expected, got) => {
+      const seen = JSON.parse(got);
+      const strip = (v: unknown): unknown => {
+        if (Array.isArray(v)) return v.map(strip);
+        if (v !== null && typeof v === 'object') {
+          const o: Record<string, unknown> = {};
+          for (const k of Object.keys(v as Record<string, unknown>).sort()) if (k !== '__canary__') o[k] = strip((v as Record<string, unknown>)[k]);
+          return o;
+        }
+        return typeof v === 'string' ? v.replace(/~$/, '') : v;
+      };
+      return JSON.stringify(strip(expected)) === JSON.stringify(seen) ? 'pass' : 'fail';
+    };
+    const cases: CanaryCase[] = [
+      { id: 'c-0', expected: {}, got: '{}' },
+      { id: 'c-1', expected: 41, got: '41' },
+    ];
+    expect(M.runCanary(cases, partial)).toEqual({ id: 'c-1', observed: 'fail' });
+    const blind: Compare = () => 'pass';
+    expect(M.runCanary(cases, blind)).toEqual({ id: 'c-0', observed: 'pass' }); // no mutation is caught: the canary stays green, so the gate is red
   });
 });
 

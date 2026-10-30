@@ -1,0 +1,1 @@
+O9-O11 (O68-10..22 minus 16 done earlier): npx vitest run src/tests/mcbylaws-loop -> 491 passed. Claude hand fixes (logged): missing HERE/fileURLToPath import in loop-gate-run.mjs, canary loop in loop-decide.mjs, removal of parseRulingsOf, one-line prereg rev and Set/Array scope in context/eval earlier.

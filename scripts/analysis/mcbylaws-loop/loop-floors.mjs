@@ -11,12 +11,19 @@ const isAuthority = (rulings, id) => Boolean(rulings) && AUTHORITY.has(rulings.g
 const clone = (x) => JSON.parse(JSON.stringify(x));
 
 /**
- * Every floor line as "<line>" -> n. A count floors file ({lines: {...}}) returns a copy of its lines; a percent floors file gives
+ * Every floor line as "<line>" -> n. A count floors file ({lines: {...}}) returns a copy of its lines plus its OWED baselines as
+ * "owed_baseline <line>" (O68-11: lowering or deleting a baseline needs a ruling); a percent floors file gives
  * "overall <m>", "pooled articles <m>" (when a pooled block exists) and "article <a> <m>" for every article. PURE.
  */
 export function flattenFloors(floors) {
   const f = floors || {};
-  if (f.lines && typeof f.lines === 'object') return { ...f.lines };
+  if (f.lines && typeof f.lines === 'object') {
+    const out = { ...f.lines };
+    for (const line of Object.keys(f.owed_baseline || {})) {
+      if (typeof f.owed_baseline[line] === 'number') out[`owed_baseline ${line}`] = f.owed_baseline[line];
+    }
+    return out;
+  }
   const out = {};
   for (const m of METRICS) {
     if (f.overall && f.overall[m] != null) out[`overall ${m}`] = f.overall[m];
@@ -30,14 +37,23 @@ export function flattenFloors(floors) {
   return out;
 }
 
-/** A named line excuses a key if they are equal or the key is that line with a metric after it ("article 150.8.60" -> "article 150.8.60 accuracy"). */
-const namesLine = (line, key) => typeof line === 'string' && (line === key || key.startsWith(`${line} `));
+/**
+ * O68-13: a named line excuses a key only if it is the key exactly. A key minus its metric suffix ("overall" for "overall
+ * accuracy") names that one key, so it counts as a known line, but it never excuses the other metric of the same line; a bare
+ * prefix such as "article" names nothing at all (see checkFloorEdit's ruling_line_unknown).
+ */
+const namesLine = (line, key) => typeof line === 'string' && line === key;
+
+/** O68-13: the keys one named line can point at: the key itself and the key minus its metric suffix. */
+const knownLines = (line, keys) =>
+  typeof line === 'string' && keys.some((key) => key === line || METRICS.some((m) => key === `${line} ${m}`));
 
 /**
  * An edit from base to cur (base null: nothing to compare, green). The history may only grow (shorter -> rulings_history_shortened);
  * each new entry's ruling must be RATIFIED or RULED in `rulings` (else ruling_not_authority:<ruling>, and it excuses nothing: a forged
- * ruling cannot cover a fall, M-322/G68-02). Only the lines named by the authority entries may fall or disappear; any other base line
- * whose value fell or vanished is floor_lowered_without_ruling:<line>. PURE.
+ * ruling cannot cover a fall, M-322/G68-02). Only the lines named by the authority entries may fall or disappear; a named line that is
+ * not a base floor key (nor a key minus its metric suffix) is ruling_line_unknown:<line> and excuses nothing (O68-13: a bare "article"
+ * names no floor). Any other base line whose value fell or vanished is floor_lowered_without_ruling:<line>. PURE.
  */
 export function checkFloorEdit(base, cur, rulings) {
   if (!base) return [];
@@ -48,17 +64,22 @@ export function checkFloorEdit(base, cur, rulings) {
   const after = Array.isArray(c.rulings) ? c.rulings : [];
   if (after.length < before.length) out.push('rulings_history_shortened');
   const added = after.length < before.length ? [] : after.slice(before.length);
+  const was = flattenFloors(b);
+  const now = flattenFloors(c);
+  const known = (line) => knownLines(line, Object.keys(was));
   const named = [];
   for (const entry of added) {
     const id = entry && entry.ruling;
     if (isAuthority(rulings, id)) {
-      for (const x of (entry && Array.isArray(entry.lines) ? entry.lines : [])) if (x && typeof x.line === 'string') named.push(x.line);
+      for (const x of (entry && Array.isArray(entry.lines) ? entry.lines : [])) {
+        if (!x || typeof x.line !== 'string') continue;
+        if (known(x.line)) named.push(x.line);
+        else out.push(`ruling_line_unknown:${x.line}`);
+      }
     } else {
       out.push(`ruling_not_authority:${id}`);
     }
   }
-  const was = flattenFloors(b);
-  const now = flattenFloors(c);
   for (const line of Object.keys(was)) {
     const old = was[line];
     const next = now[line];

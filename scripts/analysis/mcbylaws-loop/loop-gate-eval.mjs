@@ -106,6 +106,24 @@ function findingCases(rec) {
   return out;
 }
 
+/**
+ * O68-12: a case the record marks `accepted` was green in the fresh run by a FINDING, so the fresh run must have reported it `fail`
+ * (a finding covers a red value; an accepted case that the run does not see fail is bound to nothing). A case the run did not carry
+ * (a group it never ran) has nothing to compare and is not judged here. PURE.
+ */
+function acceptedNotFailing(rec, run) {
+  const ran = new Map();
+  for (const item of asArray(run.cases)) if (item && typeof item.id === 'string') ran.set(item.id, item);
+  const out = [];
+  for (const item of asArray(rec && rec.cases)) {
+    if (!item || typeof item.id !== 'string' || statusOf(item.status) !== 'accepted') continue;
+    const fresh = ran.get(item.id);
+    if (!fresh) continue;
+    if (statusOf(fresh.status) !== 'fail') out.push(`accepted_case_was_not_failing:${item.id}`);
+  }
+  return out;
+}
+
 function dedupe(list) {
   return [...new Set(list)];
 }
@@ -232,6 +250,7 @@ function stageRun(ctx, rec) {
       out.push(`record_differs_from_run:${item.id}`);
     }
   }
+  out.push(...acceptedNotFailing(rec, run));
   return { violations: out, notes, declaredIds };
 }
 
@@ -287,6 +306,11 @@ export function evaluateGate(ctx) {
   if (scope.outOfScope) return { violations: [], notes: [OUT_OF_SCOPE] };
   const violations = [...scope.violations];
   if (scope.early) return { violations: dedupe(violations), notes: [] };
+
+  // O68-15: a record at the round's revision that does not parse is a finding of its own, and it STOPS the record stage: a
+  // malformed record can never fall back to the previous round's record (that would judge a round nobody recorded).
+  const unparsable = asArray(ctx.unparsable).map((p) => `record_unparsable:${p}`);
+  if (unparsable.length) return { violations: dedupe([...violations, ...unparsable]), notes: [] };
 
   const rec = ctx.latest ? ctx.latest.rec : null;
   if (!rec) return { violations: dedupe([...violations, 'record_missing']), notes: [] };
