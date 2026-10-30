@@ -152,11 +152,11 @@ What every step declares and does, whatever its archetype.
 
 - **core.8** EXTERNALIZED. Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero. Step variables are named `<slug>_<name>`; a name shared by two or more steps comes only from the closed `SHARED_LOGIC_VARIABLES` map, and legacy shared names are renamed by migration with values carried. Unit constants and definitional windows are pinned (min = max). Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables. A missing `logic_variables` row fails the run; `on_invalid` is `fail` for any verdict- or write-affecting variable. A variable is retired by a `config.retired[]` declaration, never deleted. A model constant ratified elsewhere becomes a variable with its existing value as default.
   *Why:* The operator tunes the system from the admin page; a literal in code is a setting nobody can see or change.
-  Rules: `R-A` `R-G` `R-AW` `R-CV` `R-DR` `R-EB` `Rule-3` `R-FC` `R-FE` `R-JW` `R-KN` · history: `R-AU` `Rule-3-addendum-R-AU` `P4` `GAP-G-4` `W4A-R1` `W4A-R3` `Q-C3`
+  Rules: `R-A` `R-G` `R-AW` `R-CV` `R-DR` `R-EB` `Rule-3` `R-FC` `R-FE` `R-JW` `R-KN` `R-KR` · history: `R-AU` `Rule-3-addendum-R-AU` `P4` `GAP-G-4` `W4A-R1` `W4A-R3` `Q-C3`
 
 - **core.9** Compute is pure. It receives `ctx` (config with `$meta`, clock, catalog, descriptor, `withinLimit`), reports every check value through `ctx.report(id, value)` and returns rows, a `write_plan` or `records_meta`. The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict. An ASSERT may read `ctx.pool` read-only over declared relations (R-CA (i)). Compute never branches on PostGIS; it never reads `logic_variables` SQL; a config value aliased inside a check body still counts as compute deciding (PURITY-G7). Gate E purity codes PURITY-G0…PURITY-G13 must read zero for a new conversion; the escape-hatch ban is an ast-grep rule.
   *Why:* Pure compute can be tested with plain inputs, replayed from captures and reviewed without a database.
-  Rules: `R-W` `R-BZ` `R-CA` `R-CE` `R-CF` `R-CM` `R-CX` `R-CY` `R-DC` `Rule-2` `Rule-2-addendum-R-W` `A2` `K3` `R-KF` `R-KJ` · history: `P2`
+  Rules: `R-W` `R-BZ` `R-CA` `R-CE` `R-CF` `R-CM` `R-CX` `R-CY` `R-DC` `Rule-2` `Rule-2-addendum-R-W` `A2` `K3` `R-KF` `R-KJ` `R-KT` · history: `P2`
 
 - **core.10** Compute reads the `ctx` shape the runner's dispatch for its descriptor actually builds (a multi-primary INGESTOR gets `acquired.primaries[id]` and `written.by_target.<table>`, not the flat shape), and its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers.
   *Why:* A hand-built ctx in a test can pass while the real run reads zeros.
@@ -164,7 +164,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.11** Output is observable. `emits[]` equals what the captures emit and stays flat; dynamic-keyed telemetry rides a check row's `detail`, capped by a variable. A step that can skip declares a `when:"pre"` check; one that can scope-defer also declares a `deferred_to_full` terminal. Every run row carries the propagated `chain_run_id`.
   *Why:* A skipped or deferred run must say why in its own audit table, and runs correlate by id, not by time window.
-  Rules: `R-P` `R-U` `R-BU` `R-EP` · history: `Q-W4G-3`
+  Rules: `R-P` `R-U` `R-BU` `R-EP` `R-KS` · history: `Q-W4G-3`
 
 - **core.12** Declare write discipline per write target, never per step: mechanic ⊥ guard ⊥ scope ⊥ retract. A banned write shape ships only with a dated, SHA-anchored `grandfathered.json` entry naming its why; guard `none` needs a why. A target on an RLS-enabled table declares `guards.requires: rls_bypass_or_policy`. One upsert binds at most 65,535 parameters, so the batch keeps the measured worst case under it.
   *Why:* Write safety differs per table; a per-step answer is wrong for at least one target.
@@ -446,7 +446,7 @@ How the repo machinery runs.
 
 - **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
   *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
-  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` · history: `R-BV`
+  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` `R-KP` · history: `R-BV`
 
 - **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
   *Why:* Ceremony is spent where an archetype is still new.
@@ -454,7 +454,7 @@ How the repo machinery runs.
 
 - **x-tooling.3** Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.
   *Why:* Promises that live only in prose get forgotten.
-  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ`
+  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ` `R-KU`
 
 - **x-tooling.4** This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.
   *Why:* Spec 120's test, kept from Spec 121 M2.
@@ -499,11 +499,11 @@ Validator messages that name their rule directly:
 | `bind message has N parameter formats` | Batch × bound columns exceeds 65,535. | R-CU |
 | Before-image files appear under `docs/reports/golden/*/before-image/` after tests | The test sandbox `installBeforeImageSandbox` in `src/tests/setup.ts`. | R-CO |
 
-## 6. Rules with no or partial machine check (58 in force)
+## 6. Rules with no or partial machine check (63 in force)
 
-"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 28 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 33 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 405 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 58 none (see the glossary).
+Enforcement across all 410 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 63 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
@@ -565,6 +565,11 @@ Enforcement across all 405 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30
 | R-KN | none | core.8 | OWED MB-67: ast-grep arm red on maxbld-invariants.mjs and LIFT_ZONES (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
 | R-KO | none | x-rulings.1 | OWED MB-67: card-cite-check.mjs; brief command check vs bash_allow (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
 | R-KQ | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KP | none | x-tooling.1 | OWED MB-67: pre-push summary + mcbylaws/APPROVED gate arm (MB-67) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KR | none | core.8 | OWED MB-67: G13 ast-grep arm widened (MB-67) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KS | none | core.11 | OWED MB-31: trace test in catalogue lock (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KT | none | core.9 | OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KU | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built) |
 
 ## 7. History
 

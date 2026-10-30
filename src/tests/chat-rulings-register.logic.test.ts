@@ -675,3 +675,34 @@ describe('CHAT-211 (batch 2026-10-30-batch-aj): 40 rulings recorded; behaviour l
     }
   });
 });
+
+// CHAT-212 (batch 2026-10-30-batch-ak): each Rule text line is present in the register that carries it and cites its decision.
+describe('CHAT-212 (batch 2026-10-30-batch-ak): 11 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["R-KP", "A", "2026-10-30-batch-ak#CHAT-212.ANCHOR", "The trust anchor is the operator at pre-push: protected paths are listed in mcbylaws/protected-paths.json (to be built by MB-67) and the operator approves a one-screen summary of their changes; Layer 2/3 work is allowed only when the tracked file mcbylaws/APPROVED exists (absent today) on the McBylaws base branch, committed by the operator (QUEUE:21, F-41); the operator is authenticated by a passphrase-protected signing key, used for the APPROVED commit and for protected-file approvals (enforcement OWED MB-67)."],
+    ["R-KR", "A", "2026-10-30-batch-ak#CHAT-212.R4-07", "R4-07 The literal gate covers all Layer 2/3 code and data modules except the declared catalogue, settings and switchboard files. Numbers quoted in this plan are for reading only; at run time every one is read from Phase 2."],
+    ["R-KS", "A", "2026-10-30-batch-ak#CHAT-212.R4-08", "R4-08 Trace is written by the evaluator from what it actually read (row ids resolved at run time), never tagged by code."],
+    ["R-KT", "A", "2026-10-30-batch-ak#CHAT-212.R4-09", "R4-09 Allowlists, not denylists. The Layer 3 step may import only the evaluator and the declared helpers (closure test, G1), and may read only stored Phase 2 tables, the catalogue, settings and switchboard (an input allowlist checked at run time). Anything else FAILs, whatever its name."],
+    ["R-KU", "A", "2026-10-30-batch-ak#CHAT-212.R4-10", "R4-10 MB-73 cannot be gamed by a green from the past or an empty test. Ids are found by pattern in every file the queue cites, including the answered cards (CARD-*.answered.md), not by typed ranges.; Each green is bound to (artifact blob hash, input hashes, commit), and any change invalidates it.; Each promise's test has the red run already required (red-first); skipped is never green.; Increment scope is read from the register row, not declared by the author.; The check is a required status at landing and in CI, as well as at pre-push."],
+    ["M-394", "M", "2026-10-30-batch-ak#CHAT-212.R4-01", "R4-01 Routes are Phase 2's and complete. as_of_right (overlay or major street), coa_required (a minor-variance route), not_permitted (the zone does not permit the type, or a lot gate applies, each with its reason). The route uses every Phase 2 condition for the class, never one flag. The major-street route stays unconfirmed and is shown as unconfirmed (never as_of_right, and never relabelled coa_required, because outside the overlay the major-street route is the apartment-building permission, not a houseplex one; grounder r4) with a note until on_policy_road is verified against the by-law's major-street map: an unverified equivalence never earns an as-of-right label."],
+    ["M-395", "M", "2026-10-30-batch-ak#CHAT-212.R4-02", "R4-02 Varied clauses are a list, per option. It covers the permission (10.20.20.40(1)), any option-dependent limit (for example 600.60.40(2)) and the O-3 FSI reading where it applies. The 5–6-unit class uses its own stored Phase 2 limits per route and option, never the 2–4 houseplex's."],
+    ["M-396", "M", "2026-10-30-batch-ak#CHAT-212.R4-03", "R4-03 Precedent is classified before it is shown. The precedent query runs on classified applications only. It shows approved AND refused counts, and splits by the date the governing amendments came into force. Until classified it is not displayed. The SIX-COA oracle tests route classification only where an examiner notice cites the permission clause (coa_notice_variances), never \"approved therefore required\"."],
+    ["M-397", "M", "2026-10-30-batch-ak#CHAT-212.R4-04", "R4-04 Options and headline. Options are generated per lot from stored Phase 2 rows. A 3-storey option needs a stored not_applicable or unlimited storey cap with its clause (unlimited is stored on 107,124 lots; grounder r4); an undecided cap gives no option (R3-01). The headline is the largest option under the capped O-3 reading, with the uncapped reading shown beside it. It is ranked by GFA, the by-law measure the applicant is compared on, and the basement's livable area and units are shown on their own line, never hidden. EXC-FSI is due before the houseplex increment closes, and the dual reading also applies to SIX-COA."],
+    ["M-398", "M", "2026-10-30-batch-ak#CHAT-212.R4-05", "R4-05 The basement is read, not assumed. Whether it is excluded from GFA, whether it counts as a storey and whether its units count all come from the Phase 1/2 rows. Site conditions (groundwater, depth) are not modelled and are disclosed as a site fact (M-169). A0277 is a test case, not the template."],
+    ["M-399", "M", "2026-10-30-batch-ak#CHAT-212.R4-06", "R4-06 S-1 direction. S-1 is the minimum floor-to-floor plus a declared roof/parapet allowance (both cited, or a card). This gives the theoretical maximum storey count (a design choice taken as met and disclosed, M-172). The 2-storey option is always shown beside it. This replaces the earlier \"typical storey height\", as the operator directed (\"calculate and show both\")."],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, cite, rule] of CASES) {
+    it(`${row} carries ${cite} and its Rule text`, () => {
+      expect(TEXT[reg], cite).toContain(cite);
+      expect(TEXT[reg] + L131 + M + A + S68, cite + ' rule text').toContain(rule);
+    });
+  }
+  it('the new 124a rows are mapped to Spec 132 lines that exist', () => {
+    for (const id of ["R-KP","R-KR","R-KS","R-KT","R-KU"]) {
+      const e = map.rules.find((r) => r.id === id);
+      expect(e, id).toBeTruthy();
+      expect(map.lines.some((l) => l.id === e?.handbook_line), id).toBe(true);
+    }
+  });
+});

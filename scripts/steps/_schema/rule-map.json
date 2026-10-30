@@ -7070,6 +7070,76 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-KP",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The trust anchor is the operator at pre-push; the hold fails closed.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KR",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The literal gate covers all Layer 2/3 code and data modules (R4-07).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KS",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.11",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Trace is written by the evaluator (R4-08).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KT",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Allowlists, not denylists (R4-09).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KU",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "MB-73 cannot be gamed by a green from the past or an empty test (R4-10).",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -7462,6 +7532,31 @@
       "id": "R-KQ",
       "class": "none",
       "reason": "OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KP",
+      "class": "none",
+      "reason": "OWED MB-67: pre-push summary + mcbylaws/APPROVED gate arm (MB-67) (recorded 2026-10-30-batch-ak, lock not yet built)"
+    },
+    {
+      "id": "R-KR",
+      "class": "none",
+      "reason": "OWED MB-67: G13 ast-grep arm widened (MB-67) (recorded 2026-10-30-batch-ak, lock not yet built)"
+    },
+    {
+      "id": "R-KS",
+      "class": "none",
+      "reason": "OWED MB-31: trace test in catalogue lock (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built)"
+    },
+    {
+      "id": "R-KT",
+      "class": "none",
+      "reason": "OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built)"
+    },
+    {
+      "id": "R-KU",
+      "class": "none",
+      "reason": "OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built)"
     }
   ]
 }
