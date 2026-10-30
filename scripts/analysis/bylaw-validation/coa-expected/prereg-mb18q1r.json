@@ -1,0 +1,81 @@
+{
+ "$comment": "M-321 pre-registration, round MB-18 / CHAT-210.MB17-Q1R (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-18, committed alone before the change). Rule (operator \"Q1 yes\", 2026-10-30, ~/Buildo-scratch/p2close/CARDS-2026-10-30.answered.md MB17-Q1R; recorded 270f9462): MB17-Q1 (\"an exception applies only to the building types it names\", CHAT-209) is WITHDRAWN because it contradicts M-180(1) (docs/specs/01-pipeline/69a_mcbylaw_register.md:295, operator 2026-10-18; by-law 10.40.40.1(5), 10.40.30.1(1), 10.20.40.1(6)): a lot exception's unit for a detached house also applies to the detached houseplex, and M-180(2) the more permissive prevails. The MB17-Q1 part of commit 1d4b20d9 is reversed by this NEW commit (no reset, no amend): vocab.exception_type_binding, the evaluator's exceptionNamedOnly / namedOnlyFor / env.namedOnly reading and the evaluatorVocab line are removed, restoring the M-180(1) alias and parent-type reading for the four setback targets. The MB-18 platform street-side targets and driveway (D) arms of 1d4b20d9 stay. A0399 re-check under M-180: the scorer reads A0399/24EYK as a detached house (900.6.10(23)(D) side 0.6 m MATCH either way), so no scorer row moves; the engine on the 4-unit detached houseplex of RM exception 900.6.10(23) returns the 0.6 m side yard of (D)(i) again (it returned the 1.2 m base of 10.80.40.70(3)(A) under MB17-Q1); the 2- and 3-unit houseplex stays at 1.2 m ((D)(ii), M-252). Measured on a scratch worktree at 270f9462 with the reversal applied: 0 rows move on the 172 set (698 rows), the 4d set (496), the blind coa-2026-d set (123) and the cumulative fold-in (821); every class and City figure is unchanged, and the floors lines are identical (the OWED lines stay OWED). Layer 2 (no DB write here; the MB-26 night has not run): no resolve_bylaws cell changes against the stored witness, since MB17-Q1 never reached it.",
+ "schema": "coa-round-prereg-v1",
+ "round": 20,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-18; ~/Buildo-scratch/p2close/CARDS-2026-10-30.answered.md MB17-Q1R",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
