@@ -59,6 +59,7 @@ type Prereg = {
   $comment: string;
   plan_ref: string;
   increment: string;
+  group?: string | undefined;
   expected_moves: { clause: string; from: string; to: string }[];
   expected_totals: { [k: string]: number };
   rows_touched?: { id: string; increment: string | null }[] | undefined;
@@ -231,7 +232,8 @@ const PROTECTED_REL = 'mcbylaws/protected-paths.json';
 const RECORD_1 = 'docs/reports/loop-records/1/round-01.json';
 const RECORD_2_1 = 'docs/reports/loop-records/2/round-01.json';
 const RECORD_2_2 = 'docs/reports/loop-records/2/round-02.json';
-const PREREG_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-2.json';
+// O68-05: the prereg is found by FILE NAME, prereg-MB-<digits>-<record round>.json: the round here is 1.
+const PREREG_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-1.json';
 const PASS_CASE = 'c-pass';
 const ACCEPTED_CASE = 'c-acc';
 
@@ -313,14 +315,16 @@ function recordPayload(over: { [k: string]: unknown } = {}): Omit<LoopRec, 'bind
 }
 
 function preregPayload(over: { [k: string]: unknown } = {}): Prereg {
+  const round = typeof over.round === 'number' ? over.round : 1;
   return {
     schema: 'coa-round-prereg-v1',
     task: 'MB-68',
-    round: 1,
+    round,
     $comment: 'pre-registered before the round',
-    plan_ref: 'MB-68 increment 2 round 1',
+    plan_ref: `MB-68 increment 2 round ${round}`,
     increment: '2',
-    // No move is checked on the gate (the run carries no baseline side), so the round registers only its totals.
+    // O68-04: the totals below are the g-a totals of the run's rows (prereg totals are compared per group only).
+    group: 'g-a',
     expected_moves: [],
     expected_totals: { MATCH: 2 },
     // The row the round promotes (loop-increment's checkOneIncrement reads prereg.rows_touched).
@@ -489,8 +493,12 @@ const fakeRun = (): Run => ({
   canary: { id: 'g-a|1', observed: 'fail' },
   report: { violations: [], owed: [] },
   counts: { 'g-a cases': 2 },
-  baseRows: [{ group: 'g-a', id: 'g-a|1', status: 'MATCH', clause: '10.20.30.110' }],
-  // Two MATCH rows: the prereg's expected_totals { MATCH: 2 } is exactly the run's totals (the ctx nulls baseRows, so no move check).
+  // O68-04: baseRows equal curRows, so moves ARE checked and there are none; the prereg registers the g-a totals of curRows
+  // (expected_totals { MATCH: 2 }), the group its rows are in.
+  baseRows: [
+    { group: 'g-a', id: 'g-a|1', status: 'MATCH', clause: '10.20.30.110' },
+    { group: 'g-a', id: 'g-a|2', status: 'MATCH', clause: '10.20.30.113' },
+  ],
   curRows: [
     { group: 'g-a', id: 'g-a|1', status: 'MATCH', clause: '10.20.30.110' },
     { group: 'g-a', id: 'g-a|2', status: 'MATCH', clause: '10.20.30.113' },
@@ -560,6 +568,8 @@ describe('buildContext: commit mode', () => {
     // The round's own files are read at the index: prereg, bound blobs and the regression set agree with the record's inputs.
     expect(ctx.preregFile).toBe(PREREG_REL);
     expect(ctx.prereg?.increment).toBe('2');
+    expect(ctx.prereg?.group).toBe('g-a');
+    // O68-05: the join is the file name and the increment; the prereg's `round` is its own (CoA batch) counter, never the loop round.
     expect(ctx.prereg?.round).toBe(1);
     expect(ctx.preregHistory).toBeNull();
     expect(ctx.rowsTouched).toEqual([{ id: '10.20.30.110', increment: '2' }]);
@@ -571,7 +581,11 @@ describe('buildContext: commit mode', () => {
     expect(ctx.regression.cur?.groups[0]?.ids).toEqual([PASS_CASE]);
     expect(ctx.regression.base?.groups[0]?.ids).toEqual([PASS_CASE]);
     expect(ctx.baselineOwed).toEqual({});
-    expect(ctx.run?.baseRows).toBeNull();
+    // O68-04: the run's own base rows survive (computeRun supplied them), so the prereg's moves can be compared
+    expect(ctx.run?.baseRows).toEqual([
+      { group: 'g-a', id: 'g-a|1', status: 'MATCH', clause: '10.20.30.110' },
+      { group: 'g-a', id: 'g-a|2', status: 'MATCH', clause: '10.20.30.113' },
+    ]);
   });
 
   it('reads the base policy from the base copy, not the staged one', async () => {
@@ -609,6 +623,23 @@ describe('buildContext: push and ci mode', () => {
     expect(ctx.preregHistory?.preregCommits.length).toBe(1);
     expect(ctx.preregHistory?.roundCommit?.sha).toBe(gitQ(dir, ['rev-parse', 'HEAD']));
     expect(ctx.preregHistory?.preregFile).toBe(PREREG_REL);
+    // O68-04: a computeRun that supplied base rows keeps them (the ctx no longer forces null)
+    expect(ctx.run?.baseRows).toEqual([
+      { group: 'g-a', id: 'g-a|1', status: 'MATCH', clause: '10.20.30.110' },
+      { group: 'g-a', id: 'g-a|2', status: 'MATCH', clause: '10.20.30.113' },
+    ]);
+  });
+
+  it('a computeRun without base rows leaves baseRows null (the note says the moves were not checked)', async () => {
+    const dir = makeRepo();
+    seedBase(dir);
+    commitAll(dir, 'base');
+    stageRound1(dir);
+    stageAll(dir);
+
+    const { buildContext } = await loadContext();
+    const noBase = (): Run => ({ ...fakeRun(), baseRows: undefined } as unknown as Run);
+    const ctx = await buildContext({ mode: 'commit', root: dir, base: '', target: '' }, await deps({ computeRun: noBase }));
     expect(ctx.run?.baseRows).toBeNull();
   });
 
@@ -620,7 +651,10 @@ describe('buildContext: push and ci mode', () => {
     const ctx = await buildContext({ mode: 'ci', root: dir, base: '', target: '' }, await deps({ computeRun: noComputeRun, readRegisterText: () => '' }));
     expect(ctx.run).toBeNull();
     expect(ctx.latest?.path).toBe(RECORD_2_1);
-    expect(ctx.prereg?.round).toBe(1);
+    expect(ctx.prereg).not.toBeNull();
+    // O68-05: the join is the file name (the round) and the increment, never the prereg's own `round` (the CoA batch counter).
+    expect(ctx.preregFile).toBe(PREREG_REL);
+    expect(ctx.prereg?.increment).toBe(ctx.latest?.rec.increment);
     expect(ctx.regression.cur).not.toBeNull();
   });
 
@@ -661,10 +695,12 @@ describe('buildContext: push and ci mode', () => {
     writeFile(dir, RECORD_2_1, roundRecord(dir));
     const c1 = commitAll(dir, 'increment 2 round 1');
     expect(c0).not.toBe(c1);
-    // c2 (HEAD): increment 2 round 2 — the prereg amended, then the record bound to the range c1..HEAD (records excepted).
-    writeFile(dir, PREREG_REL, preregPayload({ round: 2 }));
+    // c2 (HEAD): increment 2 round 2 — the round's own prereg (its file name carries the round), then the record bound to the range
+    // c1..HEAD (records excepted).
+    const PREREG_2_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-2.json';
+    writeFile(dir, PREREG_2_REL, preregPayload({ round: 2 }));
     stageAll(dir);
-    writeFile(dir, RECORD_2_2, roundRecord(dir, { round: 2 }, [], c1));
+    writeFile(dir, RECORD_2_2, roundRecord(dir, { round: 2 }, [PREREG_2_REL], c1));
     commitAll(dir, 'increment 2 round 2');
     expect(gitQ(dir, ['rev-parse', 'HEAD^'])).toBe(c1);
 

@@ -1,0 +1,1 @@
+O1+O2+O4: seam fixes (O68-01/02/03/04/05/06/07/19, metadata class, prereg-only adds). Green: npx vitest run src/tests/mcbylaws-loop -> 439 passed. Red evidence: the panel's executed red states (698 record_differs_from_run, stale_green data:/pin keys, floor_fell for coa4d) are reproduced as new tests that fail on 0bd81659.

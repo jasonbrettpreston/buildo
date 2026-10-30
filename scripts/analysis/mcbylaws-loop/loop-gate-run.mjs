@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { checkPercentFloors } from './loop-floors.mjs';
 import { runCanary, roundsSinceThresholds } from './loop-decide.mjs';
-import { canon, gotSha, bindRecord, writeRecordExclusive, checkBound, nextRound, recordPath, sha256, RECORD_RE } from './loop-record.mjs';
+import { canon, gotSha, bindRecord, writeRecordExclusive, checkBound, nextRound, recordPath, sha256, RECORD_RE, CLASS_STATUS, statusOf } from './loop-record.mjs';
 import { loadRegression, saveRegression, removeCases } from './loop-regression.mjs';
 import { makeClassifier, loadLayer23 } from './loop-oracle.mjs';
 import { incrementGreen } from './loop-increment.mjs';
@@ -40,24 +40,26 @@ const producerOf = (group) => (group && group.producer) || {};
 const oursOf = (row) => (row && row.ours) || null;
 
 /**
- * The scorer rows of one group as gate cases: id "<notice>|<n>", the group, the printed class as `status`, the value, the reason, the
- * normalized clause, and got_sha over {status: row.class, value, reason} so the hash covers the printed class and value (G68-11). PURE.
+ * The scorer rows of one group as gate cases: id "<groupId>|<notice>|<n>" (group-qualified, O68-07: two groups that score the same
+ * notice|n never collide), the group, the gate status (statusOf of the printed class, O68-01), the printed class as `class`, the value,
+ * the reason, the normalized clause, and got_sha over {status: row.class, value, reason} so the hash covers the printed class and value
+ * (G68-11). PURE.
  */
 export function casesFromRows(groupId, rows) {
   const list = Array.isArray(rows) ? rows : [];
   return list.map((row) => {
     const ours = oursOf(row);
-    const status = row.class;
     const value = ours ? ours.value : null;
     const reason = ours ? ours.reason : null;
     return {
       group: groupId,
-      id: `${row.notice}|${row.n}`,
-      status,
+      id: `${groupId}|${row.notice}|${row.n}`,
+      status: statusOf(row.class),
+      class: row.class,
       value,
       reason,
       clause: row.clause_norm,
-      got_sha: gotSha({ status, value, reason }),
+      got_sha: gotSha({ status: row.class, value, reason }),
     };
   });
 }
@@ -137,17 +139,26 @@ export function groupsForMode(regression, mode) {
 // No floors file: no floor lines at all, in the shape reportFloors reads (so every line is PASS).
 const NO_FLOORS = () => ({ overall: {}, articles: {}, pooled: null });
 
+/**
+ * The percent floors of ONE group, or null when the group declares `"floors": "none"` (O68-03: the group has no percent floors, so
+ * its floors are skipped entirely, never failed by the no-floor rule). A group that leaves `floors` UNSET has not said which it is:
+ * that throws `producer_floors_unset: <group>` (exit 2 upstream), because silence is not "none". IO (reads the floors file).
+ */
 const floorsOf = (root, group) => {
   const file = producerOf(group).floors;
-  if (file == null) return NO_FLOORS();
+  if (file === 'none') return null;
+  if (file == null) throw new Error(`producer_floors_unset: ${group && group.id ? group.id : '<group>'}`);
   return readJson(path.isAbsolute(file) ? file : path.join(root, file));
 };
 
 /**
  * Run the mode's groups and build the run object evaluateGate reads: `{ cases, skipped, canary, report, counts, baseRows, curRows,
- * regenMismatch, groups, floorsOk }`, or null when no group runs (ci with only external groups: the CI note says those cases are not run).
+ * regenMismatch, inputsFresh, groups, floorsOk }`, or null when no group runs (ci with only external groups: the CI note says those
+ * cases are not run). curRows carry the printed CLASS (the prereg totals are by class). `inputsFresh` holds the recomputed value of every
+ * non-git input a `run --write` binds (the `data:<group>` content hashes and the `pin / <group> / <key>` values; O68-02), from the one
+ * helper the write path uses too.
  * The canary re-checks each case's own value against itself through canon, so a red canary proves the comparison detects a mutation.
- * IO (spawns the producer per group, reads floors and pins).
+ * IO (spawns the producer per group, reads floors, pins and the data files).
  */
 export function computeRun({ root, regression, mode, registerText, deps = {} }) {
   const groups = groupsForMode(regression, mode);
@@ -160,19 +171,25 @@ export function computeRun({ root, regression, mode, registerText, deps = {} }) 
   const regenMismatch = [];
   for (const group of groups) {
     const produced = runProducer(root, group, deps);
-    const floors = checkPercentFloors(floorsOf(root, group), produced.rows, registerText || '');
-    for (const v of floors.violations) violations.push(`${group.id} ${v}`);
-    for (const o of floors.owed) owed.push({ group: group.id, ...o });
+    const floorsFile = floorsOf(root, group);
+    // O68-03: a group with `"floors": "none"` has no percent floors: no per-article rule, no violation, no OWED line
+    if (floorsFile !== null) {
+      const floors = checkPercentFloors(floorsFile, produced.rows, registerText || '');
+      for (const v of floors.violations) violations.push(`${group.id} ${v}`);
+      for (const o of floors.owed) owed.push({ group: group.id, ...o });
+    }
     for (const m of pinMismatch(group, produced.rows, root)) regenMismatch.push(`${group.id} ${m}`);
     cases.push(...produced.cases);
     counts[`${group.id} cases`] = produced.cases.length;
-    for (const c of produced.cases) curRows.push({ group: group.id, id: c.id, status: c.status, clause: c.clause });
+    for (const c of produced.cases) curRows.push({ group: group.id, id: c.id, status: c.class, clause: c.clause });
   }
   const canary = runCanary(
     cases.map((c) => ({ id: c.id, expected: c.value, got: c.value })),
     (a, b) => (canon(a) === canon(b) ? 'pass' : 'fail'),
   );
   const all = regression && Array.isArray(regression.groups) ? regression.groups : [];
+  const runGroups = new Set(groups.map((g) => (g ? g.id : '')));
+  const inputsFresh = Object.assign({}, pinInputs(readPins(root, groups)), dataInputs(root, { groups: all.filter((g) => runGroups.has(g && g.id)) }));
   return {
     cases,
     skipped: 0,
@@ -182,6 +199,7 @@ export function computeRun({ root, regression, mode, registerText, deps = {} }) 
     baseRows: null,
     curRows,
     regenMismatch,
+    inputsFresh,
     groups: all.map((g) => ({ id: g.id, introduced_in: g.introduced_in })),
     floorsOk: violations.length === 0,
   };
@@ -195,22 +213,8 @@ export function computeRun({ root, regression, mode, registerText, deps = {} }) 
 // The bylaw register text (69a + 69) every ruling reader parses (M19). Read here, not in loop-gate-context (B7b), so `run` needs no context.
 const REGISTER_FILES = ['docs/specs/01-pipeline/69a_mcbylaw_register.md', 'docs/specs/01-pipeline/69_mcbylaw_policy.md'];
 
-/** The scorer class -> the record status (PR-68-1: the record stores one of pass | fail | accepted | pending). PURE. */
-export const CLASS_STATUS = Object.freeze({
-  MATCH: 'pass',
-  ANSWERED: 'pass',
-  'BY-LAW CHANGED': 'pass',
-  'NOT SCORABLE': 'pass',
-  DATA: 'pass',
-  DIFFER: 'fail',
-  'NO ANSWER': 'fail',
-  'NOT MODELLED': 'fail',
-  OWED: 'fail',
-});
-
-function statusOf(className) {
-  return Object.prototype.hasOwnProperty.call(CLASS_STATUS, String(className)) ? CLASS_STATUS[String(className)] : 'pending';
-}
+/** The scorer class -> the record status, from the ONE vocabulary of loop-record.mjs (O68-01); re-exported for existing importers. PURE. */
+export { CLASS_STATUS, statusOf };
 
 // `git ls-files`, scrubbed of every GIT_* variable (a hook exports GIT_DIR / GIT_INDEX_FILE: only -C <root> may decide the repo).
 const scrubbedEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
@@ -365,10 +369,21 @@ function pinOf(root, group) {
   return readJson(path.isAbsolute(pin) ? pin : path.join(root, String(pin)));
 }
 
+/** The `[group, pin]` pairs of every group of the set that has a pin file under root; a group without one has nothing to bind. IO. */
+function readPins(root, groups) {
+  const out = [];
+  for (const group of Array.isArray(groups) ? groups : []) {
+    if (!group) continue;
+    const pin = pinOf(root, group);
+    if (pin) out.push([group.id, pin]);
+  }
+  return out;
+}
+
 /**
- * The scorer pin inputs of every pinned group as `pin / <key>` entries: table_version, evaluator_version, scorer_sha (G68-08
- * extra keys of `inputs`). Only string / finite-number values are bound: an input that lives in an external data dir is not a tree
- * file, so it cannot be a blob id. PURE given the pin files (read by the caller).
+ * The scorer pin inputs of every pinned group as `pin / <group> / <key>` entries (O68-19: two groups can never overwrite each other's
+ * pin value): table_version, evaluator_version, scorer_sha (G68-08 extra keys of `inputs`). Only string / finite-number values are
+ * bound: an input that lives in an external data dir is not a tree file, so it cannot be a blob id. PURE given the pin files.
  */
 export function pinInputs(pins) {
   const out = {};
@@ -377,14 +392,17 @@ export function pinInputs(pins) {
     if (!inputs) continue;
     for (const key of ['table_version', 'evaluator_version', 'scorer_sha']) {
       const value = inputs[key];
-      if (typeof value === 'string' && value.length > 0) out[`pin / ${key}`] = value;
-      else if (typeof value === 'number' && Number.isFinite(value)) out[`pin / ${key}`] = String(value);
+      if (typeof value === 'string' && value.length > 0) out[`pin / ${group} / ${key}`] = value;
+      else if (typeof value === 'number' && Number.isFinite(value)) out[`pin / ${group} / ${key}`] = String(value);
     }
   }
   return out;
 }
 
-/** The consumed data of every external group as `data:<group>` = sha256 of its notices file content (G68-08). IO (reads the data file). */
+/**
+ * The consumed data of every external group as `data:<group>` = sha256 of its notices file content (G68-08). The ONE hash function of the
+ * data inputs: `run --write` stores exactly these values and computeRun recomputes them (inputsFresh). IO (reads the data file).
+ */
 export function dataInputs(root, regression) {
   const out = {};
   for (const group of regression && Array.isArray(regression.groups) ? regression.groups : []) {
@@ -450,13 +468,14 @@ const LIVE_DATA_RE = /^(data:|pin \/ )/;
  * `run` = computeRun's output, `findings` = the accepted findings array, `inputs` = the bound blobs. PURE.
  */
 export function recordFor({ increment, round, decision, reason, findings = [], run, inputs = {} }) {
-  // a case named in an accepted finding is EXCUSED: its status becomes `accepted`, whatever class the scorer printed (a finding is
-  // the register's authority over a failing case); an unmapped class of every other case stays pending.
+  // a case named in an accepted finding is EXCUSED only when it FAILED: its status becomes `accepted` (a finding is the register's
+  // authority over a failing case); a finding on a case that passes does not change it, and an unmapped class stays pending.
   const accepted = findingIds(findings);
   const cases = (Array.isArray(run && run.cases) ? run.cases : []).map((c) => {
     const id = c && typeof c.id === 'string' ? c.id : '';
     const status = statusOf(c ? c.status : '');
-    return { id, status: accepted.has(id) ? 'accepted' : status, got_sha: c && typeof c.got_sha === 'string' ? c.got_sha : '' };
+    const excused = status === 'fail' && accepted.has(id) ? 'accepted' : status;
+    return { id, status: excused, got_sha: c && typeof c.got_sha === 'string' ? c.got_sha : '' };
   });
   const bound = {};
   for (const key of Object.keys(inputs).sort()) {
@@ -477,7 +496,8 @@ export function recordFor({ increment, round, decision, reason, findings = [], r
 
 /**
  * `run --write-ids` / `--write`: run every group (mode push), then either rewrite each group's ids file from the run's own case ids
- * (the ids are written by the tool, never typed) or write the round's record; without either flag it is a dry run that prints the counts.
+ * (the group-qualified `<group>|<notice>|<n>` ids the run made, never typed) or write the round's record; without either flag it is a dry
+ * run that prints the counts.
  * -> { violations, notes, report } — the shell maps it to an exit code. IO (reads the set, spawns the scorer, writes).
  */
 export async function runCommand(parsed, write, deps = {}) {
@@ -558,12 +578,8 @@ export async function runCommand(parsed, write, deps = {}) {
       const id = indexBlobs[relPath];
       if (typeof id === 'string' && id) inputs[relPath] = id;
     }
-    const pins = [];
-    for (const group of regression.groups) {
-      const pin = pinOf(root, group);
-      if (pin) pins.push([group.id, pin]);
-    }
-    Object.assign(inputs, pinInputs(pins), dataInputs(root, regression));
+    // the non-git inputs (pin values, data hashes) come from the SAME helpers computeRun recomputes inputsFresh with (O68-02)
+    Object.assign(inputs, pinInputs(readPins(root, regression.groups)), dataInputs(root, regression));
     const round = nextRound(recordPathsOnDisk(root), increment);
     const record = recordFor({ increment, round, decision, reason, findings, run, inputs });
     const written = writeRecordExclusive(root, record);

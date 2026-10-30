@@ -117,10 +117,12 @@ export function recordMissing(nameStatus, classify) {
 }
 
 // G68-01: the bound set is derived from the tree; every classified changed file must appear in the record's inputs.
+// O68-02: only CODE and ORACLE bind. A GENERATED output (the regression set, an ids list, a pin, a floor, a record) is checked by
+// REGENERATION every round, so binding it would make every record stale the moment the round rewrites it.
 export function boundPaths(paths, classify) {
   return paths.filter((p) => {
     const c = classify(p);
-    return c === 'code' || c === 'oracle' || c === 'generated';
+    return c === 'code' || c === 'oracle';
   });
 }
 

@@ -269,6 +269,30 @@ describe('checkBound: every input is bound and nothing bound is stale', () => {
     const treeBlobs = { 'mcbylaws/loop/a.json': 'blob-a', 'mcbylaws/loop/b.json': 'blob-b-moved' };
     expect(M.checkBound({ inputs, treeBlobs })).toEqual(['stale_green:mcbylaws/loop/b.json']);
   });
+
+  // ---- O68-02: only GIT paths are judged here; a data:/pin / input has no blob (the run's inputsFresh judges its VALUE) ----
+
+  it('O68-02: a data: / pin / input never makes checkBound fail (no blob lookup on a non-git key)', () => {
+    const live = {
+      ...inputs,
+      'data:g-a': 'hash-a',
+      'pin / g-a / scorer': '1.2.3',
+    };
+    const treeBlobs = { 'mcbylaws/loop/a.json': 'blob-a', 'mcbylaws/loop/b.json': 'blob-b' };
+    expect(M.checkBound({ inputs: live, treeBlobs })).toEqual([]);
+  });
+
+  it('O68-02: a data: / pin / key is not demanded when it is missing and not stale when no blob is known', () => {
+    const treeBlobs = { 'mcbylaws/loop/a.json': 'blob-a-moved' };
+    const live = { 'mcbylaws/loop/a.json': 'blob-a', 'data:g-a': 'hash-a', 'pin / g-a / scorer': '1.2.3' };
+    // The git path is still judged; the two live keys are not.
+    expect(M.checkBound({ inputs: live, treeBlobs })).toEqual(['stale_green:mcbylaws/loop/a.json']);
+    // A git path missing from the tree is still stale_green even beside live keys.
+    expect(M.checkBound({ inputs: live, treeBlobs: {}, changedBound: ['mcbylaws/loop/c.json'] })).toEqual([
+      'stale_green:mcbylaws/loop/a.json',
+      'input_not_bound:mcbylaws/loop/c.json',
+    ]);
+  });
 });
 
 describe('checkRecordsAddOnly: a record is added, never modified or deleted (G68-06)', () => {

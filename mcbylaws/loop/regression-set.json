@@ -16,7 +16,7 @@
       "fast": true,
       "external": true,
       "split": "none",
-      "ids_sha256": "97185594ef3ee43f658824fcbc0f24a2877f9ea9ccf056891e25bc44e56d8498"
+      "ids_sha256": "b3002c2145969e69d9b66a7a37588dabe5ad8d7713045c7cb0aeed91e12c3188"
     },
     {
       "id": "coa4d",
@@ -28,12 +28,13 @@
         "notices": "notices.json",
         "parcels": "parcels.json",
         "plan_facts": "plan-facts",
+        "floors": "none",
         "pin": "scripts/analysis/bylaw-validation/coa-expected/expected-4d.json"
       },
       "fast": false,
       "external": true,
       "split": "none",
-      "ids_sha256": "bfe1753d7bea282984f91f389ebbc55582f7228f6c9db59f18938f43b854e85e"
+      "ids_sha256": "23fb848b9901912dd2791975bd8f2bf1e6a23306c2e907a5e116556eaf586a8f"
     }
   ],
   "pending": [],

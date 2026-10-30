@@ -20,6 +20,7 @@ const RECORD_DIR_REL = 'docs/reports/loop-records';
 const PREREG_DIR_REL = 'scripts/analysis/bylaw-validation/coa-expected';
 const COUNT_FLOORS_RE = /^mcbylaws\/loop\/floors-[^/]*\.json$/;
 const PREREG_RE = /^scripts\/analysis\/bylaw-validation\/coa-expected\/prereg-MB-[^/]*-[^/]*\.json$/;
+const DIGITS = '\\d+';
 
 const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 const asArray = (v) => (Array.isArray(v) ? v : []);
@@ -227,17 +228,19 @@ export async function buildContext(parsed = {}, deps = {}) {
     }
   }
 
-  // 5. The prereg of the round, its landing history (push and ci), the rows it expects and the cases this round introduces.
+  // The preregs at `rev` (only to know whether the round's file is there: the round's prereg is the file named after its round).
   const preregs = listFiles(git, root, rev, PREREG_DIR_REL).filter((rel) => PREREG_RE.test(rel)).sort();
   let prereg = null;
   let preregFile = null;
-  for (const rel of preregs) {
-    const parsedPrereg = readJson(git.readAt(root, rev, rel));
-    if (!isObject(parsedPrereg)) continue;
-    if (increment === null || parsedPrereg.increment !== increment || parsedPrereg.round !== round) continue;
-    prereg = parsedPrereg;
-    preregFile = rel;
-    break;
+  // O68-05: the prereg is found by FILE NAME, prereg-MB-<digits>-<round>.json (the record's loop round); its `round` field is the CoA
+  // batch counter, so it never joins the record. What must agree is the increment: the prereg registers this increment's rows.
+  if (latest && typeof latest.rec.round === 'number') {
+    const candidate = `${PREREG_DIR_REL}/prereg-MB-68-${latest.rec.round}.json`;
+    const parsedPrereg = preregs.includes(candidate) ? readJson(git.readAt(root, rev, candidate)) : null;
+    if (isObject(parsedPrereg) && parsedPrereg.increment === increment) {
+      prereg = parsedPrereg;
+      preregFile = candidate;
+    }
   }
   const preregHistory = commit || !latest || !preregFile ? null : gitPreregHistory(root, preregFile, latest.path);
   const rowsTouched = asArray(prereg && prereg.rows_touched);
@@ -266,8 +269,9 @@ export async function buildContext(parsed = {}, deps = {}) {
   const owed = floors.countCur && isObject(floors.countCur.owed_baseline) ? floors.countCur.owed_baseline : {};
 
   // 8. The run: only CI may answer null (the external groups do not run there). No prereg rows = no baseline to diff moves against.
+  // A computeRun that supplied its own base rows keeps them (O68-04): forcing null here is why moves were never compared.
   const run = computeRun({ root, regression: regression.cur, mode, registerText }) || null;
-  if (run) {
+  if (run && run.baseRows === undefined) {
     run.baseRows = null;
   }
 

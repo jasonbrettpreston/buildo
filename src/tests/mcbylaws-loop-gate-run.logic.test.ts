@@ -33,7 +33,7 @@ type Group = {
   producer?: Producer | undefined;
 };
 type Regression = { groups: Group[] };
-type CaseOut = { group: string; id: string; status: string; value: unknown; reason: unknown; clause: unknown; got_sha: string };
+type CaseOut = { group: string; id: string; status: string; class?: string; value: unknown; reason: unknown; clause: unknown; got_sha: string };
 type Call = { cmd: string; args: string[]; env: Record<string, string | undefined> };
 type SpawnFn = (cmd: string, args: string[], opts: { env?: Record<string, string | undefined>; maxBuffer?: number }) => unknown;
 type Deps = { spawn?: SpawnFn; rowsFor?: unknown };
@@ -118,11 +118,13 @@ describe('expandHome', () => {
 describe('casesFromRows: the ids and the computed got_sha (G68-11)', () => {
   const rows = [row(1), row(2, { notice: 'A0002/26', class: 'DIFFER', ours: { status: 'value', value: 1.5, reason: 'ours 1.5 vs City 1.2' } })];
 
-  it('ids are "<notice>|<n>", the group is kept, and the status is the printed class', () => {
+  it('ids are "<group>|<notice>|<n>" (O68-07), the group is kept, and the status is the gate status of the printed class', () => {
     const cases = M.casesFromRows('172', rows) as CaseOut[];
-    expect(cases.map((c) => c.id)).toEqual(['A0001/26|1', 'A0002/26|2']);
+    expect(cases.map((c) => c.id)).toEqual(['172|A0001/26|1', '172|A0002/26|2']);
     expect(cases.map((c) => c.group)).toEqual(['172', '172']);
-    expect(cases.map((c) => c.status)).toEqual(['MATCH', 'DIFFER']);
+    // O68-01: the one vocabulary of loop-record, not the printed class itself
+    expect(cases.map((c) => c.status)).toEqual(['pass', 'fail']);
+    expect(cases.map((c) => c.class)).toEqual(['MATCH', 'DIFFER']);
     expect(cases[0]?.value).toBe(1.2);
     expect(cases[1]?.reason).toBe('ours 1.5 vs City 1.2');
     expect(cases[0]?.clause).toBe('10.20.40.40(1)');
@@ -171,7 +173,7 @@ describe('runProducer: spawns the committed scorer (never inlined)', () => {
     expect(path.isAbsolute(out)).toBe(true);
     expect(fs.existsSync(path.dirname(out))).toBe(false);
     expect(res.rows).toHaveLength(1);
-    expect(res.cases[0]?.id).toBe('A0001/26|1');
+    expect(res.cases[0]?.id).toBe('172|A0001/26|1');
     expect(res.scorecard).toBeTruthy();
   });
 
@@ -252,7 +254,8 @@ describe('computeRun: the groups a mode runs', () => {
   it('push runs every group', () => {
     const calls: Call[] = [];
     const regression: Regression = {
-      groups: [group({ id: '172', fast: true }), group({ id: '4d', fast: false, producer: { kind: 'coa-scorecard', data_dir: DATA_DIR } })],
+      // O68-03: a group must say which it is, so the 4d fixture declares "none" (it has no percent floors file)
+      groups: [group({ id: '172', fast: true }), group({ id: '4d', fast: false, producer: { kind: 'coa-scorecard', data_dir: DATA_DIR, floors: 'none' } })],
     };
     const run = M.computeRun({ root: ROOT, regression, mode: 'push', registerText: '', deps: { spawn: fakeSpawn(twoRows, calls) } }) as RunOut | null;
     expect(calls).toHaveLength(2);
@@ -265,7 +268,7 @@ describe('computeRun: the groups a mode runs', () => {
     const onlyExternal: Regression = { groups: [group({ id: '172', external: true })] };
     expect(M.computeRun({ root: ROOT, regression: onlyExternal, mode: 'ci', registerText: '', deps: { spawn: fakeSpawn(twoRows, calls) } })).toBeNull();
     expect(calls).toHaveLength(0);
-    const mixed: Regression = { groups: [group({ id: '172', external: true }), group({ id: '4d', external: false, producer: { kind: 'coa-scorecard', data_dir: DATA_DIR } })] };
+    const mixed: Regression = { groups: [group({ id: '172', external: true }), group({ id: '4d', external: false, producer: { kind: 'coa-scorecard', data_dir: DATA_DIR, floors: 'none' } })] };
     const run = M.computeRun({ root: ROOT, regression: mixed, mode: 'ci', registerText: '', deps: { spawn: fakeSpawn(twoRows, calls) } }) as RunOut | null;
     expect(calls).toHaveLength(1);
     expect(run?.counts).toEqual({ '4d cases': 2 });
@@ -280,14 +283,14 @@ describe('computeRun: the groups a mode runs', () => {
     expect(run.skipped).toBe(0);
     expect(run.baseRows).toBeNull();
     expect(run.canary.observed).toBe('fail');
-    expect(run.canary.id).toBe('A0001/26|1');
+    expect(run.canary.id).toBe('172|A0001/26|1');
     expect(run.report.violations).toEqual([]);
     expect(run.report.owed).toEqual([]);
     expect(run.regenMismatch).toEqual([]);
     expect(run.floorsOk).toBe(true);
     expect(run.curRows).toEqual([
-      { group: '172', id: 'A0001/26|1', status: 'MATCH', clause: '10.20.40.40(1)' },
-      { group: '172', id: 'A0001/26|2', status: 'MATCH', clause: '10.20.40.40(1)' },
+      { group: '172', id: '172|A0001/26|1', status: 'MATCH', clause: '10.20.40.40(1)' },
+      { group: '172', id: '172|A0001/26|2', status: 'MATCH', clause: '10.20.40.40(1)' },
     ]);
     expect(run.groups).toHaveLength(1);
     expect(run.groups[0]?.id).toBe('172');

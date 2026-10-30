@@ -234,7 +234,9 @@ describe('recordMissing', () => {
 });
 
 describe('boundPaths', () => {
-  it('keeps only the classified paths', () => {
+  // O68-02: only CODE and ORACLE bind; a GENERATED output (the regression set, a pin, an ids list, a record) is checked by
+  // regeneration, never bound, so the old expectation that `mcbylaws/loop/regression-set.json` binds is now wrong.
+  it('keeps only the classified CODE and ORACLE paths (a generated output is not bound)', () => {
     expect(
       M.boundPaths(
         [
@@ -248,12 +250,22 @@ describe('boundPaths', () => {
     ).toEqual([
       'scripts/seeds/bylaw/layer3-catalogue.json',
       'src/tests/fixtures/bylaw/eval-vocab.json',
-      'mcbylaws/loop/regression-set.json',
     ]);
   });
 
   it('a docs-only list binds nothing', () => {
     expect(M.boundPaths(['docs/reference/bylaw-provisions.md'], classify)).toEqual([]);
+  });
+
+  it('a generated-only list binds nothing (regeneration is its check)', () => {
+    const generated = [
+      'mcbylaws/loop/regression-set.json',
+      'mcbylaws/loop/data/ids-g-a.json',
+      'scripts/analysis/bylaw-validation/coa-expected/expected-172.json',
+      'scripts/analysis/bylaw-validation/coa-expected/floors-172.json',
+    ];
+    for (const p of generated) expect(classify(p)).toBe('generated');
+    expect(M.boundPaths(generated, classify)).toEqual([]);
   });
 });
 

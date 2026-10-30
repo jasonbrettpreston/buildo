@@ -38,6 +38,7 @@ type Run = {
   baseRows: { group: string; id: string; status: string; clause: string }[];
   curRows: { group: string; id: string; status: string; clause: string }[];
   regenMismatch: string[];
+  inputsFresh?: { [key: string]: string } | undefined;
   groups: { id: string; introduced_in: string }[];
   floorsOk: boolean;
 };
@@ -50,6 +51,7 @@ type Prereg = {
   $comment: string;
   plan_ref: string;
   increment: string;
+  group?: string | undefined;
   expected_moves: { clause: string; from: string; to: string }[];
   expected_totals: { [k: string]: number };
 };
@@ -141,13 +143,12 @@ function goodRecord(over: { [k: string]: unknown } = {}): LoopRec {
     reason: 'every in-scope case is green and no floor line moved down',
     accepted_findings: [],
     cases: records(),
+    // O68-02: the bound set is CODE + ORACLE only. A GENERATED output (a pin, a floor, an ids list, the regression set) is checked
+    // by regeneration, so the record no longer binds it: a changed regression-set.json is never demanded in `inputs`.
     inputs: {
       [CODE_PATH]: CODE_BLOB,
-      [GEN_PIN]: 'blob-pin',
-      [GEN_FLOORS]: 'blob-floors',
-      [GEN_REGRESSION]: 'blob-regression',
-      [GEN_IDS]: 'blob-ids',
-      [GEN_COUNT_FLOORS]: 'blob-count-floors',
+      'data:g-a': 'hash-g-a',
+      'pin / g-a / scorer': '1.2.3',
     },
     ...(over as Partial<Omit<LoopRec, 'binding'>>),
   };
@@ -163,7 +164,9 @@ function preregOf(): Prereg {
     $comment: 'pre-registered before the round',
     plan_ref: 'MB-68 increment 2',
     increment: '2',
-    expected_moves: [{ clause: '10.20.40.71', from: 'ABSENT', to: 'MATCH' }],
+    // O68-04: the totals are those of THIS group only (the prereg names it), and the group's two rows are the run's two curRows.
+    group: 'g-a',
+    expected_moves: [],
     expected_totals: { MATCH: 2 },
   };
 }
@@ -231,13 +234,9 @@ function goodCtx(): Ctx {
     },
     treeBlobs: {
       [CODE_PATH]: CODE_BLOB,
-      [GEN_PIN]: 'blob-pin',
-      [GEN_FLOORS]: 'blob-floors',
-      [GEN_REGRESSION]: 'blob-regression',
-      [GEN_IDS]: 'blob-ids',
-      [GEN_COUNT_FLOORS]: 'blob-count-floors',
     },
-    changedBound: [CODE_PATH, GEN_PIN, GEN_FLOORS, GEN_REGRESSION, GEN_IDS, GEN_COUNT_FLOORS],
+    // O68-02: changedBound is code + oracle only (generated outputs are regenerated, not bound).
+    changedBound: [CODE_PATH],
     regression: { base: regressionSet(), cur },
     floors: {
       percentBase: countFloors(),
@@ -261,12 +260,21 @@ function goodCtx(): Ctx {
         owed: [{ line: 'overall accuracy', measured: 90, floor: 95 }],
       },
       counts: { 'g-a cases': 2 },
-      baseRows: [{ group: 'g-a', id: 'n-1|1', status: 'MATCH', clause: '10.20.40.70' }],
+      // The honest base is an EQUAL copy of curRows (same ids, same statuses): a round that registers no move has none.
+      baseRows: [
+        { group: 'g-a', id: 'n-1|1', status: 'MATCH', clause: '10.20.40.70' },
+        { group: 'g-a', id: 'n-2|1', status: 'MATCH', clause: '10.20.40.71' },
+      ],
       curRows: [
         { group: 'g-a', id: 'n-1|1', status: 'MATCH', clause: '10.20.40.70' },
         { group: 'g-a', id: 'n-2|1', status: 'MATCH', clause: '10.20.40.71' },
       ],
       regenMismatch: [],
+      // O68-02: the run recomputes the non-git inputs of the record (the `data:` hash and the `pin / ` values). Equal = fresh.
+      inputsFresh: {
+        'data:g-a': 'hash-g-a',
+        'pin / g-a / scorer': '1.2.3',
+      },
       groups: [
         { id: 'g-a', introduced_in: 'baseline' },
         { id: 'g-1', introduced_in: '1' },
@@ -502,15 +510,57 @@ describe('stage 3: record shape, binding, decision, one increment, skip-ahead, p
     expect(v.violations).toContain(`stale_green:${CODE_PATH}`);
   });
 
-  it('a changed classified path missing from the record inputs is input_not_bound:<path>', () => {
-    const extra = 'scripts/analysis/bylaw-validation/coa-expected/floors-other.json';
+  it('a changed ORACLE path missing from the record inputs is input_not_bound:<path>', () => {
+    // O68-02: a generated path no longer binds, so the un-bound input is an ORACLE file (a hand-authored fixture).
+    const extra = 'src/tests/fixtures/bylaw-golden-lots/lot-new.json';
     const v = verdictOf((c) => {
-      c.nameStatus = [...c.nameStatus, { s: 'M', p: extra }];
+      c.nameStatus = [...c.nameStatus, { s: 'A', p: extra }];
       c.commits = clone([c.nameStatus]);
       c.treeBlobs = { ...c.treeBlobs, [extra]: 'blob-other' };
       c.changedBound = [...c.changedBound, extra];
     });
     expect(v.violations).toContain(`input_not_bound:${extra}`);
+  });
+
+  it('O68-02: a changed generated regression-set.json is NOT demanded in the record inputs (regeneration checks it)', () => {
+    const v = verdictOf((c) => {
+      c.nameStatus = c.nameStatus.map((r) => (r.p === GEN_REGRESSION ? { s: 'M', p: r.p } : r));
+      c.commits = clone([c.nameStatus]);
+      // The tree has it, changedBound does not (boundPaths excludes generated): nothing asks the record to bind it.
+      c.treeBlobs = { ...c.treeBlobs, [GEN_REGRESSION]: 'blob-regression-moved' };
+      expect(c.changedBound).not.toContain(GEN_REGRESSION);
+    });
+    expect(v.violations.filter((x) => x.includes(GEN_REGRESSION))).toEqual([]);
+    expect(v.violations).toEqual([]);
+  });
+
+  it('O68-02: a recorded data: hash the record does not carry a blob for is fine when the run recomputes the same value', () => {
+    const v = verdictOf((c) => {
+      // treeBlobs holds no `data:g-a` key; checkBound must not demand one and the fresh value is equal.
+      expect(runOrThrow(c).inputsFresh?.['data:g-a']).toBe('hash-g-a');
+    });
+    expect(v.violations).toEqual([]);
+  });
+
+  it('O68-02: a fresh data: value that moved gives stale_green:data:g', () => {
+    const v = verdictOf((c) => {
+      const fresh = { ...(runOrThrow(c).inputsFresh || {}), 'data:g': 'hash-g' };
+      runOrThrow(c).inputsFresh = fresh;
+      const rec = latestOf(c).rec;
+      c.latest = { path: RECORD_FILE, rec: goodRecord({ inputs: { ...rec.inputs, 'data:g': 'hash-g-old' } }) };
+    });
+    expect(v.violations).toContain('stale_green:data:g');
+  });
+
+  it('O68-02: a fresh pin value that moved gives stale_green:pin / <group> / <key> (the green twin: an equal value)', () => {
+    const red = verdictOf((c) => {
+      runOrThrow(c).inputsFresh = { 'data:g-a': 'hash-g-a', 'pin / g-a / scorer': '9.9.9' };
+    });
+    expect(red.violations).toContain('stale_green:pin / g-a / scorer');
+    const green = verdictOf((c) => {
+      runOrThrow(c).inputsFresh = { 'data:g-a': 'hash-g-a', 'pin / g-a / scorer': '1.2.3' };
+    });
+    expect(green.violations).toEqual([]);
   });
 
   it('an accept with a short reason is accept_without_reason', () => {
@@ -564,8 +614,12 @@ describe('stage 3: record shape, binding, decision, one increment, skip-ahead, p
   it('a move nobody registered is unexpected_move', () => {
     const v = verdictOf((c) => {
       const run = runOrThrow(c);
-      run.curRows = [{ group: 'g-a', id: 'n-1|1', status: 'DIFFER', clause: '10.20.40.70' }];
+      run.curRows = [
+        { group: 'g-a', id: 'n-1|1', status: 'DIFFER', clause: '10.20.40.70' },
+        { group: 'g-a', id: 'c-pass|1', status: 'MATCH', clause: '10.20.40.71' },
+      ];
       run.baseRows = [{ group: 'g-a', id: 'n-1|1', status: 'MATCH', clause: '10.20.40.70' }];
+      if (c.prereg) c.prereg.expected_totals = { DIFFER: 1, MATCH: 1 };
     });
     expect(v.violations.some(named('unexpected_move'))).toBe(true);
   });
@@ -573,11 +627,22 @@ describe('stage 3: record shape, binding, decision, one increment, skip-ahead, p
   it('a registered move is the green twin of unexpected_move', () => {
     const v = verdictOf((c) => {
       const run = runOrThrow(c);
-      run.curRows = [{ group: 'g-a', id: 'n-1|1', status: 'DIFFER', clause: '10.20.40.70' }];
-      run.baseRows = [{ group: 'g-a', id: 'n-1|1', status: 'MATCH', clause: '10.20.40.70' }];
+      // Each cur row has a base row under the same key (notice|item): a move is a status CHANGE, never ABSENT->MATCH.
+      run.curRows = [
+        { group: 'g-a', id: 'n-1|1', status: 'DIFFER', clause: '10.20.40.70' },
+        { group: 'g-a', id: 'c-pass|1', status: 'MATCH', clause: '10.20.40.71' },
+      ];
+      run.baseRows = [
+        { group: 'g-a', id: 'n-1|1', status: 'MATCH', clause: '10.20.40.70' },
+        { group: 'g-a', id: 'c-pass|1', status: 'DIFFER', clause: '10.20.40.71' },
+      ];
       if (c.prereg) {
-        c.prereg.expected_moves = [{ clause: '10.20.40.70', from: 'MATCH', to: 'DIFFER' }];
-        c.prereg.expected_totals = { DIFFER: 1 };
+        c.prereg.expected_moves = [
+          { clause: '10.20.40.70', from: 'MATCH', to: 'DIFFER' },
+          { clause: '10.20.40.71', from: 'DIFFER', to: 'MATCH' },
+        ];
+        // the totals are of the prereg's own group (O68-04): one DIFFER, one MATCH
+        c.prereg.expected_totals = { DIFFER: 1, MATCH: 1 };
       }
     });
     expect(v.violations).toEqual([]);
@@ -740,6 +805,38 @@ describe('stage 5: the run is honest (checkRun, regen, value registry, record ==
     expect(v.violations).toEqual([]);
   });
 
+  // ---- O68-01: the record and the run are compared on GATE STATUSES, never on a raw scorer class ----
+
+  it('O68-01: a run case carrying a printed class is matched by its gate status (record statuses equal run statuses is green)', () => {
+    const v = verdictOf((c) => {
+      // computeRun carries the gate status AND the printed class; the record stores the status. The match is on the status.
+      runOrThrow(c).cases = [
+        { id: PASS_CASE, status: 'pass', got_sha: sha(11), group: 'g-1', class: 'MATCH' } as unknown as RunCase,
+        { id: ACCEPTED_CASE, status: 'pass', got_sha: sha(12), group: 'g-1', class: 'BY-LAW CHANGED' } as unknown as RunCase,
+      ];
+    });
+    expect(v.violations).toEqual([]);
+  });
+
+  it('O68-01: a printed class where a status belongs is still judged through the one map (a DIFFER class is fail)', () => {
+    const v = verdictOf((c) => {
+      // A run that prints the raw class as its status: `MATCH` maps to pass (green), `DIFFER` maps to fail (a mismatch).
+      const run = runOrThrow(c);
+      run.cases = [
+        { id: PASS_CASE, status: 'MATCH', got_sha: sha(11), group: 'g-1' },
+        { id: ACCEPTED_CASE, status: 'MATCH', got_sha: sha(12), group: 'g-1' },
+      ];
+    });
+    expect(v.violations).toEqual([]);
+    const red = verdictOf((c) => {
+      runOrThrow(c).cases = [
+        { id: PASS_CASE, status: 'pass', got_sha: sha(11), group: 'g-1' },
+        { id: ACCEPTED_CASE, status: 'DIFFER', got_sha: sha(12), group: 'g-1' },
+      ];
+    });
+    expect(red.violations).toContain(`record_differs_from_run:${ACCEPTED_CASE}`);
+  });
+
   it('ci with run null is green with the external-groups note (external groups are not run in CI)', () => {
     const v = verdictOf((c) => {
       c.mode = 'ci';
@@ -809,6 +906,38 @@ describe('stage 6: an accept names every not-green reason', () => {
       runOrThrow(c).floorsOk = false;
     });
     expect(v.violations.filter((x) => x.startsWith('accept_but_not_green'))).toEqual([]);
+  });
+
+  it('O68-01: the accept verdict gets the run status; a run still printing BY-LAW CHANGED is green (its class is pass)', () => {
+    const v = verdictOf((c) => {
+      runOrThrow(c).cases = [
+        { id: PASS_CASE, status: 'BY-LAW CHANGED', got_sha: sha(11), group: 'g-1' },
+        { id: ACCEPTED_CASE, status: 'pass', got_sha: sha(13), group: 'g-1' },
+      ];
+      const rec = latestOf(c).rec;
+      const cases = rec.cases.map((x) => (x.id === PASS_CASE ? { ...x, status: 'pass', got_sha: sha(13) } : x));
+      c.latest = { path: RECORD_FILE, rec: goodRecord({ cases }) };
+    });
+    expect(v.violations.filter((x) => x.startsWith('accept_but_not_green'))).toEqual([]);
+  });
+
+  it('O68-01: a run whose class is OWED is not green for the accept (owed maps to fail)', () => {
+    const v = verdictOf((c) => {
+      const run = runOrThrow(c);
+      run.cases = run.cases.map((x) => (x.id === ACCEPTED_CASE ? { ...x, status: 'OWED' } : x));
+      const rec = latestOf(c).rec;
+      const cases = rec.cases.map((x) => (x.id === ACCEPTED_CASE ? { ...x, status: 'fail' } : x));
+      c.latest = {
+        path: RECORD_FILE,
+        rec: goodRecord({
+          cases,
+          accepted_findings: [
+            { case: ACCEPTED_CASE, finding_id: RULING, reason: 'the clause is owed and the ruling records it' },
+          ],
+        }),
+      };
+    });
+    expect(v.violations).toContain(`accept_but_not_green:case_not_green:${ACCEPTED_CASE}`);
   });
 
   it('a fully green round is the green twin of accept_but_not_green', () => {

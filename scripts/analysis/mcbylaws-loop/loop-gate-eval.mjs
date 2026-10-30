@@ -7,6 +7,7 @@ import {
   checkRecordsAddOnly,
   checkRecordShape,
   checkBound,
+  statusOf,
 } from './loop-record.mjs';
 import { checkDecision, checkRun } from './loop-decide.mjs';
 import { checkOneIncrement, checkSkipAhead, incrementGreen } from './loop-increment.mjs';
@@ -19,7 +20,32 @@ const CI_NO_RUN = 'external groups: not run in CI';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+// The non-git inputs a run binds (O68-02): a `data:<group>` content hash and a `pin / <group> / <key>` scorer pin value.
+const LIVE_INPUT_RE = /^(data:|pin \/ )/;
+
 const hasViolation = (violations, code) => violations.some((v) => v === code || String(v).startsWith(`${code}:`));
+
+/**
+ * O68-02: every non-git input of the record (`data:` / `pin / `) against the run's recomputed value (`inputsFresh`).
+ * A value that differs is `stale_green:<key>` (the round WAS green on an input that has since moved). At `ci`, or with no
+ * run (the recomputed side does not exist there), or for a key the run does not recompute, nothing is judged.
+ */
+function staleLiveInputs(ctx, rec) {
+  const run = ctx.run;
+  if (!run || !isObject(run.inputsFresh)) return [];
+  if (ctx.mode === 'ci') return [];
+  const fresh = isObject(run.inputsFresh) ? run.inputsFresh : {};
+  const inputs = isObject(rec && rec.inputs) ? rec.inputs : {};
+  const out = [];
+  for (const key of Object.keys(inputs)) {
+    if (!LIVE_INPUT_RE.test(key)) continue;
+    if (!Object.prototype.hasOwnProperty.call(fresh, key)) continue;
+    if (fresh[key] !== inputs[key]) out.push(`stale_green:${key}`);
+  }
+  return out;
+}
 
 /** Every active id of every group of a regression set (G68-01: the declared set). */
 function activeIds(regression) {
@@ -62,6 +88,7 @@ function stageRecord(ctx, rec) {
   const out = [];
   out.push(...checkRecordShape(rec));
   out.push(...checkBound({ inputs: rec.inputs, treeBlobs: ctx.treeBlobs, changedBound: ctx.changedBound }));
+  out.push(...staleLiveInputs(ctx, rec));
   out.push(...checkDecision(rec, ctx.rulings, ctx.cardExists));
   out.push(
     ...checkOneIncrement({
@@ -141,11 +168,15 @@ function stageRun(ctx, rec) {
   for (const item of asArray(rec.cases)) {
     if (!item || typeof item.id !== 'string') continue;
     const before = prev[item.id];
-    if (before && before.status === item.status && before.got_sha !== item.got_sha && !covered.has(item.id)) {
+    // Both sides are GATE STATUSES (O68-01): the record's status and the previous round's status share one vocabulary.
+    const status = statusOf(item.status);
+    const beforeStatus = before ? statusOf(before.status) : undefined;
+    if (before && beforeStatus === status && before.got_sha !== item.got_sha && !covered.has(item.id)) {
       out.push(`value_changed_unregistered:${item.id}`);
     }
     const ran = byId.get(item.id);
-    if (!ran || ran.status !== item.status || ran.got_sha !== item.got_sha) {
+    // The run case is compared on the same gate status (O68-01): a raw scorer class is never compared with a record status.
+    if (!ran || statusOf(ran.status) !== status || ran.got_sha !== item.got_sha) {
       out.push(`record_differs_from_run:${item.id}`);
     }
   }
@@ -159,7 +190,8 @@ function stageAccept(ctx, rec) {
   if (!run) return [];
   const cases = asArray(run.cases).map((c) => ({
     id: c.id,
-    status: c.status,
+    // incrementGreen judges a gate status (its GREEN_STATUSES are pass|accepted); a class is mapped through the one map (O68-01).
+    status: statusOf(c.status),
     group: c.group === undefined ? null : c.group,
   }));
   const verdict = incrementGreen({

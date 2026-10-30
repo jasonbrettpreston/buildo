@@ -8,18 +8,27 @@ import { diffMoves, checkPrereg, checkPreregShape } from '../bylaw-validation/co
 
 const PREREG_DIR = 'scripts/analysis/bylaw-validation/coa-expected';
 const TASK_ID = /^MB-\d+$/;
+// O68-04: the group whose totals a prereg registers when it names none (the 172 set, the only group with percent floors).
+const DEFAULT_GROUP = 'coa172';
 
 /** The one home of a round's pre-registration (plan "Prereg path"; MB-67 P67-1): coa-expected/prereg-<MB-id>-<round>.json. */
 export function preregPath(task, round) {
   return `${PREREG_DIR}/prereg-${task}-${round}.json`;
 }
 
-/** The coa-round form, plus the task the prereg names (MB-67 reads it). One code per message of checkPreregShape. */
+/** The coa-round form, plus the task the prereg names (MB-67 reads it) and the optional group (absence reads as the default group). */
 export function checkPreregFile(pre) {
   const out = checkPreregShape(pre).map((msg) => `prereg_shape:${msg}`);
   if (typeof pre.task !== 'string' || !TASK_ID.test(pre.task)) out.push('prereg_task_missing');
+  if (typeof pre.increment !== 'string') out.push('prereg_shape:increment must be a string');
+  if (pre.group !== undefined && typeof pre.group !== 'string') out.push('prereg_shape:group must be a string');
   return out;
 }
+
+/** The group a prereg registers totals for (O68-04): its own `group`, else the 172 set (the only group with percent floors). */
+const groupOf = (pre) => (pre && typeof pre.group === 'string' && pre.group ? pre.group : DEFAULT_GROUP);
+
+const rowsOfGroup = (rows, group) => (rows || []).filter((r) => r && (r.group === undefined || r.group === group));
 
 const itemOf = (n) => (/^\d+$/.test(String(n)) ? Number(n) : n);
 
@@ -44,10 +53,28 @@ const counts = (rows) => {
   return out;
 };
 
-/** Expected against actual on the gate's rows. baseRows null = no baseline, so moves are not checked (the totals still are). */
+const BASE_ROWS_NOTE = 'prereg moves not checked: no base rows';
+
+/**
+ * The notes a prereg verdict owes the operator (O68-04), never a violation: a prereg checked with no base rows cannot compare moves,
+ * so `evaluateGate` must SAY so instead of passing silently. Returns ['prereg moves not checked: no base rows'] when baseRows is null.
+ */
+export function preregNotes(pre, baseRows) {
+  void pre;
+  return baseRows == null ? [BASE_ROWS_NOTE] : [];
+}
+
+/**
+ * Expected against actual on the gate's rows, for ONLY the group the prereg registers (`pre.group`, default 'coa172'): the totals
+ * of one group are never compared with another group's rows (O68-04). baseRows null = no baseline, so moves are not checked (the
+ * totals still are; preregNotes reports the unchecked moves).
+ */
 export function checkPreregMoves(pre, baseRows, curRows) {
-  const moves = baseRows == null ? null : diffMoves(toScorerRows(baseRows), toScorerRows(curRows));
-  const r = checkPrereg(pre, moves, counts(curRows));
+  const group = groupOf(pre);
+  const cur = rowsOfGroup(curRows, group);
+  const base = baseRows == null ? null : rowsOfGroup(baseRows, group);
+  const moves = base == null ? null : diffMoves(toScorerRows(base), toScorerRows(cur));
+  const r = checkPrereg(pre, moves, counts(cur));
   return [
     ...r.unexpected.map((m) => `unexpected_move:${m.notice}#${m.n} ${m.from}->${m.to}`),
     ...r.missing.map((m) => `missing_move:${m.clause}`),

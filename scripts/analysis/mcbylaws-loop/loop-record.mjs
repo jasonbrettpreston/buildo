@@ -12,6 +12,28 @@ export const RECORD_RE = /^docs\/reports\/loop-records\/([^/]+)\/round-(\d+)\.js
 const RECORD_DIR = 'docs/reports/loop-records/';
 const DECISIONS = ['accept', 'revert'];
 const CASE_STATUSES = ['pass', 'fail', 'accepted', 'pending'];
+
+/**
+ * The one status vocabulary of the loop (O68-01): every scorer CLASS -> the gate status `pass` | `fail`. The record, the run and any
+ * report read this map and nothing else, so there is never a second spelling of a class. A class outside the map is `pending`.
+ */
+export const CLASS_STATUS = Object.freeze({
+  MATCH: 'pass',
+  ANSWERED: 'pass',
+  'BY-LAW CHANGED': 'pass',
+  'NOT SCORABLE': 'pass',
+  DATA: 'pass',
+  DIFFER: 'fail',
+  'NO ANSWER': 'fail',
+  'NOT MODELLED': 'fail',
+  OWED: 'fail',
+});
+
+/** The gate status of one value that may already be a class (MATCH, DIFFER, ...) or a status (pass, fail, accepted, pending). PURE. */
+export function statusOf(cls) {
+  if (Object.prototype.hasOwnProperty.call(CLASS_STATUS, String(cls))) return CLASS_STATUS[String(cls)];
+  return CASE_STATUSES.includes(cls) ? cls : 'pending';
+}
 const HEX64 = /^[0-9a-f]{64}$/;
 
 // The v1 fields that are never stored (trimmed at G68-01); anything outside V1_FIELDS is an unknown field.
@@ -128,9 +150,17 @@ function recordWithoutBinding(rec) {
 }
 
 /**
+ * A bound input that is NOT a git path (O68-02): the `data:<group>` content hashes and the `pin / <group> / <key>` scorer pin values a
+ * `run --write` stores. They have no blob to compare; the run recomputes them (inputsFresh) and the gate compares the values instead.
+ */
+export const LIVE_INPUT_RE = /^(data:|pin \/ )/;
+
+/**
  * Every bound input must be in the record and unchanged in a tree. `treeBlobs` is the tree the round was
  * accepted on (the authoritative one), so every bound input is judged against it; `changedBound` (default:
  * all bound inputs) only widens the set with unbound paths changed since, which are `input_not_bound:<p>`.
+ * Only GIT paths are judged (O68-02): a `data:` / `pin / ` input has no blob, so it is skipped here (the gate
+ * compares its recomputed value through the run's `inputsFresh`).
  */
 export function checkBound({ inputs = {}, treeBlobs = {}, changedBound = null } = {}) {
   const out = [];
@@ -139,6 +169,7 @@ export function checkBound({ inputs = {}, treeBlobs = {}, changedBound = null } 
     if (!paths.includes(p)) paths.push(p);
   }
   for (const p of paths) {
+    if (LIVE_INPUT_RE.test(p)) continue;
     if (!Object.prototype.hasOwnProperty.call(inputs, p)) {
       out.push(`input_not_bound:${p}`);
     } else if (!Object.prototype.hasOwnProperty.call(treeBlobs, p) || treeBlobs[p] !== inputs[p]) {

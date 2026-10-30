@@ -25,6 +25,7 @@ type RunOut = {
   baseRows: unknown;
   curRows: { group: string; id: string; status: string; clause: unknown }[];
   regenMismatch: string[];
+  inputsFresh?: Record<string, string>;
   groups: { id: string; introduced_in?: string | undefined }[];
   floorsOk: boolean;
 };
@@ -92,6 +93,11 @@ const GROUP = 'g1';
 const IDS_REL = `mcbylaws/loop/data/ids-${GROUP}.json`;
 const SET_REL = 'mcbylaws/loop/regression-set.json';
 
+// O68-07: every id is group-qualified, `<group>|<notice>|<n>`.
+const qid = (id: string): string => `${GROUP}|${id}`;
+// a raw list read back from disk, typed as the id list it is
+const idsOf = (value: unknown): string[] => value as string[];
+
 // A throw-away repo: one classified code file (layer23), one ids file and the regression set holding those ids, committed.
 function makeRepo(name: string): string {
   const root = fs.mkdtempSync(path.join(TMP, `${name}-`));
@@ -99,7 +105,7 @@ function makeRepo(name: string): string {
   gitRun(root, ['config', 'user.email', 'gate@example.test']);
   gitRun(root, ['config', 'user.name', 'loop gate test']);
   writeFileAt(root, 'scripts/analysis/bylaw/evaluator.mjs', 'export const one = 1;\n');
-  writeFileAt(root, IDS_REL, JSON.stringify(['A0001|1']) + '\n');
+  writeFileAt(root, IDS_REL, JSON.stringify([qid('A0001|1')]) + '\n');
   writeFileAt(root, SET_REL, JSON.stringify({ schema: 'regression-v1', groups: [{ id: GROUP, introduced_in: '1', external: true }], pending: [], removals: [] }, null, 2) + '\n');
   gitRun(root, ['add', '-A']);
   gitRun(root, ['commit', '-q', '-m', 'fixture']);
@@ -117,12 +123,12 @@ const scorerCase = (id: string, status: string, got_sha: string): CaseOut => ({ 
 function fakeRun(over: Partial<RunOut> = {}): RunOut {
   return {
     cases: [
-      scorerCase('A0001|1', 'MATCH', 'a'.repeat(64)),
-      scorerCase('A0002|1', 'DIFFER', 'b'.repeat(64)),
-      scorerCase('A0003|1', 'NO ANSWER', 'c'.repeat(64)),
+      scorerCase(qid('A0001|1'), 'MATCH', 'a'.repeat(64)),
+      scorerCase(qid('A0002|1'), 'DIFFER', 'b'.repeat(64)),
+      scorerCase(qid('A0003|1'), 'NO ANSWER', 'c'.repeat(64)),
     ],
     skipped: 0,
-    canary: { id: 'A0001|1', observed: 'fail' },
+    canary: { id: qid('A0001|1'), observed: 'fail' },
     report: { violations: [], owed: [] },
     counts: { [`${GROUP} cases`]: 3 },
     baseRows: null,
@@ -132,6 +138,8 @@ function fakeRun(over: Partial<RunOut> = {}): RunOut {
     // the shape computeRun really returns: a run is floors-ok exactly when its report holds no violation
     floorsOk: true,
     ...over,
+    // derived, never set on its own: floorsOk follows report.violations, in the fixture as in computeRun
+    ...(over.report ? { floorsOk: (over.report.violations ?? []).length === 0 } : {}),
   };
 }
 
@@ -153,15 +161,16 @@ const verifyCmd = M.verifyCommand as VerifyCommand;
 const removeCmd = M.removeCommand as RemoveCommand;
 
 describe('runCommand --write-ids: the ids are written by the tool, never typed (PR-68-1)', () => {
-  it('rewrites the ids file and ids_sha256 from the run case ids, and prints the change', async () => {
+  it('rewrites the ids file and ids_sha256 from the run case ids (group-qualified), and prints the change', async () => {
     const root = makeRepo('write-ids');
     resetLines();
     const before = readJsonAt(root, IDS_REL) as string[];
-    expect(before).toEqual(['A0001|1']);
+    expect(before).toEqual([qid('A0001|1')]);
     const res = await runCmd(parsedFor(root, { writeIds: true }), capture(), { computeRun: fakeComputeRun(fakeRun()) });
     expect(res.violations).toEqual([]);
     const ids = readJsonAt(root, IDS_REL) as string[];
-    expect(ids).toEqual(['A0001|1', 'A0002|1', 'A0003|1']);
+    expect(ids).toEqual([qid('A0001|1'), qid('A0002|1'), qid('A0003|1')]);
+    expect(ids.every((id) => id.startsWith(`${GROUP}|`))).toBe(true);
     const set = readJsonAt(root, SET_REL) as { groups: { id: string; ids_sha256?: string }[] };
     expect(set.groups[0]?.ids_sha256).toBe(REG.idsSha(ids));
     expect(set.groups.every((g) => !('ids' in g))).toBe(true);
@@ -173,11 +182,31 @@ describe('runCommand --write-ids: the ids are written by the tool, never typed (
   it('a run whose ids match the saved ones changes nothing and says so', async () => {
     const root = makeRepo('write-ids-same');
     resetLines();
-    const run = fakeRun({ cases: [scorerCase('A0001|1', 'MATCH', 'a'.repeat(64))] });
+    const run = fakeRun({ cases: [scorerCase(qid('A0001|1'), 'MATCH', 'a'.repeat(64))] });
     const res = await runCmd(parsedFor(root, { writeIds: true }), capture(), { computeRun: fakeComputeRun(run) });
     expect(res.violations).toEqual([]);
-    expect(readJsonAt(root, IDS_REL)).toEqual(['A0001|1']);
+    expect(readJsonAt(root, IDS_REL)).toEqual([qid('A0001|1')]);
     expect(lines.join('\n')).toMatch(/unchanged/);
+  });
+
+  it('two groups whose cases share notice|n write two different, group-qualified ids (O68-07)', async () => {
+    const root = makeRepo('write-ids-groups');
+    resetLines();
+    writeFileAt(root, 'mcbylaws/loop/data/ids-g2.json', JSON.stringify(['g2|A0001|1']) + '\n');
+    writeFileAt(root, SET_REL, JSON.stringify({ schema: 'regression-v1', groups: [{ id: GROUP, introduced_in: '1', external: true }, { id: 'g2', introduced_in: '1', external: true }], pending: [], removals: [] }, null, 2) + '\n');
+    // both groups score the same notice|n, so their ids differ only by the group prefix
+    const shared = scorerCase(qid('A0001|1'), 'MATCH', 'a'.repeat(64));
+    const twice = fakeRun({
+      cases: [shared, { ...shared, group: 'g2', id: 'g2|A0001|1' }],
+      groups: [{ id: GROUP, introduced_in: '1' }, { id: 'g2', introduced_in: '1' }],
+    });
+    const res = await runCmd(parsedFor(root, { writeIds: true }), capture(), { computeRun: fakeComputeRun(twice) });
+    expect(res.violations).toEqual([]);
+    const one = readJsonAt(root, IDS_REL) as string[];
+    const two = readJsonAt(root, 'mcbylaws/loop/data/ids-g2.json') as string[];
+    expect(one).toEqual([qid('A0001|1')]);
+    expect(two).toEqual(['g2|A0001|1']);
+    expect(one[0]).not.toBe(two[0]);
   });
 });
 
@@ -218,27 +247,40 @@ describe('runCommand --write: the record is written by this tool (PR-68-1)', () 
     // the classified layer23 file is bound by its index blob id; an unclassified file is not
     expect(rec.inputs['scripts/analysis/bylaw/evaluator.mjs']).toBe(gitRun(root, ['rev-parse', ':scripts/analysis/bylaw/evaluator.mjs']).trim());
     expect(Object.keys(rec.inputs)).not.toContain(SET_REL);
-    expect(rec.cases.map((c) => c.id)).toEqual(['A0001|1', 'A0002|1', 'A0003|1']);
+    expect(rec.cases.map((c) => c.id)).toEqual([qid('A0001|1'), qid('A0002|1'), qid('A0003|1')]);
     // the binding is checkBound-green on the tree it was written on
     expect(rec.accepted_findings).toEqual([]);
   });
 
-  it('maps the scorer class to the record status, and a case named in an accepted finding is accepted', async () => {
+  it('maps the scorer class to the record status, and only a FAILING case named in an accepted finding is accepted', async () => {
     const root = makeRepo('write-status');
     resetLines();
-    const findings = path.join(TMP, 'findings-status.json');
-    fs.writeFileSync(findings, JSON.stringify([{ case: 'A0002|1', finding_id: 'M-322', reason: 'the City figure is a typo in the parcel file, verified against the by-law copy' }]));
+    // the ids file of the fixture group holds exactly the ten cases this run scores, so the run covers the set it records
     const classes = ['MATCH', 'ANSWERED', 'BY-LAW CHANGED', 'NOT SCORABLE', 'DATA', 'DIFFER', 'NO ANSWER', 'NOT MODELLED', 'OWED', 'SOMETHING ELSE'];
-    // the ids keep the fixture's `A0000<n>|1` shape (no A00010: the finding names A0002|1 and a 4-digit id would read A00002|1)
-    const run = fakeRun({ cases: classes.map((c, i) => scorerCase(`A000${i + 1}|1`, c, String(i).repeat(64))) });
+    const cases = classes.map((c, i) => scorerCase(qid(`A000${i + 1}|1`), c, String(i).repeat(64)));
+    writeFileAt(root, IDS_REL, JSON.stringify(cases.map((c) => c.id)) + '\n');
+    const findings = path.join(TMP, 'findings-status.json');
+    // a finding on the SECOND case (ANSWERED, a pass) and one on the sixth (DIFFER, a fail): only the failing one is excused
+    fs.writeFileSync(findings, JSON.stringify([
+      { case: qid('A0002|1'), finding_id: 'M-330', reason: 'a finding on a passing case leaves the case as it passes' },
+      { case: qid('A0006|1'), finding_id: 'M-322', reason: 'the City figure is a typo in the parcel file, verified against the by-law copy' },
+    ]));
+    const run = fakeRun({ cases, report: { violations: ['floor_fell:article 10.20.40.40 accuracy 50 < 100'], owed: [] } });
     const res = await runCmd(parsedFor(root, { write: true, increment: '1', decision: 'revert', reason: 'round one: the statuses are mapped', findings }), capture(), {
       computeRun: fakeComputeRun(run),
       git: realGit(root),
     });
     expect(res.violations).toEqual([]);
     const rec = readJsonAt(root, 'docs/reports/loop-records/1/round-01.json') as { cases: { id: string; status: string }[]; accepted_findings: unknown[] };
-    expect(rec.cases.map((c) => c.status)).toEqual(['pass', 'accepted', 'pass', 'pass', 'pass', 'fail', 'fail', 'fail', 'fail', 'pending']);
-    expect(rec.accepted_findings).toHaveLength(1);
+    // A0002|1 (ANSWERED, pass) stays pass although a finding names it; A0006|1 (DIFFER, fail) becomes accepted;
+    // SOMETHING ELSE is outside the vocabulary and stays pending
+    expect(rec.cases.map((c) => c.status)).toEqual(['pass', 'pass', 'pass', 'pass', 'pass', 'accepted', 'fail', 'fail', 'fail', 'pending']);
+    // the run's own object is not mutated by the record: it still carries the printed class
+    expect(run.cases.map((c) => c.status)).toEqual(classes);
+    // every recorded status is one of the four of the vocabulary, never a printed class
+    expect(rec.cases.every((c) => ['pass', 'fail', 'accepted', 'pending'].includes(c.status))).toBe(true);
+    expect(rec.cases[0]?.id).toBe(qid('A0001|1'));
+    expect(rec.accepted_findings).toHaveLength(2);
   });
 
   it('missing --increment / --decision / --reason refuses and writes nothing', async () => {
@@ -301,9 +343,9 @@ describe('verifyCommand: derived values are computed here, never read from the r
     const blob = gitRun(root, ['rev-parse', `:${boundFile}`]).trim();
     writeRecord(root, 'docs/reports/loop-records/1/round-01.json', {
       schema: 'loop-record-v1', increment: '1', round: 1, decision: 'accept', reason: 'the increment is green: every case of the group passes',
-      accepted_findings: [], cases: [{ id: 'A0001|1', status: 'pass', got_sha: 'a'.repeat(64) }], inputs: { [boundFile]: blob },
+      accepted_findings: [], cases: [{ id: qid('A0001|1'), status: 'pass', got_sha: 'a'.repeat(64) }], inputs: { [boundFile]: blob },
     });
-    const res = await verifyCmd(parsedFor(root, { command: 'verify', json: true }), capture(), { computeRun: fakeComputeRun(fakeRun({ cases: [scorerCase('A0001|1', 'MATCH', 'a'.repeat(64))] })) });
+    const res = await verifyCmd(parsedFor(root, { command: 'verify', json: true }), capture(), { computeRun: fakeComputeRun(fakeRun({ cases: [scorerCase(qid('A0001|1'), 'MATCH', 'a'.repeat(64))] })) });
     expect(res.violations).toEqual([]);
     expect(lines).toHaveLength(1);
     const out = JSON.parse(lines[0] ?? '') as VerifyEntry[];
@@ -318,7 +360,7 @@ describe('verifyCommand: derived values are computed here, never read from the r
     expect(entry?.canary_ok).toBe(true);
     expect(entry?.red_twins_ok).toBe(true);
     expect(entry?.rounds_since_thresholds).toBe(0);
-    expect(entry?.cases).toEqual([{ id: 'A0001|1', status: 'pass', artifact: IDS_REL }]);
+    expect(entry?.cases).toEqual([{ id: qid('A0001|1'), status: 'pass', artifact: IDS_REL }]);
   });
 
   it('a record whose bound file changed on disk reads bound_ok: false (the blob from the index no longer matches)', async () => {
@@ -326,7 +368,6 @@ describe('verifyCommand: derived values are computed here, never read from the r
     resetLines();
     writeRecord(root, 'docs/reports/loop-records/1/round-01.json', {
       schema: 'loop-record-v1', increment: '1', round: 1, decision: 'revert', reason: 'round one: two cases still differ from the City',
-      accepted_findings: [], cases: [{ id: 'A0001|1', status: 'pass', got_sha: 'a'.repeat(64) }],
       inputs: { 'scripts/analysis/bylaw/evaluator.mjs': 'f'.repeat(40) },
     });
     await verifyCmd(parsedFor(root, { command: 'verify', json: true }), capture(), { computeRun: fakeComputeRun(fakeRun()) });
@@ -389,25 +430,25 @@ describe('removeCommand: the only door for dropping a regression id (M-343)', ()
     const root = makeRepo('remove-refused');
     resetLines();
     const before = fs.readFileSync(path.join(root, SET_REL), 'utf8');
-    const res = await removeCmd(parsedFor(root, { command: 'regression-remove', ruling: 'M-999', group: GROUP, ids: 'A0001|1' }), capture(), {
+    const res = await removeCmd(parsedFor(root, { command: 'regression-remove', ruling: 'M-999', group: GROUP, ids: qid('A0001|1') }), capture(), {
       rulings: new Map([['M-999', 'PROPOSED']]),
     });
     expect(res.violations).toEqual(['ruling_not_authority:M-999']);
     expect(fs.readFileSync(path.join(root, SET_REL), 'utf8')).toBe(before);
-    expect(readJsonAt(root, IDS_REL)).toEqual(['A0001|1']);
+    expect(idsOf(readJsonAt(root, IDS_REL))).toEqual([qid('A0001|1')]);
   });
 
   it('an authority ruling (M-322) removes the id, rehashes the group and records the removal', async () => {
     const root = makeRepo('remove-authority');
     resetLines();
-    const res = await removeCmd(parsedFor(root, { command: 'regression-remove', ruling: 'M-322', group: GROUP, ids: 'A0001|1' }), capture(), {
+    const res = await removeCmd(parsedFor(root, { command: 'regression-remove', ruling: 'M-322', group: GROUP, ids: qid('A0001|1') }), capture(), {
       rulings: new Map([['M-322', 'RATIFIED']]),
     });
     expect(res.violations).toEqual([]);
-    expect(readJsonAt(root, IDS_REL)).toEqual([]);
+    expect(idsOf(readJsonAt(root, IDS_REL))).toEqual([]);
     const set = readJsonAt(root, SET_REL) as { groups: { id: string; ids_sha256?: string }[]; removals: { ruling: string; group: string; ids: string[] }[] };
     expect(set.groups[0]?.ids_sha256).toBe(REG.idsSha([]));
-    expect(set.removals).toEqual([{ ruling: 'M-322', group: GROUP, ids: ['A0001|1'] }]);
+    expect(set.removals).toEqual([{ ruling: 'M-322', group: GROUP, ids: [qid('A0001|1')] }]);
     expect(lines.join('\n')).toContain('M-322');
     // the ratchet accepts the removal under the authority ruling
     expect(REG.checkRegression(readJsonAt(root, SET_REL) as unknown, readJsonAt(root, SET_REL) as unknown, new Map())).toEqual([]);
@@ -416,11 +457,11 @@ describe('removeCommand: the only door for dropping a regression id (M-343)', ()
   it('an id that is not active is refused with remove_unknown_id', async () => {
     const root = makeRepo('remove-unknown');
     resetLines();
-    const res = await removeCmd(parsedFor(root, { command: 'regression-remove', ruling: 'M-322', group: GROUP, ids: 'A9999|1' }), capture(), {
+    const res = await removeCmd(parsedFor(root, { command: 'regression-remove', ruling: 'M-322', group: GROUP, ids: qid('A9999|1') }), capture(), {
       rulings: new Map([['M-322', 'RULED']]),
     });
-    expect(res.violations).toEqual(['remove_unknown_id:A9999|1']);
-    expect(readJsonAt(root, IDS_REL)).toEqual(['A0001|1']);
+    expect(res.violations).toEqual([`remove_unknown_id:${qid('A9999|1')}`]);
+    expect(idsOf(readJsonAt(root, IDS_REL))).toEqual([qid('A0001|1')]);
   });
 });
 

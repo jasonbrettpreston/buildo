@@ -20,6 +20,8 @@ type Pre = {
   $comment: string;
   expected_moves: { clause: string; from: string; to: string; notice?: string }[];
   expected_totals: Record<string, number>;
+  increment: string;
+  group?: string;
 };
 type PreregCommit = { sha: string; files: string[] };
 type HistoryInput = { preregCommits: PreregCommit[]; roundCommit: { sha: string } | null; isStrictAncestor: (a: string, b: string) => boolean; preregFile: string };
@@ -27,8 +29,11 @@ type History = { preregCommits: PreregCommit[]; roundCommit: { sha: string } | n
 
 const PREREG_68 = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-1.json';
 const realPrereg = (): Pre => JSON.parse(fs.readFileSync(path.join(ROOT, PREREG_68), 'utf8')) as Pre;
-const row = (id: string, status: string, clause: string, group = 'g-172'): GateRow => ({ group, id, status, clause });
+const row = (id: string, status: string, clause: string, group = 'coa172'): GateRow => ({ group, id, status, clause });
 const pre = (over: Partial<Pre> = {}): Pre => ({ ...realPrereg(), ...over });
+// A complete registration for the fixtures: it names its increment (O68-05, required; the body is the committed MB-68 registration's
+// $comment, plan_ref and expected_totals). A fixture mutation overrides what it is about, and nothing else.
+const REGISTERED = (over: Partial<Pre> = {}): Pre => ({ ...realPrereg(), increment: '1', ...over });
 
 describe('preregPath: the one home (plan "Prereg path", MB-67 P67-1)', () => {
   it('names coa-expected/prereg-<MB-id>-<round>.json', () => {
@@ -41,20 +46,38 @@ describe('preregPath: the one home (plan "Prereg path", MB-67 P67-1)', () => {
 
 describe('checkPreregFile: a prereg is the coa-round form and names its task', () => {
   it('the committed MB-68 prereg has no violation', () => {
-    expect(M.checkPreregFile(realPrereg())).toEqual([]);
+    expect(M.checkPreregFile(REGISTERED())).toEqual([]);
+  });
+  it('a registration that leaves its increment out is refused (O68-05)', () => {
+    // the loop gates on the prereg of its OWN increment, so an unstated one is not a registration; the raw fixture is the red twin
+    expect(M.checkPreregFile(realPrereg())).toEqual(['prereg_shape:increment must be a string']);
+    const without = { ...REGISTERED() } as Record<string, unknown>;
+    delete without.increment;
+    expect(M.checkPreregFile(without as unknown as Pre)).toEqual(['prereg_shape:increment must be a string']);
   });
   it('each shape message of coa-round.mjs is one prereg_shape code', () => {
-    const v = M.checkPreregFile(pre({ schema: 'x', round: -1 }));
+    const v = M.checkPreregFile(REGISTERED({ schema: 'x', round: -1 }));
     expect(v).toContain('prereg_shape:schema must be coa-round-prereg-v1');
     expect(v).toContain('prereg_shape:round must be an integer >= 0');
   });
   it('a missing plan_ref is refused by its own shape message', () => {
-    expect(M.checkPreregFile(pre({ plan_ref: '' }))).toContain('prereg_shape:plan_ref must be a non-empty string');
+    expect(M.checkPreregFile(REGISTERED({ plan_ref: '' }))).toContain('prereg_shape:plan_ref must be a non-empty string');
   });
   it('a task that is not MB-<digits> is refused; a well-formed task is not', () => {
-    expect(M.checkPreregFile(pre({ task: 'MB68' }))).toEqual(['prereg_task_missing']);
-    expect(M.checkPreregFile(pre({ task: '' }))).toEqual(['prereg_task_missing']);
-    expect(M.checkPreregFile(pre({ task: 'MB-67' }))).toEqual([]);
+    expect(M.checkPreregFile(REGISTERED({ task: 'MB68' }))).toEqual(['prereg_task_missing']);
+    expect(M.checkPreregFile(REGISTERED({ task: '' }))).toEqual(['prereg_task_missing']);
+    expect(M.checkPreregFile(REGISTERED({ task: 'MB-67' }))).toEqual([]);
+  });
+  it('O68-05: increment is required and must be a string; an absent or numeric one is a shape violation', () => {
+    expect(M.checkPreregFile(REGISTERED({ increment: 2 as unknown as string }))).toContain('prereg_shape:increment must be a string');
+    const without = { ...REGISTERED() } as Record<string, unknown>;
+    delete without.increment;
+    expect(M.checkPreregFile(without as unknown as Pre)).toContain('prereg_shape:increment must be a string');
+    expect(M.checkPreregFile(REGISTERED({ increment: '2' }))).toEqual([]);
+  });
+  it('O68-04: group is optional and must be a string when named', () => {
+    expect(M.checkPreregFile(REGISTERED({ group: 'coa172' } as unknown as Partial<Pre>))).toEqual([]);
+    expect(M.checkPreregFile(REGISTERED({ group: 4 as unknown as string } as unknown as Partial<Pre>))).toContain('prereg_shape:group must be a string');
   });
 });
 
@@ -106,6 +129,30 @@ describe('checkPreregMoves: expected against actual, a surprise is a finding (M-
     expect(M.checkPreregMoves(pre({ expected_totals: TOTAL_AFTER }), null, moved())).toEqual([]);
     const p = pre({ expected_totals: { MATCH: 0 } });
     expect(M.checkPreregMoves(p, null, base)).toEqual(['totals_diff:DIFFER expected 0 got 1', 'totals_diff:MATCH expected 0 got 1', 'totals_diff:NO ANSWER expected 0 got 1']);
+  });
+  it('O68-04: the totals are of the prereg group only; another group\'s rows are not counted', () => {
+    // the default group is coa172; the same notices in another group must not be folded into the totals
+    const other = base.map((r) => ({ ...r, group: 'coa4d' }));
+    expect(M.checkPreregMoves(pre({ expected_totals: TOTALS }), null, [...base.map((r) => ({ ...r })), ...other])).toEqual([]);
+    // a prereg that names its group compares THAT group's rows, and only them
+    const p4d = REGISTERED({ expected_totals: { MATCH: 1, DIFFER: 1, 'NO ANSWER': 1 }, group: 'coa4d' });
+    expect(M.checkPreregMoves(p4d, null, [...base.map((r) => ({ ...r })), ...other])).toEqual([]);
+    // the twin: an unexpected class total of the named group is still a finding
+    const p4dBad = REGISTERED({ expected_totals: { MATCH: 2 }, group: 'coa4d' });
+    expect(M.checkPreregMoves(p4dBad, null, other)).toEqual(['totals_diff:DIFFER expected 0 got 1', 'totals_diff:MATCH expected 2 got 1', 'totals_diff:NO ANSWER expected 0 got 1']);
+  });
+  it('O68-04: moves are diffed inside the prereg group only, so another group is never an added or removed row', () => {
+    const cur = [...base.map((r) => ({ ...r })), row('Z9/26X|1', 'MATCH', '10.9.9.9(1)', 'coa4d')];
+    expect(M.checkPreregMoves(pre({ expected_totals: TOTALS }), base, cur)).toEqual([]);
+  });
+});
+
+describe('preregNotes: unchecked moves are said out loud (O68-04)', () => {
+  it('no base rows: the note names the gap instead of passing silently', () => {
+    expect(M.preregNotes(pre(), null)).toEqual(['prereg moves not checked: no base rows']);
+  });
+  it('with base rows there is nothing to say', () => {
+    expect(M.preregNotes(pre(), [])).toEqual([]);
   });
 });
 
