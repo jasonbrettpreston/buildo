@@ -1,0 +1,135 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g2
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts (27 tests | 27 failed) 57ms
+   × parseArgs > parses --mode=<v> as the check command with defaults for everything else 2ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > parses --mode <v> (space form) and the explicit check command 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > parses every valued and boolean flag 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > also accepts the valued flags in space form 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > names the four commands from the first positional word 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > errors when there is neither a command nor a mode 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > errors on an unknown mode for check 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > errors when regression-remove names no --ruling, --group or --ids 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × parseArgs > errors on an unknown flag with unknown_flag:<flag> 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × exitCodeFor > maps 2 (error), 1 (violations), 0 (green) 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × formatReport > prints FAIL lines, note lines and the ok summary 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × formatReport > prints one FAIL line per violation, one note line per note, then the failing summary 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × main with injected deps > green: exit 0, prints the ok line, deps called once with the parsed args 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × main with injected deps > red: exit 1 and prints FAIL <code> 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × main with injected deps > a throwing dep is 2 and prints cannot run 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × main with injected deps > bad args are 2 with a usage line and no deps called 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × the real CLI file > exits 2 and prints a usage line when run with no arguments 26ms
+     → expected 1 to be 2 // Object.is equality
+   × the real CLI file > exits 2 on --mode bogus 25ms
+     → expected 1 to be 2 // Object.is equality
+   × nameStatusFromText > parses adds and modifies 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × nameStatusFromText > gives both paths for a rename and ignores empty lines 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × git readers > stagedNameStatus reports an add, a modify and a rename (both paths) 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × git readers > rangeNameStatus unions the range and perCommitNameStatus lists each commit 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × git readers > perCommitNameStatus on renames > a rename with edited content is A + D (see the note below); with a pure rename it is R on both paths 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × git readers > mergeBase > finds the common ancestor of two refs 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × git readers > mergeBase > mergeBase of an absent ref is an empty string 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × git readers > blobIdsAt reads the index and a rev; a missing path is absent 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+   × git readers > readAt reads a rev, the index and returns null for a missing path 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 27 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > parses --mode=<v> as the check command with defaults for everything else
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > parses --mode <v> (space form) and the explicit check command
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > parses every valued and boolean flag
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > also accepts the valued flags in space form
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > names the four commands from the first positional word
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > errors when there is neither a command nor a mode
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > errors on an unknown mode for check
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > errors when regression-remove names no --ruling, --group or --ids
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > errors on an unknown flag with unknown_flag:<flag>
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > exitCodeFor > maps 2 (error), 1 (violations), 0 (green)
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > formatReport > prints FAIL lines, note lines and the ok summary
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > formatReport > prints one FAIL line per violation, one note line per note, then the failing summary
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > main with injected deps > green: exit 0, prints the ok line, deps called once with the parsed args
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > main with injected deps > red: exit 1 and prints FAIL <code>
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > main with injected deps > a throwing dep is 2 and prints cannot run
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > main with injected deps > bad args are 2 with a usage line and no deps called
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > nameStatusFromText > parses adds and modifies
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > nameStatusFromText > gives both paths for a rename and ignores empty lines
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > git readers > stagedNameStatus reports an add, a modify and a rename (both paths)
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > git readers > rangeNameStatus unions the range and perCommitNameStatus lists each commit
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > git readers > perCommitNameStatus on renames > a rename with edited content is A + D (see the note below); with a pure rename it is R on both paths
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > git readers > mergeBase > finds the common ancestor of two refs
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > git readers > mergeBase > mergeBase of an absent ref is an empty string
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > git readers > blobIdsAt reads the index and a rev; a missing path is absent
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > git readers > readAt reads a rev, the index and returns null for a missing path
+Error: Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate.mjs). Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/27]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > the real CLI file > exits 2 and prints a usage line when run with no arguments
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts:290:22
+    288|   it('exits 2 and prints a usage line when run with no arguments', () …
+    289|     const r = spawn([]);
+    290|     expect(r.status).toBe(2);
+       |                      ^
+    291|     expect(`${r.stdout}${r.stderr}`).toContain('usage');
+    292|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/27]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > the real CLI file > exits 2 on --mode bogus
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts:296:22
+    294|   it('exits 2 on --mode bogus', () => {
+    295|     const r = spawn(['--mode', 'bogus']);
+    296|     expect(r.status).toBe(2);
+       |                      ^
+    297|     expect(`${r.stdout}${r.stderr}`).toContain('bad_mode');
+    298|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/27]⎯
+
+ Test Files  1 failed (1)
+      Tests  27 failed (27)
+   Start at  14:24:34
+   Duration  236ms (transform 21ms, setup 6ms, collect 10ms, tests 57ms, environment 0ms, prepare 23ms)
+
