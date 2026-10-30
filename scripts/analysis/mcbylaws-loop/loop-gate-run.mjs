@@ -153,8 +153,10 @@ const floorsOf = (root, group) => {
 
 /**
  * Run the mode's groups and build the run object evaluateGate reads: `{ cases, skipped, canary, report, counts, baseRows, curRows,
- * regenMismatch, inputsFresh, groups, floorsOk }`, or null when no group runs (ci with only external groups: the CI note says those
- * cases are not run). curRows carry the printed CLASS (the prereg totals are by class). `inputsFresh` holds the recomputed value of every
+ * regenMismatch, inputsFresh, groups, ranGroups, floorsOk }`, or null when no group runs (ci with only external groups: the CI note
+ * says those cases are not run). `groups` is the set's whole universe; `ranGroups` the ids of the groups this run actually ran (a
+ * commit run runs the fast ones only). curRows carry the printed CLASS (the prereg totals are by class). `inputsFresh` holds the
+ * recomputed value of every
  * non-git input a `run --write` binds (the `data:<group>` content hashes and the `pin / <group> / <key>` values; O68-02), from the one
  * helper the write path uses too.
  * The canary re-checks each case's own value against itself through canon, so a red canary proves the comparison detects a mutation.
@@ -201,6 +203,9 @@ export function computeRun({ root, regression, mode, registerText, deps = {} }) 
     regenMismatch,
     inputsFresh,
     groups: all.map((g) => ({ id: g.id, introduced_in: g.introduced_in })),
+    // The groups this run actually ran (a commit run runs the fast ones only): evaluateGate declares just their ids, so a mode
+    // that skips a group by design is never `ran_fewer_than_declared`.
+    ranGroups: groups.map((g) => (g ? g.id : '')).filter(Boolean),
     floorsOk: violations.length === 0,
   };
 }

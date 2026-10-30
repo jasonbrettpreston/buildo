@@ -233,7 +233,11 @@ const RECORD_1 = 'docs/reports/loop-records/1/round-01.json';
 const RECORD_2_1 = 'docs/reports/loop-records/2/round-01.json';
 const RECORD_2_2 = 'docs/reports/loop-records/2/round-02.json';
 // O68-05: the prereg is found by FILE NAME, prereg-MB-<digits>-<record round>.json: the round here is 1.
-const PREREG_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-1.json';
+// O6: the prereg is found by name + increment, never by a task number fixed to MB-68 (prereg-MB-99-1.json is a foreign task's
+// name, the shape of a real one: the round's prereg is matched on the pattern, not on the digits).
+const PREREG_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-99-1.json';
+// A prereg of the round's NUMBER but of another increment: it must never be taken for round 1's.
+const PREREG_OTHER_INC_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-98-1.json';
 const PASS_CASE = 'c-pass';
 const ACCEPTED_CASE = 'c-acc';
 
@@ -333,8 +337,12 @@ function preregPayload(over: { [k: string]: unknown } = {}): Prereg {
   } as Prereg;
 }
 
-const percentFloors = (): unknown => ({ overall: { accuracy: 90, answered: 80 }, articles: {}, pooled: null, rulings: [] });
-const countFloors = (): unknown => ({ schema: 'loop-floors-v1', lines: { 'g-a cases': 2 }, rulings: [] });
+/** The prereg of a loop round: the file name carries the round, so round 1's prereg is this exact path. */
+function nextPreregRel(round: number): string {
+  return `scripts/analysis/bylaw-validation/coa-expected/prereg-MB-99-${round}.json`;
+}
+
+const percentFloors = (): unknown => ({ overall: { accuracy: 90, answered: 80 }, articles: {}, pooled: null, rulings: [] });const countFloors = (): unknown => ({ schema: 'loop-floors-v1', lines: { 'g-a cases': 2 }, rulings: [] });
 
 /** The base tree: increments, the base policy, the group, increment 1 accepted and green. */
 function seedBase(dir: string): void {
@@ -383,11 +391,12 @@ function boundInRange(dir: string, base: string): { [path: string]: string } {
 }
 
 function roundRecord(dir: string, recOver: { [k: string]: unknown } = {}, extra: string[] = [], boundRange?: string | undefined): LoopRec {
+  const round = typeof recOver.round === 'number' ? recOver.round : 1;
   const inputs = inputsOf(dir, [...BOUND_PATHS, ...extra]);
-  const rec = bind(recordPayload({ round: 1, inputs, ...recOver }));
+  const rec = bind(recordPayload({ round, inputs, ...recOver }));
   if (boundRange === undefined) return rec;
   const blobs = boundInRange(dir, boundRange);
-  return bind(recordPayload({ round: 1, inputs: { ...inputs, ...blobs }, ...recOver }));
+  return bind(recordPayload({ round, inputs: { ...inputs, ...blobs }, ...recOver }));
 }
 
 /** Make a message unique per binding and commit the tree, so the record is not landed by an earlier `git add -A`. */
@@ -452,12 +461,17 @@ function stageRound(dir: string, recOver: { [k: string]: unknown } = {}, extra: 
 
 /** stageRound for the tests that do not carry the run's g-b group: the round adds no case, so it adds no group either. */
 function stageRound1(dir: string, recOver: { [k: string]: unknown } = {}): void {
+  // O6 (MB-67 rule): the round's prereg is committed BEFORE the round, in HEAD; the round itself is only staged.
+  writeFile(dir, PREREG_REL, preregPayload());
+  commitBound(dir, 'prereg');
   writeRoundFiles(dir);
+  // writeRoundFiles writes the prereg too: it is already in HEAD, so it must not show up as a staged change of the round.
+  writeFile(dir, PREREG_REL, preregPayload());
   writeFile(dir, SET_REL, baseRegressionSet());
   // The base set names only g-a, so the round writes no g-b ids file at all.
   fs.rmSync(path.join(dir, IDS_B_REL), { force: true });
   stageAll(dir);
-  writeFile(dir, RECORD_2_1, roundRecord(dir, recOver, [CATALOGUE_NEXT, PREREG_REL, IDS_B_REL]));
+  writeFile(dir, RECORD_2_1, roundRecord(dir, recOver, [CATALOGUE_NEXT, IDS_B_REL]));
 }
 
 /**
@@ -563,9 +577,10 @@ describe('buildContext: commit mode', () => {
     // A record is a GENERATED path, but a record cannot bind its own blob (it is written after the round is bound): it is never bound.
     expect(ctx.classify(RECORD_2_1)).toBe('generated');
     expect(ctx.changedBound).not.toContain(RECORD_2_1);
-    expect(ctx.changedBound).toContain(PREREG_REL);
+    // The prereg is committed BEFORE the round (MB-67 rule: HEAD at commit time), so it is never a staged change of the round.
+    expect(ctx.changedBound).not.toContain(PREREG_REL);
 
-    // The round's own files are read at the index: prereg, bound blobs and the regression set agree with the record's inputs.
+    // The prereg is read at HEAD (the pre-round tree, where it was committed), never from the staged index.
     expect(ctx.preregFile).toBe(PREREG_REL);
     expect(ctx.prereg?.increment).toBe('2');
     expect(ctx.prereg?.group).toBe('g-a');
@@ -592,8 +607,8 @@ describe('buildContext: commit mode', () => {
     const dir = makeRepo();
     seedBase(dir);
     commitAll(dir, 'base');
-    writeFile(dir, PROTECTED_REL, { layer23: ['docs/**'] });
     stageRound1(dir);
+    writeFile(dir, PROTECTED_REL, { layer23: ['docs/**'] });
     stageAll(dir);
 
     const { buildContext } = await loadContext();
@@ -697,7 +712,7 @@ describe('buildContext: push and ci mode', () => {
     expect(c0).not.toBe(c1);
     // c2 (HEAD): increment 2 round 2 — the round's own prereg (its file name carries the round), then the record bound to the range
     // c1..HEAD (records excepted).
-    const PREREG_2_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-2.json';
+    const PREREG_2_REL = nextPreregRel(2);
     writeFile(dir, PREREG_2_REL, preregPayload({ round: 2 }));
     stageAll(dir);
     writeFile(dir, RECORD_2_2, roundRecord(dir, { round: 2 }, [PREREG_2_REL], c1));
@@ -730,5 +745,48 @@ describe('buildContext -> evaluateGate (end to end)', () => {
     const emptyBase = await seedLandedRound(empty, { reason: '' });
     const red = await buildContext({ mode: 'push', root: empty, base: emptyBase, target: '' }, await deps());
     expect(evaluateGate(red).violations).toContain('accept_without_reason');
+  });
+
+  it('O68-06: an honest DELETION of a bound code file is not input_not_bound (the deleted path has no blob to bind)', async () => {
+    const { buildContext } = await loadContext();
+    const evaluateGate = await evaluateGateOf();
+
+    const dir = makeRepo();
+    seedBase(dir);
+    const base = commitBound(dir, 'base');
+    // The round: a bound CODE file is DELETED, a fresh record lands beside it (a revert: the deletion cannot be accepted yet).
+    fs.rmSync(path.join(dir, CATALOGUE), { force: true });
+    writeFile(dir, PREREG_REL, preregPayload());
+    commitBound(dir, 'prereg');
+    const record = bind(
+      recordPayload({
+        decision: 'revert',
+        // the record names the OTHER bound inputs only: the deleted catalogue has no blob at the round's revision
+        inputs: { [SET_REL]: indexBlob(dir, SET_REL) },
+      }),
+    );
+    writeFile(dir, RECORD_2_1, record);
+    gitQ(dir, ['add', '-A']);
+    gitQ(dir, ['commit', '-q', '--no-verify', '-m', 'delete the catalogue']);
+
+    // the deletion IS in the change set (recordMissing sees it), it is just not a bound path
+    const push = await buildContext({ mode: 'push', root: dir, base, target: '' }, await deps());
+    expect(push.nameStatus.map((r) => `${r.s} ${r.p}`)).toContain(`D ${CATALOGUE}`);
+    expect(push.classify(CATALOGUE)).toBe('code');
+    expect(push.changedBound).not.toContain(CATALOGUE);
+    expect(push.treeBlobs[CATALOGUE]).toBeUndefined();
+    // the real evaluateGate over the real ctx: no input_not_bound for the honestly deleted file
+    expect(evaluateGate(push).violations).not.toContain(`input_not_bound:${CATALOGUE}`);
+
+    // commit mode reads the index: a staged deletion of the bound file, beside a staged fresh record, is judged the same way
+    gitQ(dir, ['reset', '-q', '--hard', base]);
+    fs.rmSync(path.join(dir, CATALOGUE), { force: true });
+    const stagedRecord = bind(recordPayload({ decision: 'revert', round: 2, inputs: { [SET_REL]: indexBlob(dir, SET_REL) } }));
+    writeFile(dir, RECORD_2_2, stagedRecord);
+    stageAll(dir);
+    const commitCtx = await buildContext({ mode: 'commit', root: dir, base: '', target: '' }, await deps());
+    expect(commitCtx.nameStatus.map((r) => `${r.s} ${r.p}`)).toContain(`D ${CATALOGUE}`);
+    expect(commitCtx.changedBound).not.toContain(CATALOGUE);
+    expect(evaluateGate(commitCtx).violations).not.toContain(`input_not_bound:${CATALOGUE}`);
   });
 });

@@ -103,6 +103,9 @@ const GEN_IDS = 'mcbylaws/loop/data/ids-g-a.json';
 const GEN_COUNT_FLOORS = 'mcbylaws/loop/floors-count.json';
 const RECORD_FILE = 'docs/reports/loop-records/2/round-01.json';
 const PREREG_FILE = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-1.json';
+// O68-01 (operator fix 1): ruling metadata the tooling reads but nobody edits as logic.
+const RULE_MAP = 'scripts/analysis/bylaw/_schema/bylaw-rule-map.json';
+const AMENDMENT_INDEX = 'docs/reference/maxbld-amendment-index.json';
 const RULING = 'M-322';
 const ACCEPTED_CASE = 'c-acc';
 const PASS_CASE = 'c-pass';
@@ -391,6 +394,172 @@ describe('stage 1: a range that touches no code, oracle or generated path is out
     });
     expect(v.notes).toEqual([]);
     expect(v.violations).toContain('record_missing');
+  });
+});
+
+// ---- O68-01: the metadata class and the prereg-only add (the two operator fixes) ----
+
+describe('O68-01 operator fix 1: a metadata-only change skips the record stages and is judged on the run alone', () => {
+  // The record, the prereg and the ratchet are all withdrawn: a metadata change must not be judged against any of them.
+  const metadataCtx = (c: Ctx): void => {
+    c.mode = 'commit';
+    c.nameStatus = [
+      { s: 'M', p: RULE_MAP },
+      { s: 'M', p: AMENDMENT_INDEX },
+    ];
+    c.commits = [clone(c.nameStatus)];
+    c.latest = null;
+    c.newRecords = [];
+    c.prereg = null;
+    c.preregFile = null;
+    c.preregHistory = null;
+    c.treeBlobs = {};
+    c.changedBound = [];
+    c.regression = { base: null, cur: null };
+  };
+
+  it('the rule map and the amendment index are metadata', () => {
+    expect(classify(RULE_MAP)).toBe('metadata');
+    expect(classify(AMENDMENT_INDEX)).toBe('metadata');
+  });
+
+  it('a metadata-only commit is green on a clean run, with no out-of-scope note', () => {
+    const v = verdictOf(metadataCtx);
+    expect(v.violations).toEqual([]);
+    expect(v.notes).toEqual([]);
+  });
+
+  it('a metadata-only commit whose pin does not regenerate is generated_not_regenerable (red twin)', () => {
+    const v = verdictOf((c) => {
+      metadataCtx(c);
+      runOrThrow(c).regenMismatch = ['generated_not_regenerable'];
+    });
+    expect(v.violations).toEqual(['generated_not_regenerable']);
+  });
+
+  it('only the run violations are reported: the run report passes through and nothing else is judged', () => {
+    const v = verdictOf((c) => {
+      metadataCtx(c);
+      runOrThrow(c).report.violations = ['floor_fell:article 10.20.40 accuracy 80.0 % is below its floor 90 %'];
+    });
+    expect(v.violations).toEqual(['floor_fell:article 10.20.40 accuracy 80.0 % is below its floor 90 %']);
+  });
+
+  it('a metadata-only commit with no run is run_missing in commit mode', () => {
+    const v = verdictOf((c) => {
+      metadataCtx(c);
+      c.run = null;
+    });
+    expect(v.violations).toEqual(['run_missing']);
+    expect(v.notes).toEqual([]);
+  });
+
+  it('the same at ci with no run is green with the external-groups note', () => {
+    const v = verdictOf((c) => {
+      metadataCtx(c);
+      c.mode = 'ci';
+      c.run = null;
+    });
+    expect(v.violations).toEqual([]);
+    expect(v.notes).toContain('external groups: not run in CI');
+  });
+
+  it('a metadata path beside a code path behaves as before: record_missing (red twin)', () => {
+    const v = verdictOf((c) => {
+      metadataCtx(c);
+      c.latest = { path: RECORD_FILE, rec: goodRecord() };
+      c.newRecords = [{ path: RECORD_FILE, rec: latestOf(c).rec }];
+      c.nameStatus = [...c.nameStatus, { s: 'M', p: CODE_PATH }];
+      c.commits = [clone(c.nameStatus)];
+      c.regression = { base: regressionSet(), cur: regressionSet() };
+    });
+    expect(v.violations).toEqual(['record_missing']);
+  });
+
+  it('the same metadata plus code commit with an added record is the green twin', () => {
+    const v = verdictOf((c) => {
+      metadataCtx(c);
+      c.prereg = preregOf();
+      c.preregFile = PREREG_FILE;
+      c.nameStatus = [
+        ...c.nameStatus,
+        { s: 'M', p: CODE_PATH },
+        { s: 'A', p: RECORD_FILE },
+      ];
+      c.commits = [clone(c.nameStatus)];
+      c.treeBlobs = { [CODE_PATH]: CODE_BLOB };
+      c.changedBound = [CODE_PATH];
+      c.regression = { base: regressionSet(), cur: regressionSet() };
+      c.latest = { path: RECORD_FILE, rec: goodRecord() };
+      c.newRecords = [{ path: RECORD_FILE, rec: latestOf(c).rec }];
+    });
+    expect(v.violations).toEqual([]);
+  });
+});
+
+describe('O68-01 operator fix 2: a commit that only ADDS a prereg file needs no record and no run', () => {
+  const preregCtx = (c: Ctx): void => {
+    c.mode = 'commit';
+    c.nameStatus = [{ s: 'A', p: PREREG_FILE }];
+    c.commits = [clone(c.nameStatus)];
+    c.latest = null;
+    c.newRecords = [];
+    c.prereg = null;
+    c.preregFile = null;
+    c.preregHistory = null;
+    c.treeBlobs = {};
+    c.changedBound = [];
+    c.regression = { base: null, cur: null };
+    c.run = null;
+  };
+
+  it('an added prereg alone is out of scope: no violations, the out-of-scope note', () => {
+    const v = verdictOf(preregCtx);
+    expect(v.violations).toEqual([]);
+    expect(v.notes).toContain('out of scope: no code, oracle or generated path changed');
+  });
+
+  it('a metadata-only change is NOT out of scope (the pin and the floors still run)', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'commit';
+      c.nameStatus = [{ s: 'M', p: RULE_MAP }];
+      c.commits = [clone(c.nameStatus)];
+      c.latest = null;
+      c.newRecords = [];
+      c.prereg = null;
+      c.preregFile = null;
+      c.preregHistory = null;
+      c.treeBlobs = {};
+      c.changedBound = [];
+      c.regression = { base: null, cur: null };
+    });
+    expect(v.notes).not.toContain('out of scope: no code, oracle or generated path changed');
+    expect(v.violations).toEqual([]);
+  });
+
+  it('a MODIFIED prereg still needs its record (red twin)', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'commit';
+      c.nameStatus = [{ s: 'M', p: PREREG_FILE }];
+      c.commits = [clone(c.nameStatus)];
+      c.latest = null;
+      c.newRecords = [];
+    });
+    expect(v.violations).toEqual(['record_missing']);
+  });
+
+  it('an added prereg beside a catalogue edit still needs its record', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'commit';
+      c.nameStatus = [
+        { s: 'A', p: PREREG_FILE },
+        { s: 'M', p: CODE_PATH },
+      ];
+      c.commits = [clone(c.nameStatus)];
+      c.latest = null;
+      c.newRecords = [];
+    });
+    expect(v.violations).toEqual(['record_missing']);
   });
 });
 

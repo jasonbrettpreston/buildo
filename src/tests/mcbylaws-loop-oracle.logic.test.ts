@@ -11,7 +11,7 @@ const M = await import(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-orac
 const FIXTURES = path.join(ROOT, 'mcbylaws/loop/fixtures');
 
 type NameStatus = { s: string; p: string };
-type Classify = (p: string) => 'generated' | 'oracle' | 'code' | null;
+type Classify = (p: string) => 'metadata' | 'generated' | 'oracle' | 'code' | null;
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-loop-oracle-'));
 afterAll(() => {
@@ -38,6 +38,17 @@ const HONEST_PLUS_HAND_ORACLE: NameStatus[] = [
   { s: 'M', p: 'src/tests/mcbylaws/loop/increment-1/expected-25.json' },
 ];
 
+// O68-01: the metadata paths (rule map, amendment index) and the prereg file of a CoA increment.
+const RULE_MAP = 'scripts/analysis/bylaw/_schema/bylaw-rule-map.json';
+const AMENDMENT_INDEX = 'docs/reference/maxbld-amendment-index.json';
+const PREREG = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-68-1.json';
+
+const METADATA_ONLY: NameStatus[] = [
+  { s: 'M', p: RULE_MAP },
+  { s: 'M', p: AMENDMENT_INDEX },
+];
+const METADATA_PLUS_CODE: NameStatus[] = [...METADATA_ONLY, { s: 'M', p: 'scripts/seeds/bylaw/layer3-catalogue.json' }];
+
 describe('globToRegExp (the prototype glob, ported)', () => {
   it('anchors and treats **/ as zero-or-more directories', () => {
     const re = M.globToRegExp('scripts/seeds/bylaw/**') as RegExp;
@@ -58,7 +69,7 @@ describe('globToRegExp (the prototype glob, ported)', () => {
   });
 });
 
-describe('makeClassifier (generated checked first, then oracle, then code)', () => {
+describe('makeClassifier (metadata first, then generated, then oracle, then code)', () => {
   it('classifies the three classes and leaves the rest null', () => {
     expect(classify('scripts/analysis/bylaw/front-averaging.mjs')).toBe('code');
     expect(classify('scripts/analysis/bylaw-validation/coa-round.mjs')).toBe('code');
@@ -73,6 +84,16 @@ describe('makeClassifier (generated checked first, then oracle, then code)', () 
     expect(classify('docs/reference/bylaw-provisions.json')).toBeNull();
     expect(classify('src/tests/mcbylaws-loop-oracle.logic.test.ts')).toBeNull();
     expect(classify('scripts/analysis/mcbylaws-loop/loop-oracle.mjs')).toBeNull();
+  });
+
+  it('O68-01: the rule map and the amendment index are METADATA, checked before the layer23 code', () => {
+    // The rule map lives under `scripts/analysis/bylaw/**` (a layer23 code glob): metadata wins.
+    expect(M.METADATA_GLOBS).toEqual([RULE_MAP, 'scripts/analysis/bylaw-validation/maxbld-amendment-index.json', AMENDMENT_INDEX]);
+    expect(classify(RULE_MAP)).toBe('metadata');
+    expect(classify(AMENDMENT_INDEX)).toBe('metadata');
+    expect(classify('scripts/analysis/bylaw-validation/maxbld-amendment-index.json')).toBe('metadata');
+    // A neighbouring code path of the same directory is still code.
+    expect(classify('scripts/analysis/bylaw/front-averaging.mjs')).toBe('code');
   });
 
   it('a generated path inside an oracle glob stays generated', () => {
@@ -191,6 +212,28 @@ describe('commitStageFires', () => {
       M.commitStageFires([{ s: 'A', p: 'src/tests/mcbylaws/loop/increment-1/expected-25.json' }], classify),
     ).toBe(true);
   });
+
+  it('O68-01: a metadata change fires the stage (the pin and the floors still run)', () => {
+    expect(M.commitStageFires([{ s: 'M', p: RULE_MAP }], classify)).toBe(true);
+    expect(M.commitStageFires(METADATA_ONLY, classify)).toBe(true);
+  });
+
+  it('O68-01: an added prereg file alone does NOT fire the stage (no run to bind)', () => {
+    expect(M.commitStageFires([{ s: 'A', p: PREREG }], classify)).toBe(false);
+  });
+
+  it('O68-01: a MODIFIED prereg still fires the stage', () => {
+    expect(M.commitStageFires([{ s: 'M', p: PREREG }], classify)).toBe(true);
+  });
+
+  it('O68-01: an added prereg beside a catalogue edit still fires the stage', () => {
+    expect(
+      M.commitStageFires(
+        [{ s: 'A', p: PREREG }, { s: 'M', p: 'scripts/seeds/bylaw/layer3-catalogue.json' }],
+        classify,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe('recordMissing', () => {
@@ -231,6 +274,49 @@ describe('recordMissing', () => {
   it('docs only without a record is green', () => {
     expect(M.recordMissing([{ s: 'M', p: 'docs/reference/bylaw-provisions.md' }], classify)).toEqual([]);
   });
+
+  it('O68-01: a metadata-only change needs no record (the green twin)', () => {
+    expect(M.recordMissing(METADATA_ONLY, classify)).toEqual([]);
+  });
+
+  it('O68-01: a metadata path beside code still needs the record (the red twin)', () => {
+    expect(M.recordMissing(METADATA_PLUS_CODE, classify)).toEqual(['record_missing']);
+    expect(
+      M.recordMissing([...METADATA_PLUS_CODE, { s: 'A', p: 'docs/reports/loop-records/inc1/round-03.json' }], classify),
+    ).toEqual([]);
+  });
+
+  it('O68-01: an added prereg file alone needs no record (the green twin)', () => {
+    expect(M.recordMissing([{ s: 'A', p: PREREG }], classify)).toEqual([]);
+  });
+
+  it('O68-01: a MODIFIED prereg still needs the record', () => {
+    expect(M.recordMissing([{ s: 'M', p: PREREG }], classify)).toEqual(['record_missing']);
+  });
+
+  it('O68-01: an added prereg beside a catalogue edit still needs the record', () => {
+    expect(
+      M.recordMissing(
+        [{ s: 'A', p: PREREG }, { s: 'M', p: 'scripts/seeds/bylaw/layer3-catalogue.json' }],
+        classify,
+      ),
+    ).toEqual(['record_missing']);
+  });
+});
+
+describe('preregOnly / metadataOnly (the two operator fixes)', () => {
+  it('preregOnly is true for newly added preregs only', () => {
+    expect(M.preregOnly([{ s: 'A', p: PREREG }], classify)).toBe(true);
+    expect(M.preregOnly([{ s: 'M', p: PREREG }], classify)).toBe(false);
+    expect(M.preregOnly([{ s: 'A', p: PREREG }, { s: 'M', p: 'scripts/seeds/bylaw/vocab.json' }], classify)).toBe(false);
+    expect(M.preregOnly([], classify)).toBe(false);
+  });
+
+  it('metadataOnly is true only when every classified path is metadata', () => {
+    expect(M.metadataOnly(METADATA_ONLY, classify)).toBe(true);
+    expect(M.metadataOnly(METADATA_PLUS_CODE, classify)).toBe(false);
+    expect(M.metadataOnly([], classify)).toBe(false);
+  });
 });
 
 describe('boundPaths', () => {
@@ -266,6 +352,13 @@ describe('boundPaths', () => {
     ];
     for (const p of generated) expect(classify(p)).toBe('generated');
     expect(M.boundPaths(generated, classify)).toEqual([]);
+  });
+
+  it('O68-01: a metadata path never binds (it is not a logic input of the record)', () => {
+    for (const p of [RULE_MAP, AMENDMENT_INDEX]) expect(classify(p)).toBe('metadata');
+    expect(M.boundPaths([RULE_MAP, AMENDMENT_INDEX, 'scripts/seeds/bylaw/layer3-catalogue.json'], classify)).toEqual([
+      'scripts/seeds/bylaw/layer3-catalogue.json',
+    ]);
   });
 });
 
