@@ -4,9 +4,9 @@
     "68": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 536,
-        "bytes": 93785,
-        "commit": "mcbylaw-merge-2026-10-07"
+        "lines": 560,
+        "bytes": 100000,
+        "commit": "mb-rulings-2026-10-30"
       }
     },
     "69": {
@@ -65,9 +65,9 @@
       "why": "Spec 124 R-GU (operator y 2026-10-20: a generated spec keeps a size check, not the hand-written line budget). Seeded at 1.5x the first Spec 132 (617 lines, 74,851 B), measured: a ruling attaches to an existing line or adds one, so ordinary growth is bytes (this lane: four rulings, one line, the spec header and Operating Boundaries = +16 lines, +1.9 KB), and the largest single-commit growth on record is +108 lines / +24 KB (a864e66c, the generated section 1 tables). The cap absorbs one more step of that size plus ordinary growth, and stays below Spec 124's own byte ceiling (126,959 B), so the reading surface never outgrows the register it summarises. Hitting it means the generator copies register text instead of summarising it, or Spec 132 needs splitting; raise it only by a reviewed hand-edit with a new why."
     },
     "133": {
-      "max_lines": 2000,
-      "max_bytes": 117000,
-      "why": "Spec 69a M-260 / Spec 124 R-IY (operator y 2026-10-21, 2026-10-21-chat-batch-m-43#CHAT-43: a generated spec keeps a size check, not the hand-written line budget; the R-GU form). Seeded at 1.5x the first Spec 133 (1438 lines, 79,708 B, 307 rules: 245 M-rows + 62 LC-rows, 4 lines and about 250 B per rule), measured: a rule costs one line block, so growth is the register's growth (the by-law fix lanes added 12 M-rows, M-248 to M-259, on 2026-10-21 alone: about 50 lines and 3 KB). The cap absorbs roughly 100 more rows, and stays far below the registers it summarises (Spec 69a plus Spec 131 are 468,318 B), so the reading surface never outgrows them. Hitting it means the generator copies register text instead of summarising it (the headline clip is 300 characters), or the handbook needs splitting by family; raise it only by a reviewed hand-edit with a new why."
+      "max_lines": 2400,
+      "max_bytes": 140000,
+      "why": "Spec 69a M-260 / Spec 124 R-IY (operator y 2026-10-21, 2026-10-21-chat-batch-m-43#CHAT-43: a generated spec keeps a size check, not the hand-written line budget; the R-GU form). Seeded at 1.5x the first Spec 133 (1438 lines, 79,708 B, 307 rules: 245 M-rows + 62 LC-rows, 4 lines and about 250 B per rule), measured: a rule costs one line block, so growth is the register's growth (the by-law fix lanes added 12 M-rows, M-248 to M-259, on 2026-10-21 alone: about 50 lines and 3 KB). The cap absorbs roughly 100 more rows, and stays far below the registers it summarises (Spec 69a plus Spec 131 are 468,318 B), so the reading surface never outgrows them. Hitting it means the generator copies register text instead of summarising it (the headline clip is 300 characters), or the handbook needs splitting by family; raise it only by a reviewed hand-edit with a new why. REVIEWED RAISE 2026-10-30 (operator CARD-wave0 E2, \"approve all recommendations\"): batch aj-1 and aj-2 add 49 M and LC rules at about 5 lines each (about 250 lines, 12 KB); the cap is raised to 2400 lines / 140,000 bytes, still far below the registers it summarises."
     }
   },
   "role_banner_pending": [

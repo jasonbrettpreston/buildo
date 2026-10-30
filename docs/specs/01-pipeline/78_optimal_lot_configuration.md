@@ -495,6 +495,8 @@ House + suite ≠ houseplex (height max(HT, 10.0), no storey cap and 19 m depth 
 
 **The step** — `compute_maxbld_scenarios`, a net-new MATERIALIZER born V3. It is specified once, in **§Phase-5** (identity and chain placement in its header, outputs in P5.10, shape and counters in P5.11), with its policy in Spec 131. The paragraph that stood here (2026-10-07) proposed the slug and chain placement after `resolve_bylaws` and before `compute_parcel_cost_estimates`; §Phase-5 supersedes it. The first release is as-of-right with the P5.1 forms **plus the CoA tier** (operator 2026-10-18; P5.10a, O-18); this section's registry, townhouse forms and K axis join it by a catalogue pin change. Population: declared as a query (Spec 124 R-AY); R-AS is N/A (no legacy step; R-DK net-new).
 
+> *Dated note 2026-10-30 (Spec 69a M-377; `2026-10-30-batch-aj#CHAT-211.M61-CAT`):* the first-release deferral of the formula registry (section 6.3) is superseded: the formula catalogue is built by MB-31 (M-61, M-377).
+
 ### 6.4 The CoA axis (Spec 69 M-65)
 
 **Method** (operator ruling 2026-10-07 on `.cursor/mcbylaw/phase3-prework/coa-second-look.md`): **CoA(s) = AOR(s) × u_form(s)** — a citywide pure CoA uplift per building form, fitted against the AOR of the **same** form. No storey-p90 switch, no `realized_fsi_p90` cap, no per-neighbourhood factor.

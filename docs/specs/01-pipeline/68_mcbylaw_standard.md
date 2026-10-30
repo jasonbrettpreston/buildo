@@ -44,6 +44,10 @@
 | **O-6** | **Cheap to keep current.** An amendment is detected by a re-fetch diff; only the clause units whose text changed become `pending:stale` and are re-keyed. | 1 |
 | **O-7** | **Honest about what it does not cover.** Former by-laws, provincial overrides, unmodelled constraints, model heuristics and uncaptured exceptions are rows or counted disclosures. | 1 |
 | **O-8** | **Ground-truthed.** Required values checked against Committee of Adjustment (CoA) decisions; our code's values checked against the table. | 2–3 |
+| **O-9** | **Limits only from the table** (declared scoping; no code chooses a rule). `2026-10-30-batch-aj#CHAT-211.S68-OBJ` | 2 |
+| **O-10** | **Every Layer 2 result cites itself** (winner or absence ruling, losing candidates, closed status, inputs). `2026-10-30-batch-aj#CHAT-211.S68-OBJ` | 2 |
+| **O-11** | **Nothing typed in**: every Layer 3 number from Layer 2, catalogue rows, building types, switches, settings. `2026-10-30-batch-aj#CHAT-211.S68-OBJ` | 3 |
+| **O-12** | **Accurate against real cases**: MB-13 thresholds on the regression set, then on the proof set. `2026-10-30-batch-aj#CHAT-211.S68-OBJ` | 3 |
 
 ## 2. Intent — why this exists
 
@@ -72,6 +76,13 @@ Each is printed by the validator or recorded by a named artifact.
 | **SC-11** | Page-set completeness | TOC entries that touch residential zones and map to neither a pinned page nor a page rule | 1 missed (Ch.600.60) *[measured]*; S0.5: 23 more + 1 undetermined (Ch.500) *[measured]*, ruled by Spec 69 M-47 | **0** | 1 | G-UNIVERSE |
 | **SC-12** | Closed-model fit | clause units keyed `UNUSUAL` | pre-sorter prior only (3.0 % std · 1.0 % exception, a regex of ≈ 77–90 % precision, not a measurement); **true share measured on keyed units by S0.5** | every UNUSUAL unit `not_modelled` and disclosed; share reported | 1–2 | G-SHAPE |
 | **SC-13** | Exception coverage | excepted residential lots whose exception, and every exception it INCLUDEs, is captured | 0 % | wave 1 / both waves re-measured at Phase 2 entry (probe: direct-ranked top 220 = **74.75 %**; INCLUDE-closed-ranked top 220 = **74.38 %**; both waves 88.6 % of 339,125) *[measured, panel]* | 2 | census render |
+| **SC-14** | Layer 2 scoping is data | rule-choice branches outside `evaluate.mjs` candidate selection | not measured | **0** | 2 | G-EXC-LIT (MB-18); `2026-10-30-batch-aj#CHAT-211.S68-SC` |
+| **SC-15** | Layer 2 results cite | Spec 134 I2 violations (134:85) | not run | **0**, checked at the MB-26 night; not part of the Phase 3 exit | 2 | `resolve_bylaws` I2 |
+| **SC-16** | Layer 2 never defaults | `inputs_defaulted` (134:91) | MB-54 finding | **0**, checked at the MB-26 night; not part of the Phase 3 exit | 2 | `resolve_bylaws` I10 |
+| **SC-17** | Layer 3 numbers sourced | G13 findings + catalogue inputs that resolve to nothing | n/a | **0** | 3 | G13 (MB-67); `layer3-catalogue.logic` (MB-31) |
+| **SC-18** | Calculations declared | written Layer 3 fields with no catalogue row | no catalogue | **0** | 3 | `layer3-catalogue.logic` |
+| **SC-19** | Accuracy on real cases | per M-362 (GFA, height, storeys, footprint, units): direction; CAUGHT + CAUGHT-ESTIMATE; CAUGHT; false, soft alarms; wrong limits | round 1 | **>= 90 % per measure; >= 70 %; >= 50 %; <= 10 (0 on existing-lot minimums, party walls); <= 15; <= 3, 0 with complete inputs** (M-362, 69a:498) | 3 | the loop (MB-27), the proof set (MB-28): the Phase 3 exit |
+| **SC-20** | Shadow explains every difference | `unexplained`, `layer3_defect` | not built | **0, 0** (M-71, 69a:131) | after exit | shadow (MB-33) |
 
 ## 4. The five words, defined for the table
 

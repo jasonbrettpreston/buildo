@@ -6916,6 +6916,160 @@
         "anchor": "y), the Q-CE2 (compute_coa_cost_estimates `cost_"
       },
       "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R-KF",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A step's compute closure is its step files plus the shared evaluator it declares; harnesses call only the step.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "OWED means blocked; one exemption, BOOT-1.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A step code commit cites a RULED rule from its task's pre-registered rules[].",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KI",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A step's loop set runs at commit, push and CI; red-by-design tests live in pending/.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KJ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A step in conversion imports no code from a superseded implementation.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Every DONE line's commit exists on its branch, checked by script.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KL",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Dirty and unpushed worktrees of a programme are reported at pre-push.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KM",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "No exception paths; each step code commit carries its panel record.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KN",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Step and evaluator-extension code holds no by-law knowledge as a literal.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Claims and briefs are checked before they leave the orchestrator (Spec 08 section 7 rule 10).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The promises register is generated and the promises check is mechanical (MB-73).",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -7253,6 +7407,61 @@
       "id": "R-AH",
       "class": "partial",
       "reason": "partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes"
+    },
+    {
+      "id": "R-KF",
+      "class": "none",
+      "reason": "OWED MB-31: step-closure.logic.test.ts (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KG",
+      "class": "none",
+      "reason": "OWED MB-67: gate arm (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KH",
+      "class": "none",
+      "reason": "OWED MB-67: gate arm red on 1d4b20d9 message (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KI",
+      "class": "none",
+      "reason": "OWED MB-68: hook arms; hooks-composition.infra (MB-68) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KJ",
+      "class": "none",
+      "reason": "OWED MB-31: the R4-09 input-allowlist test (step-closure.logic.test.ts) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KK",
+      "class": "none",
+      "reason": "OWED MB-67: mcbylaws-queue-check.mjs (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KL",
+      "class": "none",
+      "reason": "OWED MB-67: pre-push summary line (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KM",
+      "class": "none",
+      "reason": "OWED MB-67: gate arm (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KN",
+      "class": "none",
+      "reason": "OWED MB-67: ast-grep arm red on maxbld-invariants.mjs and LIFT_ZONES (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KO",
+      "class": "none",
+      "reason": "OWED MB-67: card-cite-check.mjs; brief command check vs bash_allow (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built)"
+    },
+    {
+      "id": "R-KQ",
+      "class": "none",
+      "reason": "OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built)"
     }
   ]
 }

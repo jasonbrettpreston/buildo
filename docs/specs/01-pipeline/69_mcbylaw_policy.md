@@ -31,6 +31,8 @@
 > (`.cursor/mcbylaw/phase3-prework/coa-second-look.md`). Standard: Spec 68 §11.1 and the §7.4 Layer 3 block; deliverable:
 > Spec 78 §6. (M-58..M-60 are the `wf1/mcbylaw-harden` rows; M-60 stays provisional and no Phase 3 row depends on its held items.)
 >
+> *Dated note 2026-10-30 (M-383; `2026-10-30-batch-aj#CHAT-211.M-OBJ`):* "the five objectives" are standardized, observable, scalable, accurate and understandable, defined by Spec 124a R-BA and Spec 68 section 4 and bound to every McBylaws phase by M-383.
+>
 > **v0.5:** the standing rules that only restated a gate (M-3..M-10, M-12, M-13, M-16, M-18, M-24) moved into Spec 68
 > §6.4; their ids are retired here and never reused. Numbers in this register are evidence quotes tagged with how they
 > were obtained; the live values are the generated files (`universe.lock.json`, `census.json`) — on disagreement the

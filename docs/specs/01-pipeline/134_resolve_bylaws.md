@@ -49,6 +49,8 @@ The step writes only its own tables. Storage follows Spec 78 §6.8's **lean** fo
 - **Lineage:** every row carries `table_version`, `evaluator_version` and `row_sha` (sha256 over the canonical result columns, recomputed by SQL every run: I14).
 - **The migration** creates the tables empty with their indexes and closed-column CHECKs generated from `layer2-map.json`, and the orchestrator adds them to `LARGE_TABLES` at landing (P2:61). DOWN drops them. Supabase disk cannot shrink (P2:63): the budget (§6) is declared before cutover.
 
+> 2026-10-30: design options, see 69a M-400.
+
 ## 4. Status sets and `layer2-map.json`
 
 **Two sets, one declared total map** (Spec 69a M-232; `2026-10-20-scenario-build-rulings#R-5`):

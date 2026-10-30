@@ -13,6 +13,8 @@ const ROOT = path.resolve(__dirname, '../../');
 const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const A = read('docs/specs/01-pipeline/124a_step_standard_policy_appendix.md');
 const M = read('docs/specs/01-pipeline/69a_mcbylaw_register.md');
+const L131 = read('docs/specs/01-pipeline/131_lot_configuration_policy.md');
+const S68 = read('docs/specs/01-pipeline/68_mcbylaw_standard.md');
 const map = JSON.parse(read('scripts/steps/_schema/rule-map.json')) as { rules: Array<{ id: string; handbook_line: string }>; lines: Array<{ id: string }> };
 const rowOf = (text: string, id: string) => text.split('\n').find((l) => l.startsWith(`| ${id} |`) || l.startsWith(`| **${id}** |`)) ?? '';
 
@@ -611,5 +613,65 @@ describe('R-IZ / R-JA / R-JC / R-JD: each 2026-10-22 chat ruling is a register r
     for (let n = 1; n <= 10; n++) expect(M, `CHAT-63.C${n}`).toContain(`2026-10-22-batch-z3#CHAT-63.C${n}\``);
     expect(rowOf(M, 'M-329')).toContain('CHAT-70.4');
     expect(rowOf(M, 'M-317')).toContain('2026-10-22-batch-z7#CHAT-70.1');
+  });
+});
+
+// CHAT-211 (batch 2026-10-30-batch-aj): each Rule text line is present in the register that carries it and cites its decision.
+describe('CHAT-211 (batch 2026-10-30-batch-aj): 40 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["R-KF", "A", "2026-10-30-batch-aj#CHAT-211.G1", "A pending or converted step's compute closure is its step files plus the shared evaluator it declares; harnesses call only the step."],
+    ["R-KG", "A", "2026-10-30-batch-aj#CHAT-211.G2", "OWED means blocked: a step code commit cites only rules RULED with no OWED marker; rule and lock land together (124:186); OWED clears by the generator; one exemption, BOOT-1 (MB-66..MB-68, until MB-67 lands)."],
+    ["R-KH", "A", "2026-10-30-batch-aj#CHAT-211.G3", "A step code commit cites a RULED rule from its task's pre-registered rules[]."],
+    ["R-KI", "A", "2026-10-30-batch-aj#CHAT-211.G7", "A step's loop set runs at commit, push and CI; red-by-design tests live in pending/ (the directory is created by MB-68)."],
+    ["R-KJ", "A", "2026-10-30-batch-aj#CHAT-211.G8", "A step in conversion imports no code from a superseded implementation."],
+    ["R-KK", "A", "2026-10-30-batch-aj#CHAT-211.G9", "Every DONE line's commit exists on its branch, checked by script."],
+    ["R-KL", "A", "2026-10-30-batch-aj#CHAT-211.G11", "Dirty and unpushed worktrees of a programme are reported at pre-push."],
+    ["R-KM", "A", "2026-10-30-batch-aj#CHAT-211.G12", "No exception paths, other than BOOT-1 (R-KG), which ends when MB-67 lands; each step code commit carries its panel record."],
+    ["R-KN", "A", "2026-10-30-batch-aj#CHAT-211.G13", "Step and evaluator-extension code holds no by-law knowledge as a literal; numbers allowed 0, 1, -1, 2, 100; strings limited to the closed status words in vocab.json and table field names."],
+    ["R-KO", "A", "2026-10-30-batch-aj#CHAT-211.G10", "Spec 08 section 7 rule 10: claims and briefs are checked before they leave the orchestrator; no recommendation goes to the operator without its rule quoted with file:line, and a DeepSeek brief names only checks runnable through bash_allow, else provider claude with the reason logged."],
+    ["R-KQ", "A", "2026-10-30-batch-aj#CHAT-211.MB73", "A promises register is a generated view of programme-items.json (extends R-T, 124a:133); mcbylaws-promises.mjs --check (to be built by MB-73) fails when a promise has no artifact, a missing artifact, a non-green last run, a DONE task with no commit, or an old-engine import; it runs at pre-push, in CI and at every increment boundary (extends R-KK)."],
+    ["M-378", "M", "2026-10-30-batch-aj#CHAT-211.M-SWITCH", "One switchboard, built by MB-31 at scripts/seeds/bylaw/switchboard.json (to be built by MB-31): rows {id, kind, state, ruling, reason}, kind in clause, formula, scenario, building_type, reading; default on, except where the switch's own ruling sets it off (shape_calibration, LC-69); off beats on; every result lists the switches on its path."],
+    ["M-379", "M", "2026-10-30-batch-aj#CHAT-211.M-SUITE", "The house with a secondary suite differs from the detached house only through LC-33's closed gain reasons; INV-3 is about the rear suite."],
+    ["M-380", "M", "2026-10-30-batch-aj#CHAT-211.M-EXPECT", "Expected answers are the authority: worked examples and fresh expected answers are protected paths; an accepted loop change names the cases it made pass; one Layer 3 writer."],
+    ["M-381", "M", "2026-10-30-batch-aj#CHAT-211.M-CONFLICT", "Before a ruling is recommended, the register is searched for conflicting rows; every 69a, Spec 131 and Spec 124a row that cites the same clause, target or building type, and every other row of the same batch, is listed, each marked no conflict (with reason) or amends/supersedes."],
+    ["M-382", "M", "2026-10-30-batch-aj#CHAT-211.M-WIP", "Done means committed, named test green in the loop run, ruling recorded and queue line updated; at most N held patches, where N is a logic variable set by operator decision O-6 (unruled); a lane is one writer branch; built-ahead work is held only as a listed patch."],
+    ["M-383", "M", "2026-10-30-batch-aj#CHAT-211.M-OBJ", "The five objectives (standardized, observable, scalable, accurate, understandable; R-BA, Spec 68 section 4) bind every McBylaws phase, measured by Spec 68 O-1..O-12 and SC-1..SC-20; McBylaws has no exception path other than BOOT-1 (R-KG); the objectives have one home, Spec 68 section 4, and this row only cites them."],
+    ["M-384", "M", "2026-10-30-batch-aj#CHAT-211.P3-MODEL", "Phase 3 is tables, not code: formulas are data in a catalogue (code = one generic runner plus a closed helper list); no old code is imported (R-KJ); Phase 3 is a test-and-validate loop; every non-law setting is a logic variable and law numbers come only from Phase 2, except the front-yard data chain ruled by CHAT-210.MB54-Q, which uses data and settings, never law, and is flagged front_yard_needs_survey; building types, formulas, settings and switches are table rows."],
+    ["M-377", "M", "2026-10-30-batch-aj#CHAT-211.M61-CAT", "The formula catalogue is M-61's formula registry; it is built by MB-31 at scripts/seeds/bylaw/layer3-catalogue.json (to be built by MB-31); changing a calculation is editing a row and its examples; a form the grammar cannot express is a ruling to extend M-72; every change goes through the loop."],
+    ["clause (4) of M-377", "M", "2026-10-30-batch-aj#CHAT-211.START-SMALL", "Start small and expand through the loop: increment 1 is the detached house, core numbers only, on the 25 golden cases; each later increment adds one field, building type or case set and enters only when the previous is green in the loop."],
+    ["dated note on the 69a header", "M", "2026-10-30-batch-aj#CHAT-211.HDR", "The \"Next free id\" line of the 69a header is generated, not hand-kept (69a:12 said M-334; the highest id is M-376)."],
+    ["M-385", "M", "2026-10-30-batch-aj#CHAT-211.R3-01", "R3-01 Undecided never means zero: a not_evaluated or condition_unknown Phase 2 input makes every row that reads it not_evaluated with the reason carried forward; it is never treated as 0, as absent, or as unlimited."],
+    ["M-386", "M", "2026-10-30-batch-aj#CHAT-211.R3-02", "R3-02 Flags propagate: needs_survey, user_supplied, shape_box_assumed, option:<id> and every disclosure on an input are inherited by every row derived from it, up to the headline."],
+    ["M-387", "M", "2026-10-30-batch-aj#CHAT-211.R3-03", "R3-03 Front-yard chain: law stays in Phases 1-2; whether 10.5.40.70(1) applies is Phase 2's decision and the averaging arithmetic is the Phase 1 row's own expression; the chain is the one ruled exception (CHAT-210.MB54-Q): Phase 3 supplies only the neighbour-setback input in the ruled order, using data and settings, never law, flagged front_yard_needs_survey; the terminal is the zone value Phase 2 stores for x.40.70(1), used only where Phase 2 says 10.5.40.70(1) does not apply or as the flagged FS-SB2 last resort, never a typed 6.0; M-245 (no zone-default floor) and M-256 stand."],
+    ["M-388", "M", "2026-10-30-batch-aj#CHAT-211.R3-04", "R3-04 Calibration is tested on held-out data: the oracle for the allowance is the FS-SB1 held-out half and the CoA-surveyed setbacks, never the lots it was fitted on."],
+    ["M-389", "M", "2026-10-30-batch-aj#CHAT-211.R3-05", "R3-05 Options: an option whose space is zero or less, or that Phase 2 refuses, is dropped with its reason; if every option is dropped the result is not_permitted / not_evaluated with reasons; a suite split is scored only where Phase 2 permits the suite on that class."],
+    ["M-390", "M", "2026-10-30-batch-aj#CHAT-211.R3-06", "R3-06 Ideal split breakpoints are generated, not hand-listed: the candidate splits are every depth at which some row in the split changes slope (each min() arm), held as catalogue rows, with both ends included; a tie goes to the larger main (LC-22); a dense-grid check runs in the test lane only."],
+    ["M-391", "M", "2026-10-30-batch-aj#CHAT-211.R3-08", "R3-08 Storeys: Phase 2 decides whether a storey cap applies (10.20.40.10(3)(C) is stored as not_applicable); S-1 is only the height-to-storeys arithmetic, used only where Phase 2 stores the cap as not_applicable or unlimited; an absent or undecided cap is not_evaluated (M-385); S-1 counts storeys and is not a limit, so height alone still limits the building."],
+    ["M-392", "M", "2026-10-30-batch-aj#CHAT-211.R3-10", "R3-10 Shape switch: shape_calibration = on requires a fitted footprint_shape_factor with its provenance (n cases, date, audit file) and the disclosure tied to the switch state; the bounds are logic variables (unruled); turning it on without a fit fails closed."],
+    ["M-393", "M", "2026-10-30-batch-aj#CHAT-211.R3-11", "R3-11 Unresolved classes answer not_modelled: a building type with no Phase 2 class (houseplex 5-6) returns \"not_modelled: class not resolved in Phase 2 (MB-27.L2)\" and never falls back to a neighbouring class (M-194: the cap is 4 outside a confirmed 600.60 area)."],
+    ["M-400", "M", "2026-10-30-batch-aj#CHAT-211.P2-OPT", "Phase 2 stores one result per design option (roof form; suite low/tall), keyed by option like class; options that give no different law answer share the cell; within an option the cell is decided; only Phase 3 compares options."],
+    ["M-401", "M", "2026-10-30-batch-aj#CHAT-211.SIX-COA", "Houseplex 5-6 units are modelled on every relevant lot with their permission route: as_of_right, coa_required or not_permitted (with its reason); a major-street result whose equivalence is unverified is shown unconfirmed and never as_of_right; the variances assumed are exactly the listed varied clauses, starting with the permission (10.20.20.40(1)) and including any option-dependent limit (for example 600.60.40(2)); a coa_required result is never shown as as-of-right. This amends M-194 (cap 6 only in a confirmed 600.60 area: outside it a 5-6 unit result is a coa_required route), M-214(1) (major-street forms not modelled: the permission is modelled) and M-64 (a not_permitted result of this class is shown with its reason); M-65 and LC-49 are unchanged."],
+    ["M-402", "M", "2026-10-30-batch-aj#CHAT-211.OPTIONS", "Each building type lists its feasible design options, the largest marked as the headline; S-1 is a feasibility minimum, not one typical storey height; Phase 2 resolves per option only where an option changes a law answer (M-400)."],
+    ["M-403", "M", "2026-10-30-batch-aj#CHAT-211.IDEAL-SPLIT", "The rear suite and main house are split at the best breakpoint (total floor area = main + suite, both piecewise-linear in the main house depth); the candidate splits are the catalogue rows of M-390, scored by the evaluator, with the split disclosed and no search helper; a tie goes to the larger main (LC-22)."],
+    ["dated note on M-245", "M", "2026-10-30-batch-aj#CHAT-211.FRONT-YARD", "front_setback_used_m is one catalogue row that applies the ruled chain (user figure; estimate + allowance; FS-SB2 placeholder; zone fallback stored by Phase 2); the chain lives in the model path, not in a harness; every value except a user figure is flagged front_yard_needs_survey."],
+    ["interim dated note on M-252 (and LC-21)", "M", "2026-10-30-batch-aj#CHAT-211.O3-INTERIM", "Interim, not a ruling: until research card EXC-FSI is ruled, show both FSI readings on an x1462 lot with the capped reading as the headline."],
+    ["dated note on LC-16", "L", "2026-10-30-batch-aj#CHAT-211.BTYPES", "The closed scenario set becomes the building-types table scripts/seeds/bylaw/layer3-building-types.json (to be built by MB-31); semis are a recorded future build, counted not_evaluated:future_build."],
+    ["LC-69", "L", "2026-10-30-batch-aj#CHAT-211.SHAPE", "The footprint is a box, disclosed \"box shape assumed; entrances and projections not modelled\"; it reads lv(footprint_shape_factor) = 1.0 (setting to be seeded by MB-31) with the switch shape_calibration = off (M-378); no other value is set now."],
+    ["Spec 68 O-9, O-10, O-11, O-12", "S", "2026-10-30-batch-aj#CHAT-211.S68-OBJ", "Spec 68 objectives O-9 limits only from the table (2), O-10 every Layer 2 result cites itself (2), O-11 nothing typed in (3), O-12 accurate against real cases (3)."],
+    ["Spec 68 SC-14 .. SC-20", "S", "2026-10-30-batch-aj#CHAT-211.S68-SC", "Spec 68 success criteria SC-14 Layer 2 scoping is data (0), SC-15 Layer 2 results cite (0), SC-16 Layer 2 never defaults (0), SC-17 Layer 3 numbers sourced (0), SC-18 calculations declared (0), SC-19 accuracy on real cases (M-362 thresholds; the Phase 3 exit), SC-20 shadow explains every difference (0, 0)."],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, cite, rule] of CASES) {
+    it(`${row} carries ${cite} and its Rule text`, () => {
+      expect(TEXT[reg], cite).toContain(cite);
+      expect(TEXT[reg] + L131 + M + A + S68, cite + ' rule text').toContain(rule);
+    });
+  }
+  it('the new 124a rows are mapped to Spec 132 lines that exist', () => {
+    for (const id of ["R-KF","R-KG","R-KH","R-KI","R-KJ","R-KK","R-KL","R-KM","R-KN","R-KO","R-KQ"]) {
+      const e = map.rules.find((r) => r.id === id);
+      expect(e, id).toBeTruthy();
+      expect(map.lines.some((l) => l.id === e?.handbook_line), id).toBe(true);
+    }
   });
 });
