@@ -7140,6 +7140,328 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-LR",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The cloud waits: the local database at 127.0.0.1:54322 is the only database.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KV",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A Layer 2/3 commit names its task; rules[] live in the task's prereg file.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KW",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The queue is a tracked file; DONE entries name their commit.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KX",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The APPROVED file: path, branch, content, per-commit check.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KY",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Pre-push approval is a /dev/tty prompt, only when a protected path changes.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-KZ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Search keys for the conflict search.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Literal gate scope and the string allow list.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LB",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The pre-commit budget covers the gate.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LC",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The minimum panel record.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LD",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Protected-path additions beyond the F-34 list.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LE",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The gate does not refuse the commits that authorise it; RULED is a closed list.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LF",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Which range and which policy the pre-push gate judges.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The loop record's location and schema.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The loop gate mechanically guards its own inputs.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LI",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Oracle, pin and code classes; oracle-first.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LJ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Increment ids are a closed set.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "OWED floor lines are frozen.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LL",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "CI re-checks the in-repo loop groups; the CoA groups are enforced at pre-push.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LM",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The canary is run by the gate and never stored.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LN",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Wiring ownership between MB-67 and MB-68.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "rounds_since_thresholds is computed, not stored.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LP",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Fast set and full set.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "An accept reason has at least 20 characters.",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -7557,6 +7879,121 @@
       "id": "R-KU",
       "class": "none",
       "reason": "OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built)"
+    },
+    {
+      "id": "R-LR",
+      "class": "none",
+      "reason": "OWED MB-67: gate arm (MB-67) refuses any McBylaws script or night whose database target is not 127.0.0.1:54322, red fixture a remote target (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-KV",
+      "class": "none",
+      "reason": "OWED MB-67: cite.mjs trailer and prereg arms CT1..CT11 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-KW",
+      "class": "none",
+      "reason": "OWED MB-67: mcbylaws-queue-check.mjs on temp repos Q1..Q5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-KX",
+      "class": "none",
+      "reason": "OWED MB-67: hold.mjs H1..H7 per-commit parent-tree check (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-KY",
+      "class": "none",
+      "reason": "OWED MB-67: pre-push-summary.mjs prompt tests S1..S11 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-KZ",
+      "class": "none",
+      "reason": "OWED MB-67: register-conflicts.mjs K1..K5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LA",
+      "class": "none",
+      "reason": "OWED MB-67: literal-scan.mjs L1..L10 with red-literals and green-literals fixtures (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LB",
+      "class": "none",
+      "reason": "OWED MB-67: precommit-budget.mjs --measure with a re-pinned evidence file (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LC",
+      "class": "none",
+      "reason": "OWED MB-67: cite.mjs arms P1, P2 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LD",
+      "class": "none",
+      "reason": "OWED MB-67: paths.mjs protected-path table and S4 property test (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LE",
+      "class": "none",
+      "reason": "OWED MB-67: cite.mjs CT1, CT2, CT8..CT10 and hold H2 fixtures (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LF",
+      "class": "none",
+      "reason": "OWED MB-67: pre-push-summary.mjs S9, S10 and paths.mjs H6 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LG",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate record schema tests (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LH",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate regression-ratchet and oracle-first red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LI",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate oracle-first red fixtures, split-commit and glob-miss cases (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LJ",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate one-increment fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LK",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate floor_fell fixture on an OWED line (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LL",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate --mode ci prints \"external groups: not run in CI\" (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LM",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate canary fixture (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LN",
+      "class": "none",
+      "reason": "OWED MB-68: hooks-composition.infra: the loop arm is wired by MB-67 only (MB-67, MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LO",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate verify --json prints rounds_since_thresholds (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LP",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate fast-set and full-set runs (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LQ",
+      "class": "none",
+      "reason": "OWED MB-68: loop-gate reason-length red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
     }
   ]
 }

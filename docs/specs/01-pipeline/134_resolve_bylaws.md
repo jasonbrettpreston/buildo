@@ -90,7 +90,7 @@ The step writes only its own tables. Storage follows Spec 78 §6.8's **lean** fo
   - **I5** a sentinel (−1) exception lot never takes an exception-layer winner; `label_exception_mismatch` when exactly one side is present.
   - **I6** the §5 gated-lot count is a live count in the same transaction.
   - **I9** lineage: every link row's `cell_id` exists; every candidate and winner id exists at the current `table_version`.
-  - **I10** `inputs_defaulted = 0`. **I11** rows only for the population; the reset arm's deletions are counted.
+  - **I10** `inputs_defaulted = 0` (M-406). **I11** rows only for the population; the reset arm's deletions are counted.
   - **I12** equivalence: a rotating sample of lots, full per-lot `effective()` == cell result + per-lot apply, plus the pinned P2-0 ids; budget `resolve_bylaws_equivalence_budget_ms`; over budget ⇒ `not_run`, never PASS.
   - **I13** every `by_class` key is a declared class; no `needs_user_input:<scenario axis>` survives.
   - **I14** `row_sha` stored = recomputed. **I15** the result hash is invariant to candidate order (a seeded shuffle of the pinned subset).

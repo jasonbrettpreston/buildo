@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 433** (364 M-rows, 69 LC-rows): 430 in force (126 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 451** (382 M-rows, 69 LC-rows): 448 in force (144 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -174,6 +174,10 @@ First clause cited: 10.40.40.10, 10.60.40.10, x.40.10, 10.10.40.10, 10.80.40.10,
 - **m.391** Storeys: Phase 2 decides the cap, S-1 only converts height (R3-08).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: houseplex fixture: storey cap not_applicable stored, S-1 used only where no cap is stored…
   Rules: `M-391` (Spec 69a)
+
+- **m.404** S-1: storeys from height use cited logic variables (2.3 m ceiling, 212 mm floor assembly, roof allowance one assembly plus 0.3 m).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic: each S-1 variable is seeded with its value and citation (MB-31);…
+  Rules: `M-404` (Spec 69a)
 
 - **lc.59** Review-page rulings, batch 4 (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-evaluator-fixes.logic.test.ts (1); INV-21 (2)
@@ -403,6 +407,14 @@ First clause cited: 10.5.40.10.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.12 codes; triangular detector (OWED, ①)
   Rules: `M-212` (Spec 69a)
 
+### 10.5.40.11 — Height Exemptions
+
+First clause cited: 10.5.40.11.
+
+- **m.405** S-2: first floor above established grade is 0 m, disclosed.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic: s2_first_floor_above_grade_m is seeded as 0 with the disclosure…
+  Rules: `M-405` (Spec 69a)
+
 ### 10.5.40.40 — Floor Area
 
 First clause cited: 10.5.40.40.
@@ -478,6 +490,10 @@ First clause cited: 10.5.40.70.
 - **m.387** Front-yard chain: law stays in Phases 1-2 (R3-03).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: worked examples, one per step of the chain (MB-31); record:…
   Rules: `M-387` (Spec 69a)
+
+- **m.414** Front-yard step 2: strict reading of 10.5.40.70(1) for A0553.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: front-yard worked example for A0553 (strict reading) (MB-64); record:…
+  Rules: `M-414` (Spec 69a)
 
 ### 10.5.40.71 — Setbacks Exemptions
 
@@ -1675,6 +1691,66 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: blocked on the S-1 card (no value is ruled); record: chat-rulings-register.logic.test.ts ›…
   Rules: `M-399` (Spec 69a)
 
+- **m.406** Phase 2 stays strict (I10); "the lot is unchanged since 2013" is a disclosed site-fact assumption resolved per option.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: resolve_bylaws I10 lock: the assumption is recorded and disclosed per option (MB-18); record:…
+  Rules: `M-406` (Spec 69a)
+
+- **m.407** LC-68 clarified: 4 stored points is a triangle with no rear lot line; "flagged" is a listed count (dated pointer on LC-68).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: lot-flag golden-lot default test: 4 stored points is a triangle with no rear lot line (MB-18,…
+  Rules: `M-407` (Spec 69a)
+
+- **m.408** A "rule-choice branch" (Spec 68 SC-14) is a zone-symbol or building-type literal in a Layer 2 closure file.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: bylaw-gexclit.logic.test.ts: report-only detector of rule-choice branches, baseline 0…
+  Rules: `M-408` (Spec 69a)
+
+- **m.409** RB-D10 is closed by dropping only value.ratio of the storage_within_budget audit row from the compared golden.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: capture-step-golden.logic.test.ts: only value.ratio of the storage_within_budget audit row is…
+  Rules: `M-409` (Spec 69a)
+
+- **m.410** The MB-18 claim edits the one lineage line for the fallback target.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: the layer2 lineage lock (both ways) stays green with the one added line (MB-18); record:…
+  Rules: `M-410` (Spec 69a)
+
+- **m.411** Where the increment-1 loop data and pending tests live.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: protected-paths.json lists the three globs; pending/ rule R-KI (MB-67, MB-68); record:…
+  Rules: `M-411` (Spec 69a)
+
+- **m.412** Increment 1 computes the whole front-yard chain and the corner street-side term.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 worked examples FY-1.. and the corner cases A0166, A0375, A0578 (MB-64); record:…
+  Rules: `M-412` (Spec 69a)
+
+- **m.413** Increment 1 reads building_length_m on the depth axis as G-1 is printed.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 footprint examples with building_length_m on the depth axis (MB-64); record:…
+  Rules: `M-413` (Spec 69a)
+
+- **m.415** The runRow seam and the rounding contract.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: examples-run test through the seam (MB-31 exposes runRow, MB-64 consumes it); record:…
+  Rules: `M-415` (Spec 69a)
+
+- **m.416** Which applicant notices the comparison fields score.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: compare-25 generator: type_comparable cases (MB-64); record:…
+  Rules: `M-416` (Spec 69a)
+
+- **m.417** Increment 1 reads the permission word only; permitted is provisional.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 inputs file: permitted cells tagged provisional (MB-64); record:…
+  Rules: `M-417` (Spec 69a)
+
+- **m.418** Settings seeds for increment 1 are corrected.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: settings-block drift test: every increment-1 variable is seeded with its source (MB-31);…
+  Rules: `M-418` (Spec 69a)
+
+- **m.419** An unlimited storey cap means S-1 applies; unlimited is never a GFA storeys term.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: worked example GFA-9 and the 14 unlimited-storey cases (MB-64); record:…
+  Rules: `M-419` (Spec 69a)
+
+- **m.420** An absent principal gfa_m2 target drops out of the GFA minimum.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 GFA examples with no principal gfa_m2 term (MB-64); record:…
+  Rules: `M-420` (Spec 69a)
+
+- **m.421** The corner flag the scorer reads is the parcel's, shown beside the keyed golden flag.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: o13-input-findings: corner cases A0179, A0553, A0562 scored on the parcel and shown on both…
+  Rules: `M-421` (Spec 69a)
+
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
   Rules: `LC-1` (Spec 131)
@@ -1907,7 +1983,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
   Rules: `LC-69` (Spec 131)
 
-## 3. Rows with an OWED marker (126 in force)
+## 3. Rows with an OWED marker (144 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -2003,6 +2079,24 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-397 | m.397 | RULED 2026-10-30 · OWED |
 | M-398 | m.398 | RULED 2026-10-30 · OWED |
 | M-399 | m.399 | RULED 2026-10-30 · OWED |
+| M-404 | m.404 | RULED 2026-10-30 · OWED |
+| M-405 | m.405 | RULED 2026-10-30 · OWED |
+| M-406 | m.406 | RULED 2026-10-30 · OWED |
+| M-407 | m.407 | RULED 2026-10-30 · OWED |
+| M-408 | m.408 | RULED 2026-10-30 · OWED |
+| M-409 | m.409 | RULED 2026-10-30 · OWED |
+| M-410 | m.410 | RULED 2026-10-30 · OWED |
+| M-411 | m.411 | RULED 2026-10-30 · OWED |
+| M-412 | m.412 | RULED 2026-10-30 · OWED |
+| M-413 | m.413 | RULED 2026-10-30 · OWED |
+| M-414 | m.414 | RULED 2026-10-30 · OWED |
+| M-415 | m.415 | RULED 2026-10-30 · OWED |
+| M-416 | m.416 | RULED 2026-10-30 · OWED |
+| M-417 | m.417 | RULED 2026-10-30 · OWED |
+| M-418 | m.418 | RULED 2026-10-30 · OWED |
+| M-419 | m.419 | RULED 2026-10-30 · OWED |
+| M-420 | m.420 | RULED 2026-10-30 · OWED |
+| M-421 | m.421 | RULED 2026-10-30 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |

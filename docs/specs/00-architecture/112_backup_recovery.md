@@ -269,7 +269,7 @@ operator-supplied dumps.
 
 **Core contract (Spec 113 §9.2, verbatim rule):** `pg_restore --single-transaction
 --exit-on-error` is the primary restore path (note: NOT `--disable-triggers` — Supabase's
-`postgres` role is not superuser; pg_dump's FK-ordered TOC makes trigger-enforced restore safe).
+`postgres` role is not superuser; pg_dump's FK-ordered TOC makes trigger-enforced restore safe). Dated note 2026-10-30 (Spec 69a M-368; `2026-10-30-batch-al#CHAT-213.MB30-S112`): a per-table `ALTER TABLE ... DISABLE TRIGGER USER` wrapper inside the restore transaction is allowed; `--disable-triggers` and `DISABLE TRIGGER ALL` stay not used.
 On top of that, a **stderr-gated wrapper** treats **any** stderr output as failure for both
 `pg_dump` and `pg_restore` — "no stderr output" is the pass condition, never "exit code 0"
 (§9). Never assume partial success is success.
