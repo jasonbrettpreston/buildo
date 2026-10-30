@@ -51,8 +51,13 @@
     "docs/reports/loop-records/**"
   ],
   "literal_scope": [
-    "scripts/analysis/bylaw/evaluate.mjs",
-    "scripts/analysis/bylaw/dsl.mjs"
+    "scripts/analysis/bylaw/**/*.mjs",
+    "scripts/analysis/bylaw/**/*.json",
+    "scripts/lib/maxbld-*.js",
+    "scripts/resolve-bylaws.js",
+    "scripts/resolve-bylaws.descriptor.json",
+    "scripts/lib/compute/bylaw-*.js",
+    "scripts/lib/compute/maxbld-*.js"
   ],
   "literal_exempt": [
     "scripts/seeds/bylaw/layer3-catalogue.json",
@@ -70,10 +75,19 @@
     "~/Buildo-wt-mcbylaw*"
   ],
   "boot1": {
-    "tasks": ["MB-66", "MB-67", "MB-68"],
-    "exempt_ids": ["BOOT-1"]
+    "tasks": [
+      "MB-66",
+      "MB-67",
+      "MB-68"
+    ],
+    "exempt_ids": [
+      "BOOT-1"
+    ]
   },
   "external_arms": [
-    { "id": "loop", "required": false }
+    {
+      "id": "loop",
+      "required": false
+    }
   ]
 }

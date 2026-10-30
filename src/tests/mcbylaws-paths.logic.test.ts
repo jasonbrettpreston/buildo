@@ -155,3 +155,17 @@ describe('the real policy file', () => {
     expect(deadGlobs(realPolicy, []).filter((d) => realPolicy.pending_globs.includes(d.glob))).toEqual([]);
   });
 });
+
+describe('O67-24: the real literal scope is all Layer 2/3 code and data modules, not two files (R-KR, R-LA)', () => {
+  const real = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, POLICY_PATH), 'utf8'));
+  it.each([
+    'scripts/analysis/bylaw/agree.mjs',
+    'scripts/analysis/bylaw/evaluate.mjs',
+    'scripts/analysis/bylaw/_schema/bylaw-rule-map.json',
+    'scripts/lib/maxbld-layer2-view.js',
+    'scripts/resolve-bylaws.js',
+  ])('%s is in literal scope', (p) => expect(classify(real, p).literalScope).toBe(true));
+  it('the declared catalogue, settings and switchboard files are exempt', () => {
+    expect(classify(real, 'scripts/seeds/bylaw/switchboard.json').literalExempt).toBe(true);
+  });
+});

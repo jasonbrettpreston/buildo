@@ -18,8 +18,11 @@ note: |
   `ruleDirs` auto-loads every rule in this directory, so a rule without `files:`
   fires across the repo.
 files:
-  - 'scripts/analysis/bylaw/evaluate.mjs'
-  - 'scripts/analysis/bylaw/dsl.mjs'
+  - 'scripts/analysis/bylaw/**/*.mjs'
+  - 'scripts/lib/maxbld-*.js'
+  - 'scripts/resolve-bylaws.js'
+  - 'scripts/lib/compute/bylaw-*.js'
+  - 'scripts/lib/compute/maxbld-*.js'
   - 'src/tests/fixtures/mcbylaws-gate/**/*.mjs'
   - 'mcbylaws-literal-scope/**/*.mjs'
 rule:
@@ -46,8 +49,11 @@ note: |
   Import/export module sources (`from "node:fs"`) are excluded; the driver also
   drops any hit whose line reads as a module specifier (L9).
 files:
-  - 'scripts/analysis/bylaw/evaluate.mjs'
-  - 'scripts/analysis/bylaw/dsl.mjs'
+  - 'scripts/analysis/bylaw/**/*.mjs'
+  - 'scripts/lib/maxbld-*.js'
+  - 'scripts/resolve-bylaws.js'
+  - 'scripts/lib/compute/bylaw-*.js'
+  - 'scripts/lib/compute/maxbld-*.js'
   - 'src/tests/fixtures/mcbylaws-gate/**/*.mjs'
   - 'mcbylaws-literal-scope/**/*.mjs'
 rule:

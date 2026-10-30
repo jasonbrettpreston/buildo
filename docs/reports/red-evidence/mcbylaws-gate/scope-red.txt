@@ -1,0 +1,7 @@
+# red: old policy (two files in scope)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-paths.logic.test.ts > O67-24: the real literal scope is all Layer 2/3 code and data modules, not two files (R-KR, R-LA) > scripts/analysis/bylaw/agree.mjs is in literal scope
+ FAIL  src/tests/mcbylaws-paths.logic.test.ts > O67-24: the real literal scope is all Layer 2/3 code and data modules, not two files (R-KR, R-LA) > scripts/analysis/bylaw/_schema/bylaw-rule-map.json is in literal scope
+ FAIL  src/tests/mcbylaws-paths.logic.test.ts > O67-24: the real literal scope is all Layer 2/3 code and data modules, not two files (R-KR, R-LA) > scripts/lib/maxbld-layer2-view.js is in literal scope
+ FAIL  src/tests/mcbylaws-paths.logic.test.ts > O67-24: the real literal scope is all Layer 2/3 code and data modules, not two files (R-KR, R-LA) > scripts/resolve-bylaws.js is in literal scope
+      Tests  4 failed | 57 passed (61)
