@@ -1,0 +1,12 @@
+docs/reference/bylaw-code-findings.md
+docs/reference/bylaw-layer2-input.json
+docs/reference/maxbld-report-field-inventory.json
+docs/reference/maxbld-report-field-inventory.md
+docs/reports/red-evidence/bylaw/bylaw-mb18-red.txt
+scripts/analysis/bylaw-validation/coa-scorecard.mjs
+scripts/analysis/bylaw/evaluate.mjs
+scripts/analysis/bylaw/vocab.mjs
+scripts/seeds/bylaw/adjudications.json
+scripts/seeds/bylaw/vocab.json
+src/tests/bylaw-fix-4.logic.test.ts
+src/tests/bylaw-mb18.logic.test.ts

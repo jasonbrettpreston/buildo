@@ -1,0 +1,9 @@
+docs/reference/maxbld-amendment-index.json
+scripts/analysis/phase3/generate-amendment-index.mjs
+scripts/analysis/phase3/phase3-code-link.mjs
+scripts/analysis/phase3/phase3-literals.json
+scripts/lib/compute/compute-maxbld-scenarios.js
+scripts/lib/maxbld-layer2-view.js
+src/tests/steps/compute_maxbld_scenarios/amendment-index.logic.test.ts
+src/tests/steps/compute_maxbld_scenarios/compute-module.logic.test.ts
+src/tests/steps/compute_maxbld_scenarios/layer2-accessor-modules.logic.test.ts
