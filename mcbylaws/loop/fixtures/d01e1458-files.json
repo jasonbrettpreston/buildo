@@ -1,0 +1,126 @@
+[
+ {
+  "s": "M",
+  "p": "docs/reference/bylaw-code-findings.md"
+ },
+ {
+  "s": "M",
+  "p": "docs/reference/bylaw-layer2-input.json"
+ },
+ {
+  "s": "M",
+  "p": "docs/reference/bylaw-provisions.json"
+ },
+ {
+  "s": "M",
+  "p": "docs/reference/bylaw-provisions.md"
+ },
+ {
+  "s": "M",
+  "p": "docs/reference/maxbld-amendment-index.json"
+ },
+ {
+  "s": "M",
+  "p": "docs/reference/maxbld-report-field-inventory.json"
+ },
+ {
+  "s": "M",
+  "p": "docs/reference/maxbld-report-field-inventory.md"
+ },
+ {
+  "s": "A",
+  "p": "docs/reports/red-evidence/bylaw/bylaw-nn-rules-red.txt"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw-validation/coa-expected/expected-172.json"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw-validation/coa-expected/expected-4d.json"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw-validation/coa-lotfacts.mjs"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw-validation/coa-parse.cjs"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw-validation/coa-round.mjs"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw-validation/coa-scorecard.mjs"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw-validation/golden-lots-cases.mjs"
+ },
+ {
+  "s": "M",
+  "p": "scripts/analysis/bylaw/front-averaging.mjs"
+ },
+ {
+  "s": "A",
+  "p": "scripts/analysis/bylaw/main-building-gfa.mjs"
+ },
+ {
+  "s": "M",
+  "p": "scripts/seeds/bylaw/adjudications.json"
+ },
+ {
+  "s": "M",
+  "p": "scripts/seeds/bylaw/input-fidelity.json"
+ },
+ {
+  "s": "M",
+  "p": "scripts/seeds/bylaw/vocab.json"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/bylaw-evaluator-fixes.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/bylaw-fix-3.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/bylaw-fix-4.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/bylaw-fix-6.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/bylaw-front-setback-reliability.logic.test.ts"
+ },
+ {
+  "s": "A",
+  "p": "src/tests/bylaw-no-number-rules.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/bylaw-suite-owed.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/coa-round.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/coa-scorecard.logic.test.ts"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/fixtures/bylaw-golden-lots/cases.json"
+ },
+ {
+  "s": "M",
+  "p": "src/tests/fixtures/bylaw/eval-vocab.json"
+ }
+]
