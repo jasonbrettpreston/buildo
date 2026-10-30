@@ -23,6 +23,7 @@ import { panelForCommit } from './panel.mjs';
 import { scanScope, allowSet, deadScopeLines, RULE_FILE, ALLOW_REL } from './literal-scan.mjs';
 import { buildSummary, parseRefLines, isZeroSha } from './pre-push-summary.mjs';
 import { collectRef, heldCount, worktreeScan, pendingCount } from './summary-collect.mjs';
+import { scanDbTargetsInFiles, isDbScopePath } from './db-target.mjs';
 
 const CANNOT = 'FAIL:X:cannot-decide';
 const DOCS = 'docs/specs/01-pipeline';
@@ -31,7 +32,11 @@ const CITE_INPUTS = {
   registers: [`${DOCS}/69a_mcbylaw_register.md`, `${DOCS}/124a_step_standard_policy_appendix.md`, `${DOCS}/131_lot_configuration_policy.md`],
 };
 // G67-12: the arms that live outside the repo are a fixed table; the policy names them by `id` only.
-const EXTERNAL_ARMS = { loop: { file: 'scripts/analysis/mcbylaws-loop/loop-gate.mjs', argv: (mode) => ['--mode', mode] } };
+// O67-11: MB-68's CLI is `check --mode <commit|push|ci> [--base <rev>]`; exit 0 green, 1 red, 2 could not run.
+const EXTERNAL_ARMS = {
+  loop: { file: 'scripts/analysis/mcbylaws-loop/loop-gate.mjs', argv: (mode, base) => ['check', '--mode', mode, ...(base ? ['--base', base] : [])] },
+};
+const LOOP_LINES = 20;
 
 const top = (cwd) => {
   const r = git(cwd, ['rev-parse', '--show-toplevel']);
@@ -50,7 +55,7 @@ function citeInputs(cwd, rev) {
   return { owed: parseOwedTable(spec), rows };
 }
 
-function externalArmLines(cwd, policy, mode) {
+function externalArmLines(cwd, policy, mode, base) {
   const out = [];
   for (const arm of Array.isArray(policy.external_arms) ? policy.external_arms : []) {
     if (!arm || typeof arm.id !== 'string') return [CANNOT];
@@ -61,11 +66,27 @@ function externalArmLines(cwd, policy, mode) {
       else out.push(`external arm ${arm.id}: pending`);
       continue;
     }
-    const r = spawnSync(process.execPath, [file, ...spec.argv(mode)], { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    const r = spawnSync(process.execPath, [file, ...spec.argv(mode, base)], { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    // O67-11: the arm's own first lines are shown, prefixed; exit 1 or 2 (or a spawn error) is a failure.
+    const shown = r.stdout ? String(r.stdout).split('\n').filter(Boolean).slice(0, LOOP_LINES) : [];
+    for (const l of shown) out.push(`loop: ${l}`);
     if (r.error || r.status !== 0) out.push(`FAIL:X:arm-failed:${arm.id}`);
   }
   return out;
 }
+
+/** Arm V over the DB-scope subset of `paths`, read at `rev` (`''` = the index). Unreadable → `FAIL:V:cannot-decide`. */
+function dbLines(cwd, rev, paths) {
+  const files = [];
+  for (const p of paths) {
+    const text = readAt(cwd, rev, p);
+    if (text === null) return ['FAIL:V:cannot-decide'];
+    files.push({ path: p, text });
+  }
+  return files.length === 0 ? [] : scanDbTargetsInFiles(files);
+}
+
+/** The external arms for one range `base..tip`: one call per ref is enough. */
 
 /**
  * O67-01: the allow object for a range — `allowRev`'s copy (absent = nothing allowed) keeps its number and string
@@ -133,21 +154,23 @@ function staged(cwd) {
   if (!res.ok) return ['FAIL:H:cannot-decide'];
   const { policy } = res;
   const paths = allPaths(entries);
-  // Fast path: nothing staged is Layer 2/3 or in literal scope, and no glob list needs the tracked tree.
-  const touches = paths.some((p) => { const c = classify(policy, p); return c.layer23 || c.literalScope; });
+  // Fast path: nothing staged is Layer 2/3, in literal scope or in DB scope, and no glob list needs the tree.
+  const touches = paths.some((p) => { const c = classify(policy, p); return c.layer23 || c.literalScope || isDbScopePath(p); });
   if (!touches) return [];
   const tracked = listTracked(cwd, 'HEAD');
   if (tracked === null) return ['FAIL:H:cannot-decide'];
   // O67-12: a deleted path has no worktree file and a rename's OLD path is gone too; scan the live paths only.
   const live = entries.filter((e) => e.status !== 'D').map((e) => e.path);
   const scope = live.filter((p) => classify(policy, p).literalScope);
+  const db = live.filter((p) => isDbScopePath(p));
   const onDisk = exists(path.join(cwd, 'mcbylaws/APPROVED'));
   return [
     ...holdForCommit({ cwd, policy, entries, parentRev: 'HEAD', onDiskApproved: onDisk }),
     ...deadGlobLines(policy, tracked),
     ...(scope.length > 0 ? literalLines({ root: cwd, cwd, rev: 'HEAD', files: scope, policy }) : []),
+    ...dbLines(cwd, '', db),
     ...deadScopeLines(policy, tracked),
-    ...externalArmLines(cwd, policy, 'staged'),
+    ...externalArmLines(cwd, policy, 'commit'),
   ];
 }
 
@@ -231,9 +254,10 @@ function rangeArms({ cwd, base, tip }) {
   // O67-12: a deleted path is not in `git archive <tip>` (the gate would go permanently red); the new side of a
   // rename is kept and its old side is not.
   const diff = git(cwd, ['diff', '--name-only', '-z', '--diff-filter=d', '-M', base, tip]);
-  const files = diff.status !== 0 ? null : diff.stdout.split('\0').filter(Boolean)
-    .filter((p) => classify(last, p).literalScope);
-  if (files === null) return [...out, 'FAIL:L:cannot-decide'];
+  const changed = diff.status !== 0 ? null : diff.stdout.split('\0').filter(Boolean);
+  if (changed === null) return [...out, 'FAIL:L:cannot-decide', 'FAIL:V:cannot-decide'];
+  out.push(...dbLines(cwd, tip, changed.filter((p) => isDbScopePath(p))));
+  const files = changed.filter((p) => classify(last, p).literalScope);
   if (files.length === 0) return out;
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-archive-'));
   try {
@@ -279,6 +303,7 @@ function summaryInput({ cwd, refs, ci }) {
     const collected = collectRef({ cwd, ref: r.ref, localSha: r.localSha, remoteSha: zero ? '' : r.remoteSha, policy: res.policy, defaultBase });
     if (collected.error) { arms.push(CANNOT); out.push({ kind: 'unknown', ref: r.ref }); continue; }
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy }));
+    arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
     let tipLimit = res.policy.held_limit;
     try { tipLimit = JSON.parse(readAt(cwd, r.localSha, POLICY_PATH) ?? '{}').held_limit ?? tipLimit; } catch { arms.push(CANNOT); }

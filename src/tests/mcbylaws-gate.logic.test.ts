@@ -139,6 +139,94 @@ describe('mcbylaws gate CLI', () => {
   });
 });
 
+describe('O67-23: arm V runs over the DB scope inside --staged and the range', () => {
+  const NIGHT = '.cursor/night-x.md';
+  const CLOUD = "psql postgres://u:p@db.abc.supabase.co:5432/postgres -c 'select 1'\n";
+  const LOCAL = 'PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres\n';
+  it('a staged night file with a cloud target fails; the same file with a local target passes', () => {
+    const red = mk();
+    seed(red);
+    red.write(NIGHT, CLOUD);
+    red.stage(NIGHT);
+    const r = run(red, ['--staged']);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:V:db-target-not-local');
+    const green = mk();
+    seed(green);
+    green.write(NIGHT, LOCAL);
+    green.stage(NIGHT);
+    const g = run(green, ['--staged']);
+    expect(g.status).toBe(0);
+    expect(g.out).toContain('GATE OK');
+    done();
+  });
+  it('a committed cloud target in DB scope fails a --ci range', () => {
+    const repo = mk();
+    seed(repo);
+    const base = repo.git(['rev-parse', 'HEAD']);
+    repo.write('scripts/analysis/mcbylaws-loop/run.mjs', "export const u = 'postgres://u:p@db.abc.supabase.co:5432/postgres';\n");
+    repo.commit('MB-67 a cloud target');
+    const r = run(repo, ['--ci', '--base', base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:V:db-target-not-local');
+    done();
+  });
+});
+
+describe('O67-11: the loop arm is called as its CLI defines (argv and verdicts)', () => {
+  const LOOP = 'scripts/analysis/mcbylaws-loop/loop-gate.mjs';
+  const LOG = 'argv.log';
+  const fake = (code: number) => `import * as fs from 'node:fs';\nfs.appendFileSync(${JSON.stringify(LOG)}, process.argv.slice(2).join(' ') + '\\n');\nprocess.stdout.write('loop ok\\n');\nprocess.exit(${code});\n`;
+  const withFake = (code: number) => {
+    const repo = mk();
+    repo.write(LOOP, fake(code));
+    seed(repo, policy({ external_arms: [{ id: 'loop', required: true }] }));
+    approve(repo);
+    return repo;
+  };
+  const logged = (repo: Repo) => fs.readFileSync(path.join(repo.dir, LOG), 'utf8').split('\n').filter(Boolean);
+  it('--staged calls check --mode commit; --ci --base <rev> calls check --mode ci --base <rev>', () => {
+    const repo = withFake(0);
+    l23Change(repo);
+    const s = run(repo, ['--staged']);
+    expect(s.status).toBe(0);
+    expect(logged(repo)).toContain('check --mode commit');
+    expect(s.out).toContain('loop: loop ok');
+    repo.git(['rm', '-q', '--cached', '-f', 'scripts/analysis/bylaw/evaluate.mjs']);
+    fs.rmSync(path.join(repo.dir, 'scripts/analysis/bylaw/evaluate.mjs'));
+    fs.rmSync(path.join(repo.dir, LOG), { force: true });
+    const base = repo.git(['rev-parse', 'HEAD']);
+    repo.write('docs/note.md', '# note\n');
+    repo.commit('MB-67 docs');
+    fs.rmSync(path.join(repo.dir, LOG), { force: true });
+    const c = run(repo, ['--ci', '--base', base]);
+    expect(c.status).toBe(0);
+    expect(logged(repo)).toContain(`check --mode ci --base ${base}`);
+    done();
+  });
+  it('an arm that exits 2 is FAIL:X:arm-failed:loop', () => {
+    const repo = withFake(2);
+    l23Change(repo);
+    const r = run(repo, ['--staged']);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:X:arm-failed:loop');
+    done();
+  });
+  it('--push calls the arm once per ref with the ref base', () => {
+    const repo = withFake(0);
+    const remote = repo.git(['rev-parse', 'HEAD']);
+    l23Change(repo);
+    const local = repo.commit('MB-67 a Layer 2/3 change');
+    const input = `refs/heads/main ${local} refs/heads/main ${remote}\n`;
+    const r = spawnSync(process.execPath, [GATE, '--push'], {
+      cwd: repo.dir, encoding: 'utf8', timeout: 60_000, input,
+      env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null' } as unknown as NodeJS.ProcessEnv,
+    });
+    expect(logged(repo)).toContain(`check --mode push --base ${remote}`);
+    done();
+  });
+});
+
 const LIT = 'scripts/analysis/bylaw/lit.mjs';
 const ALLOW = 'mcbylaws/literal-allow.json';
 const ALLOW_EMPTY = JSON.stringify({ numbers: [], status_words: [], field_names: [], baseline: {} }, null, 2);

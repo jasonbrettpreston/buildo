@@ -1,0 +1,9 @@
+# red: fix-dbloop, old scripts/analysis/mcbylaws/gate.mjs with the new test
+     → expected +0 to be 1 // Object.is equality
+     → expected +0 to be 1 // Object.is equality
+     → expected [ '--mode staged' ] to include 'check --mode commit'
+     → ENOENT: no such file or directory, open '/private/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-gate-IqTNHw/argv.log'
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 536ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > O67-23: arm V runs over the DB scope inside --staged and the range > a staged night file with a cloud target fails; the same file with a local target passes
+    153|     expect(r.out).toContain('FAIL:V:db-target-not-local');
