@@ -1,0 +1,54 @@
+id: bylaw-no-number-literal
+language: JavaScript
+severity: error
+message: |
+  A numeric literal other than 0, 1, 2, 100 in a by-law file (MB-67, arm L).
+
+  A number inline in the evaluator or its DSL is a second, invisible copy of a
+  by-law tunable: no operator can move it, no audit row shows it, and nothing
+  ties it to the clause it claims to come from.
+
+  FIX: read it from the declared source (the catalogue / settings file the
+  clause names), or add it to mcbylaws/literal-allow.json when it is genuinely
+  an allowed sentinel.
+
+  SPEC LINK: docs/specs/01-pipeline/133_bylaw_handbook.md (MB-67 arm L, L1)
+note: |
+  ⚠️ SCOPE. `files:` below is the whole enforcement scope — sgconfig.yml
+  `ruleDirs` auto-loads every rule in this directory, so a rule without `files:`
+  fires across the repo.
+files:
+  - 'scripts/analysis/bylaw/evaluate.mjs'
+  - 'scripts/analysis/bylaw/dsl.mjs'
+  - 'src/tests/fixtures/mcbylaws-gate/**/*.mjs'
+  - 'mcbylaws-literal-scope/**/*.mjs'
+rule:
+  kind: number
+  not:
+    regex: '^(0|1|2|100)$'
+
+---
+
+id: bylaw-string-literal
+language: JavaScript
+severity: error
+message: |
+  A string literal not in mcbylaws/literal-allow.json (MB-67, arm L).
+
+  A by-law name, zone code or status word spelled inline is the same defect as
+  an inline number: an unowned copy of something the catalogue already owns.
+
+  FIX: take the word from the declared source, or add it to the allow file's
+  `status_words` / `field_names` when it is a closed vocabulary term.
+
+  SPEC LINK: docs/specs/01-pipeline/133_bylaw_handbook.md (MB-67 arm L, L2/L9)
+note: |
+  Import/export module sources (`from "node:fs"`) are excluded; the driver also
+  drops any hit whose line reads as a module specifier (L9).
+files:
+  - 'scripts/analysis/bylaw/evaluate.mjs'
+  - 'scripts/analysis/bylaw/dsl.mjs'
+  - 'src/tests/fixtures/mcbylaws-gate/**/*.mjs'
+  - 'mcbylaws-literal-scope/**/*.mjs'
+rule:
+  kind: string_fragment

@@ -1,0 +1,7 @@
+{
+  "$comment": "Arm L (MB-67): the ONLY literals a by-law file may hold besides the four number sentinels 0, 1, 2, 100. SHRINK-ONLY baseline (R-LA): a listed file may keep the literals counted at the base, never add one; the reviewer lowers it, nothing here raises it. Edited by MB-67's lane only.",
+  "numbers": [],
+  "status_words": ["not_evaluated"],
+  "field_names": ["side_yard_m"],
+  "baseline": {}
+}
