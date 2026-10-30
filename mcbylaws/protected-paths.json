@@ -1,0 +1,79 @@
+{
+  "$comment": "McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only.",
+  "pending_globs": [
+    "scripts/lib/compute/bylaw-*.js",
+    "scripts/lib/compute/maxbld-*.js"
+  ],
+  "layer23": [
+    "scripts/analysis/bylaw/**",
+    "scripts/analysis/bylaw-validation/**",
+    "scripts/seeds/bylaw/**",
+    "scripts/lib/maxbld-*.js",
+    "scripts/resolve-bylaws.js",
+    "scripts/resolve-bylaws.descriptor.json",
+    "src/tests/**/bylaw*",
+    "scripts/lib/compute/bylaw-*.js",
+    "scripts/lib/compute/maxbld-*.js"
+  ],
+  "protected": [
+    "scripts/seeds/bylaw/layer3-catalogue.json",
+    "scripts/seeds/bylaw/building-types.json",
+    "scripts/seeds/bylaw/switchboard.json",
+    "scripts/seeds/logic_variables.json",
+    "src/tests/fixtures/bylaw-golden-lots/**",
+    "scripts/analysis/bylaw-validation/coa-expected/**",
+    "src/tests/fixtures/bylaw/**",
+    "mcbylaws/oracle/**",
+    "mcbylaws/loop/**",
+    "scripts/analysis/mcbylaws-loop/**",
+    "**/pending/**",
+    "regression-set.json",
+    "scripts/analysis/mcbylaws/**",
+    "scripts/ast-grep-rules/bylaw-literal.yml",
+    "scripts/analysis/decision-log.mjs",
+    "mcbylaws/APPROVED",
+    "mcbylaws/protected-paths.json",
+    "mcbylaws/literal-allow.json",
+    ".husky/*",
+    ".github/workflows/test.yml",
+    "scripts/lib/exec-policy.json",
+    "scripts/steps/_schema/converted.json",
+    "docs/reports/panels/**",
+    "docs/reports/decisions/**",
+    ".cursor/MCBYLAWS-QUEUE.md",
+    "docs/specs/**/133_bylaw_handbook.md",
+    "docs/specs/**/69a_mcbylaw_register.md",
+    "docs/specs/**/124a_step_standard_policy_appendix.md",
+    "docs/specs/**/131_lot_configuration_policy.md",
+    "src/tests/mcbylaws-*",
+    "src/tests/fixtures/mcbylaws-gate/**",
+    "docs/reports/generated/precommit-budget.json",
+    "docs/reports/loop-records/**"
+  ],
+  "literal_scope": [
+    "scripts/analysis/bylaw/evaluate.mjs",
+    "scripts/analysis/bylaw/dsl.mjs"
+  ],
+  "literal_exempt": [
+    "scripts/seeds/bylaw/layer3-catalogue.json",
+    "scripts/seeds/bylaw/switchboard.json",
+    "scripts/seeds/logic_variables.json"
+  ],
+  "held_dirs": [
+    "~/Buildo-scratch/mb26/held",
+    "~/Buildo-scratch/mb64/held"
+  ],
+  "held_limit": 12,
+  "worktrees": [
+    "~/Buildo-wt-mb*",
+    "~/Buildo-wt-p3*",
+    "~/Buildo-wt-mcbylaw*"
+  ],
+  "boot1": {
+    "tasks": ["MB-66", "MB-67", "MB-68"],
+    "exempt_ids": ["BOOT-1"]
+  },
+  "external_arms": [
+    { "id": "loop", "required": false }
+  ]
+}
