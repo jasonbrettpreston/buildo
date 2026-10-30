@@ -8,6 +8,7 @@ import { makeRepo, type Repo } from './fixtures/mcbylaws-gate/repo-helper';
 
 const GATE = path.resolve(__dirname, '../../scripts/analysis/mcbylaws/gate.mjs');
 const REAL_POLICY = path.resolve(__dirname, '../../mcbylaws/protected-paths.json');
+const REAL_ROOT = path.resolve(__dirname, '../..');
 const L23 = 'scripts/analysis/bylaw/**';
 
 const policy = (over: Record<string, unknown> = {}) => JSON.stringify({
@@ -135,6 +136,66 @@ describe('mcbylaws gate CLI', () => {
     const parsed = JSON.parse(fs.readFileSync(REAL_POLICY, 'utf8'));
     expect(Array.isArray(parsed.layer23)).toBe(true);
     expect(parsed.held_limit).toBeGreaterThan(0);
+  });
+});
+
+const LIT = 'scripts/analysis/bylaw/lit.mjs';
+const ALLOW = 'mcbylaws/literal-allow.json';
+const ALLOW_EMPTY = JSON.stringify({ numbers: [], status_words: [], field_names: [], baseline: {} }, null, 2);
+const BASELINE_045 = { [LIT]: { numbers: { 0.45: 1 }, strings: {} } };
+
+/** A repo with an EMPTY layer23 (only arm L in play), arm L's scope, the rule file and node_modules. */
+function litSeed(allowText = ALLOW_EMPTY) {
+  const repo = mk();
+  repo.write('mcbylaws/protected-paths.json', policy({ layer23: [], literal_scope: ['scripts/analysis/bylaw/*.mjs'] }));
+  repo.write(ALLOW, allowText);
+  repo.write('src/tests/bylaw-x.test.ts', 'export const x = 1;\n');
+  repo.write(LIT, 'export const a = 0;\n');
+  fs.mkdirSync(path.join(repo.dir, 'scripts/ast-grep-rules'), { recursive: true });
+  fs.copyFileSync(path.join(REAL_ROOT, 'scripts/ast-grep-rules/bylaw-literal.yml'), path.join(repo.dir, 'scripts/ast-grep-rules/bylaw-literal.yml'));
+  fs.symlinkSync(path.join(REAL_ROOT, 'node_modules'), path.join(repo.dir, 'node_modules'), 'dir');
+  return { repo, base: repo.commit('MB-67 arm L seed') };
+}
+
+describe('E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review', () => {
+  it('one commit that adds 0.45 and raises its own baseline fails; a baseline already in the base passes', () => {
+    const red = litSeed();
+    red.repo.write(LIT, 'export const a = 0;\nexport const b = 0.45;\n');
+    red.repo.write(ALLOW, JSON.stringify({ numbers: [], status_words: [], field_names: [], baseline: BASELINE_045 }, null, 2));
+    red.repo.commit('MB-67 adds a literal and its own baseline');
+    const r = run(red.repo, ['--ci', '--base', red.base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:L:number:0.45');
+
+    const green = litSeed(JSON.stringify({ numbers: [], status_words: [], field_names: [], baseline: BASELINE_045 }, null, 2));
+    green.repo.write('docs/note.md', '# note\n');
+    green.repo.commit('MB-67 docs only');
+    const g = run(green.repo, ['--ci', '--base', green.base]);
+    expect(g.status).toBe(0);
+    expect(g.out).not.toContain('FAIL:L');
+    expect(g.out).toContain('GATE OK');
+    done();
+  });
+
+  it('a deleted or renamed scope file neither cannot-scan nor cannot-decide; only the rename target is scanned', () => {
+    const gone = litSeed();
+    fs.rmSync(path.join(gone.repo.dir, LIT));
+    gone.repo.commit('MB-67 deletes lit.mjs');
+    const d = run(gone.repo, ['--ci', '--base', gone.base]);
+    expect(d.status).toBe(0);
+    expect(d.out).not.toContain('FAIL:L:cannot-scan');
+    expect(d.out).not.toContain('FAIL:L:cannot-decide');
+
+    const moved = litSeed();
+    moved.repo.git(['mv', LIT, 'scripts/analysis/bylaw/lit2.mjs']);
+    moved.repo.write('scripts/analysis/bylaw/lit2.mjs', 'export const a = 0;\nexport const c = 0.45;\n');
+    moved.repo.commit('MB-67 renames lit.mjs and adds a literal');
+    const m = run(moved.repo, ['--ci', '--base', moved.base]);
+    expect(m.out).not.toContain('FAIL:L:cannot-scan');
+    expect(m.out).not.toContain('FAIL:L:cannot-decide');
+    expect(m.out).toContain('FAIL:L:number:0.45');
+    expect(m.out).not.toContain(`${LIT} `);
+    done();
   });
 });
 

@@ -67,12 +67,36 @@ function externalArmLines(cwd, policy, mode) {
   return out;
 }
 
+/**
+ * O67-01: the allow object for a range — `allowRev`'s copy (absent = nothing allowed) keeps its number and string
+ * lists, but its `baseline` is BASE's (absent base file or baseline = `{}`). An unparsable copy is undecidable.
+ */
+function allowAtBase(cwd, allowRev, baseRev) {
+  const parse = (rev) => {
+    const text = readAt(cwd, rev, ALLOW_REL);
+    return text === null ? null : JSON.parse(text);
+  };
+  let allow;
+  let base;
+  try { allow = parse(allowRev); } catch { return null; }
+  try { base = parse(baseRev); } catch { return null; }
+  if (allow === null) allow = {};
+  if (!allow || typeof allow !== 'object' || Array.isArray(allow)) return null;
+  if (base !== null && (typeof base !== 'object' || Array.isArray(base))) return null;
+  const baseline = base && base.baseline && typeof base.baseline === 'object' ? base.baseline : {};
+  return { ...allow, baseline };
+}
+
 /** Arm L over repo-relative `files` materialised under `root`, with the allow list read at `rev`. */
-function literalLines({ root, cwd, rev, files, policy }) {
+function literalLines({ root, cwd, rev, files, policy, allowOwnerRev }) {
   const allowText = readAt(cwd, rev, ALLOW_REL);
   let allow;
   try { allow = allowText === null ? null : JSON.parse(allowText); } catch { allow = null; }
   if (allow === null) return ['FAIL:L:cannot-decide'];
+  if (allowOwnerRev !== undefined) {
+    allow = allowAtBase(cwd, rev, allowOwnerRev);
+    if (allow === null) return ['FAIL:L:cannot-decide'];
+  }
   const res = scanScope({
     root, files, policy, allow,
     astGrepBin: path.join(cwd, 'node_modules', '.bin', 'ast-grep'),
@@ -114,7 +138,9 @@ function staged(cwd) {
   if (!touches) return [];
   const tracked = listTracked(cwd, 'HEAD');
   if (tracked === null) return ['FAIL:H:cannot-decide'];
-  const scope = paths.filter((p) => classify(policy, p).literalScope);
+  // O67-12: a deleted path has no worktree file and a rename's OLD path is gone too; scan the live paths only.
+  const live = entries.filter((e) => e.status !== 'D').map((e) => e.path);
+  const scope = live.filter((p) => classify(policy, p).literalScope);
   const onDisk = exists(path.join(cwd, 'mcbylaws/APPROVED'));
   return [
     ...holdForCommit({ cwd, policy, entries, parentRev: 'HEAD', onDiskApproved: onDisk }),
@@ -202,7 +228,9 @@ function rangeArms({ cwd, base, tip }) {
     );
   }
   out.push(...mergeArms({ cwd, base, tip }));
-  const diff = git(cwd, ['diff', '--name-only', '-z', '-M', base, tip]);
+  // O67-12: a deleted path is not in `git archive <tip>` (the gate would go permanently red); the new side of a
+  // rename is kept and its old side is not.
+  const diff = git(cwd, ['diff', '--name-only', '-z', '--diff-filter=d', '-M', base, tip]);
   const files = diff.status !== 0 ? null : diff.stdout.split('\0').filter(Boolean)
     .filter((p) => classify(last, p).literalScope);
   if (files === null) return [...out, 'FAIL:L:cannot-decide'];
@@ -214,7 +242,7 @@ function rangeArms({ cwd, base, tip }) {
       ? spawnSync('tar', ['-x', '-C', tmp], { input: tar.stdout, maxBuffer: 64 * 1024 * 1024 })
       : { status: -1 };
     if (ex.status !== 0) return [...out, 'FAIL:L:cannot-decide'];
-    return [...out, ...literalLines({ root: tmp, cwd, rev: tip, files, policy: last })];
+    return [...out, ...literalLines({ root: tmp, cwd, rev: tip, files, policy: last, allowOwnerRev: base })];
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
