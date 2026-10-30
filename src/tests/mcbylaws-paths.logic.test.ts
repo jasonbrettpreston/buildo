@@ -108,6 +108,17 @@ describe('classify', () => {
   });
 });
 
+describe('newlines in paths (O67-05)', () => {
+  const nlLayer23True = ['scripts/analysis/bylaw/a\nb.mjs', 'scripts/analysis/bylaw/x\ny/z.mjs'];
+  nlLayer23True.forEach((p) => it(`layer23 true for a path with a newline: ${JSON.stringify(p)}`, () => {
+    expect(classify(policy({ layer23: ['scripts/analysis/bylaw/**'] }), p).layer23).toBe(true);
+  }));
+  it('src/*.ts matches src/a\\nb.ts but not src/x/y.ts', () => {
+    expect(globToRegExp('src/*.ts').test('src/a\nb.ts')).toBe(true);
+    expect(globToRegExp('src/*.ts').test('src/x/y.ts')).toBe(false);
+  });
+});
+
 describe('deadGlobs', () => {
   it('reports a layer23 glob matching no tracked path', () => {
     expect(deadGlobs(policy({ layer23: ['scripts/nope/**'] }), ['a.txt', 'scripts/analysis/bylaw/evaluate.mjs']))

@@ -54,6 +54,7 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 /**
  * Anchored RegExp for one glob. `**\/` matches zero or more leading directories; a trailing `/**`
  * matches one or more segments; `*` any run without `/`; `?` one character without `/`; rest literal.
+ * Built with the `s` flag so `.` also matches a newline (O67-05): a path containing `\n` is still classified.
  * @param {string} glob
  * @returns {RegExp}
  */
@@ -81,7 +82,7 @@ export function globToRegExp(glob) {
       rest = rest.slice(1);
     }
   }
-  return new RegExp(`^${re}$`);
+  return new RegExp(`^${re}$`, 's');
 }
 
 /** @param {string[]} globs @param {string} p */
