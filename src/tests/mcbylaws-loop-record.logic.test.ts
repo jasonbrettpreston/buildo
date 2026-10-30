@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, '../..');
 const M = await import(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-record.mjs'));
 
 type Case = { id: string; status: string; got_sha: string };
-type Record = {
+type LoopRecordShape = {
   schema: string;
   increment: string;
   round: number;
@@ -21,14 +21,14 @@ type Record = {
   inputs: Record<string, string>;
   binding?: { sha256: string };
 };
-type Bound = Record & { binding: { sha256: string } };
+type Bound = LoopRecordShape & { binding: { sha256: string } };
 type NameStatus = { s: string; p: string };
 
 const HEX64 = 'a'.repeat(64);
 const OTHER_HEX64 = 'b'.repeat(64);
 
 function goodRecord(): Bound {
-  const rec: Record = {
+  const rec: LoopRecordShape = {
     schema: 'loop-record-v1',
     increment: '3',
     round: 1,
@@ -152,8 +152,8 @@ describe('bindRecord: the record is bound by the hash of itself without the bind
     ['round', (r) => { r.round = 5; }],
     ['increment', (r) => { r.increment = '4'; }],
     ['schema', (r) => { r.schema = 'loop-record-v0'; }],
-    ['cases status', (r) => { r.cases[0].status = 'fail'; }],
-    ['cases got_sha', (r) => { r.cases[0].got_sha = OTHER_HEX64; }],
+    ['cases status', (r) => { r.cases[0]!.status = 'fail'; }],
+    ['cases got_sha', (r) => { r.cases[0]!.got_sha = OTHER_HEX64; }],
     ['accepted_findings', (r) => { r.accepted_findings.push({ id: 'F-2' }); }],
     ['inputs blob', (r) => { r.inputs['mcbylaws/loop/round.json'] = 'blob-other'; }],
     ['inputs added path', (r) => { r.inputs['mcbylaws/loop/new.json'] = 'blob-new'; }],
@@ -173,7 +173,7 @@ describe('bindRecord: the record is bound by the hash of itself without the bind
 describe('checkRecordShape: every field is checked, one code per fault', () => {
   it('a missing schema is record_shape:schema', () => {
     const rec = goodRecord();
-    delete (rec as Partial<Record>).schema;
+    delete (rec as Partial<LoopRecordShape>).schema;
     expect(M.checkRecordShape(rec)).toContain('record_shape:schema');
   });
   it('a wrong schema value is record_shape:schema', () => {
@@ -235,7 +235,7 @@ describe('checkRecordShape: every field is checked, one code per fault', () => {
   });
   it('a record with no binding at all is a record_binding_mismatch', () => {
     const rec = goodRecord();
-    delete (rec as Partial<Record>).binding;
+    delete (rec as Partial<LoopRecordShape>).binding;
     expect(M.checkRecordShape(rec)).toEqual(['record_binding_mismatch']);
   });
 });
