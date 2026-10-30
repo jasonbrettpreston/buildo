@@ -9,7 +9,7 @@ import { describe, expect, it, afterAll } from 'vitest';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { makeRepo } from './fixtures/mcbylaws-gate/repo-helper';
+import { makeRepo, type Repo } from './fixtures/mcbylaws-gate/repo-helper';
 import {
   collectRef, heldCount, worktreeScan, pendingCount,
 } from '../../scripts/analysis/mcbylaws/summary-collect.mjs';
@@ -101,6 +101,101 @@ describe('collectRef', () => {
     const { repo } = baseRepo();
     const r = collect(repo, { localSha: 'not-a-sha', remoteSha: 'also-not' });
     expect(typeof r.error).toBe('string');
+  });
+});
+
+/**
+ * The panel column follows arm P: a sole-prereg commit is `exempt`, else a valid record in that commit's own tree is
+ * `true`, none is `false` and a record the arm would refuse is `'invalid'`.
+ */
+describe('collectRef — the panel column (S7, arm P rules)', () => {
+  const policyL23 = {
+    ...policy,
+    layer23: ['scripts/analysis/bylaw-validation/**', 'scripts/analysis/bylaw/**'],
+    protected: ['scripts/analysis/bylaw-validation/**', 'scripts/analysis/bylaw/**'],
+  };
+  const panel = (task: string) => `docs/reports/panels/${task}.json`;
+  const record = (task: string) => JSON.stringify({ task, plan: 'p', output: 'o' });
+
+  const scenarios: [string, (repo: Repo) => string, unknown][] = [
+    ['a sole-prereg commit with no trailer is exempt', (repo: Repo) => {
+      repo.write('scripts/analysis/bylaw-validation/coa-expected/prereg-MB-9-1.json', '{}');
+      return repo.commit('prereg only');
+    }, 'exempt'],
+    ['a layer23 commit with a valid record', (repo: Repo) => {
+      repo.write('scripts/analysis/bylaw/e2.mjs', 'y\n');
+      repo.write(panel('MB-9'), record('MB-9'));
+      return repo.commit('layer\n\nMcBylaws-Task: MB-9');
+    }, true],
+    ['a layer23 commit with a record naming another task', (repo: Repo) => {
+      repo.write('scripts/analysis/bylaw/e3.mjs', 'y\n');
+      repo.write(panel('MB-9'), record('MB-8'));
+      return repo.commit('layer\n\nMcBylaws-Task: MB-9');
+    }, 'invalid'],
+    ['a layer23 commit with an unparsable record', (repo: Repo) => {
+      repo.write('scripts/analysis/bylaw/e4.mjs', 'y\n');
+      repo.write(panel('MB-9'), '{not json');
+      return repo.commit('layer\n\nMcBylaws-Task: MB-9');
+    }, 'invalid'],
+    ['a layer23 commit with no record', (repo: Repo) => {
+      repo.write('scripts/analysis/bylaw/e5.mjs', 'y\n');
+      return repo.commit('layer\n\nMcBylaws-Task: MB-9');
+    }, false],
+    ['a layer23 commit with no task trailer', (repo: Repo) => {
+      repo.write('scripts/analysis/bylaw/e6.mjs', 'y\n');
+      return repo.commit('layer without a trailer');
+    }, false],
+  ];
+
+  it.each(scenarios)('%s', (_label, make, expected) => {
+    const repo = makeRepo();
+    repos.push(repo);
+    repo.write('README.txt', 'r\n');
+    const base = repo.commit('init');
+    const sha = make(repo);
+    const r = collect(repo, { localSha: sha, remoteSha: base, policy: policyL23 });
+    const row = r.commits.find((k: { sha: string }) => k.sha === sha);
+    expect(row).toBeTruthy();
+    expect(row.layer23).toBe(true);
+    expect(row.panel).toBe(expected);
+  });
+
+  it('a layer23 commit whose record sits only in HEAD is false, not present', () => {
+    const repo = makeRepo();
+    repos.push(repo);
+    repo.write('README.txt', 'r\n');
+    const base = repo.commit('init');
+    repo.write('scripts/analysis/bylaw/e7.mjs', 'y\n');
+    const sha = repo.commit('layer\n\nMcBylaws-Task: MB-9');
+    repo.write(panel('MB-9'), record('MB-9'));
+    repo.commit('record later');
+    const r = collect(repo, { localSha: 'HEAD', remoteSha: base, policy: policyL23 });
+    expect(r.commits.find((k: { sha: string }) => k.sha === sha).panel).toBe(false);
+  });
+
+  it('the panel column is closed: never null, whatever arm P cannot name', () => {
+    const repo = makeRepo();
+    repos.push(repo);
+    repo.write('README.txt', 'r\n');
+    const base = repo.commit('init');
+    repo.write('scripts/analysis/bylaw/e8.mjs', 'y\n');
+    const noTrailer = repo.commit('no trailer');
+    repo.write(panel('MB-9'), '');
+    repo.write('scripts/analysis/bylaw/e9.mjs', 'z\n');
+    const emptyRecord = repo.commit('empty record\n\nMcBylaws-Task: MB-9');
+    const r = collect(repo, { localSha: 'HEAD', remoteSha: base, policy: policyL23 });
+    for (const [sha, want] of [[noTrailer, false], [emptyRecord, 'invalid']] as Array<[string, unknown]>) {
+      const row = r.commits.find((k: { sha: string }) => k.sha === sha);
+      expect(row.panel).toBe(want);
+    }
+  });
+
+  it('a commit that is not layer23 keeps panel true', () => {
+    const { repo, a, c } = baseRepo();
+    const r = collect(repo, { localSha: c, remoteSha: a });
+    const plain = r.commits.find((k: { sha: string }) => k.sha === c);
+    expect(plain.layer23).toBe(false);
+    expect(plain.panel).toBe(true);
   });
 });
 

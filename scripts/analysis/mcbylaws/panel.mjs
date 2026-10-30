@@ -6,7 +6,8 @@
 // trailer: parsable JSON, `task` equal to the trailer, `plan` and `output` non-empty strings; no task trailer is
 // `no-record`. R-LE(a) is shared with arm C: exactly one `layer23` path, it is a prereg file, and the message cites no
 // ids — the bootstrap commit needs no record. Fail closed: no task, an unreadable record and any throw are failures,
-// never a pass, and an empty parse is never "nothing to check".
+// never a pass, and an empty parse is never "nothing to check". The pre-push summary (arm S) reads the same rules
+// through `recordOk` / `isSolePrereg` / `panelForPaths`, so its panel column cannot drift from this arm.
 
 import { PREREG_RE } from './cite-arms.mjs';
 import { parseMessage } from './cite-parse.mjs';
@@ -19,18 +20,44 @@ const suffix = (sha) => (typeof sha === 'string' && sha !== '' ? `:${sha}` : '')
 const nonEmpty = (s) => typeof s === 'string' && s.length > 0;
 
 /** The record a panel verdict is read from; only `MB-<n>` reaches here (the trailer pattern is that tight). */
-const recordPath = (task) => `docs/reports/panels/${task}.json`;
+export const recordPath = (task) => `docs/reports/panels/${task}.json`;
 
 /** P2: the record must be JSON naming this task, with a written plan and a written output. */
-function recordOk(text, task) {
+export function recordOk(text, task) {
+  if (!nonEmpty(task)) return false;
   let obj;
   try { obj = JSON.parse(text); } catch { return false; }
   return Boolean(obj) && typeof obj === 'object' && !Array.isArray(obj)
     && obj.task === task && nonEmpty(obj.plan) && nonEmpty(obj.output);
 }
 
-/** @param {string[]} l23 @param {{ids:string[]}} parsed */
-const solePrereg = (l23, parsed) => l23.length === 1 && PREREG_RE.test(l23[0]) && parsed.ids.length === 0;
+/**
+ * R-LE(a): one Layer 2/3 path (paths already filtered to layer23 by the caller), a prereg file, no cited id.
+ * @param {string[]} paths @param {string} message
+ */
+export function isSolePrereg(paths, message) {
+  if (!Array.isArray(paths) || paths.length !== 1 || typeof paths[0] !== 'string') return false;
+  if (!PREREG_RE.test(paths[0])) return false;
+  try { return parseMessage(message).ids.length === 0; } catch { return false; }
+}
+
+/**
+ * The summary's panel column for one commit: `'exempt'` (a sole-prereg commit), `true` / `false` (a valid record in
+ * this tree / none), `'invalid'` (present but not a record for this task) and `null` when no record can be named.
+ * @param {{cwd:string, ownRev:string, task:string|null, layer23Paths:string[], message:string}} args
+ */
+export function panelForPaths(args) {
+  try {
+    const { cwd, ownRev, task, layer23Paths, message } = args || {};
+    if (isSolePrereg(layer23Paths, message)) return 'exempt';
+    if (!nonEmpty(task)) return null;
+    const text = readAt(cwd, ownRev, recordPath(task));
+    if (text === null) return false;
+    return recordOk(text, task) ? true : 'invalid';
+  } catch {
+    return null;
+  }
+}
 
 function run({ cwd, policy, entries, message, ownRev, sha }) {
   const paths = allPaths(entries);
@@ -47,7 +74,7 @@ function run({ cwd, policy, entries, message, ownRev, sha }) {
   // A tree without a policy has no reading of what is in scope: it can never read as "nothing to check".
   if (scoped.length === 0) return [scoped.length === l23.length ? [] : `${CANNOT}${suffix(sha)}`];
   // R-LE(a): the bootstrap commit — one Layer 2/3 path, a prereg file, no citation in the message — needs no record.
-  if (solePrereg(scoped, parsed)) return [];
+  if (isSolePrereg(scoped, message)) return [];
   if (parsed.task === null) return [`FAIL:P:no-record${suffix(sha)}`];
   const record = readAt(cwd, ownRev, recordPath(parsed.task));
   if (record === null) return [`FAIL:P:no-record${suffix(sha)}`];

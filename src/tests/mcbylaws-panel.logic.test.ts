@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { makeRepo, type Repo } from './fixtures/mcbylaws-gate/repo-helper';
-import { panelForCommit } from '../../scripts/analysis/mcbylaws/panel.mjs';
+import { panelForCommit, recordOk, isSolePrereg } from '../../scripts/analysis/mcbylaws/panel.mjs';
 import { PREREG_RE } from '../../scripts/analysis/mcbylaws/cite-arms.mjs';
 import { POLICY_PATH } from '../../scripts/analysis/mcbylaws/paths.mjs';
 
@@ -89,5 +89,33 @@ describe('P — scope, exemption and the sha suffix', () => {
   it('fails closed on an unreadable change list, never throws', () => {
     expect(panelForCommit({ cwd: repo.dir, policy, entries: null as never, message: MSG, ownRev: '' }))
       .toEqual(['FAIL:P:cannot-decide']);
+  });
+});
+
+describe('P2 / R-LE(a) — the rule functions the summary column shares', () => {
+  it.each([
+    ['valid', record('MB-18'), 'MB-18', true],
+    ['wrong task', record('MB-17'), 'MB-18', false],
+    ['empty output', record('MB-18', 'p', ''), 'MB-18', false],
+    ['empty plan', record('MB-18', '', 'o'), 'MB-18', false],
+    ['not json', '{not json', 'MB-18', false],
+    ['json array', '[]', 'MB-18', false],
+    ['json null', 'null', 'MB-18', false],
+    ['plan not a string', '{"task":"MB-18","plan":[],"output":"o"}', 'MB-18', false],
+    ['no task argument', record('MB-18'), null as unknown as string, false],
+  ] as [string, string, string, boolean][])('recordOk: %s', (_l, text, task, expected) => {
+    expect(recordOk(text, task)).toBe(expected);
+  });
+
+  it.each([
+    ['a sole prereg, no ids', [PREREG], true],
+    ['two layer23 paths', [PREREG, L2], false],
+    ['a non-prereg path', [L2], false],
+    ['an empty set', [], false],
+    ['a citied message', [PREREG], false, 'prereg\n\nMcBylaws-Task: MB-18 cites R-KM\n'],
+    ['a spec-133 section also counts as an id', [PREREG], false, 'prereg\n\nSpec 133 section m.4\n'],
+    ['a task trailer alone is no id', [PREREG], true, 'prereg\n\nMcBylaws-Task: MB-18\n'],
+  ] as [string, string[], boolean, string?][])('isSolePrereg: %s', (_l, paths, expected, msg) => {
+    expect(isSolePrereg(paths, msg ?? 'prereg only\n')).toBe(expected);
   });
 });

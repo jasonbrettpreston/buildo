@@ -4,8 +4,9 @@
 //
 // HOW the summary gets its facts. `collectRef` describes ONE pushed ref the way `buildSummary` reads it: the range
 // (base = the remote sha, or the merge-base against the default branch when the ref is new), the commits oldest
-// first with their task, their rule ids, their Layer 2/3 scope and their panel record, the joined
-// numstat/name-status change list, and where APPROVED moves. The other exports count what the operator must be
+// first with their task, their rule ids, their Layer 2/3 scope and their panel column (arm P's rules: R-LE(a) exempt,
+// a valid record, a missing one, an invalid one), the joined numstat/name-status change list, and where APPROVED
+// moves. The other exports count what the operator must be
 // shown (held patches, worktrees, pending files). No environment variable is read: `~` expands through `os.homedir()`.
 // Fail closed: any git error, an unparsable stream or an unresolvable base is `{error: ...}` / null /
 // `{kind:'unknown'}` — the caller prints UNKNOWN, never a pass — and an empty parse is never "nothing to check".
@@ -13,14 +14,14 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { git, commitsInRange, changesOfCommit, listTracked, pathExistsAt } from './git-util.mjs';
+import { git, commitsInRange, changesOfCommit, listTracked } from './git-util.mjs';
 import { parseNameStatusZ, allPaths } from './name-status.mjs';
 import { classify } from './paths.mjs';
+import { parseMessage } from './cite-parse.mjs';
+import { panelForPaths } from './panel.mjs';
 
 const ZERO = '0'.repeat(40);
-const TRAILER_RE = /^McBylaws-Task:\s*(MB-\d+)\s*$/m;
 const EMPTY = { commits: [], changes: [], approvedChange: null, approvedSince: null };
-const panelPath = (task) => `docs/reports/panels/${task}.json`;
 const fail = (what) => ({ error: what });
 const expand = (p, home) => (p === '~' ? home : String(p).startsWith('~/') ? path.join(home, p.slice(2)) : p);
 
@@ -37,6 +38,14 @@ function rulesOf(policy, paths) {
   return [...rules].sort();
 }
 
+/**
+ * The panel column is closed to `true` / `false` (MISSING) / `'exempt'` / `'invalid'`: anything arm P cannot name (no
+ * task trailer, an unreadable record, a throw) is a MISSING record, never a pass and never `null`.
+ */
+function closedPanel(value) {
+  return value === true || value === 'exempt' || value === 'invalid' ? value : false;
+}
+
 /** One commit's summary row; null when a stream cannot be read (fail closed). */
 function commitRow(cwd, sha, policy) {
   const meta = git(cwd, ['show', '-s', '--format=%s%x00%B', sha]);
@@ -45,11 +54,14 @@ function commitRow(cwd, sha, policy) {
   const entries = parseNameStatusZ(raw);
   if (entries === null) return null;
   const [subject, message] = meta.stdout.split('\0');
-  const trailer = TRAILER_RE.exec(message || '');
-  const task = trailer ? trailer[1] : null;
+  const task = parseMessage(message || '').task;
   const paths = allPaths(entries);
-  const layer23 = paths.some((p) => classify(policy, p).layer23);
-  const panel = layer23 ? task !== null && pathExistsAt(cwd, sha, panelPath(task)) : true;
+  const layer23Paths = paths.filter((p) => classify(policy, p).layer23);
+  const layer23 = layer23Paths.length > 0;
+  // Arm S / S7: the column follows arm P's rules; a commit that is not Layer 2/3 keeps `true`.
+  const panel = layer23
+    ? closedPanel(panelForPaths({ cwd, ownRev: sha, task, layer23Paths, message: message || '' }))
+    : true;
   return { sha, subject: subject || '', task, rules: rulesOf(policy, paths), layer23, panel };
 }
 

@@ -43,6 +43,12 @@ describe('mcbylaws pre-push summary (arm S)', () => {
     ['CI mode prints and never asks', { ci: true, worktrees: { count: 1, dirty: 1, unpushed: 0 } },
       (r) => { expect(has(r.text, 'not evaluated in CI')).toBe(true); expect(has(r.text, 'Approve this push?')).toBe(false); }],
     ['arm FAIL is printed', { armVerdicts: ['FAIL:P:no-panel'] }, (r) => { expect(has(r.text, 'FAIL:P:no-panel')).toBe(true); expect(r.verdict).toBe('FAIL'); }],
+    ['S7 panel invalid', { refs: [ref({ commits: [{ sha: 'abcdef1234567890', subject: 's', task: 'MB-67', rules: ['R-LD'], panel: 'invalid', layer23: true }] })] },
+      (r) => { expect(has(r.text, 'PANEL INVALID abcdef1 MB-67')).toBe(true); expect(has(r.text, 'INVALID')).toBe(true); expect(r.verdict).toBe('FAIL'); }],
+    ['S7 panel exempt', { refs: [ref({ commits: [{ sha: 'abcdef1234567890', subject: 's', task: null, rules: ['R-LD'], panel: 'exempt', layer23: true }] })] },
+      (r) => { expect(has(r.text, 'MISSING')).toBe(false); expect(has(r.text, 'INVALID')).toBe(false); expect(r.verdict).toBe('OK'); }],
+    ['S7 panel present', { refs: [ref({ commits: [{ sha: 'abcdef1234567890', subject: 's', task: 'MB-67', rules: ['R-LD'], panel: true, layer23: true }] })] },
+      (r) => { expect(has(r.text, 'abcdef1 MB-67 R-LD present')).toBe(true); expect(r.verdict).toBe('OK'); }],
     ['no change', { refs: [ref({ changes: [ch('src/app.ts')] })] }, (r) => expect(r.text).toContain('MCBYLAWS: no protected paths changed')],
   ];
   for (const [name, overIn, check] of table) it(name, () => check(run(overIn)));
@@ -109,5 +115,14 @@ describe('mcbylaws pre-push summary (arm S)', () => {
     const text = run({ refs: [ref({ changes: [ch('.husky/pre-commit\nMCBYLAWS: no protected paths changed')] })] }).text;
     expect(over(text)).toHaveLength(0);
     expect(has(text, '.husky/pre-commit\\x0a')).toBe(true);
+  });
+
+  it('S7 the panel column is closed: only an invalid record fails besides a missing one', () => {
+    const row = (panel: unknown) => ({ refs: [ref({ commits: [{ sha: 'abcdef1234567890', subject: 's', task: 'MB-67', rules: ['R-LD'], panel, layer23: true }] })] });
+    for (const [panel, ok] of [[true, true], ['exempt', true], [false, false], ['invalid', false]] as const) {
+      const r = run(row(panel));
+      expect(r.verdict === 'FAIL', String(panel)).toBe(!ok);
+    }
+    expect(has(run(row('exempt')).text, 'PANEL MISSING')).toBe(false);
   });
 });

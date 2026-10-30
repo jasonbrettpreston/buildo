@@ -70,8 +70,11 @@ function section(ref, input) {
   else out.push('MCBYLAWS: no protected paths changed');
   for (const c of ref.commits || []) {
     const sha7 = String(c.sha).slice(0, 7);
-    if (c.layer23 === true) out.push(`  ${sha7} ${c.task} ${(c.rules || []).join(',')} ${c.panel ? 'present' : 'MISSING'}`);
+    const label = c.panel === 'invalid' ? 'INVALID' : c.panel === 'exempt' ? 'exempt' : c.panel ? 'present' : 'MISSING';
+    if (c.layer23 === true) out.push(`  ${sha7} ${c.task} ${(c.rules || []).join(',')} ${label}`);
     if (c.panel === false) { out.push(`PANEL MISSING ${sha7} ${escapePath(c.task)}`); fail = true; }
+    // S7: a record the panel arm would refuse (wrong task, unreadable) fails the push too.
+    if (c.panel === 'invalid') { out.push(`PANEL INVALID ${sha7} ${escapePath(c.task)}`); fail = true; }
   }
   return { lines: out, fail };
 }
