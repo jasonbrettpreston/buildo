@@ -96,6 +96,33 @@ describe('resolvePolicy: bootstrap (no base copy)', () => {
     expect(r.policy.held_limit).toBe(1);
   });
 
+  it('cannot-decide when the bootstrap commit stages the policy plus any document', () => {
+    repo = makeRepo();
+    repo.write('README.md', 'x\n');
+    repo.commit('doc');
+    repo.write(POLICY, policy());
+    repo.write('docs/notes.md', 'x\n');
+    repo.stage(POLICY, 'docs/notes.md');
+    const r = boot(repo.dir, [
+      { status: 'A', path: POLICY, oldPath: null },
+      { status: 'A', path: 'docs/notes.md', oldPath: null },
+    ]);
+    expect(r.ok).toBe(false);
+    expect(stop(r).code).toBe('cannot-decide');
+    expect(stop(r).error).toBeTruthy();
+  });
+
+  it('cannot-decide when the policy is staged as M alone and there is no base copy', () => {
+    repo = makeRepo();
+    repo.write('README.md', 'x\n');
+    repo.commit('doc');
+    repo.write(POLICY, policy());
+    repo.stage(POLICY);
+    const r = boot(repo.dir, [{ status: 'M', path: POLICY, oldPath: null }], '');
+    expect(r.ok).toBe(false);
+    expect(stop(r).code).toBe('cannot-decide');
+  });
+
   it('cannot-decide when the bootstrap commit stages a layer23 path', () => {
     repo = makeRepo();
     repo.write('README.md', 'x\n');
