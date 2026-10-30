@@ -46,6 +46,24 @@ function solePrereg(cwd, ownRev, l23) {
   return true;
 }
 
+const RED_DIR = 'docs/reports/red-evidence/';
+const LANDED = new Set(['A', 'M']);
+const lands = (e, p) => e.path === p && LANDED.has(e.status);
+
+/**
+ * R-KG exception: an OWED rule may be cited when the SAME commit lands its named lock (added, or modified to
+ * green) AND carries red evidence (a new file under the red-evidence directory). A row with no named lock, a
+ * deleted lock, or a commit without red evidence can never use it.
+ * @param {string} id @param {Map<string, {status:string, locks?:string[]}>} rows
+ * @param {Array<{status:string, path:string}>} entries @returns {boolean}
+ */
+export function lockLands(id, rows, entries) {
+  const locks = rows?.get?.(id)?.locks;
+  if (!Array.isArray(locks) || locks.length === 0 || !Array.isArray(entries)) return false;
+  const evidence = entries.some((e) => e?.status === 'A' && String(e.path ?? '').startsWith(RED_DIR));
+  return evidence && entries.some((e) => locks.some((p) => lands(e, p)));
+}
+
 /** @returns {string[]} every verdict string; `[]` is a pass */
 function run({ cwd, policy, entries, message, parentRev, ownRev, owed, rows, sha }) {
   const paths = allPaths(entries);
@@ -62,13 +80,17 @@ function run({ cwd, policy, entries, message, parentRev, ownRev, owed, rows, sha
   const rules = prereg.rules;
   const accepted = new Set();
   const out = [];
+  const landsId = (id) => (owed.has(id) || rows.get(id)?.status === 'OWED') && lockLands(id, rows, entries);
   for (const id of rules) {
     if (id === BOOT && bootListed(policy, parsed.task)) { accepted.add(id); continue; }
-    if (!isRuled(rows, id)) out.push(`FAIL:C:not-ruled:${id}${suffix(sha)}`);
+    if (!isRuled(rows, id) && !landsId(id)) out.push(`FAIL:C:not-ruled:${id}${suffix(sha)}`);
   }
   for (const id of parsed.ids) {
     if (accepted.has(id)) continue;
-    if (owed.has(id) || rows.get(id)?.status === 'OWED') { out.push(`FAIL:C:owed:${id}${suffix(sha)}`); continue; }
+    if ((owed.has(id) || rows.get(id)?.status === 'OWED') && !lockLands(id, rows, entries)) {
+      out.push(`FAIL:C:owed:${id}${suffix(sha)}`);
+      continue;
+    }
     if (!rules.includes(id)) out.push(`FAIL:C:cite-not-in-rules:${id}${suffix(sha)}`);
   }
   return out;

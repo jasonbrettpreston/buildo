@@ -40,6 +40,20 @@ export function parseOwedTable(spec133Text) {
 /** Last pipe cell of a row line, without the trailing pipe. */
 const lastCell = (line) => line.split(' | ').pop().replace(/\|+\s*$/, '').trim();
 
+const TICK_RE = /`([^`]+)`/g;
+const LOCK_RE = /\.test\.(?:ts|tsx|mjs)$/;
+const RECORD_LOCK = 'chat-rulings-register.logic.test.ts';
+
+/** Backticked behavioural lock paths (`.test.ts|tsx|mjs`) named in a row's last cell, record lock excluded. */
+function locksOf(cell) {
+  const out = [];
+  for (const m of cell.matchAll(TICK_RE)) {
+    const p = m[1].trim();
+    if (LOCK_RE.test(p) && !p.endsWith(RECORD_LOCK) && !out.includes(p)) out.push(p);
+  }
+  return out;
+}
+
 function statusOf(cell) {
   const word = (cell.match(/^(?:~~)?\**([A-Z]+)/) || [])[1] || '';
   if (['RETIRED', 'SUPERSEDED', 'WITHDRAWN'].includes(word)) return 'RETIRED';
@@ -48,7 +62,12 @@ function statusOf(cell) {
   return 'RULED';
 }
 
-/** @param {string} text @returns {Map<string, {status:string}>} status in RULED|OWED|PROPOSED|RETIRED; first wins */
+/**
+ * @param {string} text
+ * @returns {Map<string, {status:string, locks:string[]}>} status in RULED|OWED|PROPOSED|RETIRED; first wins.
+ *   `locks` are the behavioural lock paths (`.test.ts|tsx|mjs`) named in the last cell; a row that names none
+ *   can never use the arm C exception, and the register record lock is never a behavioural lock.
+ */
 export function parseRegisterRows(text) {
   const out = new Map();
   for (const line of String(text ?? '').split('\n')) {
@@ -58,7 +77,8 @@ export function parseRegisterRows(text) {
     const id = m[2] || m[3] || m[4];
     if (!id || out.has(id)) continue;
     const struck = STRUCK_RE.test(line.slice(2)) || STRUCK_RE.test(m[1]);
-    out.set(id, { status: struck ? 'RETIRED' : statusOf(lastCell(line)) });
+    const cell = lastCell(line);
+    out.set(id, { status: struck ? 'RETIRED' : statusOf(cell), locks: struck ? [] : locksOf(cell) });
   }
   return out;
 }

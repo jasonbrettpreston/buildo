@@ -87,6 +87,24 @@ describe('parseRegisterRows + isRuled', () => {
       expect(isRuled(map, id)).toBe(status === 'RULED');
     });
   }
+  it('a row carries its named locks (backticked .test.* paths), never the record lock', () => {
+    const lockRows: Array<[string, Array<[string, string[]]>]> = [
+      ['| R-QA | body | why | gate | OWED -> MB-31: lock `src/tests/lock-qa.logic.test.ts`; record: `src/tests/chat-rulings-register.logic.test.ts` |',
+        [['R-QA', ['src/tests/lock-qa.logic.test.ts']]]],
+      ['| R-QB | body | why | gate | OWED -> MB-31: lock `src/tests/lock-qb.logic.test.ts` |',
+        [['R-QB', ['src/tests/lock-qb.logic.test.ts']]]],
+      ['| R-QC | body | why | gate | OWED -> MB-31: `src/tests/a.test.tsx` `src/tests/b.test.mjs` `docs/x.md` |',
+        [['R-QC', ['src/tests/a.test.tsx', 'src/tests/b.test.mjs']]]],
+      ['| R-QD | body | why | gate | OWED -> MB-31: record `src/tests/chat-rulings-register.logic.test.ts` |',
+        [['R-QD', []]]],
+      ['| R-QE | body | why | gate | OWED |', [['R-QE', []]]],
+      ['| R-QF | body | why | gate | RULED |\n| R-QG | body | why | gate | RULED |', [['R-QF', []], ['R-QG', []]]],
+    ];
+    for (const [text, expectRows] of lockRows) {
+      const map = parseRegisterRows(text);
+      for (const [id, locks] of expectRows) expect(map.get(id), id).toEqual({ status: expect.any(String), locks });
+    }
+  });
   it('first occurrence wins', () => {
     const map = parseRegisterRows('| **M-1** | a | b | c | RETIRED |\n| **M-1** | a | b | c | RULED |');
     expect(map.get('M-1')?.status).toBe('RETIRED');
