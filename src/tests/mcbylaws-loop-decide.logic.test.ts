@@ -11,18 +11,18 @@ type Rulings = Map<string, string>;
 type Finding = { case?: string; finding_id?: unknown; reason?: string };
 type CaseEntry = { id: string; status: string };
 type Rec = {
-  decision?: string;
-  reason?: string;
-  cases?: CaseEntry[];
-  accepted_findings?: Finding[];
+  decision?: string | undefined;
+  reason?: string | undefined;
+  cases?: CaseEntry[] | undefined;
+  accepted_findings?: Finding[] | undefined;
 };
 type RunCase = { id: string; status: string; got_sha?: string | null };
 type Canary = { id: string; observed: string };
 type Run = {
   declaredIds: string[];
   cases: RunCase[];
-  skipped?: number;
-  canary?: Canary | null;
+  skipped?: number | undefined;
+  canary?: Canary | null | undefined;
 };
 type CanaryCase = { id: string; expected: unknown; got: string };
 type Compare = (expected: unknown, got: string) => string;
