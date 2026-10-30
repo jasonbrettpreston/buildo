@@ -1,0 +1,53 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g2
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write-ids: the ids are written by the tool, never typed (PR-68-1) > rewrites the ids file and ids_sha256 from the run case ids, and prints the change
+TEMPDEBUG run {"write":false,"writeIds":true,"increment":"","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write-ids: the ids are written by the tool, never typed (PR-68-1) > a run whose ids match the saved ones changes nothing and says so
+TEMPDEBUG run {"write":false,"writeIds":true,"increment":"","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"]],"covers":true,"regressionGroups":["g1"]}
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write: the record is written by this tool (PR-68-1) > writes docs/reports/loop-records/<inc>/round-01.json, a second call round-02.json
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+TEMPDEBUG record {"findings":[],"cases":[["A0001|1","pass"],["A0002|1","fail"],["A0003|1","fail"]]}
+TEMPDEBUG disk ["pass","fail","fail"]
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+TEMPDEBUG record {"findings":[],"cases":[["A0001|1","pass"],["A0002|1","fail"],["A0003|1","fail"]]}
+TEMPDEBUG disk ["pass","fail","fail"]
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write: the record is written by this tool (PR-68-1) > the file passes checkRecordShape, stores no derived value, and binds the classified files
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+TEMPDEBUG record {"findings":[],"cases":[["A0001|1","pass"],["A0002|1","fail"],["A0003|1","fail"]]}
+TEMPDEBUG disk ["pass","fail","fail"]
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write: the record is written by this tool (PR-68-1) > maps the scorer class to the record status, and a case named in an accepted finding is accepted
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-loop-gate-commands-yo0tVj/findings-status.json","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","ANSWERED"],["A0003|1","BY-LAW CHANGED"],["A0004|1","NOT SCORABLE"],["A0005|1","DATA"],["A0006|1","DIFFER"],["A0007|1","NO ANSWER"],["A0008|1","NOT MODELLED"],["A0009|1","OWED"],["A00010|1","SOMETHING ELSE"]],"covers":true,"regressionGroups":["g1"]}
+TEMPDEBUG record {"findings":[{"case":"A0002|1","finding_id":"M-322","reason":"the City figure is a typo in the parcel file, verified against the by-law copy"}],"cases":[["A0001|1","pass"],["A0002|1","accepted"],["A0003|1","pass"],["A0004|1","pass"],["A0005|1","pass"],["A0006|1","fail"],["A0007|1","fail"],["A0008|1","fail"],["A0009|1","fail"],["A00010|1","pending"]]}
+TEMPDEBUG disk ["pass","accepted","pass","pass","pass","fail","fail","fail","fail","pending"]
+TEMPDEBUG test {"file":"/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-loop-gate-commands-yo0tVj/write-status-fnnX6o/docs/reports/loop-records/1/round-01.json","statuses":["pass","accepted","pass","pass","pass","fail","fail","fail","fail","pending"]}
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write: the record is written by this tool (PR-68-1) > missing --increment / --decision / --reason refuses and writes nothing
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write: the record is written by this tool (PR-68-1) > refuses a run that does not cover all groups
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":null,"cases":null,"covers":false,"regressionGroups":["g1"]}
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":[{"id":"g1","introduced_in":"1"},{"id":"g2","introduced_in":"2"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":false,"regressionGroups":["g1"]}
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write: the record is written by this tool (PR-68-1) > the record binds the input blobs of the index, so checkBound reads them green on the tree it was written on
+TEMPDEBUG run {"write":true,"writeIds":false,"increment":"1","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+TEMPDEBUG record {"findings":[],"cases":[["A0001|1","pass"],["A0002|1","fail"],["A0003|1","fail"]]}
+TEMPDEBUG disk ["pass","fail","fail"]
+
+stdout | src/tests/mcbylaws-loop-gate-commands.logic.test.ts > runCommand --write: the record is written by this tool (PR-68-1) > without --write or --write-ids: a dry run that prints the case counts and returns no violations
+TEMPDEBUG run {"write":false,"writeIds":false,"increment":"","findings":"","runGroups":[{"id":"g1","introduced_in":"1"}],"cases":[["A0001|1","MATCH"],["A0002|1","DIFFER"],["A0003|1","NO ANSWER"]],"covers":true,"regressionGroups":["g1"]}
+
+ ✓ src/tests/mcbylaws-loop-gate-commands.logic.test.ts (17 tests) 632ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  14:43:03
+   Duration  831ms (transform 37ms, setup 6ms, collect 32ms, tests 632ms, environment 0ms, prepare 20ms)
+
