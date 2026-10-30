@@ -14,6 +14,9 @@
 # Item 5 (WF2 conversion simplification): the hook tests the INDEX — a staged
 # file that also has unstaged edits is blocked before any check reads the tree.
 bash scripts/hooks/check-partial-staging.sh && \
+# MB-67 (R-KM, R-KP): the McBylaws gate, file-only, AFTER the partial-staging refusal (so the staged files are the
+# worktree files) and before any other check; no flag or environment variable turns it off.
+node scripts/analysis/mcbylaws/gate.mjs --staged && \
 node scripts/analysis/step-churn-complexity.mjs --check && \
   node scripts/steps/_schema/generate-template-freeze.mjs --check && \
   node scripts/analysis/generate-target-files.mjs --check && \

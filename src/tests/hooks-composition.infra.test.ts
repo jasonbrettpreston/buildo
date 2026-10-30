@@ -451,3 +451,54 @@ describe('hooks path (H6) — every worktree runs the tracked .husky hooks', () 
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// MB-67 (R-KM, R-KP, R-LF; plan section 10 W2) — the McBylaws gate line in each hook. Pins are ADDED only; no
+// existing expectation above is weakened. The gate runs ONCE per hook, file-only; in pre-commit it comes AFTER
+// check-partial-staging.sh (the staged files are then the worktree files) and before step-validate; in pre-push
+// it comes FIRST, because it reads the ref pairs git writes on stdin; in commit-msg it gets the message file.
+// ---------------------------------------------------------------------------
+describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
+  const GATE = 'scripts/analysis/mcbylaws/gate.mjs';
+  const count = (text: string, needle: string) => stripComments(text).split(needle).length - 1;
+
+  it('GREEN — pre-commit runs gate --staged exactly once, after check-partial-staging.sh and before step-validate', () => {
+    const code = stripComments(PRE_COMMIT);
+    expect(count(PRE_COMMIT, `${GATE} --staged`)).toBe(1);
+    expect(code.indexOf('check-partial-staging.sh')).toBeGreaterThanOrEqual(0);
+    expect(code.indexOf(`${GATE} --staged`)).toBeGreaterThan(code.indexOf('check-partial-staging.sh'));
+    expect(code.indexOf(`${GATE} --staged`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+  });
+
+  it('RED — a tampered pre-commit with the gate line stripped is caught', () => {
+    const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/mcbylaws\/gate\.mjs --staged && \\\n/, '');
+    expect(count(tampered, `${GATE} --staged`)).toBe(0);
+  });
+
+  it('GREEN — pre-push runs gate --push exactly once, before step-validate (it reads the ref pairs on stdin)', () => {
+    const code = stripComments(PRE_PUSH);
+    expect(count(PRE_PUSH, `${GATE} --push`)).toBe(1);
+    expect(code.indexOf(`${GATE} --push`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+  });
+
+  it('RED — a tampered pre-push with the gate stripped is caught', () => {
+    const tampered = PRE_PUSH.replace(/node scripts\/analysis\/mcbylaws\/gate\.mjs --push && /, '');
+    expect(count(tampered, `${GATE} --push`)).toBe(0);
+  });
+
+  it('GREEN — commit-msg runs gate --commit-msg with the message file exactly once', () => {
+    expect(count(COMMIT_MSG, `${GATE} --commit-msg "$1"`)).toBe(1);
+  });
+
+  it('RED — a tampered commit-msg with the gate stripped is caught', () => {
+    const tampered = COMMIT_MSG.replace(/ && \\\nnode scripts\/analysis\/mcbylaws\/gate\.mjs --commit-msg "\$1"/, '');
+    expect(count(tampered, `${GATE} --commit-msg`)).toBe(0);
+  });
+
+  it('no hook sets an environment switch, flag or skip word for the gate (R-KM: no exception path)', () => {
+    for (const hook of [PRE_COMMIT, PRE_PUSH, COMMIT_MSG]) {
+      const gateLines = stripComments(hook).split('\n').filter((l) => l.includes(GATE));
+      for (const l of gateLines) expect(l).not.toMatch(/SKIP|BYPASS|MCBYLAWS_|HUSKY=|--no-|\|\| true/);
+    }
+  });
+});
