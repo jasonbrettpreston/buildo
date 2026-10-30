@@ -43,6 +43,9 @@ type GateModule = {
   exitCodeFor: (v: { violations?: string[]; error?: string }) => number;
   formatReport: (v: { command?: string; mode?: string; violations?: string[]; notes?: string[] }) => string[];
   nameStatusFromText: (text: string) => NameStatus[];
+  nameStatusZOf: (text: string) => NameStatus[];
+  stagedEnv: (root: string) => NodeJS.ProcessEnv;
+  trustedIndexFile: (root: string) => string | null;
   git: (root: string, args: string[]) => string;
   stagedNameStatus: (root: string) => NameStatus[];
   rangeNameStatus: (root: string, base: string, tip: string) => NameStatus[];
@@ -55,7 +58,7 @@ type GateModule = {
 type Record2 = { [path: string]: string };
 type Deps = {
   buildContext?: (args: Parsed) => Promise<unknown>;
-  evaluateGate?: (ctx: unknown, args: Parsed) => { violations?: string[]; notes?: string[] } | Promise<{ violations?: string[]; notes?: string[] }>;
+  evaluateGate?: (ctx: unknown, args: Parsed) => unknown;
   write?: (line: string) => void;
 };
 
@@ -415,5 +418,161 @@ describe('mergeBase', () => {
     expect(readAt(dir, ':index', 'b.txt')).toBe('staged text\n');
     expect(readAt(dir, c2, 'b.txt')).toBe(null);
     expect(readAt(dir, ':index', 'ghost.txt')).toBe(null);
+  });
+});
+
+// --- O68-08: `git commit -a` / `git commit -- <path>` hand the hook an ALTERNATE index (GIT_INDEX_FILE inside .git) --------------
+describe('alternate index (O68-08)', () => {
+  /** Run `fn` with process.env.GIT_INDEX_FILE set and every other GIT_* removed, restoring the previous env afterwards. */
+  const withIndexFile = <T>(value: string, fn: () => T): T => {
+    const saved: Record<string, string | undefined> = {};
+    for (const k of Object.keys(process.env)) if (k.startsWith('GIT_')) { saved[k] = process.env[k]; delete process.env[k]; }
+    process.env.GIT_INDEX_FILE = value;
+    try {
+      return fn();
+    } finally {
+      delete process.env.GIT_INDEX_FILE;
+      for (const [k, v] of Object.entries(saved)) if (v !== undefined) process.env[k] = v;
+    }
+  };
+
+  it('keeps GIT_INDEX_FILE only when it resolves inside the git dir', async () => {
+    const { stagedEnv, trustedIndexFile } = await load();
+    const dir = makeRepo();
+    const inside = path.join(dir, '.git', 'commit-index');
+    fs.writeFileSync(inside, '');
+    const outside = path.join(dir, 'alt-index');
+    fs.writeFileSync(outside, '');
+    expect(process.env.GIT_INDEX_FILE).toBeUndefined();
+    expect(trustedIndexFile(dir)).toBe(null);
+    expect(stagedEnv(dir).GIT_INDEX_FILE).toBeUndefined();
+    expect(withIndexFile(inside, () => trustedIndexFile(dir))).toBe(fs.realpathSync(inside));
+    expect(withIndexFile(inside, () => stagedEnv(dir).GIT_INDEX_FILE)).toBe(fs.realpathSync(inside));
+    expect(withIndexFile(outside, () => trustedIndexFile(dir))).toBe(null);
+    expect(withIndexFile(outside, () => stagedEnv(dir).GIT_INDEX_FILE)).toBeUndefined();
+  });
+
+  it('stagedNameStatus reads the alternate index inside .git and ignores one outside it', async () => {
+    const { stagedNameStatus } = await load();
+    const dir = makeRepo();
+    fs.writeFileSync(path.join(dir, 'seed.txt'), 'seed\n');
+    commitAll(dir, 'seed');
+    // The alternate index (what `git commit -a` stages) holds a file the default index does not.
+    const alt = path.join(dir, '.git', 'commit-index');
+    const altEnv = { ...cleanEnv(), GIT_INDEX_FILE: alt };
+    fs.writeFileSync(path.join(dir, 'alt-only.txt'), 'alt\n');
+    execFileSync('git', ['-C', dir, 'add', 'alt-only.txt'], { env: altEnv });
+    fs.rmSync(path.join(dir, 'alt-only.txt'));
+    const outside = path.join(dir, 'stray-index');
+    fs.writeFileSync(path.join(dir, 'stray.txt'), 'stray\n');
+    execFileSync('git', ['-C', dir, 'add', 'stray.txt'], { env: { ...cleanEnv(), GIT_INDEX_FILE: outside } });
+    fs.rmSync(path.join(dir, 'stray.txt'));
+
+    // Without the variable the default (empty) index sees nothing.
+    expect(withIndexFile('', () => stagedNameStatus(dir))).toEqual([]);
+    // The alternate index sees alt-only.txt plus every file it seeded from the default one, never stray.txt.
+    const altPaths = withIndexFile(alt, () => stagedNameStatus(dir)).map((e) => e.p);
+    expect(altPaths).toContain('alt-only.txt');
+    expect(altPaths).not.toContain('stray.txt');
+    // Outside the git dir the variable is ignored: the default index has nothing staged.
+    expect(withIndexFile(outside, () => stagedNameStatus(dir))).toEqual([]);
+  });
+});
+
+// --- O68-09: `-z` name-status: a path is never C-quoted, never trimmed -------------------------------------------
+describe('nameStatusZOf', () => {
+  it('splits on NUL and gives both paths of a rename', async () => {
+    const { nameStatusZOf } = await load();
+    expect(nameStatusZOf('A\0new.txt\0M\0edit.txt\0')).toEqual([{ s: 'A', p: 'new.txt' }, { s: 'M', p: 'edit.txt' }]);
+    expect(nameStatusZOf('R100\0old.txt\0new.txt\0')).toEqual([{ s: 'R', p: 'old.txt' }, { s: 'R', p: 'new.txt' }]);
+    expect(nameStatusZOf('')).toEqual([]);
+  });
+
+  it('keeps spaces, non-ASCII and backslashes verbatim', async () => {
+    const { nameStatusZOf } = await load();
+    expect(nameStatusZOf('A\0a b.txt\0M\0café.mjs\0A\0back\\slash.txt\0')).toEqual([
+      { s: 'A', p: 'a b.txt' },
+      { s: 'M', p: 'café.mjs' },
+      { s: 'A', p: 'back\\slash.txt' },
+    ]);
+  });
+});
+
+describe('name-status readers on paths git would C-quote (O68-09)', () => {
+  const ODD = ['a b.txt', 'café.mjs', 'back\\slash.txt'];
+
+  it('stagedNameStatus, rangeNameStatus and perCommitNameStatus keep the paths exact', async () => {
+    const { stagedNameStatus, rangeNameStatus, perCommitNameStatus } = await load();
+    const dir = makeRepo();
+    fs.writeFileSync(path.join(dir, 'seed.txt'), 'seed\n');
+    const c1 = commitAll(dir, 'seed');
+    for (const name of ODD) fs.writeFileSync(path.join(dir, name), `${name}\n`);
+    const c2 = commitAll(dir, 'odd names');
+    for (const name of ODD) fs.writeFileSync(path.join(dir, name), `${name} edited\n`);
+    gitRun(dir, ['add', '-A']);
+
+    const staged = stagedNameStatus(dir).map((e) => e.p).sort();
+    expect(staged).toEqual([...ODD].sort());
+    const union = rangeNameStatus(dir, c1, c2).map((e) => e.p).sort();
+    expect(union).toEqual([...ODD].sort());
+    const per = perCommitNameStatus(dir, c1, c2);
+    expect(per.length).toBe(1);
+    expect(per[0]?.map((e) => e.p).sort()).toEqual([...ODD].sort());
+    expect(per[0]?.every((e) => e.s === 'A')).toBe(true);
+  });
+
+  it('a rename of an odd path gives both odd paths with status R', async () => {
+    const { perCommitNameStatus } = await load();
+    const dir = makeRepo();
+    fs.writeFileSync(path.join(dir, 'seed.txt'), 'seed\n');
+    const c1 = commitAll(dir, 'seed');
+    fs.writeFileSync(path.join(dir, 'a b.txt'), `one\n${'x'.repeat(400)}\n`);
+    commitAll(dir, 'add odd');
+    gitRun(dir, ['mv', 'a b.txt', 'café.mjs']);
+    const c3 = commitAll(dir, 'rename odd');
+    const per = perCommitNameStatus(dir, c1, c3);
+    const last = per[per.length - 1] ?? [];
+    expect(last.map((e) => e.p).sort()).toEqual(['a b.txt', 'café.mjs']);
+    expect(last.every((e) => e.s === 'R')).toBe(true);
+  });
+});
+
+// --- O68-16: a verdict that is not `{ violations: [] }` is exit 2 (fail closed) ------------------------------------------------
+describe('main fails closed on a bad verdict (O68-16)', () => {
+  it.each([undefined, null, {}, { notes: [] }, { violations: 'floor_fall' }, 0])('exit 2 for %j', async (bad) => {
+    const { main } = await load();
+    const sink = collect();
+    const code = await main(['--mode=commit'], {
+      buildContext: async () => ({}),
+      evaluateGate: () => bad,
+      write: sink.write,
+    });
+    expect(code).toBe(2);
+    expect(sink.out).toContain('loop-gate: cannot run: bad verdict');
+    expect(sink.out.join('\n')).not.toContain('loop-gate commit: ok');
+  });
+
+  it('a truthy error is exit 2 and prints it', async () => {
+    const { main } = await load();
+    const sink = collect();
+    const code = await main(['--mode=commit'], {
+      buildContext: async () => ({}),
+      evaluateGate: () => ({ violations: [], notes: [], error: 'x' }),
+      write: sink.write,
+    });
+    expect(code).toBe(2);
+    expect(sink.out.join('\n')).toContain('loop-gate: cannot run: x');
+  });
+
+  it('green twin: a real verdict still exits 0', async () => {
+    const { main } = await load();
+    const sink = collect();
+    const code = await main(['--mode=commit'], {
+      buildContext: async () => ({}),
+      evaluateGate: () => ({ violations: [], notes: [] }),
+      write: sink.write,
+    });
+    expect(code).toBe(0);
+    expect(sink.out).toEqual(['loop-gate commit: ok']);
   });
 });

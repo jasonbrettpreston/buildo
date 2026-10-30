@@ -86,17 +86,95 @@ export function formatReport({ command = 'check', mode = 'check', violations = [
   return lines;
 }
 
-/** The reader name `nameStatusFromText`: loop-oracle.nameStatusOf already gives both paths of a rename with status `R`. */
+/** The reader name `nameStatusFromText`. loop-oracle.nameStatusOf parses the TAB format (no path may contain a tab). */
 export const nameStatusFromText = nameStatusOf;
+
+/**
+ * O68-09: parse `--name-status -z` output. NUL separated: `<status>\0<path>\0`, and for renames/copies `<R100>\0<old>\0<new>\0`
+ * (both paths with status `R`). A path is taken verbatim, never trimmed, so spaces / non-ASCII / backslashes survive.
+ */
+export function nameStatusZOf(text) {
+  const parts = String(text || '').split('\0');
+  const out = [];
+  let i = 0;
+  while (i < parts.length) {
+    const status = parts[i];
+    const raw = typeof status === 'string' ? status.replace(/\n/g, '') : '';
+    i += 1;
+    if (!raw) continue;
+    const s = raw[0];
+    if (s === 'R' || s === 'C') {
+      const oldPath = parts[i];
+      const newPath = parts[i + 1];
+      i += 2;
+      if (typeof oldPath === 'string' && oldPath) out.push({ s, p: oldPath });
+      if (typeof newPath === 'string' && newPath) out.push({ s, p: newPath });
+      continue;
+    }
+    const p = parts[i];
+    i += 1;
+    if (typeof p === 'string' && p) out.push({ s, p });
+  }
+  return out;
+}
 
 // --- git readers ----------------------------------------------------------------------------------------------------------------
 // Reading process.env only to build the scrubbed copy is the single permitted use (no GIT_* leaks in: a hook exports GIT_DIR / GIT_INDEX_FILE).
 const scrubbedEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
 
+// O68-08: `git commit -a` / `git commit -- <path>` write an ALTERNATE index (GIT_INDEX_FILE inside .git). For the STAGED readers only that
+// variable is kept, and only when its resolved path lies inside the repository's git dir: anywhere else it is ignored like every other GIT_*.
+const realOr = (p) => {
+  try {
+    return fs.realpathSync(p);
+  } catch {
+    return '';
+  }
+};
+
+/** The git dir of `root`, realpath'd; '' when it cannot be resolved. */
+function absoluteGitDir(root) {
+  try {
+    const out = execFileSync('git', ['-C', root, 'rev-parse', '--absolute-git-dir'], {
+      encoding: 'utf8', env: scrubbedEnv(), maxBuffer: 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'], shell: false,
+    });
+    return realOr(out.trim());
+  } catch {
+    return '';
+  }
+}
+
+/** The index file the hook is committing, when it is set AND inside the git dir of `root`; null otherwise. */
+export function trustedIndexFile(root) {
+  const raw = process.env.GIT_INDEX_FILE;
+  if (typeof raw !== 'string' || !raw) return null;
+  const gitDir = absoluteGitDir(root);
+  if (!gitDir) return null;
+  const resolved = realOr(path.resolve(root, raw));
+  if (!resolved || resolved === gitDir) return null;
+  const prefix = gitDir.endsWith(path.sep) ? gitDir : `${gitDir}${path.sep}`;
+  return resolved.startsWith(prefix) ? resolved : null;
+}
+
+/** The env for a STAGED read: the full scrub plus GIT_INDEX_FILE when it is trusted (inside the git dir); every other call is scrubbed. */
+export function stagedEnv(root) {
+  const env = scrubbedEnv();
+  const index = trustedIndexFile(root);
+  if (index) env.GIT_INDEX_FILE = index;
+  return env;
+}
+
+const readGit = (root, args, env) => execFileSync('git', ['-C', root, ...args], {
+  encoding: 'utf8', env, maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'], shell: false,
+});
+
 /** `git -C root <args>` -> stdout text (never trimmed: readAt returns the file as is). No shell. */
 export function git(root, args) {
-  return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', env: scrubbedEnv(), maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'], shell: false });
+  return readGit(root, args, scrubbedEnv());
 }
+
+/** A STAGED read (`:index` / `--cached`): the scrubbed env with the hook's trusted index kept (see stagedEnv). */
+const gitStaged = (root, args) => readGit(root, args, stagedEnv(root));
 
 const tryGit = (root, args) => {
   try {
@@ -106,20 +184,28 @@ const tryGit = (root, args) => {
   }
 };
 
-/** The staged tree vs HEAD, renames resolved: a rename yields BOTH paths with status `R`. */
+const tryGitStaged = (root, args) => {
+  try {
+    return gitStaged(root, args);
+  } catch {
+    return null;
+  }
+};
+
+/** The staged tree vs HEAD, renames resolved: a rename yields BOTH paths with status `R`. Reads the hook's index (stagedEnv). */
 export function stagedNameStatus(root) {
-  return nameStatusFromText(git(root, ['diff', '--cached', '--name-status', '-M']).trim());
+  return nameStatusZOf(gitStaged(root, ['diff', '--cached', '--name-status', '-z', '-M']));
 }
 
 /** The union over `base..tip`. */
 export function rangeNameStatus(root, base, tip) {
-  return nameStatusFromText(git(root, ['diff', '--name-status', '-M', `${base}..${tip}`]).trim());
+  return nameStatusZOf(git(root, ['diff', '--name-status', '-z', '-M', `${base}..${tip}`]));
 }
 
 /** One name-status list per commit of `base..tip`, oldest first, merge commits skipped. */
 export function perCommitNameStatus(root, base, tip) {
   const shas = git(root, ['rev-list', '--reverse', '--no-merges', `${base}..${tip}`]).split('\n').map((s) => s.trim()).filter(Boolean);
-  return shas.map((sha) => nameStatusFromText(git(root, ['show', '--name-status', '-M', '--format=', sha]).trim()));
+  return shas.map((sha) => nameStatusZOf(git(root, ['show', '--name-status', '-z', '-M', '--format=', sha])));
 }
 
 /** The merge base of HEAD and `targetRef`; '' when there is none (unrelated histories, absent ref). */
@@ -136,8 +222,14 @@ export function blobIdsAt(root, rev, paths) {
   const out = {};
   if (!list.length) return out;
   if (rev === ':index') {
-    const text = tryGit(root, ['ls-files', '-s', '--', ...list]) || '';
-    for (const line of text.split('\n')) {
+    const outText = (() => {
+      try {
+        return gitStaged(root, ['ls-files', '-s', '--', ...list]);
+      } catch {
+        return '';
+      }
+    })();
+    for (const line of outText.split('\n')) {
       const parts = line.split('\t');
       if (parts.length < 2) continue;
       const meta = (parts[0] || '').trim().split(' ');
@@ -157,7 +249,8 @@ export function blobIdsAt(root, rev, paths) {
 /** The file's text at `rev` (`':index'` = the staged copy); null when it does not exist there. */
 export function readAt(root, rev, filePath) {
   if (!looksLikePath(filePath)) return null;
-  const out = tryGit(root, ['show', rev === ':index' ? `:${filePath}` : `${rev}:${filePath}`]);
+  const spec = rev === ':index' ? `:${filePath}` : `${rev}:${filePath}`;
+  const out = rev === ':index' ? tryGitStaged(root, ['show', spec]) : tryGit(root, ['show', spec]);
   return out === null ? null : out;
 }
 
@@ -198,6 +291,11 @@ const messageOf = (err) => {
   return String(err);
 };
 
+/** O68-16: a verdict is only trustworthy when it is an object carrying an ARRAY `violations`; anything else is exit 2 (fail closed). */
+const isVerdict = (v) => v !== null && typeof v === 'object' && !Array.isArray(v) && Array.isArray(v.violations);
+
+const BAD_VERDICT = 'loop-gate: cannot run: bad verdict';
+
 /** The check path: buildContext -> evaluateGate -> report. Both are injectable so the shell is tested alone. */
 async function check(parsed, deps, write) {
   const buildContext = typeof deps.buildContext === 'function'
@@ -207,11 +305,19 @@ async function check(parsed, deps, write) {
     ? deps.evaluateGate
     : async (ctx, a) => (await import('./loop-gate-eval.mjs')).evaluateGate(ctx, a);
   const ctx = await buildContext(parsed);
-  const verdict = (await evaluateGate(ctx, parsed)) || {};
-  const violations = Array.isArray(verdict.violations) ? verdict.violations.map(String) : [];
+  const verdict = await evaluateGate(ctx, parsed);
+  if (!isVerdict(verdict)) {
+    write(BAD_VERDICT);
+    return 2;
+  }
+  const violations = verdict.violations.map(String);
   const notes = Array.isArray(verdict.notes) ? verdict.notes.map(String) : [];
   const report = verdict.report === undefined ? null : verdict.report;
   for (const line of formatReport({ command: parsed.command, mode: parsed.mode, violations, notes, json: parsed.json, report })) write(line);
+  if (verdict.error) {
+    write(`loop-gate: cannot run: ${verdict.error}`);
+    return 2;
+  }
   return exitCodeFor({ violations, error: '' });
 }
 
@@ -232,18 +338,22 @@ const dispatchRemove = async (parsed, write) => {
   return toExit(await fn(parsed, write), parsed, write);
 };
 
-/** The run/verify/remove commands answer `{violations, notes, report}` or a bare exit code. */
+/** The run/verify/remove commands answer `{violations, notes, report}` or a bare exit code. A bad verdict is exit 2 (fail closed). */
 const toExit = (res, parsed, write) => {
   if (typeof res === 'number') return res;
-  const verdict = res && typeof res === 'object' ? res : {};
-  const violations = Array.isArray(verdict.violations) ? verdict.violations.map(String) : [];
+  if (!isVerdict(res)) {
+    write(BAD_VERDICT);
+    return 2;
+  }
+  const verdict = res;
+  const violations = verdict.violations.map(String);
   const notes = Array.isArray(verdict.notes) ? verdict.notes.map(String) : [];
   const report = verdict.report === undefined ? null : verdict.report;
-  for (const line of formatReport({ command: parsed.command, mode: parsed.mode || parsed.command, violations, notes, json: parsed.json, report })) write(line);
   if (verdict.error) {
     write(`loop-gate: cannot run: ${verdict.error}`);
     return 2;
   }
+  for (const line of formatReport({ command: parsed.command, mode: parsed.mode || parsed.command, violations, notes, json: parsed.json, report })) write(line);
   return exitCodeFor({ violations, error: '' });
 };
 
