@@ -139,7 +139,7 @@ describe('arm H: the hold behind APPROVED', () => {
     };
     const red = setup(false);
     const redEntries = staged(red);
-    expect(redEntries[0].status).toBe('R');
+    expect(redEntries[0]?.status).toBe('R');
     expect(holdForCommit({ cwd: red.dir, policy: POLICY, entries: redEntries, parentRev: 'HEAD' }))
       .toEqual(['FAIL:H:no-approved']);
 

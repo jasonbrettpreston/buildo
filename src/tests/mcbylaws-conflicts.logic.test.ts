@@ -79,7 +79,7 @@ describe('checkCard (K4) and the CLI shim', () => {
   it('--text prints one candidate id per line', () => {
     const cli = path.resolve(__dirname, '../../scripts/analysis/mcbylaws/register-conflicts.mjs');
     const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
-    const r = spawnSync(process.execPath, [cli, '--text', path.join(FIX, 'mb17q1-draft.txt')], { encoding: 'utf8', env });
+    const r = spawnSync(process.execPath, [cli, '--text', path.join(FIX, 'mb17q1-draft.txt')], { encoding: 'utf8', env: env as NodeJS.ProcessEnv });
     expect(r.status).toBe(0);
     expect(r.stdout.trim().split('\n')).toEqual(TEN);
   });

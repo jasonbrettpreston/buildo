@@ -16,7 +16,7 @@ const realRegisters = ['69a_mcbylaw_register', '124a_step_standard_policy_append
   .map((n) => spec(n)).join('\n');
 
 describe('parseMessage', () => {
-  const cases: Array<[string, string, (r: any) => void]> = [
+  const cases: Array<[string, [string, unknown], (r: any) => void]> = [
     ['93feac54', ['task', null], (r) => { expect(r.ids).toContain('M-361'); expect(r.ids).toContain('M-376'); }],
     ['41719d27', ['task', null], (r) => { expect(r.ids).toContain('M-189'); expect(r.ids).toContain('R-EH'); }],
     ['1d4b20d9', ['task', null], (r) => { expect(r.ids).toEqual([]); }],

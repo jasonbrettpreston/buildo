@@ -1,0 +1,5 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/hooks-composition.infra.test.ts > hooks-composition (MB-67) — the McBylaws gate lines > GREEN — pre-commit runs gate --staged exactly once, after check-partial-staging.sh and before step-validate
+ FAIL  src/tests/hooks-composition.infra.test.ts > hooks-composition (MB-67) — the McBylaws gate lines > GREEN — pre-push runs gate --push exactly once, before step-validate (it reads the ref pairs on stdin)
+ FAIL  src/tests/hooks-composition.infra.test.ts > hooks-composition (MB-67) — the McBylaws gate lines > GREEN — commit-msg runs gate --commit-msg with the message file exactly once
+      Tests  3 failed | 46 passed (49)

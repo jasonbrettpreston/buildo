@@ -21,7 +21,7 @@ const env = () => Object.fromEntries(Object.entries(process.env).filter(([k]) =>
 function run(repo: Repo, args: string[]) {
   const r = spawnSync(process.execPath, [GATE, ...args], {
     cwd: repo.dir, encoding: 'utf8', timeout: 60_000,
-    env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0', SKIP_MCBYLAWS_GATE: '1', MCBYLAWS_GATE: 'off' },
+    env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0', SKIP_MCBYLAWS_GATE: '1', MCBYLAWS_GATE: 'off' } as unknown as NodeJS.ProcessEnv,
   });
   return { status: r.status, out: `${String(r.stdout)}\n${String(r.stderr)}` };
 }
