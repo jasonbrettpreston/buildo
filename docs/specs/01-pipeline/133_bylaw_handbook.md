@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 451** (382 M-rows, 69 LC-rows): 448 in force (144 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 457** (388 M-rows, 69 LC-rows): 454 in force (150 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -494,6 +494,10 @@ First clause cited: 10.5.40.70.
 - **m.414** Front-yard step 2: strict reading of 10.5.40.70(1) for A0553.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: front-yard worked example for A0553 (strict reading) (MB-64); record:…
   Rules: `M-414` (Spec 69a)
+
+- **m.423** RL-7 (a): the 10.5.40.70(1) 15.0 m is keyed into Phase 2 averaging_distance_m; decided and built with FS-SB2a as one change set.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-18 item (k): the three corrections and the read-as-if-token-held hook, built with M-422 and…
+  Rules: `M-423` (Spec 69a)
 
 ### 10.5.40.71 — Setbacks Exemptions
 
@@ -1751,6 +1755,26 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: o13-input-findings: corner cases A0179, A0553, A0562 scored on the parcel and shown on both…
   Rules: `M-421` (Spec 69a)
 
+- **m.422** FS-SB2a: the front-yard placeholder's street term is the mean of the ring lots beyond the abutters (amends FS-SB2).
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the catalogue row front_setback_used_m and the two variables…
+  Rules: `M-422` (Spec 69a)
+
+- **m.424** L31-13: the street a lot is on is its frontage street (primary_frontage_street_name).
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the neighbour-facts reader filters on primary_frontage_street_name; record:…
+  Rules: `M-424` (Spec 69a)
+
+- **m.425** L31-14: S-1 storey counts are a disclosed theoretical maximum; both options stay shown.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the flag storeys_from_minimum_ceiling and the invariant a + storeys x f <= height_m in the…
+  Rules: `M-425` (Spec 69a)
+
+- **m.426** Compliance condition for FS-SB2a: no code in Phase 3.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31 and MB-67: a lock that the evaluator has no front-yard branch and the reader chooses nothing;…
+  Rules: `M-426` (Spec 69a)
+
+- **m.427** Note for MB-57: the stored street_name_normalized conflicts with the frontage street on 3,336 lots and is absent on 27,680.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-57: the street-name defect; record: src/tests/chat-rulings-register.logic.test.ts › "CHAT-214…
+  Rules: `M-427` (Spec 69a)
+
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
   Rules: `LC-1` (Spec 131)
@@ -1983,7 +2007,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
   Rules: `LC-69` (Spec 131)
 
-## 3. Rows with an OWED marker (144 in force)
+## 3. Rows with an OWED marker (150 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -2097,6 +2121,12 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-419 | m.419 | RULED 2026-10-30 · OWED |
 | M-420 | m.420 | RULED 2026-10-30 · OWED |
 | M-421 | m.421 | RULED 2026-10-30 · OWED |
+| M-422 | m.422 | RULED 2026-10-31 · OWED |
+| M-423 | m.423 | RULED 2026-10-31 · OWED |
+| M-424 | m.424 | RULED 2026-10-31 · OWED |
+| M-425 | m.425 | RULED 2026-10-31 · OWED |
+| M-426 | m.426 | RULED 2026-10-31 · OWED |
+| M-427 | m.427 | RULED 2026-10-31 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |

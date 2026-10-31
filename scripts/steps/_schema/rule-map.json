@@ -7462,6 +7462,90 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-LS",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "MB-67 landing exception.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LT",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "R-KF..R-LF locks named before MB-67 lands.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LU",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Literal grandfathering, 65 files.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LV",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "MB-68 round-0 count floors.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LW",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "MB-68 cumulative group undeclared.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-LX",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Merge order and required:true.",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -7994,6 +8078,36 @@
       "id": "R-LQ",
       "class": "none",
       "reason": "OWED MB-68: loop-gate reason-length red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built)"
+    },
+    {
+      "id": "R-LS",
+      "class": "none",
+      "reason": "OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built)"
+    },
+    {
+      "id": "R-LT",
+      "class": "none",
+      "reason": "OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built)"
+    },
+    {
+      "id": "R-LU",
+      "class": "none",
+      "reason": "OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built)"
+    },
+    {
+      "id": "R-LV",
+      "class": "none",
+      "reason": "OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built)"
+    },
+    {
+      "id": "R-LW",
+      "class": "none",
+      "reason": "OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built)"
+    },
+    {
+      "id": "R-LX",
+      "class": "none",
+      "reason": "OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built)"
     }
   ]
 }

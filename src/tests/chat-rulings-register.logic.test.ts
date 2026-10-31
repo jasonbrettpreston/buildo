@@ -771,3 +771,31 @@ describe('CHAT-213 (batch 2026-10-30-batch-al): 45 rulings recorded; behaviour l
     }
   });
 });
+
+// CHAT-214 (batch 2026-10-31-batch-am): each Rule text line is present in the register that carries it and cites its decision.
+describe('CHAT-214 (batch 2026-10-31-batch-am): 15 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["M-422", "M", "2026-10-31-batch-am#CHAT-214.FS-SB2A", "Where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of (a) the subject lot's own building front setback plus 1.0 m and (b) the mean of the measurable footprint estimates plus 1.0 m of the lots beyond the abutters along the frontage street, up to the placeholder ring depth counting the abutter as the first lot, taken in each direction along the frontage street from the subject by following the abutment links across lots whose frontage street is the subject's (one direction only for a corner lot); if no such lot is measurable, (b) is the median of the footprint estimates plus 1.0 m of other same-street lots within the placeholder street radius, at least the placeholder street minimum, abutters excluded; if only one of (a) and (b) exists use it; else the same-zone median within the zone radius; else 6.0 m; always flagged needs survey, and never replacing a user figure or a neighbour estimate."],
+    ["M-422", "M", "2026-10-31-batch-am#CHAT-214.FS-SB2A-VARS", "Two logic variables are approved as rulings: fya_placeholder_ring_depth = 2 (bounds 2..4) and fya_placeholder_ring_min_n = 1; unchanged: fya_porch_allowance_m 1.0, street radius 200 / min 3, zone radius 500 / min 5. Both variables are seeded by MB-31 (scripts/seeds/logic_variables.json, with the migration MB-31 plans for it), not by this batch."],
+    ["M-422", "M", "2026-10-31-batch-am#CHAT-214.FS-SB2A-REFIT", "FS-SB2a is re-fitted on a fresh held-out sample in the loop before the proof set, as a pinned audit, under the same governance as FS-SB2."],
+    ["M-423", "M", "2026-10-31-batch-am#CHAT-214.RL-7", "RL-7 is option (a): the 10.5.40.70(1) 15.0 m is keyed into the Phase 2 target averaging_distance_m through three M-75 corrections (the third superseding COR-10.5.40.70(1)#(1)(A)/literals_not_expressed) plus the shared read-as-if-token-held hook. It is decided and recorded together with FS-SB2a (M-422) and L31-13 (M-424) as one change set: this batch records them together, and they are built together. A0375 = 2.125 m under both rules."],
+    ["M-424", "M", "2026-10-31-batch-am#CHAT-214.L31-13", "L31-13 settles as \"frontage street\": the street a lot is on, for the neighbour facts and the ring, is its primary_frontage_street_name."],
+    ["M-425", "M", "2026-10-31-batch-am#CHAT-214.L31-14", "L31-14 is accepted: S-1 storey counts carry the flag storeys_from_minimum_ceiling (a theoretical maximum, disclosed); the invariant a + storeys x f <= height_m holds; and both options stay shown (the 2-storey option with taller storeys beside the maximum-storey option, R4-04 and R4-06)."],
+    ["M-426", "M", "2026-10-31-batch-am#CHAT-214.FS-SB2A-COMPLIANCE", "Compliance condition (no code in Phase 3): every choice of FS-SB2a lives in the catalogue row and the logic variables; the ring lots are data produced by the step's declared read (same frontage street, abutters excluded, depth from lv()), counted and averaged by the one generic neighbour-facts reader that chooses nothing (L31-03); the evaluator gains no front-yard branch; no research SQL or old-engine code is imported (L3-REBUILD); the 6.0 m is never typed (R3-03: terminal = l2(front_setback_fallback_m))."],
+    ["R-LA note", "A", "2026-10-31-batch-am#CHAT-214.R-LA-COUNT", "R-LA's literal baseline stays at 61, the count MB-67's gate enforces (MB-67 recheck, ~/Buildo-scratch/mcbylaws/MB-67/output-panel/recheck.md, R2: 61 regenerated equals 61 committed): the number literals in scripts/analysis/bylaw/evaluate.mjs outside 0, 1, 2 and 100, as R-LA already words it; a different count (70) is not the baseline. MB-67 states its counting definition when its gate lands, and this dated note is replaced by it if it differs. No further correction is needed beyond this dated note."],
+    ["M-427", "M", "2026-10-31-batch-am#CHAT-214.MB57-FINDING", "Data finding for MB-57: 3,336 lots have a street_name_normalized that conflicts with the frontage street and 27,680 have none; the rules read primary_frontage_street_name, so no figure changes."],
+    ["R-LS", "A", "2026-10-31-batch-am#CHAT-214.GATE-1", "MB-67's pre-policy commits land through a ONE-TIME landing exception that names exactly the commits 42521481..ce116571 and 3e3212b9; it is not a general code rule."],
+    ["R-LT", "A", "2026-10-31-batch-am#CHAT-214.GATE-2", "R-KF..R-LF move from OWED to RECORDED, each with its behavioural lock named, before MB-67 lands. This row is the precondition only: the rows stay OWED until MB-67 names its locks, and this batch flips none of them."],
+    ["R-LU", "A", "2026-10-31-batch-am#CHAT-214.GATE-3", "MB-67 grandfathers the existing literals in the other 65 in-scope files as a frozen baseline; only new literals fail; the baseline is burned down over time."],
+    ["R-LV", "A", "2026-10-31-batch-am#CHAT-214.GATE-4", "MB-68 round-0 count floors: floors-172.json is written through the ruling door with owed_baseline 91.7, citing M-372 and M-322/M-330; the counts are generated by the tool, never typed."],
+    ["R-LW", "A", "2026-10-31-batch-am#CHAT-214.GATE-5", "MB-68's cumulative group stays undeclared until MB-31/MB-64 supply a producer; this is recorded as a ledger row."],
+    ["R-LX", "A", "2026-10-31-batch-am#CHAT-214.GATE-6", "Merge order: MB-68 first, then MB-67; after MB-68 lands the loop arm flips to required:true."],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, cite, rule] of CASES) {
+    it(`${row} carries ${cite} and its Rule text`, () => {
+      expect(TEXT[reg], cite).toContain(cite);
+      expect(TEXT[reg] + L131 + M + A + S68, cite + ' rule text').toContain(rule);
+    });
+  }
+});

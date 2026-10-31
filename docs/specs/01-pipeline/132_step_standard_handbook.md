@@ -402,7 +402,7 @@ What `standard=V3` means and how it is enforced.
 
 - **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
   *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
-  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` · history: `R-GF`
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` · history: `R-GF`
 
 - **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
   *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
@@ -499,11 +499,11 @@ Validator messages that name their rule directly:
 | `bind message has N parameter formats` | Batch × bound columns exceeds 65,535. | R-CU |
 | Before-image files appear under `docs/reports/golden/*/before-image/` after tests | The test sandbox `installBeforeImageSandbox` in `src/tests/setup.ts`. | R-CO |
 
-## 6. Rules with no or partial machine check (86 in force)
+## 6. Rules with no or partial machine check (92 in force)
 
-"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 56 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 62 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 433 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 86 none (see the glossary).
+Enforcement across all 439 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 92 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
@@ -593,6 +593,12 @@ Enforcement across all 433 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30
 | R-LO | none | x-tooling.1 | OWED MB-68: loop-gate verify --json prints rounds_since_thresholds (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-LP | none | x-tooling.1 | OWED MB-68: loop-gate fast-set and full-set runs (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-LQ | none | x-tooling.1 | OWED MB-68: loop-gate reason-length red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LS | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LT | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LU | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LV | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LW | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LX | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
 
 ## 7. History
 
