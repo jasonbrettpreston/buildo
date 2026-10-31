@@ -1,0 +1,8 @@
+---
+write_scope:
+- src/tests/mcbylaws-loop-gate-run.logic.test.ts
+---
+# MB-68 R1c - two tests of computeRun baseRev fail; the MODULE is verified correct (TEST FILE ONLY) - DeepSeek
+Tools: read_file, edit_file, grep_files, run_command (npx vitest run, npx tsc --noEmit). Never git add/commit. Small edit_file changes; no console.log left.
+The orchestrator ran `computeRun({root, baseRev:'HEAD', ...})` by hand on a throw-away git repo with a fake spawn: it works (the fake sees `--root <tmp>/mcbylaws-loop-gate-base-XXXX`, `baseRows` are returned, `baseRowsError` null). Two tests in `describe('computeRun: base rows from a base revision (B1 / plan s7)')` still fail: (1) `a move between the base and cur rows is unexpected_move ...` (assertion near line 454: expected the result to include `unexpected_move:A0001/26#1 DIFFER->MATCH`), (2) `the extracted temp dir is removed afterwards` (near line 512: `seen` is never set, so the base-side callback of `rootSpawn` is never called). Cause is in the TEST fixtures: look at `isLive(root)` and `rootSpawn`: the fake decides live vs base by comparing the `--root` argument with the live root; the live root may be realpath'ed differently from `REPO` (macOS `/var` vs `/private/var`) or the fixture's pin/regression make `computeRun` throw or return a run without a base spawn. Debug with a temporary console.log of `run.baseRowsError` and the roots seen, fix the fixture/helper (compare with `fs.realpathSync`), remove the log. Do not weaken assertions.
+Finish when `npx vitest run src/tests/mcbylaws-loop-gate-run.logic.test.ts` passes and tsc is clean for it. Report the output.

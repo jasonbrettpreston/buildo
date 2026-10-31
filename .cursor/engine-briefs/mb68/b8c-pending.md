@@ -1,0 +1,8 @@
+---
+write_scope:
+- src/tests/pending/mcbylaws-loop/loop-groups-waiting.test.ts
+---
+# MB-68 B8c - pending arms waiting on MB-31 and MB-64 - DeepSeek, LEAVE UNCOMMITTED
+Tools: `read_file`, `write_file`, `run_command` (`npx vitest run <path>`, `npx tsc --noEmit`). Never git add/commit. Plan sections 3 and 9 (R-KI `pending/` split; MB-67's summary counts `**/pending/**`).
+Write ONE new vitest file `src/tests/pending/mcbylaws-loop/loop-groups-waiting.test.ts` (name ends `.test.ts`, NOT `.logic.test.ts`): header with two `// SPEC LINK:` lines (R-KI in `docs/specs/01-pipeline/124a_step_standard_policy_appendix.md` and `~/Buildo-scratch/mcbylaws/MB-68/plan.md` section 3), then `describe('MB-68 arms waiting on other tasks', ...)` with `it.todo` entries, each name saying what it waits for: `golden25 group joins the regression set when lane T's seam runRow exists (MB-64)`, `examples-inc1 group (MB-64)`, `invariants group (MB-64)`, `rows_from_two_increments reads the increment tag on catalogue rows (MB-31 adds the field)`, `value_changed_unregistered on the 25 once expected_sha is printed by the seam (MB-64)`, `loop-gate wired into the dispatcher as required (MB-67 flips external_arms.loop.required after MB-68 lands)`. No imports beyond vitest. Typing rules: the repo typechecks tests strictly (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`); add `| undefined` to optional fields; guards for index access and null. Run `npx tsc --noEmit` before finishing: no error may name your files.
+Run `npx vitest run src/tests/pending/mcbylaws-loop/loop-groups-waiting.test.ts`: it passes with todo entries; report the output.

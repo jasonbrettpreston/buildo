@@ -1,0 +1,77 @@
+diff --git a/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs b/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs
+index 49f42265..fe4f9f0f 100644
+--- a/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs
++++ b/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs
+@@ -3,7 +3,7 @@
+ // Pure composition: every rule lives in its own module and is imported here, never restated. evaluateGate does no IO.
+ // -> { violations: string[], notes: string[] }; a code with a detail is `code:detail`. Violations are de-duplicated in first-seen order.
+ import { CLASS_STATUS } from "./loop-gate-run.mjs";
+-import { commitStageFires, checkOracleFirst, recordMissing } from './loop-oracle.mjs';
++import { metadataOnly, commitStageFires, checkOracleFirst, recordMissing } from './loop-oracle.mjs';
+ import {
+   checkRecordsAddOnly,
+   checkRecordShape,
+@@ -179,6 +179,10 @@ function stageAccept(ctx, rec) {
+  * newest record, the ratchet and floors, the run, and finally the accept's increment-green verdict.
+  */
+ export function evaluateGate(ctx) {
++  if (metadataOnly(asArray(ctx.nameStatus), ctx.classify)) {
++    const r = ctx.run;
++    return { violations: dedupe([...asArray(r && r.regenMismatch), ...asArray(r && r.report && r.report.violations)]), notes: r ? [] : [CI_NO_RUN] };
++  }
+   const scope = stageScopeAndRecords(ctx);
+   if (scope.outOfScope) return { violations: [], notes: [OUT_OF_SCOPE] };
+   const violations = [...scope.violations];
+diff --git a/scripts/analysis/mcbylaws-loop/loop-oracle.mjs b/scripts/analysis/mcbylaws-loop/loop-oracle.mjs
+index 30689cfc..178368c3 100644
+--- a/scripts/analysis/mcbylaws-loop/loop-oracle.mjs
++++ b/scripts/analysis/mcbylaws-loop/loop-oracle.mjs
+@@ -53,6 +53,12 @@ export const GEN_GLOBS = [
+   'docs/reports/loop-records/**',
+ ];
+ 
++// O68-11 (1): generated ruling metadata that the evaluator reads but no human edits as logic. No record is required; the full run still
++// recomputes the pin and floors on it (see evaluateGate), so a batch that moves a scorer row is red until the pin is regenerated.
++export const METADATA_GLOBS = ['scripts/analysis/bylaw/_schema/bylaw-rule-map.json', 'docs/reference/maxbld-amendment-index.json'];
++const META_RE = METADATA_GLOBS.map(globToRegExp);
++const isMeta = (p) => META_RE.some((r) => r.test(p));
++const PREREG_ADD_RE = globToRegExp('scripts/analysis/bylaw-validation/coa-expected/prereg-*.json');
+ const RECORD_ADDED = /^docs\/reports\/loop-records\/.+\/round-\d+\.json$/;
+ 
+ const toRegexes = (globs) => globs.map(globToRegExp);
+@@ -81,6 +87,7 @@ export function loadLayer23(root) {
+ export function makeClassifier(layer23 = DEFAULT_LAYER23) {
+   const code = toRegexes(layer23);
+   return (p) => {
++    if (isMeta(p)) return 'metadata';
+     if (isGen(p)) return 'generated';
+     if (isOraclePath(p)) return 'oracle';
+     if (code.some((r) => r.test(p))) return 'code';
+@@ -98,8 +105,19 @@ export function checkOracleFirst(commitsNameStatus, classify) {
+     : [];
+ }
+ 
++// O68-12 (2): a change set whose every classified path is a NEW prereg file is the prereg-alone commit (M-321): it needs no record.
++export function preregOnly(nameStatus, classify) {
++  const hit = nameStatus.filter((x) => classify(x.p) !== null);
++  return hit.length > 0 && hit.every((x) => x.s === 'A' && PREREG_ADD_RE.test(x.p));
++}
++export function metadataOnly(nameStatus, classify) {
++  const hit = nameStatus.map((x) => classify(x.p)).filter(Boolean);
++  return hit.length > 0 && hit.every((c) => c === 'metadata');
++}
++
+ // G68-04: the commit stage fires on CODE, ORACLE or GENERATED.
+ export function commitStageFires(staged, classify) {
++  if (preregOnly(staged, classify)) return false;
+   return staged.some((x) => {
+     const c = classify(x.p);
+     return c === 'code' || c === 'oracle' || c === 'generated';
+@@ -108,6 +126,7 @@ export function commitStageFires(staged, classify) {
+ 
+ // G68-01/G68-06: a range that touches any class must ADD a record for its round.
+ export function recordMissing(nameStatus, classify) {
++  if (preregOnly(nameStatus, classify)) return [];
+   const touches = nameStatus.some((x) => {
+     const c = classify(x.p);
+     return c === 'code' || c === 'oracle' || c === 'generated';

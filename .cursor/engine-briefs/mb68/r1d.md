@@ -1,0 +1,10 @@
+---
+write_scope:
+- scripts/analysis/mcbylaws-loop/loop-gate-context.mjs
+- src/tests/mcbylaws-loop-gate-context.logic.test.ts
+---
+# MB-68 R1d - N68-1 and N68-2 in the context (two small items, tests first) - DeepSeek
+Tools: read_file, edit_file, grep_files, run_command (npx vitest run, npx tsc --noEmit). Never git add/commit. Small edit_file changes; no console.log left. Do item A completely (test red, code, green) before item B.
+A. **N68-1 read from the round's revision.** In `loop-gate-context.mjs` the register text and the closed increment list are read from the worktree (`defaultRegisterText(root)` and `loadIncrements(root)`). Read them at `rev` instead (`git.readAt(root, rev, <path>)`; in commit mode `rev` is `':index'`): register = the two files `docs/specs/01-pipeline/69a_mcbylaw_register.md` and `docs/specs/01-pipeline/69_mcbylaw_policy.md` joined with `\n`; increments = `JSON.parse` of `scripts/analysis/mcbylaws-loop/data/increments.json`, field `ids` (array of strings). A path that is missing at `rev` throws `Error('data_missing: <path>@<rev>')`. Keep the injected `deps.readRegisterText` seam untouched for existing tests. Test with a throw-away repo (reuse the helpers of the file): an UNSTAGED worktree edit of the register that adds `| **M-999** | x | RULED |` is NOT seen in commit mode (`ctx.rulings.get('M-999')` undefined) while the same edit STAGED is seen.
+B. **N68-2 greenHistory in a range.** `greenHistory` is taken from the BASE records only. Make it: distinct increments of `decision === 'accept'` records that exist at `rev` (the tip; the index in commit mode) for increments OTHER than `latest.rec.increment`, UNION the ones at the base. Comment: a record added inside the range was judged by the per-commit hooks at its own commit. Test: base has an accepted increment-1 record; the range adds an accepted increment-2 record and a round-1 record of increment 3: `ctx.greenHistory` contains '1' and '2'.
+Finish when the context test file and `npx vitest run src/tests/mcbylaws-loop --exclude src/tests/mcbylaws-loop-realdata.logic.test.ts` pass and tsc is clean for mcbylaws-loop files.
