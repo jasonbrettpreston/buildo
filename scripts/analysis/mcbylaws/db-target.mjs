@@ -125,5 +125,7 @@ export function isDbScopePath(p) {
   if (/^scripts\/analysis\/mcbylaws(-loop)?\//.test(rel)) return true;
   if (/^\.cursor\/(?:.+\/)?(?:night|brief)[^/]*\.md$/i.test(rel)) return true;
   if (/^\.cursor\/(?:nights|briefs)\/(?:.+\/)?[^/]+\.md$/i.test(rel)) return true;
+  // N67-4 — engine briefs carry run lines and connection strings, so they are in scope.
+  if (/^\.cursor\/engine-briefs\/(?:.+\/)?[^/]+\.md$/i.test(rel)) return true;
   return /^\.mb67-briefs\//.test(rel);
 }

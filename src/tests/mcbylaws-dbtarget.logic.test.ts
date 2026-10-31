@@ -80,6 +80,11 @@ describe('isDbScopePath — the caller gates which files the scan covers', () =>
     ['.cursor/plans/night.mjs', false],
     ['.mb67-briefs/f4.md', true],
     ['.mb67-briefs/deep/f4.txt', true],
+    // N67-4 — engine briefs carry run lines and connection strings
+    ['.cursor/engine-briefs/mb67-g1.md', true],
+    ['.cursor/engine-briefs/sub/x.md', true],
+    ['.cursor/engine-briefs/x.json', false],
+    ['.cursor/other/x.md', false],
     ['scripts/analysis/decision-log.mjs', false],
     ['scripts/analysis/mcbylaws-x/a.mjs', false],
     ['src/tests/mcbylaws-dbtarget.logic.test.ts', false],
