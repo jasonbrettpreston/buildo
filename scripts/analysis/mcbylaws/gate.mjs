@@ -211,20 +211,41 @@ function mergeArms({ cwd, base, tip }) {
   return out;
 }
 
+/**
+ * O67-03: one policy for arm L over a whole range — the first policy in force, with `literal_scope` = the UNION of
+ * every policy's and `literal_exempt` = the INTERSECTION (an exemption must hold in all of them). `null` = nothing
+ * resolved, which arm L reads as `cannot-decide`.
+ */
+function mergedLiteralPolicy(policies) {
+  if (!Array.isArray(policies) || policies.length === 0) return null;
+  const scope = [...new Set(policies.flatMap((p) => p.literal_scope || []))];
+  const exempt = (policies[0].literal_exempt || []).filter((g) => policies.every((p) => (p.literal_exempt || []).includes(g)));
+  return { ...policies[0], literal_scope: scope, literal_exempt: exempt };
+}
+
 /** One ref's arms: per commit H, C, P over the range, then L over the range's in-scope files from `git archive`. */
 function rangeArms({ cwd, base, tip }) {
   const shas = git(cwd, ['rev-list', '--no-merges', '--reverse', `${base}..${tip}`]);
   if (shas.status !== 0) return ['FAIL:H:cannot-decide', 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
+  // O67-02: an empty non-merge list does NOT mean an empty range -- a range of merges only must still be judged.
   const commits = shas.stdout.split('\n').filter(Boolean);
-  if (commits.length === 0) return []; // an empty range has nothing to judge and no literal scan
   const cache = new Map();
   const inputsFor = (rev) => {
     if (!cache.has(rev)) cache.set(rev, citeInputs(cwd, rev) || { owed: new Set(), rows: new Map() });
     return cache.get(rev);
   };
   const out = [];
-  let last = null; // the policy of the LAST resolved commit, used only by the literal scan
+  // O67-03: arm L is judged by the policies in force BEFORE each commit, never by the last one (a narrowing
+  // commit earlier in the range must not switch arm L off for a later commit that adds a literal).
+  const policies = [];
+  const baseRes = resolvePolicy(cwd, base);
+  if (baseRes.ok) policies.push(baseRes.policy);
   for (const sha of commits) {
+    // O67-03: the first policy in force may be a commit's OWN only when no base policy resolves (O67-04 bootstrap).
+    if (policies.length === 0) {
+      const at = resolvePolicy(cwd, `${sha}^`, { ownRev: sha });
+      if (at.ok) policies.push(at.policy);
+    }
     const changes = git(cwd, ['diff-tree', '-r', '-z', '-M', '--name-status', '--no-commit-id', '--root', sha]);
     const entries = changes.status === 0 ? parseNameStatusZ(changes.stdout) : null;
     if (entries === null) {
@@ -237,7 +258,7 @@ function rangeArms({ cwd, base, tip }) {
       out.push(`FAIL:H:cannot-decide:${sha}`);
       continue;
     }
-    last = res.policy;
+    policies.push(res.policy);
     const msg = git(cwd, ['log', '-1', '--format=%B', sha]);
     if (msg.status !== 0) {
       out.push(`FAIL:C:cannot-decide:${sha}`, `FAIL:P:cannot-decide:${sha}`);
@@ -257,7 +278,10 @@ function rangeArms({ cwd, base, tip }) {
   const changed = diff.status !== 0 ? null : diff.stdout.split('\0').filter(Boolean);
   if (changed === null) return [...out, 'FAIL:L:cannot-decide', 'FAIL:V:cannot-decide'];
   out.push(...dbLines(cwd, tip, changed.filter((p) => isDbScopePath(p))));
-  const files = changed.filter((p) => classify(last, p).literalScope);
+  // O67-03: scope = the UNION of every `literal_scope` in force, an exemption must hold in ALL of them.
+  const literals = mergedLiteralPolicy(policies);
+  if (literals === null) return [...out, 'FAIL:L:cannot-decide'];
+  const files = changed.filter((p) => classify(literals, p).literalScope);
   if (files.length === 0) return out;
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-archive-'));
   try {
@@ -266,7 +290,7 @@ function rangeArms({ cwd, base, tip }) {
       ? spawnSync('tar', ['-x', '-C', tmp], { input: tar.stdout, maxBuffer: 64 * 1024 * 1024 })
       : { status: -1 };
     if (ex.status !== 0) return [...out, 'FAIL:L:cannot-decide'];
-    return [...out, ...literalLines({ root: tmp, cwd, rev: tip, files, policy: last, allowOwnerRev: base })];
+    return [...out, ...literalLines({ root: tmp, cwd, rev: tip, files, policy: literals, allowOwnerRev: base })];
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

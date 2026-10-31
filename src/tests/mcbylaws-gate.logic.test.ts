@@ -404,3 +404,62 @@ describe('O67-02: a merge commit is judged by its own combined diff (an "evil" m
     done();
   });
 });
+
+describe('K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits', () => {
+  const SEED = 'scripts/analysis/bylaw/seed.mjs';
+  const POLICY = 'mcbylaws/protected-paths.json';
+  /** Builds a range holding ONE merge commit whose two parents are both in the base; `evil` writes into the merge. */
+  const mergeOnly = (evil: boolean) => {
+    const repo = mk();
+    seed(repo);
+    approve(repo);
+    const x = repo.git(['rev-parse', 'HEAD']);
+    repo.git(['checkout', '-q', '-b', 'y']);
+    repo.write('docs/y.md', '# y\n');
+    repo.commit('MB-67 y');
+    repo.git(['checkout', '-q', '-b', 'side-x', x]);
+    repo.write('docs/x.md', '# x\n');
+    repo.commit('MB-67 x');
+    repo.git(['checkout', '-q', '-b', 'base', 'side-x']);
+    repo.git(['merge', '--no-edit', 'y']);
+    const base = repo.git(['rev-parse', 'HEAD']);
+    repo.git(['checkout', '-q', '-b', 'evil', 'side-x']);
+    repo.git(['merge', '--no-ff', '--no-commit', 'y']);
+    if (evil) { repo.write(SEED, 'export const q = 42.77;\n'); repo.stage(SEED); }
+    else { repo.write('docs/z.md', '# z\n'); repo.stage('docs/z.md'); }
+    repo.git(['commit', '-q', '-m', 'Merge y']);
+    const merge = repo.git(['rev-parse', 'HEAD']);
+    expect(repo.git(['rev-list', '--no-merges', `${base}..${merge}`])).toBe('');
+    return { repo, base, merge };
+  };
+
+  it('B1: an evil merge alone in the range fails on its sha; a docs-only merge passes', () => {
+    const red = mergeOnly(true);
+    const r = run(red.repo, ['--ci', '--base', red.base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain(`FAIL:P:no-record:${red.merge}`);
+    const green = mergeOnly(false);
+    const g = run(green.repo, ['--ci', '--base', green.base]);
+    expect(g.status).toBe(0);
+    for (const arm of ['H', 'C', 'P', 'L']) expect(g.out).not.toContain(`FAIL:${arm}:`);
+    done();
+  });
+
+  it('B2: a narrowing commit does not switch arm L off for a later literal; the control without narrowing fails too', () => {
+    const litRepo = (over: Record<string, unknown>) => {
+      const s = litSeed(policy(over));
+      s.repo.write(POLICY, policy({ layer23: [], literal_scope: [LIT] }));
+      return s;
+    };
+    const red = litSeed(policy({ layer23: [], literal_scope: [LIT] }));
+    red.repo.write(POLICY, policy({ layer23: [], literal_scope: ['scripts/analysis/bylaw/other.mjs'] }));
+    red.repo.commit('MB-67 narrows literal_scope');
+    red.repo.write(LIT, 'export const a = 0;\nexport const b = 0.45;\n');
+    red.repo.commit('MB-67 adds a literal');
+    expect(run(red.repo, ['--ci', '--base', red.base]).out).toContain('FAIL:L:number:0.45');
+    const control = litRepo({});
+    control.repo.write(LIT, 'export const a = 0;\nexport const b = 0.45;\n');
+    control.repo.commit('MB-67 adds a literal');
+    done();
+  });
+});
