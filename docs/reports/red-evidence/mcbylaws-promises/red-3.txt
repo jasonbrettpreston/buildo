@@ -1,0 +1,26 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g3
+
+ ❯ src/tests/mcbylaws-promises-check.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises.logic.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-promises-check.logic.test.ts [ src/tests/mcbylaws-promises-check.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-check.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-check.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-check.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/mcbylaws-promises.logic.test.ts [ src/tests/mcbylaws-promises.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/mcbylaws-promises.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/mcbylaws-promises.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  17:05:30
+   Duration  188ms (transform 32ms, setup 12ms, collect 0ms, tests 0ms, environment 0ms, prepare 49ms)
+
