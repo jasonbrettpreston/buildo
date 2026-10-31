@@ -1,0 +1,234 @@
+# red: prepolicy, old scripts/analysis/mcbylaws/gate.mjs with the new tests
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-pp
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts (34 tests | 5 failed) 9323ms
+   ✓ O67-11: the loop arm is called as its CLI defines (argv and verdicts) > --staged calls check --mode commit; --ci --base <rev> calls check --mode ci --base <rev> 314ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > one commit that adds 0.45 and raises its own baseline fails; a baseline already in the base passes 405ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > a deleted or renamed scope file neither cannot-scan nor cannot-decide; only the rename target is scanned 418ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 518ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-04: a range whose base has no policy passes when its first commit is the policy alone, and fails when it is not 479ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-20: arm C reads the register in each commit's PARENT; a later RATIFIED row does not rescue an earlier cite 351ms
+   ✓ O67-02: a merge commit is judged by its own combined diff (an "evil" merge cannot hide from --no-merges) > a conflict resolved off Layer 2/3 fails on the merge sha; a clean merge adds no H failure 610ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B1: an evil merge alone in the range fails on its sha; a docs-only merge passes 577ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B2: a narrowing commit does not switch arm L off for a later literal; the control without narrowing fails too 331ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a decoy sha in the base file excuses nothing, and neither does an absent base file 492ms
+   × PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit skips H, C and P, is shown as pre-policy (not exempt), still fails V; the bootstrap and a later commit are judged 313ms
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' not to match /FAIL:H:[^\n]*b41328dab37acc2662e5ff56…/
+   × PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit still fails arm L 268ms
+     → expected [ Array(1) ] to deeply equal []
+   × PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a bootstrap sha missing from the repository is FAIL:X:cannot-decide, and the commits are still judged 310ms
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'
+   × PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > an ancestry check that errors is FAIL:X:cannot-decide and exempts nothing 308ms
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'
+   × PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > the CLI uses the frozen sha only: a repo without 17c95d00 is cannot-decide, and the source reads no environment 317ms
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit skips H, C and P, is shown as pre-policy (not exempt), still fails V; the bootstrap and a later commit are judged
+AssertionError: expected 'PUSH HEAD  HOLD       APPROVED absent…' not to match /FAIL:H:[^\n]*b41328dab37acc2662e5ff56…/
+
+- Expected: 
+/FAIL:H:[^\n]*b41328dab37acc2662e5ff56b5d43bc49213c029/
+
++ Received: 
+"PUSH HEAD  HOLD       APPROVED absent
+PROTECTED:
+  mcbylaws/protected-paths.json   +21 -0
+  scripts/analysis/bylaw/evaluate.mjs   +1 -0
+  scripts/analysis/bylaw/later.mjs   +1 -0
+  b41328d null R-LD MISSING
+PANEL MISSING b41328d null
+  c264b1d null R-LD MISSING
+PANEL MISSING c264b1d null
+HELD PATCHES  0 of 12
+held, worktrees: not evaluated in CI
+pending/  0 red-by-design tests (was 0)
+landing exception: 42521481cab1ad58b848600367c8d11f1a185b8c (frozen landing list)
+landing exception: 3e7b592e9a21862c93db18bca890f74604c22db3 (frozen landing list)
+landing exception: bef5585e65ccc2a02169902dd18da1ba2fa9349a (frozen landing list)
+landing exception: 6474b00ef0f558f675a9c240a801a3aef05eb1b4 (frozen landing list)
+landing exception: ce116571ba381a0a1b51734820f45ccce2981244 (frozen landing list)
+landing exception: 3e3212b99131a49441e06e8c655c8b9663ee36d3 (frozen landing list)
+FAIL:H:cannot-decide:b41328dab37acc2662e5ff56b5d43bc49213c029
+FAIL:H:no-approved:c264b1da90afba83ccc989bb89a248fad8751999
+FAIL:C:cannot-decide:c264b1da90afba83ccc989bb89a248fad8751999
+FAIL:P:no-record:c264b1da90afba83ccc989bb89a248fad8751999
+FAIL:V:db-target-not-local:postgres://u:p@db.abc.supabase.co:5432/postgres';:scripts/analysis/mcbylaws-loop/run.mjs
+held, worktree and tty: not evaluated in CI
+GATE FAIL
+
+"
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:607:58
+    605|     const r = runB(b.repo, ['--ci', '--base', b.base], b.boot);
+    606|     expect(r.status).toBe(1);
+    607|     for (const arm of ['H', 'C', 'P']) expect(r.out).not.toMatch(new R…
+       |                                                          ^
+    608|     expect(failsFor(r.out, b.pre).filter((l) => /^FAIL:[HCP]:/.test(l)…
+    609|     expect(r.out).toContain('FAIL:V:db-target-not-local');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit still fails arm L
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "FAIL:H:cannot-decide:588ae08b95d81e14c866a6a2418c7ec238fbb076",
++ ]
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:632:74
+    630|     const out = runB(r, ['--ci', '--base', base], boot);
+    631|     expect(out.out).toContain('FAIL:L:number:0.45');
+    632|     expect(failsFor(out.out, pre).filter((l) => /^FAIL:[HCP]:/.test(l)…
+       |                                                                          ^
+    633|     done();
+    634|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a bootstrap sha missing from the repository is FAIL:X:cannot-decide, and the commits are still judged
+AssertionError: expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'
+
+- Expected
++ Received
+
+- FAIL:X:cannot-decide
++ PUSH HEAD  HOLD       APPROVED absent
++ PROTECTED:
++   mcbylaws/protected-paths.json   +21 -0
++   scripts/analysis/bylaw/evaluate.mjs   +1 -0
++   scripts/analysis/bylaw/later.mjs   +1 -0
++   1d6fe5d null R-LD MISSING
++ PANEL MISSING 1d6fe5d null
++   c8d8c0c null R-LD MISSING
++ PANEL MISSING c8d8c0c null
++ HELD PATCHES  0 of 12
++ held, worktrees: not evaluated in CI
++ pending/  0 red-by-design tests (was 0)
++ landing exception: 42521481cab1ad58b848600367c8d11f1a185b8c (frozen landing list)
++ landing exception: 3e7b592e9a21862c93db18bca890f74604c22db3 (frozen landing list)
++ landing exception: bef5585e65ccc2a02169902dd18da1ba2fa9349a (frozen landing list)
++ landing exception: 6474b00ef0f558f675a9c240a801a3aef05eb1b4 (frozen landing list)
++ landing exception: ce116571ba381a0a1b51734820f45ccce2981244 (frozen landing list)
++ landing exception: 3e3212b99131a49441e06e8c655c8b9663ee36d3 (frozen landing list)
++ FAIL:H:cannot-decide:1d6fe5d8a01489a701f191d5f83c091fa97a2a8e
++ FAIL:H:no-approved:c8d8c0c009e5deff70af4ff29cfeafc819e9650c
++ FAIL:C:cannot-decide:c8d8c0c009e5deff70af4ff29cfeafc819e9650c
++ FAIL:P:no-record:c8d8c0c009e5deff70af4ff29cfeafc819e9650c
++ FAIL:V:db-target-not-local:postgres://u:p@db.abc.supabase.co:5432/postgres';:scripts/analysis/mcbylaws-loop/run.mjs
++ held, worktree and tty: not evaluated in CI
++ GATE FAIL
++
++
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:668:19
+    666|     const r = runB(b.repo, ['--ci', '--base', b.base], '0'.repeat(40));
+    667|     expect(r.status).toBe(1);
+    668|     expect(r.out).toContain('FAIL:X:cannot-decide');
+       |                   ^
+    669|     expect(failsFor(r.out, b.pre).some((l) => l.startsWith('FAIL:H:'))…
+    670|     done();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > an ancestry check that errors is FAIL:X:cannot-decide and exempts nothing
+AssertionError: expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'
+
+- Expected
++ Received
+
+- FAIL:X:cannot-decide
++ PUSH HEAD  HOLD       APPROVED absent
++ PROTECTED:
++   mcbylaws/protected-paths.json   +21 -0
++   scripts/analysis/bylaw/evaluate.mjs   +1 -0
++   scripts/analysis/bylaw/later.mjs   +1 -0
++   1d6fe5d null R-LD MISSING
++ PANEL MISSING 1d6fe5d null
++   c8d8c0c null R-LD MISSING
++ PANEL MISSING c8d8c0c null
++ HELD PATCHES  0 of 12
++ held, worktrees: not evaluated in CI
++ pending/  0 red-by-design tests (was 0)
++ landing exception: 42521481cab1ad58b848600367c8d11f1a185b8c (frozen landing list)
++ landing exception: 3e7b592e9a21862c93db18bca890f74604c22db3 (frozen landing list)
++ landing exception: bef5585e65ccc2a02169902dd18da1ba2fa9349a (frozen landing list)
++ landing exception: 6474b00ef0f558f675a9c240a801a3aef05eb1b4 (frozen landing list)
++ landing exception: ce116571ba381a0a1b51734820f45ccce2981244 (frozen landing list)
++ landing exception: 3e3212b99131a49441e06e8c655c8b9663ee36d3 (frozen landing list)
++ FAIL:H:cannot-decide:1d6fe5d8a01489a701f191d5f83c091fa97a2a8e
++ FAIL:H:no-approved:c8d8c0c009e5deff70af4ff29cfeafc819e9650c
++ FAIL:C:cannot-decide:c8d8c0c009e5deff70af4ff29cfeafc819e9650c
++ FAIL:P:no-record:c8d8c0c009e5deff70af4ff29cfeafc819e9650c
++ FAIL:V:db-target-not-local:postgres://u:p@db.abc.supabase.co:5432/postgres';:scripts/analysis/mcbylaws-loop/run.mjs
++ held, worktree and tty: not evaluated in CI
++ GATE FAIL
++
++
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:677:19
+    675|     const r = runB(b.repo, ['--ci', '--base', b.base], b.boot, 'ancest…
+    676|     expect(r.status).toBe(1);
+    677|     expect(r.out).toContain('FAIL:X:cannot-decide');
+       |                   ^
+    678|     expect(failsFor(r.out, b.pre).some((l) => l.startsWith('FAIL:H:'))…
+    679|     expect(r.out).not.toContain('pre-policy');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > the CLI uses the frozen sha only: a repo without 17c95d00 is cannot-decide, and the source reads no environment
+AssertionError: expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'
+
+- Expected
++ Received
+
+- FAIL:X:cannot-decide
++ PUSH HEAD  HOLD       APPROVED absent
++ PROTECTED:
++   mcbylaws/protected-paths.json   +21 -0
++   scripts/analysis/bylaw/evaluate.mjs   +1 -0
++   scripts/analysis/bylaw/later.mjs   +1 -0
++   1d6fe5d null R-LD MISSING
++ PANEL MISSING 1d6fe5d null
++   53740b2 null R-LD MISSING
++ PANEL MISSING 53740b2 null
++ HELD PATCHES  0 of 12
++ held, worktrees: not evaluated in CI
++ pending/  0 red-by-design tests (was 0)
++ landing exception: 42521481cab1ad58b848600367c8d11f1a185b8c (frozen landing list)
++ landing exception: 3e7b592e9a21862c93db18bca890f74604c22db3 (frozen landing list)
++ landing exception: bef5585e65ccc2a02169902dd18da1ba2fa9349a (frozen landing list)
++ landing exception: 6474b00ef0f558f675a9c240a801a3aef05eb1b4 (frozen landing list)
++ landing exception: ce116571ba381a0a1b51734820f45ccce2981244 (frozen landing list)
++ landing exception: 3e3212b99131a49441e06e8c655c8b9663ee36d3 (frozen landing list)
++ FAIL:H:cannot-decide:1d6fe5d8a01489a701f191d5f83c091fa97a2a8e
++ FAIL:H:no-approved:53740b27a97401f74765607e7fc2eae4e0ac254c
++ FAIL:C:cannot-decide:53740b27a97401f74765607e7fc2eae4e0ac254c
++ FAIL:P:no-record:53740b27a97401f74765607e7fc2eae4e0ac254c
++ FAIL:V:db-target-not-local:postgres://u:p@db.abc.supabase.co:5432/postgres';:scripts/analysis/mcbylaws-loop/run.mjs
++ held, worktree and tty: not evaluated in CI
++ GATE FAIL
++
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:689:29
+    687|       env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null' } as unknown as …
+    688|     });
+    689|     expect(`${cli.stdout}`).toContain('FAIL:X:cannot-decide');
+       |                             ^
+    690|     const src = fs.readFileSync(GATE, 'utf8');
+    691|     expect(src.split('17c95d0091129b85b6728e44964589bf1555e582').lengt…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 29 passed (34)
+   Start at  14:17:33
+   Duration  9.49s (transform 26ms, setup 6ms, collect 14ms, tests 9.32s, environment 0ms, prepare 19ms)
+

@@ -19,7 +19,20 @@ const policy = (over: Record<string, unknown> = {}) => JSON.stringify({
 /** The env every spawn of the gate gets: no GIT_*, and the switches that must change nothing (P3). */
 const env = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))) as Record<string, string>;
 
+const DRIVER = path.resolve(__dirname, './fixtures/mcbylaws-gate/gate-driver.mjs');
+/** The range modes need a bootstrap sha (CARD-prepolicy-exempt); fixtures pass it to the driver as a parameter. */
+function runB(repo: Repo, args: string[], boot: string, mode: 'real' | 'ancestry-error' = 'real', input?: string) {
+  const r = spawnSync(process.execPath, [DRIVER, GATE, boot, mode, ...args], {
+    cwd: repo.dir, encoding: 'utf8', timeout: 60_000, ...(input === undefined ? {} : { input }),
+    env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0', SKIP_MCBYLAWS_GATE: '1', MCBYLAWS_GATE: 'off' } as unknown as NodeJS.ProcessEnv,
+  });
+  return { status: r.status, out: `${String(r.stdout)}\n${String(r.stderr)}` };
+}
+/** Existing fixtures: the root commit is the bootstrap, so no commit of a range is a strict ancestor of it (nothing pre-policy). */
+const rootOf = (repo: Repo) => repo.git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0];
+
 function run(repo: Repo, args: string[]) {
+  if (args[0] === '--ci' || args[0] === '--push') return runB(repo, args, rootOf(repo));
   const r = spawnSync(process.execPath, [GATE, ...args], {
     cwd: repo.dir, encoding: 'utf8', timeout: 60_000,
     env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0', SKIP_MCBYLAWS_GATE: '1', MCBYLAWS_GATE: 'off' } as unknown as NodeJS.ProcessEnv,
@@ -218,10 +231,7 @@ describe('O67-11: the loop arm is called as its CLI defines (argv and verdicts)'
     l23Change(repo);
     const local = repo.commit('MB-67 a Layer 2/3 change');
     const input = `refs/heads/main ${local} refs/heads/main ${remote}\n`;
-    const r = spawnSync(process.execPath, [GATE, '--push'], {
-      cwd: repo.dir, encoding: 'utf8', timeout: 60_000, input,
-      env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null' } as unknown as NodeJS.ProcessEnv,
-    });
+    runB(repo, ['--push'], rootOf(repo), 'real', input);
     expect(logged(repo)).toContain(`check --mode push --base ${remote}`);
     done();
   });
@@ -566,6 +576,120 @@ describe('S11: a large range pages the summary and writes the full list, instead
     expect(r.out).not.toContain('FAIL:S:summary');
     expect(r.out).toContain('full list:');
     expect(r.status).toBe(0);
+    done();
+  });
+});
+
+describe('PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only', () => {
+  const L23FILE = 'scripts/analysis/bylaw/evaluate.mjs';
+  const CLOUD_FILE = 'scripts/analysis/mcbylaws-loop/run.mjs';
+  const CLOUD = "export const u = 'postgres://u:p@db.abc.supabase.co:5432/postgres';\n";
+  const failsFor = (out: string, x: string) => out.split('\n').filter((l) => l.startsWith('FAIL:') && l.includes(x));
+  /** root (base) -> pre (Layer 2/3 + cloud target, no policy, no citation) -> boot (the policy ALONE) -> post (Layer 2/3, no citation). */
+  const build = () => {
+    const r = mk();
+    r.write('docs/note.md', '# note\n');
+    const base = r.commit('MB-67 root: docs');
+    r.write(L23FILE, 'export const evaluate = 1;\n');
+    r.write(CLOUD_FILE, CLOUD);
+    const pre = r.commit('MB-67 pre-policy: a Layer 2/3 change and a cloud target, no citation');
+    r.write('mcbylaws/protected-paths.json', policy());
+    const boot = r.commit('MB-67 the policy alone');
+    r.write('scripts/analysis/bylaw/later.mjs', 'export const later = 1;\n');
+    const post = r.commit('MB-67 later: a Layer 2/3 change, no citation');
+    return { repo: r, base, pre, boot, post };
+  };
+
+  it('a pre-policy commit skips H, C and P, is shown as pre-policy (not exempt), still fails V; the bootstrap and a later commit are judged', () => {
+    const b = build();
+    const r = runB(b.repo, ['--ci', '--base', b.base], b.boot);
+    expect(r.status).toBe(1);
+    for (const arm of ['H', 'C', 'P']) expect(r.out).not.toMatch(new RegExp(`FAIL:${arm}:[^\\n]*${b.pre}`));
+    expect(failsFor(r.out, b.pre).filter((l) => /^FAIL:[HCP]:/.test(l))).toEqual([]);
+    expect(r.out).toContain('FAIL:V:db-target-not-local');
+    expect(r.out).toContain(`pre-policy: ${b.pre.slice(0, 7)}`);
+    expect(r.out).not.toContain(`landing exception: ${b.pre}`);
+    expect(failsFor(r.out, b.boot)).toEqual([]);
+    expect(failsFor(r.out, b.post).some((l) => l.startsWith('FAIL:H:'))).toBe(true);
+    done();
+  });
+
+  it('a pre-policy commit still fails arm L', () => {
+    const r = mk();
+    r.write(ALLOW, ALLOW_EMPTY);
+    r.write('src/tests/bylaw-x.test.ts', 'export const x = 1;\n');
+    fs.mkdirSync(path.join(r.dir, 'scripts/ast-grep-rules'), { recursive: true });
+    fs.copyFileSync(path.join(REAL_ROOT, 'scripts/ast-grep-rules/bylaw-literal.yml'), path.join(r.dir, 'scripts/ast-grep-rules/bylaw-literal.yml'));
+    fs.symlinkSync(path.join(REAL_ROOT, 'node_modules'), path.join(r.dir, 'node_modules'), 'dir');
+    r.write('.gitignore', 'node_modules\n');
+    const base = r.commit('MB-67 arm L seed, no policy');
+    r.write('scripts/analysis/bylaw/lit.mjs', 'export const a = 0.45;\n');
+    const pre = r.commit('MB-67 pre-policy literal');
+    r.write('mcbylaws/protected-paths.json', policy({ layer23: [], literal_scope: ['scripts/analysis/bylaw/*.mjs'] }));
+    const boot = r.commit('MB-67 the policy alone');
+    const out = runB(r, ['--ci', '--base', base], boot);
+    expect(out.out).toContain('FAIL:L:number:0.45');
+    expect(failsFor(out.out, pre).filter((l) => /^FAIL:[HCP]:/.test(l))).toEqual([]);
+    done();
+  });
+
+  it('a commit AFTER the bootstrap with no citation still fails H, and nothing after the bootstrap is pre-policy', () => {
+    const b = build();
+    const r = runB(b.repo, ['--ci', '--base', b.boot], b.boot);
+    expect(r.status).toBe(1);
+    expect(failsFor(r.out, b.post).some((l) => l.startsWith('FAIL:H:'))).toBe(true);
+    expect(r.out).not.toContain('pre-policy');
+    done();
+  });
+
+  it('a commit on a side branch that is not an ancestor of the bootstrap still fails H', () => {
+    const r = mk();
+    r.write('docs/note.md', '# note\n');
+    const base = r.commit('MB-67 root: docs');
+    const branch = r.git(['branch', '--show-current']);
+    r.git(['checkout', '-q', '-b', 'side']);
+    r.write(L23FILE, 'export const evaluate = 1;\n');
+    const side = r.commit('MB-67 side: a Layer 2/3 change, no citation');
+    r.git(['checkout', '-q', branch]);
+    r.write('mcbylaws/protected-paths.json', policy());
+    const boot = r.commit('MB-67 the policy alone');
+    r.git(['merge', '--no-ff', '-m', 'Merge side', 'side']);
+    const out = runB(r, ['--ci', '--base', base], boot);
+    expect(out.status).toBe(1);
+    expect(failsFor(out.out, side).some((l) => l.startsWith('FAIL:H:'))).toBe(true);
+    expect(out.out).not.toContain(`pre-policy: ${side.slice(0, 7)}`);
+    done();
+  });
+
+  it('a bootstrap sha missing from the repository is FAIL:X:cannot-decide, and the commits are still judged', () => {
+    const b = build();
+    const r = runB(b.repo, ['--ci', '--base', b.base], '0'.repeat(40));
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:X:cannot-decide');
+    expect(failsFor(r.out, b.pre).some((l) => l.startsWith('FAIL:H:'))).toBe(true);
+    done();
+  });
+
+  it('an ancestry check that errors is FAIL:X:cannot-decide and exempts nothing', () => {
+    const b = build();
+    const r = runB(b.repo, ['--ci', '--base', b.base], b.boot, 'ancestry-error');
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:X:cannot-decide');
+    expect(failsFor(r.out, b.pre).some((l) => l.startsWith('FAIL:H:'))).toBe(true);
+    expect(r.out).not.toContain('pre-policy');
+    done();
+  });
+
+  it('the CLI uses the frozen sha only: a repo without c500c249 is cannot-decide, and the source reads no environment', () => {
+    const b = build();
+    const cli = spawnSync(process.execPath, [GATE, '--ci', '--base', b.base], {
+      cwd: b.repo.dir, encoding: 'utf8', timeout: 60_000,
+      env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null' } as unknown as NodeJS.ProcessEnv,
+    });
+    expect(`${cli.stdout}`).toContain('FAIL:X:cannot-decide');
+    const src = fs.readFileSync(GATE, 'utf8');
+    expect(src.split('c500c24904a80bee53769a660640226b1d0fd1ee').length - 1).toBe(1);
+    expect(src).not.toMatch(/process\.env/);
     done();
   });
 });

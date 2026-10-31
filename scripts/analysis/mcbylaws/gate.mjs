@@ -50,6 +50,33 @@ const LANDING_FROZEN = [
   '3e3212b99131a49441e06e8c655c8b9663ee36d3',
 ];
 const FROZEN_REASON = 'frozen landing list';
+// CARD-prepolicy-exempt (operator 2026-10-31, option A): a commit that is a STRICT ancestor of this bootstrap commit
+// (c500c249, which adds the policy file alone) has no policy to be judged by, so it skips the per-commit arms H, C
+// and P. Frozen here, never a list, never read from the tip or a data file; the bootstrap commit itself is judged
+// through the bootstrap path. Tests give a different sha as a function parameter (`main(argv, { bootstrap })`);
+// the CLI always uses this constant.
+const BOOTSTRAP_FROZEN = 'c500c24904a80bee53769a660640226b1d0fd1ee';
+const ancestryStatus = (cwd, sha, boot) => git(cwd, ['merge-base', '--is-ancestor', sha, boot]);
+
+/**
+ * The commits of `shas` that are strict ancestors of `ctx.bootstrap`, decided one by one by `git merge-base
+ * --is-ancestor` (exit 0 yes, 1 no). A bootstrap that is not a commit here, or any other exit, is `FAIL:X:cannot-decide`
+ * and NOTHING is exempted (fail closed).
+ */
+function prePolicyCommits(cwd, shas, ctx) {
+  const none = new Set();
+  if (shas.length === 0) return { set: none, fail: [] };
+  const have = git(cwd, ['cat-file', '-e', `${ctx.bootstrap}^{commit}`]);
+  if (have.status !== 0) return { set: none, fail: [CANNOT] };
+  const set = new Set();
+  for (const sha of shas) {
+    if (sha === ctx.bootstrap) continue;
+    const st = ctx.ancestry(cwd, sha, ctx.bootstrap).status;
+    if (st === 0) set.add(sha);
+    else if (st !== 1) return { set: none, fail: [CANNOT] };
+  }
+  return { set, fail: [] };
+}
 
 const top = (cwd) => {
   const r = git(cwd, ['rev-parse', '--show-toplevel']);
@@ -200,7 +227,7 @@ function combinedPaths(raw) {
  * O67-02 (`evil` merge): a merge is judged by its own combined diff, through the same arms as a commit — so a
  * conflict resolved OFF Layer 2/3 (what `--no-merges` hides, and what a clean merge cannot show) still fails.
  */
-function mergeArms({ cwd, base, tip, excused = new Set() }) {
+function mergeArms({ cwd, base, tip, excused = new Set() }) { // `excused` = landing exceptions UNION pre-policy commits
   const merges = git(cwd, ['rev-list', '--merges', '--reverse', `${base}..${tip}`]);
   if (merges.status !== 0) return ['FAIL:C:cannot-decide'];
   const out = [];
@@ -257,7 +284,7 @@ function landingExceptions(cwd, base) {
 }
 
 /** One ref's arms: per commit H, C, P over the range, then L over the range's in-scope files from `git archive`. */
-function rangeArms({ cwd, base, tip }) {
+function rangeArms({ cwd, base, tip, pre = { set: new Set(), fail: [] } }) {
   const shas = git(cwd, ['rev-list', '--no-merges', '--reverse', `${base}..${tip}`]);
   if (shas.status !== 0) return ['FAIL:H:cannot-decide', 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
   // O67-02: an empty non-merge list does NOT mean an empty range -- a range of merges only must still be judged.
@@ -280,6 +307,8 @@ function rangeArms({ cwd, base, tip }) {
   for (const sha of commits) {
     // The landing exception: this exact sha skips H, C and P; every other commit is judged in full.
     if (excused.has(sha)) continue;
+    // CARD-prepolicy-exempt: an ancestor of the bootstrap skips H, C and P (arms L and V below still run).
+    if (pre.set.has(sha)) continue;
     // O67-03: the first policy in force may be a commit's OWN only when no base policy resolves (O67-04 bootstrap).
     if (policies.length === 0) {
       const at = resolvePolicy(cwd, `${sha}^`, { ownRev: sha });
@@ -310,7 +339,7 @@ function rangeArms({ cwd, base, tip }) {
       ...panelForCommit({ cwd, policy: res.policy, entries, message, ownRev: sha, sha }),
     );
   }
-  out.push(...mergeArms({ cwd, base, tip, excused }));
+  out.push(...mergeArms({ cwd, base, tip, excused: new Set([...excused.keys(), ...pre.set]) }));
   // O67-12: a deleted path is not in `git archive <tip>` (the gate would go permanently red); the new side of a
   // rename is kept and its old side is not.
   const diff = git(cwd, ['diff', '--name-only', '-z', '--diff-filter=d', '-M', base, tip]);
@@ -338,7 +367,7 @@ function rangeArms({ cwd, base, tip }) {
 const DEFAULT_BASE = (cwd) => (git(cwd, ['rev-parse', '--verify', '--quiet', 'origin/main']).status === 0 ? 'origin/main' : 'main');
 
 /** Build `buildSummary`'s input for `refs` (`[{ref, localSha, remoteSha}]`), arms included. */
-function summaryInput({ cwd, refs, ci }) {
+function summaryInput({ cwd, refs, ci, ctx }) {
   const arms = [];
   const out = [];
   let policy = null;
@@ -368,9 +397,16 @@ function summaryInput({ cwd, refs, ci }) {
     // R-LS: a listed commit is shown as exempt, so the summary prints neither MISSING nor a fail. The set comes from
     // the range BASE; a fail-closed base file adds its verdict here too.
     const exceptions = landingExceptions(cwd, b);
-    const rows = (collected.commits || []).map((c) => (exceptions.reasons.has(c.sha) ? { ...c, panel: 'exempt' } : c));
-    arms.push(...exceptions.fail);
-    arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy }));
+    // CARD-prepolicy-exempt: ancestors of the bootstrap are shown as `pre-policy`, distinct from `exempt`.
+    const all = git(cwd, ['rev-list', `${b}..${r.localSha}`]);
+    const pre = all.status === 0 ? prePolicyCommits(cwd, all.stdout.split('\n').filter(Boolean), ctx) : { set: new Set(), fail: [CANNOT] };
+    const rows = (collected.commits || []).map((c) => (exceptions.reasons.has(c.sha) ? { ...c, panel: 'exempt' }
+      : pre.set.has(c.sha) ? { ...c, panel: 'pre-policy' } : c));
+    arms.push(...exceptions.fail, ...pre.fail);
+    if (pre.set.size > 0) {
+      arms.push(`pre-policy: ${[...pre.set].slice(0, 3).map((x) => x.slice(0, 7)).join(',')}${pre.set.size > 3 ? ',...' : ''} (${pre.set.size} commit(s), ancestors of the bootstrap ${ctx.bootstrap.slice(0, 8)}; arms H, C, P skipped)`);
+    }
+    arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy, pre }));
     arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
     let tipLimit = res.policy.held_limit;
@@ -420,10 +456,10 @@ const isProtected = (policy, p) => { const c = classify(policy, p); return c.lay
 // A FAIL verdict whose lines carry no FAIL: prefix (a PANEL MISSING line, say) must still exit 1.
 const failClosed = (summary, lines) => (summary.verdict === 'FAIL' && !lines.some((l) => String(l).startsWith('FAIL:')) ? [...lines, 'FAIL:S:summary'] : lines);
 
-function push(cwd, stdin) {
+function push(cwd, stdin, ctx) {
   const refs = parseRefLines(stdin).map((r) => ({ ...r, ref: r.localRef }));
   if (refs.length === 0) return [CANNOT];
-  const input = summaryInput({ cwd, refs, ci: false });
+  const input = summaryInput({ cwd, refs, ci: false, ctx });
   const summary = buildSummary(input);
   const lines = shown(summary);
   if (summary.verdict === 'FAIL') return failClosed(summary, lines);
@@ -434,15 +470,16 @@ function push(cwd, stdin) {
   return ask === '' ? lines : [...lines, ask];
 }
 
-function ci(cwd, baseRev) {
+function ci(cwd, baseRev, ctx) {
   const res = resolvePolicy(cwd, 'HEAD');
-  const input = summaryInput({ cwd, refs: [{ ref: 'refs/heads/HEAD', localSha: 'HEAD', remoteSha: baseRev }], ci: true });
+  const input = summaryInput({ cwd, refs: [{ ref: 'refs/heads/HEAD', localSha: 'HEAD', remoteSha: baseRev }], ci: true, ctx });
   const summary = buildSummary(input);
   const lines = [...shown(summary), 'held, worktree and tty: not evaluated in CI'];
   return { verdict: summary.verdict, lines: failClosed(summary, lines), ok: res.ok };
 }
 
-function run(argv) {
+function run(argv, opts = {}) {
+  const ctx = { bootstrap: opts.bootstrap ?? BOOTSTRAP_FROZEN, ancestry: opts.ancestry ?? ancestryStatus };
   const flag = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   if (argv[0] === '--commit-msg') {
     const cwd = top(process.cwd());
@@ -457,13 +494,13 @@ function run(argv) {
     if (!cwd) return { cwd, lines: [CANNOT] };
     let stdin = '';
     try { stdin = fs.readFileSync(0, 'utf8'); } catch { return { cwd, lines: [CANNOT] }; }
-    return { cwd, lines: push(cwd, stdin) };
+    return { cwd, lines: push(cwd, stdin, ctx) };
   }
   if (argv[0] === '--ci') {
     const cwd = top(process.cwd());
     const base = flag('--base');
     if (!cwd || typeof base !== 'string' || base === '') return { cwd, lines: [CANNOT] };
-    const r = ci(cwd, base);
+    const r = ci(cwd, base, ctx);
     return { cwd, lines: r.ok ? r.lines : [...r.lines, 'FAIL:H:cannot-decide'] };
   }
   return { cwd: null, lines: [CANNOT] };
@@ -471,10 +508,10 @@ function run(argv) {
 
 // arm Q: wired after the queue-tracking commit (plan section 10)
 
-export function main(argv) {
+export function main(argv, opts = {}) {
   let lines;
   try {
-    lines = run(argv).lines;
+    lines = run(argv, opts).lines;
   } catch {
     lines = [CANNOT];
   }
