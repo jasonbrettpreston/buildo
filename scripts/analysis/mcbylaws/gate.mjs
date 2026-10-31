@@ -369,11 +369,21 @@ function summaryInput({ cwd, refs, ci }) {
   const worktrees = worktreeScan(policy);
   if (worktrees.error) arms.push('FAIL:S:worktrees-unknown');
   const now = pendingCount(cwd, 'HEAD');
+  // S11: a page that overflows writes the full list here; a write that fails throws and `main` reports cannot-decide.
+  const writeFull = (text) => {
+    const file = path.join(os.tmpdir(), `mcbylaws-summary-${process.pid}.txt`);
+    fs.writeFileSync(file, String(text), 'utf8');
+    return file;
+  };
   return {
-    refs: out, policy: policy || {}, basePolicy, held, worktrees, ci,
+    refs: out, policy: policy || {}, basePolicy, held, worktrees, ci, writeFull,
     pending: now === null ? { now: null, was: null } : { now, was: now }, armVerdicts: arms,
   };
 }
+
+/** S11: what the operator (or the CI log) sees — `summary.text` unpaged, so `full list:` shows and nothing overflows. */
+const shown = (summary) => String(summary.text || '').split('\n').filter(Boolean)
+  .map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice('MCBYLAWS: '.length) : l));
 
 function askTty() {
   let fd;
@@ -401,7 +411,7 @@ function push(cwd, stdin) {
   if (refs.length === 0) return [CANNOT];
   const input = summaryInput({ cwd, refs, ci: false });
   const summary = buildSummary(input);
-  const lines = [...summary.lines.map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice('MCBYLAWS: '.length) : l))];
+  const lines = shown(summary);
   if (summary.verdict === 'FAIL') return failClosed(summary, lines);
   const protectedChange = input.refs.some((r) => (r.changes || []).some((c) => isProtected(input.policy, c.path)
     || (c.oldPath && isProtected(input.policy, c.oldPath))));
@@ -414,7 +424,7 @@ function ci(cwd, baseRev) {
   const res = resolvePolicy(cwd, 'HEAD');
   const input = summaryInput({ cwd, refs: [{ ref: 'refs/heads/HEAD', localSha: 'HEAD', remoteSha: baseRev }], ci: true });
   const summary = buildSummary(input);
-  const lines = [...summary.lines.map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice('MCBYLAWS: '.length) : l)), 'held, worktree and tty: not evaluated in CI'];
+  const lines = [...shown(summary), 'held, worktree and tty: not evaluated in CI'];
   return { verdict: summary.verdict, lines: failClosed(summary, lines), ok: res.ok };
 }
 

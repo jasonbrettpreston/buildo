@@ -503,3 +503,20 @@ describe('L1 (CARD-gates-recheck 1): the landing exception is an exact sha list 
     done();
   });
 });
+
+describe('S11: a large range pages the summary and writes the full list, instead of FAIL:S:overflow', () => {
+  it('60 protected files on one docs-only commit pass at --ci with a full list', () => {
+    const repo = mk();
+    seed(repo, policy({ protected: ['mcbylaws/oracle/**'] }));
+    approve(repo);
+    const base = repo.git(['rev-parse', 'HEAD']);
+    for (let i = 0; i < 60; i += 1) repo.write(`mcbylaws/oracle/c${String(i).padStart(2, '0')}.json`, `{ "n": ${i} }\n`);
+    repo.commit('MB-67 adds oracle fixtures');
+    const r = run(repo, ['--ci', '--base', base]);
+    expect(r.out).not.toContain('FAIL:S:overflow');
+    expect(r.out).not.toContain('FAIL:S:summary');
+    expect(r.out).toContain('full list:');
+    expect(r.status).toBe(0);
+    done();
+  });
+});
