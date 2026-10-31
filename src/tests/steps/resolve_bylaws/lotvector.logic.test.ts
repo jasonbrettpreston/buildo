@@ -133,6 +133,24 @@ describe('R-IV: buildLotVector — one pure builder, a missing input is never de
     expect('no_rear_lot_line' in rb().buildLotVector(row({ geom_npoints: 5 }), ENV()).lot.flags).toBe(false);
   });
 
+  // SPEC LINK: docs/specs/01-pipeline/131_lot_configuration_policy.md LC-68; MB-18 plan section 2 row T-c3. A lock: green on the
+  // base (scripts/lib/bylaw-resolution.js sets lawfully_existing:false and the 4-vertex no_rear_lot_line, M-407).
+  it('LC-68 lock: every golden lot builds the golden-lot flags and lawfully_existing is always false', () => {
+    const lots = read('src/tests/fixtures/bylaw-golden-lots/lots.json').lots as Json[];
+    expect(lots.length).toBe(178);
+    for (const { id, lot } of lots) {
+      const x = /^900\.\d+\.10\((\d+)\)$/.exec(lot.exception);
+      const flags = rb().buildLotVector(row({
+        zoning_class: lot.zone, zoning_zn_string: lot.zone_label, exception_number: x ? Number(x[1]) : null,
+        is_corner_lot: lot.flags.corner_lot, is_through_lot: lot.flags.through_lot, on_policy_road: lot.flags.major_street,
+        abuts_laneway: lot.flags.abuts_lane, is_heritage_designated: lot.flags.heritage_property,
+        geom_npoints: lot.flags.no_rear_lot_line ? 4 : 5,
+      }), ENV()).lot.flags;
+      expect(flags.lawfully_existing, id).toBe(false);
+      expect(flags, id).toEqual(lot.flags);
+    }
+  });
+
   it('is pure: the same row twice gives equal vectors and the row is not mutated', () => {
     const r = row();
     const copy = JSON.stringify(r);

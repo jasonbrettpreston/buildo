@@ -1,0 +1,6 @@
+== item (c3) lock: green on base; mutation check (lawfully_existing: true in the module) turns it red; engine run 20261031T235245Z-3d815f73
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/steps/resolve_bylaws/lotvector.logic.test.ts > R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) > builds the golden-lot vector shape from a parcels row (parity with pull-golden-lots rowToLot on every shared field)
+ FAIL  src/tests/steps/resolve_bylaws/lotvector.logic.test.ts > R-IV: buildLotVector — one pure builder, a missing input is never defaulted (Spec 134 §2, I10) > LC-68 lock: every golden lot builds the golden-lot flags and lawfully_existing is always false
+ Test Files  1 failed (1)
+      Tests  2 failed | 15 passed (17)
