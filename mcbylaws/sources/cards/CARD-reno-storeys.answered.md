@@ -1,0 +1,5 @@
+# CARD answered 2026-10-29 (operator, verbatim): "as for the defaul renovation scenarions for the stories we assume the existing is 1 storey - until this is corrrected by the user"
+## RENO-ST Default existing storeys for renovation scenarios
+- Current rule: Spec 78 P5.6 / O-13 (amended 2026-10-18): existing_storeys is never estimated; NULL → `not_evaluated:needs_user_input:existing_storeys` for the existing_gfa-based renovation fields.
+- Answer: the renovation scenarios assume the existing house is 1 storey until the user enters the real number. The 1 storey is an externalized variable (a ruled logic variable, changeable, observable): every field that uses it is labelled "assumed 1 storey, enter your storeys" (source `assumed_default`), and the user's entry replaces it and recomputes (P5.7). This amends O-13 / P5.6 for renovation scenarios only.
+Rule-text line: "Renovation scenarios assume an existing house of 1 storey, a ruled and labelled default, until the user enters the storeys; this amends O-13 for renovation only."

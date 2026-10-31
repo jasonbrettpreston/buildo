@@ -1,0 +1,9 @@
+# CARD WAVE-0 approval — ANSWERED 2026-10-30
+Operator words (verbatim): "approve all recommendations"
+Scope: every recommendation the orchestrator presented in chat on 2026-10-30, in the consolidated approval list (sections A–D) and the final Wave 0 message, as written:
+- A1 R-KP text approved; authentication = a passphrase-protected signing key used for the APPROVED commit and protected-file approvals.
+- A2: M-382 approved without the number (N = 12 stays a proposal); M-392 approved without the bounds; the M-252 interim note approved as INTERIM; R4-01..R4-10 approved; start small, ideal split, front-yard row and LC-69 approved; M-403 DROPPED (duplicates R4-04/R4-05).
+- A3: E1 yes, E2 yes (Spec 133 cap 2400 lines), E3 yes (raise the Spec 68 budget), E4 yes, E5 yes.
+- B: S-1 = 2.3 m (OBC Table 9.5.3.1) + 212 mm floor assembly, roof allowance = one assembly + 0.3 m, cited logic variables; S-2 = 0, disclosed; MB18-RL-3 = Phase 2 stays strict (I10), with "lot unchanged since 2013" added as a disclosed site-fact assumption resolved per option (needs one ruling amending I10 scope); MB64-PR-2 yes; PR-3 yes for increment 1; PR-4 strict; PR-10 yes; PR-12 yes; PR-13 = score on parcel data, show both, fix the parcel flag.
+- C: MB30-PR-1 yes, PR-2 yes, PR-4 yes in principle (no build until a trigger exists), the Spec 112 note yes; MB18-RL-1 = code right, LC-68 clarified by a dated note; RL-2/RL-4/RL-5 lane recommendations; P67-1..P67-11 yes (track the queue in git); APPROVED on the McBylaws base branch; G68-08 = CI rechecks the in-repo groups, the CoA groups at pre-push; 20-character accept reason; floors never lowered without a ruling; MB64-PR-1/5/7/8/9 and PR-68-1..11 lane defaults.
+NOT answered by this reply (it was a question, not a recommendation): MB30-PR-3 (is the dev DB 127.0.0.1:54322). The MB-30 proof prints host/port and waits for the operator's go before any write.

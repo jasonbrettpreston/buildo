@@ -1,0 +1,3 @@
+# CARD McProof sizing — ANSWERED 2026-10-31
+Operator words (verbatim): "yes size it"
+Approved (as presented 2026-10-31): increment 1 gets the FULL six-stage review once (it is the foundation). Later increments are sized by risk: a new reading, a ruling, or a clause not yet checked gets the full six stages; a clause already approved by City data, or a repeat of an approved pattern, gets the quick path (stage 0 Reality check + stage 5 Calculation check); where DeepSeek and the Claude check keep agreeing in an increment, review drops to a sample instead of every example. After the build works, the system checks itself (exact matches, City-oracle tests, CoA catch rates) and examples are re-checked only when a ruling changes them. To be written into McProof (MB-77).
