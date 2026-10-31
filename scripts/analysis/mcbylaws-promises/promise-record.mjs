@@ -91,15 +91,34 @@ export function uncommittedLines(cwd, paths) {
 }
 
 /**
- * Re-records a stale green (K6), keeping its identity: a fresh record is never overwritten (`fresh:<id>`), and a new
- * record with another id or another red_of is a rewrite (`record_rewritten:<id>`). Returns the relative path.
+ * Re-records a stale green (K6, K-2), keeping its identity: a fresh record is never overwritten (`fresh:<id>`), and a new
+ * record with another id or another red_of is a rewrite (`record_rewritten:<id>`). The new bytes go to a temp in the same
+ * directory (flag `wx`) and `fs.renameSync` replaces the old file atomically, so a window with no record never exists; the
+ * temp is removed on any error. Returns the relative path.
  */
 export function reRecord(root, oldRec, newRec, treeBlobs) {
   const id = oldRec && oldRec.id;
   if (!isStale(oldRec, treeBlobs)) throw new Error(`fresh:${id}`);
   if (!newRec || newRec.id !== oldRec.id || newRec.red_of !== oldRec.red_of) throw new Error(`record_rewritten:${id}`);
-  fs.rmSync(path.join(root, recordRel('green', oldRec.id)), { force: true });
-  return writeExclusive(root, 'green', newRec);
+  return writeReplace(root, 'green', newRec);
+}
+
+/** Writes the record beside the final path (`wx`) then renames over it: the old file is never removed first. */
+function writeReplace(root, kind, rec) {
+  const rel = recordRel(kind, rec && rec.id);
+  const file = path.join(root, rel);
+  const fromRoot = path.relative(root, file);
+  if (!fromRoot || fromRoot.startsWith('..') || path.isAbsolute(fromRoot)) throw new Error(`unsafe_id:outside_root:${rel}`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
+  try {
+    fs.writeFileSync(tmp, `${JSON.stringify(rec, null, 2)}\n`, { flag: 'wx' });
+    fs.renameSync(tmp, file);
+  } catch (err) {
+    fs.rmSync(tmp, { force: true });
+    throw err;
+  }
+  return rel;
 }
 
 /** True when `path` is a green record that may change at `rev` because the OLD record is stale the blobs at `rev`. */

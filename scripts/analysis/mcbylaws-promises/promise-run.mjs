@@ -39,6 +39,40 @@ export function runVitest({ cwd, files, bin, config, timeoutMs = 300000 }) {
   }
 }
 
+/** Runs `fn(dir)` on a temp extraction of `rev` -> {ok:true,value} | {ok:false,reason}; never reads the tree. */
+export function withCheckout(cwd, rev, fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcb-promises-co-'));
+  try {
+    const env = cleanEnv(process.env);
+    const archive = spawnSync('git', ['archive', '--format=tar', rev], {
+      cwd, env, timeout: 300000, maxBuffer: 512 * 1024 * 1024,
+    });
+    if (archive.error || archive.signal || archive.status !== 0 || !Buffer.isBuffer(archive.stdout)) {
+      return { ok: false, reason: 'archive' };
+    }
+    const untar = spawnSync('tar', ['-x', '-C', dir], { input: archive.stdout, env, maxBuffer: 512 * 1024 * 1024 });
+    if (untar.error || untar.signal || untar.status !== 0) return { ok: false, reason: 'archive' };
+    const mods = path.join(cwd, 'node_modules');
+    if (fs.existsSync(mods)) fs.symlinkSync(mods, path.join(dir, 'node_modules'), 'dir');
+    try {
+      return { ok: true, value: fn(dir) };
+    } catch {
+      return { ok: false, reason: 'checkout-fn' };
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** Runs the promise test set at `rev` (not the working tree) -> same shape as runVitest. */
+export function runAtRef({ cwd, rev, files, bin, config, timeoutMs }) {
+  const res = withCheckout(cwd, rev, (dir) => runVitest({
+    cwd: dir, files, bin: bin ?? path.join(cwd, 'node_modules', '.bin', 'vitest'), config, timeoutMs,
+  }));
+  if (!res.ok) return { ok: false, reason: `checkout:${res.reason}` };
+  return res.value;
+}
+
 /** Maps each entry to {state, fullName}: passed|failed|pending|skipped|todo, or missing|ambiguous. */
 export function matchTests(json, entries) {
   const results = Array.isArray(json?.testResults) ? json.testResults : [];

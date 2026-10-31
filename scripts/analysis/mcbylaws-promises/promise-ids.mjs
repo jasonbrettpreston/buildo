@@ -125,8 +125,8 @@ export function extractRows(files, incIds = []) {
   }
   const rows = [...seen.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (const row of rows) {
-    const idx = row.kind === 'increment' ? -1
-      : incs.findIndex((c) => texts.has(c) && cites(texts.get(c), row.id));
+    if (row.kind === 'increment') continue; // INC- rows keep the cell set at creation
+    const idx = incs.findIndex((c) => texts.has(c) && cites(texts.get(c), row.id));
     row.increment = idx >= 0 ? incs[idx] : null;
   }
   return /** @type {Row[]} */ (rows);

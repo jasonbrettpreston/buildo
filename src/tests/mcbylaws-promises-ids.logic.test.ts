@@ -66,6 +66,8 @@ describe('increments table', () => {
     expect(out.find((r: { id: string }) => r.id === 'M-377')!.increment).toBe('1');
     expect(out.find((r: { id: string }) => r.id === 'R-KQ')!.increment).toBe('6b');
     expect(out.find((r: { id: string }) => r.id === 'R-T')!.increment).toBeNull();
+    expect(out.find((r: { id: string }) => r.id === 'INC-1')!.increment).toBe('1');
+    expect(out.find((r: { id: string }) => r.id === 'INC-6b')!.increment).toBe('6b');
   });
 });
 

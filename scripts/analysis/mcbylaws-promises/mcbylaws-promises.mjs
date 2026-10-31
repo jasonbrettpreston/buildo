@@ -3,11 +3,15 @@
 // The promises CLI: --check | --status | --write-green | --write-red | --audit-pack. Exit 0 green, 1 red, 2 could not run.
 // main() returns the exit code and never calls process.exit; every refusal or throw fails closed, never as a pass.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { git } from '../mcbylaws/git-util.mjs';
+import { git, listTracked, readAt } from '../mcbylaws/git-util.mjs';
+import { RULE_FILE, ALLOW_REL } from '../mcbylaws/literal-scan.mjs';
 import { runCheck } from './promise-check.mjs';
 import { statusTable, summaryLine, auditPack } from './promise-status.mjs';
+import { auditEntries } from './promise-counts.mjs';
+import { runAtRef } from './promise-run.mjs';
 import { writeRed, writeGreen } from './promise-write.mjs';
 import { buildRegister, readArtifacts } from './promise-register.mjs';
 import { readIncrementIds } from './promise-increment.mjs';
@@ -15,6 +19,8 @@ import { readIncrementIds } from './promise-increment.mjs';
 const USAGE = 'usage: mcbylaws-promises --check | --status | --write-red <id> | --write-green <id> | --audit-pack '
   + '[--rev <r>] [--base <b>] [--increment <n>] [--audit <file> --pack <file>] [--out <file>]';
 const CANNOT = 'FAIL:R:cannot-decide';
+const POLICY_REL = 'mcbylaws/protected-paths.json';
+const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 // A mode takes NO value except the two writers; those and every option take one.
 const MODES = ['--check', '--status', '--write-red', '--write-green', '--audit-pack'];
 const WRITERS = ['--write-red', '--write-green'];
@@ -64,7 +70,37 @@ function readText(file) {
   }
 }
 
-/** One check against one ref with the CLI's inputs and printed lines; `{lines, res, exit}`. */
+/** The parsed JSON object at `rev:rel` (`null` when it is absent or unparsable). PURE-ish. */
+function readJsonAt(cwd, rev, rel) {
+  const text = readAt(cwd, rev, rel);
+  if (typeof text !== 'string') return null;
+  try {
+    const value = JSON.parse(text);
+    return typeof value === 'object' && value !== null && !Array.isArray(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The CLI's drift block, built from the BASE ref (the checked ref cannot loosen what judges it), or `{error}`.
+ * @returns {{drift?: object, error?: string}}
+ */
+function buildDrift(args, opts) {
+  const base = opts['--base'];
+  const rev = opts['--rev'] ?? 'HEAD';
+  const policy = readJsonAt(args.cwd, base, POLICY_REL);
+  if (policy === null) return { error: `${CANNOT}:policy` };
+  const allow = readJsonAt(args.cwd, base, ALLOW_REL);
+  if (allow === null) return { error: `${CANNOT}:literal-allow` };
+  const literalArgs = (dir) => ({
+    root: dir, files: listTracked(args.cwd, rev) ?? [], policy, allow,
+    astGrepBin: path.join(args.cwd, 'node_modules', '.bin', 'ast-grep'), ruleFile: path.join(dir, RULE_FILE),
+  });
+  return { drift: { policy, home: args.home, literalArgs } };
+}
+
+/** One check against one ref with the CLI's inputs and printed lines; `{lines, res}` or `{fatal}`. */
 function checkOnce(args, opts) {
   let auditText;
   let auditPackValue;
@@ -80,13 +116,18 @@ function checkOnce(args, opts) {
       return { fatal: `${CANNOT}:audit-pack` };
     }
   }
+  const built = buildDrift(args, opts);
+  if (built.error !== undefined) return { fatal: built.error };
   const res = runCheck({
-    cwd: args.cwd, rev: opts['--rev'] ?? 'HEAD', base: opts['--base'] ?? null, incArg: opts['--increment'],
-    auditText, auditPack: auditPackValue, run: args.run, queue: args.queue,
+    cwd: args.cwd, rev: opts['--rev'] ?? 'HEAD', base: opts['--base'], incArg: opts['--increment'],
+    auditText, auditPack: auditPackValue, drift: built.drift, run: args.run, queue: args.queue,
   });
   const lines = [...res.lines, summaryLine(res.counts)];
   return { lines, res };
 }
+
+/** The WAIT lines (condition 4): always printed after the FAIL lines, never part of the exit code. */
+const waitsOf = (res) => (Array.isArray(res.waits) ? res.waits.filter((l) => typeof l === 'string') : []);
 
 /** The done evidence (`green/<id>.json`) or the FAIL line naming this id; the summary and run lines never count as evidence. */
 function evidenceOf(id, lines) {
@@ -109,6 +150,7 @@ function statusMode(args, opts, out) {
     evidence: once.res.states[row.id] === 'done' ? `mcbylaws/promises/green/${row.id}.json` : evidenceOf(row.id, once.res.lines),
   }));
   out(statusTable({ commit, registerHash: once.res.registerHash, rows }));
+  for (const line of waitsOf(once.res)) out(line);
   return once.res.exit === 2 ? 2 : 0;
 }
 
@@ -134,30 +176,53 @@ function writeMode(args, opts, mode, id, out, err) {
   }
 }
 
-/** `--audit-pack`: one entry per id the artifact map declares; the pack is written to `--out` or printed. */
+/** `--audit-pack`: the tests run AT the checked ref, one entry per declared id, with the real counts. */
 function auditMode(args, opts, out) {
-  const artifacts = readArtifacts(args.cwd, 'HEAD').artifacts;
-  const entries = Object.keys(artifacts).sort().map((id) => ({
-    id, command: `npx vitest run ${artifacts[id].artifact} --run`, counts: 'Tests  1 passed (1)',
-  }));
-  const text = `${JSON.stringify(auditPack(entries), null, 2)}\n`;
+  const rev = opts['--rev'] ?? 'HEAD';
+  const artifacts = readArtifacts(args.cwd, rev);
+  const map = isObject(artifacts.artifacts) ? artifacts.artifacts : {};
+  if (!isObject(artifacts.artifacts)) {
+    out(`${CANNOT}:artifacts`);
+    return 2;
+  }
+  const rows = Object.keys(map).sort().map((id) => ({ id, artifact: map[id].artifact }));
+  const run = typeof args.run === 'function' ? args.run : (a) => runAtRef({ cwd: args.cwd, rev, files: a.files });
+  const res = rows.length === 0 ? { ok: true, json: {} } : run({ cwd: args.cwd, files: [...new Set(rows.map((r) => r.artifact))] });
+  if (!res || res.ok !== true) {
+    const reason = res && typeof res.reason === 'string' && res.reason !== '' ? res.reason : 'unknown';
+    out(`${CANNOT}:run:${reason}`);
+    return 2;
+  }
+  const audited = auditEntries({ artifacts: rows, json: res.json });
+  const cannot = audited.lines.find((l) => l.startsWith(CANNOT));
+  if (cannot !== undefined) {
+    out(cannot);
+    return 2;
+  }
+  const text = `${JSON.stringify(auditPack(audited.entries), null, 2)}\n`;
   if (opts['--out'] === undefined) out(text);
   else fs.writeFileSync(path.resolve(args.cwd, opts['--out']), text);
-  return 0;
+  for (const line of audited.lines) out(line);
+  return audited.lines.length > 0 ? 1 : 0;
 }
 
 /**
  * The promises CLI.
  * @param {string[]} argv
- * @param {{cwd?: string, out?: Function, err?: Function, run?: Function, queue?: Function}} [io]
+ * @param {{cwd?: string, home?: string, out?: Function, err?: Function, run?: Function, queue?: Function}} [io]
  * @returns {number} the exit code
  */
-export function main(argv, { cwd = process.cwd(), out = (s) => console.log(s), err = (s) => console.error(s), run, queue } = {}) {
-  const args = { cwd, run, queue };
+export function main(argv, { cwd = process.cwd(), home = os.homedir(), out = (s) => console.log(s), err = (s) => console.error(s), run, queue } = {}) {
+  const args = { cwd, home, run, queue };
   try {
     const parsed = parseArgs(argv);
     if (parsed.error !== undefined) {
       err(USAGE);
+      return 2;
+    }
+    // B3: a mode that judges needs `--base`; without it the check could not be decided, which is not a usage error.
+    if ((parsed.mode === '--check' || parsed.mode === '--status') && parsed.opts['--base'] === undefined) {
+      out(`${CANNOT}:no-base`);
       return 2;
     }
     if (parsed.mode === '--status') return statusMode(args, parsed.opts, out);
@@ -168,7 +233,10 @@ export function main(argv, { cwd = process.cwd(), out = (s) => console.log(s), e
         out(once.fatal);
         return 2;
       }
-      for (const line of once.lines) out(line);
+      const waits = waitsOf(once.res);
+      for (const line of once.lines.slice(0, -1)) out(line);
+      for (const line of waits) out(line);
+      out(once.lines[once.lines.length - 1]);
       return once.res.exit;
     }
     return writeMode(args, parsed.opts, parsed.mode, parsed.target, out, err);

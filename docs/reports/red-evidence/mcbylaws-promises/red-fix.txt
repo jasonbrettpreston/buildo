@@ -1,0 +1,579 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g3
+
+ ❯ src/tests/mcbylaws-promises-counts.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-ids.logic.test.ts (22 tests | 1 failed) 6ms
+   × increments table > INC rows and increment attribution 2ms
+     → expected null to be '1' // Object.is equality
+ ❯ src/tests/mcbylaws-promises-hardening.logic.test.ts (4 tests | 1 failed) 214ms
+   × promise-record — K-2: re-record is atomic > keeps the old bytes and no temp when the new record cannot be serialised 3ms
+     → ENOENT: no such file or directory, open '/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-promises-hardening-VXopKy/mcbylaws/promises/green/A.json'
+ ❯ src/tests/mcbylaws-promises-runref.logic.test.ts (6 tests | 6 failed) 355ms
+   × runAtRef — the checked ref, not the working tree > runs the committed test green 71ms
+     → runAtRef is not a function
+   × runAtRef — the checked ref, not the working tree > an uncommitted failing test cannot turn the checked ref red 52ms
+     → runAtRef is not a function
+   × runAtRef — the checked ref, not the working tree > a rev that does not exist fails closed with a checkout reason 53ms
+     → runAtRef is not a function
+   × runAtRef — the checked ref, not the working tree > leaves no checkout directory behind, even after a failure 56ms
+     → withCheckout is not a function
+   × withCheckout — the tree of a rev in a temp dir > returns the fn value and removes the dir 62ms
+     → withCheckout is not a function
+   × withCheckout — the tree of a rev in a temp dir > a throwing fn is checkout-fn and the dir is gone 59ms
+     → withCheckout is not a function
+ ❯ src/tests/mcbylaws-promises-greens-hardening.logic.test.ts (9 tests | 6 failed) 960ms
+   × greenLines hardening (K-1, K-6) > empty inputs -> stale green once 127ms
+     → expected 'done' to be 'red' // Object.is equality
+   × greenLines hardening (K-1, K-6) > no inputs field -> stale green 114ms
+     → expected 'done' to be 'red' // Object.is equality
+   × greenLines hardening (K-1, K-6) > red edited after its binding -> record-rewritten 110ms
+     → expected 'done' to be 'red' // Object.is equality
+   × greenLines hardening (K-1, K-6) > red without a binding field -> record-rewritten 99ms
+     → expected 'done' to be 'red' // Object.is equality
+   × greenLines hardening (K-1, K-6) > empty inputs emits the stale-green line exactly once, with no duplicate 96ms
+     → expected +0 to be 1 // Object.is equality
+   × greenLines hardening (K-1, K-6) > a red edited after binding is red once even with another red problem 98ms
+     → expected +0 to be 1 // Object.is equality
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts (10 tests | 9 failed) 1967ms
+   × B3 the base is required > --check without --base cannot decide, exit 2 230ms
+     → expected +0 to be 2 // Object.is equality
+   × B3 the base is required > --status without --base cannot decide, exit 2 213ms
+     → expected +0 to be 2 // Object.is equality
+   × B4b the drift inputs come from the base ref > an unreadable base policy is cannot-decide:policy, exit 2 225ms
+     → expected 'FAIL:R:cannot-decide:scan-config\npro…' to contain 'FAIL:R:cannot-decide:policy'
+   × B4b the drift inputs come from the base ref > held_limit 0 at the base with one held patch is FAIL:W:held:1:0, and the checked rev cannot loosen it 244ms
+     → promises: 1 done, 0 red, 0 not yet: expected 'promises: 1 done, 0 red, 0 not yet' to contain 'FAIL:R:cannot-decide:held'
+   × B4b the drift inputs come from the base ref > held_limit 1 at the base with two held patches is FAIL:W:held:2:1, and the checked rev cannot lift the limit 235ms
+     → promises: 1 done, 0 red, 0 not yet: expected 'promises: 1 done, 0 red, 0 not yet' to contain 'FAIL:W:held:2:1'
+   × condition 4 the WAIT lines are printed > --check prints both WAIT lines and the exit is unchanged 178ms
+     → expected [] to deeply equal undefined
+   × condition 4 the WAIT lines are printed > --status appends the same lines after the table and still exits 0 181ms
+     → WAITS is not iterable
+   × B5 the audit pack carries the real counts > a skipped test shows skipped in the counts and exits 1 96ms
+     → expected +0 to be 1 // Object.is equality
+   × B5 the audit pack carries the real counts > a run that cannot run exits 2 with no pack 88ms
+     → expected +0 to be 2 // Object.is equality
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts (20 tests | 14 failed) 3565ms
+   × guard (B1) > returns the value with no lines, and a throw as one cannot-decide line 2ms
+     → guard is not a function
+   × a throwing step is never dropped (B1, K-3, K-5) > cwd is not a repository 113ms
+     → ["FAIL:Q:cannot-decide","FAIL:R:cannot-decide:base-ids"]: expected false to be true // Object.is equality
+   × a throwing step is never dropped (B1, K-3, K-5) > everything throws 115ms
+     → ["FAIL:R:cannot-decide:base-ids"]: expected false to be true // Object.is equality
+   × a throwing step is never dropped (B1, K-3, K-5) > an unreadable scan root is cannot-decide:unreadable:<path>, never an empty text 226ms
+     → expected [] to include 'FAIL:R:cannot-decide:unreadable:src/o…'
+   × no rows and no rows in scope (B2) > a queue with no promise row is cannot-decide:no-promises 172ms
+     → expected [ 'FAIL:R:id-vanished:R-ZZ' ] to include 'FAIL:R:cannot-decide:no-promises'
+   × no rows and no rows in scope (B2) > rows exist but none is in the derived scope 202ms
+     → expected [ 'FAIL:R:no-artifact:INC-1', …(2) ] to include 'FAIL:R:cannot-decide:no-promises-in-s…'
+   × base is required (B3) > base undefined is cannot-decide:no-base 164ms
+     → expected [] to deeply equal [ 'FAIL:R:cannot-decide:no-base' ]
+   × base is required (B3) > base null is cannot-decide:no-base 163ms
+     → expected [] to deeply equal [ 'FAIL:R:cannot-decide:no-base' ]
+   × base is required (B3) > base "" is cannot-decide:no-base 163ms
+     → expected [] to deeply equal [ 'FAIL:R:cannot-decide:no-base' ]
+   × base is required (B3) > base {} is cannot-decide:no-base 168ms
+     → expected [] to deeply equal [ 'FAIL:R:cannot-decide:no-base' ]
+   × drift must be supplied (B4b) > an absent drift block is cannot-decide:drift-not-supplied 165ms
+     → expected [] to include 'FAIL:R:cannot-decide:drift-not-suppli…'
+   × drift must be supplied (B4b) > a literalArgs function runs inside a checkout of the checked ref that is gone afterwards 163ms
+     → expected [] to have a length of 1 but got +0
+   ✓ the run is the checked ref (B4a) > an uncommitted failing edit cannot turn the checked ref red 495ms
+   × condition 4: the WAIT lines > both entries on a green result, outside lines and exit 166ms
+     → Target cannot be null or undefined.
+   × condition 4: the WAIT lines > both entries on an aborted result 150ms
+     → expected +0 to be 2 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-promises-counts.logic.test.ts [ src/tests/mcbylaws-promises-counts.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-counts.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-counts.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-counts.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/38]⎯
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 37 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > B3 the base is required > --check without --base cannot decide, exit 2
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > B3 the base is required > --status without --base cannot decide, exit 2
+AssertionError: expected +0 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:45:22
+     43|     const made = repo();
+     44|     const res = run([mode], { cwd: made.r.dir, home: made.home, run: m…
+     45|     expect(res.code).toBe(2);
+       |                      ^
+     46|     expect(res.text).toContain('FAIL:R:cannot-decide:no-base');
+     47|     expect(res.err).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > B4b the drift inputs come from the base ref > an unreadable base policy is cannot-decide:policy, exit 2
+AssertionError: expected 'FAIL:R:cannot-decide:scan-config\npro…' to contain 'FAIL:R:cannot-decide:policy'
+
+- Expected
++ Received
+
+- FAIL:R:cannot-decide:policy
++ FAIL:R:cannot-decide:scan-config
++ promises: 1 done, 0 red, 0 not yet
+
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:65:22
+     63|     const res = run(['--check', '--base', rev], { cwd: made.r.dir, hom…
+     64|     expect(res.code).toBe(2);
+     65|     expect(res.text).toContain('FAIL:R:cannot-decide:policy');
+       |                      ^
+     66|   });
+     67| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > B4b the drift inputs come from the base ref > held_limit 0 at the base with one held patch is FAIL:W:held:1:0, and the checked rev cannot loosen it
+AssertionError: promises: 1 done, 0 red, 0 not yet: expected 'promises: 1 done, 0 red, 0 not yet' to contain 'FAIL:R:cannot-decide:held'
+
+Expected: "FAIL:R:cannot-decide:held"
+Received: "promises: 1 done, 0 red, 0 not yet"
+
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:80:34
+     78|       const res = run(['--check', '--rev', rev, '--base', base], { cwd…
+     79|       // The CLI reads the drift policy at the BASE: a limit of 0 cann…
+     80|       expect(res.text, res.text).toContain('FAIL:R:cannot-decide:held'…
+       |                                  ^
+     81|       expect(res.text).not.toContain('FAIL:W:held:');
+     82|       expect(res.code).toBe(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > B4b the drift inputs come from the base ref > held_limit 1 at the base with two held patches is FAIL:W:held:2:1, and the checked rev cannot lift the limit
+AssertionError: promises: 1 done, 0 red, 0 not yet: expected 'promises: 1 done, 0 red, 0 not yet' to contain 'FAIL:W:held:2:1'
+
+Expected: "FAIL:W:held:2:1"
+Received: "promises: 1 done, 0 red, 0 not yet"
+
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:98:34
+     96|       const rev = made.commit('loosen');
+     97|       const res = run(['--check', '--rev', rev, '--base', base], { cwd…
+     98|       expect(res.text, res.text).toContain('FAIL:W:held:2:1');
+       |                                  ^
+     99|       expect(res.code).toBe(1);
+    100|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > condition 4 the WAIT lines are printed > --check prints both WAIT lines and the exit is unchanged
+AssertionError: expected [] to deeply equal undefined
+
+- Expected: 
+undefined
+
++ Received: 
+Array []
+
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:111:58
+    109|     const res = run(['--check', '--base', made.base], { cwd: made.r.di…
+    110|     expect(res.code).toBe(0);
+    111|     expect(res.out.filter((l) => l.startsWith('WAIT:'))).toEqual(WAITS…
+       |                                                          ^
+    112|     expect(res.out[res.out.length - 1]).toBe('promises: 1 done, 0 red,…
+    113|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > condition 4 the WAIT lines are printed > --status appends the same lines after the table and still exits 0
+TypeError: WAITS is not iterable
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:120:24
+    118|     expect(res.code).toBe(0);
+    119|     expect(res.text).toContain('| R-ZZ | done |');
+    120|     for (const line of WAITS) expect(res.text).toContain(line);
+       |                        ^
+    121|     expect(res.text.indexOf('WAIT:')).toBeGreaterThan(res.text.indexOf…
+    122|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > B5 the audit pack carries the real counts > a skipped test shows skipped in the counts and exits 1
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:133:22
+    131|     });
+    132|     const res = run(['--audit-pack'], { cwd: made.r.dir, home: made.ho…
+    133|     expect(res.code).toBe(1);
+       |                      ^
+    134|     const pack = JSON.parse(res.out[0]!);
+    135|     expect(pack.entries[0].counts).toBe('Tests  0 passed | 1 skipped (…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts > B5 the audit pack carries the real counts > a run that cannot run exits 2 with no pack
+AssertionError: expected +0 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts:143:22
+    141|     const made = repo();
+    142|     const res = run(['--audit-pack'], { cwd: made.r.dir, home: made.ho…
+    143|     expect(res.code).toBe(2);
+       |                      ^
+    144|     expect(res.text).toContain('FAIL:R:cannot-decide:run:boom');
+    145|     expect(res.text).not.toContain('promises-audit-pack-v1');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > guard (B1) > returns the value with no lines, and a throw as one cannot-decide line
+TypeError: guard is not a function
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:41:12
+     39| describe('guard (B1)', () => {
+     40|   it('returns the value with no lines, and a throw as one cannot-decid…
+     41|     expect(guard('x', () => 1)).toEqual({ value: 1, lines: [] });
+       |            ^
+     42|     expect(guard('x', () => undefined)).toEqual({ value: undefined, li…
+     43|     expect(guard('x', () => { throw new Error('boom'); })).toEqual({ v…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > a throwing step is never dropped (B1, K-3, K-5) > cwd is not a repository
+AssertionError: ["FAIL:Q:cannot-decide","FAIL:R:cannot-decide:base-ids"]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:66:120
+     64|       const made = repo();
+     65|       const res = check(made, c.opts(made));
+     66|       expect(res.lines.some((l: string) => l.startsWith(`FAIL:R:cannot…
+       |                                                                                                                        ^
+     67|       expect(res.exit).toBe(2);
+     68|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > a throwing step is never dropped (B1, K-3, K-5) > everything throws
+AssertionError: ["FAIL:R:cannot-decide:base-ids"]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:66:120
+     64|       const made = repo();
+     65|       const res = check(made, c.opts(made));
+     66|       expect(res.lines.some((l: string) => l.startsWith(`FAIL:R:cannot…
+       |                                                                                                                        ^
+     67|       expect(res.exit).toBe(2);
+     68|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > a throwing step is never dropped (B1, K-3, K-5) > an unreadable scan root is cannot-decide:unreadable:<path>, never an empty text
+AssertionError: expected [] to include 'FAIL:R:cannot-decide:unreadable:src/o…'
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:78:23
+     76|     const rev = made.r.git(['rev-parse', 'HEAD']);
+     77|     const res = check(made, { rev });
+     78|     expect(res.lines).toContain('FAIL:R:cannot-decide:unreadable:src/o…
+       |                       ^
+     79|     expect(res.exit).toBe(2);
+     80|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > no rows and no rows in scope (B2) > a queue with no promise row is cannot-decide:no-promises
+AssertionError: expected [ 'FAIL:R:id-vanished:R-ZZ' ] to include 'FAIL:R:cannot-decide:no-promises'
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:88:23
+     86|     made.r.write('.cursor/MCBYLAWS-QUEUE.md', '# Q\n- nothing here\n');
+     87|     const res = check(made, { rev: made.commit('empty queue') });
+     88|     expect(res.lines).toContain('FAIL:R:cannot-decide:no-promises');
+       |                       ^
+     89|     expect(res.exit).toBe(2);
+     90|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > no rows and no rows in scope (B2) > rows exist but none is in the derived scope
+AssertionError: expected [ 'FAIL:R:no-artifact:INC-1', …(2) ] to include 'FAIL:R:cannot-decide:no-promises-in-s…'
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:97:23
+     95|     const rev = made.commit('scope');
+     96|     const res = check(made, { rev, incArg: '1' });
+     97|     expect(res.lines).toContain('FAIL:R:cannot-decide:no-promises-in-s…
+       |                       ^
+     98|     expect(res.exit).toBe(2);
+     99|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > base is required (B3) > base undefined is cannot-decide:no-base
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > base is required (B3) > base null is cannot-decide:no-base
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > base is required (B3) > base "" is cannot-decide:no-base
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > base is required (B3) > base {} is cannot-decide:no-base
+AssertionError: expected [] to deeply equal [ 'FAIL:R:cannot-decide:no-base' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:R:cannot-decide:no-base",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:108:25
+    106|       const made = repo();
+    107|       const res = check(made, { base });
+    108|       expect(res.lines).toEqual(['FAIL:R:cannot-decide:no-base']);
+       |                         ^
+    109|       expect(res.exit).toBe(2);
+    110|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > drift must be supplied (B4b) > an absent drift block is cannot-decide:drift-not-supplied
+AssertionError: expected [] to include 'FAIL:R:cannot-decide:drift-not-suppli…'
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:127:23
+    125|     const made = repo();
+    126|     const res = check(made, { drift: undefined });
+    127|     expect(res.lines).toContain('FAIL:R:cannot-decide:drift-not-suppli…
+       |                       ^
+    128|     expect(res.exit).toBe(2);
+    129|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > drift must be supplied (B4b) > a literalArgs function runs inside a checkout of the checked ref that is gone afterwards
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:153:18
+    151|     };
+    152|     const res = check(made, { drift: { policy: POLICY, literalArgs } }…
+    153|     expect(seen).toHaveLength(1);
+       |                  ^
+    154|     expect(seen[0]!.text).toBe('export const z = 1;\n');
+    155|     expect(seen[0]!.exists).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > condition 4: the WAIT lines > both entries on a green result, outside lines and exit
+AssertionError: Target cannot be null or undefined.
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:181:23
+    179|     const res = check(repo());
+    180|     expect(res.waits).toEqual(WAITS);
+    181|     expect(res.waits).toHaveLength(2);
+       |                       ^
+    182|     expect(res.lines).toEqual([]);
+    183|     expect(res.exit).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-failclosed.logic.test.ts > condition 4: the WAIT lines > both entries on an aborted result
+AssertionError: expected +0 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/tests/mcbylaws-promises-failclosed.logic.test.ts:188:22
+    186|   it('both entries on an aborted result', () => {
+    187|     const res = check(repo(), { base: null });
+    188|     expect(res.exit).toBe(2);
+       |                      ^
+    189|     expect(res.waits).toEqual(WAITS);
+    190|     expect(res.lines.some(isCannot)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-greens-hardening.logic.test.ts > greenLines hardening (K-1, K-6) > empty inputs -> stale green once
+ FAIL  src/tests/mcbylaws-promises-greens-hardening.logic.test.ts > greenLines hardening (K-1, K-6) > no inputs field -> stale green
+ FAIL  src/tests/mcbylaws-promises-greens-hardening.logic.test.ts > greenLines hardening (K-1, K-6) > red edited after its binding -> record-rewritten
+ FAIL  src/tests/mcbylaws-promises-greens-hardening.logic.test.ts > greenLines hardening (K-1, K-6) > red without a binding field -> record-rewritten
+AssertionError: expected 'done' to be 'red' // Object.is equality
+
+Expected: "red"
+Received: "done"
+
+ ❯ src/tests/mcbylaws-promises-greens-hardening.logic.test.ts:81:31
+     79|   it.each(cases)('%s', (_name, over, state, lines) => {
+     80|     const res = build(over).call();
+     81|     expect(res.states['R-1']).toBe(state);
+       |                               ^
+     82|     expect(res.lines).toStrictEqual(lines);
+     83|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-greens-hardening.logic.test.ts > greenLines hardening (K-1, K-6) > empty inputs emits the stale-green line exactly once, with no duplicate
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/mcbylaws-promises-greens-hardening.logic.test.ts:94:56
+     92|   it('empty inputs emits the stale-green line exactly once, with no du…
+     93|     const res = build({ greenPatch: (g) => ({ ...g, inputs: {} }) }).c…
+     94|     expect(count(res.lines, 'FAIL:R:stale-green:R-1')).toBe(1);
+       |                                                        ^
+     95|     expect(res.lines.length).toBe(1);
+     96|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-greens-hardening.logic.test.ts > greenLines hardening (K-1, K-6) > a red edited after binding is red once even with another red problem
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/mcbylaws-promises-greens-hardening.logic.test.ts:109:66
+    107|       redAfterBind: (r) => ({ ...r, artifact_blob: BLOB }),
+    108|     }).call();
+    109|     expect(count(res.lines, `FAIL:R:record-rewritten:${RED_P}`)).toBe(…
+       |                                                                  ^
+    110|     expect(res.states['R-1']).toBe('red');
+    111|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-hardening.logic.test.ts > promise-record — K-2: re-record is atomic > keeps the old bytes and no temp when the new record cannot be serialised
+Error: ENOENT: no such file or directory, open '/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-promises-hardening-VXopKy/mcbylaws/promises/green/A.json'
+ ❯ readGreen src/tests/mcbylaws-promises-hardening.logic.test.ts:23:52
+     21| };
+     22| const entries = (d: string): string[] => (fs.existsSync(d) ? fs.readdi…
+     23| const readGreen = (root: string, id: string) => fs.readFileSync(path.j…
+       |                                                    ^
+     24| 
+     25| describe('promise-record — K-2: re-record is atomic', () => {
+ ❯ src/tests/mcbylaws-promises-hardening.logic.test.ts:43:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-ids.logic.test.ts > increments table > INC rows and increment attribution
+AssertionError: expected null to be '1' // Object.is equality
+
+- Expected: 
+"1"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-promises-ids.logic.test.ts:69:74
+     67|     expect(out.find((r: { id: string }) => r.id === 'R-KQ')!.increment…
+     68|     expect(out.find((r: { id: string }) => r.id === 'R-T')!.increment)…
+     69|     expect(out.find((r: { id: string }) => r.id === 'INC-1')!.incremen…
+       |                                                                          ^
+     70|     expect(out.find((r: { id: string }) => r.id === 'INC-6b')!.increme…
+     71|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-runref.logic.test.ts > runAtRef — the checked ref, not the working tree > runs the committed test green
+TypeError: runAtRef is not a function
+ ❯ run src/tests/mcbylaws-promises-runref.logic.test.ts:34:3
+     32| 
+     33| const run = (r: Repo, sha: string) =>
+     34|   runAtRef({ cwd: r.dir, rev: sha, files: ['a.test.mjs'], bin: VITEST,…
+       |   ^
+     35| 
+     36| describe('runAtRef — the checked ref, not the working tree', () => {
+ ❯ src/tests/mcbylaws-promises-runref.logic.test.ts:41:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-runref.logic.test.ts > runAtRef — the checked ref, not the working tree > an uncommitted failing test cannot turn the checked ref red
+TypeError: runAtRef is not a function
+ ❯ run src/tests/mcbylaws-promises-runref.logic.test.ts:34:3
+     32| 
+     33| const run = (r: Repo, sha: string) =>
+     34|   runAtRef({ cwd: r.dir, rev: sha, files: ['a.test.mjs'], bin: VITEST,…
+       |   ^
+     35| 
+     36| describe('runAtRef — the checked ref, not the working tree', () => {
+ ❯ src/tests/mcbylaws-promises-runref.logic.test.ts:50:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-runref.logic.test.ts > runAtRef — the checked ref, not the working tree > a rev that does not exist fails closed with a checkout reason
+TypeError: runAtRef is not a function
+ ❯ run src/tests/mcbylaws-promises-runref.logic.test.ts:34:3
+     32| 
+     33| const run = (r: Repo, sha: string) =>
+     34|   runAtRef({ cwd: r.dir, rev: sha, files: ['a.test.mjs'], bin: VITEST,…
+       |   ^
+     35| 
+     36| describe('runAtRef — the checked ref, not the working tree', () => {
+ ❯ src/tests/mcbylaws-promises-runref.logic.test.ts:61:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-runref.logic.test.ts > runAtRef — the checked ref, not the working tree > leaves no checkout directory behind, even after a failure
+TypeError: withCheckout is not a function
+ ❯ src/tests/mcbylaws-promises-runref.logic.test.ts:71:21
+     69|     let seen = '';
+     70|     let existedInside = false;
+     71|     const failRes = withCheckout(r.dir, sha, (dir: string) => {
+       |                     ^
+     72|       seen = dir;
+     73|       existedInside = fs.existsSync(dir);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-runref.logic.test.ts > withCheckout — the tree of a rev in a temp dir > returns the fn value and removes the dir
+TypeError: withCheckout is not a function
+ ❯ src/tests/mcbylaws-promises-runref.logic.test.ts:98:17
+     96|     repo = r;
+     97|     let seen = '';
+     98|     const res = withCheckout(r.dir, sha, (dir: string) => {
+       |                 ^
+     99|       seen = dir;
+    100|       return fs.readFileSync(path.join(dir, 'a.test.mjs'), 'utf8');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/38]⎯
+
+ FAIL  src/tests/mcbylaws-promises-runref.logic.test.ts > withCheckout — the tree of a rev in a temp dir > a throwing fn is checkout-fn and the dir is gone
+TypeError: withCheckout is not a function
+ ❯ src/tests/mcbylaws-promises-runref.logic.test.ts:111:17
+    109|     repo = r;
+    110|     let seen = '';
+    111|     const res = withCheckout(r.dir, sha, (dir: string) => { seen = dir…
+       |                 ^
+    112|     expect(res).toEqual({ ok: false, reason: 'checkout-fn' });
+    113|     expect(fs.existsSync(seen)).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/38]⎯
+
+ Test Files  7 failed (7)
+      Tests  37 failed | 34 passed (71)
+   Start at  17:30:53
+   Duration  3.83s (transform 126ms, setup 83ms, collect 228ms, tests 7.07s, environment 1ms, prepare 209ms)
+

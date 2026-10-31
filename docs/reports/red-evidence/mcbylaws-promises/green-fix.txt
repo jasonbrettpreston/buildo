@@ -1,0 +1,62 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g3
+
+ ✓ src/tests/mcbylaws-promises-drift-mb67.logic.test.ts (16 tests) 369ms
+ ✓ src/tests/mcbylaws-promises-increment.logic.test.ts (15 tests) 425ms
+ ✓ src/tests/mcbylaws-promises-status.logic.test.ts (15 tests) 3ms
+ ✓ src/tests/mcbylaws-promises-drift.logic.test.ts (10 tests) 712ms
+ ✓ src/tests/mcbylaws-promises-run.logic.test.ts (17 tests) 575ms
+ ✓ src/tests/mcbylaws-promises-record.logic.test.ts (8 tests) 1149ms
+   ✓ promise-record — add-only (R-LG, F-REREWRITE) > deleting the green, editing the red, or editing a fresh green is record-rewritten 504ms
+   ✓ promise-record — add-only (R-LG, F-REREWRITE) > a stale green may be re-recorded keeping id and red_of; untouched and added pass 491ms
+ ✓ src/tests/mcbylaws-promises-counts.logic.test.ts (15 tests) 3ms
+ ✓ src/tests/mcbylaws-promises-ids.logic.test.ts (22 tests) 5ms
+ ✓ src/tests/mcbylaws-promises-sources.logic.test.ts (7 tests) 948ms
+ ✓ src/tests/mcbylaws-promises-hardening.logic.test.ts (4 tests) 314ms
+   ✓ promise-record — B3: a forged green is still record-rewritten > a re-bound green with the same id and red_of and fresh inputs is record-rewritten 305ms
+ ✓ src/tests/mcbylaws-promises-register.logic.test.ts (21 tests) 1856ms
+ ✓ src/tests/mcbylaws-promises-closure.logic.test.ts (35 tests) 1013ms
+ ✓ src/tests/mcbylaws-promises-greens-hardening.logic.test.ts (9 tests) 1621ms
+ ✓ src/tests/mcbylaws-promises-greens.logic.test.ts (18 tests) 3184ms
+ ✓ src/tests/mcbylaws-promises-write.logic.test.ts (17 tests) 3213ms
+   ✓ writeGreen > after a committed red writes a bound green with red_of and the closure inputs 315ms
+   ✓ writeGreen refusals and re-record > a second green on an unchanged tree throws fresh 374ms
+   ✓ writeGreen refusals and re-record > re-records a stale green, keeping red_of and the new input blob 495ms
+   ✓ writeGreen refusals and re-record > keeps the old green red_of even when the red artifact_blob would differ now 325ms
+ ✓ src/tests/mcbylaws-promises-runref.logic.test.ts (6 tests) 1521ms
+   ✓ runAtRef — the checked ref, not the working tree > runs the committed test green 452ms
+   ✓ runAtRef — the checked ref, not the working tree > an uncommitted failing test cannot turn the checked ref red 777ms
+ ✓ src/tests/mcbylaws-promises-cli-failclosed.logic.test.ts (10 tests) 3396ms
+   ✓ B3 the base is required > --check with --base made.base is green 554ms
+   ✓ B4b the drift inputs come from the base ref > held_limit 0 at the base with one held patch is FAIL:W:held:1:0, and the checked rev cannot loosen it 537ms
+   ✓ B4b the drift inputs come from the base ref > held_limit 1 at the base with two held patches is FAIL:W:held:2:1, and the checked rev cannot lift the limit 562ms
+   ✓ condition 4 the WAIT lines are printed > --check prints both WAIT lines and the exit is unchanged 417ms
+   ✓ condition 4 the WAIT lines are printed > --status appends the same lines after the table and still exits 0 421ms
+ ✓ src/tests/mcbylaws-promises-failclosed.logic.test.ts (20 tests) 4961ms
+   ✓ a throwing step is never dropped (B1, K-3, K-5) > the runner throws 399ms
+   ✓ a throwing step is never dropped (B1, K-3, K-5) > the artifact map is unreadable 326ms
+   ✓ a throwing step is never dropped (B1, K-3, K-5) > an unreadable scan root is cannot-decide:unreadable:<path>, never an empty text 407ms
+   ✓ no rows and no rows in scope (B2) > rows exist but none is in the derived scope 390ms
+   ✓ the run is the checked ref (B4a) > an uncommitted failing edit cannot turn the checked ref red 593ms
+ ✓ src/tests/mcbylaws-promises.logic.test.ts (21 tests) 4970ms
+   ✓ mcbylaws-promises --check > F-P10 a fully green repo exits 0 with the summary last 447ms
+   ✓ mcbylaws-promises --check > F-P1 proper, no red and no green: not green, exit 1 505ms
+   ✓ mcbylaws-promises --check > a failing run exits 1 with the not-green line 425ms
+   ✓ mcbylaws-promises --check > an unknown increment cannot be decided 390ms
+   ✓ mcbylaws-promises --status (F-IDEM) > prints identical bytes twice, with the done row and the real HEAD 516ms
+   ✓ mcbylaws-promises --audit-pack and --audit > --check with a matching audit text and pack has no audit line; a missing block is uncovered 370ms
+ ✓ src/tests/mcbylaws-promises-check.logic.test.ts (26 tests) 5311ms
+   ✓ promise-check green path > reports a done promise with no lines 384ms
+   ✓ promise-check reds > F-P1 artifacts.json without the entry 460ms
+   ✓ promise-check reds > F-P2 entry pointing at a missing file 405ms
+   ✓ promise-check reds > F-D1 forbidden name in a scan root 417ms
+   ✓ promise-check reds > F-D1 a ref that loosens the scan config is still judged by the base config 414ms
+   ✓ promise-check reds > F-P8 committed edit after the records 409ms
+   ✓ promise-check reds > F-P10 no red and no green 329ms
+
+ Test Files  20 passed (20)
+      Tests  312 passed (312)
+   Start at  17:30:57
+   Duration  5.58s (transform 274ms, setup 227ms, collect 628ms, tests 35.55s, environment 2ms, prepare 617ms)
+

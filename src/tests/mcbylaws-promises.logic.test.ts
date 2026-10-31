@@ -2,6 +2,7 @@
 //            R-KK (the audit pack is a witness), F-IDEM (byte-identical status), F-ARM (the letters are free per task).
 // The CLI against real temp repos: F-P10, F-P12, F-P1, F-IDEM, usage errors, the writers and the audit pack.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -13,8 +14,12 @@ const repos: { cleanup(): void }[] = [];
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
 
+// ONE empty home for the whole file: the CLI reads the user's worktrees from it, so it must never be the real home.
+const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'mcb-promises-home-'));
+
 afterAll(() => {
   for (const r of repos) r.cleanup();
+  fs.rmSync(HOME, { recursive: true, force: true });
 });
 
 /** A fixture repo, registered for cleanup. */
@@ -24,13 +29,13 @@ function repo(opts: Record<string, boolean> = {}): Made {
   return made;
 }
 
-type Io = { cwd: string; run?: Made['run'] };
+type Io = { cwd: string; home?: string; run?: Made['run'] | (() => object) };
 
-/** Runs main with captured out / err. */
+/** Runs main with captured out / err, always against the shared empty home. */
 function run(argv: string[], io: Io) {
   const out: string[] = [];
   const err: string[] = [];
-  const code = main(argv, { ...io, out: (s: string) => out.push(s), err: (s: string) => err.push(s) });
+  const code = main(argv, { home: HOME, ...io, out: (s: string) => out.push(s), err: (s: string) => err.push(s) } as never);
   return { code, out, err, text: out.join('\n'), errText: err.join('\n') };
 }
 
@@ -42,7 +47,7 @@ const failedRun = () => ({
 describe('mcbylaws-promises --check', () => {
   it('F-P10 a fully green repo exits 0 with the summary last', () => {
     const made = repo();
-    const res = run(['--check'], { cwd: made.r.dir, run: made.run });
+    const res = run(['--check', '--base', made.base], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(0);
     expect(res.err).toEqual([]);
     expect(res.out[res.out.length - 1]).toBe('promises: 1 done, 0 red, 0 not yet');
@@ -51,7 +56,7 @@ describe('mcbylaws-promises --check', () => {
 
   it('F-P1 no queue root: arm Q and arm R both report, exit 2', () => {
     const made = repo({ queueTracked: false });
-    const res = run(['--check'], { cwd: made.r.dir, run: made.run });
+    const res = run(['--check', '--base', made.base], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(2);
     expect(res.text).toContain('FAIL:Q:queue-untracked');
     expect(res.out.some((l) => l.startsWith('FAIL:R:cannot-decide'))).toBe(true);
@@ -59,7 +64,7 @@ describe('mcbylaws-promises --check', () => {
 
   it('F-P1 proper, no red and no green: not green, exit 1', () => {
     const made = repo({ green: false, red: false });
-    const res = run(['--check'], { cwd: made.r.dir, run: made.run });
+    const res = run(['--check', '--base', made.base], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(1);
     expect(res.text).toContain('FAIL:R:not-green:R-ZZ');
   });
@@ -68,14 +73,14 @@ describe('mcbylaws-promises --check', () => {
     ['F-P12 queue untracked', 'FAIL:Q:queue-untracked'],
   ])('%s is a red queue that cannot be decided, exit 2', (_name, line) => {
     const made = repo({ queueTracked: false });
-    const res = run(['--check'], { cwd: made.r.dir, run: made.run });
+    const res = run(['--check', '--base', made.base], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(2);
     expect(res.text).toContain(line);
   });
 
   it('a failing run exits 1 with the not-green line', () => {
     const made = repo();
-    const res = run(['--check'], { cwd: made.r.dir, run: failedRun });
+    const res = run(['--check', '--base', made.base], { cwd: made.r.dir, run: failedRun });
     expect(res.code).toBe(1);
     expect(res.text).toContain('FAIL:R:not-green:R-ZZ');
     expect(res.out[res.out.length - 1]).toMatch(/^promises: /);
@@ -83,7 +88,7 @@ describe('mcbylaws-promises --check', () => {
 
   it('an unknown increment cannot be decided', () => {
     const made = repo();
-    const res = run(['--check', '--increment', '0'], { cwd: made.r.dir, run: made.run });
+    const res = run(['--check', '--base', made.base, '--increment', '0'], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(2);
     expect(res.text).toContain('FAIL:R:cannot-decide:increment-unknown:0');
   });
@@ -107,27 +112,29 @@ describe('mcbylaws-promises usage', () => {
 describe('mcbylaws-promises --status (F-IDEM)', () => {
   it('prints identical bytes twice, with the done row and the real HEAD', () => {
     const made = repo();
-    const a = run(['--status'], { cwd: made.r.dir, run: made.run });
-    const b = run(['--status'], { cwd: made.r.dir, run: made.run });
+    const a = run(['--status', '--base', made.base], { cwd: made.r.dir, run: made.run });
+    const b = run(['--status', '--base', made.base], { cwd: made.r.dir, run: made.run });
     const head = made.r.git(['rev-parse', 'HEAD']);
     expect(a.code).toBe(0);
     expect(a.out).toEqual(b.out);
     expect(a.text).toContain('| R-ZZ | done |');
     expect(a.text).toContain(`commit: ${head}`);
     expect(a.text).toContain('register: ');
-    expect(a.text).not.toMatch(/\d{4}-\d{2}-\d{2}/);
+    const waitLines = a.out.filter((l) => l.startsWith('WAIT:'));
+    expect(waitLines).toHaveLength(2);
+    expect(a.out.filter((l) => !l.startsWith('WAIT:')).join('\n')).not.toMatch(/\d{4}-\d{2}-\d{2}/);
   });
 
   it('reports a red row without judging it', () => {
     const made = repo({ green: false, red: false });
-    const res = run(['--status'], { cwd: made.r.dir, run: made.run });
+    const res = run(['--status', '--base', made.base], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(0);
     expect(res.text).toContain('| R-ZZ | red | FAIL:R:not-green:R-ZZ |');
   });
 
   it('cannot decide exits 2', () => {
     const made = repo({ scanConfig: false });
-    const res = run(['--status'], { cwd: made.r.dir, run: made.run });
+    const res = run(['--status', '--base', made.base], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(2);
     // --status prints the table only, never the FAIL lines.
     expect(res.text).toContain('| id |');
@@ -169,7 +176,7 @@ describe('mcbylaws-promises --audit-pack and --audit', () => {
 
   it('prints a pack with one entry per declared artifact', () => {
     const made = repo();
-    const res = run(['--audit-pack'], { cwd: made.r.dir });
+    const res = run(['--audit-pack'], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(0);
     const pack = JSON.parse(res.text);
     expect(pack.schema).toBe('promises-audit-pack-v1');
@@ -182,7 +189,7 @@ describe('mcbylaws-promises --audit-pack and --audit', () => {
   it('writes the pack to --out', () => {
     const made = repo();
     const out = path.join(tmpDir, 'pack.json');
-    const res = run(['--audit-pack', '--out', out], { cwd: made.r.dir });
+    const res = run(['--audit-pack', '--out', out], { cwd: made.r.dir, run: made.run });
     expect(res.code).toBe(0);
     expect(res.out).toEqual([]);
     expect(JSON.parse(fs.readFileSync(out, 'utf8')).entries).toHaveLength(1);
@@ -190,20 +197,20 @@ describe('mcbylaws-promises --audit-pack and --audit', () => {
 
   it('--check with a matching audit text and pack has no audit line; a missing block is uncovered', () => {
     const made = repo();
-    const pack = JSON.parse(run(['--audit-pack'], { cwd: made.r.dir }).text);
+    const pack = JSON.parse(run(['--audit-pack'], { cwd: made.r.dir, run: made.run }).text);
     const good = path.join(tmpDir, 'pack-good.json');
     const goodText = path.join(tmpDir, 'audit-good.md');
     fs.writeFileSync(good, JSON.stringify(pack));
     fs.writeFileSync(goodText, '## R-ZZ\nnpx vitest run src/tests/z.test.ts --run\nTests  1 passed (1)\n');
-    const ok = run(['--check', '--audit', goodText, '--pack', good], { cwd: made.r.dir, run: made.run });
+    const ok = run(['--check', '--base', made.base, '--audit', goodText, '--pack', good], { cwd: made.r.dir, run: made.run });
     expect(ok.code).toBe(0);
     expect(ok.text).not.toContain('audit');
     const badText = path.join(tmpDir, 'audit-bad.md');
     fs.writeFileSync(badText, '## OTHER\nnothing here\n');
-    const bad = run(['--check', '--audit', badText, '--pack', good], { cwd: made.r.dir, run: made.run });
+    const bad = run(['--check', '--base', made.base, '--audit', badText, '--pack', good], { cwd: made.r.dir, run: made.run });
     expect(bad.code).toBe(1);
     expect(bad.text).toContain('FAIL:R:audit-uncovered:R-ZZ');
-    const missing = run(['--check', '--audit', path.join(tmpDir, 'nope.md'), '--pack', good], { cwd: made.r.dir, run: made.run });
+    const missing = run(['--check', '--base', made.base, '--audit', path.join(tmpDir, 'nope.md'), '--pack', good], { cwd: made.r.dir, run: made.run });
     expect(missing.code).toBe(2);
     expect(missing.text).toContain('FAIL:R:cannot-decide:audit-file');
   });

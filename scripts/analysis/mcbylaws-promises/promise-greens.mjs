@@ -1,5 +1,6 @@
-// SPEC LINK: MB-73 plan sections 3 and 4; K4a (red first), K6 / FV-2 (a green bound to blobs, stale once they move),
-//            FV2-1 (one identity per promise), R-LG (a record is never rewritten), R-KQ / R-KU (a row needs a green).
+// SPEC LINK: MB-73 plan sections 3 and 4; K4a (red first), K-1 (a green must bind its artifact as an input),
+//            K6 / FV-2 (a green bound to blobs, stale once they move) and K-6 (the red's binding is judged too),
+//            R-LG (a record is never rewritten), R-KQ / R-KU (a row needs a green).
 // Every judge returns string[] of `FAIL:R:<code>[:detail]` lines, empty = pass; a failure to decide is `FAIL:R:cannot-decide`.
 import { readAt } from '../mcbylaws/git-util.mjs';
 import { bindRecord } from '../mcbylaws-loop/loop-record.mjs';
@@ -8,6 +9,7 @@ import { identityHash } from './promise-register.mjs';
 import { runLines } from './promise-run.mjs';
 
 const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
 /**
  * Reads one record at `rev`: `{rec, line}`; absent -> both null; unparseable or non-object -> cannot-decide.
@@ -31,17 +33,19 @@ export function readRecord(cwd, rev, kind, id) {
   return { rec, line: null };
 }
 
+/** K6 / R-LG: the record carries a binding that its own content no longer produces (a missing binding counts). */
+const rewritten = (rec) => bindRecord(rec).binding.sha256 !== (rec.binding && rec.binding.sha256);
+
 /**
- * The problems of one row's green, in order: binding, red-first, staleness, the run.
+ * The problems of one row's green, in order: the green's binding, the red's binding, red-first, staleness, the run.
  * @param {{cwd: string, rev: string, row: object, entry: object, green: object, red: object|null, match: object}} o
  * @returns {string[]}
  */
 function greenProblems({ cwd, rev, row, entry, green, red, match }) {
   const id = row.id;
   const out = [];
-  if (bindRecord(green).binding.sha256 !== (green.binding && green.binding.sha256)) {
-    out.push(`FAIL:R:record-rewritten:${recordRel('green', id)}`);
-  }
+  if (rewritten(green)) out.push(`FAIL:R:record-rewritten:${recordRel('green', id)}`);
+  if (red && rewritten(red)) out.push(`FAIL:R:record-rewritten:${recordRel('red', id)}`);
   if (
     !red ||
     green.red_of !== red.artifact_blob ||
@@ -53,8 +57,10 @@ function greenProblems({ cwd, rev, row, entry, green, red, match }) {
   const inputs = isObject(green.inputs) ? green.inputs : {};
   const treeBlobs = blobsFor(cwd, rev, [entry.artifact, ...Object.keys(inputs)]);
   const stale = staleLines(green, treeBlobs);
+  // K-1: a green that does not bind its artifact as an input certifies nothing about the code.
+  const unbound = !own(inputs, entry.artifact);
   const moved = green.artifact_blob !== treeBlobs[entry.artifact] || green.identity_sha !== identityHash(row, entry);
-  if (stale.length > 0 || moved) out.push(`FAIL:R:stale-green:${id}`);
+  if (stale.length > 0 || unbound || moved) out.push(`FAIL:R:stale-green:${id}`);
   for (const line of runLines({ [id]: match })) out.push(line);
   return out;
 }
@@ -74,7 +80,7 @@ export function greenLines({ cwd, rev, rows, artifacts, matches }) {
   };
   for (const row of sorted) {
     const id = row.id;
-    const has = Object.prototype.hasOwnProperty.call(map, id);
+    const has = own(map, id);
     const entry = has ? map[id] : null;
     if (!has || !isObject(entry)) {
       states[id] = 'red';

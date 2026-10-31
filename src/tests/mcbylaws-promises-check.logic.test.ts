@@ -20,9 +20,17 @@ function repo(opts: Record<string, boolean> = {}) {
   return made;
 }
 
-/** runCheck against one fixture commit (defaults to the records commit). */
+/** Quiet drift facts: no held patches, no worktrees, no literal scan (its own tests cover those). */
+const DRIFT = {
+  policy: {
+    pending_globs: [], layer23: [], protected: [], literal_scope: [], literal_exempt: [],
+    held_dirs: [], held_limit: 12, worktrees: [],
+  },
+};
+
+/** runCheck against one fixture commit (defaults to the records commit, base = the first commit). */
 function check(made: ReturnType<typeof repo>, extra: Record<string, unknown> = {}) {
-  return runCheck({ cwd: made.r.dir, rev: made.rev, run: made.run, ...extra });
+  return runCheck({ cwd: made.r.dir, rev: made.rev, base: made.base, run: made.run, drift: DRIFT, ...extra });
 }
 
 describe('promise-check fixture', () => {
@@ -75,6 +83,16 @@ describe('promise-check reds', () => {
     expect(res.lines).toContain('FAIL:Q:queue-untracked');
     expect(res.lines.some((l: string) => l.startsWith('FAIL:R:cannot-decide'))).toBe(true);
     expect(res.exit).toBe(2);
+  });
+
+  it('F-D1 a ref that loosens the scan config is still judged by the base config', () => {
+    const made = repo();
+    made.r.write('src/old.mjs', 'export const legacy = "zz-forbidden-name";\n');
+    made.r.write('mcbylaws/promises/scan-roots.json', '{"scan_roots":["src/"],"forbidden":["zz-other-name"],"layer_paths":[],"allow_imports":[]}\n');
+    const res = check(made, { rev: made.commit('loosen') });
+    expect(res.lines).toContain('FAIL:W:old-engine:src/old.mjs');
+    expect(res.lines).not.toContain('FAIL:R:cannot-decide:scan-config');
+    expect(res.exit).toBe(1);
   });
 
   it('F-P8 committed edit after the records', () => {
@@ -169,6 +187,13 @@ describe('promise-check base and the run', () => {
     const res = check(made, { rev: later, base });
     expect(res.lines).toContain('FAIL:R:id-vanished:R-GONE');
     expect(res.exit).toBe(1);
+  });
+
+  it('no base cannot be decided', () => {
+    const made = repo();
+    const res = check(made, { base: null });
+    expect(res.lines).toEqual(['FAIL:R:cannot-decide:no-base']);
+    expect(res.exit).toBe(2);
   });
 
   it('calls the runner exactly once with the artifact paths', () => {
