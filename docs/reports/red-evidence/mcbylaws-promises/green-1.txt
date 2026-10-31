@@ -1,0 +1,19 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g3
+
+ ✓ src/tests/mcbylaws-promises-ids.logic.test.ts (22 tests) 4ms
+ ✓ src/tests/mcbylaws-promises-status.logic.test.ts (15 tests) 4ms
+ ✓ src/tests/mcbylaws-promises-increment.logic.test.ts (15 tests) 371ms
+ ✓ src/tests/mcbylaws-promises-run.logic.test.ts (17 tests) 490ms
+ ✓ src/tests/mcbylaws-promises-sources.logic.test.ts (7 tests) 656ms
+ ✓ src/tests/mcbylaws-promises-closure.logic.test.ts (35 tests) 754ms
+ ✓ src/tests/mcbylaws-promises-record.logic.test.ts (8 tests) 787ms
+   ✓ promise-record — add-only (R-LG, F-REREWRITE) > deleting the green, editing the red, or editing a fresh green is record-rewritten 411ms
+ ✓ src/tests/mcbylaws-promises-register.logic.test.ts (21 tests) 1134ms
+
+ Test Files  8 passed (8)
+      Tests  140 passed (140)
+   Start at  17:05:26
+   Duration  1.37s (transform 119ms, setup 96ms, collect 188ms, tests 4.20s, environment 1ms, prepare 239ms)
+

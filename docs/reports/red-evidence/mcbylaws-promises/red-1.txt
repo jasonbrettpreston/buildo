@@ -1,0 +1,68 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g3
+
+ ❯ src/tests/mcbylaws-promises-record.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-status.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-ids.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-run.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-increment.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-sources.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-register.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-promises-closure.logic.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-promises-closure.logic.test.ts [ src/tests/mcbylaws-promises-closure.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-closure.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-closure.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-closure.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/tests/mcbylaws-promises-ids.logic.test.ts [ src/tests/mcbylaws-promises-ids.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-ids.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-ids.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-ids.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/tests/mcbylaws-promises-increment.logic.test.ts [ src/tests/mcbylaws-promises-increment.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-increment.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-increment.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-increment.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/tests/mcbylaws-promises-record.logic.test.ts [ src/tests/mcbylaws-promises-record.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-record.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-record.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-record.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/tests/mcbylaws-promises-register.logic.test.ts [ src/tests/mcbylaws-promises-register.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-register.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-register.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-register.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/tests/mcbylaws-promises-run.logic.test.ts [ src/tests/mcbylaws-promises-run.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-run.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-run.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-run.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/tests/mcbylaws-promises-sources.logic.test.ts [ src/tests/mcbylaws-promises-sources.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-sources.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-sources.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-sources.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/tests/mcbylaws-promises-status.logic.test.ts [ src/tests/mcbylaws-promises-status.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws-promises/promise-status.mjs (resolved id: ../../scripts/analysis/mcbylaws-promises/promise-status.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g3/src/tests/mcbylaws-promises-status.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+ Test Files  8 failed (8)
+      Tests  no tests
+   Start at  17:05:25
+   Duration  224ms (transform 98ms, setup 89ms, collect 0ms, tests 0ms, environment 1ms, prepare 236ms)
+
