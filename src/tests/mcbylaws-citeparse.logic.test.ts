@@ -78,6 +78,18 @@ describe('parseRegisterRows + isRuled', () => {
     ['| **M-7** | body | why | gate | SUPERSEDED by M-9 |', 'M-7', 'RETIRED'],
     ['| **M-8** | body | why | gate | OWED |', 'M-8', 'OWED'],
     ['| not a row M-9 | x |', 'M-9', '<absent>'],
+    // O67-09: an OWED marker in any decorated form reads OWED and can never be cited.
+    ['| **LC-30** | b | w | g | **OWED:** a future ruling, once data exists |', 'LC-30', 'OWED'],
+    ['| **M-10** | b | w | g | **OWED** |', 'M-10', 'OWED'],
+    ['| **M-11** | b | w | g | ~~OWED~~ |', 'M-11', 'OWED'],
+    ['| **M-12** | b | w | g | `OWED` |', 'M-12', 'OWED'],
+    ['| **M-13** | b | w | g | OWED |', 'M-13', 'OWED'],
+    ['| **M-14** | b | w | g |   OWED pending |', 'M-14', 'OWED'],
+    ['| **M-15** | b | w | g | RATIFIED 2026-10-18 |', 'M-15', 'RULED'],
+    ['| **M-16** | b | w | g | RULED (as-built) |', 'M-16', 'RULED'],
+    ['| **M-17** | b | w | g | SUPERSEDED by M-9, was OWED |', 'M-17', 'RETIRED'],
+    ['| **M-18** | b | w | g | ~~RETIRED 2026-10-07, was OWED~~ |', 'M-18', 'RETIRED'],
+    ['| **M-19** | b | w | g | PROPOSED, not OWED |', 'M-19', 'PROPOSED'],
   ];
   for (const [line, id, status] of rows) {
     it(`${id} -> ${status}`, () => {
@@ -115,6 +127,15 @@ describe('parseRegisterRows + isRuled', () => {
     expect(map.has('LC-15')).toBe(true);
     expect(map.has('R-KV')).toBe(true);
     expect(RULED_STATUSES).toEqual(['RULED']);
+  });
+  it('O67-09: the real spec 131 OWED rows are OWED, never citable', () => {
+    const map = parseRegisterRows(spec('131_lot_configuration_policy'));
+    expect(map.get('LC-30')?.status).toBe('OWED');
+    expect(map.get('LC-46')?.status).toBe('OWED');
+    expect(map.get('LC-15')?.status).toBe('OWED');
+    expect(isRuled(map, 'LC-30')).toBe(false);
+    expect(isRuled(map, 'LC-46')).toBe(false);
+    expect(sentinelsOk(parseOwedTable(real133), parseRegisterRows(realRegisters))).toBe(true);
   });
 });
 

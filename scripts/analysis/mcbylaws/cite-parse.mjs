@@ -55,10 +55,17 @@ function locksOf(cell) {
 }
 
 function statusOf(cell) {
-  const word = (cell.match(/^(?:~~)?\**([A-Z]+)/) || [])[1] || '';
-  if (['RETIRED', 'SUPERSEDED', 'WITHDRAWN'].includes(word)) return 'RETIRED';
-  if (word === 'PROPOSED') return 'PROPOSED';
-  if (cell.includes('OWED ->') || cell.startsWith('OWED')) return 'OWED';
+  const s = String(cell ?? '');
+  // O67-09: the leading closed word decides first; decoration (~, *, `, whitespace) never hides it.
+  const plain = s.replace(/[~*`\s]/g, '').toUpperCase();
+  if (plain.startsWith('RETIRED') || plain.startsWith('SUPERSEDED') || plain.startsWith('WITHDRAWN')) {
+    return 'RETIRED';
+  }
+  if (plain.startsWith('PROPOSED')) return 'PROPOSED';
+  // O67-09: an OWED marker in any decorated form reads OWED, so the row can never be cited as RULED.
+  // The closed leading word above decided first, so a later mention of owed never makes a row OWED.
+  if (plain.startsWith('OWED') || /OWED\*{0,2}:/.test(s)) return 'OWED'; // 'RULED. **OWED:** ...' is RULED and OWED (Spec 131 LC-15, LC-46)
+  if (s.includes('OWED ->')) return 'OWED';
   return 'RULED';
 }
 

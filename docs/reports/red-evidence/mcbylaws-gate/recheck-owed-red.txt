@@ -1,0 +1,9 @@
+# red: recheck-owed, old scripts/analysis/mcbylaws/cite-parse.mjs with the new test
+     → expected 'RULED' to be 'OWED' // Object.is equality
+     → expected 'RULED' to be 'OWED' // Object.is equality
+     → expected 'RULED' to be 'OWED' // Object.is equality
+     → expected 'RULED' to be 'OWED' // Object.is equality
+     → expected 'RULED' to be 'OWED' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-citeparse.logic.test.ts > parseRegisterRows + isRuled > LC-30 -> OWED
+ FAIL  src/tests/mcbylaws-citeparse.logic.test.ts > parseRegisterRows + isRuled > M-10 -> OWED
