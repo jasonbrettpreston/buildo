@@ -48,7 +48,8 @@
     "src/tests/mcbylaws-*",
     "src/tests/fixtures/mcbylaws-gate/**",
     "docs/reports/generated/precommit-budget.json",
-    "docs/reports/loop-records/**"
+    "docs/reports/loop-records/**",
+    "mcbylaws/landing-exceptions.json"
   ],
   "literal_scope": [
     "scripts/analysis/bylaw/**/*.mjs",

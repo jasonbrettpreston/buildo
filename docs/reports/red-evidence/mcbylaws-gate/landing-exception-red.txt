@@ -1,0 +1,9 @@
+# red: landing-exception, old scripts/analysis/mcbylaws/gate.mjs with the new test
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 573ms
+     → expected 1 to be +0 // Object.is equality
+   × L1 (CARD-gates-recheck 1): the landing exception is an exact sha list read at the range tip > an invalid list fails closed (FAIL:X:cannot-decide) and the listed commit is still judged 272ms
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > L1 (CARD-gates-recheck 1): the landing exception is an exact sha list read at the range tip > a listed sha skips H, C and P and is announced; an unlisted sha still fails
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > L1 (CARD-gates-recheck 1): the landing exception is an exact sha list read at the range tip > an invalid list fails closed (FAIL:X:cannot-decide) and the listed commit is still judged
+AssertionError: expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:X:cannot-decide'

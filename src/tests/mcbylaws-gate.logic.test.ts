@@ -463,3 +463,43 @@ describe('K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every pol
     done();
   });
 });
+
+describe('L1 (CARD-gates-recheck 1): the landing exception is an exact sha list read at the range tip', () => {
+  const EXC = 'mcbylaws/landing-exceptions.json';
+  const list = (...shas: string[]) => JSON.stringify({ commits: shas.map((sha) => ({ sha, reason: 'pre-policy landing' })) });
+  /** Root docs commit, then a Layer 2/3 change with no policy at its parent and no trailer, then docs with the list. */
+  const repo = (listed: (first: string) => string) => {
+    const r = mk();
+    r.write('docs/note.md', '# note\n');
+    const base = r.commit('MB-67 root: docs only');
+    r.write('scripts/analysis/bylaw/evaluate.mjs', 'export const evaluate = 1;\n');
+    const first = r.commit('MB-67 a Layer 2/3 change with no policy yet');
+    r.write('mcbylaws/protected-paths.json', policy());
+    r.commit('MB-67 the policy file alone');
+    r.write(EXC, listed(first));
+    r.commit('MB-67 docs: the exception list');
+    return { repo: r, base, first };
+  };
+  it('a listed sha skips H, C and P and is announced; an unlisted sha still fails', () => {
+    const red = repo(() => list());
+    const r = run(red.repo, ['--ci', '--base', red.base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain(`FAIL:H:cannot-decide:${red.first}`);
+    const ok = repo((first) => list(first));
+    const g = run(ok.repo, ['--ci', '--base', ok.base]);
+    expect(g.status).toBe(0);
+    expect(g.out).toContain(`landing exception: ${ok.first}`);
+    for (const arm of ['H', 'C', 'P']) expect(g.out).not.toContain(`FAIL:${arm}:cannot-decide:${ok.first}`);
+    done();
+  });
+  it('an invalid list fails closed (FAIL:X:cannot-decide) and the listed commit is still judged', () => {
+    for (const text of [list('0'.repeat(7)), 'not json', JSON.stringify({ commits: {} }), JSON.stringify([])]) {
+      const bad = repo(() => text);
+      const r = run(bad.repo, ['--ci', '--base', bad.base]);
+      expect(r.status).toBe(1);
+      expect(r.out).toContain('FAIL:X:cannot-decide');
+      expect(r.out).toContain(`FAIL:H:cannot-decide:${bad.first}`);
+    }
+    done();
+  });
+});

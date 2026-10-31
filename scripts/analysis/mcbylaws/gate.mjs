@@ -37,6 +37,9 @@ const EXTERNAL_ARMS = {
   loop: { file: 'scripts/analysis/mcbylaws-loop/loop-gate.mjs', argv: (mode, base) => ['check', '--mode', mode, ...(base ? ['--base', base] : [])] },
 };
 const LOOP_LINES = 20;
+// Operator CARD-gates-recheck item 1: a one-time, EXACT list of shas read from the range tip; never a pattern.
+const EXCEPTIONS_REL = 'mcbylaws/landing-exceptions.json';
+const SHA40 = /^[0-9a-f]{40}$/;
 
 const top = (cwd) => {
   const r = git(cwd, ['rev-parse', '--show-toplevel']);
@@ -187,7 +190,7 @@ function combinedPaths(raw) {
  * O67-02 (`evil` merge): a merge is judged by its own combined diff, through the same arms as a commit — so a
  * conflict resolved OFF Layer 2/3 (what `--no-merges` hides, and what a clean merge cannot show) still fails.
  */
-function mergeArms({ cwd, base, tip }) {
+function mergeArms({ cwd, base, tip, excused = new Set() }) {
   const merges = git(cwd, ['rev-list', '--merges', '--reverse', `${base}..${tip}`]);
   if (merges.status !== 0) return ['FAIL:C:cannot-decide'];
   const out = [];
@@ -197,6 +200,7 @@ function mergeArms({ cwd, base, tip }) {
     const entries = combinedPaths(raw.stdout).map((p) => ({ status: 'M', score: null, path: p, oldPath: null }));
     if (entries.length === 0) continue;
     const parentRev = `${sha}^1`;
+    if (excused.has(sha)) continue;
     const res = resolvePolicy(cwd, parentRev, { ownRev: sha, entries });
     if (!res.ok) { out.push(`FAIL:H:cannot-decide:${sha}`); continue; }
     const message = git(cwd, ['log', '-1', '--format=%B', sha]);
@@ -223,24 +227,47 @@ function mergedLiteralPolicy(policies) {
   return { ...policies[0], literal_scope: scope, literal_exempt: exempt };
 }
 
+/**
+ * The landing exceptions listed at `tip`: `{ set, fail }`, where `fail` is a `FAIL:X:cannot-decide` line to push and
+ * `set` is then EMPTY. Absent file = no exceptions; unparsable or off-shape = fail closed.
+ */
+function landingExceptions(cwd, tip) {
+  const empty = { set: new Set(), fail: [] };
+  const text = readAt(cwd, tip, EXCEPTIONS_REL);
+  if (text === null) return empty;
+  let data;
+  try { data = JSON.parse(text); } catch { return { set: new Set(), fail: ['FAIL:X:cannot-decide'] }; }
+  const list = data && typeof data === 'object' && !Array.isArray(data) && Array.isArray(data.commits) ? data.commits : null;
+  if (list === null || list.some((c) => !c || typeof c !== 'object' || !SHA40.test(c.sha))) {
+    return { set: new Set(), fail: ['FAIL:X:cannot-decide'] };
+  }
+  return { set: new Set(list.map((c) => c.sha)), fail: [] };
+}
+
 /** One ref's arms: per commit H, C, P over the range, then L over the range's in-scope files from `git archive`. */
 function rangeArms({ cwd, base, tip }) {
   const shas = git(cwd, ['rev-list', '--no-merges', '--reverse', `${base}..${tip}`]);
   if (shas.status !== 0) return ['FAIL:H:cannot-decide', 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
   // O67-02: an empty non-merge list does NOT mean an empty range -- a range of merges only must still be judged.
   const commits = shas.stdout.split('\n').filter(Boolean);
+  const exceptions = landingExceptions(cwd, tip);
+  const excused = exceptions.set;
+  const excLines = [...excused].map((sha) => `landing exception: ${sha}`);
+  const out = [...exceptions.fail, ...excLines];
+
   const cache = new Map();
   const inputsFor = (rev) => {
     if (!cache.has(rev)) cache.set(rev, citeInputs(cwd, rev) || { owed: new Set(), rows: new Map() });
     return cache.get(rev);
   };
-  const out = [];
   // O67-03: arm L is judged by the policies in force BEFORE each commit, never by the last one (a narrowing
   // commit earlier in the range must not switch arm L off for a later commit that adds a literal).
   const policies = [];
   const baseRes = resolvePolicy(cwd, base);
   if (baseRes.ok) policies.push(baseRes.policy);
   for (const sha of commits) {
+    // The landing exception: this exact sha skips H, C and P; every other commit is judged in full.
+    if (excused.has(sha)) continue;
     // O67-03: the first policy in force may be a commit's OWN only when no base policy resolves (O67-04 bootstrap).
     if (policies.length === 0) {
       const at = resolvePolicy(cwd, `${sha}^`, { ownRev: sha });
@@ -271,7 +298,7 @@ function rangeArms({ cwd, base, tip }) {
       ...panelForCommit({ cwd, policy: res.policy, entries, message, ownRev: sha, sha }),
     );
   }
-  out.push(...mergeArms({ cwd, base, tip }));
+  out.push(...mergeArms({ cwd, base, tip, excused }));
   // O67-12: a deleted path is not in `git archive <tip>` (the gate would go permanently red); the new side of a
   // rename is kept and its old side is not.
   const diff = git(cwd, ['diff', '--name-only', '-z', '--diff-filter=d', '-M', base, tip]);
@@ -326,6 +353,9 @@ function summaryInput({ cwd, refs, ci }) {
     if (!res.ok) { arms.push('FAIL:H:cannot-decide'); out.push({ kind: 'unknown', ref: r.ref }); continue; }
     const collected = collectRef({ cwd, ref: r.ref, localSha: r.localSha, remoteSha: zero ? '' : r.remoteSha, policy: res.policy, defaultBase });
     if (collected.error) { arms.push(CANNOT); out.push({ kind: 'unknown', ref: r.ref }); continue; }
+    // The landing exception: a listed commit is shown as exempt, so the summary prints neither MISSING nor a fail.
+    const excused = landingExceptions(cwd, r.localSha).set;
+    const rows = (collected.commits || []).map((c) => (excused.has(c.sha) ? { ...c, panel: 'exempt' } : c));
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy }));
     arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
@@ -333,7 +363,7 @@ function summaryInput({ cwd, refs, ci }) {
     try { tipLimit = JSON.parse(readAt(cwd, r.localSha, POLICY_PATH) ?? '{}').held_limit ?? tipLimit; } catch { arms.push(CANNOT); }
     basePolicy = res.policy;
     policy = { ...res.policy, held_limit: tipLimit };
-    out.push(collected);
+    out.push({ ...collected, commits: rows });
   }
   const held = heldCount(policy);
   const worktrees = worktreeScan(policy);

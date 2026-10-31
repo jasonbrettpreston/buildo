@@ -1,0 +1,11 @@
+{
+  "$comment": "ONE-TIME landing exception (operator CARD-gates-recheck item 1, 2026-10-31; ledger row in batch 2026-10-31-am): these exact commits of the MB-67 branch were made before the gate's policy existed (42521481..ce116571) or renamed the prereg (3e3212b9), so the per-commit arms H, C and P cannot judge them. The gate skips arms H, C and P for these shas and for no others. There is no general rule: a sha not listed here is judged in full. Protected path: every change shows in the pre-push summary.",
+  "commits": [
+    { "sha": "42521481cab1ad58b848600367c8d11f1a185b8c", "reason": "MB-67 prereg, before the policy file existed" },
+    { "sha": "3e7b592e9a21862c93db18bca890f74604c22db3", "reason": "MB-67 gate fixtures, before the policy file existed" },
+    { "sha": "bef5585e65ccc2a02169902dd18da1ba2fa9349a", "reason": "MB-67 git helpers, before the policy file existed" },
+    { "sha": "6474b00ef0f558f675a9c240a801a3aef05eb1b4", "reason": "MB-67 name-status parser, before the policy file existed" },
+    { "sha": "ce116571ba381a0a1b51734820f45ccce2981244", "reason": "MB-67 policy validator and the policy file itself (carries code, so not a policy-alone bootstrap)" },
+    { "sha": "3e3212b99131a49441e06e8c655c8b9663ee36d3", "reason": "MB-67 prereg rename to prereg-MB-67-1.json (a rename, and R-KF..R-LF were OWED)" }
+  ]
+}
