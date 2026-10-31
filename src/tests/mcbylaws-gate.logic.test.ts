@@ -464,42 +464,91 @@ describe('K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every pol
   });
 });
 
-describe('L1 (CARD-gates-recheck 1): the landing exception is an exact sha list read at the range tip', () => {
+describe('L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE', () => {
   const EXC = 'mcbylaws/landing-exceptions.json';
+  const FROZEN = [
+    '42521481cab1ad58b848600367c8d11f1a185b8c', '3e7b592e9a21862c93db18bca890f74604c22db3',
+    'bef5585e65ccc2a02169902dd18da1ba2fa9349a', '6474b00ef0f558f675a9c240a801a3aef05eb1b4',
+    'ce116571ba381a0a1b51734820f45ccce2981244', '3e3212b99131a49441e06e8c655c8b9663ee36d3',
+  ];
   const list = (...shas: string[]) => JSON.stringify({ commits: shas.map((sha) => ({ sha, reason: 'pre-policy landing' })) });
-  /** Root docs commit, then a Layer 2/3 change with no policy at its parent and no trailer, then docs with the list. */
-  const repo = (listed: (first: string) => string) => {
+  const DECOY = '0'.repeat(40);
+  const L23FILE = 'scripts/analysis/bylaw/evaluate.mjs';
+  /**
+   * A root docs commit R, then branch `side` from R with one Layer 2/3 commit X (no policy, no trailer: normally
+   * refused). Back on the original branch: the policy (P), then the exception list (in the base when `inBase`,
+   * otherwise after the base), then the base marker; the merge of `side` brings X into the range.
+   */
+  const withX = (text: ((x: string) => string) | null, inBase: boolean) => {
     const r = mk();
     r.write('docs/note.md', '# note\n');
-    const base = r.commit('MB-67 root: docs only');
-    r.write('scripts/analysis/bylaw/evaluate.mjs', 'export const evaluate = 1;\n');
-    const first = r.commit('MB-67 a Layer 2/3 change with no policy yet');
+    const root = r.commit('MB-67 root: docs');
+    const branch = r.git(['branch', '--show-current']);
+    r.git(['checkout', '-q', '-b', 'side']);
+    r.write(L23FILE, 'export const evaluate = 1;\n');
+    const x = r.commit('MB-67 a Layer 2/3 change with no policy yet');
+    r.git(['checkout', '-q', branch]);
+    if (inBase && text !== null) { r.write(EXC, text(x)); r.commit('MB-67 the exception list'); }
     r.write('mcbylaws/protected-paths.json', policy());
-    r.commit('MB-67 the policy file alone');
-    r.write(EXC, listed(first));
-    r.commit('MB-67 docs: the exception list');
-    return { repo: r, base, first };
+    r.commit('MB-67 the policy');
+    r.write('docs/marker.md', '# base marker\n');
+    const base = r.commit('MB-67 base marker');
+    if (!inBase && text !== null) { r.write(EXC, text(x)); r.commit('MB-67 the exception list'); }
+    r.git(['merge', '--no-ff', '-m', 'Merge side', 'side']);
+    return { repo: r, base, x };
   };
-  it('a listed sha skips H, C and P and is announced; an unlisted sha still fails', () => {
-    const red = repo(() => list());
-    const r = run(red.repo, ['--ci', '--base', red.base]);
-    expect(r.status).toBe(1);
-    expect(r.out).toContain(`FAIL:H:cannot-decide:${red.first}`);
-    const ok = repo((first) => list(first));
-    const g = run(ok.repo, ['--ci', '--base', ok.base]);
-    expect(g.status).toBe(0);
-    expect(g.out).toContain(`landing exception: ${ok.first}`);
-    for (const arm of ['H', 'C', 'P']) expect(g.out).not.toContain(`FAIL:${arm}:cannot-decide:${ok.first}`);
+  const noFile = () => withX(null, false);
+  /** Every FAIL line of `out` that names commit `x` (any arm, any code). */
+  const failsFor = (out: string, x: string) => out.split('\n').filter((l) => l.startsWith('FAIL:') && l.includes(x));
+
+  it('the frozen constant: the real list holds exactly the six shas, and the gate source names each once', () => {
+    const real = JSON.parse(fs.readFileSync(path.join(REAL_ROOT, EXC), 'utf8')) as { commits: { sha: string }[] };
+    expect(real.commits.map((c) => c.sha)).toEqual(FROZEN);
+    expect(real.commits).toHaveLength(6);
+    const src = fs.readFileSync(GATE, 'utf8');
+    for (const sha of FROZEN) expect(src.split(sha).length - 1).toBe(1);
+  });
+
+  it('a base file listing the sha announces it and has no FAIL line for it', () => {
+    const listed = withX((x) => list(x), true);
+    const ann = run(listed.repo, ['--ci', '--base', listed.base]);
+    expect(ann.out).toContain(`landing exception: ${listed.x} (pre-policy landing)`);
+    for (const arm of ['H', 'C', 'P']) expect(ann.out).not.toContain(`FAIL:${arm}:cannot-decide:${listed.x}`);
+    expect(failsFor(ann.out, listed.x)).toEqual([]);
+    expect(ann.status).toBe(0);
     done();
   });
-  it('an invalid list fails closed (FAIL:X:cannot-decide) and the listed commit is still judged', () => {
-    for (const text of [list('0'.repeat(7)), 'not json', JSON.stringify({ commits: {} }), JSON.stringify([])]) {
-      const bad = repo(() => text);
-      const r = run(bad.repo, ['--ci', '--base', bad.base]);
-      expect(r.status).toBe(1);
-      expect(r.out).toContain('FAIL:X:cannot-decide');
-      expect(r.out).toContain(`FAIL:H:cannot-decide:${bad.first}`);
-    }
+
+  it('a decoy sha in the base file excuses nothing, and neither does an absent base file', () => {
+    const decoy = withX(() => list(DECOY), true);
+    const r = run(decoy.repo, ['--ci', '--base', decoy.base]);
+    expect(r.status).toBe(1);
+    expect(r.out).not.toContain(`landing exception: ${decoy.x}`);
+    expect(failsFor(r.out, decoy.x).length).toBeGreaterThan(0);
+    const bare = noFile();
+    const b = run(bare.repo, ['--ci', '--base', bare.base]);
+    expect(b.status).toBe(1);
+    expect(b.out).not.toContain(`landing exception: ${bare.x}`);
+    expect(failsFor(b.out, bare.x).length).toBeGreaterThan(0);
+    done();
+  });
+
+  it('RED X1: a list added by a LATER commit of the range names the earlier sha and still does not excuse it', () => {
+    const later = withX((x) => list(x), false);
+    expect(JSON.parse(later.repo.git(['show', `HEAD:${EXC}`])).commits[0].sha).toBe(later.x);
+    const r = run(later.repo, ['--ci', '--base', later.base]);
+    expect(r.status).toBe(1);
+    expect(r.out).not.toContain(`landing exception: ${later.x}`);
+    expect(failsFor(r.out, later.x).length).toBeGreaterThan(0);
+    done();
+  });
+
+  it('an invalid base file fails closed (FAIL:X:cannot-decide) and the frozen six still apply', () => {
+    const bad = withX(() => list('0'.repeat(7)), true);
+    const r = run(bad.repo, ['--ci', '--base', bad.base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:X:cannot-decide');
+    expect(failsFor(r.out, bad.x).length).toBeGreaterThan(0);
     done();
   });
 });

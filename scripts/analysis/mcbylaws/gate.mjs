@@ -37,9 +37,19 @@ const EXTERNAL_ARMS = {
   loop: { file: 'scripts/analysis/mcbylaws-loop/loop-gate.mjs', argv: (mode, base) => ['check', '--mode', mode, ...(base ? ['--base', base] : [])] },
 };
 const LOOP_LINES = 20;
-// Operator CARD-gates-recheck item 1: a one-time, EXACT list of shas read from the range tip; never a pattern.
+// Operator CARD-gates-recheck item 1: a one-time, EXACT list of shas; never a pattern, never a rule.
 const EXCEPTIONS_REL = 'mcbylaws/landing-exceptions.json';
 const SHA40 = /^[0-9a-f]{40}$/;
+// R-LS: the six pre-policy shas are frozen HERE, so no commit of a range can widen its own exception set.
+const LANDING_FROZEN = [
+  '42521481cab1ad58b848600367c8d11f1a185b8c',
+  '3e7b592e9a21862c93db18bca890f74604c22db3',
+  'bef5585e65ccc2a02169902dd18da1ba2fa9349a',
+  '6474b00ef0f558f675a9c240a801a3aef05eb1b4',
+  'ce116571ba381a0a1b51734820f45ccce2981244',
+  '3e3212b99131a49441e06e8c655c8b9663ee36d3',
+];
+const FROZEN_REASON = 'frozen landing list';
 
 const top = (cwd) => {
   const r = git(cwd, ['rev-parse', '--show-toplevel']);
@@ -228,20 +238,22 @@ function mergedLiteralPolicy(policies) {
 }
 
 /**
- * The landing exceptions listed at `tip`: `{ set, fail }`, where `fail` is a `FAIL:X:cannot-decide` line to push and
- * `set` is then EMPTY. Absent file = no exceptions; unparsable or off-shape = fail closed.
+ * R-LS: the frozen six UNION the list read at the range BASE (never at the tip, so no commit of the range can name
+ * itself or an earlier unlisted commit). Absent base file = the frozen six; unparsable or off-shape base file =
+ * `FAIL:X:cannot-decide` and only the frozen six apply.
  */
-function landingExceptions(cwd, tip) {
-  const empty = { set: new Set(), fail: [] };
-  const text = readAt(cwd, tip, EXCEPTIONS_REL);
-  if (text === null) return empty;
+function landingExceptions(cwd, base) {
+  const frozen = new Map(LANDING_FROZEN.map((sha) => [sha, FROZEN_REASON]));
+  const text = readAt(cwd, base, EXCEPTIONS_REL);
+  if (text === null) return { reasons: frozen, fail: [] };
   let data;
-  try { data = JSON.parse(text); } catch { return { set: new Set(), fail: ['FAIL:X:cannot-decide'] }; }
+  try { data = JSON.parse(text); } catch { return { reasons: frozen, fail: ['FAIL:X:cannot-decide'] }; }
   const list = data && typeof data === 'object' && !Array.isArray(data) && Array.isArray(data.commits) ? data.commits : null;
   if (list === null || list.some((c) => !c || typeof c !== 'object' || !SHA40.test(c.sha))) {
-    return { set: new Set(), fail: ['FAIL:X:cannot-decide'] };
+    return { reasons: frozen, fail: ['FAIL:X:cannot-decide'] };
   }
-  return { set: new Set(list.map((c) => c.sha)), fail: [] };
+  for (const c of list) if (!frozen.has(c.sha)) frozen.set(c.sha, c.reason);
+  return { reasons: frozen, fail: [] };
 }
 
 /** One ref's arms: per commit H, C, P over the range, then L over the range's in-scope files from `git archive`. */
@@ -250,9 +262,9 @@ function rangeArms({ cwd, base, tip }) {
   if (shas.status !== 0) return ['FAIL:H:cannot-decide', 'FAIL:C:cannot-decide', 'FAIL:P:cannot-decide'];
   // O67-02: an empty non-merge list does NOT mean an empty range -- a range of merges only must still be judged.
   const commits = shas.stdout.split('\n').filter(Boolean);
-  const exceptions = landingExceptions(cwd, tip);
-  const excused = exceptions.set;
-  const excLines = [...excused].map((sha) => `landing exception: ${sha}`);
+  const exceptions = landingExceptions(cwd, base);
+  const excused = exceptions.reasons;
+  const excLines = [...excused].map(([sha, reason]) => `landing exception: ${sha} (${reason || 'listed'})`);
   const out = [...exceptions.fail, ...excLines];
 
   const cache = new Map();
@@ -353,9 +365,11 @@ function summaryInput({ cwd, refs, ci }) {
     if (!res.ok) { arms.push('FAIL:H:cannot-decide'); out.push({ kind: 'unknown', ref: r.ref }); continue; }
     const collected = collectRef({ cwd, ref: r.ref, localSha: r.localSha, remoteSha: zero ? '' : r.remoteSha, policy: res.policy, defaultBase });
     if (collected.error) { arms.push(CANNOT); out.push({ kind: 'unknown', ref: r.ref }); continue; }
-    // The landing exception: a listed commit is shown as exempt, so the summary prints neither MISSING nor a fail.
-    const excused = landingExceptions(cwd, r.localSha).set;
-    const rows = (collected.commits || []).map((c) => (excused.has(c.sha) ? { ...c, panel: 'exempt' } : c));
+    // R-LS: a listed commit is shown as exempt, so the summary prints neither MISSING nor a fail. The set comes from
+    // the range BASE; a fail-closed base file adds its verdict here too.
+    const exceptions = landingExceptions(cwd, b);
+    const rows = (collected.commits || []).map((c) => (exceptions.reasons.has(c.sha) ? { ...c, panel: 'exempt' } : c));
+    arms.push(...exceptions.fail);
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy }));
     arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
