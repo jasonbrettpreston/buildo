@@ -1,0 +1,20 @@
+== item (h) red: new tests with the base module; engine run 20261031T234915Z-3a0853b8
+   × storage_within_budget ratio normalisation (RB-D10, MB-18 h) > two captures differing ONLY in storage_within_budget value.ratio compare EQUAL, status/threshold still compared 3ms
+   × storage_within_budget ratio normalisation (RB-D10, MB-18 h) > lock (green on base too): another metric's value.ratio is untouched — a difference there is still a diff 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/capture-step-golden.logic.test.ts > storage_within_budget ratio normalisation (RB-D10, MB-18 h) > two captures differing ONLY in storage_within_budget value.ratio compare EQUAL, status/threshold still compared
+AssertionError: expected [ { …(3) } ] to deeply equal []
+ FAIL  src/tests/capture-step-golden.logic.test.ts > storage_within_budget ratio normalisation (RB-D10, MB-18 h) > lock (green on base too): another metric's value.ratio is untouched — a difference there is still a diff
+ Test Files  1 failed (1)
+      Tests  2 failed | 49 passed (51)
+== item (h) red 2: constructor-metric test against the H1 lookup (inherited-key read), engine run 20261031T235034Z-4560b065
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable
+     → fields is not iterable

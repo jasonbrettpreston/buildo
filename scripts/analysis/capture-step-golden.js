@@ -123,6 +123,11 @@ const VOLATILE_KEYS = [
 ];
 // audit_table rows whose `metric` is auto-injected timing by emitSummary (pipeline.js:346-352)
 const VOLATILE_METRIC_PREFIXES = ['sys_'];
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy_appendix.md R-DA, MB-18 (h) (RB-D10)
+// Scoped normalisation (never a band, never VOLATILE_KEYS): drop only these dotted fields from
+// the audit row whose `metric` is the key. storage_within_budget's value.ratio comes from
+// physical table bytes; the budget check reads the measured MiB `value`, so the ratio can go.
+const AUDIT_METRIC_VOLATILE_FIELDS = { storage_within_budget: ['value.ratio'] };
 // String patterns masked inside stdout log lines (and inside string leaf values).
 const VOLATILE_PATTERNS = [
   { name: 'iso_timestamp', re: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/g, mask: '<TS>' },
@@ -662,7 +667,28 @@ function maskString(s, hits) {
 }
 
 /**
- * Recursively drop VOLATILE_KEYS, drop `sys_*` audit rows, and mask volatile string patterns.
+ * Drop one dotted field (e.g. `value.ratio`) from a COPY of an audit row; drop `value` too when
+ * it is left empty. Never mutates `item`. Returns the copy and whether the field was present.
+ */
+function dropDottedField(item, dotted) {
+  const parts = dotted.split('.');
+  const copy = { ...item };
+  let node = copy;
+  for (const k of parts.slice(0, -1)) {
+    if (!node[k] || typeof node[k] !== 'object' || Array.isArray(node[k])) return { row: copy, dropped: false };
+    node[k] = { ...node[k] };
+    node = node[k];
+  }
+  const last = parts[parts.length - 1];
+  if (!(last in node)) return { row: copy, dropped: false };
+  delete node[last];
+  if (Object.keys(node).length === 0 && parts.length > 1) delete copy[parts[0]];
+  return { row: copy, dropped: true };
+}
+
+/**
+ * Recursively drop VOLATILE_KEYS, drop `sys_*` audit rows, drop AUDIT_METRIC_VOLATILE_FIELDS from
+ * their named audit rows, and mask volatile string patterns.
  * Records what it stripped into `hits`. Pure; never mutates its input.
  */
 function scrub(value, hits, keyPath) {
@@ -675,7 +701,21 @@ function scrub(value, hits, keyPath) {
         if (isVolatileRow) hits.add(`row:${item.metric}`);
         return !isVolatileRow;
       })
-      .map((item, i) => scrub(item, hits, `${keyPath}[${i}]`));
+      .map((item, i) => {
+        const scrubbed = scrub(item, hits, `${keyPath}[${i}]`);
+        if (!item || typeof item !== 'object' || typeof item.metric !== 'string') return scrubbed;
+        let row = scrubbed;
+        // Own-property lookup only: `AUDIT_METRIC_VOLATILE_FIELDS[metric] ?? []` would read
+        // INHERITED keys (`constructor`, `toString`) and iterate a function.
+        const fields = Object.hasOwn(AUDIT_METRIC_VOLATILE_FIELDS, item.metric)
+          ? AUDIT_METRIC_VOLATILE_FIELDS[item.metric] : [];
+        for (const field of fields) {
+          const { row: next, dropped } = dropDottedField(row, field);
+          row = next;
+          if (dropped) hits.add(`field:${item.metric}.${field}`);
+        }
+        return row;
+      });
   }
   if (value && typeof value === 'object') {
     const out = {};
@@ -1647,6 +1687,7 @@ if (require.main === module) {
 module.exports = {
   VOLATILE_KEYS,
   VOLATILE_METRIC_PREFIXES,
+  AUDIT_METRIC_VOLATILE_FIELDS,
   VOLATILE_PATTERNS,
   SUMMARY_MARKER,
   META_MARKER,

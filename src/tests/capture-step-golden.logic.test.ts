@@ -607,3 +607,61 @@ describe('projection bypasses the ceiling on the UNPROJECTED count; ORDER BY pre
     ]);
   });
 });
+
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy_appendix.md R-DA, MB-18 (h)
+// Scoped normalisation (not a band): storage_within_budget's `value.ratio` is computed from
+// physical table bytes, so it differs between two runs on identical code + data. The budget
+// check reads the measured MiB `value`, not the ratio, so only the ratio is dropped — from that
+// one audit row, never from `ratio` keys elsewhere.
+const { AUDIT_METRIC_VOLATILE_FIELDS } = harness;
+
+function auditCapture(row: Record<string, unknown>, otherRow?: Record<string, unknown>) {
+  const raw = rawCapture();
+  raw.summary.records_meta.audit_table.rows.push(row);
+  if (otherRow) raw.summary.records_meta.audit_table.rows.push(otherRow);
+  return raw;
+}
+
+describe('storage_within_budget ratio normalisation (RB-D10, MB-18 h)', () => {
+  it('two captures differing ONLY in storage_within_budget value.ratio compare EQUAL, status/threshold still compared', () => {
+    const row = (ratio: number) => ({ metric: 'storage_within_budget', value: { ratio }, threshold: 'value_max 1300', status: 'PASS' });
+    const a = normalise(auditCapture(row(0.5640)));
+    const b = normalise(auditCapture(row(0.5641)));
+    expect(diffNormalised(a.normalised, b.normalised)).toEqual([]);
+    const kept = a.normalised.summary.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'storage_within_budget');
+    expect(kept.status).toBe('PASS');
+    expect(kept.threshold).toBe('value_max 1300');
+    expect(kept.value).toBeUndefined();
+    expect(a.nondeterminism).toContain('field:storage_within_budget.value.ratio');
+  });
+
+  it('lock (green on base too): the budget check still bites — status/threshold/measured value are compared', () => {
+    const pass = normalise(auditCapture({ metric: 'storage_within_budget', value: 700, threshold: 'value_max 1300', status: 'PASS' }));
+    const fail = normalise(auditCapture({ metric: 'storage_within_budget', value: 1301, threshold: 'value_max 1300', status: 'FAIL' }));
+    const paths = diffNormalised(pass.normalised, fail.normalised).map((d: { path: string }) => d.path);
+    expect(paths.some((p: string) => p.endsWith('.status') || p.endsWith('.value'))).toBe(true);
+  });
+
+  it('lock (green on base too): another metric\'s value.ratio is untouched — a difference there is still a diff', () => {
+    const row = (ratio: number) => ({ metric: 'some_other_metric', value: { ratio }, threshold: 1, status: 'PASS' });
+    const a = normalise(auditCapture(row(0.5)));
+    const b = normalise(auditCapture(row(0.6)));
+    const paths = diffNormalised(a.normalised, b.normalised).map((d: { path: string }) => d.path);
+    expect(paths).toHaveLength(1);
+    expect(paths[0]).toMatch(/value\.ratio$/);
+    expect(Object.keys(AUDIT_METRIC_VOLATILE_FIELDS)).toEqual(['storage_within_budget']);
+  });
+
+  // Fail-closed (MB-18 h fix to the H1 lookup): `AUDIT_METRIC_VOLATILE_FIELDS[metric] ?? []`
+  // reads INHERITED object properties — `constructor` yields Object, whose iteration throws.
+  it('an audit row whose metric is an inherited object key (constructor) normalises without throwing and keeps value.ratio', () => {
+    const { normalised, nondeterminism } = (() => {
+      let out: ReturnType<typeof normalise> | undefined;
+      expect(() => { out = normalise(auditCapture({ metric: 'constructor', value: { ratio: 0.5 } })); }).not.toThrow();
+      return out!;
+    })();
+    const kept = normalised.summary.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'constructor');
+    expect(kept.value.ratio).toBe(0.5);
+    expect(nondeterminism.some((h: string) => h.startsWith('field:constructor'))).toBe(false);
+  });
+});
