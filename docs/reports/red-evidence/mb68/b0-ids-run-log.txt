@@ -1,0 +1,1 @@
+B0 (Claude, external data, plan section 10): node scripts/analysis/mcbylaws-loop/loop-gate.mjs run --write-ids --root . -> coa172 698 ids (all unique), coa4d 496 ids (all unique); written by the tool, not typed. Seed regression-set.json authored by Claude with empty ids; sha recomputed by the tool.

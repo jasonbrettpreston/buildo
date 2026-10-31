@@ -1,0 +1,19 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g2
+
+ ✓ src/tests/mcbylaws-loop-realdata.logic.test.ts (9 tests) 94898ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 1. honest round (a comment, no scorer row moves) goes green through the real CLI 24708ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 2. dishonest: a code change AFTER the record was written is stale_green 10195ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 2b. a code change with no record at all is record_missing 3636ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 3. dishonest: a forged case status in a COMMITTED record is record_differs_from_run 21229ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 4. dishonest: a hand-edited pin is generated_not_regenerable 10185ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 5. metadata only: a rule-map touch needs no record, but beside a code edit it is record_missing 7256ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 6. prereg-only add: a new prereg file is out of scope 3650ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 7. floors still guard the real data: a raised floor over the real rows is floor_fell 10197ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  15:58:25
+   Duration  95.07s (transform 21ms, setup 6ms, collect 5ms, tests 94.90s, environment 0ms, prepare 20ms)
+

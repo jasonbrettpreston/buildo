@@ -1,0 +1,1 @@
+O5-O8: real-data e2e (src/tests/mcbylaws-loop-realdata.logic.test.ts): 9 tests, real CLI, real 172+4d scorer, honest green and 7 dishonest/edge cases; absent data dir fails (no skip). Run: npx vitest run src/tests/mcbylaws-loop-realdata -> 9 passed. Before the fixes (commit 827804d7) the honest round was red: prereg_missing, ran_fewer_than_declared:496, case_missing x496.

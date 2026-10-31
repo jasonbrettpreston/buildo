@@ -1,0 +1,22 @@
+{
+ "$comment": "M-321 pre-registration, MB-68 loop gate build (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-68; plan ~/Buildo-scratch/mcbylaws/MB-68/plan.md section 7 and the prereg path section aligned with MB-67 P67-1), committed alone before the build. The build adds only new files under scripts/analysis/mcbylaws-loop/, mcbylaws/loop/, src/tests/mcbylaws-loop-*.logic.test.ts and docs/reports/; it imports coa-round.mjs unchanged and changes no evaluator, catalogue, scorer or pin input. Therefore no scorer row moves on the 172, 4d or cumulative sets and no floor changes. Baseline run on this tree (cf5e707c) before the build: rows 698, totals equal the pin, FLOORS OK (OWED: 1, listed: article 10.5.40 accuracy 91.7 against floor 94, M-372).",
+ "schema": "coa-round-prereg-v1",
+ "task": "MB-68",
+ "round": 14,
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-68; ~/Buildo-scratch/mcbylaws/MB-68/plan.md",
+ "batch": "coa-2026-a,b,c (172 set)",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_floors": "unchanged: floors-172.json is not edited; the result stays FLOORS OK (OWED: 1, listed, M-372)",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
+}

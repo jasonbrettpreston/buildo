@@ -1,0 +1,11 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g2
+
+ ✓ src/tests/mcbylaws-loop-prereg.logic.test.ts (30 tests) 627ms
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  14:18:41
+   Duration  837ms (transform 32ms, setup 9ms, collect 20ms, tests 627ms, environment 0ms, prepare 20ms)
+

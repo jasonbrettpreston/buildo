@@ -1,0 +1,1 @@
+B8a: end-to-end suite over finished modules and real data (698 + 496 cases); a guard suite, so no module-missing red. Mutation red inside the suite: a dropped id (regression_case_removed), a forged ruling (ruling_not_authority).

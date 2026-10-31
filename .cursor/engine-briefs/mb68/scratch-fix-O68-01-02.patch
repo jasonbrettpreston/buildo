@@ -1,0 +1,39 @@
+diff --git a/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs b/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs
+index 62d6abff..49f42265 100644
+--- a/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs
++++ b/scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs
+@@ -2,6 +2,7 @@
+ // SPEC LINK: ~/Buildo-scratch/mcbylaws/MB-68/plan.md sections 1, 6, 8 (the gate contract and its order of work, the classes V68-1, run honesty and increment green)
+ // Pure composition: every rule lives in its own module and is imported here, never restated. evaluateGate does no IO.
+ // -> { violations: string[], notes: string[] }; a code with a detail is `code:detail`. Violations are de-duplicated in first-seen order.
++import { CLASS_STATUS } from "./loop-gate-run.mjs";
+ import { commitStageFires, checkOracleFirst, recordMissing } from './loop-oracle.mjs';
+ import {
+   checkRecordsAddOnly,
+@@ -61,7 +62,7 @@ function stageScopeAndRecords(ctx) {
+ function stageRecord(ctx, rec) {
+   const out = [];
+   out.push(...checkRecordShape(rec));
+-  out.push(...checkBound({ inputs: rec.inputs, treeBlobs: ctx.treeBlobs, changedBound: ctx.changedBound }));
++  out.push(...checkBound({ inputs: Object.fromEntries(Object.entries(rec.inputs||{}).filter(([k])=>!/^(data:|pin \/ )/.test(k))), treeBlobs: ctx.treeBlobs, changedBound: ctx.changedBound }));
+   out.push(...checkDecision(rec, ctx.rulings, ctx.cardExists));
+   out.push(
+     ...checkOneIncrement({
+@@ -145,7 +146,7 @@ function stageRun(ctx, rec) {
+       out.push(`value_changed_unregistered:${item.id}`);
+     }
+     const ran = byId.get(item.id);
+-    if (!ran || ran.status !== item.status || ran.got_sha !== item.got_sha) {
++    if (!ran || (CLASS_STATUS[ran.status]||"pending") !== item.status || ran.got_sha !== item.got_sha) {
+       out.push(`record_differs_from_run:${item.id}`);
+     }
+   }
+@@ -159,7 +160,7 @@ function stageAccept(ctx, rec) {
+   if (!run) return [];
+   const cases = asArray(run.cases).map((c) => ({
+     id: c.id,
+-    status: c.status,
++    status: CLASS_STATUS[c.status]||"pending",
+     group: c.group === undefined ? null : c.group,
+   }));
+   const verdict = incrementGreen({

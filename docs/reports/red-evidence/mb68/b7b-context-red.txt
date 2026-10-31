@@ -1,0 +1,42 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g2
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts (8 tests | 8 failed) 884ms
+   × buildContext: commit mode > reads the index: nameStatus, commits, the classes of the base policy, the new record and the bound catalogue 103ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+   × buildContext: commit mode > reads the base policy from the base copy, not the staged one 100ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+   × buildContext: push and ci mode > push over two commits: commits per commit, base explicit, preregHistory present 155ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+   × buildContext: push and ci mode > ci: computeRun may answer null and the ctx still carries every fact 171ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+   × buildContext: push and ci mode > an unresolvable base throws base_not_resolvable; a missing cur regression file throws data_missing 51ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+   × buildContext: push and ci mode > derives base from the merge-base of the target when --base is empty 152ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+   × buildContext: push and ci mode > greenHistory from accepted records at the base, prevCases from the previous round of the increment 151ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+   × buildContext -> evaluateGate (end to end) > the honest round has no violations; an empty reason is accept_without_reason 0ms
+     → Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext: commit mode > reads the index: nameStatus, commits, the classes of the base policy, the new record and the bound catalogue
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext: commit mode > reads the base policy from the base copy, not the staged one
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext: push and ci mode > push over two commits: commits per commit, base explicit, preregHistory present
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext: push and ci mode > ci: computeRun may answer null and the ctx still carries every fact
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext: push and ci mode > an unresolvable base throws base_not_resolvable; a missing cur regression file throws data_missing
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext: push and ci mode > derives base from the merge-base of the target when --base is empty
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext: push and ci mode > greenHistory from accepted records at the base, prevCases from the previous round of the increment
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > buildContext -> evaluateGate (end to end) > the honest round has no violations; an empty reason is accept_without_reason
+Error: Failed to load url /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs (resolved id: /Users/brettpreston_macmini/Buildo-wt-mb-g2/scripts/analysis/mcbylaws-loop/loop-gate-context.mjs). Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  14:51:37
+   Duration  1.08s (transform 25ms, setup 7ms, collect 14ms, tests 884ms, environment 0ms, prepare 18ms)
+
