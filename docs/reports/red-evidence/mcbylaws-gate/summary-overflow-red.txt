@@ -1,0 +1,9 @@
+# red: summary-overflow, old scripts/analysis/mcbylaws/gate.mjs with the new test
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 515ms
+   ✓ L1 (CARD-gates-recheck 1): the landing exception is an exact sha list read at the range tip > an invalid list fails closed (FAIL:X:cannot-decide) and the listed commit is still judged 1134ms
+   × S11: a large range pages the summary and writes the full list, instead of FAIL:S:overflow > 60 protected files on one docs-only commit pass at --ci with a full list 232ms
+     → expected 'PUSH HEAD  APPROVED present since 81d…' not to contain 'FAIL:S:summary'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > S11: a large range pages the summary and writes the full list, instead of FAIL:S:overflow > 60 protected files on one docs-only commit pass at --ci with a full list
+AssertionError: expected 'PUSH HEAD  APPROVED present since 81d…' not to contain 'FAIL:S:summary'
+  FAIL:S:summary

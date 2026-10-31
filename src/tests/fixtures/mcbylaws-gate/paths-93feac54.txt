@@ -1,0 +1,10 @@
+scripts/analysis/bylaw-validation/blind-model.mjs
+scripts/analysis/bylaw-validation/blind-run.mjs
+scripts/analysis/bylaw-validation/maxbld-scenario-inputs.mjs
+scripts/analysis/phase3/phase3-code-link.mjs
+scripts/analysis/phase3/phase3-literals.json
+scripts/lib/compute/compute-maxbld-scenarios.js
+scripts/lib/maxbld-main-building.js
+scripts/lib/maxbld-secondary-suite.js
+src/features/admin-controls/generated/logic-variable-effect.json
+src/tests/bylaw-maxbld-inputs.logic.test.ts

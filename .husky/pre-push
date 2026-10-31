@@ -35,4 +35,7 @@
 # row, so it must be caught here, fleet-wide, before the push completes —
 # `--staged`'s job is scoping what commit-time gates apply to; it is not a
 # substitute for the fleet-wide freshness sweep. Measured 2026-09-26: ~19s.
-node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test
+#
+# MB-67 (R-KM, R-KP, R-LF): the McBylaws gate runs FIRST, because it reads git's ref pairs on stdin (nothing else in
+# this hook reads stdin). It prints the summary and asks the operator before the 71 s suite, so a "no" costs nothing.
+node scripts/analysis/mcbylaws/gate.mjs --push && node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test

@@ -47,8 +47,19 @@ function rawExport(log: { decisions: FixtureDecision[] }) {
     entries: log.decisions.map((d) => ({ ref: d.id, key: d.question, note: d.recommendation, evidence: [] })),
   };
 }
+// GIT_* inherited from the commit hook would send a fixture's git into the real worktree: strip them everywhere.
+function gitEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  for (const k of Object.keys(env)) if (k.startsWith('GIT_')) delete env[k];
+  return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', ...extra };
+}
+function gitInit(root: string) {
+  return spawnSync('git', ['init', '-q'], { cwd: root, encoding: 'utf8', env: gitEnv({ GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@example.invalid', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@example.invalid' }) });
+}
 function tree(log: unknown, specText: string | null, raw = rawExport(log as { decisions: FixtureDecision[] })): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'decision-log-'));
+  // A real repository, so arm K's staged-diff probe can decide (an empty index = no staged rows).
+  expect(gitInit(root).status).toBe(0);
   fs.mkdirSync(path.join(root, 'docs/reports/decisions'), { recursive: true });
   // The committed log is what --import makes of the raw export (the fixture log supplies only the lane fields).
   const fx = log as { source: { title: string; url: string } };
@@ -62,7 +73,7 @@ function tree(log: unknown, specText: string | null, raw = rawExport(log as { de
   return root;
 }
 function runCli(args: string[], root?: string) {
-  return spawnSync('node', [CLI, ...args], { cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, ...(root ? { BUILDO_DECISION_LOG_ROOT: root } : {}) } });
+  return spawnSync('node', [CLI, ...args], { cwd: REPO_ROOT, encoding: 'utf8', env: gitEnv(root ? { BUILDO_DECISION_LOG_ROOT: root } : {}) });
 }
 
 describe('R-HK — the CLI has explicit modes; no default write; an unknown flag exits 2', () => {
@@ -155,6 +166,26 @@ describe('R-HK — --check: every approved decision has a citing register row', 
 });
 
 describe('R-HK — --write emits a skeleton row per uncovered decision; the real CLI goes RED then GREEN', () => {
+  it('arm K fails closed outside a git work tree: --check exits 1 and says so (never a pass)', () => {
+    const root = tree(fixtureLog(), spec(row('X-1', `${STEM}#R-1`), row('X-2', `${STEM}#R-2`)).text);
+    const notRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'decision-log-norepo-'));
+    fs.cpSync(root, notRepo, { recursive: true });
+    fs.rmSync(path.join(notRepo, '.git'), { recursive: true, force: true });
+    const r = runCli(['--check'], notRepo);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('FAIL:K:cannot-decide');
+    expect(r.stderr).toContain('not a git work tree');
+  });
+
+  it('arm K decides in a git-initialised root with a clean tree: --check exit codes unchanged', () => {
+    const green = tree(fixtureLog(), spec(row('X-1', `${STEM}#R-1`), row('X-2', `${STEM}#R-2`)).text);
+    expect(runCli(['--check'], green).status).toBe(0);
+    const red = tree(fixtureLog(), spec().text);
+    const r = runCli(['--check'], red);
+    expect(r.status).toBe(1);
+    expect(r.stderr).not.toContain('not a git work tree');
+  });
+
   it('RED (exit 1) with no rows → --write emits the routed skeletons → GREEN (exit 0) once rows cite them', () => {
     const root = tree(fixtureLog(), spec().text);
     const red = runCli(['--check'], root);

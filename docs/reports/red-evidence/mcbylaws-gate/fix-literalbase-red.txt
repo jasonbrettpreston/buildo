@@ -1,0 +1,9 @@
+# red: fix-literalbase, old scripts/analysis/mcbylaws/gate.mjs with the new test
+     → expected +0 to be 1 // Object.is equality
+     → expected 1 to be +0 // Object.is equality
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 500ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > one commit that adds 0.45 and raises its own baseline fails; a baseline already in the base passes
+    168|     expect(r.out).toContain('FAIL:L:number:0.45');
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > a deleted or renamed scope file neither cannot-scan nor cannot-decide; only the rename target is scanned
+    186|     expect(d.out).not.toContain('FAIL:L:cannot-scan');

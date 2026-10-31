@@ -1,0 +1,9 @@
+# red: fix-owedlock, old scripts/analysis/mcbylaws/cite-arms.mjs with the new test
+     → expected [ 'FAIL:C:not-ruled:R-QA', …(1) ] to deeply equal []
+     → lockLands is not a function
+     → expected [ 'FAIL:C:not-ruled:R-QA', …(1) ] to deeply equal []
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-KG arm C — an OWED rule whose lock lands in the same commit > b. green: lock added + red evidence
+AssertionError: expected [ 'FAIL:C:not-ruled:R-QA', …(1) ] to deeply equal []
++   "FAIL:C:not-ruled:R-QA",
++   "FAIL:C:owed:R-QA",

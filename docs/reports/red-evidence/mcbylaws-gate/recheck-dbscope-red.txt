@@ -1,0 +1,7 @@
+# red: recheck-dbscope, old scripts/analysis/mcbylaws/db-target.mjs with the new test
+     → expected false to be true // Object.is equality
+     → expected false to be true // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-dbtarget.logic.test.ts > isDbScopePath — the caller gates which files the scan covers > .cursor/engine-briefs/mb67-g1.md -> true
+ FAIL  src/tests/mcbylaws-dbtarget.logic.test.ts > isDbScopePath — the caller gates which files the scan covers > .cursor/engine-briefs/sub/x.md -> true
+      Tests  2 failed | 33 passed (35)

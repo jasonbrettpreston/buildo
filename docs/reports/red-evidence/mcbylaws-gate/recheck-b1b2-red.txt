@@ -1,0 +1,9 @@
+# red: recheck-b1b2, old scripts/analysis/mcbylaws/gate.mjs with the new test
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 499ms
+     → expected +0 to be 1 // Object.is equality
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:L:number:0.45'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B1: an evil merge alone in the range fails on its sha; a docs-only merge passes
+    440|     expect(r.out).toContain(`FAIL:P:no-record:${red.merge}`);
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B2: a narrowing commit does not switch arm L off for a later literal; the control without narrowing fails too
+AssertionError: expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'FAIL:L:number:0.45'

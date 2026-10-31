@@ -1,0 +1,9 @@
+# green: dbtarget, module(s) present: scripts/analysis/mcbylaws/db-target.mjs
+# 2026-10-30T19:24:00Z HEAD 3e3212b9
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g1
+ ✓ src/tests/mcbylaws-dbtarget.logic.test.ts (31 tests) 3ms
+ Test Files  1 passed (1)
+      Tests  31 passed (31)
+   Start at  15:24:00
+   Duration  184ms (transform 18ms, setup 6ms, collect 4ms, tests 3ms, environment 0ms, prepare 17ms)

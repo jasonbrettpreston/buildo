@@ -1,0 +1,9 @@
+# red: fix-panelcol, old scripts/analysis/mcbylaws/summary-collect.mjs with the new test
+     → expected false to be 'exempt' // Object.is equality
+     → expected true to be 'invalid' // Object.is equality
+     → expected true to be 'invalid' // Object.is equality
+     → expected true to be 'invalid' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-summarycollect.logic.test.ts > collectRef — the panel column (S7, arm P rules) > a sole-prereg commit with no trailer is exempt
+ FAIL  src/tests/mcbylaws-summarycollect.logic.test.ts > collectRef — the panel column (S7, arm P rules) > a layer23 commit with a record naming another task
+ FAIL  src/tests/mcbylaws-summarycollect.logic.test.ts > collectRef — the panel column (S7, arm P rules) > a layer23 commit with an unparsable record

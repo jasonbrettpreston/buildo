@@ -1,0 +1,6 @@
+feat(78_optimal_lot_configuration): MB-16 a maximum building for every permitted type on the 25 lots: max-build inputs move from harness what-if hooks into the engine (M-168 permission at the class own height; M-361 G1-Q1 no cap only where the zone has no article, G1-Q2 today's lot stands in for 2013, G1-Q3 height alone; CHAT-201 MR-Q2-P roof and garage options labelled; FS-SB1/FS-SB2 sources kept; M-177(4)/M-199 secondary-suite GFA split, SC-Q3 registry literal; prereg 5cecc9a9)
+
+Spec-diff: N-A every rule built here is already ratified in 69a (M-168, M-361, M-376, M-177, M-199) and the CHAT-201/FS-SB records; no spec text moves, the register build-status line is updated by the queue owner
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+

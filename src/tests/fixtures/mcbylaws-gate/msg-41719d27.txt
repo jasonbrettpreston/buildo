@@ -1,0 +1,8 @@
+feat(78_optimal_lot_configuration): P3-8 step commit 2 HELD on P3-Q1 / P3-Q15 - compute module compute-maxbld-scenarios orchestrating the pure Phase 3 modules over a batch of Layer 2 lots (Spec 132 §materializer.1 (R-EH), §core.9; Spec 133 §m.188, §m.189 (M-189); CHAT-73.nohalt; strict red: compute-module.logic 25 of 25 failed with the module absent, ~/Buildo-scratch/p3build/red-p3-8.txt; amendment-index 4 of 4, red-p3-8b.txt)
+
+HELD on P3-Q1 / P3-Q15: stays on wf1/p3plan, nothing merged until the operator rules. scripts/lib/compute/compute-maxbld-scenarios.js: buildSourceSql, materializeRows (Layer 2 through the one accessor; P5.1 status, P5.2 main building, P5.4 units, P5.10a CoA tier, P5.6/P5.7 renovation, P3-6 lineage, is_headline; e1 keyed retraction + e2 upsert rows with every persisted column), tally/finalizeMatched/buildPostSql, the eleven Spec 78 P5.11 checks and compute(ctx) with records_meta. The rear suite (P5.5) has no module and is NOT built: REAR_SUITE = not_built, every suite_ column in NOT_POPULATED (a ratchet the test recomputes, with NULL_BY_DESIGN for owner-entered and unfitted columns). Clause literals come from scripts/analysis/phase3/phase3-literals.json (still reported unmapped by the G-CODE arm). Adds the view's entriesFromPointers and disclosure-set lookup and a generated amendment index (--check) for field_citations. Gates: G0 closure PASS, G1..G4 purity 0 sites, gate E list clean.
+
+Spec-diff: N-A held draft on wf1/p3plan, the step is unregistered; the owner-spec (Spec 78) staging and Target Files generation happen at cutover (Spec 132 x-stages.4).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+

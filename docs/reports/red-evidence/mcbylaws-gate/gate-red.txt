@@ -1,0 +1,27 @@
+# red: gate, module(s) absent: scripts/analysis/mcbylaws/gate.mjs
+# 2026-10-30T18:51:36Z HEAD 8a080c73
++
++ Node.js v24.22.0
++
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:117:19
+    115|     const a = run(req, ['--staged']);
+    116|     expect(a.status).toBe(1);
+    117|     expect(a.out).toContain('FAIL:X:arm-missing:loop');
+       |                   ^
+    118|     const opt = mk();
+    119|     seed(opt, policy({ external_arms: [{ id: 'loop', required: false }…
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > mcbylaws gate CLI > P3: the gate source carries no environment switch
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mb-g1/scripts/analysis/mcbylaws/gate.mjs'
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:130:20
+    128| 
+    129|   it('P3: the gate source carries no environment switch', () => {
+    130|     const src = fs.readFileSync(GATE, 'utf8');
+       |                    ^
+    131|     for (const word of ['process.env', 'SKIP', 'BYPASS', 'no-gate']) e…
+    132|   });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+ Test Files  1 failed (1)
+      Tests  6 failed | 1 passed (7)
+   Start at  14:51:36
+   Duration  575ms (transform 17ms, setup 6ms, collect 5ms, tests 403ms, environment 0ms, prepare 24ms)

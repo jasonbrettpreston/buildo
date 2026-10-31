@@ -1,0 +1,14 @@
+# red: dbtarget, module(s) absent: scripts/analysis/mcbylaws/db-target.mjs
+# 2026-10-30T19:23:59Z HEAD 3e3212b9
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-g1
+ ❯ src/tests/mcbylaws-dbtarget.logic.test.ts (0 test)
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-dbtarget.logic.test.ts [ src/tests/mcbylaws-dbtarget.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws/db-target.mjs (resolved id: ../../scripts/analysis/mcbylaws/db-target.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb-g1/src/tests/mcbylaws-dbtarget.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  15:23:59
+   Duration  213ms (transform 19ms, setup 11ms, collect 0ms, tests 0ms, environment 0ms, prepare 21ms)

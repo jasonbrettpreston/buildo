@@ -1,0 +1,9 @@
+# red: decision-log.mjs without the arm K (HEAD version)
+     → stagedRowConflictProblems is not a function
+     → stagedRowConflictProblems is not a function
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-conflicts.logic.test.ts > decision-log --check gains arm K (W3): a register row ADDED in the staged diff needs its Conflict check > red: the MB17-Q1 draft row with no paragraph, and one that omits M-180
+TypeError: stagedRowConflictProblems is not a function
+ FAIL  src/tests/mcbylaws-conflicts.logic.test.ts > decision-log --check gains arm K (W3): a register row ADDED in the staged diff needs its Conflict check > green: the row naming all ten with M-180 amends, and a staged diff with no register row
+TypeError: stagedRowConflictProblems is not a function
+      Tests  2 failed | 12 passed (14)

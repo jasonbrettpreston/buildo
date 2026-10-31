@@ -1,0 +1,9 @@
+# red: recheck2-x1, old scripts/analysis/mcbylaws/gate.mjs with the new test
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 514ms
+     → expected +0 to be 1 // Object.is equality
+   × L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a base file listing the sha announces it and has no FAIL line for it 231ms
+     → expected 'PUSH HEAD  HOLD       APPROVED absent…' to contain 'landing exception: 27de8b1cface8ec93a…'
+     → expected +0 to be 1 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > the frozen constant: the real list holds exactly the six shas, and the gate source names each once
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a base file listing the sha announces it and has no FAIL line for it

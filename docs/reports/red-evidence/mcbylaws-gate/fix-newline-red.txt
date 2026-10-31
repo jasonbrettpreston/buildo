@@ -1,0 +1,7 @@
+# red: fix-newline, old scripts/analysis/mcbylaws/paths.mjs with the new test
+     → expected false to be true // Object.is equality
+     → expected false to be true // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-paths.logic.test.ts > newlines in paths (O67-05) > layer23 true for a path with a newline: "scripts/analysis/bylaw/a\nb.mjs"
+ FAIL  src/tests/mcbylaws-paths.logic.test.ts > newlines in paths (O67-05) > layer23 true for a path with a newline: "scripts/analysis/bylaw/x\ny/z.mjs"
+      Tests  2 failed | 53 passed (55)

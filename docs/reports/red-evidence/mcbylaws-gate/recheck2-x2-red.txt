@@ -1,0 +1,7 @@
+# red: recheck2-x2, old scripts/analysis/decision-log.mjs with the new test
+     → expected '[decision-log] RED — 1 problem(s):\n …' to contain 'not a git work tree'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/decision-log.logic.test.ts > R-HK — --write emits a skeleton row per uncovered decision; the real CLI goes RED then GREEN > arm K fails closed outside a git work tree: --check exits 1 and says so (never a pass)
++   FAIL:K:cannot-decide
+    176|     expect(r.stderr).toContain('FAIL:K:cannot-decide');
+      Tests  1 failed | 47 passed (48)

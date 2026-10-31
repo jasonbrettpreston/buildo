@@ -1,0 +1,2 @@
+# red: fix-bootstrap, old scripts/analysis/mcbylaws/policy-resolve.mjs with the new test
+      Tests  10 passed (10)

@@ -66,3 +66,16 @@ jobs:
         run: >-
           npm run test -- --exclude "src/tests/db/**"
           --exclude "src/tests/admin-lead-schemas.contract.test.ts"
+
+      # MB-67 (R-KM, R-KP, R-LF; plan section 10 W4): the McBylaws gate re-runs every arm on the range, per commit, from
+      # the event's own base. CI is the LANDING gate: it runs only on pull requests to main and pushes to main, so a push
+      # of a lane branch is checked only by the local pre-push hook. fetch-depth 0 (above) gives it the whole history.
+      # No input, flag or environment variable turns an arm off; a summary prints, it never prompts.
+      - name: McBylaws gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then BASE="origin/$BASE_REF"; else BASE="$BEFORE_SHA"; fi
+          node scripts/analysis/mcbylaws/gate.mjs --ci --base "$BASE"

@@ -1,0 +1,21 @@
+# mode: green   hooks: hooks
+--- commit of a Layer 2/3 file, no APPROVED
+FAIL:H:no-approved
+GATE FAIL
+commit exit:        1 commits in log
+f929313 seed
+--- push of that commit (commit made with --no-verify when the hook refused it, to reach the pre-push check)
+push exit: 1
+PUSH main  HOLD       APPROVED absent
+PROTECTED:
+  scripts/analysis/bylaw/evaluate.mjs   +1 -0
+  aa45360 null R-LD MISSING
+PANEL MISSING aa45360 null
+HELD PATCHES  12 of 12, may only fall
+WORKTREES  11 McBylaws worktrees: 10 dirty, 56 commits not on any remote DIRTY
+pending/  0 red-by-design tests (was 0)
+FAIL:H:no-approved:aa453607ebc30515b7fa9f37c56170b90e52552b
+FAIL:C:cannot-decide:aa453607ebc30515b7fa9f37c56170b90e52552b
+FAIL:P:no-record:aa453607ebc30515b7fa9f37c56170b90e52552b
+GATE FAIL
+f9293137
