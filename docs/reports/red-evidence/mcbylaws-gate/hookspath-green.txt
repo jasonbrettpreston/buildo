@@ -1,0 +1,100 @@
+# green: hooks path backstop and makeRepo guard
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-rul
+
+ ✓ src/tests/hooks-composition.infra.test.ts (49 tests) 16ms
+ ✓ src/tests/mcbylaws-loop-gate-eval.logic.test.ts (80 tests) 18ms
+ ✓ src/tests/mcbylaws-loop-floors.logic.test.ts (27 tests) 8ms
+ ✓ src/tests/mcbylaws-loop-prereg.logic.test.ts (38 tests) 1214ms
+ ✓ src/tests/mcbylaws-loop-oracle.logic.test.ts (55 tests) 10ms
+ ✓ src/tests/mcbylaws-loop-gate-commands.logic.test.ts (23 tests) 1672ms
+ ✓ src/tests/mcbylaws-loop-decide.logic.test.ts (52 tests) 7ms
+ ✓ src/tests/mcbylaws-loop-regression.logic.test.ts (45 tests) 13ms
+ ✓ src/tests/mcbylaws-loop-record.logic.test.ts (66 tests) 10ms
+ ✓ src/tests/mcbylaws-loop-gate.logic.test.ts (41 tests) 1958ms
+ ✓ src/tests/mcbylaws-loop-increment.logic.test.ts (24 tests) 4ms
+ ✓ src/tests/hooks-path-guard.infra.test.ts (2 tests) 14ms
+ ✓ src/tests/mcbylaws-gitutil.logic.test.ts (22 tests) 484ms
+deepseek-exec: provider downgraded to claude (no_write_scope)
+deepseek-exec: provider downgraded to claude (no_write_scope)
+deepseek-exec: provider downgraded to claude (engine_unavailable:no_api_key)
+deepseek-exec: provider downgraded to claude (engine_unavailable:no_api_key)
+ ✓ src/tests/mcbylaws-loop-gate-context.logic.test.ts (15 tests) 6887ms
+   ✓ buildContext: commit mode > reads the index: nameStatus, commits, the classes of the base policy, the new record and the bound catalogue 374ms
+   ✓ buildContext: commit mode > reads the base policy from the base copy, not the staged one 395ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > an UNSTAGED register edit is NOT seen in commit mode; the same edit STAGED is 667ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > push mode reads the register at HEAD: a landed ruling is seen, a merely written one is not 978ms
+   ✓ buildContext: push and ci mode > push over two commits: commits per commit, base explicit, preregHistory present 460ms
+   ✓ buildContext: push and ci mode > ci: computeRun may answer null and the ctx still carries every fact 449ms
+   ✓ buildContext: push and ci mode > derives base from the merge-base of the target when --base is empty 450ms
+   ✓ buildContext: push and ci mode > N68-2 greenHistory also holds the increments accepted INSIDE the range (never the one under judgement) 450ms
+   ✓ buildContext: push and ci mode > greenHistory from accepted records at the base, prevCases from the previous round of the increment 427ms
+   ✓ buildContext -> evaluateGate (end to end) > the honest round has no violations; an empty reason is accept_without_reason 919ms
+   ✓ buildContext -> evaluateGate (end to end) > O68-06: an honest DELETION of a bound code file is not input_not_bound (the deleted path has no blob to bind) 426ms
+HEAD is now at 7f8ad67 seed
+HEAD is now at 7f8ad67 seed
+HEAD is now at 772bf14 seed
+ ✓ src/tests/deepseek-exec-fences.infra.test.ts (123 tests | 2 skipped) 8794ms
+   ✓ SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C) > commit 9: budgets — timeout_ms clamped to timeout_ceiling_ms, never rejected > a requested timeout_ms far beyond the ceiling is CLAMPED to the ceiling (not rejected) — proven via a custom policy + a direct tool dispatch 768ms
+   ✓ SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C) > commit 9: budgets — a bash command exceeding its timeout is killed, and the child is gone afterwards > run_bash_command with timeout_ms:500 against a 30s sleep fixture: TIMEOUT, and the sleep process is no longer running 591ms
+   ✓ SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C) > commit 10: git_commit — single-committer advisory lock > a stale committer lock (dead pid) is reclaimed, and the commit succeeds 302ms
+   ✓ SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C) > commit 10b: committer lock is per-worktree (amends commit 10) > two DIFFERENT worktrees commit without COMMITTER_BUSY colliding — their lock filenames differ 328ms
+ ✓ src/tests/mcbylaws-loop-gate-run.logic.test.ts (27 tests) 10152ms
+   ✓ the real 172 group (MB-68 B7d) > 698 cases with unique ids, the pin regenerated, canary red, floors checked, and a second run hashes identically 10068ms
+ ✓ src/tests/mcbylaws-gate.logic.test.ts (41 tests) 18556ms
+   ✓ mcbylaws gate CLI > H1: a Layer 2/3 staged change with no APPROVED fails, and passes once APPROVED is committed 392ms
+   ✓ mcbylaws gate CLI > H7: a dead layer23 glob fails, and passes when it is listed in pending_globs 417ms
+   ✓ mcbylaws gate CLI > G67-12: an external arm missing fails when required and is pending when not 502ms
+   ✓ O67-23: arm V runs over the DB scope inside --staged and the range > a staged night file with a cloud target fails; the same file with a local target passes 359ms
+   ✓ O67-23: arm V runs over the DB scope inside --staged and the range > a committed cloud target in DB scope fails a --ci range 401ms
+   ✓ O67-11: the loop arm is called as its CLI defines (argv and verdicts) > --staged calls check --mode commit; --ci --base <rev> calls check --mode ci --base <rev> 540ms
+   ✓ O67-11: the loop arm is called as its CLI defines (argv and verdicts) > --push calls the arm once per ref with the ref base 429ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > one commit that adds 0.45 and raises its own baseline fails; a baseline already in the base passes 721ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > a deleted or renamed scope file neither cannot-scan nor cannot-decide; only the rename target is scanned 708ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 961ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-04: a range whose base has no policy passes when its first commit is the policy alone, and fails when it is not 855ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-20: arm C reads the register in each commit's PARENT; a later RATIFIED row does not rescue an earlier cite 600ms
+   ✓ O67-02: a merge commit is judged by its own combined diff (an "evil" merge cannot hide from --no-merges) > a conflict resolved off Layer 2/3 fails on the merge sha; a clean merge adds no H failure 1020ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B1: an evil merge alone in the range fails on its sha; a docs-only merge passes 931ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B2: a narrowing commit does not switch arm L off for a later literal; the control without narrowing fails too 529ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a base file listing the sha announces it and has no FAIL line for it 372ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a decoy sha in the base file excuses nothing, and neither does an absent base file 768ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > RED X1: a list added by a LATER commit of the range names the earlier sha and still does not excuse it 435ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > an invalid base file fails closed (FAIL:X:cannot-decide) and the frozen six still apply 383ms
+   ✓ S11: a large range pages the summary and writes the full list, instead of FAIL:S:overflow > 60 protected files on one docs-only commit pass at --ci with a full list 347ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit skips H, C and P, is shown as pre-policy (not exempt), still fails V; the bootstrap and a later commit are judged 479ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit still fails arm L 407ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a commit AFTER the bootstrap with no citation still fails H, and nothing after the bootstrap is pre-policy 363ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a commit on a side branch that is not an ancestor of the bootstrap still fails H 312ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a bootstrap sha missing from the repository is FAIL:X:cannot-decide, and the commits are still judged 460ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > an ancestry check that errors is FAIL:X:cannot-decide and exempts nothing 462ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > the CLI uses the frozen sha only: a repo without c500c249 is cannot-decide, and the source reads no environment 471ms
+   ✓ RM (CARD-rulemap-literal-exempt, R-KR): exactly the generated rule map is exempt from arm L, and nothing else in scope > arm L does not scan the exempt map, but still fails a new string in any other JSON file of the scope 781ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > an old base is judged from the bootstrap: pre-bootstrap work is not judged, post-bootstrap work still fails arm L and the loop arm, and the summary names the effective base 431ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a base at the bootstrap is unchanged: no effective-base line, the same post-bootstrap failures 408ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a side-branch commit after the bootstrap (not its ancestor) is still judged 515ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a missing bootstrap is FAIL:X:cannot-decide and the old base is not widened to the bootstrap 518ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > an ancestry error is FAIL:X:cannot-decide and the base stays as given 509ms
+ ✓ src/tests/mcbylaws-loop-gate-e2e.logic.test.ts (11 tests) 20239ms
+   ✓ the real run (mode push over the committed set) > the run covers the committed set: 1194 cases, the pin regenerates, the canary is red, every case is hashed, nothing is missing 8997ms
+   ✓ the real run (mode push over the committed set) > the coa4d group declares no percent floors, so the real run has floorsOk true and exactly the one 172 OWED line (M-360) 11152ms
+ ✓ src/tests/mcbylaws-loop-realdata.logic.test.ts (13 tests) 194425ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 1. honest round (a comment, no scorer row moves) goes green through the real CLI 41383ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 2. dishonest: a code change AFTER the record was written is stale_green 10214ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 2b. a code change with no record at all is record_missing 9071ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 3. dishonest: a forged case status in a COMMITTED record is record_differs_from_run 21452ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 4. dishonest: a hand-edited pin is generated_not_regenerable 10169ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 5. metadata only: a rule-map touch needs no record, but beside a code edit it is record_missing 7314ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 6. prereg-only add: a new prereg file is out of scope 3674ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 7. floors still guard the real data: a raised floor over the real rows is floor_fell 10170ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 8. a real scorer row that moves with no prereg entry is unexpected_move 19230ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 9. the same move registered in the prereg is green, and a registered move that does not happen is missing_move 35303ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 10. the round-0 count floors file holds the real counts and both it and the OWED baseline still guard them 10221ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 11. the OWED baseline cannot be LOWERED by hand: a round may not loosen its own ratchet 10194ms
+
+ Test Files  19 passed (19)
+      Tests  752 passed | 2 skipped (754)
+   Start at  15:10:18
+   Duration  194.65s (transform 384ms, setup 159ms, collect 1.12s, tests 264.48s, environment 1ms, prepare 518ms)
+

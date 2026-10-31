@@ -16,7 +16,9 @@ import { afterAll, describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as gitUtil from '../../scripts/analysis/mcbylaws/git-util.mjs';
-import { makeRepo } from './fixtures/mcbylaws-gate/repo-helper';
+import { spawnSync } from 'node:child_process';
+import * as path from 'node:path';
+import { assertOwnRepo, makeRepo } from './fixtures/mcbylaws-gate/repo-helper';
 
 const gu = gitUtil as unknown as {
   git(cwd: string, args: string[], opts?: { input?: string }): { status: number; stdout: string; stderr: string };
@@ -243,5 +245,40 @@ describe('MB-67 B1c — repo-helper honours the temp-repo rules', () => {
       r.cleanup();
     }
     expect(fs.existsSync(r.dir)).toBe(false);
+  });
+});
+
+describe('MB-67 incident 2026-10-31: makeRepo never writes config into a repository that is not its own', () => {
+  it('assertOwnRepo throws for the real repository and accepts a fixture repository', () => {
+    const r = makeRepo();
+    try {
+      expect(() => assertOwnRepo(r.dir)).not.toThrow();
+      expect(() => assertOwnRepo(path.resolve(__dirname, '../..'))).toThrow(/not its own/);
+    } finally {
+      r.cleanup();
+    }
+  });
+
+  it('with GIT_DIR, GIT_WORK_TREE and GIT_CONFIG_PARAMETERS aimed at the real repo, the real hooks path is untouched and the fixture is its own repo', () => {
+    const real = path.resolve(__dirname, '../..');
+    const raw = spawnSync('git', ['rev-parse', '--git-common-dir'], { cwd: real, encoding: 'utf8' }).stdout.trim();
+    const common = path.resolve(real, raw);
+    const read = () => spawnSync('git', ['config', '--file', path.join(common, 'config'), '--get', 'core.hooksPath'], { encoding: 'utf8' }).stdout.trim();
+    const before = read();
+    const saved = { d: process.env.GIT_DIR, w: process.env.GIT_WORK_TREE, p: process.env.GIT_CONFIG_PARAMETERS };
+    process.env.GIT_DIR = common;
+    process.env.GIT_WORK_TREE = real;
+    process.env.GIT_CONFIG_PARAMETERS = "'core.hooksPath=/tmp/leak'";
+    let r: ReturnType<typeof makeRepo> | null = null;
+    try {
+      r = makeRepo();
+      expect(r.git(['rev-parse', '--absolute-git-dir']).startsWith(r.dir)).toBe(true);
+      expect(read()).toBe(before);
+    } finally {
+      for (const [k, v] of [['GIT_DIR', saved.d], ['GIT_WORK_TREE', saved.w], ['GIT_CONFIG_PARAMETERS', saved.p]] as const) {
+        if (v === undefined) delete process.env[k]; else process.env[k] = v;
+      }
+      r?.cleanup();
+    }
   });
 });

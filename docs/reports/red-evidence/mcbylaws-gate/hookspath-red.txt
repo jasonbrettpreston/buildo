@@ -1,0 +1,44 @@
+# red: hooks path backstop and makeRepo guard (helpers absent)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-rul
+
+ ❯ src/tests/hooks-path-guard.infra.test.ts (0 test)
+ ❯ src/tests/mcbylaws-gitutil.logic.test.ts (22 tests | 1 failed) 263ms
+   × MB-67 incident 2026-10-31: makeRepo never writes config into a repository that is not its own > assertOwnRepo throws for the real repository and accepts a fixture repository 24ms
+     → expected [Function] to not throw an error but 'TypeError: asse…' was thrown
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/hooks-path-guard.infra.test.ts [ src/tests/hooks-path-guard.infra.test.ts ]
+Error: Failed to load url ./hooks-path-guard.global (resolved id: ./hooks-path-guard.global) in /Users/brettpreston_macmini/Buildo-wt-mb-rul/src/tests/hooks-path-guard.infra.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-gitutil.logic.test.ts > MB-67 incident 2026-10-31: makeRepo never writes config into a repository that is not its own > assertOwnRepo throws for the real repository and accepts a fixture repository
+AssertionError: expected [Function] to not throw an error but 'TypeError: asse…' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"TypeError: __vite_ssr_import_6__.assertOwnRepo is not a function"
+
+ ❯ src/tests/mcbylaws-gitutil.logic.test.ts:255:46
+    253|     const r = makeRepo();
+    254|     try {
+    255|       expect(() => assertOwnRepo(r.dir)).not.toThrow();
+       |                                              ^
+    256|       expect(() => assertOwnRepo(path.resolve(__dirname, '../..'))).to…
+    257|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  2 failed (2)
+      Tests  1 failed | 21 passed (22)
+   Start at  15:08:45
+   Duration  611ms (transform 23ms, setup 13ms, collect 189ms, tests 263ms, environment 0ms, prepare 40ms)
+

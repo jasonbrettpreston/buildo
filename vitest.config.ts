@@ -24,6 +24,6 @@ export default defineConfig({
     // BUILDO_TEST_DB_EXTERNAL=1 — the dev stack is refused); otherwise it's a no-op so the normal mocked
     // suite isn't slowed down. Individual *.db.test.ts files self-skip
     // via describe.skipIf(!dbAvailable()).
-    globalSetup: ['src/tests/db/setup-testcontainer.ts'],
+    globalSetup: ['src/tests/db/setup-testcontainer.ts', 'src/tests/hooks-path-guard.global.ts'],
   },
 });

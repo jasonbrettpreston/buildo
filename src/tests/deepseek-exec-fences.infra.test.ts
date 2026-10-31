@@ -1335,7 +1335,10 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         path.join(huskyDir, 'pre-commit'),
         '#!/bin/sh\nif [ -n "$DEEPSEEK_API_KEY" ]; then echo "LEAKED:$DEEPSEEK_API_KEY"; exit 1; fi\nexit 0\n',
       );
-      execFileSync('git', ['config', 'core.hooksPath', '.husky'], { cwd: repo, env: scrubbedChildEnv() });
+      // incident 2026-10-31: write only into this fixture's own config file, by explicit path, after proving the git dir is inside `repo`.
+      const ownGitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' }).trim();
+      if (!fs.realpathSync(ownGitDir).startsWith(fs.realpathSync(repo) + path.sep)) throw new Error(`fixture repo ${repo} is not its own git repository`);
+      execFileSync('git', ['config', '--file', path.join(ownGitDir, 'config'), 'core.hooksPath', '.husky'], { cwd: repo, env: scrubbedChildEnv() });
       const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,

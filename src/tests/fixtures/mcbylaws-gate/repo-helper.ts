@@ -11,11 +11,29 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-/** The GIT_* slice of the environment (common rule 3 allows no other passthrough). */
-function gitEnv(base: NodeJS.Dict<string> = process.env): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [k, v] of Object.entries(base)) if (k.startsWith('GIT_') && v !== undefined) env[k] = v;
-  return env;
+/**
+ * The environment of every fixture git call: NO GIT_* variable of the parent survives (GIT_DIR, GIT_WORK_TREE,
+ * GIT_INDEX_FILE and GIT_CONFIG_PARAMETERS would aim a call at the REAL repository -- incident 2026-10-31, a fixture
+ * wrote core.hooksPath into the real shared config); the isolation variables below are set instead, and discovery
+ * may not climb above the fixture's parent directory.
+ */
+function isolatedEnv(ceiling: string): NodeJS.ProcessEnv {
+  const env = {} as NodeJS.ProcessEnv;
+  for (const [k, v] of Object.entries(process.env)) if (!k.startsWith('GIT_') && v !== undefined) env[k] = v;
+  return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1', GIT_CEILING_DIRECTORIES: ceiling };
+}
+
+/**
+ * Throws unless `dir` is the work tree of a repository whose git dir sits INSIDE `dir` -- called before any config
+ * write, so a write can never land in a repository that is not the fixture's own.
+ */
+export function assertOwnRepo(dir: string): void {
+  const real = fs.realpathSync(dir);
+  const r = spawnSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: real, encoding: 'utf8', env: isolatedEnv(path.dirname(real)) });
+  const gitDir = r.status === 0 ? fs.realpathSync(r.stdout.trim()) : '';
+  if (gitDir === '' || !gitDir.startsWith(real + path.sep)) {
+    throw new Error(`repo-helper: ${dir} is not its own git repository (git dir "${gitDir}"); refusing to write config`);
+  }
 }
 
 export interface Repo {
@@ -54,7 +72,7 @@ export function makeRepo(): Repo {
       const r = spawnSync('git', [...configArgs(repo), ...args], {
         cwd: repo.dir,
         encoding: 'utf8',
-        env: { ...process.env, ...gitEnv(), GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' },
+        env: isolatedEnv(path.dirname(repo.dir)),
         maxBuffer: 64 * 1024 * 1024,
       });
       if (r.error) throw r.error;
@@ -80,9 +98,11 @@ export function makeRepo(): Repo {
     },
   };
   repo.git(['init', '-q']);
-  repo.git(['config', 'commit.gpgsign', 'false']);
-  repo.git(['config', 'user.name', 'MB-67']);
-  repo.git(['config', 'user.email', 'mb67@example.invalid']);
-  repo.git(['config', 'core.hooksPath', empty]);
+  // Every write below goes to the fixture's own config FILE by explicit path, after the guard: it cannot reach another repo.
+  assertOwnRepo(dir);
+  const own = path.join(dir, '.git', 'config');
+  for (const [k, v] of [['commit.gpgsign', 'false'], ['user.name', 'MB-67'], ['user.email', 'mb67@example.invalid'], ['core.hooksPath', empty]] as [string, string][]) {
+    repo.git(['config', '--file', own, k, v]);
+  }
   return repo;
 }
