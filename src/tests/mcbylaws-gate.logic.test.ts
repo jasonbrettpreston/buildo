@@ -32,7 +32,7 @@ function runB(repo: Repo, args: string[], boot: string, mode: 'real' | 'ancestry
 const rootOf = (repo: Repo) => repo.git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0];
 
 function run(repo: Repo, args: string[]) {
-  if (args[0] === '--ci' || args[0] === '--push') return runB(repo, args, rootOf(repo));
+  if (args[0] === '--ci' || args[0] === '--push') return runB(repo, args, rootOf(repo)!);
   const r = spawnSync(process.execPath, [GATE, ...args], {
     cwd: repo.dir, encoding: 'utf8', timeout: 60_000,
     env: { ...env(), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0', SKIP_MCBYLAWS_GATE: '1', MCBYLAWS_GATE: 'off' } as unknown as NodeJS.ProcessEnv,
@@ -231,7 +231,7 @@ describe('O67-11: the loop arm is called as its CLI defines (argv and verdicts)'
     l23Change(repo);
     const local = repo.commit('MB-67 a Layer 2/3 change');
     const input = `refs/heads/main ${local} refs/heads/main ${remote}\n`;
-    runB(repo, ['--push'], rootOf(repo), 'real', input);
+    runB(repo, ['--push'], rootOf(repo)!, 'real', input);
     expect(logged(repo)).toContain(`check --mode push --base ${remote}`);
     done();
   });
@@ -738,7 +738,7 @@ describe('RM (CARD-rulemap-literal-exempt, R-KR): exactly the generated rule map
 
   it('arm L does not scan the exempt map, but still fails a new string in any other JSON file of the scope', () => {
     const b = build();
-    const out = runB(b.r, ['--ci', '--base', b.base], rootOf(b.r));
+    const out = runB(b.r, ['--ci', '--base', b.base], rootOf(b.r)!);
     expect(out.out).not.toContain('map-only-string-xyz');
     expect(out.out).toContain('FAIL:L:json-string:other-new-string-abc');
     done();

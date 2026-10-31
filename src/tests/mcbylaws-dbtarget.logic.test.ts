@@ -54,9 +54,9 @@ describe('scanDbTargets — detail rules', () => {
   });
 
   it('fail closed: garbage input is refused, never read as "nothing to check"', () => {
-    expect(scanDbTargets(null)[0]).toMatch(/^FAIL:V:db-target-not-local/);
-    expect(scanDbTargets(undefined)[0]).toMatch(/^FAIL:V:db-target-not-local/);
-    expect(scanDbTargets(42)[0]).toMatch(/^FAIL:V:db-target-not-local/);
+    expect(scanDbTargets(null as unknown as string)[0]).toMatch(/^FAIL:V:db-target-not-local/);
+    expect(scanDbTargets(undefined as unknown as string)[0]).toMatch(/^FAIL:V:db-target-not-local/);
+    expect(scanDbTargets(42 as unknown as string)[0]).toMatch(/^FAIL:V:db-target-not-local/);
   });
 });
 
@@ -94,7 +94,7 @@ describe('isDbScopePath — the caller gates which files the scan covers', () =>
   });
 
   it('rejects a non-string path', () => {
-    expect(isDbScopePath(null)).toBe(false);
-    expect(isDbScopePath(7)).toBe(false);
+    expect(isDbScopePath(null as unknown as string)).toBe(false);
+    expect(isDbScopePath(7 as unknown as string)).toBe(false);
   });
 });
