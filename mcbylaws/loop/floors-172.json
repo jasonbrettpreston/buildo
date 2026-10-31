@@ -1,0 +1,42 @@
+{
+  "schema": "loop-floors-v1",
+  "lines": {
+    "coa172 cases": 698,
+    "coa4d cases": 496
+  },
+  "owed_baseline": {
+    "article 10.5.40 accuracy": 91.7
+  },
+  "rulings": [
+    {
+      "ruling": "M-330",
+      "lines": [
+        {
+          "line": "coa172 cases",
+          "from": null,
+          "to": 698
+        }
+      ]
+    },
+    {
+      "ruling": "M-330",
+      "lines": [
+        {
+          "line": "coa4d cases",
+          "from": null,
+          "to": 496
+        }
+      ]
+    },
+    {
+      "ruling": "M-372",
+      "lines": [
+        {
+          "line": "owed_baseline article 10.5.40 accuracy",
+          "from": null,
+          "to": 91.7
+        }
+      ]
+    }
+  ]
+}

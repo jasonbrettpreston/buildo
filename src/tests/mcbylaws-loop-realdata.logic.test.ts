@@ -25,8 +25,17 @@ const PIN_172 = 'scripts/analysis/bylaw-validation/coa-expected/expected-172.jso
 const FLOORS_172 = 'scripts/analysis/bylaw-validation/coa-expected/floors-172.json';
 const PREREG_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-99-1.json';
 const RECORD_1 = 'docs/reports/loop-records/1/round-01.json';
+const SCORER = 'scripts/analysis/bylaw-validation/coa-scorecard.mjs';
+const COUNT_FLOORS = 'mcbylaws/loop/floors-172.json';
+// the real scorecard row the round-0 count floors are measured on, and its printed class at the real scorer
+const MOVE_NOTICE = 'A0062/25SC';
+const MOVE_N = 1;
+const SCORER_ANCHOR = 'fs.writeFileSync(OUT, JSON.stringify({ root: ROOT';
+const SCORER_PATCH = `for (const r of rows) { if (r.notice === '${MOVE_NOTICE}' && r.n === ${String(MOVE_N)}) r.class = 'DIFFER'; }`;
 const SPAWN_BUDGET_MS = 240_000;
 const FIXTURE_BUDGET_MS = 300_000;
+// a real-data round costs five scorer spawns (the round, the base tree, and one per floor step): a generous per-test budget
+const ROUND_BUDGET_MS = 900_000;
 
 type Run = { status: number; stdout: string };
 
@@ -105,8 +114,9 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
    * Every `it` starts from the clone's committed state: leftovers of an earlier step (a staged comment, a written record, a reset
    * pin) made later checks answer for the wrong change set (observed as false results), so the state is cleared first.
    */
-  const cleanState = (): void => {
-    gitOk(clone, ['reset', '-q', '--hard', 'HEAD']);
+  /** Back to the clone's first commit (the overlay) when `toBase`: steps 8 and 9 commit a patched scorer that must not leak into the next step. */
+  const cleanState = (toBase = false): void => {
+    gitOk(clone, ['reset', '-q', '--hard', toBase ? base : 'HEAD']);
     gitOk(clone, ['clean', '-fdq']);
   };
 
@@ -153,6 +163,104 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
     writeText(file, `${JSON.stringify(obj, null, 2)}\n`);
     gitOk(clone, ['add', '--', rel]);
   };
+
+  /**
+   * The round's prereg (M-321 shape), written in the clone and committed ALONE: increment 1, group coa172, the given moves, and the
+   * clone's own pin totals. Committing it alone keeps `prereg_commit_not_alone` out of the picture: the assertion is about the move.
+   */
+  const commitPreregAlone = (moves: unknown[]): string => {
+    const pin: unknown = JSON.parse(readText(path.join(clone, PIN_172)));
+    const totals = (pin as { totals?: Record<string, number> }).totals;
+    expect(totals !== undefined && typeof totals === 'object').toBe(true);
+    writeText(
+      path.join(clone, PREREG_REL),
+      `${JSON.stringify(
+        {
+          $comment: 'real-data e2e (prereg moves)',
+          schema: 'coa-round-prereg-v1',
+          task: 'MB-99',
+          round: 15,
+          increment: '1',
+          group: 'coa172',
+          plan_ref: 'e2e',
+          expected_moves: moves,
+          expected_totals: totals,
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    gitOk(clone, ['add', '--', PREREG_REL]);
+    gitOk(clone, ['commit', '-q', '-m', 'prereg MB-99 round 15 (alone)']);
+    return revParse(clone, 'HEAD');
+  };
+
+  /**
+   * Patch the BASE tree's scorer so the one real row scores DIFFER there: the statement is inserted immediately BEFORE the anchor line
+   * that writes the scorecard (found EXACTLY once, else the fixture cannot do what it claims). Written and staged, never committed:
+   * the caller decides what the commit is.
+   */
+  const patchScorer = (): string[] => {
+    const file = path.join(clone, SCORER);
+    const lines = readText(file).split('\n');
+    const hits = lines.map((line, i) => (line.startsWith(SCORER_ANCHOR) ? i : -1)).filter((i) => i >= 0);
+    expect(hits.length).toBe(1);
+    const at = hits[0] as number;
+    lines.splice(at, 0, SCORER_PATCH);
+    writeText(file, lines.join('\n'));
+    gitOk(clone, ['add', '--', SCORER]);
+    return [SCORER];
+  };
+
+  /**
+   * The round of step 8/9: the patched scorer committed as the "base", the prereg committed ALONE, then the original scorer restored
+   * and a comment line appended and staged. Returns the clause_norm of the moved row, read from the REAL scorer's own output.
+   */
+  const stageRealMoveRound = (movesFor: (clause: string) => unknown[]): string => {
+    const original = revParse(clone, 'HEAD');
+    const clause = runScorerRow();
+    patchScorer();
+    commitAll('base tree: the scorer moves one real row to DIFFER');
+    commitPreregAlone(movesFor(clause));
+    gitOk(clone, ['checkout', original, '--', SCORER]);
+    // the restored file differs from the base's patched copy: the round moves that one real row (DIFFER -> MATCH)
+    expect(gitOk(clone, ['diff', '--name-only', 'HEAD', '--', SCORER]).trim()).toBe(SCORER); // restored original differs from the patched base: that IS the move
+    stageComment();
+    return clause;
+  };
+
+  /** Run the REAL scorer once inside the clone and read the moved row: its clause_norm (a scorer result, never typed by the test). */
+  const runScorerRow = (): string => {
+    const out = path.join(tmp, 'sc.json');
+    const r = spawnSync(
+      process.execPath,
+      [
+        path.join(clone, SCORER),
+        '--root', clone,
+        '--notices', path.join(DATA_DIR, 'notices-all2.json'),
+        '--parcels', path.join(DATA_DIR, 'parcels-all2.json'),
+        '--plan-facts', path.join(DATA_DIR, 'plan-facts'),
+        '--out', out,
+      ],
+      { cwd: clone, encoding: 'utf8', timeout: SPAWN_BUDGET_MS, env: childEnv() },
+    );
+    if (r.error) throw r.error;
+    expect(String(r.stderr)).not.toContain('Error');
+    expect(r.status).toBe(0);
+    const parsed: unknown = JSON.parse(readText(out));
+    const rows = (parsed as { rows?: Array<{ notice?: string; n?: number; class?: string; clause_norm?: string; clause?: string }> }).rows;
+    expect(Array.isArray(rows)).toBe(true);
+    const row = (rows || []).find((x) => x && x.notice === MOVE_NOTICE && x.n === MOVE_N);
+    expect(row !== undefined).toBe(true);
+    // the real scorer says MATCH: the base tree's patched copy says DIFFER, so the move is DIFFER->MATCH
+    expect(row !== undefined && row.class).toBe('MATCH');
+    const clause = String((row !== undefined && (row.clause_norm ?? row.clause)) || '');
+    expect(clause.length).toBeGreaterThan(0);
+    return clause;
+  };
+
+  /** The FAIL codes of a gate run, one per line (`FAIL <code>`). */
+  const failLines = (run: Run): string[] => run.stdout.split('\n').map((line) => line.trim()).filter((line) => line.startsWith('FAIL ')).map((line) => line.slice('FAIL '.length));
 
   beforeAll(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-loop-realdata-'));
@@ -350,5 +458,93 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
     const r = gate(['--mode', 'commit']);
     expect(r.stdout).toContain('floor_fell');
     expect(r.status).toBe(1);
-  });
+  }, ROUND_BUDGET_MS);
+
+  it('8. a real scorer row that moves with no prereg entry is unexpected_move', () => {
+    cleanState(true);
+    // the base tree's scorer says DIFFER for A0062/25SC#1, the round's scorer says MATCH, and the prereg registers NO move
+    const clause = stageRealMoveRound(() => []);
+    expect(clause.length).toBeGreaterThan(0);
+    writeRecord('e2e: a real scorer row moved without being registered');
+    // the comment line was staged before the record; the record describes exactly that change set
+    const r = gate(['--mode', 'commit']);
+    expect(failLines(r)).toContain(`unexpected_move:${MOVE_NOTICE}#${String(MOVE_N)} DIFFER->MATCH`);
+    expect(r.status).toBe(1);
+  }, ROUND_BUDGET_MS);
+
+  it('9. the same move registered in the prereg is green, and a registered move that does not happen is missing_move', () => {
+    cleanState(true);
+    // (a) the move the real scorer makes, listed by (notice, n, clause, from, to) exactly as the base and round rows give it
+    const clause = stageRealMoveRound((cl) => [{ notice: MOVE_NOTICE, n: MOVE_N, clause: cl, from: 'DIFFER', to: 'MATCH' }]);
+    writeRecord('e2e: the one registered move happens');
+    const listed = gate(['--mode', 'commit']);
+    expect(failLines(listed)).toEqual([]);
+    expect(listed.stdout).not.toContain('FAIL');
+    expect(listed.status).toBe(0);
+
+    // (b) the green twin's dishonest pair: the same prereg, but no patched base tree, so base and round agree and the move never happens
+    cleanState(true);
+    commitPreregAlone([{ notice: MOVE_NOTICE, n: MOVE_N, clause, from: 'DIFFER', to: 'MATCH' }]);
+    stageComment();
+    writeRecord('e2e: the registered move does not happen');
+    const missing = gate(['--mode', 'commit']);
+    expect(failLines(missing)).toContain(`missing_move:${clause}`);
+    expect(missing.status).toBe(1);
+  }, ROUND_BUDGET_MS);
+
+  it('10. the round-0 count floors file holds the real counts and both it and the OWED baseline still guard them', () => {
+    cleanState(true);
+    // (a) the file the tool generated in the REAL repo: the real counts, the real OWED baseline, and only round-0 rulings
+    const realFile = path.join(ROOT, COUNT_FLOORS);
+    expect(fs.existsSync(realFile)).toBe(true);
+    const parsed: unknown = JSON.parse(readText(realFile));
+    expect(parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)).toBe(true);
+    const floors = parsed as {
+      schema?: unknown;
+      lines?: Record<string, unknown>;
+      owed_baseline?: Record<string, unknown>;
+      rulings?: Array<{ ruling?: unknown }>;
+    };
+    expect(floors.schema).toBe('loop-floors-v1');
+    expect(floors.lines?.['coa172 cases']).toBe(698);
+    expect(floors.lines?.['coa4d cases']).toBe(496);
+    expect(floors.owed_baseline?.['article 10.5.40 accuracy']).toBe(91.7);
+    const rulings = Array.isArray(floors.rulings) ? floors.rulings : [];
+    expect(rulings.length).toBeGreaterThan(0);
+    for (const entry of rulings) expect(['M-330', 'M-372']).toContain(entry.ruling);
+    // the clone holds the same file: the floor lines the steps below move are the ones asserted above
+    expect(readText(path.join(clone, COUNT_FLOORS))).toBe(readText(realFile));
+
+    // (b) a count floor raised by hand above the real count: the run (698 coa172 cases) falls below 699
+    stageComment();
+    editJson(COUNT_FLOORS, (obj) => {
+      const lines = obj.lines;
+      expect(lines !== null && typeof lines === 'object').toBe(true);
+      (lines as Record<string, number>)['coa172 cases'] = 699;
+    });
+    writeRecord('e2e: hand-raised count floor');
+    const raised = gate(['--mode', 'commit']);
+    expect(failLines(raised)).toContain('floor_fell:coa172 cases 698 < 699');
+    expect(raised.stdout).toContain('floor_fell');
+    expect(raised.status).toBe(1);
+  }, ROUND_BUDGET_MS);
+
+  it('11. the OWED baseline cannot be LOWERED by hand: a round may not loosen its own ratchet', () => {
+    cleanState(true);
+    // (a) the OWED baseline lowered with no ruling entry recording the move: M-322 / O68-11 refuse it
+    stageComment();
+    editJson(COUNT_FLOORS, (obj) => {
+      const owed = obj.owed_baseline;
+      expect(owed !== null && typeof owed === 'object').toBe(true);
+      (owed as Record<string, number>)['article 10.5.40 accuracy'] = 80.0; // LOWERED by hand: the one move a round must not make on its own
+    });
+    writeRecord('e2e: hand-lowered OWED baseline');
+    const raised = gate(['--mode', 'commit']);
+    const codes = failLines(raised);
+    expect(codes.length).toBeGreaterThan(0);
+    // the exact code: the baseline now read from the BASE side (91.7) is not the raised one, but the file edit itself is refused too if the ratchet reads it
+    expect(codes).toContain('floor_lowered_without_ruling:owed_baseline article 10.5.40 accuracy');
+    expect(raised.stdout).toContain('FAIL');
+    expect(raised.status).toBe(1);
+  }, ROUND_BUDGET_MS);
 });

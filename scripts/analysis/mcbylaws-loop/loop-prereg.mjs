@@ -35,7 +35,9 @@ const itemOf = (n) => (/^\d+$/.test(String(n)) ? Number(n) : n);
 /** Gate-form rows [{group, id: '<notice>|<n>', status, clause}] -> scorer rows the C-4 diff keys by notice and item. */
 export function toScorerRows(rows) {
   return (rows || []).map((r) => {
-    const s = String(r.id || '');
+    let s = String(r.id || '');
+    // ids are group-qualified ("<group>|<notice>|<n>", O68-07); a prereg names the NOTICE, so the group prefix is stripped
+    if (r.group && s.startsWith(`${r.group}|`)) s = s.slice(String(r.group).length + 1);
     const i = s.lastIndexOf('|');
     return {
       notice: i < 0 ? s : s.slice(0, i),

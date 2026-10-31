@@ -230,9 +230,12 @@ const IDS_REL = 'mcbylaws/loop/data/ids-g-a.json';
 const COUNT_FLOORS = 'mcbylaws/loop/floors-count.json';
 const INCREMENTS_REL = 'scripts/analysis/mcbylaws-loop/data/increments.json';
 const PROTECTED_REL = 'mcbylaws/protected-paths.json';
+const REGISTER_REL = 'docs/specs/01-pipeline/69a_mcbylaw_register.md';
+const POLICY_69_REL = 'docs/specs/01-pipeline/69_mcbylaw_policy.md';
 const RECORD_1 = 'docs/reports/loop-records/1/round-01.json';
 const RECORD_2_1 = 'docs/reports/loop-records/2/round-01.json';
 const RECORD_2_2 = 'docs/reports/loop-records/2/round-02.json';
+const RECORD_3_1 = 'docs/reports/loop-records/3/round-01.json';
 // O68-05: the prereg is found by FILE NAME, prereg-MB-<digits>-<record round>.json: the round here is 1.
 // O6: the prereg is found by name + increment, never by a task number fixed to MB-68 (prereg-MB-99-1.json is a foreign task's
 // name, the shape of a real one: the round's prereg is matched on the pattern, not on the digits).
@@ -249,11 +252,9 @@ const PROMOTE_110_113 = [
 ];
 
 const sha = (n: number): string => String(n).padStart(64, '0');
-const REGISTER_TEXT = [
-  '| **M-322** | floors | RATIFIED 2026-10-07 |',
-  '| **M-333** | register | RULED 2026-10-07 |',
-  '',
-].join('\n');
+// The register reaches buildContext only through the `readRegisterText` seam (every test injects it): a fixture-invented ruling
+// here would be a fact the repository does not hold. The default reader's own git-at-`rev` path is tested separately below.
+const REGISTER_TEXT = '';
 
 function idsSha(ids: string[]): string {
   return crypto.createHash('sha256').update(JSON.stringify(ids)).digest('hex');
@@ -355,8 +356,8 @@ function seedBase(dir: string): void {
   writeFile(dir, 'mcbylaws/loop/floors-percent.json', percentFloors());
   writeFile(dir, COUNT_FLOORS, countFloors());
   writeFile(dir, RECORD_1, bind(recordPayload({ increment: '1', round: 1 })));
-  writeFile(dir, 'docs/specs/01-pipeline/69a_mcbylaw_register.md', '# register\n');
-  writeFile(dir, 'docs/specs/01-pipeline/69_mcbylaw_policy.md', '# policy\n');
+  writeFile(dir, REGISTER_REL, '# register\n');
+  writeFile(dir, POLICY_69_REL, '# policy\n');
 }
 
 /** The record's inputs, bound to the REAL blob ids of the tree it is committed beside (built after the files are written). */
@@ -530,6 +531,12 @@ const deps = async (over: { [k: string]: unknown } = {}): Promise<Deps> => ({
   ...over,
 }) as Deps;
 
+/** The deps WITHOUT the register seam: the REAL default reader, which must read the register at the round's revision. */
+const defaultDeps = async (): Promise<Deps> => ({
+  git: await loadGit(),
+  computeRun: () => fakeRun(),
+}) as Deps;
+
 const noComputeRun = (): undefined => undefined;
 
 // ---- tests -------------------------------------------------------------------------------------------------------------------------
@@ -562,7 +569,6 @@ describe('buildContext: commit mode', () => {
     expect(ctx.classify(CATALOGUE_NEXT)).toBe('code');
     expect(ctx.classify(SET_REL)).toBe('generated');
     expect(ctx.incrementIds).toEqual(INCREMENT_IDS);
-    expect(ctx.rulings.get('M-322')).toBe('RATIFIED');
 
     expect(ctx.latest).not.toBeNull();
     expect(ctx.latest?.path).toBe(RECORD_2_1);
@@ -621,6 +627,81 @@ describe('buildContext: commit mode', () => {
     expect(ctx.classify(RECORD_2_1)).toBe('generated');
     // The staged policy would make docs/** code; the base copy decides, so a doc path stays unclassified.
     expect(ctx.classify('docs/specs/01-pipeline/69a_mcbylaw_register.md')).toBeNull();
+  });
+});
+
+describe('buildContext: N68-1 the register and the closed increment list are read at the round revision', () => {
+  const RULING_LINE = '| **M-999** | x | RULED |';
+
+  /** A repository whose base is a landed, honest round: commit mode then judges the index over HEAD. */
+  async function landedRepo(): Promise<string> {
+    const dir = makeRepo();
+    await seedLandedRound(dir);
+    return dir;
+  }
+
+  const addRuling = (dir: string): void => {
+    writeFile(dir, REGISTER_REL, `# register\n${RULING_LINE}\n`);
+  };
+
+  it('an UNSTAGED register edit is NOT seen in commit mode; the same edit STAGED is', async () => {
+    const dir = await landedRepo();
+    const { buildContext } = await loadContext();
+
+    // The worktree carries the ruling, HEAD and the index do not: commit mode reads `:index`, so it is not a ruling of this round.
+    addRuling(dir);
+    const unstaged = await buildContext({ mode: 'commit', root: dir, base: '', target: '' }, await defaultDeps());
+    expect(unstaged.rulings.get('M-999')).toBeUndefined();
+
+    // Staged, the same line IS at the round's revision: it is a ruling.
+    stageAll(dir);
+    const staged = await buildContext({ mode: 'commit', root: dir, base: '', target: '' }, await defaultDeps());
+    expect(staged.rulings.get('M-999')).toBe('RULED');
+    // The base tree's register (69a, then Spec 69) is still the text read: the whole register is the two files joined.
+    expect(staged.rulings.size).toBe(1);
+  });
+
+  it('push mode reads the register at HEAD: a landed ruling is seen, a merely written one is not', async () => {
+    const dir = await landedRepo();
+    const base = gitQ(dir, ['rev-parse', 'HEAD^']);
+    const { buildContext } = await loadContext();
+
+    const landed = await buildContext({ mode: 'push', root: dir, base, target: '' }, await defaultDeps());
+    expect(landed.rulings.get('M-999')).toBeUndefined();
+
+    addRuling(dir);
+    stageAll(dir);
+    commitAll(dir, 'register ruling');
+    const after = await buildContext({ mode: 'push', root: dir, base, target: '' }, await defaultDeps());
+    expect(after.rulings.get('M-999')).toBe('RULED');
+  });
+
+  it('a missing increments.json at the revision is data_missing: <path>@<rev>', async () => {
+    const dir = makeRepo();
+    seedBase(dir);
+    commitAll(dir, 'base');
+    const { buildContext } = await loadContext();
+
+    // Deleted from the worktree only: the index still has it, so commit mode still reads it.
+    fs.rmSync(path.join(dir, INCREMENTS_REL), { force: true });
+    const ctx = await buildContext({ mode: 'commit', root: dir, base: '', target: '' }, await deps());
+    expect(ctx.incrementIds).toEqual(INCREMENT_IDS);
+
+    stageAll(dir);
+    await expect(buildContext({ mode: 'commit', root: dir, base: '', target: '' }, await deps()))
+      .rejects.toThrow(`data_missing: ${INCREMENTS_REL}@:index`);
+  });
+
+  it('a register file missing at the revision is data_missing: <path>@<rev>', async () => {
+    const dir = makeRepo();
+    seedBase(dir);
+    commitAll(dir, 'base');
+    fs.rmSync(path.join(dir, POLICY_69_REL), { force: true });
+    stageAll(dir);
+
+    const { buildContext } = await loadContext();
+    await expect(buildContext({ mode: 'commit', root: dir, base: '', target: '' }, await defaultDeps()))
+      .rejects.toThrow(`data_missing: ${POLICY_69_REL}@:index`);
   });
 });
 
@@ -705,6 +786,31 @@ describe('buildContext: push and ci mode', () => {
     expect(gitQ(dir, ['merge-base', 'HEAD', 'main'])).toBe(base);
   });
 
+  it('N68-2 greenHistory also holds the increments accepted INSIDE the range (never the one under judgement)', async () => {
+    const dir = makeRepo();
+    seedBase(dir);
+    // The base: increment 1 landed and was accepted.
+    const c0 = commitBound(dir, 'base: increment 1 accepted');
+    // c1: increment 2 round 1 landed and accepted, INSIDE the range (judged by the per-commit hooks at its own commit).
+    writeRoundFiles(dir);
+    stageAll(dir);
+    writeFile(dir, RECORD_2_1, roundRecord(dir));
+    const c1 = commitBound(dir, 'increment 2 round 1 accepted');
+    // c2 (HEAD): increment 3 round 1, NOT accepted: it is the round under judgement, so it is never its own green history.
+    writeFile(dir, nextPreregRel(1), preregPayload({ increment: '3' }));
+    stageAll(dir);
+    writeFile(dir, RECORD_3_1, roundRecord(dir, { increment: '3', decision: 'revert' }, [], c1));
+    commitBound(dir, 'increment 3 round 1');
+    expect(gitQ(dir, ['rev-parse', 'HEAD^'])).toBe(c1);
+
+    const { buildContext } = await loadContext();
+    const ctx = await buildContext({ mode: 'push', root: dir, base: c0, target: '' }, await deps());
+    expect(ctx.latest?.path).toBe(RECORD_3_1);
+    expect(ctx.latest?.rec.increment).toBe('3');
+    // '1' from the base records, '2' accepted inside the range; '3' is the round under judgement and is excluded.
+    expect(ctx.greenHistory).toEqual(['1', '2']);
+  });
+
   it('greenHistory from accepted records at the base, prevCases from the previous round of the increment', async () => {
     const dir = makeRepo();
     seedBase(dir);
@@ -730,8 +836,9 @@ describe('buildContext: push and ci mode', () => {
     expect(ctx.latest?.path).toBe(RECORD_2_2);
     // Round 1 of increment 2 is AT the base c1, so the round under judgement is not the first of its increment.
     expect(ctx.firstRoundOfIncrement).toBe(false);
-    // The accepted records at the base: increments 1 and 2, distinct, in order.
-    expect(ctx.greenHistory).toEqual(['1', '2']);
+    // N68-2: the accepted records at the base and at the tip, except the increment under judgement (2, accepted at the base):
+    // it is green there, and a round never vouches for itself.
+    expect(ctx.greenHistory).toEqual(['1']);
     // The previous round of increment 2 is round 1, and its record is at the base.
     expect(ctx.prevCases).toEqual({ [PASS_CASE]: { status: 'pass', got_sha: sha(11) }, [ACCEPTED_CASE]: { status: 'pass', got_sha: sha(12) } });
   });

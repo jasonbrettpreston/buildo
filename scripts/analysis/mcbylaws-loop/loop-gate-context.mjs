@@ -21,6 +21,9 @@ const PREREG_DIR_REL = 'scripts/analysis/bylaw-validation/coa-expected';
 const COUNT_FLOORS_RE = /^mcbylaws\/loop\/floors-[^/]*\.json$/;
 const PREREG_RE = /^scripts\/analysis\/bylaw-validation\/coa-expected\/prereg-MB-[^/]*-[^/]*\.json$/;
 const DIGITS = '\\d+';
+// N68-1: the register (69a + Spec 69, one text) and the closed increment list are read at the round's revision, like every other fact.
+const REGISTER_PARTS = ['docs/specs/01-pipeline/69a_mcbylaw_register.md', 'docs/specs/01-pipeline/69_mcbylaw_policy.md'];
+const INCREMENTS_REL = 'scripts/analysis/mcbylaws-loop/data/increments.json';
 
 const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 const asArray = (v) => (Array.isArray(v) ? v : []);
@@ -170,13 +173,30 @@ function livingPaths(nameStatus) {
 
 const registerModuleUrl = () => pathToFileURL(path.join(ROOT_OF_MODULE, 'scripts/analysis/bylaw/universe.mjs')).href;
 
+/** The text of a file at `rev`; `data_missing: <path>@<rev>` when it is not there (N68-1: a fact read at a revision, named). */
+function textAt(git, root, rev, rel) {
+  const text = git.readAt(root, rev, rel);
+  if (text === null || text === undefined) throw new Error(`data_missing: ${rel}@${rev}`);
+  return text;
+}
+
+/** The closed increment list (`ids`) at `rev`; `data_missing: <path>@<rev>` for a missing, unparsable or empty list. */
+function incrementsAt(git, root, rev) {
+  const parsed = readJson(textAt(git, root, rev, INCREMENTS_REL));
+  const ids = parsed && Array.isArray(parsed.ids) ? parsed.ids : null;
+  if (!ids || ids.length === 0 || ids.some((id) => typeof id !== 'string' || id.length === 0)) {
+    throw new Error(`data_missing: ${INCREMENTS_REL}@${rev}`);
+  }
+  return ids;
+}
+
 /**
  * The ctx for evaluateGate, collected from git. `parsed` = parseArgs' { root, mode, base, target }; `deps` =
  * { git, computeRun, readRegisterText }, every one injectable. An unresolvable base throws `base_not_resolvable` (exit 2).
  * `parsed` is the WHOLE parseArgs object: the user-facing flags are `command`, `mode`, `root`, `base`, `target`.
  */
 export async function buildContext(parsed = {}, deps = {}) {
-  const { git, parseRulings, makeClassifier, boundPaths, loadRegression, loadIncrements, parseRecord, RECORD_RE,
+  const { git, parseRulings, makeClassifier, boundPaths, loadRegression, parseRecord, RECORD_RE,
     gitPreregHistory, DEFAULT_LAYER23, computeRun } = await resolveDeps(deps);
 
   const p = isObject(parsed) ? parsed : {};
@@ -220,12 +240,15 @@ export async function buildContext(parsed = {}, deps = {}) {
   // 2. The policy is the BASE copy (a round cannot widen its own classes), the classes and the closed increment set.
   const layer23 = layer23Of(git.readAt(root, base, PROTECTED_REL)) || DEFAULT_LAYER23;
   const classify = makeClassifier(layer23);
-  const incrementIds = loadIncrements(root);
+  // N68-1: the closed increment list is read at the round's revision too (`:index` for commit): a worktree edit the round does not
+  // stage must not widen the set the round is judged against.
+  const incrementIds = incrementsAt(git, root, rev);
 
-  // 3. The register (69a + Spec 69, one text) and its rulings; no card index exists yet (loop-gate-eval's cardExists seam).
+  // 3. The register (69a + Spec 69, one text) at the round's revision, and its rulings; no card index exists yet (loop-gate-eval's
+  // cardExists seam). N68-1: an UNSTAGED worktree edit of the register is not a ruling of the round under judgement.
   const registerText = typeof deps.readRegisterText === 'function'
     ? deps.readRegisterText(root)
-    : await defaultRegisterText(root);
+    : REGISTER_PARTS.map((rel) => textAt(git, root, rev, rel)).join('\n');
   const rulings = parseRulings(registerText);
   const cardExists = () => false;
 
@@ -246,9 +269,18 @@ export async function buildContext(parsed = {}, deps = {}) {
   const round = latest ? latest.rec.round : null;
   // The first round of an increment: no record of that increment landed at the base.
   const firstRoundOfIncrement = increment === null ? false : !parseableBase.some((entry) => entry.rec.increment === increment);
-  // An accepted record can only have landed through a green gate: the accept door refuses a red round, so an accept in the base
-  // history is proof the increment was green there. The green history is therefore the distinct increments of the accepted records.
-  const greenHistory = distinct(parseableBase.filter((entry) => entry.rec.decision === 'accept').map((entry) => entry.rec.increment));
+  // An accepted record can only have landed through a green gate: the accept door refuses a red round, so an accept in the
+  // history is proof the increment was green there. N68-2: the history is not the base's alone. A record added INSIDE the range
+  // was judged by the per-commit hooks at its own commit, so an accepted record at `rev` (the tip) counts too; the increment
+  // under judgement (latest.rec.increment) never counts, or a round would vouch for its own greenness.
+  const acceptedIncrements = (entries) => entries
+    .filter((entry) => entry.rec.decision === 'accept')
+    .map((entry) => entry.rec.increment)
+    .filter((inc) => inc !== increment);
+  const greenHistory = distinct([
+    ...acceptedIncrements(parseableBase),
+    ...acceptedIncrements(parsedNow),
+  ]);
   const prev = increment === null ? null : previousRound(parsedNow, increment, round);
   const prevCases = {};
   if (prev) {
@@ -311,7 +343,9 @@ export async function buildContext(parsed = {}, deps = {}) {
 
   // 8. The run: only CI may answer null (the external groups do not run there). No prereg rows = no baseline to diff moves against.
   // A computeRun that supplied its own base rows keeps them (O68-04): forcing null here is why moves were never compared.
-  const run = computeRun({ root, regression: regression.cur, mode, registerText }) || null;
+  // B1 (re-check): with a prereg the moves are compared with the BASE revision's own scorer rows (plan s7); CI runs no external group.
+  const baseRev = prereg && mode !== 'ci' ? base : undefined;
+  const run = computeRun({ root, regression: regression.cur, mode, registerText, ...(baseRev ? { baseRev } : {}) }) || null;
   if (run && run.baseRows === undefined) {
     run.baseRows = null;
   }
@@ -350,7 +384,6 @@ async function resolveDeps(deps) {
   const recordMod = await import('./loop-record.mjs');
   const oracleMod = await import('./loop-oracle.mjs');
   const regressionMod = await import('./loop-regression.mjs');
-  const incrementMod = await import('./loop-increment.mjs');
   const preregMod = await import('./loop-prereg.mjs');
   return {
     git: gate,
@@ -359,7 +392,6 @@ async function resolveDeps(deps) {
     boundPaths: oracleMod.boundPaths,
     DEFAULT_LAYER23: oracleMod.DEFAULT_LAYER23,
     loadRegression: regressionMod.loadRegression,
-    loadIncrements: incrementMod.loadIncrements,
     parseRecord: recordMod.parseRecord || defaultParseRecord,
     RECORD_RE: recordMod.RECORD_RE,
     gitPreregHistory: preregMod.gitPreregHistory,
@@ -434,9 +466,3 @@ const distinct = (list) => [...new Set(list)];
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const defaultParseRecord = (text) => readJson(text);
-
-/** The default register text: 69a + Spec 69 through readSpec69Rulings (the one reader every ruling consumer uses). */
-async function defaultRegisterText(root) {
-  const mod = await import(registerModuleUrl());
-  return mod.readSpec69Rulings(root);
-}

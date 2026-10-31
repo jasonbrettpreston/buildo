@@ -97,7 +97,7 @@ function commitAll(dir: string, message: string): string {
 }
 
 // The parseArgs usage error IS the usage line the CLI prints (main writes it verbatim and returns 2).
-const USAGE_LINE = 'usage: loop-gate [check|run|verify|regression-remove] --mode <commit|push|ci> [--root <dir>] [--json]';
+const USAGE_LINE = 'usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--json]';
 
 describe('parseArgs', () => {
   it('parses --mode=<v> as the check command with defaults for everything else', async () => {

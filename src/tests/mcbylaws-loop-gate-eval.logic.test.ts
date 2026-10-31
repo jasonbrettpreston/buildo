@@ -30,6 +30,7 @@ type Latest = { path: string; rec: LoopRec } | null;
 type RunCase = { id: string; status: string; got_sha: string; group?: string | undefined };
 type Canary = { id: string | null; observed: string };
 type Run = {
+  ranGroups?: string[] | undefined;
   cases: RunCase[];
   skipped: number;
   canary: Canary;
@@ -949,6 +950,41 @@ describe('stage 4: the regression ratchet, floor edits, the OWED ratchet and the
       runOrThrow(c).report.violations = ['floor_fell:article 10.20.40 accuracy 80.0 % is below its floor 90 %'];
     });
     expect(v.violations).toContain('floor_fell:article 10.20.40 accuracy 80.0 % is below its floor 90 %');
+  });
+});
+
+// The count floors are checked only for the groups the run actually RAN (a commit run runs the fast group only): the count line of a
+// group the run skipped by design is not measurable there, so it is never `not_measured`.
+describe('stage 4: count floors only for the groups that ran (M-330 round 0 count lines)', () => {
+  const twoGroupFloors = (c: Ctx): void => {
+    c.mode = 'commit';
+    c.floors.countBase = null;
+    c.floors.countCur = countFloors({ lines: { 'coa172 cases': 698, 'coa4d cases': 40 } });
+    const run = runOrThrow(c);
+    run.ranGroups = ['coa172'];
+    run.counts = { 'coa172 cases': 698 };
+  };
+
+  it('a commit-like run (ranGroups [coa172]) with a floor line for coa4d is green: the skipped group is not measured', () => {
+    const v = verdictOf(twoGroupFloors);
+    expect(v.violations.filter((x) => x.startsWith('floor_fell:'))).toEqual([]);
+  });
+
+  it('the run of only coa172 is still ratcheted: a count of 697 against the floor 698 is floor_fell', () => {
+    const v = verdictOf((c) => {
+      twoGroupFloors(c);
+      runOrThrow(c).counts = { 'coa172 cases': 697 };
+    });
+    expect(v.violations).toContain('floor_fell:coa172 cases 697 < 698');
+  });
+
+  it('a push-like run (every group ran) that misses the coa4d count is floor_fell not_measured', () => {
+    const v = verdictOf((c) => {
+      twoGroupFloors(c);
+      runOrThrow(c).ranGroups = ['coa172', 'coa4d'];
+    });
+    expect(v.violations).toContain('floor_fell:coa4d cases not_measured');
+    expect(v.violations).not.toContain('floor_fell:coa172 cases 698 < 698');
   });
 });
 

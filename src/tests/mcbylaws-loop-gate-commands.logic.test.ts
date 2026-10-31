@@ -17,6 +17,7 @@ const F = await import(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-floo
 
 type CaseOut = { group: string; id: string; status: string; value: unknown; reason: unknown; clause: unknown; got_sha: string };
 type RunOut = {
+  ranGroups?: string[] | undefined;
   cases: CaseOut[];
   skipped: number;
   canary: { id: string | null; observed: string };
@@ -37,6 +38,7 @@ type Parsed = {
   write: boolean;
   writeIds: boolean;
   ruling: string;
+  owedRuling: string;
   group: string;
   ids: string;
   increment: string;
@@ -55,8 +57,7 @@ type Deps = {
   blobIdsAt?: (root: string, rev: string, paths: string[]) => Record<string, string>;
   readAt?: (root: string, rev: string, filePath: string) => string | null;
   write?: (line: string) => void;
-};
-type Verdict = { violations: string[]; notes?: string[]; report?: unknown; error?: string };
+};type Verdict = { violations: string[]; notes?: string[]; report?: unknown; error?: string };
 type RunCommand = (parsed: Parsed, write: (line: string) => void, deps?: Deps) => Verdict | Promise<Verdict>;
 type VerifyCommand = (parsed: Parsed, write: (line: string) => void, deps?: Deps) => Verdict | Promise<Verdict>;
 type RemoveCommand = (parsed: Parsed, write: (line: string) => void, deps?: Deps) => Verdict | Promise<Verdict>;
@@ -113,7 +114,7 @@ function makeRepo(name: string): string {
 }
 
 const parsedFor = (root: string, over: Partial<Parsed> = {}): Parsed => ({
-  command: 'run', mode: '', root, json: false, write: false, writeIds: false, ruling: '', group: '', ids: '',
+  command: 'run', mode: '', root, json: false, write: false, writeIds: false, ruling: '', owedRuling: '', group: '', ids: '',
   increment: '', decision: '', reason: '', base: '', findings: '', target: '', error: '', ...over,
 });
 
@@ -159,6 +160,12 @@ const resetLines = (): void => {
 const runCmd = M.runCommand as RunCommand;
 const verifyCmd = M.verifyCommand as VerifyCommand;
 const removeCmd = M.removeCommand as RemoveCommand;
+const floorsWriteCmd = (): ((parsed: Parsed, write: (line: string) => void, deps?: Deps) => Verdict | Promise<Verdict>) => {
+  const fn = (M as unknown as { floorsWriteCommand?: (parsed: Parsed, write: (line: string) => void, deps?: Deps) => Verdict | Promise<Verdict> }).floorsWriteCommand;
+  expect(typeof fn).toBe('function');
+  if (typeof fn !== 'function') throw new Error('floorsWriteCommand is not exported');
+  return fn;
+};
 
 describe('runCommand --write-ids: the ids are written by the tool, never typed (PR-68-1)', () => {
   it('rewrites the ids file and ids_sha256 from the run case ids (group-qualified), and prints the change', async () => {
@@ -484,6 +491,103 @@ describe('removeCommand: the only door for dropping a regression id (M-343)', ()
     });
     expect(res.violations).toEqual([`remove_unknown_id:${qid('A9999|1')}`]);
     expect(idsOf(readJsonAt(root, IDS_REL))).toEqual([qid('A0001|1')]);
+  });
+});
+
+describe('floorsWriteCommand: round-0 count floors are generated from the run, through the door (M-330, M-322, M-372)', () => {
+  const FLOORS_REL = 'mcbylaws/loop/floors-172.json';
+  const OWED_LINE = 'article 10.5.40 accuracy';
+  // The generated file is exactly what the RUN says, never a typed constant: two groups' counts and one OWED baseline.
+  const generatedRun = (): RunOut => ({
+    ...fakeRun(),
+    counts: { 'g1 cases': 3, 'g2 cases': 2 },
+    report: { violations: [], owed: [{ line: OWED_LINE, measured: 91.6667, floor: 94 }] },
+    // the run's cases cover every group it declares, as a real push run's do
+    cases: [scorerCase(qid('A0001|1'), 'MATCH', 'a'.repeat(64)), { ...scorerCase(qid('B0001|1'), 'MATCH', 'b'.repeat(64)), group: 'g2' }],
+    groups: [{ id: 'g1', introduced_in: '1' }, { id: 'g2', introduced_in: '1' }],
+    // a real push run runs EVERY group, so it says so (coversAllGroups reads cases + groups)
+    ranGroups: ['g1', 'g2'],
+  });
+  const RULING = 'M-330';
+  const OWED_RULING = 'M-372';
+  const authority = (): Map<string, string> => new Map([[RULING, 'RULED'], [OWED_RULING, 'RULED']]);
+  type FloorsFile = { schema: string; lines: Record<string, number>; owed_baseline: Record<string, number>; rulings: { ruling: string; lines: { line: string; from: number | null; to: number }[] }[] };
+
+  it('writes lines, owed_baseline and the ruling history from the run itself', async () => {
+    const root = makeRepo('floors-write');
+    resetLines();
+    // the set the run is the push run OF: both groups of the generated run are declared and run
+    writeFileAt(root, SET_REL, JSON.stringify({ schema: 'regression-v1', groups: [{ id: 'g1', introduced_in: '1', external: true }, { id: 'g2', introduced_in: '1', external: true }], pending: [], removals: [] }, null, 2) + '\n');
+    writeFileAt(root, 'mcbylaws/loop/data/ids-g2.json', JSON.stringify([qid('B0001|1')]) + '\n');
+    const res = await floorsWriteCmd()(parsedFor(root, { command: 'floors-write', ruling: RULING, owedRuling: OWED_RULING }), capture(), {
+      computeRun: fakeComputeRun(generatedRun()),
+      rulings: authority(),
+    });
+    expect(res.violations).toEqual([]);
+    expect(fs.existsSync(path.join(root, FLOORS_REL))).toBe(true);
+    const file = readJsonAt(root, FLOORS_REL) as FloorsFile;
+    expect(file.schema).toBe('loop-floors-v1');
+    // the counts EQUAL the injected run (a run of another shape writes other lines: nothing is typed into the module)
+    expect(file.lines).toEqual({ 'g1 cases': 3, 'g2 cases': 2 });
+    // the OWED baseline is recorded at the scorer's printed precision (91.6667 prints 91.7)
+    expect(file.owed_baseline).toEqual({ [OWED_LINE]: 91.7 });
+    // one entry per line set, each carrying its own ruling and the exact line it set
+    expect(file.rulings).toHaveLength(3);
+    expect(file.rulings.filter((e) => e.ruling === RULING).map((e) => e.lines[0]?.line).sort()).toEqual(['g1 cases', 'g2 cases']);
+    expect(file.rulings.find((e) => e.ruling === OWED_RULING)?.lines[0]).toEqual({ line: `owed_baseline ${OWED_LINE}`, from: null, to: 91.7 });
+    // the file through the door: flattenFloors exposes every line and the baseline, and the set's own history is not shortened
+    expect(F.flattenFloors(file)).toEqual({ 'g1 cases': 3, 'g2 cases': 2, [`owed_baseline ${OWED_LINE}`]: 91.7 });
+    expect(F.checkFloorEdit(file, file, authority())).toEqual([]);
+    expect(lines.join('\n')).toContain(FLOORS_REL);
+    // the injected run is not mutated
+    expect(generatedRun().counts).toEqual({ 'g1 cases': 3, 'g2 cases': 2 });
+  });
+
+  it('a ruling that is not authority writes nothing and names the ruling', async () => {
+    const root = makeRepo('floors-write-forged');
+    resetLines();
+    writeFileAt(root, SET_REL, JSON.stringify({ schema: 'regression-v1', groups: [{ id: 'g1', introduced_in: '1', external: true }, { id: 'g2', introduced_in: '1', external: true }], pending: [], removals: [] }, null, 2) + '\n');
+    writeFileAt(root, 'mcbylaws/loop/data/ids-g2.json', JSON.stringify([qid('B0001|1')]) + '\n');
+    const res = await floorsWriteCmd()(parsedFor(root, { command: 'floors-write', ruling: 'M-999', owedRuling: OWED_RULING }), capture(), {
+      computeRun: fakeComputeRun(generatedRun()),
+      rulings: new Map([[RULING, 'RULED'], [OWED_RULING, 'RULED'], ['M-999', 'PROPOSED']]),
+    });
+    expect(res.violations).toEqual(['ruling_not_authority:M-999']);
+    expect(fs.existsSync(path.join(root, FLOORS_REL))).toBe(false);
+    // the owed ruling is refused on its own too (the counts pass their door, the baseline does not)
+    const res2 = await floorsWriteCmd()(parsedFor(root, { command: 'floors-write', ruling: RULING, owedRuling: 'M-999' }), capture(), {
+      computeRun: fakeComputeRun(generatedRun()),
+      rulings: new Map([[RULING, 'RULED'], ['M-999', 'PROPOSED']]),
+    });
+    expect(res2.violations).toEqual(['ruling_not_authority:M-999']);
+    expect(fs.existsSync(path.join(root, FLOORS_REL))).toBe(false);
+  });
+
+  it('an existing floors file refuses: later changes go through the door functions', async () => {
+    const root = makeRepo('floors-write-exists');
+    resetLines();
+    writeFileAt(root, FLOORS_REL, JSON.stringify({ schema: 'loop-floors-v1', lines: { 'g1 cases': 1 }, owed_baseline: {}, rulings: [] }, null, 2) + '\n');
+    const before = fs.readFileSync(path.join(root, FLOORS_REL), 'utf8');
+    const res = await floorsWriteCmd()(parsedFor(root, { command: 'floors-write', ruling: RULING, owedRuling: OWED_RULING }), capture(), {
+      computeRun: fakeComputeRun(generatedRun()),
+      rulings: authority(),
+    });
+    expect(res.violations).toEqual(['floors_file_exists']);
+    expect(fs.readFileSync(path.join(root, FLOORS_REL), 'utf8')).toBe(before);
+  });
+
+  it('missing --ruling or --owed-ruling refuses and writes nothing', async () => {
+    const root = makeRepo('floors-write-missing');
+    resetLines();
+    // each case omits exactly one flag, and the module names that one (floors_write_needs:<name>, the run command's shape)
+    for (const [over, missing] of [[{ owedRuling: OWED_RULING }, 'ruling'], [{ ruling: RULING }, 'owed-ruling']] as const) {
+      const res = await floorsWriteCmd()(parsedFor(root, { command: 'floors-write', ...over }), capture(), {
+        computeRun: fakeComputeRun(generatedRun()),
+        rulings: authority(),
+      });
+      expect(res.violations).toEqual([`floors_write_needs:${missing}`]);
+    }
+    expect(fs.existsSync(path.join(root, FLOORS_REL))).toBe(false);
   });
 });
 

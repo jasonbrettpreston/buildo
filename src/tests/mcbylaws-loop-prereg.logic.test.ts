@@ -82,6 +82,11 @@ describe('checkPreregFile: a prereg is the coa-round form and names its task', (
 });
 
 describe('toScorerRows: gate-form rows become scorer rows', () => {
+  it('strips the group prefix of a group-qualified id, so a prereg names the plain notice (real-data finding)', () => {
+    const rows = M.toScorerRows([{ group: 'coa172', id: 'coa172|A0062/25SC|1', status: 'MATCH', clause: 'c' }]);
+    expect(rows[0]?.notice).toBe('A0062/25SC');
+    expect(rows[0]?.n).toBe(1);
+  });
   it('splits the id at the last |, keeps the clause as both clause and clause_norm', () => {
     expect(M.toScorerRows([row('A0144/17SC|3', 'MATCH', '10.20.40.10(1)')])).toEqual([
       { notice: 'A0144/17SC', n: 3, class: 'MATCH', clause_norm: '10.20.40.10(1)', clause: '10.20.40.10(1)' },

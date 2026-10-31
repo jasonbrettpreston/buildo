@@ -258,6 +258,41 @@ describe('checkOwedRatchet: an OWED line may not fall further (PR-68-7, M-372)',
   });
 });
 
+describe("checkOwedRatchet compares at the scorer's printed precision (PR-68-7)", () => {
+  // The scorer prints one decimal: 91.6667 is printed 91.7, so a baseline recorded from that printed value must hold.
+  const baseline = { 'article 10.5.40 accuracy': 91.7 };
+  it('a measured 91.6667 holds against a baseline of 91.7 (printed 91.7)', () => {
+    expect(M.checkOwedRatchet(baseline, [{ line: 'article 10.5.40 accuracy', measured: 91.6667, floor: 94 }])).toEqual([]);
+  });
+  it('a measured 91.6 and a measured 90.0 both fall further', () => {
+    expect(M.checkOwedRatchet(baseline, [{ line: 'article 10.5.40 accuracy', measured: 91.6, floor: 94 }])).toEqual(['owed_line_fell_further:article 10.5.40 accuracy']);
+    expect(M.checkOwedRatchet(baseline, [{ line: 'article 10.5.40 accuracy', measured: 90.0, floor: 94 }])).toEqual(['owed_line_fell_further:article 10.5.40 accuracy']);
+  });
+});
+
+describe('setOwedBaseline: the OWED baseline door (M-330, O68-11)', () => {
+  it('records the ruling and the baseline on a deep copy, as "owed_baseline <line>"', () => {
+    const f = { ...count(), owed_baseline: {} as { [k: string]: number } };
+    const r = rulings([['M-372', 'RULED']]);
+    const g = M.setOwedBaseline(f, 'article 10.5.40 accuracy', 91.7, 'M-372', r);
+    expect(g.owed_baseline['article 10.5.40 accuracy']).toBe(91.7);
+    // the entry names exactly the key flattenFloors exposes for an owed baseline, so checkFloorEdit can excuse a later change
+    expect(g.rulings.at(-1)).toEqual({ ruling: 'M-372', lines: [{ line: 'owed_baseline article 10.5.40 accuracy', from: null, to: 91.7 }] });
+    expect(M.flattenFloors(g)['owed_baseline article 10.5.40 accuracy']).toBe(91.7);
+    expect(f.owed_baseline['article 10.5.40 accuracy']).toBeUndefined(); // the input is untouched
+    expect(f.rulings).toEqual([]);
+    const h = M.setOwedBaseline(g, 'article 10.5.40 accuracy', 92.4, 'M-372', r);
+    expect(h.rulings.at(-1).lines[0]).toEqual({ line: 'owed_baseline article 10.5.40 accuracy', from: 91.7, to: 92.4 });
+    expect(M.checkFloorEdit(f, h, r)).toEqual([]); // a raise through the door is green
+  });
+  it('a ruling that is not authority throws and changes nothing', () => {
+    const f = { ...count(), owed_baseline: {} as { [k: string]: number } };
+    expect(() => M.setOwedBaseline(f, 'article 10.5.40 accuracy', 91.7, 'M-9', rulings([['M-9', 'PROPOSED']]))).toThrow(/ruling_not_authority:M-9/);
+    expect(() => M.setOwedBaseline(f, 'article 10.5.40 accuracy', 91.7, 'NOPE-1', rulings([]))).toThrow(/ruling_not_authority:NOPE-1/);
+    expect(M.setOwedBaseline(f, 'article 10.5.40 accuracy', 91.7, 'M-9', rulings([['M-9', 'RATIFIED']])).owed_baseline['article 10.5.40 accuracy']).toBe(91.7);
+  });
+});
+
 describe('setCountFloor: the count-floor door (M-330)', () => {
   it('records the ruling and the line on a deep copy', () => {
     const f = count();

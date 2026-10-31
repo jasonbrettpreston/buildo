@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { checkPercentFloors } from './loop-floors.mjs';
+import { checkPercentFloors, setCountFloor, setOwedBaseline, atPrintedPrecision } from './loop-floors.mjs';
 import { runCanary, roundsSinceThresholds } from './loop-decide.mjs';
 import { canon, gotSha, bindRecord, writeRecordExclusive, checkBound, nextRound, recordPath, sha256, RECORD_RE, CLASS_STATUS, statusOf } from './loop-record.mjs';
 import { loadRegression, saveRegression, removeCases } from './loop-regression.mjs';
@@ -99,6 +99,60 @@ export function runProducer(root, group, deps = {}) {
   }
 }
 
+/**
+ * The tree of `rev` extracted into a fresh temp dir (the base side of the run, plan s7 / O68-04): `git -C <root> archive
+ * --format=tar` then `tar -xf`, both with every GIT_* variable scrubbed; `node_modules` is symlinked from the live root when it
+ * exists (a scorer may need it). The caller removes the dir. Throws when git or tar fails. IO.
+ */
+export function extractRev(root, rev, deps = {}) {
+  const file = typeof deps.execFileSync === 'function' ? deps.execFileSync : execFileSync;
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-loop-gate-base-'));
+  try {
+    const tarFile = `${tmp}.tar`;
+    try {
+      file('git', ['-C', root, 'archive', '--format=tar', '-o', tarFile, rev], { env: cleanEnv(), maxBuffer: MAX_BUFFER, stdio: ['ignore', 'pipe', 'pipe'], shell: false });
+      file('tar', ['-xf', tarFile, '-C', tmp], { env: cleanEnv(), maxBuffer: MAX_BUFFER, stdio: ['ignore', 'pipe', 'pipe'], shell: false });
+    } finally {
+      fs.rmSync(tarFile, { force: true });
+    }
+    const modules = path.join(root, 'node_modules');
+    if (fs.existsSync(modules)) {
+      try {
+        fs.symlinkSync(modules, path.join(tmp, 'node_modules'), 'dir');
+      } catch {
+        // no symlink (an unusual fs): the scorer still runs from the base tree's own files
+      }
+    }
+    return tmp;
+  } catch (err) {
+    fs.rmSync(tmp, { recursive: true, force: true });
+    throw err;
+  }
+}
+
+/**
+ * The base rows of the SAME groups, scored on the tree of `baseRev`: one producer spawn per group with the extracted base tree as its
+ * root (the DATA stays the group's external data_dir), in the shape of curRows ({group, id, status: <class>, clause}, ids
+ * group-qualified). A tree that cannot be extracted or scored is `{ rows: null, error }`, never a throw (the gate then prints the
+ * existing "no base rows" note). The temp dir is always removed. IO.
+ */
+export function baseRowsFrom({ root, baseRev, groups, deps = {} }) {
+  let baseRoot = null;
+  try {
+    baseRoot = extractRev(root, baseRev, deps);
+    const rows = [];
+    for (const group of groups) {
+      const produced = runProducer(baseRoot, group, deps);
+      for (const c of produced.cases) rows.push({ group: group.id, id: c.id, status: c.class, clause: c.clause });
+    }
+    return { rows, error: null };
+  } catch (err) {
+    return { rows: null, error: err && err.message ? err.message : String(err) };
+  } finally {
+    if (baseRoot) fs.rmSync(baseRoot, { recursive: true, force: true });
+  }
+}
+
 /** The class totals of a set of scorer rows: { "<class>": n }. PURE. */
 export function classTotals(rows) {
   const out = {};
@@ -153,9 +207,11 @@ const floorsOf = (root, group) => {
 };
 
 /**
- * Run the mode's groups and build the run object evaluateGate reads: `{ cases, skipped, canary, report, counts, baseRows, curRows,
- * regenMismatch, inputsFresh, groups, ranGroups, floorsOk }`, or null when no group runs (ci with only external groups: the CI note
- * says those cases are not run). `groups` is the set's whole universe; `ranGroups` the ids of the groups this run actually ran (a
+ * Run the mode's groups and build the run object evaluateGate reads: `{ cases, skipped, canary, report, counts, baseRows,
+ * baseRowsError, curRows, regenMismatch, inputsFresh, groups, ranGroups, floorsOk }`, or null when no group runs (ci with only
+ * external groups: the CI note says those cases are not run). `baseRev` (a git revision) gives baseRows: the same groups scored on
+ * that revision's extracted tree; without it, or when that tree cannot be built or scored, baseRows is null and baseRowsError says
+ * why (the gate's own note). `groups` is the set's whole universe; `ranGroups` the ids of the groups this run actually ran (a
  * commit run runs the fast ones only). curRows carry the printed CLASS (the prereg totals are by class). `inputsFresh` holds the
  * recomputed value of every
  * non-git input a `run --write` binds (the `data:<group>` content hashes and the `pin / <group> / <key>` values; O68-02), from the one
@@ -163,9 +219,12 @@ const floorsOf = (root, group) => {
  * The canary re-checks each case's own value against itself through canon, so a red canary proves the comparison detects a mutation.
  * IO (spawns the producer per group, reads floors, pins and the data files).
  */
-export function computeRun({ root, regression, mode, registerText, deps = {} }) {
+export function computeRun({ root, regression, mode, registerText, baseRev = null, deps = {} }) {
   const groups = groupsForMode(regression, mode);
   if (groups.length === 0) return null;
+  // B1 (plan s7): the base side is the SAME groups scored on the tree of baseRev (an extracted temp tree), so a round's moves can be
+  // diffed against its prereg. Without baseRev there is no baseline (the gate says so), and a base tree that cannot be built is null.
+  const base = baseRev ? baseRowsFrom({ root, baseRev, groups, deps }) : { rows: null, error: null };
   const cases = [];
   const counts = {};
   const curRows = [];
@@ -179,6 +238,8 @@ export function computeRun({ root, regression, mode, registerText, deps = {} }) 
     if (floorsFile !== null) {
       const floors = checkPercentFloors(floorsFile, produced.rows, registerText || '');
       for (const v of floors.violations) violations.push(`${group.id} ${v}`);
+      // The baseline key is namespaced by its GROUP (`<group>:<line>`, the same `<group> ` prefix a count line carries), so two
+      // groups can never ratchet each other's baseline and a floors-write records every OWED baseline under its own group's name.
       for (const o of floors.owed) owed.push({ group: group.id, ...o });
     }
     for (const m of pinMismatch(group, produced.rows, root)) regenMismatch.push(`${group.id} ${m}`);
@@ -199,7 +260,8 @@ export function computeRun({ root, regression, mode, registerText, deps = {} }) 
     canary,
     report: { violations, owed },
     counts,
-    baseRows: null,
+    baseRows: base.rows,
+    baseRowsError: base.error,
     curRows,
     regenMismatch,
     inputsFresh,
@@ -773,6 +835,77 @@ export async function verifyCommand(parsed, write, deps = {}) {
   }
   const last = out.length ? out[out.length - 1] : null;
   say(last ? `verify: ${out.length} increment(s), latest ${last.increment} (round ${last.round})` : 'verify: no records (0 records under docs/reports/loop-records)');
+  return { violations: [], notes: [] };
+}
+
+/**
+ * The round-0 count floors file every group's counts are written to. It is created ONCE by `floors-write`: once it exists, every later
+ * change of a floor line or an OWED baseline goes through the door functions (setCountFloor / setOwedBaseline) with a ruling.
+ */
+const FLOORS_FILE_REL = 'mcbylaws/loop/floors-172.json';
+
+/** Write `value` as 2-space JSON + a newline through a temp file and a rename, so a reader never sees half a file. IO. */
+function writeJsonAtomic(file, value) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tmp-${process.pid}-${Date.now()}`;
+  try {
+    fs.writeFileSync(tmp, `${JSON.stringify(value, null, 2)}\n`);
+    fs.renameSync(tmp, file);
+  } finally {
+    fs.rmSync(tmp, { force: true });
+  }
+}
+
+/**
+ * `floors-write --ruling=<id> --owed-ruling=<id>`: create the round-0 count floors file from ONE push-mode run, through the doors
+ * (M-330, M-322, M-372). Every `run.counts` line is a setCountFloor call under `--ruling` and every OWED item a setOwedBaseline call
+ * under `--owed-ruling`, so the counts are GENERATED from the run, never typed here. It refuses when the file already exists
+ * (`floors_file_exists`), when a ruling is missing, and when a ruling is not authority (`ruling_not_authority:<id>`, nothing written).
+ * -> { violations, notes }. IO (spawns the scorer, writes the file).
+ */
+export async function floorsWriteCommand(parsed, write, deps = {}) {
+  const say = typeof write === 'function' ? write : () => {};
+  const root = str(parsed && parsed.root) || '.';
+  const ruling = str(parsed && parsed.ruling);
+  const owedRuling = str(parsed && parsed.owedRuling);
+  const missing = [];
+  if (!ruling) missing.push('ruling');
+  if (!owedRuling) missing.push('owed-ruling');
+  if (missing.length) return { violations: [`floors_write_needs:${missing.join('|')}`], notes: [] };
+  const file = path.join(root, FLOORS_FILE_REL);
+  if (fs.existsSync(file)) return { violations: ['floors_file_exists'], notes: [] };
+  const regression = loadRegression(root);
+  const compute = typeof deps.computeRun === 'function' ? deps.computeRun : computeRun;
+  let run = null;
+  try {
+    run = compute({ root, regression, mode: 'push', registerText: registerTextOf(root) });
+  } catch {
+    run = null; // a run that cannot go derives no floor line
+  }
+  if (!coversAllGroups(run, regression)) return { violations: ['run_needs_mode_push_or_full'], notes: [] };
+  const rulings = await rulingsOf(root, deps);
+  // Every line is set through the door; a non-authority ruling throws there, so the file is built first and written only if every
+  // door call accepted.
+  let next = { schema: 'loop-floors-v1', lines: {}, owed_baseline: {}, rulings: [] };
+  try {
+    for (const key of Object.keys(run.counts || {})) {
+      const count = run.counts[key];
+      if (typeof count !== 'number' || !Number.isFinite(count)) continue;
+      next = setCountFloor(next, key, count, ruling, rulings);
+    }
+    for (const item of Array.isArray(run.report && run.report.owed) ? run.report.owed : []) {
+      if (!item || typeof item.line !== 'string') continue;
+      if (typeof item.measured !== 'number' || !Number.isFinite(item.measured)) continue;
+      next = setOwedBaseline(next, item.line, atPrintedPrecision(item.measured), owedRuling, rulings);
+    }
+  } catch (err) {
+    const message = err && typeof err === 'object' && typeof err.message === 'string' ? err.message : String(err);
+    if (message.startsWith('ruling_not_authority:')) return { violations: [message], notes: [] };
+    throw err;
+  }
+  writeJsonAtomic(file, next);
+  say(`floors written ${FLOORS_FILE_REL}: ${Object.keys(next.lines).length} line(s), ${Object.keys(next.owed_baseline).length} OWED baseline(s)`);
+  say(`floors-write: ${next.rulings.length} ruling entr(ies) recorded (counts under ${ruling}, OWED baselines under ${owedRuling})`);
   return { violations: [], notes: [] };
 }
 

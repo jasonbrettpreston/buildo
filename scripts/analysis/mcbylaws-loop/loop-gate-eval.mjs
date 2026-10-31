@@ -179,6 +179,41 @@ function stageRecord(ctx, rec) {
 }
 
 /**
+ * A `<group> ` prefix the run cannot measure: `ran` is the run's own `ranGroups` (a commit run runs the fast group only), so every
+ * group the run did not run is skipped, whether or not the run's `groups` universe still lists it (a commit run's universe omits the
+ * groups it did not run). A run without a `ranGroups` array is never skipped here (see measurableCountFloors). PURE.
+ */
+const isSkippedGroupPrefix = (group, ran) => !ran.has(group);
+
+const skippedGroupOf = (key, ran, run) => {
+  const at = key.indexOf(' ');
+  if (at < 0) return false;
+  return isSkippedGroupPrefix(key.slice(0, at), ran);
+};
+
+/** `lines` without the count lines of the groups the run skipped by design. PURE. */
+function measurables(counts, ran) {
+  if (!ran) return counts;
+  const out = {};
+  for (const key of Object.keys(counts || {})) {
+    if (skippedGroupOf(key, ran)) continue;
+    out[key] = counts[key];
+  }
+  return out;
+}
+
+/**
+ * The count floor lines a run can measure: every line of the floors file whose `<group> ` prefix names a group the run did not run
+ * (`run.ranGroups`) is dropped (it is not `not_measured`, it is simply not this run's to measure). Without a `ranGroups` array (a run
+ * that does not say), every line is measured, as before. PURE.
+ */
+function measurableCountFloors(countFloors, run) {
+  const ran = run && Array.isArray(run.ranGroups) ? new Set(run.ranGroups) : null;
+  if (!ran || !countFloors || !isObject(countFloors.lines)) return countFloors;
+  return { ...countFloors, lines: measurables(countFloors.lines, ran) };
+}
+
+/**
  * Stage 4: the regression ratchet, floor edits, OWED, and the run's own report. `presence` holds the `checkCasesPresent` lines,
  * gathered with the run's `declaredIds` in stage 5: a group the run never ran is not demanded by either of the two.
  */
@@ -196,7 +231,11 @@ function stageRatchet(ctx, rec, presence) {
   if (run && run.report) {
     out.push(...checkOwedRatchet(ctx.baselineOwed, asArray(run.report.owed)));
     out.push(...asArray(run.report.violations));
-    if (floors.countCur) out.push(...checkCountFloors(floors.countCur, run.counts));
+    if (floors.countCur) {
+      // only the groups this run ran carry a measurable count line (a commit run runs the fast group only)
+      const ran = run && Array.isArray(run.ranGroups) ? new Set(run.ranGroups) : null;
+      out.push(...checkCountFloors(measurableCountFloors(floors.countCur, run), measurables(run.counts, ran)));
+    }
   }
   return out;
 }

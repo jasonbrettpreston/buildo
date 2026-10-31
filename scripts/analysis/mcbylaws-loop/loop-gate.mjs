@@ -10,17 +10,17 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { nameStatusOf } from './loop-oracle.mjs';
 
-export const COMMANDS = ['check', 'run', 'verify', 'regression-remove'];
+export const COMMANDS = ['check', 'run', 'verify', 'regression-remove', 'floors-write'];
 export const MODES = ['commit', 'push', 'ci'];
-export const USAGE = 'usage: loop-gate [check|run|verify|regression-remove] --mode <commit|push|ci> [--root <dir>] [--json]';
+export const USAGE = 'usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--json]';
 
 const BOOL_FLAGS = { json: true, write: true, 'write-ids': true };
-const VALUE_FLAGS = ['mode', 'root', 'ruling', 'group', 'ids', 'increment', 'decision', 'reason', 'base', 'findings', 'target'];
+const VALUE_FLAGS = ['mode', 'root', 'ruling', 'group', 'ids', 'increment', 'decision', 'reason', 'base', 'findings', 'target', 'owed-ruling'];
 
 /** argv without node and script -> the full argument object. `error` is a plain string ('' when the arguments are well formed). */
 export function parseArgs(argv) {
   const a = {
-    command: '', mode: '', root: '.', json: false, write: false, writeIds: false, ruling: '', group: '', ids: '',
+    command: '', mode: '', root: '.', json: false, write: false, writeIds: false, ruling: '', owedRuling: '', group: '', ids: '',
     increment: '', decision: '', reason: '', base: '', findings: '', target: '', error: '',
   };
   const list = Array.isArray(argv) ? argv.map(String) : [];
@@ -63,7 +63,7 @@ export function parseArgs(argv) {
   return a;
 }
 
-const toKey = (name) => (name === 'write-ids' ? 'writeIds' : name);
+const toKey = (name) => (name === 'write-ids' ? 'writeIds' : name === 'owed-ruling' ? 'owedRuling' : name);
 const nextValue = (list, i) => {
   const n = list[i + 1];
   return typeof n === 'string' && !n.startsWith('--') ? n : '';
@@ -290,6 +290,7 @@ export async function main(argv, deps = {}) {
     if (parsed.command === 'run') return await dispatchRun(parsed, write);
     if (parsed.command === 'verify') return await dispatchVerify(parsed, write);
     if (parsed.command === 'regression-remove') return await dispatchRemove(parsed, write);
+    if (parsed.command === 'floors-write') return toExit(await (await import('./loop-gate-run.mjs')).floorsWriteCommand(parsed, write), parsed, write);
     return await check(parsed, deps, write);
   } catch (err) {
     write(`loop-gate: cannot run: ${messageOf(err)}`);

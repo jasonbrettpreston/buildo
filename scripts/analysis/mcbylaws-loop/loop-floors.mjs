@@ -44,7 +44,8 @@ export function flattenFloors(floors) {
  */
 const namesLine = (line, key) => typeof line === 'string' && line === key;
 
-/** O68-13: the keys one named line can point at: the key itself and the key minus its metric suffix. */
+/** O68-13: the keys one named line can point at: the key itself (which for a count file's OWED baseline is "owed_baseline <line>",
+ * exactly the key flattenFloors exposes) and the key minus its metric suffix. */
 const knownLines = (line, keys) =>
   typeof line === 'string' && keys.some((key) => key === line || METRICS.some((m) => key === `${line} ${m}`));
 
@@ -66,7 +67,7 @@ export function checkFloorEdit(base, cur, rulings) {
   const added = after.length < before.length ? [] : after.slice(before.length);
   const was = flattenFloors(b);
   const now = flattenFloors(c);
-  const known = (line) => knownLines(line, Object.keys(was));
+  const known = (line) => knownLines(line, [...Object.keys(was), ...Object.keys(now)]); // a line may be new in cur (round 0 sets it through the door)
   const named = [];
   for (const entry of added) {
     const id = entry && entry.ruling;
@@ -121,9 +122,14 @@ export function checkCountFloors(floors, counts) {
 }
 
 /**
+ * The OWED ratchet compares at the scorer's printed precision (one decimal: 91.6667 prints 91.7), so a baseline recorded from the
+ * printed value holds for the same measurement. PURE.
+ */
+export const atPrintedPrecision = (x) => Math.round(x * 10) / 10;
+
+/**
  * An OWED line may not get worse while it is owed (PR-68-7): baselineOwed = { "<line>": measured } recorded by the round-0 ruling's
- * entry. A line measured below its baseline (beyond fp noise) is owed_line_fell_further:<line>. A line with no baseline has nothing to
- * ratchet. PURE.
+ * entry. A line printed below its baseline is owed_line_fell_further:<line>. A line with no baseline has nothing to ratchet. PURE.
  */
 export function checkOwedRatchet(baselineOwed, owed) {
   const out = [];
@@ -132,7 +138,8 @@ export function checkOwedRatchet(baselineOwed, owed) {
     if (!item || typeof item.line !== 'string') continue;
     const was = base[item.line];
     if (typeof was !== 'number' || !Number.isFinite(was)) continue;
-    if (item.measured + 1e-9 < was) out.push(`owed_line_fell_further:${item.line}`);
+    if (typeof item.measured !== 'number' || !Number.isFinite(item.measured)) continue;
+    if (atPrintedPrecision(item.measured) + 1e-9 < atPrintedPrecision(was)) out.push(`owed_line_fell_further:${item.line}`);
   }
   return out;
 }
@@ -149,5 +156,22 @@ export function setCountFloor(floors, line, value, ruling, rulings) {
   const from = next.lines[line] === undefined ? null : next.lines[line];
   next.lines[line] = value;
   next.rulings.push({ ruling, lines: [{ line, from, to: value }] });
+  return next;
+}
+
+/**
+ * The one door for an OWED baseline (M-330, O68-11), exactly like setCountFloor: a ruling that is RATIFIED or RULED sets one
+ * `owed_baseline[line]`, on a deep copy, and the entry is appended to the history naming the key flattenFloors exposes for it
+ * (`owed_baseline <line>`), so a later change of that baseline is covered by the ruling that made it. Anything else throws and
+ * changes nothing. PURE.
+ */
+export function setOwedBaseline(floors, line, value, ruling, rulings) {
+  if (!isAuthority(rulings, ruling)) throw new Error(`ruling_not_authority:${ruling}`);
+  const next = clone(floors || {});
+  next.owed_baseline = next.owed_baseline || {};
+  next.rulings = Array.isArray(next.rulings) ? next.rulings : [];
+  const from = next.owed_baseline[line] === undefined ? null : next.owed_baseline[line];
+  next.owed_baseline[line] = value;
+  next.rulings.push({ ruling, lines: [{ line: `owed_baseline ${line}`, from, to: value }] });
   return next;
 }

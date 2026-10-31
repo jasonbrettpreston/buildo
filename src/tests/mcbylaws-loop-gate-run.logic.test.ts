@@ -5,6 +5,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(__dirname, '../..');
 const M = await import(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-gate-run.mjs'));
@@ -321,6 +322,214 @@ describe('computeRun: the groups a mode runs', () => {
     const regression: Regression = { groups: [group()] };
     const run = M.computeRun({ root: ROOT, regression, mode: 'push', registerText: '', deps: { spawn: fakeSpawn(twoRows, []) } }) as RunOut | null;
     expect(run?.regenMismatch).toEqual(['172 generated_not_regenerable']);
+  });
+});
+
+describe('computeRun: base rows from a base revision (B1 / plan s7)', () => {
+  // The base tree is extracted from the repository itself: a throw-away repo (TMP2, outside this suite's 172 fixture data) whose
+  // base commit holds just the scorer's directory and a marker file, so `git archive <baseRev>` gives a tree the fake spawn is
+  // asked to score with `--root <that tree>`. The marker is the test's own file, never a directory of this checkout.
+  const REPO = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mcbylaws-loop-gate-run-repo-')));
+  const MARKER = 'zz-loop-gate-base-marker.txt';
+  // the git child env: every GIT_* variable scrubbed (a hook or a CI checkout must not redirect this throw-away repo)
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))) as NodeJS.ProcessEnv;
+  afterAll(() => {
+    fs.rmSync(REPO, { recursive: true, force: true });
+  });
+  const gitRepo = (args: string[]): string =>
+    execFileSync('git', ['-C', REPO, ...args], { encoding: 'utf8', env, stdio: ['ignore', 'pipe', 'pipe'] });
+  fs.mkdirSync(path.join(REPO, 'scripts/analysis/bylaw-validation'), { recursive: true });
+  // a stand-in for the committed scorer: the real one is never run (the spawn is the fake, which only needs --root and data)
+  fs.writeFileSync(path.join(REPO, 'scripts/analysis/bylaw-validation/coa-scorecard.mjs'), '// scorer stand-in\n');
+  fs.writeFileSync(path.join(REPO, MARKER), 'base tree only\n');
+  execFileSync('git', ['init', '-q', REPO], { env });
+  gitRepo(['config', 'user.email', 'run@example.invalid']);
+  gitRepo(['config', 'user.name', 'run']);
+  gitRepo(['add', '-A']);
+  gitRepo(['commit', '-q', '--no-verify', '-m', 'base']);
+  // the base rev carries the marker; the live worktree (the revision a base run is NOT) does not
+  const BASE_REV = gitRepo(['rev-parse', 'HEAD']).trim();
+  fs.rmSync(path.join(REPO, MARKER), { force: true });
+  gitRepo(['add', '-A']);
+  gitRepo(['commit', '-q', '--no-verify', '-m', 'after the base']);
+  expect(fs.existsSync(path.join(REPO, MARKER))).toBe(false);
+
+  type RowOut = { group: string; id: string; status: string; clause: unknown };
+  type BaseRun = RunOut & { baseRows: RowOut[] | null; baseRowsError?: string | null };
+
+  // A spawn keyed by the --root it is given: the base tree answers `baseFor`, the live root (the repo itself) answers `curRows`.
+  // macOS: os.tmpdir() is `/var/...` but mkdtempSync keeps REPO's realpath (`/private/var/...`), so compare realpaths (falling back to
+  // the raw string when the path is already gone, as the base temp tree is when a callback reads it after removal)
+  const real = (p: string): string => {
+    try {
+      return fs.realpathSync(p);
+    } catch {
+      return p;
+    }
+  };
+  const isLive = (root: string): boolean => real(root) === real(ROOT) || real(root) === real(REPO);
+  function rootSpawn(calls: Call[], baseRows: Row[], curRows: Row[], baseFor: (root: string) => Row[] = () => baseRows): SpawnFn {
+    return (cmd, args, opts) => {
+      calls.push({ cmd, args, env: opts.env ?? {} });
+      const root = args[args.indexOf('--root') + 1] ?? '';
+      const rows = isLive(root) ? curRows : baseFor(root);
+      const out = args[args.indexOf('--out') + 1] ?? '';
+      fs.writeFileSync(out, JSON.stringify({ rows }));
+      return Buffer.from('');
+    };
+  }
+
+  // The extracted tree is where the base rows come from: it must be a real archive of the revision, so it carries a file the repo
+  // has only at that commit (the fixture's MARKER), and the base spawn must have seen it.
+  const SEEN: string[] = [];
+  const seenReset = (): void => {
+    SEEN.length = 0;
+  };
+  const baseRow = (n: number, cls = 'MATCH'): Row => row(n, { class: cls });
+  // The base rows of the fixture: row 1 DIFFER at the base, MATCH at the live revision (one real move, which the prereg test uses).
+  const atBase = (root: string): Row[] => {
+    SEEN.push(fs.existsSync(path.join(root, MARKER)) ? 'base-only' : `missing:${root}`);
+    return [baseRow(1, 'DIFFER'), baseRow(2)];
+  };
+
+  // A baseRev is extracted from the root it is given (`git -C <root> archive`), so a real base tree needs REPO as the root. The
+  // live tree is the same repo's worktree: with baseRev the fake must see a --root that is NOT this one (`--root` names the
+  // extracted temp tree for the base spawn, and only the bare worktree for the live one).
+  const INPUT = { root: REPO, baseRev: BASE_REV };
+  const LIVE = (call: Call): string => call.args[call.args.indexOf('--root') + 1] ?? '';
+
+  it('with baseRev the fake sees a --root that is NOT the live root, and baseRows come from that tree', () => {
+    seenReset();
+    const calls: Call[] = [];
+    fs.writeFileSync(pinFile, JSON.stringify({ totals: { MATCH: 2 }, variances: 2 }));
+    const regression: Regression = { groups: [group()] };
+    const run = M.computeRun({
+      ...INPUT,
+      regression,
+      mode: 'push',
+      registerText: '',
+      deps: { spawn: rootSpawn(calls, [baseRow(1, 'DIFFER')], [baseRow(1), baseRow(2)], atBase) } as Deps,
+    }) as BaseRun | null;
+    expect(run).toBeTruthy();
+    if (!run) return;
+    // two spawns: the extracted base tree (scored first), then the live root
+    expect(calls).toHaveLength(2);
+    const baseCall = calls.find((call) => LIVE(call) !== REPO);
+    const liveCall = calls.find((call) => LIVE(call) === REPO);
+    expect(baseCall).toBeTruthy();
+    expect(liveCall).toBeTruthy();
+    if (!baseCall || !liveCall) return;
+    expect(path.isAbsolute(LIVE(baseCall))).toBe(true);
+    // the base tree really is the tree of the revision (the marker only that commit has) and its temp dir is gone afterwards; the
+    // live root has no marker, so the base spawn scored a tree this checkout does not have
+    expect(SEEN).toEqual(['base-only']);
+    expect(fs.existsSync(path.join(REPO, MARKER))).toBe(false);
+    expect(fs.existsSync(LIVE(baseCall))).toBe(false); // removed after the base spawn
+    // the DATA stays the group's external data_dir, for the base run too
+    expect(baseCall.args[baseCall.args.indexOf('--notices') + 1]).toBe(path.join(DATA_DIR, 'notices-all2.json'));
+    expect(`err=${String(run.baseRowsError)} seen=${SEEN.join('|')}`).toBe('err=null seen=base-only');
+    expect(run.baseRows).toEqual([
+      { group: '172', id: '172|A0001/26|1', status: 'DIFFER', clause: '10.20.40.40(1)' },
+      { group: '172', id: '172|A0001/26|2', status: 'MATCH', clause: '10.20.40.40(1)' },
+    ]);
+    // the cur rows are the live run's, in the same shape
+    expect(run.curRows).toEqual([
+      { group: '172', id: '172|A0001/26|1', status: 'MATCH', clause: '10.20.40.40(1)' },
+      { group: '172', id: '172|A0001/26|2', status: 'MATCH', clause: '10.20.40.40(1)' },
+    ]);
+  });
+
+  it('a move between the base and cur rows is unexpected_move to checkPreregMoves, and green when the prereg lists it', async () => {
+    const PREREG = await import(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-prereg.mjs'));
+    seenReset();
+    const calls: Call[] = [];
+    const regression: Regression = { groups: [group()] };
+    // base: row 1 DIFFER; cur: row 1 MATCH -> one move DIFFER -> MATCH
+    const run = M.computeRun({
+      ...INPUT,
+      regression,
+      mode: 'push',
+      registerText: '',
+      deps: { spawn: rootSpawn(calls, [baseRow(1)], [baseRow(1), baseRow(2)], atBase) } as Deps,
+    }) as BaseRun | null;
+    expect(run).toBeTruthy();
+    if (!run) return;
+    expect(SEEN).toEqual(['base-only']);
+    expect(run.baseRows).not.toBeNull();
+    type Move = { clause: string; from: string; to: string };
+    type Moves = (pre: unknown, base: unknown, cur: unknown) => string[];
+    const checkPreregMoves = (PREREG as unknown as { checkPreregMoves: Moves }).checkPreregMoves;
+    // the prereg names the group the fixture rows carry: checkPreregMoves keeps only that group's rows (O68-04), so a prereg that
+    // left `group` off would fall back to the coa172 default and have no rows to diff at all
+    const unlisted = { group: '172', expected_moves: [] as Move[], expected_totals: { MATCH: 2 } };
+    // the run's ids are group-qualified (`<group>|<notice>|<n>`, O68-07), while checkPreregMoves' gate form is `<notice>|<n>`: strip the
+    // qualifier (the group is already named separately) so the move is keyed by the real notice and item
+    const unqualified = (rows: RowOut[] | null): RowOut[] | null =>
+      rows === null ? null : rows.map((r) => ({ ...r, id: r.id.split('|').slice(1).join('|') }));
+    expect(checkPreregMoves(unlisted, unqualified(run.baseRows), unqualified(run.curRows))).toContain(
+      'unexpected_move:A0001/26#1 DIFFER->MATCH',
+    );
+    // the same move, pre-registered: green (the totals are the cur run's own)
+    const listed = { group: '172', expected_moves: [{ clause: '10.20.40.40(1)', from: 'DIFFER', to: 'MATCH' }], expected_totals: { MATCH: 2 } };
+    expect(checkPreregMoves(listed, unqualified(run.baseRows), unqualified(run.curRows))).toEqual([]);
+    // with no base rows there is nothing to diff: no move is claimed (preregNotes says so instead)
+    expect(checkPreregMoves(unlisted, null, unqualified(run.curRows)).filter((m: string) => m.startsWith('unexpected_move:'))).toEqual([]);
+  });
+
+  it('an extraction failure gives baseRows null and a baseRowsError, never a throw', () => {
+    const calls: Call[] = [];
+    const regression: Regression = { groups: [group()] };
+    const run = M.computeRun({
+      root: REPO,
+      baseRev: 'no-such-revision',
+      regression,
+      mode: 'push',
+      registerText: '',
+      deps: { spawn: rootSpawn(calls, [baseRow(1)], [baseRow(1)]) },
+    }) as BaseRun | null;
+    expect(run).toBeTruthy();
+    if (!run) return;
+    expect(run.baseRows).toBeNull();
+    expect(typeof run.baseRowsError).toBe('string');
+    expect((run.baseRowsError ?? '').length).toBeGreaterThan(0);
+    // only the live run happened
+    expect(calls).toHaveLength(1);
+  });
+
+  it('without baseRev baseRows stays null and no base tree is extracted', () => {
+    const calls: Call[] = [];
+    const regression: Regression = { groups: [group()] };
+    const run = M.computeRun({ root: REPO, regression, mode: 'push', registerText: '', deps: { spawn: rootSpawn(calls, [baseRow(1)], [baseRow(1)]) } }) as BaseRun | null;
+    expect(run?.baseRows).toBeNull();
+    expect(calls).toHaveLength(1);
+  });
+
+  it('the extracted temp dir is removed afterwards', () => {
+    const before = new Set(fs.readdirSync(os.tmpdir()).filter((n) => n.startsWith('mcbylaws-loop-gate-base-')));
+    seenReset();
+    const calls: Call[] = [];
+    const regression: Regression = { groups: [group()] };
+    let seen = '';
+    M.computeRun({
+      ...INPUT,
+      regression,
+      mode: 'push',
+      registerText: '',
+      deps: {
+        // atBase records what the base tree carries (the marker only the base commit has) into SEEN, so this test checks the same
+        // extraction the other base tests do, not just that a callback ran
+        spawn: rootSpawn(calls, [baseRow(1)], [baseRow(1)], (root) => {
+          seen = root;
+          expect(fs.existsSync(root)).toBe(true);
+          return atBase(root);
+        }),
+      },
+    });
+    expect(seen).not.toBe('');
+    expect(SEEN).toEqual(['base-only']);
+    expect(fs.existsSync(seen)).toBe(false);
+    const after = fs.readdirSync(os.tmpdir()).filter((n) => n.startsWith('mcbylaws-loop-gate-base-'));
+    expect(after.filter((n) => !before.has(n))).toEqual([]);
   });
 });
 
