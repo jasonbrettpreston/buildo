@@ -693,3 +693,40 @@ describe('PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of 
     done();
   });
 });
+
+describe('RM (CARD-rulemap-literal-exempt, R-KR): exactly the generated rule map is exempt from arm L, and nothing else in scope', () => {
+  const MAP = 'scripts/analysis/bylaw/_schema/bylaw-rule-map.json';
+  const OTHER = 'scripts/analysis/bylaw/_schema/other-map.json';
+  const real = JSON.parse(fs.readFileSync(REAL_POLICY, 'utf8')) as { literal_exempt: string[]; literal_scope: string[] };
+
+  it('the real policy lists exactly the map beside the three declared files; no glob', () => {
+    expect(real.literal_exempt).toEqual([
+      'scripts/seeds/bylaw/layer3-catalogue.json', 'scripts/seeds/bylaw/switchboard.json', 'scripts/seeds/logic_variables.json', MAP,
+    ]);
+    expect(real.literal_exempt.some((g) => /[*?[{]/.test(g))).toBe(false);
+  });
+
+  const build = () => {
+    const r = mk();
+    r.write('mcbylaws/protected-paths.json', fs.readFileSync(REAL_POLICY, 'utf8'));
+    r.write(ALLOW, ALLOW_EMPTY);
+    r.write('mcbylaws/APPROVED', 'O-1 APPROVED 2026-10-30\n');
+    fs.mkdirSync(path.join(r.dir, 'scripts/ast-grep-rules'), { recursive: true });
+    fs.copyFileSync(path.join(REAL_ROOT, 'scripts/ast-grep-rules/bylaw-literal.yml'), path.join(r.dir, 'scripts/ast-grep-rules/bylaw-literal.yml'));
+    fs.symlinkSync(path.join(REAL_ROOT, 'node_modules'), path.join(r.dir, 'node_modules'), 'dir');
+    r.write('.gitignore', 'node_modules\n');
+    const base = r.commit('MB-67 seed with the real policy');
+    r.write(MAP, '{"rules": ["map-only-string-xyz"]}\n');
+    r.write(OTHER, '{"rules": ["other-new-string-abc"]}\n');
+    r.commit('MB-67 adds the map and another JSON file');
+    return { r, base };
+  };
+
+  it('arm L does not scan the exempt map, but still fails a new string in any other JSON file of the scope', () => {
+    const b = build();
+    const out = runB(b.r, ['--ci', '--base', b.base], rootOf(b.r));
+    expect(out.out).not.toContain('map-only-string-xyz');
+    expect(out.out).toContain('FAIL:L:json-string:other-new-string-abc');
+    done();
+  });
+});
