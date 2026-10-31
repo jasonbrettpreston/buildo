@@ -1,0 +1,35 @@
+{
+  "task": "MB-73",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-10-31",
+  "head": "d619dfb4",
+  "commits_reviewed": [
+    "bcd6ffe0",
+    "79d0b8f6",
+    "18e8f66e",
+    "7e18688c",
+    "d619dfb4"
+  ],
+  "cards": [],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-73/plan.md (v4) and adjudication.md",
+  "output": "OUTPUT panel PASS after re-check 1: first pass FAIL on B1-B5 (guard dropped cannot-decide, zero promises green, --base optional, run on working tree and drift arm not called, audit counts hardcoded); all five fixed in d619dfb4 and re-broken by hand on temp repos without escape (cwd=42 exit 2, no-promises exit 2, no-base exit 2, dirty worktree exit 1, real audit counts). 312 tests green at 8 forks. WAIT lines for withdrawn-has-commits and untraced-number are printed, not failed. Residual: a forged binding passes if the test really passes at the ref.",
+  "seats": [
+    "regression-guardian",
+    "grounded-reviewer",
+    "ds-spec",
+    "ds-security",
+    "ds-idempotency",
+    "ds-error-paths"
+  ],
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "wiring and stage-10 close must fail on any WAIT line",
+    "wire withdrawnLines after WAIT-P67-2",
+    "wire W:untraced-number after MB-31",
+    "amend plan section 10 write scope",
+    "audit counts are per file, not per promise"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-73/output-panel/stage8.md"
+}
