@@ -1,0 +1,41 @@
+{
+  "task": "MB-67",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-10-31",
+  "head": "ba05d88974803296fae8a71f224b65525b23ab5b",
+  "commits_reviewed": [
+    "c500c249",
+    "72b0b021",
+    "43534f74",
+    "f86def72",
+    "b9e48147",
+    "92e7ed2f",
+    "ba05d889"
+  ],
+  "cards": [
+    "CARD-prepolicy-exempt",
+    "CARD-rulemap-literal-exempt",
+    "CARD-bootstrap-rebuild",
+    "CARD-gate-scope-from-bootstrap"
+  ],
+  "plan": "Plan and earlier panels: ~/Buildo-scratch/mcbylaws/MB-67/plan.md; output-panel/recheck-2.md, recheck-3.md. The five post-recheck commits skipped stages 3-5 and 8; this record covers the owed stage 8.",
+  "output": "OUTPUT panel PASS: Regression Guardian (real fixture repos, old base, forked branch, side merge, -s ours merge, side-line base, rewritten bootstrap: no post-bootstrap escape; only a local git-replace ref defeats the ancestry test, follow-up F1), grounded reviewer (each change matches its card, nothing wider), DeepSeek spec/security/idempotency/error-paths grounded and adjudicated, hooks-path guard holds under CI. 995 tests green. No blockers.",
+  "seats": [
+    "regression-guardian",
+    "grounded-reviewer",
+    "ds-spec",
+    "ds-security",
+    "ds-idempotency",
+    "ds-error-paths"
+  ],
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "F1 GIT_NO_REPLACE_OBJECTS=1 in gate git calls",
+    "F2 guard: only exit 1 means unset",
+    "F3 guard: also read effective value",
+    "F4 skip per-commit ancestry loop when base moved"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-67/output-panel/stage8-followups.md"
+}
