@@ -78,6 +78,22 @@ function prePolicyCommits(cwd, shas, ctx) {
   return { set, fail: [] };
 }
 
+/**
+ * CARD-gate-scope-from-bootstrap (operator 2026-10-31, option A): when the range base is a (non-strict) ancestor of the
+ * frozen bootstrap, EVERY arm that diffs base..tip -- H/C/P per commit, merges, V, L, the loop arm, the landing-exception
+ * and allow-list reads, the policy read -- uses the bootstrap as its effective base: nothing before the policy existed is
+ * judged. A base at or after the bootstrap (or on a side line) is unchanged. A bootstrap that is not a commit here, or
+ * an ancestry error, is `FAIL:X:cannot-decide` and the base is left as given (fail closed).
+ */
+function effectiveBase(cwd, b, ctx) {
+  const have = git(cwd, ['cat-file', '-e', `${ctx.bootstrap}^{commit}`]);
+  if (have.status !== 0) return { base: b, moved: false, fail: [CANNOT] };
+  const st = ctx.ancestry(cwd, b, ctx.bootstrap).status;
+  if (st === 0) return { base: ctx.bootstrap, moved: true, fail: [] };
+  if (st === 1) return { base: b, moved: false, fail: [] };
+  return { base: b, moved: false, fail: [CANNOT] };
+}
+
 const top = (cwd) => {
   const r = git(cwd, ['rev-parse', '--show-toplevel']);
   return r.status === 0 && r.stdout.trim() !== '' ? r.stdout.trim() : null;
@@ -386,13 +402,17 @@ function summaryInput({ cwd, refs, ci, ctx }) {
       out.push({ kind: 'unknown', ref: r.ref });
       continue;
     }
-    const b = base.stdout.trim();
+    const pushBase = base.stdout.trim();
+    const eff = effectiveBase(cwd, pushBase, ctx);
+    const b = eff.base;
+    arms.push(...eff.fail);
+    if (eff.moved && b !== pushBase) arms.push(`effective base: ${b.slice(0, 8)} (the bootstrap; push base ${pushBase.slice(0, 8)} is an ancestor of it, so nothing older is judged)`);
     // O67-04: the summary only DISPLAYS; judging is per commit in `rangeArms`. A base without a policy is
     // shown through the tip's copy (the range bootstraps the policy); only when both fail is it undecidable.
     let res = resolvePolicy(cwd, b);
     if (!res.ok) res = resolvePolicy(cwd, r.localSha);
     if (!res.ok) { arms.push('FAIL:H:cannot-decide'); out.push({ kind: 'unknown', ref: r.ref }); continue; }
-    const collected = collectRef({ cwd, ref: r.ref, localSha: r.localSha, remoteSha: zero ? '' : r.remoteSha, policy: res.policy, defaultBase });
+    const collected = collectRef({ cwd, ref: r.ref, localSha: r.localSha, remoteSha: eff.moved ? b : (zero ? '' : r.remoteSha), policy: res.policy, defaultBase });
     if (collected.error) { arms.push(CANNOT); out.push({ kind: 'unknown', ref: r.ref }); continue; }
     // R-LS: a listed commit is shown as exempt, so the summary prints neither MISSING nor a fail. The set comes from
     // the range BASE; a fail-closed base file adds its verdict here too.

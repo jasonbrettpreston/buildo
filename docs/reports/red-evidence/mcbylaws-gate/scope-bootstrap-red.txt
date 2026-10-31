@@ -1,0 +1,131 @@
+# red: scope from bootstrap, gate without effectiveBase
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb-pp
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts (41 tests | 2 failed) 11815ms
+   ✓ O67-11: the loop arm is called as its CLI defines (argv and verdicts) > --staged calls check --mode commit; --ci --base <rev> calls check --mode ci --base <rev> 322ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > one commit that adds 0.45 and raises its own baseline fails; a baseline already in the base passes 424ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > a deleted or renamed scope file neither cannot-scan nor cannot-decide; only the rename target is scanned 424ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 556ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-04: a range whose base has no policy passes when its first commit is the policy alone, and fails when it is not 505ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-20: arm C reads the register in each commit's PARENT; a later RATIFIED row does not rescue an earlier cite 357ms
+   ✓ O67-02: a merge commit is judged by its own combined diff (an "evil" merge cannot hide from --no-merges) > a conflict resolved off Layer 2/3 fails on the merge sha; a clean merge adds no H failure 634ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B1: an evil merge alone in the range fails on its sha; a docs-only merge passes 597ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B2: a narrowing commit does not switch arm L off for a later literal; the control without narrowing fails too 340ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a decoy sha in the base file excuses nothing, and neither does an absent base file 510ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > RED X1: a list added by a LATER commit of the range names the earlier sha and still does not excuse it 304ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a bootstrap sha missing from the repository is FAIL:X:cannot-decide, and the commits are still judged 304ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > an ancestry check that errors is FAIL:X:cannot-decide and exempts nothing 304ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > the CLI uses the frozen sha only: a repo without c500c249 is cannot-decide, and the source reads no environment 304ms
+   ✓ RM (CARD-rulemap-literal-exempt, R-KR): exactly the generated rule map is exempt from arm L, and nothing else in scope > arm L does not scan the exempt map, but still fails a new string in any other JSON file of the scope 574ms
+   × EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > an old base is judged from the bootstrap: pre-bootstrap work is not judged, post-bootstrap work still fails arm L and the loop arm, and the summary names the effective base 343ms
+     → expected 'PUSH HEAD  APPROVED present since 340…' not to contain 'pre-string-aaa'
+   × EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a side-branch commit after the bootstrap (not its ancestor) is still judged 418ms
+     → expected 'PUSH HEAD  APPROVED present since 95f…' not to contain 'pre-string-aaa'
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a missing bootstrap is FAIL:X:cannot-decide and the old base is not widened to the bootstrap 362ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > an ancestry error is FAIL:X:cannot-decide and the base stays as given 371ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > an old base is judged from the bootstrap: pre-bootstrap work is not judged, post-bootstrap work still fails arm L and the loop arm, and the summary names the effective base
+AssertionError: expected 'PUSH HEAD  APPROVED present since 340…' not to contain 'pre-string-aaa'
+
+- Expected
++ Received
+
+- pre-string-aaa
++ PUSH HEAD  APPROVED present since 3405cbc 2026-10-31
++ PROTECTED:
++   mcbylaws/protected-paths.json   +28 -0
++   scripts/analysis/bylaw/post.json   +1 -0
++   scripts/analysis/bylaw/pre.json   +1 -0
++   c2c99b9 null L10,R-LD pre-policy
++   34fb9b7 null L10,R-LD MISSING
++ PANEL MISSING 34fb9b7 null
++ HELD PATCHES  0 of 12
++ held, worktrees: not evaluated in CI
++ pending/  0 red-by-design tests (was 0)
++ pre-policy: c2c99b9 (1 commit(s), ancestors of the bootstrap 96d87b5e; arms H, C, P skipped)
++ landing exception: 42521481cab1ad58b848600367c8d11f1a185b8c (frozen landing list)
++ landing exception: 3e7b592e9a21862c93db18bca890f74604c22db3 (frozen landing list)
++ landing exception: bef5585e65ccc2a02169902dd18da1ba2fa9349a (frozen landing list)
++ landing exception: 6474b00ef0f558f675a9c240a801a3aef05eb1b4 (frozen landing list)
++ landing exception: ce116571ba381a0a1b51734820f45ccce2981244 (frozen landing list)
++ landing exception: 3e3212b99131a49441e06e8c655c8b9663ee36d3 (frozen landing list)
++ FAIL:C:cannot-decide:34fb9b79f3bdf5fff2f8c7179106119724523d4e
++ FAIL:P:no-record:34fb9b79f3bdf5fff2f8c7179106119724523d4e
++ FAIL:L:json-string:post-string-bbb
++ FAIL:L:json-string:pre-string-aaa
++ loop: loop ran
++ FAIL:X:arm-failed:loop
++ held, worktree and tty: not evaluated in CI
++ GATE FAIL
++
++
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:774:25
+    772|     const out = runB(b.r, ['--ci', '--base', b.old], b.boot);
+    773|     expect(out.status).toBe(1);
+    774|     expect(out.out).not.toContain('pre-string-aaa');
+       |                         ^
+    775|     expect(out.out).toContain('FAIL:L:json-string:post-string-bbb');
+    776|     expect(out.out).toContain('FAIL:X:arm-failed:loop');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/mcbylaws-gate.logic.test.ts > EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a side-branch commit after the bootstrap (not its ancestor) is still judged
+AssertionError: expected 'PUSH HEAD  APPROVED present since 95f…' not to contain 'pre-string-aaa'
+
+- Expected
++ Received
+
+- pre-string-aaa
++ PUSH HEAD  APPROVED present since 95f686d 2026-10-31
++ PROTECTED:
++   mcbylaws/protected-paths.json   +28 -0
++   scripts/analysis/bylaw/post.json   +1 -0
++   scripts/analysis/bylaw/pre.json   +1 -0
++   scripts/analysis/bylaw/side.mjs   +1 -0
++   0a179d3 null L10,R-LD pre-policy
++   d5e0fcb null R-LD MISSING
++ PANEL MISSING d5e0fcb null
++   f9fbe9a null L10,R-LD MISSING
++ PANEL MISSING f9fbe9a null
++ HELD PATCHES  0 of 12
++ held, worktrees: not evaluated in CI
++ pending/  0 red-by-design tests (was 0)
++ pre-policy: 0a179d3 (1 commit(s), ancestors of the bootstrap 3f3839a2; arms H, C, P skipped)
++ landing exception: 42521481cab1ad58b848600367c8d11f1a185b8c (frozen landing list)
++ landing exception: 3e7b592e9a21862c93db18bca890f74604c22db3 (frozen landing list)
++ landing exception: bef5585e65ccc2a02169902dd18da1ba2fa9349a (frozen landing list)
++ landing exception: 6474b00ef0f558f675a9c240a801a3aef05eb1b4 (frozen landing list)
++ landing exception: ce116571ba381a0a1b51734820f45ccce2981244 (frozen landing list)
++ landing exception: 3e3212b99131a49441e06e8c655c8b9663ee36d3 (frozen landing list)
++ FAIL:H:cannot-decide:d5e0fcb905ac8aba7dbbf5dd87177eb50ddb3860
++ FAIL:C:cannot-decide:f9fbe9a68b5ee46b0d79b907a2c5969a4a9f9e7d
++ FAIL:P:no-record:f9fbe9a68b5ee46b0d79b907a2c5969a4a9f9e7d
++ FAIL:L:json-string:post-string-bbb
++ FAIL:L:json-string:pre-string-aaa
++ loop: loop ran
++ FAIL:X:arm-failed:loop
++ held, worktree and tty: not evaluated in CI
++ GATE FAIL
++
++
+
+ ❯ src/tests/mcbylaws-gate.logic.test.ts:796:25
+    794|     expect(out.status).toBe(1);
+    795|     expect(failsFor(out.out, b.sideSha).length).toBeGreaterThan(0);
+    796|     expect(out.out).not.toContain('pre-string-aaa');
+       |                         ^
+    797|     done();
+    798|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 39 passed (41)
+   Start at  14:55:38
+   Duration  12.01s (transform 28ms, setup 7ms, collect 16ms, tests 11.81s, environment 0ms, prepare 20ms)
+

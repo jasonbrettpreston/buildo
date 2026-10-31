@@ -589,7 +589,15 @@ describe('PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of 
   const build = () => {
     const r = mk();
     r.write('docs/note.md', '# note\n');
-    const base = r.commit('MB-67 root: docs');
+    const root = r.commit('MB-67 root: docs');
+    // CARD-gate-scope-from-bootstrap: a base that is an ancestor of the bootstrap is moved up to it, so the pre-policy
+    // skip of H, C and P is shown from a base on a SIDE line (not an ancestor of the bootstrap).
+    const branch = r.git(['branch', '--show-current']);
+    r.git(['checkout', '-q', '-b', 'sidebase']);
+    r.write('docs/other.md', '# other\n');
+    const base = r.commit('MB-67 a base on a side line');
+    r.git(['checkout', '-q', branch]);
+    void root;
     r.write(L23FILE, 'export const evaluate = 1;\n');
     r.write(CLOUD_FILE, CLOUD);
     const pre = r.commit('MB-67 pre-policy: a Layer 2/3 change and a cloud target, no citation');
@@ -622,7 +630,13 @@ describe('PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of 
     fs.copyFileSync(path.join(REAL_ROOT, 'scripts/ast-grep-rules/bylaw-literal.yml'), path.join(r.dir, 'scripts/ast-grep-rules/bylaw-literal.yml'));
     fs.symlinkSync(path.join(REAL_ROOT, 'node_modules'), path.join(r.dir, 'node_modules'), 'dir');
     r.write('.gitignore', 'node_modules\n');
-    const base = r.commit('MB-67 arm L seed, no policy');
+    const seedSha = r.commit('MB-67 arm L seed, no policy');
+    const branch = r.git(['branch', '--show-current']);
+    r.git(['checkout', '-q', '-b', 'sidebase']);
+    r.write('docs/other.md', '# other\n');
+    const base = r.commit('MB-67 a base on a side line (not an ancestor of the bootstrap)');
+    r.git(['checkout', '-q', branch]);
+    void seedSha;
     r.write('scripts/analysis/bylaw/lit.mjs', 'export const a = 0.45;\n');
     const pre = r.commit('MB-67 pre-policy literal');
     r.write('mcbylaws/protected-paths.json', policy({ layer23: [], literal_scope: ['scripts/analysis/bylaw/*.mjs'] }));
@@ -727,6 +741,91 @@ describe('RM (CARD-rulemap-literal-exempt, R-KR): exactly the generated rule map
     const out = runB(b.r, ['--ci', '--base', b.base], rootOf(b.r));
     expect(out.out).not.toContain('map-only-string-xyz');
     expect(out.out).toContain('FAIL:L:json-string:other-new-string-abc');
+    done();
+  });
+});
+
+describe('EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm', () => {
+  const LOOPF = 'scripts/analysis/mcbylaws-loop/loop-gate.mjs';
+  const LOGF = 'loop.log';
+  const fakeLoop = `import * as fs from 'node:fs';\nfs.appendFileSync(${JSON.stringify(LOGF)}, process.argv.slice(2).join(' ') + '\\n');\nprocess.stdout.write('loop ran\\n');\nprocess.exit(1);\n`;
+  const pol = () => policy({ layer23: [L23], literal_scope: ['scripts/analysis/bylaw/**/*.json'], external_arms: [{ id: 'loop', required: true }] });
+  const failsFor = (out: string, x: string) => out.split('\n').filter((l) => l.startsWith('FAIL:') && l.includes(x));
+  /** root R (allow list, rule file, loop, APPROVED; the OLD base) -> pre (arm L bait, BEFORE the bootstrap) -> boot (policy alone) -> post (arm L bait AFTER it). */
+  const build = (side = false) => {
+    const r = mk();
+    r.write(ALLOW, ALLOW_EMPTY);
+    r.write(LOOPF, fakeLoop);
+    r.write('.gitignore', `node_modules\n${LOGF}\n`);
+    r.write('mcbylaws/APPROVED', 'O-1 APPROVED 2026-10-30\n');
+    fs.mkdirSync(path.join(r.dir, 'scripts/ast-grep-rules'), { recursive: true });
+    fs.copyFileSync(path.join(REAL_ROOT, 'scripts/ast-grep-rules/bylaw-literal.yml'), path.join(r.dir, 'scripts/ast-grep-rules/bylaw-literal.yml'));
+    fs.symlinkSync(path.join(REAL_ROOT, 'node_modules'), path.join(r.dir, 'node_modules'), 'dir');
+    const old = r.commit('MB-67 root: the old base');
+    const branch = r.git(['branch', '--show-current']);
+    r.write('scripts/analysis/bylaw/pre.json', '{"s": ["pre-string-aaa"]}\n');
+    const pre = r.commit('MB-67 before the bootstrap');
+    r.write('mcbylaws/protected-paths.json', pol());
+    const boot = r.commit('MB-67 the policy alone');
+    let sideSha = '';
+    if (side) {
+      r.git(['checkout', '-q', '-b', 'side', pre]);
+      r.write('scripts/analysis/bylaw/side.mjs', 'export const side = 1;\n');
+      sideSha = r.commit('MB-67 side branch: a Layer 2/3 change, no citation');
+      r.git(['checkout', '-q', branch]);
+      r.git(['merge', '--no-ff', '-m', 'Merge side', 'side']);
+    }
+    r.write('scripts/analysis/bylaw/post.json', '{"s": ["post-string-bbb"]}\n');
+    const post = r.commit('MB-67 after the bootstrap');
+    return { r, old, pre, boot, post, sideSha };
+  };
+  const logOf = (r: Repo) => (fs.existsSync(path.join(r.dir, LOGF)) ? fs.readFileSync(path.join(r.dir, LOGF), 'utf8').split('\n').filter(Boolean) : []);
+
+  it('an old base is judged from the bootstrap: pre-bootstrap work is not judged, post-bootstrap work still fails arm L and the loop arm, and the summary names the effective base', () => {
+    const b = build();
+    const out = runB(b.r, ['--ci', '--base', b.old], b.boot);
+    expect(out.status).toBe(1);
+    expect(out.out).not.toContain('pre-string-aaa');
+    expect(out.out).toContain('FAIL:L:json-string:post-string-bbb');
+    expect(out.out).toContain('FAIL:X:arm-failed:loop');
+    expect(logOf(b.r)).toContain(`check --mode ci --base ${b.boot}`);
+    expect(out.out).toContain(`effective base: ${b.boot.slice(0, 8)}`);
+    done();
+  });
+
+  it('a base at the bootstrap is unchanged: no effective-base line, the same post-bootstrap failures', () => {
+    const b = build();
+    const out = runB(b.r, ['--ci', '--base', b.boot], b.boot);
+    expect(out.out).not.toContain('effective base');
+    expect(out.out).toContain('FAIL:L:json-string:post-string-bbb');
+    expect(logOf(b.r)).toContain(`check --mode ci --base ${b.boot}`);
+    done();
+  });
+
+  it('a side-branch commit after the bootstrap (not its ancestor) is still judged', () => {
+    const b = build(true);
+    const out = runB(b.r, ['--ci', '--base', b.old], b.boot);
+    expect(out.status).toBe(1);
+    expect(failsFor(out.out, b.sideSha).length).toBeGreaterThan(0);
+    expect(out.out).not.toContain('pre-string-aaa');
+    done();
+  });
+
+  it('a missing bootstrap is FAIL:X:cannot-decide and the old base is not widened to the bootstrap', () => {
+    const b = build();
+    const out = runB(b.r, ['--ci', '--base', b.old], '0'.repeat(40));
+    expect(out.status).toBe(1);
+    expect(out.out).toContain('FAIL:X:cannot-decide');
+    expect(out.out).not.toContain('effective base');
+    expect(out.out).toContain('pre-string-aaa');
+    done();
+  });
+
+  it('an ancestry error is FAIL:X:cannot-decide and the base stays as given', () => {
+    const b = build();
+    const out = runB(b.r, ['--ci', '--base', b.old], b.boot, 'ancestry-error');
+    expect(out.out).toContain('FAIL:X:cannot-decide');
+    expect(out.out).not.toContain('effective base');
     done();
   });
 });
