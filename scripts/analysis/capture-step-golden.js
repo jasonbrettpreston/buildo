@@ -667,8 +667,8 @@ function maskString(s, hits) {
 }
 
 /**
- * Drop one dotted field (e.g. `value.ratio`) from a COPY of an audit row; drop `value` too when
- * it is left empty. Never mutates `item`. Returns the copy and whether the field was present.
+ * Drop one dotted field (e.g. `value.ratio`) from a COPY of an audit row; an emptied parent stays `{}`, so the
+ * G8 diff key is the dropped field itself (the registered RB-D10 key). Never mutates `item`. Returns the copy and whether the field was present.
  */
 function dropDottedField(item, dotted) {
   const parts = dotted.split('.');
@@ -680,9 +680,8 @@ function dropDottedField(item, dotted) {
     node = node[k];
   }
   const last = parts[parts.length - 1];
-  if (!(last in node)) return { row: copy, dropped: false };
+  if (!Object.hasOwn(node, last)) return { row: copy, dropped: false };
   delete node[last];
-  if (Object.keys(node).length === 0 && parts.length > 1) delete copy[parts[0]];
   return { row: copy, dropped: true };
 }
 

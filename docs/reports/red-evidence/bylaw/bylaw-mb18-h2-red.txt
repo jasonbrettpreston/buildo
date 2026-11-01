@@ -1,0 +1,17 @@
+== item (h) follow-up red (FIX-h-1): the test half of h-built.v2 (written in engine run H3a 20261101T124845Z-91b337b6) against the as-built module of 9d0e6363; an emptied value must stay {} and the diff key must be the registered RB-D10 key value.ratio
+   × storage_within_budget ratio normalisation (RB-D10, MB-18 h) > two captures differing ONLY in storage_within_budget value.ratio compare EQUAL, status/threshold still compared 2ms
+     → expected undefined to deeply equal {}
+   × storage_within_budget ratio normalisation (RB-D10, MB-18 h) > against a pre-change golden (value still holds ratio) the only diff key is value.ratio, the registered RB-D10 explained-diffs key 1ms
+     → expected [ Array(1) ] to deeply equal [ Array(1) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/capture-step-golden.logic.test.ts > storage_within_budget ratio normalisation (RB-D10, MB-18 h) > two captures differing ONLY in storage_within_budget value.ratio compare EQUAL, status/threshold still compared
+AssertionError: expected undefined to deeply equal {}
+ FAIL  src/tests/capture-step-golden.logic.test.ts > storage_within_budget ratio normalisation (RB-D10, MB-18 h) > against a pre-change golden (value still holds ratio) the only diff key is value.ratio, the registered RB-D10 explained-diffs key
+AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]
+-   "summary.records_meta.audit_table.rows[].value.ratio",
++   "summary.records_meta.audit_table.rows[].value",
+ Test Files  1 failed (1)
+      Tests  2 failed | 51 passed (53)
+== item (h) follow-up green: module fixed in engine run H3b 20261101T125017Z-bad3ee75
+ Test Files  1 passed (1)
+      Tests  53 passed (53)

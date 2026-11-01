@@ -631,8 +631,16 @@ describe('storage_within_budget ratio normalisation (RB-D10, MB-18 h)', () => {
     const kept = a.normalised.summary.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'storage_within_budget');
     expect(kept.status).toBe('PASS');
     expect(kept.threshold).toBe('value_max 1300');
-    expect(kept.value).toBeUndefined();
+    expect(kept.value).toEqual({});
     expect(a.nondeterminism).toContain('field:storage_within_budget.value.ratio');
+  });
+
+  it('against a pre-change golden (value still holds ratio) the only diff key is value.ratio, the registered RB-D10 explained-diffs key', () => {
+    const row = { metric: 'storage_within_budget', value: { ratio: 0.5640 }, threshold: 'value_max 1300', status: 'PASS' };
+    const now = normalise(auditCapture(row)).normalised;
+    const before = structuredClone(now);
+    before.summary.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'storage_within_budget').value = { ratio: 0.5640 };
+    expect(diffNormalised(before, now).map((d: { path: string }) => d.path.replace(/\[\d+\]/g, '[]'))).toEqual(['summary.records_meta.audit_table.rows[].value.ratio']);
   });
 
   it('lock (green on base too): the budget check still bites — status/threshold/measured value are compared', () => {
