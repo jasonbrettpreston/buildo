@@ -7560,6 +7560,20 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-MA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A task numbers its preregs 1, 2, ...; a loop round reads the landing task's newest prereg of the record's increment (R-KV amended).",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -8127,6 +8141,11 @@
       "id": "R-LZ",
       "class": "none",
       "reason": "OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an)"
+    },
+    {
+      "id": "R-MA",
+      "class": "none",
+      "reason": "OWED MB-79 (h): no test names R-MA yet (recorded 2026-11-01-batch-ao)"
     }
   ]
 }

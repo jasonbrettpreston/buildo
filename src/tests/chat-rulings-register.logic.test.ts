@@ -813,3 +813,20 @@ describe('CHAT-215 (batch 2026-10-31-batch-an): 1 rulings recorded; behaviour lo
     });
   }
 });
+
+// CHAT-216 (batch 2026-11-01-batch-ao): each Rule text line is present in the register that carries it and cites its decision.
+// CHAT-216.PR-68-12 is a no_ruling decision (superseded proposal) resting on R-KV and R-MA; it has no row of its own.
+describe('CHAT-216 (batch 2026-11-01-batch-ao): 3 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["R-MA", "A", "2026-11-01-batch-ao#CHAT-216.O-28", "one file per pre-registered round of the task: `prereg-<MB-id>-<n>.json`, n = 1, 2, ... in the task's own order. For a record, the gate reads the landing task's prereg with the highest n (compared as an integer) among that task's preregs committed strictly before the commit that adds the record, whose `increment` equals the record's. At commit time the task is the task of the prereg added by HEAD's commit; so a landing's prereg is committed alone directly under the commit that adds its record, and that commit carries the `McBylaws-Task` trailer. At push and in CI it is the `McBylaws-Task` trailer of the commit that adds the record. A file not of the form `prereg-MB-<n>-<k>.json` is a rules source for arm C only while its task has no file of that form (a scope condition of arm C, not an exception)."],
+    ["R-LZ note", "A", "2026-11-01-batch-ao#CHAT-216.O-28-RLZ", "one file per pre-registered round of the task: `prereg-<MB-id>-<n>.json`, n = 1, 2, ... in the task's own order."],
+    ["M-180 note", "M", "2026-11-01-batch-ao#CHAT-216.O-30", "A0399 re-check under (1), as the 2026-10-30 note requires: on a lot in exception RM 23 (900.6.10(23)), a detached houseplex of 4 dwelling units that is the only residential building on the lot (the new-build default, M-158) has `side_setback_m` 0.6 m, winner `900.6.10(23)#(23)[SSP](D)(i)`, where the expected value was 1.2 m, winner `10.80.40.70(3)#(3)(A)` (`src/tests/bylaw-mb18.logic.test.ts`, MB-18 item a)."],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, c, rule] of CASES) {
+    it(`${row} carries ${c} and its Rule text`, () => {
+      expect(TEXT[reg], c).toContain(c);
+      expect(TEXT[reg] + L131 + M + A + S68, c + ' rule text').toContain(rule);
+    });
+  }
+});

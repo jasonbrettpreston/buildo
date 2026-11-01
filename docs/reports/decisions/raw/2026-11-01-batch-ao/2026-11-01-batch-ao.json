@@ -1,0 +1,39 @@
+{
+  "source": "operator chat 2026-11-01",
+  "operator_quote": "wait for the panel - I approve the panel decision as long as it in compliance . I just dont understand why its taking so long to resolve - the rule conflict is evident in the rulings - we should be aware of the rules - we just cant wait for forever trying to resolve this - this also doesnt seem like its overly inmportant to the overall goal. pnale decision is approved when it arrives. record tehe rulings as alwasy to keep the spec sand handbooks up to date - this is also part of the process.  When and issue arises you need to quote the rulings that applies... not just explain the problem.",
+  "context": "Recorded by lane R in MB-78's lane R slot (O-28 loop break (B), card ~/Buildo-scratch/p2close/CARD-o28-prereg-name.answered.md, third answer), before MB-78 commit 3, which is rebuilt on this base (MB-79/h/adjudication.md A15). O-28: option h-2 of ~/Buildo-scratch/mcbylaws/MB-79/h/rule.md section 4 as folded (adjudication.md edits 1-11, fold.md), approved by the operator's second answer on that card. O-30: card ~/Buildo-scratch/p2close/CARD-o30-m180-note.answered.md, Draft 2 of ~/Buildo-scratch/mcbylaws/R-batch-ao/drafts.md. Compliance table ~/Buildo-scratch/mcbylaws/MB-78/batch-ao/compliance.md. Left out: PR-79f-1 and its R-LI / R-LH notes (the MB-79 (f) plan returns to stage 2 for P-9 first, adjudication A2); the M-339, M-340 and M-409 lock notes (their MB-18 lock files are not in the tree).",
+  "decisions": [
+    {
+      "id": "CHAT-216.O-28",
+      "subject": "O-28 option h-2 (MB-79 (h)): R-KV amended, a task numbers its preregs and the gate reads the landing task's newest of the record's increment: R-MA",
+      "decision": "approve",
+      "recommendation": "CARD-o28-prereg-name (~/Buildo-scratch/p2close/CARD-o28-prereg-name.answered.md); text from ~/Buildo-scratch/mcbylaws/MB-79/h/rule.md. Rule text: one file per pre-registered round of the task: `prereg-<MB-id>-<n>.json`, n = 1, 2, ... in the task's own order. For a record, the gate reads the landing task's prereg with the highest n (compared as an integer) among that task's preregs committed strictly before the commit that adds the record, whose `increment` equals the record's. At commit time the task is the task of the prereg added by HEAD's commit; so a landing's prereg is committed alone directly under the commit that adds its record, and that commit carries the `McBylaws-Task` trailer. At push and in CI it is the `McBylaws-Task` trailer of the commit that adds the record. A file not of the form `prereg-MB-<n>-<k>.json` is a rules source for arm C only while its task has no file of that form (a scope condition of arm C, not an exception).",
+      "quote_ref": "q_o28"
+    },
+    {
+      "id": "CHAT-216.O-28-RLZ",
+      "subject": "O-28 option h-2: R-LZ's mechanics completed with the naming sentence: R-LZ note",
+      "decision": "approve",
+      "recommendation": "CARD-o28-prereg-name (~/Buildo-scratch/p2close/CARD-o28-prereg-name.answered.md); text from ~/Buildo-scratch/mcbylaws/MB-79/h/rule.md. Rule text: one file per pre-registered round of the task: `prereg-<MB-id>-<n>.json`, n = 1, 2, ... in the task's own order.",
+      "quote_ref": "q_o28"
+    },
+    {
+      "id": "CHAT-216.PR-68-12",
+      "subject": "PR-68-12 / O68-05 (MB-68, the prereg-to-record join by loop round), never recorded: superseded, rests on R-KV, R-MA",
+      "decision": "superseded",
+      "recommendation": "Superseded: no ruling. PR-68-12 (~/Buildo-scratch/mcbylaws/MB-68/output-panel/adjudication.md:134, finding O68-05) was proposed and never recorded (Spec 124 section 4, 124:187: a ruling that only lives in a pilot report has not reached policy). Option h-2 (~/Buildo-scratch/p2close/CARD-o28-prereg-name.answered.md, second answer; MB-79/h/rule.md section 4) marks its name join superseded: R-KV as amended by R-MA governs. Proposal text: The prereg-to-record join: file name `prereg-<task>-<round>.json` plus `increment` in the prereg; the prereg round is the loop round, not the CoA batch counter.",
+      "quote_ref": "q_o28"
+    },
+    {
+      "id": "CHAT-216.O-30",
+      "subject": "O-30 (OQ-7): the M-180 dated note naming the A0399 side-yard value 1.2 -> 0.6 with its cited source: M-180 note",
+      "decision": "approve",
+      "recommendation": "CARD-o30-m180-note (~/Buildo-scratch/p2close/CARD-o30-m180-note.answered.md); text from ~/Buildo-scratch/mcbylaws/R-batch-ao/drafts.md. Rule text: A0399 re-check under (1), as the 2026-10-30 note requires: on a lot in exception RM 23 (900.6.10(23)), a detached houseplex of 4 dwelling units that is the only residential building on the lot (the new-build default, M-158) has `side_setback_m` 0.6 m, winner `900.6.10(23)#(23)[SSP](D)(i)`, where the expected value was 1.2 m, winner `10.80.40.70(3)#(3)(A)` (`src/tests/bylaw-mb18.logic.test.ts`, MB-18 item a).",
+      "quote_ref": "q_o30"
+    }
+  ],
+  "q_o28": "wait for the panel - I approve the panel decision as long as it in compliance . I just dont understand why its taking so long to resolve - the rule conflict is evident in the rulings - we should be aware of the rules - we just cant wait for forever trying to resolve this - this also doesnt seem like its overly inmportant to the overall goal. pnale decision is approved when it arrives. record tehe rulings as alwasy to keep the spec sand handbooks up to date - this is also part of the process.  When and issue arises you need to quote the rulings that applies... not just explain the problem.",
+  "q_o28b": "(B) Lane G limit (Recommended)",
+  "q_o28a": "option 2 as long as it complies with the governing spec or handbook",
+  "q_o30": "0-30 dated note first"
+}
