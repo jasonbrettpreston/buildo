@@ -17,6 +17,430 @@
   "amendments": {},
   "decisions": [
     {
+      "id": "CHAT-215.O-19",
+      "question": "O-19 (SB-3): reason token setting_out_of_bounds: M-428",
+      "recommendation": "CARD-o19-o21 (~/Buildo-scratch/p2close/CARD-o19-o21.answered.md). Rule text: O-19 (SB-3): adopt the reason token `not_evaluated:setting_out_of_bounds` into the M-64 closed reason list.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "0-19-O-21 approved - let's close this out - I dont need to see it"
+    },
+    {
+      "id": "CHAT-215.O-20",
+      "question": "O-20 (FOOT-18): R3-10 switch names: M-429",
+      "recommendation": "CARD-o19-o21 (~/Buildo-scratch/p2close/CARD-o19-o21.answered.md). Rule text: O-20 (FOOT-18): use the planned R3-10 switch names `shape_calibrated`, `setting_not_fitted`, `switched_off` (`MB-31/adjudication.md:47`), not `shape_calibration_disclosure`.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "0-19-O-21 approved - let's close this out - I dont need to see it"
+    },
+    {
+      "id": "CHAT-215.O-21",
+      "question": "O-21 (SB-5): no cross-bound on the ring minimum: M-430",
+      "recommendation": "CARD-o19-o21 (~/Buildo-scratch/p2close/CARD-o19-o21.answered.md). Rule text: O-21 (SB-5): no cross-bound. A ring minimum above the ring depth falls back to the street median, with the flag \"ring not used\".",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "0-19-O-21 approved - let's close this out - I dont need to see it"
+    },
+    {
+      "id": "CHAT-215.PERM",
+      "question": "PERM reading (RD/R permitted residential building types): M-431",
+      "recommendation": "CARD-perm-reading (~/Buildo-scratch/p2close/CARD-perm-reading.answered.md). Rule text: in the RD zone the only residential use permitted is a dwelling unit in a permitted residential building type (10.20.20.10(1) read with 10.20.20.40(1); the R zone equivalents 10.10.20.10 / 10.10.20.40 read the same way). So the stored Phase 2 \"permitted\" answer for a building type on a lot rests on BOTH clauses plus that type's own lot condition (e.g. \"if the lot abuts a major street\"). A type that is not listed, or whose lot condition fails, is not permitted as of right; it needs a Committee of Adjustment variance (10.20.20.40(2): \"or is authorized by a Section 45 Planning Act minor variance\"), which is the CoA route already modelled (SIX-COA). Operator direction on method: data-driven checks (permits, CoA, past research) are the preferred route for validating readings.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "PERM reading approved. This was a strong approach - data driven"
+    },
+    {
+      "id": "CHAT-215.L31-15",
+      "question": "L31-15 ring walk: M-432",
+      "recommendation": "CARD-l31-15-16-18 (~/Buildo-scratch/p2close/CARD-l31-15-16-18.answered.md). Rule text: L31-15 ring walk: from each abutter on the subject's frontage street, step to the next lot whose frontage street is the subject's; where more than one, the lot with the longest shared edge, lowest lot id on a tie; the ring is a set of distinct lots; a lot with no estimate keeps its place (counts toward depth, not toward the mean). Corner lots use the same rule (the literal one-chain reading gave the same 1.10 m / 63 %). The walk is a DECLARED database read in the step's descriptor (same kind as the street-median read), with depth and minimum from lv(); this counts as data under \"no code in phase 3\" (CARD-fs-sb2a item 5). Not adopted: the no-walk all-candidates read (1.12 m).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "recommendation accepted - please record"
+    },
+    {
+      "id": "CHAT-215.L31-16",
+      "question": "L31-16 fya_placeholder_ring_min_n bounds: M-433",
+      "recommendation": "CARD-l31-15-16-18 (~/Buildo-scratch/p2close/CARD-l31-15-16-18.answered.md). Rule text: L31-16 fya_placeholder_ring_min_n bounds 1..4 (not 1..20: no audit lot had more than 9 ring lots, a high value would silently switch the ring off). The four existing fya_placeholder_* seed descriptions are amended by an explicit UPDATE.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "recommendation accepted - please record"
+    },
+    {
+      "id": "CHAT-215.L31-18",
+      "question": "L31-18 FS-SB2a re-fit: M-434",
+      "recommendation": "CARD-l31-15-16-18 (~/Buildo-scratch/p2close/CARD-l31-15-16-18.answered.md). Rule text: L31-18 re-fit: FS-SB2a is labelled \"calibration provisional\"; meanwhile a split-sample check on the 264 lots runs in the MB-68 loop as the pinned audit; the true fresh re-fit runs when newly measured lots exist (new CoA plans or surveys); MB-68 names that source before the proof set. This replaces CARD-fs-sb2a item 3's \"fresh sample before the proof set\" because no fresh measured sample exists locally.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "recommendation accepted - please record"
+    },
+    {
+      "id": "CHAT-215.SIDE-1",
+      "question": "R-zone main-building side yard 0.9 m; 0.45 m is a disclosure: M-435",
+      "recommendation": "CARD-side-yard-city (~/Buildo-scratch/p2close/CARD-side-yard-city.answered.md). Rule text: R-zone main-building side yard: the maximum uses 0.9 m (10.10.40.70(3)(A)); the 0.45 m blank-wall reduction (10.10.40.70(4), no windows or doors on that side) is a DISCLOSURE, not the stored maximum and not a second option. Supersedes the default in M-205(2) (\"0.45 m blank-wall reduction ... taken by default\"). Evidence: ~/Buildo-scratch/mcbylaws/research/Q6-permit-coa-as-evidence.md (City states 0.9 m on 37 of 39 R-zone lines, 7 of 7 since 2021). Phase 2 change: the stored R-zone side-yard cell moves 0.45 -> 0.9 (a Layer 2 rule change; pre-registered moves; MB-18 lane M).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "the city data is great - it matches - for 1 let's use the .9M (usethe .45 as a disclosure) Can we add a piece to the artifact that city data supports this - or remove the question as approved. I will use this data to answer the question anyways. Use a generator. The other data we have to answer some of the remaining question is the 25 cases - will this help use resolve anything."
+    },
+    {
+      "id": "CHAT-215.SIDE-2",
+      "question": "City-approved examples by a generator: M-437",
+      "recommendation": "CARD-side-yard-city (~/Buildo-scratch/p2close/CARD-side-yard-city.answered.md). Rule text: Examples whose answer the City data supports are shown as approved by City data and leave the operator's question list. This is decided by a GENERATOR from the evidence data with an externalized threshold (not by hand); examples with a disagreement or thin data stay with the operator.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "the city data is great - it matches - for 1 let's use the .9M (usethe .45 as a disclosure) Can we add a piece to the artifact that city data supports this - or remove the question as approved. I will use this data to answer the question anyways. Use a generator. The other data we have to answer some of the remaining question is the 25 cases - will this help use resolve anything."
+    },
+    {
+      "id": "CHAT-215.SIDE-3",
+      "question": "City-oracle tests in the MB-68 loop: M-441",
+      "recommendation": "CARD-side-yard-city (~/Buildo-scratch/p2close/CARD-side-yard-city.answered.md). Rule text: Automatic City tests (recommendation B): taken as approved by \"I will use this data to answer the question anyways\" — the supported topics become pinned City-oracle tests in the MB-68 loop. (Orchestrator reading; confirm if wrong.)",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "the city data is great - it matches - for 1 let's use the .9M (usethe .45 as a disclosure) Can we add a piece to the artifact that city data supports this - or remove the question as approved. I will use this data to answer the question anyways. Use a generator. The other data we have to answer some of the remaining question is the 25 cases - will this help use resolve anything."
+    },
+    {
+      "id": "CHAT-215.SIDE-4",
+      "question": "The 25 golden CoA cases as evidence: M-437",
+      "recommendation": "CARD-side-yard-city (~/Buildo-scratch/p2close/CARD-side-yard-city.answered.md). Rule text: The 25 golden CoA cases are to be checked as a further evidence source for the remaining questions.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "the city data is great - it matches - for 1 let's use the .9M (usethe .45 as a disclosure) Can we add a piece to the artifact that city data supports this - or remove the question as approved. I will use this data to answer the question anyways. Use a generator. The other data we have to answer some of the remaining question is the 25 cases - will this help use resolve anything."
+    },
+    {
+      "id": "CHAT-215.COV-1",
+      "question": "Coverage map (MB-75): M-436",
+      "recommendation": "CARD-coverage-reality-gemini (~/Buildo-scratch/p2close/CARD-coverage-reality-gemini.answered.md). Rule text: Coverage map: every Phase 3 catalogue row and every branch of it has at least one worked example; a gap gets an example or a stated, cited reason; enforced automatically by the loop gate. New task MB-75 (lane G, after MB-68 lands; MB-31's catalogue is its input).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "add 1 and 3, 4 for disagreement"
+    },
+    {
+      "id": "CHAT-215.COV-3",
+      "question": "City-wide reality check (MB-76): M-441",
+      "recommendation": "CARD-coverage-reality-gemini (~/Buildo-scratch/p2close/CARD-coverage-reality-gemini.answered.md). Rule text: City-wide reality check: after the first Phase 3 DB run, a Reality-Check seat reviews the outputs on all lots (zone-aware bounds, cross-field invariants, distribution outliers; existing tools scripts/analysis/parcel-sanity-audit.js and parcel-field-dump.js), separating genuine bugs from not-yet-re-run data. New task MB-76 (lane T, after the MB-31 step's first local run).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "add 1 and 3, 4 for disagreement"
+    },
+    {
+      "id": "CHAT-215.COV-4",
+      "question": "Gemini for disagreements: M-447",
+      "recommendation": "CARD-coverage-reality-gemini (~/Buildo-scratch/p2close/CARD-coverage-reality-gemini.answered.md). Rule text: Gemini runs the independent blind check ONLY on examples where DeepSeek's blind answer and the Claude check disagree, to settle them before they reach the operator.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "add 1 and 3, 4 for disagreement"
+    },
+    {
+      "id": "CHAT-215.SIZING",
+      "question": "McProof sizing: M-444",
+      "recommendation": "CARD-mcproof-sizing (~/Buildo-scratch/p2close/CARD-mcproof-sizing.answered.md). Rule text: increment 1 gets the FULL six-stage review once (it is the foundation). Later increments are sized by risk: a new reading, a ruling, or a clause not yet checked gets the full six stages; a clause already approved by City data, or a repeat of an approved pattern, gets the quick path (stage 0 Reality check + stage 5 Calculation check); where DeepSeek and the Claude check keep agreeing in an increment, review drops to a sample instead of every example. After the build works, the system checks itself (exact matches, City-oracle tests, CoA catch rates) and examples are re-checked only when a ruling changes them.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "yes size it"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-1",
+      "question": "McProof: define the questions: M-436",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Define the questions. An example enters a Phase 3 answer key only if it has one layer (Source, Reading, Ruling, Inputs, Arithmetic), a plain real-world question, a complete scenario (building class, suite/houseplex, zone, actual and required frontage, depth, area, corner conditions, front-setback source, lot conditions), a source for every input, the full clause chain and rulings, and every catalogue row and branch of the increment has at least one example or a cited reason (MB-75).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-2",
+      "question": "McProof: evidence sweep: M-437",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Evidence sweep. (Source is added to the generator's excluded layers; the recent City window must span at least 2 applications, card item 6.) City data (permits, CoA notice variance lines, the 25 reviewed cases) is gathered read-only from the local database. A City approval is set only by the generator with externalized thresholds (`city-approve.mjs` + config); evidence never approves a Ruling-layer example; the 25 are marked not independent where inside the CoA data and not counted twice; changing a threshold is a ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-3",
+      "question": "McProof: independence (text in Spec 08 §11.7): M-438",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Independence. The author of an example never reviews its own example. The blind check withholds the answer, the working and all evidence. The calculation recheck does its own sums before it sees the key. A different seat or model family runs stage 3 from stage 4.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-4",
+      "question": "McProof: regression sweep: M-439",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Regression sweep. For each topic DeepSeek reads past research, decisions, lessons and commit notes; a grounder verifies each cited quote; findings are classed (a) confirmed reading, (b) data trap, (c) possible regression, (d) superseded; each (c) is adjudicated against current rulings (latest wins); unresolved (c) goes to the operator.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-5",
+      "question": "McProof: six-stage review: M-440",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Six-stage review. Per example, in order: 0 Reality check (a failing example stops), 1 City data, 2 Regression, 3 Blind check (DeepSeek; Gemini only where the DeepSeek blind answer and the Claude check disagree), 4 Claude recommendation (grounder), 5 Calculation check (DeepSeek, independent). DeepSeek does the bulk; Claude grounds (Spec 08 rule 4, 08:330). Records are kept as `reviews.json`. v4 stage order (CARD-mcproof-lessons item 1): stages 0 and 1 run to completion over the whole set (every example of the increment) before any stage 3 or stage 5 call. \"Finished\" = approved; differs routed to a fix; needs_you routed to the operator list; or errored after `max_retries_per_stage` (2) which becomes parked with its reason and is listed in the operator summary. Stage 0 also confirms each example's layer label.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-6",
+      "question": "McProof: build validation: M-441",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Build validation. Once an increment calculates: its approved examples run through the one evaluator must match exactly (MB-68 loop gate); City-oracle tests with pinned counts; the coverage map (MB-75); the city-wide reality check (MB-76); CoA scoring on the 25, then 172 / 4d; then the proof set. A failure is traced to its phase.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-7",
+      "question": "McProof: what stays with the operator: M-442",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: What stays with the operator. Rulings (including every Ruling-layer example and every unresolved disagreement) and accepting findings.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-8",
+      "question": "McProof: after all calculations work: M-443",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: After all calculations work. Answer-key validation (Part A) is repeated only for new or changed examples; the settled key becomes the permanent regression set; the evidence generator is re-run as a drift watch.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-9",
+      "question": "McProof: amendment to the operator-check condition (dated note on M-358): M-358",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Amendment to the operator-check condition. An example whose six stages are all approved (or not applicable with a reason) counts as checked for the increment entry condition (queue increments table, row 1: \"operator-checked (O-10)\"); Ruling-layer and unresolved examples are still answered by the operator; the operator signs the McProof summary and spot-checks 10 percent of the all-approved examples, at least 1 per chapter (card item 2).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-10",
+      "question": "McProof: sizing by risk: M-444",
+      "recommendation": "CARD-mcproof-sizing (~/Buildo-scratch/p2close/CARD-mcproof-sizing.answered.md). Rule text: Sizing by risk (operator \"yes size it\", `CARD-mcproof-sizing.answered.md`). Increment 1 gets the full six stages once. Later increments: a new reading, any ruling, or a clause not yet checked gets the full six; a clause already approved by City data, or a repeat of an approved pattern, gets the quick path (stage 0 + stage 5); where DeepSeek's blind answer and the Claude check keep agreeing within an increment and layer, review drops to a sample. After the build works, an example is re-checked only when a changed ruling touches it. v4 (CARD-mcproof-lessons item 2): an Arithmetic-layer example on the quick path (the sizing card's own quick-path conditions; no new criterion) is low-risk and skips stages 3 and 5, leaving stage 0, stage 4 and the sizing rule id; switch `quick_arithmetic_skips_stage5`. Operator decision (CARD-mcproof-lessons.answered.md item 2; \"yes add to MB-77 the recommendations\"), overriding the sizing card's stage-5 quick path for low-risk Arithmetic only. Evidence: no arithmetic error (`MB-64/review/REVIEW.md:36`, `REVIEW.round2.md:92`); 20 of 39 verdicts changed by Claude grounding (`REVIEW.md:40`), so stage 0 and stage 4 are kept.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "yes size it"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-11",
+      "question": "McProof: the sizing decision is generated: M-445",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: The sizing decision is generated, not hand-picked. A generator (`sizing.mjs`) reads the examples, the City approvals and the review records and writes `sizing.json` (path per example with the rule id). \"Keep agreeing\" = share of agreement between stage 3 and stage 4 >= `agreement_min_share` over >= `agreement_min_sample` fully reviewed examples in the same increment and layer; the sample is chosen by a seeded hash; a miss in a sample puts the layer back to full; Ruling-layer examples are never quick. `sizing.mjs` also writes `low_risk_arithmetic` (v4, CARD-mcproof-lessons item 2). Flipping `quick_arithmetic_skips_stage5` invalidates the `n/a` reasons that cite it; the builder recomputes them (v4.1). All thresholds sit in `mcproof.config.json` with a reason each; changing one is a ruling.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-12",
+      "question": "McProof: record integrity: M-446",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Record integrity. Each stage result carries a model, attempts, an `example_sha` and a `config_sha`; a changed example reads as `open`; `n/a` needs a reason; a crashed stage is `errored` and blocks approval; v4 (CARD-mcproof-lessons item 3; builder sub-item (c)): a stage 3 or stage 5 reply with no answer table (critique only) is `errored`, retried up to `max_retries_per_stage`, and never counts as an answer; still errored after the cap it becomes parked with its reason, listed in the operator summary; a layer label changed after stage 0 changes the `example_sha` and resets that example's stage 0 (v4.1) (evidence `MB-64/review/REVIEW.md:37`, `REVIEW.round2.md:92`, `:98`); `city` is derived from the generator at build time; `overall` is derived; accepted findings are listed with a reason; mandatory stages by layer decide APPROVED; a worked-example edit before the key is signed is logged, after signing it needs a ledger row (queue Process 1: changing a worked example is a ruling).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCPROOF-13",
+      "question": "McProof: Gemini tie-break and parking (text in Spec 08 §11.7): M-447",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Gemini tie-break and parking. Gemini runs when the blind value differs from the key or stage 4 says change; its answer is recorded in the blind stage; agreeing with DeepSeek sends the example back to stage 4 once; a three-way split goes to the operator; after `max_fix_rounds` the example is parked with an operator card. Scope: disagreements about worked-example ANSWERS only; keying of law and formula rows stays under M-17 and M-62 (operator adjudicates every disagreement), see `conflicts.md`.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCP-ITEM-1",
+      "question": "McProof decision 1: the name: M-436",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Name: McProof (the validation standard for every Phase 3 increment).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCP-ITEM-2",
+      "question": "McProof decision 2: amends M-358 and O-10: M-358",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: An example with all its mandatory stages approved counts as checked (amends M-358 \"operator-checked, never LLM-filled\" and the O-10 entry condition); the operator signs the McProof summary and spot-checks 10 % of the all-approved examples, at least 1 per chapter.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCP-ITEM-3",
+      "question": "McProof decision 3: when Gemini runs: M-447",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Gemini runs when the blind answer (stage 3) differs from the key OR the Claude check (stage 4) recommends a change.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCP-ITEM-4",
+      "question": "McProof decision 4: City-oracle snapshots: M-441",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Each City-oracle test is pinned to a dated evidence snapshot.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCP-ITEM-5",
+      "question": "McProof decision 5: two fix rounds: M-447",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Two fix rounds, then the example is parked and goes to the operator.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCP-ITEM-6",
+      "question": "McProof decision 6: sizing values: M-445",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Sizing values: \"keep agreeing\" = stage 3 and stage 4 agree on >= 95 % of >= 20 fully reviewed examples (same increment and layer); sample 20 % by seeded hash, >= 3 per layer; any miss returns the layer to full review; recent City evidence must span >= 2 applications.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.MCP-ITEM-7",
+      "question": "McProof decision 7: homes: M-438",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: Homes: rows in Spec 69a; MCPROOF-3 (independence) and MCPROOF-13 (Gemini tie-break) as a short new Spec 08 section; Spec 69 a pointer at most.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.BLOCK-PY",
+      "question": "Block python: M-448",
+      "recommendation": "CARD-mcproof-1-7 (~/Buildo-scratch/p2close/CARD-mcproof-1-7.answered.md). Rule text: \"block python\": a Claude Code hook refuses any python/python3/pip command for every session and agent.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve1-7 blokc python"
+    },
+    {
+      "id": "CHAT-215.LESSON-1",
+      "question": "McProof lesson 1: stage 0 and City data first: M-440",
+      "recommendation": "CARD-mcproof-lessons (~/Buildo-scratch/p2close/CARD-mcproof-lessons.answered.md). Rule text: Run stage 0 and City data in full first, before any blind or recompute stage.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "yes add to MB-77 the recommendations and let's move on and build Mb-67 as soon as MB-67 clears"
+    },
+    {
+      "id": "CHAT-215.LESSON-2",
+      "question": "McProof lesson 2: low-risk Arithmetic skips: M-444",
+      "recommendation": "CARD-mcproof-lessons (~/Buildo-scratch/p2close/CARD-mcproof-lessons.answered.md). Rule text: Skip the blind check and the recompute on low-risk Arithmetic examples, per the approved sizing (CARD-mcproof-sizing).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "yes add to MB-77 the recommendations and let's move on and build Mb-67 as soon as MB-67 clears"
+    },
+    {
+      "id": "CHAT-215.LESSON-3",
+      "question": "McProof lesson 3: answer tables: M-446",
+      "recommendation": "CARD-mcproof-lessons (~/Buildo-scratch/p2close/CARD-mcproof-lessons.answered.md). Rule text: Build the MB-77 prompt builder (sub-item c) so that DeepSeek returns tables.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "yes add to MB-77 the recommendations and let's move on and build Mb-67 as soon as MB-67 clears"
+    },
+    {
+      "id": "CHAT-215.A16-1",
+      "question": "Stage-0 point 1: the 1.0 m allowance on the zone-median fallback (M-422): M-422",
+      "recommendation": "CARD-approve-1-6-review (~/Buildo-scratch/p2close/CARD-approve-1-6-review.answered.md). Rule text: The 1.0 m allowance also applies to the zone-median fallback (FY-10, FY-21). Add this to the M-422 text.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve 1-6"
+    },
+    {
+      "id": "CHAT-215.A16-2",
+      "question": "Stage-0 point 2: an unseeded setting refuses the run: M-449",
+      "recommendation": "CARD-approve-1-6-review (~/Buildo-scratch/p2close/CARD-approve-1-6-review.answered.md). Rule text: An unseeded setting (SB-4) makes the run refuse to start. No silent default.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve 1-6"
+    },
+    {
+      "id": "CHAT-215.A16-3",
+      "question": "Stage-0 point 3: HT-5 and GFA-13 move: M-450",
+      "recommendation": "CARD-approve-1-6-review (~/Buildo-scratch/p2close/CARD-approve-1-6-review.answered.md). Rule text: HT-5 and GFA-13 move to the later options increment.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve 1-6"
+    },
+    {
+      "id": "CHAT-215.A16-5",
+      "question": "Stage-0 point 5: LV-7 and LV-8 kept: M-451",
+      "recommendation": "CARD-approve-1-6-review (~/Buildo-scratch/p2close/CARD-approve-1-6-review.answered.md). Rule text: Keep LV-7 and LV-8, tagged for increment 5 (garden suite).",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve 1-6"
+    },
+    {
+      "id": "CHAT-215.A16-6A",
+      "question": "Stage-0 point 6(a): spot list, Source excluded, config keys: M-437",
+      "recommendation": "CARD-approve-1-6-review (~/Buildo-scratch/p2close/CARD-approve-1-6-review.answered.md). Rule text: A Reading example with no City data goes on a spot list. Source examples are left out of the City-approval generator. The config keys are as drafted in MB-77/mcproof.config.proposed.json.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve 1-6"
+    },
+    {
+      "id": "CHAT-215.A16-6B",
+      "question": "Stage-0 point 6(b): MCPROOF-13 scope: M-447",
+      "recommendation": "CARD-approve-1-6-review (~/Buildo-scratch/p2close/CARD-approve-1-6-review.answered.md). Rule text: MCPROOF-13 covers worked-example answers only. M-17 and M-62 disagreements stay with the operator.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve 1-6"
+    },
+    {
+      "id": "CHAT-215.A16-6C",
+      "question": "Stage-0 point 6(c): \"never LLM-filled\": M-358",
+      "recommendation": "CARD-approve-1-6-review (~/Buildo-scratch/p2close/CARD-approve-1-6-review.answered.md). Rule text: \"Never LLM-filled\" means an expected answer is never copied from the code under test and never produced by the seat that reviews it.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "approve 1-6"
+    },
+    {
+      "id": "CHAT-215.MB64-CLOSE",
+      "question": "MB-64 close (increment 1 only): M-358",
+      "recommendation": "CARD-mb64-close (~/Buildo-scratch/p2close/CARD-mb64-close.answered.md). Rule text: Effect: no republish of the check page; MB-64 is DONE once the round-4 re-check is filed. This answer stands in for the McProof operator part (summary sign-off and 10 % spot-check) for increment 1, and for O-10.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "MB-64 I'm satsified with the outcome - I dont need the page republished - I got the outcome I wanted - after teh re-check consider it closed and move on."
+    },
+    {
+      "id": "CHAT-215.O-25",
+      "question": "O-25 WAIT-SOURCES: tracked copies of the cards: R-KU",
+      "recommendation": "CARD-o25-sources (~/Buildo-scratch/p2close/CARD-o25-sources.answered.md). Rule text: copy the answer cards (`~/Buildo-scratch/p2close/CARD-*.answered.md`) and `~/Buildo-scratch/plan-1030/HANDBOOK-AMENDMENTS.md` into a tracked `mcbylaws/sources/`, so the register and CI read tracked files only (K3)",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "yes copy"
+    },
+    {
+      "id": "CHAT-215.PREPOLICY",
+      "question": "Pre-policy commits exempt from arms H, C, P (option A): R-LY",
+      "recommendation": "CARD-prepolicy-exempt (~/Buildo-scratch/p2close/CARD-prepolicy-exempt.answered.md). Rule text: A (recommended): a commit that is an ancestor of the bootstrap commit 17c95d00 (a frozen constant) is exempt from the per-commit arms H, C and P. Nothing is listed, and the set cannot grow. Every commit from 17c95d00 on is checked in full.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "option a"
+    },
+    {
+      "id": "CHAT-215.BOOT-REBUILD",
+      "question": "Bootstrap rebuilt with the rule-map exemption (option A): R-LY",
+      "recommendation": "CARD-bootstrap-rebuild (~/Buildo-scratch/p2close/CARD-bootstrap-rebuild.answered.md). Rule text: A (recommended): rebuild the four new local, unpushed commits. The bootstrap is re-made with the rule-map exemption in it, followed by the MB-67 merge and the two gate changes. Only their shas change. The frozen bootstrap constant (CARD-prepolicy-exempt) is updated to the new sha, recorded as a dated note. No gate rule changes.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "option a"
+    },
+    {
+      "id": "CHAT-215.GATE-SCOPE",
+      "question": "Gate scope starts at the bootstrap for every range-diff arm (option A): R-LY",
+      "recommendation": "CARD-gate-scope-from-bootstrap (~/Buildo-scratch/p2close/CARD-gate-scope-from-bootstrap.answered.md). Rule text: A (recommended): when the base is an ancestor of the frozen bootstrap c500c249…, every range-diff arm (L, the loop, and any other arm that diffs base..tip) uses the bootstrap as its effective base. Nothing before the bootstrap is judged. Everything from the bootstrap on is judged in full. The rule-map exemption stays for future batches.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "we are wastring alot of time on this... option A for the last time"
+    },
+    {
+      "id": "CHAT-215.RULEMAP",
+      "question": "The generated rule map in literal_exempt: R-KR",
+      "recommendation": "CARD-rulemap-literal-exempt (~/Buildo-scratch/p2close/CARD-rulemap-literal-exempt.answered.md). Rule text: Recommended: add this ONE file to the policy's `literal_exempt` (the R-KR declared-files list). Not a general exemption for generated files.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "1. approved"
+    },
+    {
+      "id": "CHAT-215.O-27",
+      "question": "O-27: the drafted McProof clauses and SIDE-3 confirmed: M-445",
+      "recommendation": "CARD-o27-foot18 (~/Buildo-scratch/p2close/CARD-o27-foot18.answered.md). Rule text: O-27 confirmed on the condition that each clause complies with the handbook (Specs 122/124/132, 69a, 08); the condition is checked clause by clause by the independent verifier before the status cells change to RULED.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "0-27 confirm all if in compliance with handbook, foot 18 keet it as pending"
+    },
+    {
       "id": "CHAT-215.O-26",
       "question": "O-26 option 2: revert rounds of increment 1 while it cannot be green: R-LZ",
       "recommendation": "CARD-o26-loop-arm (~/Buildo-scratch/p2close/CARD-o26-loop-arm.answered.md). Rule text: One ruling, no code change: while increment 1 cannot be green, a commit lands with a loop record of decision `revert` for increment 1, only when its prereg registers zero moves and the run shows equal totals and floors held.",

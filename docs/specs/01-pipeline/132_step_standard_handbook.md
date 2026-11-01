@@ -402,7 +402,7 @@ What `standard=V3` means and how it is enforced.
 
 - **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
   *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
-  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LZ` `R-MA` · history: `R-GF`
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LY` `R-LZ` `R-MA` · history: `R-GF`
 
 - **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
   *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
@@ -499,11 +499,11 @@ Validator messages that name their rule directly:
 | `bind message has N parameter formats` | Batch × bound columns exceeds 65,535. | R-CU |
 | Before-image files appear under `docs/reports/golden/*/before-image/` after tests | The test sandbox `installBeforeImageSandbox` in `src/tests/setup.ts`. | R-CO |
 
-## 6. Rules with no or partial machine check (94 in force)
+## 6. Rules with no or partial machine check (78 in force)
 
-"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 64 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 48 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 441 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 94 none (see the glossary).
+Enforcement across all 442 mapped ids: 296 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 78 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
@@ -555,33 +555,17 @@ Enforcement across all 441 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30
 | R-AQ | partial | x-verify.2 | partial: run-chain-selection.logic — --only/--from partial-run mechanism; "one acceptance set" not asserted |
 | R-AH | partial | x-tooling.2 | partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes |
 | R-KF | none | core.9 | OWED MB-31: step-closure.logic.test.ts (recorded 2026-10-30-batch-aj, lock not yet built) |
-| R-KG | none | x-v3.2 | OWED MB-67: gate arm (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
-| R-KH | none | x-v3.2 | OWED MB-67: gate arm red on 1d4b20d9 message (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
 | R-KI | none | x-tooling.1 | OWED MB-68: hook arms; hooks-composition.infra (MB-68) (recorded 2026-10-30-batch-aj, lock not yet built) |
 | R-KJ | none | core.9 | OWED MB-31: the R4-09 input-allowlist test (step-closure.logic.test.ts) (recorded 2026-10-30-batch-aj, lock not yet built) |
 | R-KK | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
-| R-KL | none | x-tooling.1 | OWED MB-67: pre-push summary line (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
-| R-KM | none | x-validate.2 | OWED MB-67: gate arm (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
-| R-KN | none | core.8 | OWED MB-67: ast-grep arm red on maxbld-invariants.mjs and LIFT_ZONES (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
-| R-KO | none | x-rulings.1 | OWED MB-67: card-cite-check.mjs; brief command check vs bash_allow (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
 | R-KQ | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built) |
-| R-KP | none | x-tooling.1 | OWED MB-67: pre-push summary + mcbylaws/APPROVED gate arm (MB-67) (recorded 2026-10-30-batch-ak, lock not yet built) |
-| R-KR | none | core.8 | OWED MB-67: G13 ast-grep arm widened (MB-67) (recorded 2026-10-30-batch-ak, lock not yet built) |
 | R-KS | none | core.11 | OWED MB-31: trace test in catalogue lock (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
 | R-KT | none | core.9 | OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
 | R-KU | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built) |
 | R-LR | none | x-tooling.3 | OWED MB-67: gate arm (MB-67) refuses any McBylaws script or night whose database target is not 127.0.0.1:54322, red fixture a remote target (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-KV | none | x-v3.2 | OWED MB-67: cite.mjs trailer and prereg arms CT1..CT11 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-KW | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs on temp repos Q1..Q5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-KX | none | x-v3.2 | OWED MB-67: hold.mjs H1..H7 per-commit parent-tree check (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-KY | none | x-tooling.1 | OWED MB-67: pre-push-summary.mjs prompt tests S1..S11 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-KZ | none | x-tooling.3 | OWED MB-67: register-conflicts.mjs K1..K5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-LA | none | core.8 | OWED MB-67: literal-scan.mjs L1..L10 with red-literals and green-literals fixtures (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-LB | none | x-tooling.1 | OWED MB-67: precommit-budget.mjs --measure with a re-pinned evidence file (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-LC | none | x-validate.2 | OWED MB-67: cite.mjs arms P1, P2 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-LD | none | x-tooling.3 | OWED MB-67: paths.mjs protected-path table and S4 property test (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-LE | none | x-v3.2 | OWED MB-67: cite.mjs CT1, CT2, CT8..CT10 and hold H2 fixtures (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
-| R-LF | none | x-tooling.1 | OWED MB-67: pre-push-summary.mjs S9, S10 and paths.mjs H6 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-LG | none | x-tooling.1 | OWED MB-68: loop-gate record schema tests (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-LH | none | x-tooling.1 | OWED MB-68: loop-gate regression-ratchet and oracle-first red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
 | R-LI | none | x-tooling.1 | OWED MB-68: loop-gate oracle-first red fixtures, split-commit and glob-miss cases (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
@@ -599,8 +583,8 @@ Enforcement across all 441 mapped ids: 279 lock, 1 lock-db, 37 check, 0 hook, 30
 | R-LV | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
 | R-LW | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
 | R-LX | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LY | none | x-v3.2 | OWED MB-67: the gate tests do not yet name R-LY (recorded 2026-10-31-batch-an) |
 | R-LZ | none | x-v3.2 | OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an) |
-| R-MA | none | x-v3.2 | OWED MB-79 (h): no test names R-MA yet (recorded 2026-11-01-batch-ao) |
 
 ## 7. History
 
