@@ -1,0 +1,682 @@
+# McBylaws queue v3 (the ONLY McBylaws job list) — approved 2026-10-30
+
+## How Phase 3 works (plain language)
+- **Phase 1 is the by-law table**: every rule of By-law 569-2013 we rely on, double-keyed. Done.
+- **Phase 2 is the application table**: for each lot, which rules apply and what limits they give, with the clause behind each one (the `resolve_bylaws` step). Closed.
+- **Phase 2 is the first stage of every Phase 3 calculation (operator 2026-10-30).** Phase 3 reads only Phase 2's stored result rows and the same lot facts Phase 2 used (the parcel layer; the keyed golden facts check them, O-13). A formula row never re-derives a limit: no restated by-law "lesser of", no "% of depth", no exception logic in Layer 3 (a min() across stored Phase 2 caps is arithmetic, not law). The one ruled exception is the front-yard data chain (MB54-Q: where neighbour data is absent, Layer 2 leaves averaging undecided and Phase 3 applies the FS-SB chain). It uses data and settings, never law, and is always flagged "needs survey". When a number is wrong, the loop traces it to its phase: a formula row is fixed in Phase 3; a limit is fixed in Phase 2 (MB-27.L2, reloaded by a night); a rule is fixed in Phase 1.
+- **Phase 3 is a set of calculation tables**, run by the **one evaluator** (`evaluate.mjs`, extended per M-72) inside one standard pipeline step:
+  1. **Building types**: one row per type we build (detached house, houseplex, house with a secondary suite, renovations, rear-suite add-on).
+  2. **Formula catalogue**: one row per number we calculate. A row holds a formula written as data, its named inputs, the clauses it rests on, its worked examples and its switch.
+  3. **Settings**: every number that is not law (storey height, search step …) is a logic variable you can see and change.
+  4. **Switchboard**: one table that turns a clause, formula, scenario, building type or reading on or off. Off always wins. Every result says which switches were on.
+  5. **Results**: every number with its full trace: formula row, inputs, Layer 2 rows, settings, switches, clauses.
+- **No by-law knowledge lives in code.** The code is the evaluator, at most 10 generic handlers and the step. No old code is reused.
+- **The test-and-validate loop.** To change a calculation you edit a row, not code. Then the loop runs everything we test against: worked examples, expected answers derived fresh and checked by you, the invariants, the accuracy floors and the real CoA cases. It compares the results with the last accepted run. You accept the change with a recorded reason, or it is reverted.
+- **Start small, then expand (operator, 2026-10-30: "start small and test against the 25 cases or the coa and then expand using the loop").** Increment 1 is one building type, the detached house, with its core numbers only, on the 25 golden cases. It must pass there first. Each later increment adds ONE thing (a field, a building type or a wider case set) and enters only when the previous one is green in the loop. The order is under "Increments" below.
+- **Done** means the loop meets the MB-13 accuracy thresholds, first on the 25 regression cases and then on a fresh proof set nobody fixed against.
+- **Why it drifted, and what now enforces it.** Formulas as data were ruled on 2026-10-07 (M-61, M-72). Phase 3 instead grew hand-written code with typed-in numbers. Now gates refuse that code: the closure test, the literal gate and the commit gate. You approve every push from a one-screen summary of what changed.
+
+---
+
+> **APPROVED 2026-10-30 (O-1, `~/Buildo-scratch/p2close/CARD-plan-1030-approval.answered.md`). This is now the live McBylaws queue; v2 is backed up at `~/Buildo-scratch/plan-1030/MCBYLAWS-QUEUE.v2-live-backup-2026-10-30.md`.** The working drafts and review trail are in `~/Buildo-scratch/plan-1030/`. The hold lifts when the operator commits `mcbylaws/APPROVED` (O-1). Until that file exists, the gates refuse Layer 2/3 work: the hold fails closed (F-41).
+> Folds both PLAN-panel rounds (`ds/ADJUDICATION.md`, `ds/ADJUDICATION-r2.md`) and CARD P3-DATA-MODEL. Earlier drafts: `MCBYLAWS-QUEUE.v3.v1.md`, `MCBYLAWS-QUEUE.v3.v2.md`.
+> **Smaller: 19 open tasks — 12 on the Phase 3 exit path, 7 follow-on** (draft v2: 31; draft v1: 41; queue v2: 43).
+
+A task not listed here is not done. Next free id: **MB-82**. Ids are never reused. Paths: specs are in `~/Buildo-wt-p3model/docs/specs/`. `124:42` means `01-pipeline/124_step_standard_policy.md` line 42; `08:` means `00-architecture/08_agents.md`; "audit #n" means `HANDBOOK-AUDIT.md` §2 row n. Rule ids M-378.., R-KF.. and "dated note on …" refer to proposals in `HANDBOOK-AMENDMENTS.md`.
+
+## What we calculate (the catalogue's basis)
+The catalogue is built from the Phase 2 target vocabulary (`scripts/seeds/bylaw/vocab.json`: 94 `dsl_target` entries, `building_type`, `scenario_class_units`) and from the questions the product answers. Spec 78 P5.10's output schema and P5.2's method were written for the old engine. They are **reference only, never the basis**.
+
+| Product question | Phase 2 targets it reads (vocab `dsl_target`) | Catalogue row | Increment |
+|---|---|---|---|
+| Can I build this type here? | the Layer 2 permission per class (`permitted_by_class`, R-IT); `required_lot_area_m2`, `required_lot_frontage_m` | `permitted` | 1 |
+| How big a footprint? | `front_setback_m`, `rear_setback_m`, `side_setback_m`, `side_setback_street_m`, `building_depth_m`, `building_length_m`, `lot_coverage_pct`; geometry `lot_area_m2`, `lot_frontage_m`, `lot_depth_m` (M-61) | `footprint_max_m2` | 1 (street side and averaging: 2) |
+| How tall, how many storeys? | `height_m`, `height_storeys`, `main_wall_height_m` | `height_max_m`, `storeys_max` | 1 (wall shares: 2) |
+| How much GFA? | `fsi`, `gfa_m2` (and `interior_floor_area_m2` only where Phase 2 stores it as a cap, with its clause) | `gfa_max_m2` = min(footprint × storeys, `fsi` × lot area, `gfa_m2`); an `unregulated` cap drops out (M-72) | 1 |
+| How many units? | `dwelling_units_max`, `lot_area_per_unit_min_m2`, `bedrooms` | `units_max` | 1 (detached house: 1 unit); houseplex split: 3 |
+
+**Front yard (increment 1; operator 2026-10-30: "we did learn that we need a nuanced approach to the front yard setback").** The footprint reads the front setback through ONE catalogue row, `front_setback_used_m`, which applies the ruled chain in order: (1) the user's neighbour figures; (2) the Layer 2 averaged value (10.5.40.70(1), M-205(1)) = the neighbour footprint estimates + `lv(fya_porch_allowance_m)` 1.0 m (M-245; FS-SB1: the estimates run short, median −0.97 m, n = 248), both neighbours, or one if only one is found, with no zone-default floor (M-245); (3) where neighbours exist but cannot be measured (M-256, MB54-Q), the FS-SB2 placeholder as amended by **FS-SB2a** (operator 2026-10-31, `CARD-fs-sb2a.answered.md`; evidence `research/Q4-neighbour-ring-vs-FS-SB2.md`, MAE 1.10 m vs 1.28 m): the mean of own house + 1.0 m and the street term, where the street term is the mean of the measurable estimates + 1.0 m of the ring lots beyond the abutters along the frontage street (`fya_placeholder_ring_depth` 2 counting the abutter, at least `fya_placeholder_ring_min_n` 1; one direction for a corner lot), else the same-street median + 1.0 m (`fya_placeholder_street_radius_m` 200, min 3); either term alone if only one exists; else the same-zone median (500 m, min 5). The ring lots are DATA from the step's declared read, counted by the generic neighbour-facts reader; every choice is in the row (L31-03; operator: "no code in phase 3"). Re-fit on a fresh held-out sample in the loop before the proof set (pinned audit); (4) the zone front setback that Phase 2 stores as its own fallback target `front_setback_fallback_m` (x.40.70(1), with its clause; added by MB-18 (j)). It is never a typed value: it applies where Phase 2 says 10.5.40.70(1) does not apply and, as the FS-SB2 last resort, flagged needs survey, where the chain has no data. Every value except a user figure is flagged `front_yard_needs_survey`. The settings already exist in `logic_variables.json`. Today only the analysis script `front-averaging.mjs` reads them, so the chain lives in a harness, not the model: this row moves it into the catalogue (FS-SB1: "build M-245 into the model path"). Test: worked examples, one per step of the chain, plus the 248-lot calibration as an oracle; the loop reports every result whose number moves when the allowance setting changes.
+
+**Undecided Phase 2 cells (found 2026-10-30, read-only query of `bylaw_resolution_results`, parcel 205238 = A0067).** The stored Phase 2 leaves some limits undecided on purpose. The old engine harness (`dumpall.mjs` → `runMaxbldScenarios`, design key `pitched|garage_not_facing`) filled them silently, so no example or expected answer may be built from that harness. Three kinds:
+- (a) **missing data**: `front_setback_m` `condition_unknown:front_averaging_not_applicable`. This goes to the front-yard chain above (MB54-Q).
+- (b) **design choices**: `main_wall_height_m` `condition_unknown:flat_or_shallow_roof`; garden-suite `height_m` ↔ `separation_m` (`missing_input:distance_to_residential_m` / `proposed_height_m`). Proposed: a **design-options table** (e.g. roof pitched/flat; suite low/tall = the two arms of 150.7.60.40(1), their values read from Phase 2 per option). Each option supplies its design-choice inputs, Phase 2 is resolved per option and stored, and Phase 3 evaluates every option and reports the best, with the option disclosed (M-172). Phase 3 still reads only stored Phase 2. **New card P2-OPT (operator)**: it adds an option dimension to the Phase 2 store. Operator, 2026-10-30: "we know where the house is for this option and the height is answered by both design choices". Within an option the cell is decided. It reads "undecided" only because Phase 2 ran without the option's inputs: low = `proposed_height_m` ≤ 4.0, so height 4.0 m (150.7.60.40(1)(A)) and separation 4.0 m (150.7.60.30(1)(A)); tall = `distance_to_residential_m` ≥ 7.5, so height 6.3 m (150.7.60.40(1)(B)) and separation 7.5 m (150.7.60.30(1)(B)). Today the store keeps one winner per lot × class × structure × target (`bylaw_resolution_results` has no candidate column). P2-OPT adds the option as one more key, like class: Phase 2 stores one winner per option, every option is kept, and only Phase 3 compares the options (DS-r3 F-52).
+
+**The ideal split between the main house and the rear suite (operator 2026-10-30: "In some cases this may mean reducing the size of the main house to accommodate the rear suite. We want the ideal max build solution.").** Total floor area = main + suite. Both are piecewise-linear in the main house's depth, so the best split sits at a breakpoint: the depth where the main house reaches its own cap (FSI/GFA ÷ storeys ÷ width), the depth where the suite reaches its cap, and the full main depth. The catalogue lists these candidate splits as rows, and the evaluator scores each one and keeps the best, with no search helper and the split disclosed. Worked examples and the oracle cover a lot where shrinking the main house costs nothing (its FSI cap binds) and one where it is a real trade-off.
+
+**Houseplex 5–6 units: not held in Phase 2.** `bylaw_resolution_results` holds five classes (detached_house, detached_houseplex, house_with_secondary_suite, semi_detached_house, semi_detached_houseplex; 440,093 lots each). `vocab.scenario_class_units` declares `detached_houseplex_5_6`, but Phase 2 does not resolve it. Before the sixplex increment it is an MB-27.L2 sub-item: add the class to the Phase 2 catalogue (Sixplex Overlay, 600.60; MB45d-Q3U). The houseplex 2–4 needs card S-1 (storeys from height, because 10.20.40.10(3)(C) lifts the storey cap) and O-3 (the D1 exception-FSI reading).
+- (c) **to check**: `building_depth_m` and `building_length_m` read `not_evaluated` `existing_building_facts:lot_frontage_m` on A0067 (frontage is held). This may be a Phase 2 defect, and it goes to MB-18 as a red-first check before increment 1.
+
+**Building shape: ready, not now (operator 2026-10-30: "the max build estimates a box shape but we know that most build need an entrance or protrusion ... flexibility to also recalibrate this in the future, but not now").** Card G-1 keeps the box, disclosed "box shape assumed; entrances and projections not modelled". The footprint row also reads `lv(footprint_shape_factor)` = 1.0 with a switch `shape_calibration` = off. A later recalibration (fitted on the CoA cases through the loop, with the Phase 2 encroachment targets — platform, stairs, canopy, eaves — as inputs) is a settings and rows change, not code. No value other than 1.0 is set now.
+
+**Houseplex 5–6 units, as-of-right and CoA route (operator 2026-10-30: "developers have been going to the COA to get them approved on non-major streets ... I would like this modelled for all relevant lots"). Card SIX-COA, O-18.** Evidence: A0277/26NY (27 Creston Rd, RD (x5)): 6 units, approved on condition, with a variance to 10.20.20.40(1). The examiner wrote "six unit dwelling needs to abut a major street. This application does not." Read-only counts on 2026-10-30 (lots with a Phase 2 row and no lot gate): Sixplex Overlay 139,335; outside the overlay and on a policy road 12,485; outside the overlay and not on one 247,365 (`parcels.in_sixplex_area`, `on_policy_road`; that this flag equals the by-law's major street is to be confirmed in keying).
+- **Phase 2 (law):** add the class `detached_houseplex_5_6` (MB-27.L2), with its permission ROUTE stored per lot with its clause: `as_of_right` (the overlay, 600.60.40(1)(B); or the major-street route, 10.20.20.40(1) and siblings, confirmed in keying), `coa_required` (s.45 minor variance named, with the varied clause listed), or `not_permitted` with a reason.
+- **Phase 3:** one building-type row. The same formula rows, reading the 5–6-unit class's OWN stored Phase 2 limits per route and option (R4-02). The variances assumed are exactly the listed varied clauses, starting with the permission. The result carries the route Phase 2 stored. A `coa_required` result is never shown as as-of-right, and `not_permitted` is shown as not permitted with its reason.
+- **Evidence, not law:** a declared precedent query over `coa_applications`: decided 5–6-unit applications since 2024, within a radius setting. It shows approved and refused counts beside a `coa_required` result. The rough text match today gives 2024: 13 approved; 2025: 24 approved, 9 refused; 2026: 60 approved, 12 refused. These counts are to be classified properly before use.
+- **Tests:** A0277 is the first case (expected: `coa_required` on 10.20.20.40(1)), then every decided 5–6-unit CoA case as oracle C.
+- **Order:** an increment after "houseplex 2–4 + rear suite". It needs the Phase 2 class first (a Layer 2 night).
+
+**Show every feasible option (operator 2026-10-30: "calculate both and provide both as options").** Each building type lists its feasible design options, the largest marked as the headline: the garden suite 1 storey (≤ 60 m², 150.7.60.50(4)(B)) and 2 storeys (≤ 120 m², the tall 6.3 m / 7.5 m arm); the main house 2 storeys (taller storeys) and 3 storeys where Phase 2 stores no storey cap (e.g. the houseplex, 10.20.40.10(3)(C)) and the height fits. S-1 becomes a feasibility minimum (the minimum floor-to-floor, value from a cited source), not one "typical" storey height, so no single fitted number decides the answer. Phase 2 resolves per option (P2-OPT) only where an option changes a law answer: roof form, suite height/separation, and the 5–6-unit raised lowest level (600.60.40(2), 10.5 m, overlay only).
+**Basement, shown on its own line.** It is not a storey and not in GFA (10.5.40.40(3)(A), read from the Phase 1 row), but its livable area and units are shown. A0277's approved design was 2 storeys + basement, 2 + 2 + 2 = 6 units, so the 5–6-unit option reads "2 storeys + basement, 6 units" (source: operator 2026-10-30, `CARD-operator-words-2026-10-30.answered.md`: "2 units basement, 2, units main floor, 2 units second floor"; to be confirmed against A0277's plan facts in MB-64).
+
+**Round-3 rules (DeepSeek round 3, adjudicated 2026-10-30; `ds/r3/ADJUDICATION-r3.md`). These bind every catalogue row:**
+- **R3-01 Undecided never means zero.** A `not_evaluated` or `condition_unknown` Phase 2 input makes every row that reads it `not_evaluated`, with the reason carried forward. It is never treated as 0, as absent, or as unlimited (only `unregulated` drops out, M-72). The test is a red fixture: A0067's `building_depth_m` `not_evaluated` gives a footprint that is `not_evaluated`, not the whole lot.
+- **R3-02 Flags propagate.** `needs_survey`, `user_supplied`, `shape_box_assumed`, `option:<id>` and every disclosure on an input are inherited by every row derived from it, up to the headline. Shape test: no headline without its inputs' flags.
+- **R3-03 Front-yard chain: law stays in Phases 1–2.** Whether 10.5.40.70(1) applies is Phase 2's decision. The averaging arithmetic is the Phase 1 row's own expression, run by the same evaluator. Phase 3's row only supplies the neighbour-setback INPUT, in the ruled order (user figure, then estimate + allowance, then the FS-SB2 placeholder). The terminal is the zone value Phase 2 stores for x.40.70(1), with its clause, never a typed 6.0. If own house is absent (a vacant lot), the other term is used alone (FS-SB2). User figures are range-checked by bounds on a logic variable and flagged `user_supplied`.
+- **R3-04 Calibration is tested on held-out data.** The oracle for the allowance is the FS-SB1 held-out half and the CoA-surveyed setbacks, never the lots it was fitted on.
+- **R3-05 Options.** An option whose space comes out at zero or less, or that Phase 2 refuses, is dropped with its reason. If every option is dropped, the result is `not_permitted` / `not_evaluated` with reasons. A suite split is scored only where Phase 2 permits the suite on that class. Suite floor area sits outside FSI only by 150.7.60.50(1) as a stored Phase 2 fact.
+- **R3-06 Ideal split breakpoints are generated, not hand-listed.** The candidate splits are every depth at which some row in the split changes slope. That means each min() arm: main FSI/GFA, coverage (both 150.7.60.70(1) options), depth/length caps, suite caps of 60 and 120 m², suite < main, soft landscaping and separation. The two ends are included. A dense-grid check runs in the test lane only (as a test, never in the product) and must never beat the breakpoint answer.
+- **R3-08 Storeys.** Phase 2 decides whether a storey cap applies (for example, 10.20.40.10(3)(C) is stored as `not_applicable`). S-1 is only the height → storeys arithmetic, used where Phase 2 stores no cap.
+- **R3-10 Shape switch.** `shape_calibration` = on requires a fitted `footprint_shape_factor` with its provenance (n cases, date, audit file), bounds [0.5, 1.0] proposed, and the disclosure tied to the switch state. Turning it on without a fit fails closed.
+- **R3-11 Unresolved classes answer `not_modelled`.** A building type with no Phase 2 class (for example, houseplex 5–6) returns `not_modelled: class not resolved in Phase 2 (MB-27.L2)`. It never falls back to a neighbouring class.
+- Rejected: `distance_to_residential_m` as a site fact (150.7.60.40(1) measures to "the residential building on the lot", which is our own design), and option coverage of applicant designs (scoring the applicant is the harness's job, not the options table).
+
+**Increment 1 = these core numbers only**, for the detached house. Every assumption it needs is a NEW proposed row or setting with a rule cite or a card. Nothing is carried from the old engine or Spec 78 P5.9:
+- **S-1 storey height** (to turn a height into storeys where the by-law gives no storey limit). Card S-1; no value carried over.
+- **S-2 first-floor height above grade**. Card S-2; needed only if S-1's rule uses it.
+- **G-1 buildable area shape**: footprint = min((frontage − side setback − the street-side setback on a corner lot, else the side setback again) × min(lot depth − front − rear, `building_depth_m`, `building_length_m`), `lot_coverage_pct` × lot area) × `lv(footprint_shape_factor)`, on the M-61 geometry inputs and stored Phase 2 values only (DS-r3 F-57, F-59). Card G-1: it assumes a rectangular lot; the result is disclosed as such.
+
+Not in increment 1, each with its own card when its increment comes: unit circulation share; any attic or roof-form geometry (attic floor area, dormers, pitched/flat pair); the rear-suite depth search.
+
+## Increments: start small, expand through the loop
+Each increment enters only when the previous one is green in the loop (MB-68 record: every case of the increment passes or is a named, accepted finding). No row, building type or case set for a later increment is authored before its turn. The same rule binds the Layer 2 work in MB-18 and the examples in MB-64.
+
+| # | Adds ONE thing | Entry condition | Done-condition (in the loop) |
+|---|---|---|---|
+| 1 | **Detached house, core numbers only** (the five rows above; cards S-1, S-2, G-1). Cases: the **25 golden cases** | MB-31 step frame, the evaluator extension and the switchboard built; the increment-1 rows authored; MB-64 increment-1 worked examples and fresh expected answers operator-checked (O-10); cards S-1, S-2, G-1 answered; MB-26 night done | every increment-1 worked example passes; every fresh expected answer matches, or is an accepted finding with a reason; the CoA decisions on the 25 are scored as the real-world check |
+| 2 | Detached house, clause-required refinements only: street-side yard, front-yard averaging (10.5.40.70(1)), main-wall share caps (x.40.10(2)) | 1 green | the new examples and oracle fields pass on the 25; increment-1 results unchanged unless accepted |
+| 3 | Detached houseplex: units, caps (M-344 target), bedrooms | 2 green | houseplex examples and oracle rows pass on the 25 |
+| 4 | House with a secondary suite: LC-33 gains (M-379) | 3 green | suite examples and oracle rows pass on the 25 |
+| 5 | Rear-suite add-on: garden suite (laneway disclosed until MB-57) | 4 green | rear-suite examples pass; INV-3 holds on the 25 |
+| 6 | Renovations (addition, interior, basement) | 5 green | renovation examples pass on the 25 using their `ex_*` figures |
+| 6b | Attic floor area and roof forms, **only if** a card rules that a clause requires them (10.5.40.40(1) counts attic area in GFA) and rules the geometry (card G-2; nothing taken from the old attic model) | 6 green; card G-2 answered | the attic examples pass; earlier results unchanged unless accepted |
+| 7 | **The primary measure and catch rate on the 25** (MB-13 thresholds on the regression set) | 6 green | SC-19 met on the 25 (MB-27) |
+| 8 | Wider case set: the CoA 172 and 4d sets, then the cumulative set | 7 green | no floor falls (M-322); the thresholds hold on the wider set |
+| 9 | The proof set (MB-28) | 8 green; MB-35 night | SC-19 met on the proof set: the Phase 3 exit (MB-46) |
+| 10 | All lots: shadow and switch-over by field group (MB-38) | exit recorded | `unexplained` = 0 and `layer3_defect` = 0 per group |
+
+## Goal
+McBylaws is the conversion of the by-law step under Spec 122/124 and the Spec 132 handbook (McDonald's Airtight V3), with the same five objectives as every converted step (M-383). The anchor is **M-61** (69a:121, RATIFIED 2026-10-07): "Layer 3 report fields are declared formulas, run by the one evaluator … No code names a zone, a scenario or a regulation id." **Phase 3 exit = the MB-13 thresholds met on the proof set** (M-362, 69a:498; F-46). Switching the product over and retiring the old code follow the exit.
+
+## Five principles
+Standardized · observable · scalable · accurate · understandable (R-BA, 124a:238; Spec 68 §4; M-328, 69a:462). Each task names the ones it serves. Scope grows only by a ruling (R-IZ (3), 124a:984).
+
+## Process (every task; Spec 08 governs how it runs)
+1. **Quote the rule first**, with `file:line` (R-IZ (2)). If there is no rule, write a card and attach the register conflict search (M-381). Changing a test assertion, a floor, an oracle case or a worked example is a ruling.
+2. **Plan with the tests in it** (08:453). Pre-register the task's `rules[]` and expected moves (M-321, 69a:455), committed alone.
+3. **PLAN panel**: the DeepSeek four-lens set (§7 rule 4, 08:330), the lean grounder-first panel (08:456), Ground-truth before Compliance (08:213).
+4. **Fold, then validate the fold** (08:446).
+5. **Record rulings by decision-log**, in the same commit as their lock (124:186, 132:427). OWED clears only by the generator. One exemption, BOOT-1: MB-66..MB-68 cite O-1 until MB-67 lands (F-28).
+6. **Build red-first through the engine** (`CLAUDE.md:39`, 08:136, 08:144). Use provider `claude`, with the reason logged, for registries, settings seeds, migrations, DB work and verification seats (08:145; F-38). Briefs use only `bash_allow` commands (08:95-126). Red-by-design tests live in `pending/` (F-05).
+7. **The loop gate** runs at commit, pre-push and CI (R-KI).
+8. **OUTPUT panel per task** (08:459). Its record, `docs/reports/panels/<task>.json`, is committed with the work (R-KM).
+9. **Pre-push**: the operator reads the one-screen summary of protected-path changes and approves the push (F-34). CI is the backstop.
+10. **Done** = committed + named test green + ruling recorded + this line updated. One status word per heading. READY is derived: every WAITS is done.
+11. **Reference practice** (operator 2026-11-01: "I also want to initiate a practice where we refer to the task the queue and lane number"): every mention of work, in reports, decisions and briefs, carries `MB-nn (item) · McBylaws queue · lane X · stage N`.
+
+## Lanes (08:148; a lane = one writer branch)
+R rulings (orchestrator) · G gates · M Layer 2 model · E Layer 3 (**one writer**; the write scope covers the catalogue, the step, the evaluator extension, seeds and migrations, so the engine refuses a second claim, `CLAIM_CONFLICT`, 08:146) · T tests (the loop set) · P product · D DB writer (ONE; operator go; `~/Buildo-scratch/dblock/HELD`) · V landing (ONE; the operator pushes) · A analysis · O operator.
+Status words: DONE · RUNNING · WAITS · OPERATOR (named O-id) · HELD · LATER.
+
+---
+## Lane board — 2026-11-01 (by hand until MB-73 generates it; one row per task, the stage named; evidence under `~/Buildo-scratch/mcbylaws/<MB-id>/`)
+Labels (operator 2026-11-01: "let's label the tasks as Error preventation / Mistake resolution and then Phase 3"): **[EP]** error prevention (gates, checkers, validation, safe DB tools) · **[MR]** mistake resolution (fixing errors already made) · **[P3]** the Phase 3 build and its inputs. A label never changes a status, a WAITS or a stage.
+| Lane | Task | Status | Stage / next step |
+|---|---|---|---|
+| R | [P3] MB-78 decision batch 2026-10-31-pm | DONE 2026-11-01 (MB-78@3fde1015, commit 3 `0570417a`; pushed to origin/wf1/mb-rulings; stage 10 not run by the checker: MB-73 is not wired, so a person wrote this line, a deviation from stage 10) | Built and staged as batch `2026-10-31-batch-an` (CHAT-215, 54 decisions: 24 new 69a rows M-428..M-451, 124a R-LY and R-LZ, Spec 08 §11.7, 16 rows flipped to RECORDED; all committed). Verify PASS after re-check 4 (`MB-78/verify.md`), O-27 handbook check 13 of 13 COMPLY. Landing split (b) on wf1/mb78: `8a81d014` (R-LZ + CHAT-215.O-26 + panel record), `5749c2ea` (prereg `prereg-MB-78-2.json`, increment 1, alone). Commit 3 (the other 52 decisions + the re-pin + the `revert` round record) landed as `0570417a` over `prereg-MB-78-3.json` (`154bc77b`), after the MB-79 (h) join (R-MA); stage 8 re-check with K-1 PASS (`MB-78/verify.md`, baseRowsN 698); batch ap `3fde1015` (R-LT note). |
+| R | [EP] MB-77 McProof | WAITS MB-78 commit 3 | Rows staged in the MB-78 batch (land with commit 3) (M-436..M-447, the M-358 note, Spec 08 §11.7); all O-27 clauses confirmed (`CARD-o27-foot18.answered.md`). Builder conditions C1 (`mcproof.config.json` outside arm L literal scope or in `literal_exempt`) and C2 (the City-oracle test states why generator values are allowed) in `MB-78/blockers.md`. After MB-78 lands: sub-items (a)–(c), red-first. |
+| G | [EP] MB-67 commit gate | DONE 2026-10-31 | Stage 8 PASS on the follow-up commits (`MB-67/output-panel/stage8-followups.md`); record `docs/reports/panels/MB-67.json` committed `9e33ef86` (local; goes out with the next operator push). Follow-ups F1–F4 are in MB-79. |
+| G | [EP] MB-68 loop gate | DONE | Landed and pushed. |
+| G | [EP] MB-73 queue checker | RUNNING (stage 9 pushed; wiring WAITS WAIT-P67-2) | WAIT-SOURCES done: O-25 "yes copy" (`CARD-o25-sources.answered.md`), `1c98d349` tracks 52 cards + HANDBOOK-AMENDMENTS.md in `mcbylaws/sources/`, pushed by the operator (origin/wf1/mb-rulings = `1c98d349`). Next: WAIT-P67-2 (lane R, after MB-78), then the wiring commit; the wiring and the stage-10 close treat any WAIT line as not done. |
+| G | [MR (a, d, e, h, j, m, o) · EP (b, c, f, g, i, k, l)] MB-79 gate follow-ups | RUNNING (item (h) landed 2026-11-01 (`32c35ef9`, `f1b92f95`; R-MA RECORDED in `0570417a` under the R-LT note of batch ap `3fde1015`; pushed); items (j)-(l) (K-1..K-3) at stage 1, lane G beside MB-73, O-28 break (B); items (m) (range check) and (o) (push reads HEAD) at stage 1, before the CI landing to main); item (f) stage 2 return for P-9 running 2026-11-01 (`MB-79/f/stage2-return.md`), build WAITS MB-73 | Item (f), the oracle door (O-26 option 3): plan v5 FINAL-PENDING, returning to stage 2 for P-9 under h-2 (`MB-79/f/plan.md`, `rule.md`); round 2 kept 32 of 44; fold validation by grounder and cross-read adversary, two re-checks, PASS (`MB-79/f/fold-validation/`). Build WAITS PR-79f-1 and the M-180 note recorded by decision-log (O-29, O-30 answered 2026-11-01; drafts `R-batch-ao/drafts.md`), and MB-73 clearing lane G. Items (g), (h), (i) added 2026-10-31; (h): rule card `MB-79/h/rule.md`, stage 3 panel `MB-79/h/adjudication.md` folded, O-28 answered (h-2, break (B)); plan `MB-79/h/plan.md` (fold `MB-79/h/fold2.md`); stage 7 build on `wf1/mb79h` (`~/Buildo-wt-mb79h`, committed `32c35ef9`/`f1b92f95`, pushed in `3fde1015`), evidence `MB-79/h/build/`. |
+| G | [EP] MB-75 coverage map | WAITS MB-31 catalogue | Stage 1 (card answered). |
+| M | [MR · EP (e) · P3 (g, j, k)] MB-18 Phase 2 fixes found during Phase 3 work | RUNNING (stage 7 PARTIAL) | wf1/mb18: prereg `e6787b5d`, item (h) `9d0e6363`, item (c3) `6b8068f5`. Items a, c1, c2, d+i, e1 built red-first and HELD as patches (`MB-18/patches/`) for the loop gate: c1, c2, d+i, e1 land under R-LZ after MB-78 (commit 3 after the MB-79 (h) build); item a also needs the MB-79 (f) door (its A0399 expected value moves, `oracle_moved_with_code`). Stage 8 run 2026-11-01 (`MB-18/stage8/adjudication.md`): prereg, c3, d PASS; c1, c2, i, h (follow-up) and the panel record FIX, back at stage 7; stage 7b built and re-check 1 PASS on the code (`MB-18/stage8/adjudication.md`); stage 9 packaging (`MB-18/stage9/`): h GATE OK, c1 and c2 refused (M-339, M-340 OWED with no lock; M-409 too: lane R dated notes needed); item a also owns the `maxbld-amendment-index.json` regeneration; e1 FAIL (literal arm, stale layer2-input; rulings needed). Held-work breach (disclosed 2026-11-01): MB-18 holds five patches (a, c1, c2, d+i, e1) against "one artifact per task"; how a multi-item task holds its work is a gap, rule card owed at MB-18 stage 1. Items (k) at stage 2; (l), (m), (n) at stage 1. |
+| M | [EP] MB-74 rule map out of the version hash | WAITS MB-18 items a, c, d, e, h, i and k | Card answered 2026-10-30 (`CARD-mb74.answered.md`, "Mb-74 option A"); plan FINAL. |
+| T | [P3] MB-64 worked examples | DONE 2026-10-31 (operator close) | Operator: "after teh re-check consider it closed and move on" (`CARD-mb64-close.answered.md`), no republish. Round 4 re-check filed (`MB-64/review/REVIEW.round4.md`: 13 approved, 2 change, 1 operator, 0 parked). Leftovers in MB-80 (`MB-64/close.md`). |
+| T | [EP] MB-76 city-wide reality check | WAITS MB-31 first run | Stage 1 (card answered). |
+| T | [P3] MB-80 MB-64 leftovers | RUNNING (stage 5 done 2026-11-01: GAP-1/2/3 answered, `CARD-mb80-gaps.answered.md`; fold `MB-80/fold.md`, re-validation `MB-80/fold-validation/`; ledger row `MB-80/ledger-draft.md` WAITS lane R after MB-78 commit 3 (it amends M-428, in commit 3); (e) = O-12/O-13) | Stage 3 REVISE; stage 5 fold required. PERM-5 wording, FY-14 abutter, new SB-6, FOOT-18 kept pending (operator), O-12/O-13. |
+| M | [MR] MB-81 Lock fail-open: COMPUTE_MODULES | WAITS MB-18 (lane M one writer) | Stage 1. Found 2026-11-01 by the MB-18 stage 8 re-check: the `COMPUTE_MODULES` check in `bylaw-provisions.infra.test.ts` passes on HEAD with a module missing (fail-open), as c2 did for `bylaw-resolution.js`. |
+| E | [P3] MB-31 Layer 3 step | WAITS MB-18 landed (build); plan fold of GAP-3 A and the :347/:244 fix running 2026-11-01 (`MB-31/fold-1101.md`) (O-3 blocks only the houseplex increment, M-397 69a:538; G-1 is ruled, LC-69 131:119 + M-413 69a:550) | Plan FINAL (FS-SB2a folded). |
+| D | [EP] MB-30 night tools | DONE 2026-11-01 (MB-30@a23aca09, panel record `f64eca7a`; pushed to origin/wf1/mb-rulings `3fde1015`; stage 10 not run by the checker: MB-73 is not wired, so a person wrote this line, a deviation from stage 10) | wf1/mb30b: prereg `6c838c69`, B1 `55877f3c`, B2 `6500c767`, fixes `59eb970b`, panel record `f64eca7a` (stage 8 FAIL, then re-check 1 PASS, `MB-30/output-panel/stage8.md`). Proof run 1 (operator go `CARD-mb26-go.answered.md`) STOPPED at §backup before any DB write: SQL type error `text || "char"` (`MB-30/proof/run-1-stop.md`); every query then mapped read-only, proof.zsh fixed with a pre-flight, re-check 2 PASS. Run 2 PASS 2026-11-01 07:56 (operator OK, `CARD-mb30-run2.answered.md`): P-1..P-7 and P-9 PASS, P-8 printed, states before = after, lock released (`MB-30/proof/run-2.out`, `proof.log`). Promoted 2026-11-01 (operator, `CARD-mb30-promote.answered.md`; plan §6 steps 2-4 done, `MB-30/promotion.md`). Merged into wf1/mb-rulings as `a23aca09`; pushed 2026-11-01 (origin `3fde1015`). |
+| D | [P3] MB-26 first night | WAITS MB-18 landed (MB-30 merged and pushed 2026-11-01) | Operator go given (`CARD-mb26-go.answered.md`; local DB only, after prerequisites). |
+| A/O | [MR] MB-11 save and clean worktrees | READY | In the 12 McBylaws worktrees the gate scans (`mcbylaws/protected-paths.json` `worktrees`, read by `summary-collect.mjs` worktreeScan): 19 commits on no remote across 4 branches (wt-mb30 2, wt-mb37 2, wt-mbspec 2, wt-p3engine 13), and 5 of them with real changes (p37, p3engine, p3model, p3plan, mcbylaw-p2). The gate counts 10 dirty because 5 more (mb-g1, mb-g2, mb-rul, mb37, mbspec) hold only an untracked `mobile/node_modules`. About 130 other `~/Buildo-wt-*` worktrees outside the gate's list are also dirty; they are in MB-11's scope (the largest are p2-0 288, dsk 261 and w44 223 files). First item: `bce322cc`, the 2026-10-29-ah rulings batch (CHAT-209), on no remote; check whether it is recorded another way. The operator decides keep, push or archive per item. Nothing is deleted. |
+Open operator decisions: O-3 (D1 only, houseplex increment), O-12, O-13 (dimensions); proposals confirmed when their task is reached: O-5 (MB-57), O-6 (MB-67; held-patch N, M-382), O-7 (MB-37), O-14 (MB-27), O-15 (MB-28) (see "Open operator decisions"). WIP rule (M-382): at most one task per lane past stage 6, except lane G, which runs per the lanes table (2, disjoint write scopes; O-28 break (B)). Process breach 2026-10-31: the MB-67 follow-up commits were built and pushed without stages 3–5 and 8. They are disclosed here and owed as the MB-67 stage 8 above.
+
+## Wave 0 status — 2026-10-30 (recorded by hand until MB-73 generates it; evidence is under `~/Buildo-scratch/mcbylaws/<MB-id>/`)
+| Task | Lane | Stage reached | Evidence |
+|---|---|---|---|
+| MB-66 | R | **DONE and PUSHED 2026-10-30** (origin/wf1/mb-rulings at `cf5e707c`, pre-push green; also `f41d6c5c` R-DF lock names and `cf5e707c` operator-approved re-pins and amendment index, CARD-push-fixes). wf1/mb-rulings: aj-1 `2b6ef704` + fix `452edcb1` (verify PASS after the fact; slip disclosed), aj-2 `ceed0b48` (verified before commit), operator-signed APPROVED `5d3c6b57` (good signature, key SHA256:JWpLzbSi…), aj-3 `80f10269` (verified before apply; one post-verify wording fix so 69a names no step script, system-map R-AF). 655 decisions. Next: Wave 1 (MB-67 ∥ MB-68) branches from origin/wf1/mb-rulings | `MB-66/record/`, `~/Buildo-scratch/rulings-1024/batch-a{j,k,l}-verify.md` |
+| MB-67 | G | Wave 1 BUILT (22 local commits, wf1/mb67-commit-gate, `~/Buildo-wt-mb-g1`); OUTPUT panel FAILED: 27 KEEP, 10 blockers, including O67-23 (LOCAL-DB arm absent, operator item 3 not built) and O67-24 (literal scope too narrow, item 2), and O67-11 (the MB-68 CLI call is wrong); back with the builder for fixes (superseded: MB-67 DONE 2026-10-31, landed MB-67@72b0b021) | `MB-67/output-panel/adjudication.md` |
+| MB-68 | G | Wave 1 BUILT (16 local commits, wf1/mb68-loop-gate, `~/Buildo-wt-mb-g2`, all engine-written); OUTPUT panel FAILED: 22 KEEP; on real data every honest round is red (the tests stubbed the run); back with the builder for O68-01..09, the metadata class, the prereg-only exemption and a real-data e2e test (superseded: MB-68 DONE 2026-10-31, landed MB-68@1ab95c8d) | `MB-68/output-panel/adjudication.md` |
+| MB-18 | M | stage 5b PASS (items a, c, d, e, h, i; j is gated and rides MB-26) | `MB-18/plan.md`, `adjudication.md` |
+| MB-64 | T | stage 5b PASS; 49 worked examples await the operator check (O-10) (superseded: MB-64 DONE 2026-10-31, MB-64@2b25c035, evidence `mcbylaws/sources/evidence/MB-64/`) | `MB-64/worked-examples.md` |
+| MB-30 | D | stage 5b PASS; the build WAITS MB-66 + MB-67/68 | `MB-30/plan.md` |
+| MB-73 | G | plan FINAL 2026-10-30 (v4; 2 fold validations; last edits verified by the orchestrator). Build WAITS: MB-67 and MB-68 landed; the operator cards copied into a tracked `mcbylaws/sources/`; the P67-2 queue commit (DONE lines `MB-nn@sha`, scope globs on withdrawn rows) (2026-11-01: MB-67 and MB-68 landed, `72b0b021`, `1ab95c8d`) | `MB-73/plan.md`, `adjudication.md` |
+| MB-74 | M | plan FINAL 2026-10-30 (v3 + FV4, re-validated PASS). Build WAITS MB-18 items a, c, d, e, h, i and k landed (not j); lane M, one writer, on MB-18's branch | `MB-74/plan.md`, `adjudication.md` |
+| MB-31 | E | plan FINAL 2026-10-30 (v2; last edits verified by the orchestrator; migrations 287 + 294, MB-18 keeps 293). A0375 = 2.125 m settled (the two pools differed by two mislabelled lots; FS-SB2a gives the same); L31-14 answered; FS-SB2a answered 2026-10-31: the plan folds the ring facts, the row's street term and the two settings (fold + validation). Build WAITS: MB-67/68 landed (arm C same-commit exception), MB-18 (k) stored by the MB-26 night, the MB-64 sign-off (O-10) | `MB-31/plan.md`, `adjudication.md` |
+| research | R | S-1, EXC-FSI, R4-01 answered with citations; Q4 neighbour ring done 2026-10-30, FS-SB2a approved 2026-10-31; street-name defect (3,336 conflicts, 27,680 none) logged for MB-57 | `research/` |
+| 2026-10-31 | — | MB-67 and MB-68 fixes committed (local); output panels re-run next. R-LA: MB-67 enforces 61 (ast-grep number nodes); lane E's 70 was a rough regex, so no correction is needed beyond a dated note | `MB-67/`, `MB-68/` |
+| 2026-10-31 | R | batch am COMMITTED locally: `84027ca2` (CHAT-214, 15 decisions: M-422..M-427, R-LS..R-LX, dated notes M-245/M-256/R-LA; verify PASS on pass 3) + re-pin `d92531a5` (totals equal; CARD-gates-recheck item 0). 670 decisions. Not pushed. The R-LA counting definition is added by a later dated note when MB-67 lands its rule file | `~/Buildo-scratch/rulings-1024/batch-am-{verify,compliance}.md` |
+| 2026-10-31 | E | MB-31 FS-SB2a fold: FOLD ACCURATE after fixes (DeepSeek spec + error-paths on an extract, grounder PASS, Cross-read 4 HIGH folded). Fresh rebuild reproduces Q4 (1.28 → 1.10 m). A0375 2.125 m (lane T to take the frontage-street pool). New ledger rows L31-15..L31-18 to the operator; L31-17 already covered by batch am (M-245/M-256 notes). Lane T inputs: `MB-31/data/fssb2a-examples.json` | `MB-31/fold-fssb2a.md` |
+| 2026-10-31 | R | L31-15 (ring walk: chain per abutter, longest shared edge, declared read = data), L31-16 (ring_min_n 1..4), L31-18 (calibration provisional; split-sample pinned audit; true re-fit when new measured lots exist) ANSWERED, `CARD-l31-15-16-18.answered.md`; recorded in the NEXT batch with the PERM-reading ruling (one re-pin). Lane E applying to the MB-31 plan | `p2close/` |
+| 2026-10-31 | R | PERM reading APPROVED (`CARD-perm-reading.answered.md`; evidence `research/Q5-rd-building-types-practice.md`): 10.20.20.10(1) read with 10.20.20.40(1) + each type's lot condition; non-listed types need a CoA variance. Recorded in the next batch with L31-15/16/18. Q6 (permit/CoA as evidence per topic) and Q7 (DeepSeek past-research sweep) running | `research/` |
+| 2026-10-31 | R/M/T | R-zone side yard ANSWERED: maximum 0.9 m (10.10.40.70(3)(A)), 0.45 m (4) is a disclosure only; supersedes the M-205(2) default (`CARD-side-yard-city.answered.md`, evidence Q6 37/39). NEW MB-18 item (l): re-key the stored R-zone side-yard cell 0.45 → 0.9 with pre-registered moves (lane M, after the gates). Lane T: City-approval GENERATOR (thresholds in a config file) + FOOT-8 update. Q8 (the 25 golden cases as evidence) running. Next batch now also records this card | `p2close/`, `research/` |
+| 2026-10-31 | T/M | Check page v6 published: 94 examples, 11 approved by City data (generator `check-page/city-approve.mjs`, thresholds in `city-approve.config.json`), Q7 adjudicated (5 confirmed and fixed, 8 superseded, 2 to the operator; `MB-64/q7-adjudication.md`). NEW Phase 2 finding for MB-18 item (m): exception RD 21 caps floor area at 135 m² + 25 % of lot area up to FSI 0.5, but Phase 2 stores only 0.5 (1,597 of 2,729 x21 lots over 540 m² are overstated; lot 281681 should be FSI 0.4435) — red-first fix, lane M, after the gates. Expected-25 side-yard moves listed in `MB-64/r-side-yard-move.md`, applied when MB-18 (l) lands | `MB-64/` |
+| 2026-10-31 | G/T | NEW **MB-75** coverage map (every catalogue row and branch has ≥ 1 worked example or a cited reason; enforced by the loop gate; lane G, WAITS MB-68 landed + MB-31 catalogue) and NEW **MB-76** city-wide reality check (Reality-Check seat on all-lot outputs, zone-aware bounds + invariants + outliers; lane T, WAITS the MB-31 step's first local run). Operator 2026-10-31 "add 1 and 3, 4 for disagreement" (`CARD-coverage-reality-gemini.answered.md`); Gemini blind check on DeepSeek/Claude disagreements only. Minimum livable size and parcel-data answers in `CARD-parcel-minsize-review.answered.md` (next batch) | `p2close/` |
+| 2026-10-31 | G | **MB-68 LANDED locally** on wf1/mb-rulings: merge `1ab95c8d` (second re-check READY TO LAND, `MB-68/output-panel/recheck-2.md`), after `28d6f678` system-map regenerate; 751 tests pass on the merged tree (loop, register, scorecard, system-map). Not pushed. MB-67 FAIL on X1 (landing exception read from the range tip, not exactly the named shas) and X2 (decision-log test red since 49380970): builder fixing. Follow-ups after landing: MB-67 KEEPs 06–27, MB-68 N68-4, flip loop arm required:true. NEW **MB-77** McProof (validation standard for every Phase 3 increment): lane R drafting `MB-77/MCPROOF.md`. Next free id: MB-78 | `MB-67/`, `MB-68/`, `MB-77/` |
+| 2026-10-31 | R/T | Operator "approve 1-6" (`p2close/CARD-approve-1-6-review.answered.md`): zone-median fallback gets the +1.0 (M-422 text); unseeded setting refuses the run (SB-4); HT-5/GFA-13 move to the options increment; all options below minimum means no headline ("no livable option"); LV-7/8 tagged for increment 5; McProof details (a)–(c). Goes in the next batch. MB-64 review round 2 done: 64 pass every stage, 27 change, 13 need the operator (`MB-64/review/REVIEW.md`). MB-67 X1/X2 fixed (`fbb1a48b`, `5e07a0cf`; full suite 21,294 pass); waiting on a quick re-check. |
+| 2026-10-31 | G | **MB-67 LANDED locally** on wf1/mb-rulings: policy bootstrap `17c95d00` (the policy file alone, as `bootstrapBlocker` requires) then merge `d95c95d5`; third re-check READY TO LAND (`MB-67/output-panel/recheck-3.md`); merged tree 38 files, 1,198 tests pass; staged gate OK. NOT pushed. **OPEN (operator):** arm H cannot judge any commit made before the policy existed. `gate --ci --base cf5e707c` fails on about 20 rulings and MB-68 commits; against main it fails on 690. The six-sha landing exception covers only MB-67 itself. A two-step push gets the lane branch past pre-push (`--base 1ab95c8d` is GATE OK), but the CI landing to main would still fail. Proposed: exempt ancestors of the bootstrap commit `17c95d00` (frozen constant) from arms H, C and P. Follow-ups: M-312 is missing from the Spec 133 §3 OWED table (generator gap); is LC-46 citable? Loop arm required:true flip waits for this. |
+| 2026-10-31 | G | **MB-67 landing rebuilt and closed** on wf1/mb-rulings @ `b9e48147`: bootstrap `c500c249` (policy plus the rule-map literal_exempt entry), merge `72b0b021`, pre-policy exemption `43534f74`, rule-map exemption `f86def72`, gate scope from the bootstrap for every range-diff arm `b9e48147`. Cards: CARD-prepolicy-exempt, CARD-rulemap-literal-exempt, CARD-bootstrap-rebuild, CARD-gate-scope-from-bootstrap. `--ci --base cf5e707c` and `--ci --base origin/main` both GATE OK. Coordinator tamper test: a planted number in evaluate.mjs is refused (`FAIL:L:number`). Full suite 21,816 pass. The old line is kept at `wf1/mb-rulings-pre-landing` / `wf1/mb67-prepolicy`. 71 commits are ahead of origin, a fast-forward; READY FOR THE OPERATOR PUSH. Superseded: the 17c95d00/d95c95d5 shas above. |
+| 2026-10-31 | G | **PUSHED** wf1/mb-rulings cf5e707c..b9e48147 (operator). DEFECT: the push ran with NO hooks, because `~/Buildo/.git/config` core.hooksPath had been set to a temporary empty dir (`mcbylaws-nohooks-*`, written by `src/tests/fixtures/mcbylaws-gate/repo-helper.ts` makeRepo leaking into the real repo). Restored to `.husky` with install-hooks.mjs. Coordinator ran the skipped pre-push checks by hand: gate both ranges OK, step-validate, spec-split, generated-docs and the full suite all pass; typecheck had 8 TS2345 errors in the gate tests, fixed in `92e7ed2f` (hooks on, GATE OK). Leak root-cause fix plus a hooksPath backstop test dispatched to lane G. Next push: after that fix. |
+| 2026-10-31 | G | hooksPath leak fixed in `ba05d889` (fixture git calls strip GIT_* and set a ceiling, `assertOwnRepo` before any config write, writes use `--file`; vitest globalSetup guard `hooks-path-guard.global.ts` plus an infra test). Full suite 21,844 pass. Coordinator proved the guard red: with the real hooksPath drifted, the run aborts with "HOOKS PATH DRIFT"; restored to `.husky`. Next operator push carries `92e7ed2f`+`ba05d889`. |
+Nothing has been built, committed or written to the DB. Next: the operator answers; MB-66 records; the operator commits `mcbylaws/APPROVED`; Wave 1 builds (MB-67 ∥ MB-68).
+
+## How every task is run (Spec 08) — operator 2026-10-30: "ensure efficient use of the lanes via spec 08 - this lead to a mess last time because it wasnt properly managed"
+
+### The ten stages of every task (the status line names the current stage; each stage leaves a file in `~/Buildo-scratch/mcbylaws/<MB-id>/`)
+| # | Stage | Rule | Artifact |
+|---|---|---|---|
+| 1 | **Rule.** Quote the governing rule with file:line. If it is not in a handbook or spec, STOP: the rule goes to the ruling ledger below and is recorded by decision-log first. | Process 1; R-IZ (2); CARD-plan-1030 ("if its not in the handbook or spec we need a ruling") | `rule.md` |
+| 2 | **PLAN**, with the failing tests written into it, the `write_scope` and every executable claim executed | 08 §11.4 (08:452); §C.6.1 (08:144); §11.1 (08:441) | `plan.md` |
+| 3 | **PLAN panel**: the DeepSeek lens set (spec, security, idempotency, error-paths) plus the lean grounder-first seats and Compliance, gated by Ground-truth | 08 §7 rule 4 (08:330); §11.5 (08:455); §7 rule 2 | `panel/` |
+| 4 | **Round-2**: a grounder keeps or rejects every finding, with a reason | 08 §7 rule 3 | `adjudication.md` |
+| 5 | **Fold + fold-validation**: grounder re-execution plus the Cross-read Adversary | 08 §11.2 (08:445); §11.5 | `fold.md` |
+| 6 | **Pre-register** the expected moves, committed alone | M-321 | prereg commit |
+| 7 | **Build red-first** through the DeepSeek engine: one brief = one module + its test, within budget. Claude only with a logged reason | 08 §B, §C; §7 rule 9; Process 8 | `red.txt`, ledger run id |
+| 8 | **OUTPUT panel**: Regression Guardian + one grounded reviewer, Reality-Check where values move, the DeepSeek lens set, and Compliance | 08 §11.5; §6.4 (08:295) | `output-panel/` |
+| 9 | **Commit** (local; the operator pushes). The loop and the gates are green | Process 10 | commit id |
+| 10 | **Done**: MB-73 checks the done-condition, and the checker updates the status line, never a person | R-KK; MB-73 | checker output |
+
+### Panel size by task class (smallest diverse panel, 08 §7 rules 5 and 7)
+| Class | PLAN panel | OUTPUT panel |
+|---|---|---|
+| R rulings, docs | DS spec lens + Compliance grounder + Ground-truth | second-seat check of the recorded rows |
+| G gates | DS ×4 + Integration + Idempotency + Regression Guardian | Guardian + grounded reviewer + DS ×4 |
+| M Layer 2 / E Layer 3 | DS ×4 + Integration + Idempotency + Guardian + **Reality-Check** (values move) + Compliance | Guardian + grounded reviewer + Reality-Check + DS ×4 + Compliance |
+| T loop set, oracle | DS spec + Integration; the operator checks the expected values (O-10) | Guardian + grounded reviewer |
+| D DB nights | **Idempotency lens (mandatory)** + Reality-Check + Integration | Reality-Check on the loaded rows + Guardian |
+| P product | as M/E, plus the frontend nuance (08 §11.5-FE) | Guardian + grounded reviewer |
+Seats run on Sonnet by default. Opus only for hard design adjudication, with the reason logged. DeepSeek handles breadth and execution (08 §7 rule 9; the operator's token directive 2026-10-26).
+
+### Lanes (08 §C.6: one worktree per task, write scopes must not overlap, claims checked by the engine)
+| Lane | What | Writers | Worktree / branch | Running limit |
+|---|---|---|---|---|
+| R | rulings, decision log, register rows, cards, read-only research | orchestrator only (registries reserved, 08:145) | `~/Buildo-wt-mb-rul` · wf1/mb-rulings | 1 writing task (research seats are read-only and may run alongside) |
+| G | gates, the loop gate, the promises check | 1 per write scope (MB-67 and MB-68 have disjoint scopes, so 2 may run) | `~/Buildo-wt-mb-g1`, `~/Buildo-wt-mb-g2` | 2 |
+| M | Layer 2 rule fixes (MB-18, MB-27.L2) | 1 | `~/Buildo-wt-mb-l2` | 1 |
+| E | Layer 3: catalogue, step, evaluator extension | **exactly 1** (`CLAIM_CONFLICT`, 08:146) | `~/Buildo-wt-mb-l3` | 1 |
+| T | the loop set, oracle, worked examples | 1 | `~/Buildo-wt-mb-loop` | 1 |
+| D | DB writes | **1 machine-wide**, under `dblock`, with an operator go, a dump first, disk ≥ 10 GiB | main tree, operator-run | 1. **Never idle while a ruled DB job is ready** (operator 2026-10-25) |
+| P | product, after the exit | 1 | later | 0 until MB-46 |
+WIP: each lane has at most 1 task RUNNING past stage 6, except lane G, which runs per the lanes table (2, disjoint write scopes; operator O-28 break (B), `CARD-o28-prereg-name.answered.md`; M-382 69a:518 "a lane is one writer branch"). Held patches ≤ 12 and only falling (O-6). PLAN stages (2–5) may run ahead in any lane, because they write no code.
+
+### Waves (efficient order; each wave starts when its WAITS are met, checked by the queue checker)
+| Wave | R | G | M | T | E | D |
+|---|---|---|---|---|---|---|
+| 0 now | **MB-66** record the ruling ledger; read-only research: S-1 source, EXC-FSI evidence, R4-01 major-street check | — | MB-18 PLAN | MB-64 PLAN | — | MB-30 PLAN |
+| 1 | MB-66 output check | **MB-67 ∥ MB-68** build | MB-18 panel/fold | MB-64 panel/fold | MB-31 PLAN | MB-30 panel |
+| 2 | — | **MB-73** build | **MB-18** build | **MB-64** build (operator checks the examples) | MB-31 panel/fold | **MB-30** build |
+| 3 | — | — | — | — | **MB-31** build (increment 1) | **MB-26** Layer 2 night |
+| 4 | EXC-FSI card | — | MB-27.L2 items | loop rows per increment | **MB-27** increments 1→n | MB-27.L2 nights |
+| 5 | MB-46 close | MB-73(e) audit | — | MB-28 proof set | — | **MB-35** night |
+Observability: the queue checker writes one board (lanes × tasks × stage, with evidence links) at every wave and increment boundary. It goes to the operator before the next wave starts (MB-73(d)).
+
+## Ruling ledger — everything this plan relies on that is not yet in a handbook or spec
+Every row is recorded by **MB-66** in one decision-log batch, with a compliance table and a second-seat check, before any task builds on it. The status is PROPOSED until recorded. Nothing outside this list may be cited unless it is already in a spec, the handbook or the register.
+| Rule(s) | Source of authority | Home once recorded |
+|---|---|---|
+| R-KF…R-KN (guardrails G1–G13) | O-1; HANDBOOK-AMENDMENTS §1–§3 | Spec 124a |
+| M-377…M-384; the dated notes on M-61, M-72, LC-16, LC-21, LC-48, the 69a header and Spec 69 | O-1; HANDBOOK-AMENDMENTS | Spec 69a / Spec 131 |
+| Spec 68 O-9…O-12, SC-14…SC-20 (Phase 2/3 objectives) | O-1 | Spec 68 |
+| Spec 08 §7 rule 10 (orchestrator discipline, engine sizing) | O-1 | Spec 08 |
+| R3-01…R3-06, R3-08, R3-10, R3-11 (R3-07 and R3-09 were applied as row text in the GFA row and G-1, not as rules) (undecided never zero, flags propagate, front-yard law split, held-out calibration, options, generated breakpoints, storeys, shape switch, not_modelled) | O-1; `ds/r3/ADJUDICATION-r3.md` | Spec 69a rows (M-385…) |
+| R4-01…R4-10 (complete routes, varied-clause lists, classified precedent, per-lot options and headline, basement read not assumed, S-1 direction, literal-gate scope, evaluator-written trace, allowlists, ungameable MB-73) | O-1; `ds/r4/ADJUDICATION-r4.md` | Spec 69a rows / Spec 124a (R4-07…R4-10) |
+| P2-OPT (Phase 2 stores per design option) | O-17 | Spec 134 amendment + a 69a row |
+| SIX-COA (houseplex 5–6 routes) | O-18 | 69a row |
+| Show every feasible option; basement on its own line; ideal split | operator 2026-10-30, verbatim in `CARD-operator-words-2026-10-30.answered.md` | 69a rows |
+| Box shape + `footprint_shape_factor` hook (G-1) | operator 2026-10-30 ("Box shape looks good") | Spec 131 row |
+| Front-yard row: FS-SB1 / FS-SB2 / M-245 built into the model path | already ruled (FS-SB1, FS-SB2, MB54-Q); this records WHERE they live | dated note on M-245 |
+| FS-SB2a (ring street term), RL-7 (a), L31-13 = frontage street, L31-14, R-LA = 61 confirmed | `CARD-fs-sb2a.answered.md`, `CARD-rl7-l31-14-baseline.answered.md` (2026-10-30/31) | batch am: 69a rows + two logic variables (MB-31 seeds) |
+| P3-DATA-MODEL, L3-REBUILD (formulas as data; no old code) | operator cards 2026-10-30 | dated notes on M-61 |
+| O-3 interim: show both readings until EXC-FSI | CARD-plan-1030 | interim dated note on M-252 |
+| S-1 / S-2 values | PENDING: a cited source, or a card | logic variables with their citation |
+| MB-73 promises check | operator 2026-10-30 | R-KK extension (124a) |
+
+## THE PHASE 3 EXIT PATH — 12 tasks
+
+### (1) Guardrails
+
+**MB-66 Record the operator decisions and the WHOLE ruling ledger (above) — O-1 answered 2026-10-30** (R) · claude
+- Rules: BOOT-1; 124:185-187; 132:427; 69:7.
+- What: record M-384 (CARD P3-DATA-MODEL and the narrowed L3-REBUILD), M-383 with the Spec 69 note, Spec 68 O-9..O-12 / SC-14..SC-20, the 69a header note, and the 2026-10-30 cards not yet carried by batch ai. Every other row is recorded by its owning task.
+- Tests: `decision-log.logic`; `spec133-bylaw-handbook.logic`; `spec-split-check --check` arm iii-b.
+- Done when: `decision-log --check` is clean; Spec 132/133 are regenerated twice and the second run changes nothing; an independent V-lane seat re-checks each row against the operator's words (132:435).
+- Serves: standardized, observable, understandable.
+
+**MB-67 The commit gate and the pre-push summary (G2, G3, G5, G6, G9–G13) — DONE 2026-10-31 (MB-67@72b0b021, the landing merge; follow-up commits to MB-67@ba05d889, pushed; stage 8 record `9e33ef86`)** (G) · deepseek, claude for hook wiring
+- Rules: BOOT-1; R-KG, R-KH, R-KK, R-KL, R-KM, R-KN, M-381, M-382, Spec 08 §7 rule 10 (each recorded here with its lock); 124a:984.
+- What, as one gate module run at commit, pre-push and CI:
+  - a cited RULED rule from the task's `rules[]`, on Layer 2/3 code paths (G3);
+  - no OWED rule (G2);
+  - no step logic outside the step, and a panel record on each Layer 2/3 commit (G12);
+  - the literal arm (provisional, R-KN; the set is an operator decision at O-1): numbers only 0, 1, −1, 2, 100; strings only the closed status words and table field names (G13);
+  - `register-conflicts.mjs` with a `decision-log --check` arm (G5);
+  - `card-cite-check.mjs` and the brief command check (G10);
+  - `mcbylaws-queue-check.mjs`: every DONE line's commit exists on its branch (G9; absorbs draft-v2 MB-69);
+  - the gates refuse Layer 2/3 paths while `mcbylaws/APPROVED` is absent (F-41);
+  - the pre-push summary from `mcbylaws/protected-paths.json`: changed protected paths, held count vs N, dirty McBylaws worktrees, `pending/` count, panel records (G6, G11; F-34).
+- Tests (red fixtures from real incidents, each with a green twin):
+  - 1d4b20d9's message;
+  - an unrelated RULED cite;
+  - 41719d27 citing OWED LC-15;
+  - 93feac54;
+  - a commit with no panel record;
+  - a copy of the held `maxbld-invariants.mjs` as a red fixture (reference only);
+  - `LIFT_ZONES = ['R','RT','RM']`;
+  - the MB17-Q1 draft;
+  - a card quote not found at its line;
+  - the v2 queue's MB-58 line;
+  - a Layer 2/3 commit with `APPROVED` absent.
+- Done when: every fixture is red on the parent and green with the gate, at commit, pre-push and CI.
+- Serves: standardized, observable, accurate.
+
+**MB-68 The loop gate (G4, G7) — DONE 2026-10-31 (MB-68@1ab95c8d, the landing merge; pushed)** (G) · deepseek, claude for pre-push/CI wiring
+- Rules: BOOT-1; R-KI and the dated note on M-61 (3) (the loop), each recorded here with its lock; M-322 (69a:456); M-360 (133:650); M-321.
+- What:
+  - `regression-set.json` and the `pending/` split;
+  - the loop record as committed JSON: catalogue sha, settings sha, switchboard sha, per-case results (F-43);
+  - accept with a reason, or revert;
+  - the fast set at pre-commit for staged Layer 2/3 files; the full set at pre-push and CI.
+- Tests: red on a replay of d01e1458, on the MB-17 Q3 A0388 flip, and on an accept with no reason.
+- Done when: those reds hold at commit, pre-push and CI.
+- Serves: accurate, observable.
+
+### (2) Tables and checks first
+
+**MB-64 The loop set — DONE 2026-10-31 (MB-64@2b25c035, its evidence tracked in `mcbylaws/sources/evidence/MB-64/`; operator close, `CARD-mb64-close.answered.md`; leftovers MB-80)** (T, O) · deepseek per brief · absorbs v2 MB-63, MB-04, MB-24 and MB-45g
+- Rules: M-358 "operator-checked spreadsheet, never LLM-filled" (69a:492); M-379 and M-380 (recorded here with their locks); M-362 (69a:498); LC-43 (133:1714).
+- What, all protected paths (only the T lane writes them; F-33):
+  - (a) Worked examples, about three per catalogue row on either side of each min/max switch, written fresh from the row and the by-law text, operator-checked per the O-10 sample.
+  - (b) **Expected answers, derived fresh**, increment by increment: from the KEYED golden lot facts, the Phase 2 limits and the by-law text, by a seat that has never read the old engine, Spec 78 P5.2 / P5.9 or `hand.mjs`; checked by the operator (O-10). MB-62's hand values (`p2close/mb62/hand.mjs`) used the old engine's lot facts (e.g. 580.13, not the keyed 580.6), its settings and its attic geometry, and were scored against the engine: **reference only**. The CoA decisions (the applicant's approved numbers) stay as the real-world check. D1 is scored on the O-3 reading, with the other reported beside it.
+  - (c) Invariants as check rows, only those that follow from a clause for the rows present (LC-43; the Spec 78 P5.15 list is reference for wording), with numbers from `l2()` or `lv()`.
+  - (d) The primary measure: the applicant's own type against M-72's `max` across options (MB17-T).
+  - (e) Golden applicant figures and proposed buildings, from `p2close/mb63/proposed-25.json` (O-12) and the MB-04 decisions (recorded 2adb5671).
+  - (f) The committed CoA case files as oracle C (F-39), including the 109 unread figures (CHAT-164): each read, or disclosed as unread.
+- Start small: (a)–(d) are first written and operator-checked for **increment 1 only** (detached house, core numbers, 25 golden cases); each later increment's examples and oracle rows are added when that increment enters (MB-27). (e) is needed from increment 7; (f) from increment 8.
+- Tests: each file has its own red fixture and stays in `pending/` until MB-31 passes it.
+- Done when: the increment-1 parts of (a)–(d) exist from a clean checkout with the operator check recorded; later parts are done as their increment enters.
+- Serves: accurate, observable.
+
+**MB-75 Coverage map — WAITS MB-31 catalogue** (G) · claude
+- Rules: `CARD-coverage-reality-gemini.answered.md` (operator "add 1 and 3, 4 for disagreement"); M-358.
+- What: every catalogue row and every branch has at least one worked example, or a cited reason why it has none. The loop gate enforces the map.
+- Done when: the map is generated from the catalogue and the examples, and the loop gate refuses an uncovered row.
+- Serves: observable, accurate.
+
+**MB-76 City-wide reality check — WAITS the MB-31 step's first local run** (T) · deepseek seat, claude grounding
+- Rules: `CARD-coverage-reality-gemini.answered.md`; McProof (MB-77) Part B.
+- What: a Reality-Check seat runs over every lot's output with zone-aware bounds, invariants and outliers. Gemini blind-checks only where DeepSeek and Claude disagree.
+- Done when: the report is filed and every outlier is explained or opened as a finding.
+- Serves: accurate, observable.
+
+**MB-77 Record and adopt McProof, the validation standard for every Phase 3 increment — WAITS MB-78 commit 3** (R, then T) · deepseek lenses, claude recording
+- Rules: `CARD-mcproof-sizing.answered.md`, `CARD-mcproof-1-7.answered.md`, `CARD-approve-1-6-review.answered.md` item 6; M-358, M-362, M-380.
+- What: the full draft is `MB-77/QUEUE-ENTRY.md` (stage plan, increments-table edit, ruling-ledger row, lane pointer), applied once the rows are recorded. Sub-items in lane T, red-first: (a) `sizing.mjs`; (b) the MCPROOF-12 builder changes; (c) a prompt builder with a field whitelist.
+- First use: MB-64 increment 1, now in review round 3.
+- Done when: the rows are recorded and checked, and the MB-64 increment-1 summary is with the operator.
+- Serves: standardized, observable, accurate, understandable.
+
+**MB-78 Decision batch 2026-10-31-pm, with one re-pin — DONE 2026-11-01 (MB-78@3fde1015, commit 3 `0570417a`; pushed to origin/wf1/mb-rulings; stage 10 not run by the checker: MB-73 is not wired, so a person wrote this line, a deviation from stage 10)** (R) · claude recording, an independent verify that reads the whole text
+- What: record these answered cards (`~/Buildo-scratch/p2close/`) in one batch:
+  - CARD-o19-o21, CARD-perm-reading, CARD-l31-15-16-18, CARD-side-yard-city, CARD-parcel-minsize-review (after the OBC 2024 official-text check), CARD-coverage-reality-gemini, CARD-mcproof-sizing, CARD-mcproof-1-7, CARD-approve-1-6-review;
+  - the gate cards: CARD-prepolicy-exempt, CARD-rulemap-literal-exempt, CARD-bootstrap-rebuild, CARD-gate-scope-from-bootstrap (124a rows);
+  - rows MCPROOF-1..13, plus a Spec 08 section;
+  - the M-422 text with the +1.0 on the zone median;
+  - the stage-0 rulings;
+  - the R-KF..R-LF flips, using `MB-67/rkf-rlf-locks.md`.
+- Done when: `decision-log --check` is clean and the verify passes, and the K-1 re-check below has run.
+- Stage 8 re-check before commit 3: (K-1 from MB-79 (h) stage 8, `MB-79/h/output-panel/adjudication.md:35`) commit 3's zero-move claim rests on totals only at the hook's `--root .`; re-check it with an absolute `--root` and the base rows count, per MB-79 (j).
+
+**MB-79 Gate follow-ups — RUNNING (per item, next line)** (G) · claude
+- Status by item (moved out of the heading 2026-11-01, WAIT-P67-2, so the heading carries one status word): item (h) landed 2026-11-01 (`32c35ef9`, `f1b92f95`; R-MA RECORDED in `0570417a` under the R-LT note of batch ap `3fde1015`; pushed); items (j)-(l) (K-1..K-3) at stage 1, lane G beside MB-73, O-28 break (B); items (m) (range check) and (o) (push reads HEAD) at stage 1, before the CI landing to main; item (f) stage 2 return for P-9 running 2026-11-01 (`MB-79/f/stage2-return.md`), build WAITS MB-73, PR-79f-1 and the M-180 note recorded (O-29, O-30 answered; drafts `R-batch-ao/drafts.md`).
+- What:
+  - (a) M-312 reads OWED in the register but is missing from the generated Spec 133 §3 OWED table; fix the generator.
+  - (b) Before MB-31 builds: check whether Phase 3 catalogue rows (calculations as data) fall in arm L's literal scope (`scripts/analysis/bylaw/**/*.json`), where the shrink-only baseline would refuse every new row. Card if so.
+  - (c) Flip the loop arm to required:true.
+  - (d) The hooks-path incident (the `b9e48147` push ran without hooks): hooks restored by hand and the typecheck errors fixed in `92e7ed2f`; the leak fix and the guard are `ba05d889`, and the guard was proven red; the leak path is not proven. Close after a week of green guard runs.
+  - (e) MB-67 stage-8 follow-ups (`MB-67/output-panel/stage8-followups.md`): F1, a local `git replace` ref on the bootstrap lets an uncited commit pass as pre-policy (CI is not affected), so set `GIT_NO_REPLACE_OBJECTS=1` for the gate's git calls; F2, the hooks guard treats every config read error as unset; F3, the guard reads only the shared config file, not the effective value; F4, the per-commit ancestry loop is wasted work once the base has moved.
+  - (f) The oracle door (O-26 option 3, `CARD-o26-loop-arm.answered.md`): an oracle edit beside code passes only when the round's prereg lists each changed line in `expected_value_changes[]` with an already-pushed ruling (`<log stem>#<ref>`). Needed by MB-18 item a and MB-26/MB-27.L2. Proposed ruling PR-79f-1 (`MB-79/f/rule.md`), recorded before the build. Evidence `MB-79/f/`.
+  - (g) `vitest related` does not select `coa-scorecard.logic.test.ts`, so the pre-commit hook misses stale pins after a table_version move (MB-78 re-check 4). Add the pinned scorecard tests to the pre-commit selection, or a pre-push arm.
+  - (h) The prereg join per O-28 option h-2 (`MB-79/h/rule.md` §4, §7): R-KV amended (a task numbers its own preregs `prereg-MB-<n>-<k>.json`; the gate reads the landing task's highest k committed before the record, increment matching), recorded by decision-log in MB-78's lane R slot (batch ao); then the gate change (loop join + arm C "newest") built through the ten stages in lane G beside MB-73 (break (B)). PR-68-12 / O68-05's name join is superseded. Plan `MB-79/h/plan.md`; built, panelled and landed 2026-11-01 (`32c35ef9`, `f1b92f95`).
+  - (i) The pre-push summary prints each listed oracle entry (`path: old -> new [ruling #ref]`); today it prints only `path +n -m` (`pre-push-summary.mjs:54`, `row()`, called at :68; HARD_FLOOR at :8; owner MB-67). Until it lands, the orchestrator shows the operator the entries in chat before a door-using push (`MB-79/f/plan.md` 2.4).
+  - (j) [MR] Loop gate fail-open (K-1, found 2026-11-01 by the MB-79 (h) stage 8 panel, `MB-79/h/output-panel/adjudication.md`): at the hook default `--root .`, `extractRev` (`loop-gate-run.mjs:118-121`) links a self-pointing `node_modules`, the base-tree scorer fails, `baseRows` is null and the O68-04 note (`loop-prereg.mjs:64-67`) has no caller, so moves go unchecked silently (`notes: []`); totals are still compared (`loop-prereg.mjs:71-73`). M-321 (69a:455) needs "After the round the runner records expected against actual; an unexpected move is a finding, not a pass", and R-LZ (124a:1038) lands a commit "only when its prereg registers zero moves". Until fixed, every R-LZ record run uses an absolute `--root` (the CLI's flag, `loop-gate.mjs:15`), and its evidence names the base rows count (as `evidence/mb78-e2e.md` did: `baseRowsN: 698`); the gate's own output cannot show it today. Red first; stage 1.
+  - (k) [EP] K-2 (observation): the commit-time task (HEAD prereg) and the push task (trailer) can disagree with no flag (J13). Any cross-check is a new gate rule (R-BG); stage 1.
+  - (l) [EP] K-3 (observation): under R-MA one prereg can serve several rounds of one increment; nothing at the gate checks by freshness that each round has its own prereg (M-321, 69a:455: "Each CoA fix round pre-registers the rows it expects to move"). Stage 1.
+  - (m) [MR] Loop gate range check (found 2026-11-01 landing MB-78 + MB-30): `gate --ci --base origin/wf1/mb-rulings` over origin..`a23aca09` fails `input_not_bound: prereg-MB-30-1.json`, because the range check binds every changed code or oracle path of the range to the range's newest record, MB-78's round record (`loop-gate-context.mjs:351-353`, :392; `loop-record.mjs:189`), while R-MA (124a:1039) has a record read only "the landing task's prereg with the highest n (compared as an integer) among that task's preregs committed strictly before the commit that adds the record". origin..`0570417a` and `0570417a`..`a23aca09` are each GATE OK. Operator: "Two pushes now (Recommended)" (`CARD-push-two-step-1101.answered.md`): push origin..`0570417a`, then `a23aca09`; not pushed yet (origin `1c98d349`). (m) is fixed through the ten stages before the CI landing to main. Red first; stage 1.
+  - (o) [MR] Loop gate push mode reads HEAD, not the pushed sha (found 2026-11-01 when the operator's push of `0570417a` was refused): `gate.mjs --push` collects each pushed ref at its local sha (`gate.mjs:415-429`), but the loop arm gets only `--base` (`gate.mjs:37`, :430) and reads `base..HEAD` (`loop-gate-context.mjs:319`, `rangeNameStatus(root, base, 'HEAD')`), so a push of an older sha is judged on the worktree's HEAD. R-KP (124a:1025): "The trust anchor is the operator at pre-push"; the check the operator relies on must judge what is pushed. Operator: "Push 1 with HEAD at 0570417a (Recommended)" (`CARD-push-head-detach-1101.answered.md`); until (o) lands, any push of a sha other than HEAD is offered the same way, with its own card. MB-79 (f) briefs D3, D5a and D5b wait on (o)'s write scope (`MB-79/f/plan.md` §5). Red first; stage 1.
+- Serves: observable, standardized.
+
+**MB-81 Lock fail-open: the COMPUTE_MODULES check — WAITS MB-18 (lane M, one writer)** (M) · deepseek
+- Rules: R-DET extended to the compute module (Spec 134:123, wf1/mb78 tree); found by `MB-18/stage8/adjudication.md` Re-check 1, kept note K1.
+- What: make the `COMPUTE_MODULES` arm of `bylaw-provisions.infra.test.ts` fail when a listed module is missing; red first.
+- Done when: the lock is red with a module removed and green on HEAD.
+- Serves: observable, accurate.
+
+**MB-80 MB-64 increment-1 leftovers — RUNNING (detail next line)** (T) · deepseek per brief, claude grounding
+- Status detail (moved out of the heading 2026-11-01, WAIT-P67-2, so the heading carries one status word): stage 5 done 2026-11-01: GAP-1/2/3 answered, `CARD-mb80-gaps.answered.md`; fold `MB-80/fold.md`, re-validation `MB-80/fold-validation/`; ledger row `MB-80/ledger-draft.md` WAITS lane R after MB-78 commit 3 (it amends M-428, in commit 3).
+- Rules: `CARD-mb64-close.answered.md`; `CARD-o27-foot18.answered.md` (FOOT-18); MCPROOF-1 (coverage), M-414.
+- What (`MB-64/close.md`): (a) PERM-5 Basis wording "as quoted from the pinned file"; (b) FY-14: add the abutter as a dropped negative estimate with its distance within 15.0 m; (c) new SB-6, ring minimum 5 -> `not_evaluated:setting_out_of_bounds`, and the ring depth bounds 2..4; (d) FOOT-18 kept as a pending example outside the accuracy key until R3-10 has real bounds and a fitted factor (operator); (e) O-12 and O-13 (golden field names; lot inputs vs keyed golden facts), carried from MB-64; (f) a machine token for "ring not used".
+- Done when: each item is changed and re-checked by an independent seat, or answered.
+- Serves: accurate, understandable.
+
+**MB-18 Layer 2 rule fixes and missing rules — RUNNING (stage 7 partial; held items WAIT MB-78, MB-79 (h) build, MB-79 (f))** (M) · deepseek, claude for re-pins · absorbs v2 MB-20, MB-21, the ravine keying of MB-51, and MB-45e
+- Rules:
+  - M-180(1) (69a:295); MB17-Q1R, MB18-R1 (`CARDS-2026-10-30.answered.md`); M-158 (69a:261).
+  - The 2026-10-18 dated note on M-182/M-191: "On an unmapped lot (B) already gives no coverage, so (D) adds nothing" (69a:329).
+  - M-339, M-340 (133:1462, :1466); LC-68 (133:1794); M-220.
+  - M-365, M-366 (133:422, :546); M-342, M-344 (133:1474, :1482); M-334, M-349; M-335, M-337, M-338, M-346, M-347, M-350, M-351, M-353..M-355.
+  - M-371 (69a:507); the ravine clauses 5.10.40.70(6), 5.10.40.80(1), 5.10.40.40(1) (SC-Q4).
+- What:
+  - (a) Land the MB17-Q1 reversal (artifact: `mb26/held/q1r-wip.patch`, prereg 8fadc19f) as a new commit.
+  - (b) D2 at `evaluate.mjs:249` (a Layer 2 evaluator finding, first noticed by MB-62; fixed against the by-law text, not the MB-62 values).
+  - (c) M-339 fixtures, the M-340 list, LC-68 defaults.
+  - (d) Existing-lot minimums move to the verdict layer.
+  - (e) G-EXC-LIT over the Layer 2 closure (SC-14).
+  - (f) One sub-task per missing-rule group (MB-18a…), including the 10.5.40 round.
+  - (g) The Layer 2 targets the catalogue rows need, taken from the "What we calculate" table, increment by increment (`phase3-literals.json` is reference only, retired in MB-43; it is not a work list).
+  - (h) RB-D10 closed.
+  - (i) Red-first check of `building_depth_m` / `building_length_m` `not_evaluated` `existing_building_facts:lot_frontage_m` on lots whose frontage is held (A0067 = parcel 205238): fixed in Phase 2 if it is a defect, else the reason is documented. Before increment 1.
+  - (j) The Phase 2 fallback target `front_setback_fallback_m`: the zone x.40.70(1) front setback stored with its clause on every lot, so the front-yard chain's last step reads a stored value. Before increment 1.
+  - (k) `averaging_distance_m`: key the 15.0 m by the M-75 hook (RL-7 answered (a), with L31-13; `MB-18/plan.md` section 16). Lands before (j).
+  - (l) Re-key the stored R-zone side-yard cell from 0.45 to 0.9 (10.10.40.70(3)(A); `CARD-side-yard-city.answered.md`), with pre-registered moves. The expected-25 moves are in `MB-64/r-side-yard-move.md`.
+  - (m) Exception RD 21: 135 m2 + 25 % of lot area, up to FSI 0.5. Phase 2 stores only 0.5, so 1,597 of 2,729 x21 lots over 540 m2 are overstated (lot 281681 should be 0.4435). Red-first.
+  - (n) 10.5.30.21(1): on a lawfully existing lot, its own frontage is the minimum lot frontage (a 3.0 m lot gives a 0.6 m side yard). Phase 2 does not apply it; stored side yards on RD lots of 2.9–3.4 m are mostly 1.2 m or 0.9 m (MB-64 FOOT-11/12, review round 2). First a reading check against permits and CoA (as for PERM), then a card if the stored band is wrong.
+- Tests: `bylaw-mb18.logic` (12 cases); D2 vectors (A0553, A0578 status `unregulated`, red on HEAD); one red-first test per group.
+- Start small: before increment 1 only (a), (c), (d), (e), (i), (j) and the Layer 2 targets increment 1 reads; (b) D2 (houseplex and suite coverage), each (f) group and each (g) target enter with the increment that first needs it (MB-27), never earlier. Items (k)–(n) (added 2026-10-31): (k) before (j), as its plan says; (l), (m) and (n) each pass stages 2–5 first, and their increment is set in their plan.
+- Done when (increment-1 scope ONLY, final validation fix): (a), (c), (d), (e), (h), (i), (j) and the Layer 2 targets increment 1 reads have landed with their pre-registered moves met; floors unchanged or up. (b) D2, each (f) missing-rule group and each later (g) target are NOT part of MB-18: they are MB-27.L2 sub-items of the increment that first needs them. Items (k)–(n) are not in this done-condition until their plans set it.
+- Serves: accurate, scalable.
+
+### (3) The step
+
+**MB-31 The Layer 3 step: tables + the evaluator extension — WAITS MB-18 landed (build); plan fold of GAP-3 A and the :347/:244 fix running 2026-11-01 (`MB-31/fold-1101.md`)** (O-3 blocks only the houseplex increment, M-397; G-1 ruled by LC-69 + M-413; corrected 2026-11-01) (E) · deepseek; claude for settings seeds, migration 287, registry entries · absorbs v2 MB-22, MB-23, MB-25 (CoA status), MB-65
+- Rules:
+  - **M-61** (69a:121) and **M-72** (69a:132), with their dated notes;
+  - M-378, R-KF, R-KJ, and the dated notes on LC-16, LC-21, LC-48 (each recorded here with its lock); cards S-1, S-2, G-1;
+  - LC-15 (131:58); D-1 (78:693); the step standard 132:277, 132:157 (Spec 78 P5.11 is reference for the check list only);
+  - LC-60 "Every CoA form ships `coa_status = not_evaluated:coa_factor_unfitted:<form>`" (131:110); M-341 (133:1470); M-345 (69a:479); M-348 (2).
+- What:
+  - (a) Extend `evaluate.mjs` per M-72, the WF that rule names: unit algebra, `l2()` with its statuses including `unregulated` and `unlimited` (F-48), `lv()`, `floor`/`ceil`/`round`, alternatives as `max`. No other function.
+  - (b) The tables: building types, the formula catalogue (M-61 form plus `applies_to`, `clauses[]`, `status_map`, `example_ids[]`, `switch`), settings declared in `scripts/seeds/logic_variables.json` (claude), and the switchboard.
+  - (c) The step, built fresh (R-KJ): descriptor, shell, the switchboard filter, catalogue rows run through the evaluator, results with trace written as JSON for the loop. Migration 287 is written fresh (the untracked `~/Buildo-wt-p3plan` copy is reference only; applied at MB-35).
+  - (d) The catalogue holds the increment-1 rows of the "What we calculate" table only.
+- Tests:
+  - `bylaw-p3-dsl.logic` (M-72's planned lock);
+  - `layer3-catalogue.logic` (every field has a row; every input resolves; every switch id exists);
+  - `switchboard.logic`;
+  - `step-closure.logic`;
+  - `no-retired-import.logic`;
+  - MB-64's `pending/` tests move into the loop set as they pass.
+- Scope: the tables, evaluator extension, switchboard and step are built once; the catalogue and building-type tables hold **only increment 1** (detached house, core numbers). Later rows are added in MB-27, one increment at a time.
+- Done when: **every increment-1 worked example passes** (F-47); SC-17 = 0 and SC-18 = 0 for the rows present; `step-validate --step=compute_maxbld_scenarios --fast` prints the five words.
+- Serves: standardized, observable, scalable, understandable.
+
+### (4) The loop
+
+**MB-27 Expand in the loop, increment by increment, to the MB-13 thresholds — WAITS MB-31, MB-26, OPERATOR (O-14)** (E, T) · deepseek for row edits, claude for harness runs
+- Rules: the dated note on M-61 (3); M-362 (69a:498); M-325; M-330 (69a:464); M-372..M-374; M-307; M-380.
+- What:
+  - Each round edits catalogue rows, settings or switches, never step or evaluator code (a new grammar form is an M-72 ruling).
+  - Each round is pre-registered, then run on the stored Layer 2 rows (D-1).
+  - The result is compared with the last accepted run, then accepted with a reason or reverted.
+  - After K rounds without the thresholds, an operator card.
+  - Absorbs v2 MB-45c (the owed floor lines).
+  - **MB-27.L2 (Layer 2 changes a later increment needs):** MB-18 (b) D2 (the D2 rows' status becomes `unregulated`, F-15, before increment 3), each MB-18 (f) missing-rule group and each later (g) target. Each one is red-first, pre-registered, and loaded by a Layer 2 night run under the MB-26 procedure (dump first, operator go) BEFORE its increment's first round. This removes the MB-18 → MB-27 cycle (final validation).
+- Order: increments 1 → 8 of the table above. Each adds one thing and enters only when the previous one is green. A round that adds two things at once is refused by review and by the loop record (one increment id per round).
+- Done when: increment 8 is green: the MB-13 thresholds are met on the regression set (SC-19) and hold on the CoA 172 / 4d / cumulative sets; the OWED floor lines PASS; the closeness threshold is recorded before MB-28.
+- Serves: accurate.
+
+### (5) DB nights and the proof set
+
+**MB-30 Night tools, rebuilt through the path — DONE 2026-11-01 (MB-30@a23aca09, panel record `f64eca7a`; pushed to origin/wf1/mb-rulings `3fde1015`; stage 10 not run by the checker: MB-73 is not wired, so a person wrote this line, a deviation from stage 10)** (D; R only for the register rows) · claude (DB tooling, reason logged)
+- Rules: M-368 (133:1554); R-KM.
+- What: rebuild through the full process (58610707 is reference only); wire into `n3db.cjs` (re-freeze NIGHT3.sha256). Permit work stays out.
+- Done when: landed with its panel record; one night proven on the dev DB (DISABLED and RE-ENABLED in the logs; `|1` count = table count).
+- Serves: observable, accurate.
+
+**MB-26 The first Layer 2 night (later Layer 2 nights for MB-27.L2 follow this same procedure) — WAITS MB-18 landed (MB-30 merged and pushed 2026-11-01) (operator go given, `CARD-mb26-go.answered.md`)** (D) · absorbs v2 MB-53, MB-54, MB-55, MB-56, MB-45d and MB-45f as sub-items MB-26a–f
+- Rules: Spec 134 §7–§9 (134:77-150); the per-patch rules: M-285 (street name); 134:91 I10 with MB54-Q (neighbour data stays undecided in Layer 2); MB55-Q; CHAT-206 / M-158; M-369 / MB45d-Q3U; f6542f03 (`content_hash`).
+- Artifacts, one per sub-item, from `mb26/held/`:
+  - MB-26a `MB-53.patch`, prereg 0544c257;
+  - MB-26b `MB-54.patch`, prereg 9e5814d2;
+  - MB-26c `MB-55.patch`, prereg f2a869f7;
+  - MB-26d `MB-56.patch`, prereg ff5adef7;
+  - MB-26e `MB-45d.patch`, prereg 915e64c5;
+  - MB-26f MB-45f (not yet built; built and pre-registered before the night).
+- What:
+  - Take a DB dump first (F-22).
+  - Apply the patches in README order, each as its own commit with its own panel record (F-35).
+  - A failed patch is dropped: the dump is restored, the night reruns without it, and the dropped patch stays HELD and rides MB-35 (F-44).
+  - The night itself gets an OUTPUT panel record.
+- Done when: each applied patch's pre-registered moves are met; dropped patches are listed; **Spec 134 I2 and I10 pass on the Layer 2 table** (F-30).
+- Serves: accurate, observable.
+
+**MB-35 DB night: load the scenarios — WAITS MB-27, MB-30; operator go** (D) · claude
+- Rules: LC-15 (131:58); R-DK net-new evidence set (Spec 132 §x-stages.3).
+- What: take a DB dump first (F-44); apply migration 287 (written fresh in MB-31) and the settings seed migration; run the step; capture the R-DK evidence set; land any patch dropped from MB-26.
+- Done when: loaded count = computed count; step gates green; `standard=V3` printed.
+- Serves: observable, accurate.
+
+**MB-28 Proof set and the oracles — WAITS MB-27, MB-35, OPERATOR (O-15)** (O, A) · absorbs v2 MB-29
+- Rules: M-362 (69a:498); M-357 (133:806); Spec 78 §6.9 oracle row (78:582, the list of oracle kinds).
+- What:
+  - At least 25 fresh cases and 130 rows; manifest and denominator hashed before the run.
+  - Never used for fixing; run once.
+  - Then the oracles: CoA decisions, no-CoA new-build permits as a lower bound, expert hand lots, neighbourhood p90.
+  - A failure returns to MB-27, and a new proof set is keyed up to the O-15 limit.
+- Done when: the MB-13 thresholds are met on the proof set; each oracle is met or each exceedance classified.
+- Serves: accurate.
+
+**MB-46 Record Phase 3 CLOSED — WAITS MB-28, MB-73** (R) · absorbs v2 MB-45a
+- Rules: M-362 (69a:498); SC-5.
+- Done when: the MB-13 thresholds on the proof set are recorded in 69a, with evidence checked by `mcbylaws-queue-check.mjs`. Nothing else is part of the exit (F-46).
+- Serves: observable, accurate.
+
+---
+## FOLLOW-ON (after the exit) — 7 tasks
+
+**MB-38 Shadow and switch-over, groups 1–4 — WAITS MB-46** (P, E) · absorbs v2 MB-32, MB-33, MB-36, MB-39, MB-40, MB-41
+- Rules: M-71 (69a:131); M-348 (1); M-352 (133:1506); M-329 (133:1426); lc.50 (133:1738); M-371 (69a:507); LC-31.
+- What:
+  - Build the shadow classifier fresh (the old one is reference only).
+  - Build the CoA→parcel link gate and the consumer gate.
+  - Then run each group in order (setbacks; coverage; height and storeys; FSI/GFA): shadow on the 20,000-lot sample with `unexplained` = 0 and `layer3_defect` = 0, switch with source flags, recapture derived stores, switch-back flag tested red-first.
+- Done when: per group, the gates are green and the product reads only the new fields.
+- Serves: accurate, observable.
+
+**MB-37 Hide the old numbers until switched, rebuilt through the path — WAITS MB-67, MB-68, OPERATOR (O-7)** (P)
+- Rules: M-367 (133:1550); R-KM.
+- What: ba2d8ee6 is reference only.
+- Done when: landed with its panel record; no number changes value.
+- Serves: understandable.
+
+**MB-42 Product inputs — WAITS MB-38** (P)
+- Rules: the "What we calculate" table (the inputs its rows read); M-312, M-326. (Spec 78 P5.3 / P5.6 are reference only.)
+- What: the user inputs the catalogue reads. The app reads the same catalogue rows.
+- Done when: each input changes the result in a test.
+- Serves: accurate, understandable.
+
+**MB-43 Retire the old calculation — WAITS MB-38, operator OK** (P)
+- Rules: M-371 (69a:507); Spec 78 O-11 (78:705); card P3-DATA-MODEL ruling 2.
+- What: delete `scripts/lib/max-build.js` paths, the MB-07 consumers and the reference-only Phase 3 code (audit §7).
+- Done when: the MB-07 search and the retired-reference list find 0 files.
+- Serves: standardized, understandable.
+
+**MB-44 The Phase 3 report, with in-force basis — WAITS MB-38** (P) · absorbs v2 MB-34
+- Rules: P-1 (69:102); M-320 (133:1394); M-324; LC-60.
+- What: per lot and type, the maximum building, formula rows, settings, switches, by-laws with clause and in-force status, and the CoA tier status.
+- Done when: the P-1 report test is green; in-force basis is verified for catalogue clauses, or a card goes out if more than 10 % are unverifiable.
+- Serves: understandable, observable.
+
+**MB-57 Lot data not held: TRCA line, map layers, lane length — OPERATOR (O-5)** (D, O) · absorbs the source half of v2 MB-51
+- Rules: M-371; SC-Q4; M-224; MB-57-LANE.
+- What: if a regression or proof case rests on one of these facts, MB-27 raises it as a loop finding.
+- Done when: each layer is acquired as a source step or disclosed as not held.
+- Serves: accurate, observable.
+
+**MB-11 Save and clean worktrees; process debts — WAITS MB-67** (A, O) · absorbs v2 MB-47
+- Rules: R-KL; the v2 MB-11 removal rule; `tasks/lessons.md:222`.
+- Done when: the pre-push summary shows 0 unsaved McBylaws worktrees; the four local-only branches are pushed by the operator or saved as patches.
+- Serves: observable.
+
+---
+## DONE (commit checked to exist, 2026-10-30: 56 of 56)
+- MB-01@b2b7d622 MB-01@2b8dac34, MB-02@2b25c035, MB-03@54ac0b34 (+03b MB-03@63d33585), MB-05@2adb5671, MB-06@05464257, MB-07@2b25c035, MB-08@788fc42c MB-08@7298c7ec MB-08@46e46429, MB-09@5995911c, MB-10@fec1d070, MB-12@08f86779, MB-13@2adb5671, MB-19@2adb5671, MB-48@2adb5671, MB-49@2b25c035, MB-52@2b25c035, MB-58@573a6cdf, MB-59@2826a4e2 MB-59@e4c8b520, MB-60, MB-62@2b25c035 (its hand values are reference only, not expected answers).
+- MB-14, MB-15, MB-16, MB-50a, MB-50b: history only.
+  Note on the two lines above: the code of MB-14, MB-15, MB-16, MB-50a and MB-50b is reference only and retired in MB-43. The MB-15 harness is reference only; the T-lane loop tool is the MB-68 gate, which calls only the step. Each sha is the commit that did the work, stamped 2026-11-01 (WAIT-P67-2, R-KW); every stamped sha is on wf1/mb-rulings. MB-10's sha is the tip it verified and the operator pushed; MB-13, MB-19 and MB-48 are answered cards recorded in 2adb5671. MB-02, MB-07, MB-49, MB-52, MB-62 and MB-64 had no commit (their work was files under `~/Buildo-scratch`); their evidence is tracked in `mcbylaws/sources/evidence/<MB-id>/` by 2b25c035 (operator, `CARD-queue-tracking-1101.answered.md` Q2), and that commit is their sha.
+  Open 2026-11-01 (WAIT-P67-2): MB-14, MB-15, MB-16, MB-50 (50a, 50b) and MB-60 carry no sha. Their commits (949879c2, ab659a9a, 93feac54, b425074b, 2131f09d) are on local wf1/p3-engine only: on no origin ref and no ancestor of wf1/mb-rulings. R-KW: "each DONE entry is written MB-nn@sha and never rewritten"; R-KK: "every DONE line's commit exists on its branch". Whether those commits stay is MB-11 (the operator's keep, push or archive call on the unpushed p3-engine commits), so they are stamped only after MB-11 decides; the queue check lists them until then.
+
+## Held work (one artifact per task; MB-67 adds the count to the pre-push summary)
+| Task | Artifact |
+|---|---|
+| MB-18 | `mb26/held/q1r-wip.patch` (= `q1r-code.worktree-2026-10-30.patch` = the p3-model worktree diff). Reference only: `mb26/q1r-code.patch`, `mb26/held/MB-18.patch` (sequence-check copy). |
+| MB-26a–e | `mb26/held/MB-53`, `MB-54`, `MB-55`, `MB-56`, `MB-45d` `.patch` (+ `.generated.patch`); `aux/` informational |
+| MB-26f | none yet (MB-45f not built) |
+| MB-64 | reference only: `mb64/held/mb64-uncommitted.patch` (prereg 92f6e82f), `p2close/mb17/*` drafts |
+| MB-30, MB-37 | reference only: 58610707, ba2d8ee6 |
+| MB-11 | `~/Buildo-wt-p3plan` untracked files; `p3build/p37-save/` |
+
+## Order of work (start small, then expand)
+1. O-1 → MB-66 → MB-67, MB-68.
+2. Increment-1 inputs only: MB-64 (increment-1 parts, O-10), MB-18 (increment-1 parts), MB-30 → MB-26 night.
+3. MB-31 (tables, evaluator extension, switchboard, step; increment-1 rows).
+4. MB-27: increment 1 green on the 25 → increments 2–6 (one building part or type each) → 7 (thresholds on the 25) → 8 (CoA 172 / 4d / cumulative).
+5. MB-35 night → MB-28 proof set (increment 9) → MB-46 exit.
+6. Follow-on: MB-38 (increment 10, all lots, by field group) → MB-42, MB-43, MB-44; MB-37 after O-7; MB-57, MB-11 any time.
+
+**MB-74 Take the rule map out of the Layer 2 version hash — WAITS MB-18 items a, c, d, e, h, i and k; card ANSWERED 2026-10-30 (option A, `CARD-mb74.answered.md`) (R, then M)** · found 2026-10-30 on the first wf1/mb-rulings push
+- Problem (executed): `table_version` hashes every file under `scripts/analysis/bylaw/`, including `_schema/bylaw-rule-map.json`, which every ruling batch regenerates. So a docs-only batch moves Layer 2 version, the CoA pins go from PINNED to informational (coa-scorecard.logic red), and the amendment index stamp drifts. Fixed once by operator-approved re-pins (CARD-push-fixes, `cf5e707c`).
+- Proposed: exclude `_schema/bylaw-rule-map.json` (generated metadata, not a Layer 1 input) from the `table_version` recipe (Spec 134 §2 / R-IW). This is a code and recipe change, so it needs a card, then the full Spec 08 path.
+- Done when: a ruling-only batch leaves `table_version`, the pins and the amendment index unchanged (a red fixture shows it).
+- Serves: observable, accurate.
+
+## Close-out: did we do what we said? (airtight enforcement)
+Operator, 2026-10-30: "a final section in the plan to make sure we did everything we said we did and it didn't become a mess - airtight enforcement" (`CARD-plan-1030-approval.answered.md`).
+
+**MB-73 The promises check, run from the first increment until Phase 3 closes — RUNNING (wiring: next line)** (G, then R at close) · deepseek for the checker; independent seat at close
+- Status detail (moved out of the heading 2026-11-01, WAIT-P67-2, so the heading carries one status word): the build is RUNNING; its wiring WAITS WAIT-P67-2.
+- Rules: R-KK (status is checked, not hand-kept); R-BF "generated or witnessed, never hand-kept" (124a:243); Spec 08 §11.1 (no claim that could be executed but wasn't, 08:442); 68 §5 (no row typed by hand).
+- What:
+  - **(a) The promises register, generated, never hand-written.** `mcbylaws-promises.mjs --write` reads this queue and HANDBOOK-AMENDMENTS.md and lists every promise id: rules R-KF…R-KN, M-377…M-384, the dated notes, R3-01…R3-11, guardrails G1–G13, BOOT-1, every increment, every answered decision (O-1, O-17, O-18, S-1, …), every withdrawn task and every "Not doing" line. Each promise carries the enforcing artifact named in its row (a test file, a hook arm, a step-validate check or a loop record). A promise without one is a FAIL.
+  - **(b) The check, run mechanically.** `mcbylaws-promises.mjs --check` FAILS when any of these is true: a promise has no artifact; the artifact file does not exist; its last run in the loop/regression output is not green; a DONE task's commit is missing or not on the branch; a withdrawn task has new commits; a "Not doing" item has code; an increment is marked green while a promise in its scope is red. It runs at pre-push (the operator sees the result), in CI, and at every increment boundary.
+  - **(c) Drift monitors, in the same check.** Any import of, or input from, the old engine or its harness (wf1/p3-engine, `maxbld-*.js`, `renovation-shared.js`, `runMaxbldScenarios`, `dumpall.mjs`, `blind-run-parcels.json`); any by-law literal in step or evaluator code (G13); held patches over N (O-6); McBylaws worktrees with uncommitted changes (G11); any Layer 3 number not traced to a stored Phase 2 row, a catalogue row and a setting (R3-02). Each is a FAIL, not a warning.
+  - **(d) A one-page status at each increment boundary**, written by the check, not by an agent. For every promise in scope: done / red / not yet, each with its evidence. It goes to the operator before the next increment starts.
+  - **(e) Close-out audit before MB-46.** A seat that wrote none of the Phase 3 code, plus the DeepSeek lens set, re-executes every promise from a clean checkout and quotes its evidence. Any "said but not done" is a STOP that returns to the operator, never a note.
+- Tests: red fixtures, one per FAIL condition in (b) and (c) (for example, a fake DONE line with a missing commit, an import of `maxbld-main-building.js`, a promise without an artifact); `mcbylaws-promises.logic.test.ts`.
+- Done when: the check is green at every increment boundary, and the (e) audit shows 0 unmet promises.
+- Serves: observable, standardized, accurate.
+
+**Round-4 rules (DeepSeek round 4 on the post-round-3 sections, 2026-10-30, `ds/r4/`; 35 CRITICAL/HIGH, none changes the approved direction). These bind SIX-COA, the options list and MB-73:**
+- **R4-01 Routes are Phase 2's and complete.** `as_of_right` (overlay or major street), `coa_required` (a minor-variance route), `not_permitted` (the zone does not permit the type, or a lot gate applies, each with its reason). The route uses every Phase 2 condition for the class, never one flag. The major-street route stays `unconfirmed` and is shown as `unconfirmed` (never `as_of_right`, and never relabelled `coa_required`, because outside the overlay the major-street route is the apartment-building permission, not a houseplex one; grounder r4) with a note until `on_policy_road` is verified against the by-law's major-street map: an unverified equivalence never earns an as-of-right label.
+- **R4-02 Varied clauses are a list, per option.** It covers the permission (10.20.20.40(1)), any option-dependent limit (for example 600.60.40(2)) and the O-3 FSI reading where it applies. The 5–6-unit class uses its own stored Phase 2 limits per route and option, never the 2–4 houseplex's.
+- **R4-03 Precedent is classified before it is shown.** The precedent query runs on classified applications only. It shows approved AND refused counts, and splits by the date the governing amendments came into force. Until classified it is not displayed. The SIX-COA oracle tests route classification only where an examiner notice cites the permission clause (`coa_notice_variances`), never "approved therefore required".
+- **R4-04 Options and headline.** Options are generated per lot from stored Phase 2 rows. A 3-storey option needs a stored `not_applicable` or `unlimited` storey cap with its clause (`unlimited` is stored on 107,124 lots; grounder r4); an undecided cap gives no option (R3-01). The headline is the largest option under the capped O-3 reading, with the uncapped reading shown beside it. It is ranked by GFA, the by-law measure the applicant is compared on, and the basement's livable area and units are shown on their own line, never hidden. EXC-FSI is due before the houseplex increment closes, and the dual reading also applies to SIX-COA.
+- **R4-05 The basement is read, not assumed.** Whether it is excluded from GFA, whether it counts as a storey and whether its units count all come from the Phase 1/2 rows. Site conditions (groundwater, depth) are not modelled and are disclosed as a site fact (M-169). A0277 is a test case, not the template.
+- **R4-06 S-1 direction.** S-1 is the minimum floor-to-floor plus a declared roof/parapet allowance (both cited, or a card). This gives the theoretical maximum storey count (a design choice taken as met and disclosed, M-172). The 2-storey option is always shown beside it. This replaces the earlier "typical storey height", as the operator directed ("calculate and show both").
+- **R4-07 The literal gate covers all Layer 2/3 code and data modules** except the declared catalogue, settings and switchboard files. Numbers quoted in this plan are for reading only; at run time every one is read from Phase 2.
+- **R4-08 Trace is written by the evaluator from what it actually read** (row ids resolved at run time), never tagged by code.
+- **R4-09 Allowlists, not denylists.** The Layer 3 step may import only the evaluator and the declared helpers (closure test, G1), and may read only stored Phase 2 tables, the catalogue, settings and switchboard (an input allowlist checked at run time). Anything else FAILs, whatever its name.
+- **R4-10 MB-73 cannot be gamed by a green from the past or an empty test.**
+  - Ids are found by pattern in every file the queue cites, including the answered cards (CARD-*.answered.md), not by typed ranges.
+  - Each green is bound to (artifact blob hash, input hashes, commit), and any change invalidates it.
+  - Each promise's test has the red run already required (red-first); skipped is never green.
+  - Increment scope is read from the register row, not declared by the author.
+  - The check is a required status at landing and in CI, as well as at pre-push.
+
+## Open operator decisions (each in the WAITS graph; every default is a PROPOSAL)
+| # | Decision | Blocks | Proposed default (operator decides) and reason |
+|---|---|---|---|
+| O-1 | Approve the amendments, this queue and the four audit proposal drops; commit `mcbylaws/APPROVED`. | MB-66 | Approve as a set. |
+| O-3 | Interim RECORDED (M-252 dated note 69a:405, LC-21 note 131:64, M-397 69a:538). OPEN: D1: does x1462 cap the houseplex FSI on A0067, A0094, A0166, A0170? | the houseplex increment (not increment 1) | REVISED 2026-10-30: show BOTH readings. The headline is capped and the uncapped reading is shown beside it, until a research card (EXC-FSI) is ruled. Reason: x1462 (A) reads "a lot with a dwelling unit in a permitted building type", which applies to the lot directly, not "under 10.20.40.1(6)"; 10.20.40.1(7)'s more-permissive rule compares only against what applies "under regulation 10.20.40.1(6)" (M-252). City practice: A0062/25SC (RD x156→x1462, duplex conversion, decided 2026-09-17, after 648-2025): the examiner required an FSI variance under 900.3.10(1462) (0.6 required, 0.76 proposed). EXC-FSI collects every houseplex CoA notice on an FSI-arm exception lot first. |
+| O-4 | ANSWERED by recorded rows (corrected 2026-11-01): S-1 = 2.3 m (OBC Table 9.5.3.1) + 212 mm floor assembly, roof allowance = one assembly + 0.3 m; S-2 = 0, disclosed (`CARD-wave0-approval.answered.md`, M-404, M-405 69a:542). G-1 ruled: LC-69 (131:119, box shape disclosed, `footprint_shape_factor` 1.0, switch off) and M-413 (69a:550, G-1 exactly as printed under "Increment 1"). Residual: no row covers a lot that is not four-sided beyond the triangle disclosure (M-212, M-407); raised in MB-31 if met. The width axis waits for the options increment (M-413). LC-69 (OWED MB-31) and M-413 (OWED MB-64) are cited by a step commit only when their locks land in the same commit (R-KG 124a:1015). | MB-31 | — |
+| O-5 | The "along a lane" distance. | MB-57 | 3.0 m, half the 6.0 m minimum lane (10.5.30.20(2)(A)), as a setting, disclosed. Reason: no cited figure exists. |
+| O-6 | N, the held-patch limit. | MB-67 | 12 (today's count), and it only falls. Reason: a lower N would block work already held. |
+| O-7 | MB-37: the `opt_aor_*` / `opt_coa_*` headline. | MB-37 | Label it "being recalculated" and leave values unchanged. Reason: hiding it flips the basis label. |
+| O-10 | ANSWERED 2026-10-31 for increment 1: the operator closed MB-64 ("consider it closed", `CARD-mb64-close.answered.md`); MCPROOF-9 (dated note on M-358, MB-78 batch) governs later increments. | MB-64 | — |
+| O-12 | Golden field names. Compliance 2026-11-01: the per-figure shape complies with M-327 (69a:461); the measure names must come from the calculator's own field list (M-327; the Layer 3 catalogue field list, built by MB-31), not a hand-made schema. | MB-80 (item e) | The `proposed-25.json` per-figure shape, with names from the catalogue field list once MB-31 builds it. |
+| O-13 | Lot inputs vs the keyed golden facts. Corner flag ANSWERED by M-421 (69a:558; `CARD-wave0-approval` PR-13); M-308 also names the corner flag, so the M-308 scope note covers it too. OPEN for frontage, depth and area: the default conflicts with M-308 (69a:438, the scorer reads survey dimensions); a ruling (a dated note scoping M-308) is needed before MB-80 (e). | MB-80 (item e) | Score on parcel data and report each difference as a named input finding. Reason: users see the parcel data. |
+| O-14 | K, loop rounds before a card. | MB-27 | 3. Reason: a fix and one correction per finding; a judgement, not a measured value. |
+| O-15 | Proof-set re-keys allowed. | MB-28 | 1. Reason: each re-key costs the operator 25 or more new cases. |
+| O-17 | P2-OPT: Phase 2 stores one result per design option (roof form; suite low/tall), the option being a key like class. | MB-18, MB-31 (from the first increment that needs a design choice) | Yes. Reason: within an option the cells are decided ("we know where the house is for this option", operator 2026-10-30); without it those cells stay `not_evaluated` and R3-01 blocks every result that reads them. |
+| O-4 note | SETTLED by recorded rows (2026-11-01): M-405 S-2 = 0, so 6.3 m gives 2 storeys ((6.3 − 0 − 0.512) / 2.512 = 2.30, M-404); M-391 (69a:528) leaves the suite's storeys to the cap Phase 2 stores (150.7.60.40(2)). Original note: S-1/S-2 also set the suite's storeys (SUITE-ST: "the same derivation the principal building uses"). | MB-31 | Was a flag for the operator: if the first-floor height S-2 applies to a suite, 6.3 m can give 1 storey, not the 2 in SUITE-ST's example. That halves the suite cap (150.7.60.50(4): 60 m² for one storey, 120 m² for two). Decide S-1/S-2 for the suite together with the main house. |
+| O-18 | SIX-COA: model the houseplex 5–6 on every relevant lot as as-of-right (overlay / major street) or a CoA route (elsewhere), with precedent evidence. | MB-27.L2, the sixplex increment | Yes, permission-variance only. Reason: A0277 and the CoA trend; it never presents a CoA build as as-of-right. |
+| O-16 | Withdrawn. | — | `search()` came from the old engine's P5.5 depth search. The rear-suite increment raises a card if the grammar cannot express what the clauses need. |
+| O-19 | SB-3 reason token `not_evaluated:setting_out_of_bounds` (new; no clash in 69a, 131, 133 or vocab). | MB-64, MB-31 | Adopt it into the M-64 closed reason list. | **ANSWERED 2026-10-31: approved** (`CARD-o19-o21.answered.md`).
+| O-20 | FOOT-18 flag for the R3-10 switch: lane T proposes `shape_calibration_disclosure`; the planned names are `shape_calibrated`, `setting_not_fitted`, `switched_off` (`MB-31/adjudication.md:47`). | MB-64, MB-31 | Use the planned `shape_calibrated` set. | **ANSWERED 2026-10-31: approved** (`CARD-o19-o21.answered.md`).
+| O-21 | SB-5: ring minimum above ring depth makes the ring unusable. Add a cross-bound, or accept the fallback with a "ring not used" flag? | MB-31 | Accept the fallback and show the flag. | **ANSWERED 2026-10-31: approved** (`CARD-o19-o21.answered.md`).
+| O-22 | SETTLED by recorded rows (2026-11-01): LC-46 stays not citable (Spec 133 §4 history; R-KG 124a:1015; LC-59(2) 131:109). Cite M-207, M-212, M-213 and LC-59(2) instead. | MB-79 | — |
+| O-23 | ANSWERED 2026-10-31 "0-23 approved" (`CARD-o23-repin.answered.md`): the one re-pin in MB-78. | MB-78 | — |
+| O-25 | ANSWERED 2026-10-31 "yes copy" (`CARD-o25-sources.answered.md`); done in `1c98d349`. | MB-73 | — |
+| O-26 | ANSWERED 2026-10-31: option 2 now (a zero-move commit lands with a `revert` round record of increment 1; recorded as R-LZ in MB-78 `8a81d014`), option 3 queued as MB-79 (f) (`CARD-o26-loop-arm.answered.md`). | MB-78, MB-18, MB-79 | — |
+| O-27 | ANSWERED 2026-10-31 "confirm all if in compliance with handbook" (`CARD-o27-foot18.answered.md`); 13 of 13 clauses and SIDE-3 COMPLY (`MB-78/verify.md`). FOOT-18 kept pending (MB-80). | MB-78, MB-80 | — |
+| O-28 | The prereg naming for R-LZ landings: round 1 needs a new `prereg-MB-<n>-1.json` (MB-78's `-1` is taken and frozen), e.g. `prereg-MB-79-1.json`. (1) use that name; (2) the same plus a dated note on R-LZ / record PR-68-12 that the file-name number is a round slot and the prereg's `task` names the task; (3) change the tool to join on task. Map: `MB-79/loop-arm-map.md` section 11. | MB-78, MB-18 | **ANSWERED 2026-11-01** (`CARD-o28-prereg-name.answered.md`, second and third answers): "I approve the panel decision as long as it in compliance" (panel: option h-2 complies after its edits, `MB-79/h/adjudication.md`) and "(B) Lane G limit (Recommended)". History: the first answer was conditional, "option 2 as long as it complies with the governing spec or handbook"; option 2 does NOT comply with R-KV (124a:1039, "one file per task"; lane R check on the card). The proposed alternative path is also NOT COMPLIANT as proposed (`MB-78/compliance-o28-path.md`: it amends R-KV without an operator answer); a new verbatim answer was owed (the second answer). The ruling card comes from MB-79 (h) stage 1. |
+| O-29 | Must a ruling the MB-79 (f) door relies on already be on GitHub (`refs/remotes/origin/*`, so the operator approved its push) before the prereg? It stops an agent that only commits locally; it does NOT stop an agent with a shell that fakes a ref under `refs/remotes/origin/`, and it is not evaluated in CI (`MB-79/f/fold-validation/cross-read.md`). The real control is the operator reading the listed entries (shown in chat until item (i) lands) before the push. If no, the door records a citation for review and refuses only an edit whose citation, ruling or case token does not exist. | MB-79 (f) | **ANSWERED 2026-11-01** "0-29 yes" (`CARD-o29-door-pushed.answered.md`). |
+| O-30 | (OQ-7) MB-18 item a changes A0399's expected side yard 1.2 -> 0.6. Its ruling M-180 (`CHAT-210.MB17-Q1R`) names A0399 but not 1.2 or 0.6. Accept M-180 as the door's authority for item a, or first record a dated note on M-180 naming the old and new values? | MB-79 (f), MB-18 a | **ANSWERED 2026-11-01** "0-30 dated note first" (`CARD-o30-m180-note.answered.md`); draft in `R-batch-ao/drafts.md` (0.6 from M-180(1)). |
+
+Answered 2026-10-30 (`CARD-plan-1030-approval.answered.md`): O-1 approved (conditional on the targeted DeepSeek pass over the post-round-3 sections), O-17 approved, O-18 approved, S-1 = approved to FIND a citable minimum floor-to-floor; the values were given in `CARD-wave0-approval.answered.md` (S-1 2.3 m + 212 mm; S-2 = 0) (research: 2.3 m + 212 mm, `~/Buildo-scratch/mcbylaws/research/Q1-S1-floor-to-floor.md`); O-3 = show both readings until EXC-FSI. The other defaults stay proposals, confirmed when their task is reached. Earlier: O-2 (formulas as data, CARD P3-DATA-MODEL); O-8 (permits out of scope); O-9 (MB54-Q); O-11 (held MB-64 patch is reference only).
+
+## Not doing
+- Permit step conversion: frozen. The guardrails are generic and will apply when it is unfrozen.
+- Reusing old code: CARD P3-DATA-MODEL ruling 2.
+- Semis and townhouses: M-376 SC-Q1.
+- The garage / K axis: not a first-release building type (78:496).
+- The CoA u-fit: LC-60.
+- The family-map blocking arm: not needed for the exit.
+- LC-2, LC-3, LC-29, LC-30, M-332: proposals, confirmed at O-1.
+- Numeric plausibility bounds: no ruled source; INV-7/8/10 are the gates.
+
+## Withdrawn or merged (nothing dropped silently)
+| Task | Now | Reason |
+|---|---|---|
+| draft-v1 MB-70, MB-71, MB-72; v2 MB-50, MB-61 | withdrawn → catalogue rows (MB-31), examples (MB-64), loop (MB-27) | table model; no old code. Scope globs (the old-engine files these tasks were to rebuild: MB-70's module list, MB-71, MB-72, MB-50a `b425074b`, MB-70's conformance file): `scripts/lib/maxbld-*.js`, `scripts/lib/compute/compute-maxbld-scenarios.js`, `scripts/compute-maxbld-scenarios.js`, `src/features/leads/lib/renovation-shared.js`, `scripts/analysis/phase3/phase3-literals.json`, `scripts/analysis/bylaw-validation/maxbld-*-inputs.mjs`, `src/tests/bylaw-maxbld-*.test.ts`, `src/tests/renovation-shared.logic.test.ts`, `**/layer3-conformance*` |
+| MB-65, MB-23, MB-22, MB-25 (CoA status) | → MB-31 | one step with its tables (F-47) |
+| draft-v2 MB-69 | → MB-67 | its check is now one line (F-29) |
+| MB-20, MB-21, MB-51 (keying), MB-45e | → MB-18 | Layer 2 rule builds, one M-lane task |
+| MB-53, MB-54, MB-55, MB-56, MB-45d, MB-45f | → MB-26a–f | they land at the night as sub-items, each with its own commit and panel |
+| MB-63, MB-04, MB-24, MB-45g | → MB-64 | the loop set and its inputs |
+| MB-29 | → MB-28 | same moment |
+| MB-32, MB-33, MB-36, MB-39, MB-40, MB-41 | → MB-38 | the shadow and its gates are the switch's preconditions |
+| MB-34 | → MB-44 | in-force basis is a report field |
+| MB-45a | → MB-46 | recorded at close |
+| MB-45b | statuses → MB-18; lineage → MB-31; family map → Not doing | — |
+| MB-45c | → MB-27 | the loop re-measures the owed lines |
+| MB-47 | → MB-11 | housekeeping |
+| MB-51 (TRCA source) | → MB-57 | lot data |
+| (breadth before increment 1) | reshaped, not added | MB-18 groups, MB-64 examples and MB-31 rows for later increments are deferred to their increment in MB-27; no task builds breadth before increment 1 is green |
+| MB-17 | withdrawn | Q1 by MB17-Q1R; Q2 Not doing; Q3 → MB-64a example; MB17-T → MB-64d. Scope globs (its prereg `15b1e38f` and the files holding `mechanicalAtticExclusion`, the Q3 defect): `scripts/analysis/bylaw-validation/coa-expected/prereg-mb17*.json`, `src/features/leads/lib/renovation-shared.js`, `scripts/lib/maxbld-main-building.js`, `src/tests/renovation-shared.logic.test.ts` |
+| MB-50c, 50d, 50f | Not doing | M-376; first-release types |
+| MB-50e, 50g | → MB-31 rows | catalogue rows |
+
+## Mapping: every queue-v2 task and held item → this draft
+| v2 | Now | v2 | Now | v2 | Now |
+|---|---|---|---|---|---|
+| MB-01..03b, 05..10, 12, 13, 19, 48, 49, 52, 58, 59, 60, 62 | DONE | MB-27 | MB-27 | MB-45a–g | MB-46, split, MB-27, MB-26e, MB-18, MB-26f, MB-64 |
+| MB-04 | MB-64 | MB-28, 29 | MB-28 | MB-46 | MB-46 |
+| MB-11, 47 | MB-11 | MB-30 | MB-30 | MB-50a, b | DONE (history) |
+| MB-14, 15, 16 | DONE (history) | MB-31 | MB-31 | MB-50c, d, f | Not doing |
+| (breadth before increment 1) | reshaped, not added | MB-18 groups, MB-64 examples and MB-31 rows for later increments are deferred to their increment in MB-27; no task builds breadth before increment 1 is green |
+| MB-17 | withdrawn | MB-32, 33, 36, 38–41 | MB-38 | MB-50e, g | MB-31 |
+| MB-18, 20, 21 | MB-18 | MB-34 | MB-44 | MB-51 | MB-18 + MB-57 |
+| MB-22, 23, 25 | MB-31 | MB-35 | MB-35 | MB-53..56 | MB-26a–d |
+| MB-24 | MB-64 | MB-37 | MB-37 | MB-57 | MB-57 |
+| MB-26 | MB-26 | MB-42, 43, 44 | MB-42, 43, 44 | MB-61 | withdrawn → MB-31 |
+| MB-63, 64 | MB-64 | MB-65 | MB-31 | draft MB-66..72 | MB-66, 67, 68; 69 → 67; 70–72 withdrawn |
+
+Held items and cards: `q1r-*` → MB-18; `mb26/held/*` → MB-26a–e; `mb64/held/*`, `mb17/*` → reference for MB-64; 58610707, ba2d8ee6 → reference for MB-30, MB-37; `p3plan`, `p37-save` → MB-11; `CARD-mb65-design.md` → MB-31; `CARD-lane-distance.md` → MB-57 (O-5); `CARD-mb17-bounds.md` → answered (Q3 → MB-64a); `CARD-l3-rebuild`, `CARD-p3-data-model` → MB-66 (M-384); `CARDS-2026-10-30.answered.md` → MB-18, MB-26b, MB-26c, MB-26e, MB-64d, MB-31 (O-4), MB-57.
+
+## Fold record
+- Round 2 KEEP applied in this file: F-28 (BOOT-1), F-29, F-30, F-35, F-37 (a Rules line on every task), F-39, F-41, F-42, F-43, F-44, F-45, F-46, F-47.
+- Round 2 KEEP applied in `HANDBOOK-AMENDMENTS.md`: F-31..F-34, F-36, F-38, F-40, F-48, F-49.
+- Round 2 KEEP applied in `HANDBOOK-AUDIT.md`: F-50, plus anchor rows 63 and 64 (F-40).
+- Round 1 follow-on defects are closed by those fixes.
+- REJECT and MOOT findings are not applied.
+
+This file is tracked on wf1/mb-rulings and pushed with the repo (R-KW, 124a:1041; operator 2026-11-01, `CARD-queue-tracking-1101.answered.md`: "track in the repo which is public"; the tracked copy is the queue, every edit is a commit).
