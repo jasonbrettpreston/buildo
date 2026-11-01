@@ -1,0 +1,17 @@
+== item (c2) red: the new it with LAYER2_LIBRARY not declared; engine run 20261101T000211Z-036684c8
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/bylaw-provisions.infra.test.ts > determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt > the lock names the Layer 2 library the compute module requires (M-340)
+ReferenceError: LAYER2_LIBRARY is not defined
+ Test Files  1 failed (1)
+      Tests  1 failed | 66 passed (67)
+== item (c2) red 2 (FIX-c2-1): the lock must fail closed; the new first assertion (written in engine run C2b 20261101T124845Z-0fd33d97) with scripts/lib/bylaw-resolution.js moved out of the tree (moved by the orchestrator, not the engine)
+   × determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt > the lock names the Layer 2 library the compute module requires (M-340) 3ms
+     → expected [ …(58) ] to include 'scripts/lib/bylaw-resolution.js'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/bylaw-provisions.infra.test.ts > determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt > the lock names the Layer 2 library the compute module requires (M-340)
+AssertionError: expected [ …(58) ] to include 'scripts/lib/bylaw-resolution.js'
+ Test Files  1 failed (1)
+      Tests  1 failed | 66 passed (67)
+== item (c2) green: library in place
+ Test Files  1 passed (1)
+      Tests  68 passed (68)

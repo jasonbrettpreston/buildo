@@ -93,9 +93,16 @@ describe('determinism grep lock (Spec 68 §10): generator + scripts/analysis/byl
   // module is held to the same ban list. It lands at commit ① (R-IX); the lock covers it from the commit it exists, and the next
   // case fails if the extension is dropped from this list.
   const COMPUTE_MODULES = ['scripts/lib/compute/resolve-bylaws.js'];
-  const files = ['scripts/generate-bylaw-provisions.mjs', ...walk('scripts/analysis/bylaw'), ...COMPUTE_MODULES.filter((f) => fs.existsSync(path.join(ROOT, f)))].filter((f) => f !== 'scripts/analysis/bylaw/clock.mjs');
+  // Spec 69a M-340 (operator 2026-10-22, EVE.L2P-2): the Layer 2 library the compute module requires computes the hashed keys,
+  // so it carries the same determinism guarantee as the M-117 files and is held to the same ban list (Spec 134:121).
+  const LAYER2_LIBRARY = ['scripts/lib/bylaw-resolution.js'];
+  const files = ['scripts/generate-bylaw-provisions.mjs', ...walk('scripts/analysis/bylaw'), ...COMPUTE_MODULES.filter((f) => fs.existsSync(path.join(ROOT, f))), ...LAYER2_LIBRARY.filter((f) => fs.existsSync(path.join(ROOT, f)))].filter((f) => f !== 'scripts/analysis/bylaw/clock.mjs');
   it('the lock names the resolve_bylaws compute module (R-DET extension, Spec 134:121)', () => {
     expect(COMPUTE_MODULES).toEqual(['scripts/lib/compute/resolve-bylaws.js']);
+  });
+  it('the lock names the Layer 2 library the compute module requires (M-340)', () => {
+    expect(files).toContain('scripts/lib/bylaw-resolution.js');
+    expect(LAYER2_LIBRARY).toEqual(['scripts/lib/bylaw-resolution.js']);
   });
   it('the walk reaches oracle-b/ (the recursion is real)', () => {
     expect(files.filter((f) => f.startsWith('scripts/analysis/bylaw/oracle-b/')).length).toBeGreaterThanOrEqual(3);
