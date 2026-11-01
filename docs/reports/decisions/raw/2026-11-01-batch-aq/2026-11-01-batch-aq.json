@@ -1,0 +1,24 @@
+{
+  "source": "operator chat 2026-11-01",
+  "operator_quote": "1-4 approved as long as they are complaint with the governing spec or handbook.  you need to prove it by citing the ruling",
+  "context": "Recorded by lane R (McBylaws queue, lane R slot). Items 1 and 3 of the coordinator's batch aq brief only; items 2 (A-2), 4 (GAP-3) and 5 (GAP-1) are held for the operator's re-pin approval (they add 69a rows, which move table_version). MB-18 e1 is not recorded (NOT COMPLIANT, ~/Buildo-scratch/mcbylaws/compliance/night-1101-four.md item 3). Compliance ~/Buildo-scratch/mcbylaws/R-batch-aq/compliance.md.",
+  "decisions": [
+    {
+      "id": "CHAT-218.MB79-P",
+      "subject": "MB-79 (p): a merge that brings a lane's round records is judged at commit time by R-MA's push-and-CI join (F-3 wording): R-MA note",
+      "decision": "approve",
+      "recommendation": "CARD-mb79-gapj-p (~/Buildo-scratch/p2close/CARD-mb79-gapj-p.answered.md), (p) option A, as worded by the MB-79 gates stage 3 adjudication F-3. Rule text: At commit time, during a merge in progress with exactly one merge head (`MERGE_HEAD` holds one sha), a record that the index adds against HEAD is joined by this row's push-and-CI source when the record is absent from HEAD's tree and its index blob equals its blob at `MERGE_HEAD`: the task is the `McBylaws-Task` trailer of the commit that adds the record in `MERGE_HEAD`'s history, and the prereg is read from that commit's first-parent tree. The record stays the round under judgement; every other loop check of the merge commit (binding against the merged index, oracle-first, add-only, record presence, the run) is unchanged. A record whose index blob differs from `MERGE_HEAD`'s, a record `MERGE_HEAD` lacks, a merge with more than one merge head, or a commit with no `MERGE_HEAD`, keeps the join by the prereg added by HEAD's commit. Conflict check: R-KW (\"lane branches enter by merge, not rebase\"), applied; R-LF and R-KU, unchanged (the merged tree is still bound); R-BG, this is the dated note it requires.",
+      "quote_ref": "q_p"
+    },
+    {
+      "id": "CHAT-218.B-2",
+      "subject": "Card B, B-2: M-409's \"decision-log line\" for the protected-path change of MB-18 item h and the h follow-up: no ruling, rests on M-409",
+      "decision": "no_ruling",
+      "recommendation": "No ruling: M-409 (69a) already decides the question (\"the change needs a second-seat check and a decision-log line because it touches a golden comparison (a protected path)\"). This decision is that decision-log line (CARD-night-1101-four item 2: \"B-2, the operator's answer imported as a no_ruling decision resting on M-409 (132:427 \"Operator decisions are transferred by generator, never by hand\").\"; option text, ~/Buildo-scratch/p2close/CARD-owed-clear-and-m409.md, Card B: - The answer is imported as a chat decision in the next lane R batch, with decision `no_ruling` (R-DV-1), `routing.rests_on: [\"M-409\"]`. Its subject is the protected-path change: the h commit and its follow-up, plus the second-seat check named in the plan's M-409 note (`docs/reports/panels/MB-18.json`). - The M-409 lock note then cites `<stem>#<id>`.). Subject: the protected-path change of MB-18 item h (b2d80b89) and the h follow-up (23b511d0), with the second-seat record docs/reports/panels/MB-18.json. It is an after-the-fact record: the h commits landed and were pushed at 50f45403 before this line existed; it is not the operator's pre-push approval of that change (proof ~/Buildo-scratch/mcbylaws/compliance/night-1101-four.md item 2, condition 2d). Not decided here: the card's question whether a second seat after the commit satisfies M-409 (unanswered). Five words: standardized (the import path of every operator decision, 132:427); observable (decision-log --check proves it rests on M-409); scalable (any protected-path change made under a ruling); accurate (M-409's words as written: a line for the change, distinct from the ruling's own line 2026-10-30-batch-al#CHAT-213.MB18-RL-4); understandable (the operator's approval of this protected-path change is logged).",
+      "quote_ref": "q_n1"
+    }
+  ],
+  "q_p": "2. yes",
+  "q_n1": "1-4 approved as long as they are complaint with the governing spec or handbook.  you need to prove it by citing the ruling",
+  "q_n2": "if 1-4 fails compliance test - revise and then test for compliance - if it passes you can proceed"
+}

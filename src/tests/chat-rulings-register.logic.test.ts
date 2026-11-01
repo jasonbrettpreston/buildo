@@ -897,3 +897,18 @@ describe('CHAT-217 (batch 2026-11-01-batch-ap): 1 rulings recorded; behaviour lo
     });
   }
 });
+
+// CHAT-218 (batch 2026-11-01-batch-aq): each Rule text line is present in the register that carries it and cites its decision.
+// CHAT-218.B-2 is a no_ruling decision resting on M-409; it has no row of its own.
+describe('CHAT-218 (batch 2026-11-01-batch-aq): 1 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["R-MA note", "A", "2026-11-01-batch-aq#CHAT-218.MB79-P", "At commit time, during a merge in progress with exactly one merge head (`MERGE_HEAD` holds one sha), a record that the index adds against HEAD is joined by this row's push-and-CI source"],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, c, rule] of CASES) {
+    it(`${row} carries ${c} and its Rule text`, () => {
+      expect(TEXT[reg], c).toContain(c);
+      expect(TEXT[reg] + L131 + M + A + S68, c + ' rule text').toContain(rule);
+    });
+  }
+});
