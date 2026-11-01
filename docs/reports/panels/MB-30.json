@@ -1,0 +1,37 @@
+{
+  "task": "MB-30",
+  "class": "D",
+  "stage": 8,
+  "date": "2026-10-31",
+  "head": "59eb970b",
+  "commits_reviewed": [
+    "6c838c69",
+    "55877f3c",
+    "6500c767",
+    "59eb970b"
+  ],
+  "cards": [
+    "CARD-wave0-approval (MB30-PR-1, PR-2, PR-4, Spec 112 note)",
+    "CARD-local-db (MB30-PR-3)"
+  ],
+  "plan": "Plan and earlier panels: ~/Buildo-scratch/mcbylaws/MB-30/plan.md; adjudication.md. Build log: build-log.md. Staged tool outside the repo: ~/Buildo-scratch/rarms/night-tools/night3.next/ (n3db.cjs, restore.zsh); promotion and NIGHT3.sha256 re-freeze not yet done.",
+  "output": "OUTPUT panel PASS after re-check 1: Regression Guardian (43 new tests green, gate OK, frozen night3 verifies, inline block equals module, explain-sql byte-identical), grounded reviewer, Reality-Check (staged plan and trigger-state vs the live catalog: 30 tables, 6 triggers, 28 DB-wide all O; proof set 8 tables incl. permits; trigger-state now requires the read list to equal plan.json), DeepSeek spec/security/idempotency/error-paths grounded and adjudicated. First pass FAIL (P-9 lock mode, trigger-state fail-open) fixed in 59eb970b and the staged tool and proof.zsh; F7 permits perturbation ruled safe and in scope. proof.zsh written, not yet run.",
+  "seats": [
+    "regression-guardian",
+    "grounded-reviewer",
+    "reality-check",
+    "ds-spec",
+    "ds-security",
+    "ds-idempotency",
+    "ds-error-paths"
+  ],
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "pdie recovery text: mention permits updated_at stamp",
+    "F8 plan() refusal paths covered statically only",
+    "MB30-PR rows ARE in 69a:504 and 124a:1030 (first-pass F9 withdrawn); wiring test reads a scratch path",
+    "proof.zsh not yet run: first run is the real test"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-30/output-panel/stage8.md (Re-check 1)"
+}

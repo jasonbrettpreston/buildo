@@ -1,0 +1,89 @@
+{
+ "$comment": "M-321 pre-registration, task MB-30 (night tools, rebuilt through the path; class D; queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-30; plan ~/Buildo-scratch/mcbylaws/MB-30/plan.md stage 5b PASS), committed alone before the build. Rule M-368 (69a:504): the night restore disables user triggers on the tables it restores inside the restore transaction and re-enables them before COMMIT. The repo build adds only NEW files: scripts/lib/night-restore-triggers.js, src/tests/night-restore-triggers.logic.test.ts, src/tests/night3-restore-wiring.logic.test.ts and src/tests/fixtures/night3-explain-sql.pre-mb30.sql. The night tool itself (n3db.cjs, restore.zsh, staged in ~/Buildo-scratch/rarms/night-tools/night3.next/) lives outside the repo and is not promoted or re-frozen at this stage. Expected test movement: night-restore-triggers.logic.test.ts T1-T10 red (module missing) then green; night3-restore-wiring.logic.test.ts W1-W9 red on the unwired staged tool, W3 green before and after (regression guard on explain-sql, byte-identical). It touches no Layer 2 value, no evaluator, no scorer, no oracle row and no floor. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the floors file is unchanged and the floors check stays OK. No resolve_bylaws cell changes and NO DB write (the dev-DB night is a separate step that needs the operator go). Expected totals copied from prereg-MB-73-1.json, which stands on the same unchanged scorer tree.",
+ "schema": "coa-round-prereg-v1",
+ "round": 23,
+ "task": "MB-30",
+ "rules": [
+  "M-321",
+  "M-368",
+  "M-381",
+  "M-382",
+  "R-KM"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-30; ~/Buildo-scratch/mcbylaws/MB-30/plan.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
