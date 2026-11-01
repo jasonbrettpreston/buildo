@@ -1,0 +1,16 @@
+== item (d) lock: green on base (no module change); mutation checks turn it red: (1) buildLotVector pushes a lot_frontage_below_minimum gate, (2) existing() falls back to the stored lot variable; engine runs d1 20261031T235616Z-feb04ae5 d2 20261031T235917Z-90b0539e
+-- mutation 1
+   × MB-18 d / Layer 2 keeps the existing-lot minimum a requirement, not a verdict (M-158) > emits no gate for an existing lot below the label minimum 4ms
+ FAIL  src/tests/bylaw-mb18d.logic.test.ts > MB-18 d / Layer 2 keeps the existing-lot minimum a requirement, not a verdict (M-158) > emits no gate for an existing lot below the label minimum
+AssertionError: expected [ 'lot_frontage_below_minimum' ] to deeply equal []
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+-- mutation 2
+   × MB-18 d / Layer 2 keeps the existing-lot minimum a requirement, not a verdict (M-158) > leaves a carve-out exception unevaluated rather than below-minimum 4ms
+ FAIL  src/tests/bylaw-mb18d.logic.test.ts > MB-18 d / Layer 2 keeps the existing-lot minimum a requirement, not a verdict (M-158) > leaves a carve-out exception unevaluated rather than below-minimum
+AssertionError: expected 'value' to be 'not_evaluated' // Object.is equality
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+-- green on base
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
