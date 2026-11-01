@@ -1,0 +1,15 @@
+{
+  "source": "operator chat 2026-10-31",
+  "operator_quote": "0-23 approved",
+  "context": "Recorded by lane R (MB-78, the decision batch 2026-10-31-pm, with the one re-pin approved at O-23, card ~/Buildo-scratch/p2close/CARD-o23-repin.answered.md). Cards ~/Buildo-scratch/p2close/CARD-*.answered.md as named per decision. Compliance table ~/Buildo-scratch/mcbylaws/MB-78/compliance.md. Left out: CARD-parcel-minsize-review (the OBC 2024 official-text check is not done) and CARD-approve-1-6-review item 4 (rests on the minimum sizes of that card); ~/Buildo-scratch/mcbylaws/MB-78/blockers.md.",
+  "decisions": [
+    {
+      "id": "CHAT-215.O-26",
+      "subject": "O-26 option 2: revert rounds of increment 1 while it cannot be green: R-LZ",
+      "decision": "approve",
+      "recommendation": "CARD-o26-loop-arm (~/Buildo-scratch/p2close/CARD-o26-loop-arm.answered.md). Rule text: One ruling, no code change: while increment 1 cannot be green, a commit lands with a loop record of decision `revert` for increment 1, only when its prereg registers zero moves and the run shows equal totals and floors held.",
+      "quote_ref": "q_o26"
+    }
+  ],
+  "q_o26": "My recommendation: option 2 now, with option 3 queued as an MB-79 build, so item a and MB-26 can land after it. Reply \"O-26 option 2\", \"option 2 and 3\", or something else. Approved"
+}

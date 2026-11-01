@@ -1,0 +1,49 @@
+{
+  "task": "MB-78",
+  "class": "R",
+  "stage": 8,
+  "date": "2026-10-31",
+  "head": "541a471d04c602cfe3d05d65a35b7bdb8d3783b6",
+  "commits_reviewed": [
+    "541a471d"
+  ],
+  "cards": [
+    "CARD-o19-o21",
+    "CARD-perm-reading",
+    "CARD-l31-15-16-18",
+    "CARD-side-yard-city",
+    "CARD-coverage-reality-gemini",
+    "CARD-mcproof-sizing",
+    "CARD-mcproof-1-7",
+    "CARD-mcproof-lessons",
+    "CARD-approve-1-6-review",
+    "CARD-mb64-close",
+    "CARD-o25-sources",
+    "CARD-o23-repin",
+    "CARD-prepolicy-exempt",
+    "CARD-rulemap-literal-exempt",
+    "CARD-bootstrap-rebuild",
+    "CARD-gate-scope-from-bootstrap",
+    "CARD-o27-foot18",
+    "CARD-o26-loop-arm"
+  ],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-78/blockers.md, compliance.md and split-b.md: 54 decisions (52 cards decisions + CHAT-215.O-27 + CHAT-215.O-26), 24 new 69a rows (M-428..M-451), 2 new 124a rows (gate-scope, O-26 revert round), dated notes, 16 flips. Verified tree = MB-78/batch.patch applied on 541a471d. Landed in three commits (split b): (1) the O-26 row and decision alone, with this record; (2) a zero-move prereg for increment 1, alone; (3) the rest of the batch with the re-pin and the loop revert round record. The tree after commit 3 equals the verified batch.patch tree plus this record (checked by tree diff).",
+  "output": "OUTPUT panel PASS after re-check 4: independent whole-text verify of every recorded row against the cards (MB-78/verify.md). First pass FIX on F1-F7, re-check 1 on G1-G3, re-check 2 PASS plus the O-27 handbook-compliance check (13 of 13 drafted McProof clauses and SIDE-3 comply; flipped to RULED on CARD-o27-foot18), re-check 3 PASS on the O-27 status cells and the new R-LZ row (O-26 option 2, text equals the card word for word, option 3 queued not ruled, conflict check right, ceiling 112 -> 98). decision-log --check clean (724 decisions, 372 rows), spec-split-check --check clean, quotes-check ALL PASS (18 quotes, 41 card texts); 16 flips each have an existing lock file naming the row; batch.patch equals the staged diff. Re-check 4: split (b) confirmed: commit 1 (R-LZ + CHAT-215.O-26 only, table_version unchanged, scorecard 27 of 27 green, gate OK) satisfies the card's \"recorded by decision-log before any commit relies on it\"; the tree after commit 3 differs from the batch.patch tree by this record only.",
+  "seats": [
+    "verifier-second-seat"
+  ],
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "LAND SEQUENCE (verify.md Re-check 4): commit 1 = R-LZ + CHAT-215.O-26 + Spec 132 regen + system map line + ceiling 112 -> 113 + this record (commit1-msg.txt); commit 2 = prereg-MB-78-2.json alone, increment 1, zero moves; commit 3 = split-b-commit3-base.patch + regenerated expected-172/4d pins at the new parent + loop revert round record from loop-gate run --write (commit-msg.armC.txt, part 2 of 2). Intermediate values (ceiling 113, count 671, 1 ruling) become 98, 724, 54 in commit 3.",
+    "C1 mcproof.config.json outside arm L literal scope or literal_exempt (MB-77 sub-item a / MB-79 b)",
+    "C2 City-oracle tests state the generator, pinned snapshot and Ruling-layer exclusion (MB-68)",
+    "R-LZ lock test naming the row id (MB-79); option 3 oracle edit door queued in MB-79 (item a, MB-26)",
+    "SIDE-3 and O-27 confirmed by the operator on CARD-o27-foot18 (done)",
+    "FOOT-18 kept as pending example (MB-80 item)",
+    "CARD-approve-1-6-review item 4 and CARD-parcel-minsize-review items 1-2 wait for the OBC 2024 official-text check",
+    "R-KX and R-LB need their id added to the named lock test; R-KK and R-KW wait for P67-2",
+    "MB-79: vitest related does not select src/tests/coa-scorecard.logic.test.ts, so the pre-commit hook would not catch a table_version move that leaves the pins stale (found by hand on the first split); add the pinned scorecard tests to the pre-commit selection or a pre-push arm"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-78/verify.md"
+}

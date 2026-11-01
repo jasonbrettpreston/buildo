@@ -799,3 +799,17 @@ describe('CHAT-214 (batch 2026-10-31-batch-am): 15 rulings recorded; behaviour l
     });
   }
 });
+
+// CHAT-215 (batch 2026-10-31-batch-an): each Rule text line is present in the register that carries it and cites its decision.
+describe('CHAT-215 (batch 2026-10-31-batch-an): 1 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["R-LZ", "A", "2026-10-31-batch-an#CHAT-215.O-26", "One ruling, no code change: while increment 1 cannot be green, a commit lands with a loop record of decision `revert` for increment 1, only when its prereg registers zero moves and the run shows equal totals and floors held."],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, c, rule] of CASES) {
+    it(`${row} carries ${c} and its Rule text`, () => {
+      expect(TEXT[reg], c).toContain(c);
+      expect(TEXT[reg] + L131 + M + A + S68, c + ' rule text').toContain(rule);
+    });
+  }
+});

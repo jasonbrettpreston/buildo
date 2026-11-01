@@ -7546,6 +7546,20 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-LZ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "While increment 1 cannot be green, a landing is recorded as a revert round of increment 1 with zero pre-registered moves, equal totals and floors held.",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -8108,6 +8122,11 @@
       "id": "R-LX",
       "class": "none",
       "reason": "OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built)"
+    },
+    {
+      "id": "R-LZ",
+      "class": "none",
+      "reason": "OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an)"
     }
   ]
 }

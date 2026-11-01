@@ -1,0 +1,28 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-31-batch-an/2026-10-31-batch-an.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-31-batch-an",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "0-23 approved",
+    "record": "operator chat 2026-10-31",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-31-batch-an/2026-10-31-batch-an.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-215.O-26",
+      "question": "O-26 option 2: revert rounds of increment 1 while it cannot be green: R-LZ",
+      "recommendation": "CARD-o26-loop-arm (~/Buildo-scratch/p2close/CARD-o26-loop-arm.answered.md). Rule text: One ruling, no code change: while increment 1 cannot be green, a commit lands with a loop record of decision `revert` for increment 1, only when its prereg registers zero moves and the run shows equal totals and floors held.",
+      "decision": "approve",
+      "decided_at": "2026-10-31",
+      "operator_quote": "My recommendation: option 2 now, with option 3 queued as an MB-79 build, so item a and MB-26 can land after it. Reply \"O-26 option 2\", \"option 2 and 3\", or something else. Approved"
+    }
+  ]
+}
