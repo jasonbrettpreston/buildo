@@ -1,0 +1,28 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-11-01-batch-ap/2026-11-01-batch-ap.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-11-01-batch-ap",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Rule it: extend R-LT (Recommended)",
+    "record": "operator chat 2026-11-01",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-11-01-batch-ap/2026-11-01-batch-ap.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-217.RLT-GEN",
+      "question": "R-LT made general for 124a: a row named OWED to a task flips to RECORDED, lock named, once the task's build lands with its panel record: R-LT note",
+      "recommendation": "CARD-rma-flip-rlt (~/Buildo-scratch/p2close/CARD-rma-flip-rlt.answered.md). Option: Record by decision-log a dated note on R-LT: a 124a row named OWED to a task flips to RECORDED, with its lock named, once that task's build lands with its panel record (the R-LT practice, now general for 124a). R-MA's flip then rests on it. Docs-only commit before the push; status cells and the rule map don't change, so no re-pin. Rule text: a 124a row named OWED to a task flips to RECORDED, with its lock named, once that task's build lands with its panel record (the R-LT practice, now general for 124a).",
+      "decision": "approve",
+      "decided_at": "2026-11-01",
+      "operator_quote": "Rule it: extend R-LT (Recommended)"
+    }
+  ]
+}

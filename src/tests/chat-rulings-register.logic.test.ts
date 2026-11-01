@@ -883,3 +883,17 @@ describe('CHAT-216 (batch 2026-11-01-batch-ao): 3 rulings recorded; behaviour lo
     });
   }
 });
+
+// CHAT-217 (batch 2026-11-01-batch-ap): each Rule text line is present in the register that carries it and cites its decision.
+describe('CHAT-217 (batch 2026-11-01-batch-ap): 1 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["R-LT note", "A", "2026-11-01-batch-ap#CHAT-217.RLT-GEN", "a 124a row named OWED to a task flips to RECORDED, with its lock named, once that task's build lands with its panel record (the R-LT practice, now general for 124a)."],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, c, rule] of CASES) {
+    it(`${row} carries ${c} and its Rule text`, () => {
+      expect(TEXT[reg], c).toContain(c);
+      expect(TEXT[reg] + L131 + M + A + S68, c + ' rule text').toContain(rule);
+    });
+  }
+});

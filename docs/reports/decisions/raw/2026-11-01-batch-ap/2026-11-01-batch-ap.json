@@ -1,0 +1,15 @@
+{
+  "source": "operator chat 2026-11-01",
+  "operator_quote": "Rule it: extend R-LT (Recommended)",
+  "context": "Recorded by lane R in MB-78's lane R slot on wf1/mb-rulings (MB-78 still RUNNING until pushed). Card ~/Buildo-scratch/p2close/CARD-rma-flip-rlt.answered.md: MB-78 commit 3 (0570417a) flipped R-MA OWED -> RECORDED \"applying R-LT\", whose rule text names R-KF..R-LF only. Compliance table ~/Buildo-scratch/mcbylaws/MB-78/batch-ap/compliance.md.",
+  "decisions": [
+    {
+      "id": "CHAT-217.RLT-GEN",
+      "subject": "R-LT made general for 124a: a row named OWED to a task flips to RECORDED, lock named, once the task's build lands with its panel record: R-LT note",
+      "decision": "approve",
+      "recommendation": "CARD-rma-flip-rlt (~/Buildo-scratch/p2close/CARD-rma-flip-rlt.answered.md). Option: Record by decision-log a dated note on R-LT: a 124a row named OWED to a task flips to RECORDED, with its lock named, once that task's build lands with its panel record (the R-LT practice, now general for 124a). R-MA's flip then rests on it. Docs-only commit before the push; status cells and the rule map don't change, so no re-pin. Rule text: a 124a row named OWED to a task flips to RECORDED, with its lock named, once that task's build lands with its panel record (the R-LT practice, now general for 124a).",
+      "quote_ref": "q_rlt"
+    }
+  ],
+  "q_rlt": "Rule it: extend R-LT (Recommended)"
+}
