@@ -11,7 +11,7 @@ const TASK_ID = /^MB-\d+$/;
 // O68-04: the group whose totals a prereg registers when it names none (the 172 set, the only group with percent floors).
 const DEFAULT_GROUP = 'coa172';
 
-/** The one home of a round's pre-registration (plan "Prereg path"; MB-67 P67-1): coa-expected/prereg-<MB-id>-<round>.json. */
+/** A prereg path coa-expected/prereg-<MB-id>-<n>.json for a given n. Under R-MA (MB-79 h) n is the task's own number (1, 2, ...), not the loop round, and the name form is owned by ../mcbylaws/prereg-name.mjs (PREREG_FORM_RE). This helper does not validate the form, and no gate path calls it. */
 export function preregPath(task, round) {
   return `${PREREG_DIR}/prereg-${task}-${round}.json`;
 }
@@ -114,11 +114,20 @@ const scrubbedEnv = () => Object.fromEntries(Object.entries(process.env).filter(
 const gitTemp = (root, args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', env: scrubbedEnv(), stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const nonEmpty = (s) => s.split('\n').map((x) => x.trim()).filter(Boolean);
 
+/**
+ * The commit that adds `rel`: the LAST line of `git log --diff-filter=A --format=%H -- <rel>` from HEAD (the oldest add), or null.
+ * `git(root, args)` returns stdout and throws on a git failure (the throw is the caller's to handle). R-MA (MB-79 h) and gitPreregHistory share it.
+ */
+export function recordAddCommit(git, root, rel) {
+  const added = nonEmpty(String(git(root, ['log', '--diff-filter=A', '--format=%H', '--', rel]) ?? ''));
+  return added.length ? added[added.length - 1] : null;
+}
+
 /** The argument checkPreregHistory takes, read from git. The round record's first add is its last log line; the round is unwritten until then. */
 export function gitPreregHistory(root, preregFile, recordFile) {
   const g = (args) => gitTemp(root, args);
-  const added = nonEmpty(g(['log', '--diff-filter=A', '--format=%H', '--', recordFile]));
-  const roundCommit = added.length ? { sha: added[added.length - 1] } : null;
+  const add = recordAddCommit(gitTemp, root, recordFile);
+  const roundCommit = add ? { sha: add } : null;
   const preregCommits = nonEmpty(g(['log', '--reverse', '--format=%H', '--', preregFile])).map((sha) => ({ sha, files: nonEmpty(g(['show', '--name-only', '--format=', sha])) }));
   const isStrictAncestor = (a, b) => {
     if (!a || !b || a === b) return false;

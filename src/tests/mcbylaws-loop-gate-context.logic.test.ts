@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { hooksPathVerdict, readRealHooksPath } from './hooks-path-guard.global';
 
 const ROOT = path.resolve(__dirname, '../..');
 const CONTEXT_MOD = path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-gate-context.mjs');
@@ -96,6 +97,7 @@ type Ctx = {
   newCases: { id: string; introduced_in: string }[];
   rowsTouched: { id: string; increment: string | null }[];
   run: Run | null;
+  preregJoin?: { task: string | null; source: string | null; violations: string[] } | undefined;
 };
 type Verdict = { violations: string[]; notes: string[] };
 type Parsed = { mode: string; root: string; base: string; target: string };
@@ -183,10 +185,12 @@ function makeRepo(): string {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mb68-ctx-')));
   tempDirs.push(dir);
   execFileSync('git', ['init', '-q', dir], { env: cleanEnv() });
-  gitQ(dir, ['config', 'user.email', 'ctx@example.invalid']);
-  gitQ(dir, ['config', 'user.name', 'ctx']);
+  // F1 (MB-79 (h); ba05d889 class): the git dir is checked to be this temp dir's own BEFORE any config write, and config is written only by --file.
   const gitDir = fs.realpathSync(gitQ(dir, ['rev-parse', '--absolute-git-dir']));
   if (gitDir !== path.join(dir, '.git')) throw new Error(`temp repository does not resolve to ${dir}`);
+  const own = path.join(dir, '.git', 'config');
+  gitQ(dir, ['config', '--file', own, 'user.email', 'ctx@example.invalid']);
+  gitQ(dir, ['config', '--file', own, 'user.name', 'ctx']);
   return dir;
 }
 
@@ -236,12 +240,9 @@ const RECORD_1 = 'docs/reports/loop-records/1/round-01.json';
 const RECORD_2_1 = 'docs/reports/loop-records/2/round-01.json';
 const RECORD_2_2 = 'docs/reports/loop-records/2/round-02.json';
 const RECORD_3_1 = 'docs/reports/loop-records/3/round-01.json';
-// O68-05: the prereg is found by FILE NAME, prereg-MB-<digits>-<record round>.json: the round here is 1.
-// O6: the prereg is found by name + increment, never by a task number fixed to MB-68 (prereg-MB-99-1.json is a foreign task's
-// name, the shape of a real one: the round's prereg is matched on the pattern, not on the digits).
+// R-MA (amends R-KV; MB-79 h): the prereg is found by its task's name prereg-<task>-<k>.json, newest k with the record's increment;
+// O6 still holds: no task number is fixed in the gate (the J tests below use MB-78, MB-79 and MB-18).
 const PREREG_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-99-1.json';
-// A prereg of the round's NUMBER but of another increment: it must never be taken for round 1's.
-const PREREG_OTHER_INC_REL = 'scripts/analysis/bylaw-validation/coa-expected/prereg-MB-98-1.json';
 const PASS_CASE = 'c-pass';
 const ACCEPTED_CASE = 'c-acc';
 
@@ -324,7 +325,7 @@ function preregPayload(over: { [k: string]: unknown } = {}): Prereg {
   const round = typeof over.round === 'number' ? over.round : 1;
   return {
     schema: 'coa-round-prereg-v1',
-    task: 'MB-68',
+    task: 'MB-99',
     round,
     $comment: 'pre-registered before the round',
     plan_ref: `MB-68 increment 2 round ${round}`,
@@ -339,7 +340,7 @@ function preregPayload(over: { [k: string]: unknown } = {}): Prereg {
   } as Prereg;
 }
 
-/** The prereg of a loop round: the file name carries the round, so round 1's prereg is this exact path. */
+/** The prereg of a loop round: the file name carries the task and k, so the newest k with the record's increment is this exact path. */
 function nextPreregRel(round: number): string {
   return `scripts/analysis/bylaw-validation/coa-expected/prereg-MB-99-${round}.json`;
 }
@@ -494,7 +495,7 @@ async function seedLandedRound(dir: string, recOver: { [k: string]: unknown } = 
   commitBound(dir, 'round files');
   writeFile(dir, RECORD_2_1, roundRecord(dir, recOver, [], base));
   gitQ(dir, ['add', '-A']);
-  gitQ(dir, ['commit', '-q', '--no-verify', '--amend', '-m', 'round']);
+  gitQ(dir, ['commit', '-q', '--no-verify', '--amend', '-m', 'round\n\nMcBylaws-Task: MB-99']);
   return base;
 }
 
@@ -538,6 +539,51 @@ const defaultDeps = async (): Promise<Deps> => ({
 }) as Deps;
 
 const noComputeRun = (): undefined => undefined;
+
+// ---- R-MA: the prereg join by task (MB-79 (h) plan sections 2 and 4.2) ----
+const COA = 'scripts/analysis/bylaw-validation/coa-expected';
+const pre = (task: string, k: number): string => `${COA}/prereg-${task}-${String(k)}.json`;
+const RECORD_1_2 = 'docs/reports/loop-records/1/round-02.json';
+type PreregJoin = { task: string | null; source: string | null; violations: string[] };
+const joinOf = (ctx: Ctx): PreregJoin | undefined => ctx.preregJoin;
+/** R-AN: the committed bytes of a REAL prereg, read from the working tree under ROOT (never by a commit sha, never retyped). */
+const realPrereg = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+/** A J base: seedBase without its increment-1 record (the J cases stage increment 1's rounds themselves). Returns the base sha. */
+function seedJoinBase(dir: string, message = 'base'): string {
+  seedBase(dir);
+  fs.rmSync(path.join(dir, RECORD_1), { force: true });
+  return commitAll(dir, message);
+}
+/** ONE file committed alone (M-321), with this exact message. */
+function commitAlone(dir: string, rel: string, content: unknown, message = `prereg alone: ${rel}`): string {
+  writeFile(dir, rel, content);
+  gitQ(dir, ['add', '--', rel]);
+  gitQ(dir, ['commit', '-q', '--no-verify', '-m', message]);
+  return gitQ(dir, ['rev-parse', 'HEAD']);
+}
+/** An unrelated commit, so HEAD is not the prereg commit. */
+const commitUnrelated = (dir: string, name = 'unrelated'): string => commitAlone(dir, `notes/${name}.txt`, `${name}\n`, name);
+/** Stage an increment-1 revert record for `round` (1 or 2), bound to the index; nothing else is staged by it. */
+function stageInc1Record(dir: string, round = 1): string {
+  const rel = round === 1 ? RECORD_1 : RECORD_1_2;
+  const rec = bind(recordPayload({ increment: '1', round, decision: 'revert', reason: 'R-MA join fixture: a revert round of increment 1', inputs: inputsOf(dir, BOUND_PATHS) }));
+  writeFile(dir, rel, rec);
+  gitQ(dir, ['add', '--', rel]);
+  return rel;
+}
+/** The round LANDED as one commit: a new catalogue plus the increment-1 record, with this exact message (trailer or not). */
+function landRound(dir: string, message: string): string {
+  writeFile(dir, CATALOGUE_NEXT, { rows: [1] });
+  gitQ(dir, ['add', '--', CATALOGUE_NEXT]);
+  stageInc1Record(dir, 1);
+  gitQ(dir, ['commit', '-q', '--no-verify', '-m', message]);
+  return gitQ(dir, ['rev-parse', 'HEAD']);
+}
+const inc1 = (task: string, over: { [k: string]: unknown } = {}): Prereg => preregPayload({ task, increment: '1', ...over });
+async function ctxOf(dir: string, mode: string, base = '', over: { [k: string]: unknown } = {}, target = ''): Promise<Ctx> {
+  const { buildContext } = await loadContext();
+  return buildContext({ mode, root: dir, base, target }, await deps(over));
+}
 
 // ---- tests -------------------------------------------------------------------------------------------------------------------------
 
@@ -593,7 +639,7 @@ describe('buildContext: commit mode', () => {
     expect(ctx.preregFile).toBe(PREREG_REL);
     expect(ctx.prereg?.increment).toBe('2');
     expect(ctx.prereg?.group).toBe('g-a');
-    // O68-05: the join is the file name and the increment; the prereg's `round` is its own (CoA batch) counter, never the loop round.
+    // R-MA: the join is by task (the task comes from HEAD's added prereg at commit, from the trailer at push/ci; newest k with the record's increment); the prereg's `round` is its own (CoA batch) counter, never the loop round.
     expect(ctx.prereg?.round).toBe(1);
     expect(ctx.preregHistory).toBeNull();
     expect(ctx.rowsTouched).toEqual([{ id: '10.20.30.110', increment: '2' }]);
@@ -753,7 +799,7 @@ describe('buildContext: push and ci mode', () => {
     expect(ctx.run).toBeNull();
     expect(ctx.latest?.path).toBe(RECORD_2_1);
     expect(ctx.prereg).not.toBeNull();
-    // O68-05: the join is the file name (the round) and the increment, never the prereg's own `round` (the CoA batch counter).
+    // R-MA: the join is by task (the task from HEAD's added prereg at commit, from the trailer at push/ci; newest k with the record's increment), never the prereg's own `round` (the CoA batch counter).
     expect(ctx.preregFile).toBe(PREREG_REL);
     expect(ctx.prereg?.increment).toBe(ctx.latest?.rec.increment);
     expect(ctx.regression.cur).not.toBeNull();
@@ -822,13 +868,13 @@ describe('buildContext: push and ci mode', () => {
     writeFile(dir, RECORD_2_1, roundRecord(dir));
     const c1 = commitAll(dir, 'increment 2 round 1');
     expect(c0).not.toBe(c1);
-    // c2 (HEAD): increment 2 round 2 — the round's own prereg (its file name carries the round), then the record bound to the range
+    // c2 (HEAD): increment 2 round 2 — the round's own prereg (its file name carries the task and k, and its trailer names the task), then the record bound to the range
     // c1..HEAD (records excepted).
     const PREREG_2_REL = nextPreregRel(2);
     writeFile(dir, PREREG_2_REL, preregPayload({ round: 2 }));
     stageAll(dir);
     writeFile(dir, RECORD_2_2, roundRecord(dir, { round: 2 }, [PREREG_2_REL], c1));
-    commitAll(dir, 'increment 2 round 2');
+    commitAll(dir, 'increment 2 round 2\n\nMcBylaws-Task: MB-99');
     expect(gitQ(dir, ['rev-parse', 'HEAD^'])).toBe(c1);
 
     const { buildContext } = await loadContext();
@@ -903,3 +949,271 @@ describe('buildContext -> evaluateGate (end to end)', () => {
     expect(evaluateGate(commitCtx).violations).not.toContain(`input_not_bound:${CATALOGUE}`);
   });
 });
+
+// ---- R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment -----------------------
+
+describe('R-MA (amends R-KV): the loop gate joins the landing task\'s newest prereg of the record\'s increment', () => {
+  it('J1: the MB-78 real case — the task comes from HEAD\'s added prereg, the newest k with the record\'s increment wins', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    // The REAL committed bytes of MB-78's two preregs (R-AN): never retyped here.
+    expect((JSON.parse(realPrereg(pre('MB-78', 1))) as { increment?: unknown }).increment).toBeUndefined();
+    expect((JSON.parse(realPrereg(pre('MB-78', 2))) as { increment?: unknown }).increment).toBe('1');
+    commitAlone(dir, pre('MB-78', 1), realPrereg(pre('MB-78', 1)));
+    commitAlone(dir, pre('MB-78', 2), realPrereg(pre('MB-78', 2)));
+    stageInc1Record(dir, 1);
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(ctx.preregFile).toBe(pre('MB-78', 2));
+    expect(ctx.prereg?.increment).toBe('1');
+    expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'head-prereg', violations: [] });
+  });
+
+  it('E1: the MB-78 real case raises no prereg_missing and no increment disagreement', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 1), realPrereg(pre('MB-78', 1)));
+    commitAlone(dir, pre('MB-78', 2), realPrereg(pre('MB-78', 2)));
+    stageInc1Record(dir, 1);
+
+    const ctx = await ctxOf(dir, 'commit');
+    const evaluateGate = await evaluateGateOf();
+    const v = evaluateGate(ctx).violations;
+    expect(v).not.toContain('prereg_missing');
+    expect(v).not.toContain('increment_not_one_id:prereg');
+    expect(v).not.toContain('increment_differs_prereg_vs_record');
+  });
+
+  it('J1b: a new -3 landed directly under the record is the one taken (the landing order, never HEAD)', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 2), inc1('MB-78'));
+    commitUnrelated(dir);
+    commitAlone(dir, pre('MB-78', 3), inc1('MB-78'));
+    stageInc1Record(dir, 1);
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(ctx.preregFile).toBe(pre('MB-78', 3));
+    expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'head-prereg', violations: [] });
+  });
+
+  it('J2: the highest k AMONG the increment matches is taken, a newer prereg of another increment is skipped', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    const noInc = inc1('MB-78') as unknown as { [k: string]: unknown };
+    delete noInc.increment;
+    commitAlone(dir, pre('MB-78', 2), noInc);
+    stageInc1Record(dir, 2);
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(ctx.preregFile).toBe(pre('MB-78', 1));
+    expect(joinOf(ctx)?.violations).toEqual([]);
+  });
+
+  it('J3: another task\'s prereg file is never read (not even a broken one)', async () => {
+    for (const foreign of [inc1('MB-79') as unknown, '{not json\n'] as unknown[]) {
+      const dir = makeRepo();
+      seedJoinBase(dir);
+      commitAlone(dir, pre('MB-79', 1), foreign);
+      commitAlone(dir, pre('MB-78', 2), inc1('MB-78'));
+      stageInc1Record(dir, 1);
+
+      const real = await loadGit();
+      const seen: string[] = [];
+      const spy: GitDeps = { ...real, readAt: (r, rev, p) => { seen.push(p); return real.readAt(r, rev, p); } };
+      const ctx = await ctxOf(dir, 'commit', '', { git: spy });
+      expect(ctx.preregFile).toBe(pre('MB-78', 2));
+      expect(seen.some((p) => p.includes('prereg-MB-79-'))).toBe(false);
+      // positive control: the landing task's own prereg WAS read
+      expect(seen).toContain(pre('MB-78', 2));
+      expect(joinOf(ctx)?.violations).toEqual([]);
+    }
+  });
+
+  it('J4: k is an integer, so -10 beats -2', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, pre('MB-18', 2), inc1('MB-18'));
+    commitAlone(dir, pre('MB-18', 10), inc1('MB-18'));
+    stageInc1Record(dir, 2);
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(ctx.preregFile).toBe(pre('MB-18', 10));
+  });
+});
+
+// ---- R-MA (amends R-KV): the push / ci join reads the trailer of the commit that ADDS the record, and the disclosed costs ------
+
+describe('R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs', () => {
+  it('J5: a later prereg-only commit does not take over an earlier record (push)', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 2), inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    // A later prereg-only commit for the SAME task: the record was added by the round commit, so the push join still reads `-2`.
+    commitAlone(dir, pre('MB-78', 3), inc1('MB-78', { expected_totals: { MATCH: 3 } }));
+
+    const ctx = await ctxOf(dir, 'push', base);
+    expect(ctx.preregFile).toBe(pre('MB-78', 2));
+    expect(ctx.preregFile).not.toBe(pre('MB-78', 3));
+    expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'trailer', violations: [] });
+  });
+
+  it('J6: ci mode joins the same record by the same trailer, and computes no run', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 2), inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    commitAlone(dir, pre('MB-78', 3), inc1('MB-78', { expected_totals: { MATCH: 3 } }));
+    // ci reads the target branch: `main` is the base here, so the pushed range is base..main
+    gitQ(dir, ['branch', 'main', base]);
+
+    const ctx = await ctxOf(dir, 'ci', '', { computeRun: noComputeRun }, 'main');
+    expect(ctx.preregFile).toBe(pre('MB-78', 2));
+    expect(ctx.run).toBeNull();
+  });
+
+  it('J6b: the commit that adds the record carries no trailer: prereg_task_unknown:no-trailer', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 2), inc1('MB-78'));
+    landRound(dir, 'round');
+
+    const ctx = await ctxOf(dir, 'push', base);
+    expect(ctx.prereg).toBeNull();
+    expect(joinOf(ctx)?.violations ?? []).toContain('prereg_task_unknown:no-trailer');
+    const violations = (await evaluateGateOf())(ctx).violations;
+    expect(violations).toContain('prereg_task_unknown:no-trailer');
+    expect(violations).toContain('prereg_missing');
+  });
+
+  it('J6c: a WRONG trailer joins another task\'s preregs only: MB-79 has none, so prereg_missing', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    commitAlone(dir, pre('MB-78', 2), inc1('MB-78'));
+    // The old name join would have taken MB-78's `-1`; the trailer says MB-79, which has no prereg at all.
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-79');
+
+    const ctx = await ctxOf(dir, 'push', base);
+    expect(ctx.prereg).toBeNull();
+    const violations = (await evaluateGateOf())(ctx).violations;
+    expect(violations).toContain('prereg_missing');
+  });
+
+  it('J7: commit mode where HEAD did not add the prereg: prereg_task_unknown:commit and prereg_missing (the disclosed cost)', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    commitUnrelated(dir);
+    stageInc1Record(dir, 1);
+
+    const ctx = await ctxOf(dir, 'commit');
+    const violations = (await evaluateGateOf())(ctx).violations;
+    expect(violations).toContain('prereg_task_unknown:commit');
+    expect(violations).toContain('prereg_missing');
+    expect(violations).toContain('increment_not_one_id:prereg');
+    expect(violations).toContain('increment_differs_prereg_vs_record');
+  });
+
+  it('J8: the file name says MB-78, its JSON says MB-79: prereg_name_task_mismatch', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    // File named MB-78, JSON task MB-79: the file is found by its name, its content disagrees and the join stops.
+    commitAlone(dir, pre('MB-78', 2), inc1('MB-79'));
+    stageInc1Record(dir, 2);
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(ctx.prereg).toBeNull();
+    const violations = (await evaluateGateOf())(ctx).violations;
+    expect(violations).toContain(`prereg_name_task_mismatch:${pre('MB-78', 2)}`);
+    expect(violations).toContain('prereg_missing');
+    expect(violations).toContain('increment_not_one_id:prereg');
+    expect(violations).toContain('increment_differs_prereg_vs_record');
+  });
+
+  it('J9: a non-form file is never the loop gate\'s prereg (the null-prereg half survives the fix)', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, `${COA}/prereg-mb18-a.json`, inc1('MB-18'));
+    stageInc1Record(dir, 1);
+
+    const ctx = await ctxOf(dir, 'commit');
+    // The null-prereg half is green on old and new code (a survive-the-fix lock); only `prereg_task_unknown:commit` is red on the old code.
+    expect(ctx.prereg).toBeNull();
+    const violations = (await evaluateGateOf())(ctx).violations;
+    expect(violations).toContain('prereg_task_unknown:commit');
+    expect(violations).toContain('prereg_missing');
+    expect(violations).toContain('increment_not_one_id:prereg');
+    expect(violations).toContain('increment_differs_prereg_vs_record');
+  });
+
+  it('J10: the newest k is unparsable and an older one is valid: no fall-back to the older file', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    commitAlone(dir, pre('MB-78', 2), '{not json\n');
+    stageInc1Record(dir, 1);
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(ctx.prereg).toBeNull();
+    const violations = (await evaluateGateOf())(ctx).violations;
+    expect(violations).toContain(`prereg_unparsable:${pre('MB-78', 2)}`);
+    expect(violations).toContain('prereg_missing');
+  });
+
+  it('J11: the ROOT commit adds the record: the push rule has no parent to read, prereg_task_unknown:no-parent', async () => {
+    const dir = makeRepo();
+    // No seedJoinBase here: seedBase writes RECORD_1, and the ROOT commit adds it (the root has no parent commit).
+    seedBase(dir);
+    commitAll(dir, 'base\n\nMcBylaws-Task: MB-78');
+    // Not reset to anything: commit mode with nothing staged joins the COMMITTED record by the push rule.
+    expect(gitQ(dir, ['rev-list', '--count', 'HEAD'])).toBe('1');
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(ctx.latest?.path).toBe(RECORD_1);
+    expect(joinOf(ctx)?.violations ?? []).toContain('prereg_task_unknown:no-parent');
+  });
+
+  it('J12: the record appears only in a merge resolution: no commit ADDS it, prereg_task_unknown:no-add-commit', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    fs.rmSync(path.join(dir, RECORD_1), { force: true });
+    gitQ(dir, ['checkout', '-q', '-b', 'side']);
+    commitUnrelated(dir, 'side');
+    gitQ(dir, ['checkout', '-q', '-']);
+    commitUnrelated(dir, 'main');
+    gitQ(dir, ['merge', '-q', '--no-commit', '--no-ff', 'side']);
+    // The record is written by the MERGE RESOLUTION itself: no commit of the history ADDS it.
+    writeFile(dir, RECORD_1, bind(recordPayload({ increment: '1', round: 1, decision: 'revert', inputs: inputsOf(dir, BOUND_PATHS) })));
+    gitQ(dir, ['add', '--', RECORD_1]);
+    gitQ(dir, ['commit', '-q', '--no-verify', '-m', 'merge\n\nMcBylaws-Task: MB-78']);
+    // Fixture fact: git cannot name the commit that added the record.
+    expect(gitQ(dir, ['log', '--diff-filter=A', '--format=%H', '--', RECORD_1])).toBe('');
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(joinOf(ctx)?.violations ?? []).toContain('prereg_task_unknown:no-add-commit');
+  });
+
+  it('J13: HEAD adds another task\'s prereg (commit takes MB-79), then push takes MB-78 from the trailer', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    commitAlone(dir, pre('MB-79', 1), inc1('MB-79'));
+    stageInc1Record(dir, 1);
+
+    const commit = await ctxOf(dir, 'commit');
+    // The commit half is red on the old code (HEAD added MB-79), the push half is green on both (stated).
+    expect(commit.preregFile).toBe(pre('MB-79', 1));
+    expect(joinOf(commit)?.task).toBe('MB-79');
+
+    gitQ(dir, ['commit', '-q', '--no-verify', '-m', 'round\n\nMcBylaws-Task: MB-78']);
+    const push = await ctxOf(dir, 'push', base);
+    expect(push.preregFile).toBe(pre('MB-78', 1));
+    expect(joinOf(push)?.source).toBe('trailer');
+  });
+});
+
+// F1 (MB-79 (h); ba05d889): a hooks-path leak is pinned on the file that caused it.
+afterAll(() => expect(hooksPathVerdict(readRealHooksPath(ROOT), process.env.CI === 'true')).toBeNull());

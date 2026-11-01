@@ -161,6 +161,8 @@ function stageRecord(ctx, rec) {
   if (ctx.firstRoundOfIncrement) {
     out.push(...checkSkipAhead(rec.increment, asArray(ctx.greenHistory), ctx.incrementIds));
   }
+  // R-MA (MB-79 h): the join's own codes (prereg_task_unknown:*, prereg_name_task_mismatch:*, prereg_unparsable:*), beside prereg_missing.
+  out.push(...asArray(ctx.preregJoin && ctx.preregJoin.violations));
   if (!ctx.prereg) {
     out.push('prereg_missing');
   } else {

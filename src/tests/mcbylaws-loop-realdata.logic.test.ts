@@ -18,7 +18,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const ROOT = path.resolve(__dirname, '../..');
 const DATA_DIR = path.join(os.homedir(), 'Buildo-scratch', 'coa-data');
 const GATE_REL = 'scripts/analysis/mcbylaws-loop/loop-gate.mjs';
-const CLONE_OVERLAY = ['scripts/analysis/mcbylaws-loop', path.join('mcbylaws', 'loop')];
+// R-MA (amends R-KV; MB-79 h): the loop gate imports scripts/analysis/mcbylaws/prereg-name.mjs, so that directory is overlaid too.
+const CLONE_OVERLAY = ['scripts/analysis/mcbylaws-loop', 'scripts/analysis/mcbylaws', path.join('mcbylaws', 'loop')];
 const ASSEMBLY = 'scripts/analysis/bylaw-validation/assembly.mjs';
 const RULE_MAP = 'scripts/analysis/bylaw/_schema/bylaw-rule-map.json';
 const PIN_172 = 'scripts/analysis/bylaw-validation/coa-expected/expected-172.json';
@@ -333,7 +334,7 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
     expect(commit.status).toBe(0);
 
     // (e) the push gate over base..HEAD is green too
-    commitAll('honest real-data round');
+    commitAll('honest real-data round\n\nMcBylaws-Task: MB-99');
     const push = gate(['--mode', 'push', '--base', base]);
     expect(push.stdout).not.toContain('FAIL');
     expect(push.status).toBe(0);
@@ -367,9 +368,9 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
     const before = revParse(clone, 'HEAD');
     // the round's code edit lands FIRST: the forged record is re-bound to this committed tree and rewrites that record
     stageComment();
-    commitAll('the round code edit');
+    commitAll('the round code edit\n\nMcBylaws-Task: MB-99');
     const recordRel = writeRecord('e2e: round to be forged');
-    const committed = commitAll('the round record (to be forged)');
+    const committed = commitAll('the round record (to be forged)\n\nMcBylaws-Task: MB-99');
 
     const recordFile = path.join(clone, recordRel);
     const parsed: unknown = JSON.parse(readText(recordFile));
@@ -390,7 +391,7 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
     const rewritten = git(clone, ['diff', '--quiet', 'HEAD', '--', recordRel]);
     expect(rewritten.status).toBe(1);
     stageComment();
-    commitAll('forged round (the case status is flipped)');
+    commitAll('forged round (the case status is flipped)\n\nMcBylaws-Task: MB-99');
 
     expect(before).not.toBe(committed);
     const r = gate(['--mode', 'push', '--base', before]);

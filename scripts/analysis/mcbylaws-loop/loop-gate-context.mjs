@@ -8,6 +8,9 @@
 // top-level import in either direction would make the other half of the cycle eagerly evaluated. `deps` is the test seam.
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { parseMessage } from '../mcbylaws/cite-parse.mjs';
+import { byNewest, parsePreregName } from '../mcbylaws/prereg-name.mjs';
+import { recordAddCommit } from './loop-prereg.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_OF_MODULE = path.resolve(HERE, '../../..');
@@ -19,8 +22,6 @@ const PROTECTED_REL = 'mcbylaws/protected-paths.json';
 const RECORD_DIR_REL = 'docs/reports/loop-records';
 const PREREG_DIR_REL = 'scripts/analysis/bylaw-validation/coa-expected';
 const COUNT_FLOORS_RE = /^mcbylaws\/loop\/floors-[^/]*\.json$/;
-const PREREG_RE = /^scripts\/analysis\/bylaw-validation\/coa-expected\/prereg-MB-[^/]*-[^/]*\.json$/;
-const DIGITS = '\\d+';
 // N68-1: the register (69a + Spec 69, one text) and the closed increment list are read at the round's revision, like every other fact.
 const REGISTER_PARTS = ['docs/specs/01-pipeline/69a_mcbylaw_register.md', 'docs/specs/01-pipeline/69_mcbylaw_policy.md'];
 const INCREMENTS_REL = 'scripts/analysis/mcbylaws-loop/data/increments.json';
@@ -190,6 +191,91 @@ function incrementsAt(git, root, rev) {
   return ids;
 }
 
+/** git(root, args) as text, or null when git fails (a reader here never throws). */
+function tryGitText(git, root, args) {
+  try {
+    return String(git.git(root, args));
+  } catch {
+    return null;
+  }
+}
+
+/** R-MA, commit time: the ONE task among the prereg-<task>-<k>.json files HEAD's commit adds (status A), else null. */
+export function headPreregTask(git, root) {
+  const out = tryGitText(git, root, ['diff-tree', '--no-commit-id', '--root', '-r', '--name-status', '-z', 'HEAD']);
+  if (out === null) return null;
+  const parts = out.split('\0');
+  const tasks = new Set();
+  for (let i = 0; i < parts.length;) {
+    const status = parts[i].trim();
+    if (!status) { i += 1; continue; }
+    if (status[0] === 'R' || status[0] === 'C') { i += 3; continue; }
+    const rel = parts[i + 1];
+    i += 2;
+    if (status === 'A') {
+      const name = parsePreregName(rel);
+      if (name) tasks.add(name.task);
+    }
+  }
+  return tasks.size === 1 ? [...tasks][0] : null;
+}
+
+/** R-MA, push and ci: the McBylaws-Task trailer of a commit (cite-parse owns the trailer form), or null. */
+export function trailerTask(git, root, sha) {
+  const text = tryGitText(git, root, ['log', '-1', '--format=%B', sha]);
+  return text === null ? null : parseMessage(text).task;
+}
+
+/**
+ * R-MA (amends R-KV; 2026-11-01-batch-ao#CHAT-216.O-28): the prereg of one record. The task T: at commit time for a NEW record, the
+ * task of the prereg HEAD's commit adds (the tree is HEAD); otherwise (push, ci, or a record already committed) the trailer of the
+ * commit that adds the record (the tree is that commit's first parent: "committed strictly before"). Candidates: T's
+ * prereg-<T>-<k>.json files in the tree, filtered by NAME before any read (another task's file is never read), newest integer k
+ * first: unparsable stops (prereg_unparsable), a JSON task that is not T stops (prereg_name_task_mismatch), another increment is
+ * skipped, else it is the prereg. `record` = {path, rec}. Returns {prereg, preregFile, task, source, violations}.
+ */
+export function findPreregFor({ git, root, mode, record, isNew }) {
+  const none = (violations, task = null, source = null) => ({ prereg: null, preregFile: null, task, source, violations });
+  if (!record || typeof record.path !== 'string' || !isObject(record.rec)) return none([]);
+  let task;
+  let source;
+  let tree;
+  if (mode === 'commit' && isNew) {
+    source = 'head-prereg';
+    tree = 'HEAD';
+    task = headPreregTask(git, root);
+    if (!task) return none(['prereg_task_unknown:commit'], null, source);
+  } else {
+    source = 'trailer';
+    let add = null;
+    try {
+      add = recordAddCommit((r, args) => git.git(r, args), root, record.path);
+    } catch {
+      add = null;
+    }
+    if (!add) return none(['prereg_task_unknown:no-add-commit'], null, source);
+    const parent = revOf(git, root, `${add}^`);
+    if (!parent) return none(['prereg_task_unknown:no-parent'], null, source);
+    task = trailerTask(git, root, add);
+    if (!task) return none(['prereg_task_unknown:no-trailer'], null, source);
+    tree = parent;
+  }
+  const candidates = [];
+  for (const rel of listFiles(git, root, tree, PREREG_DIR_REL)) {
+    const name = parsePreregName(rel);
+    if (name && name.task === task) candidates.push({ rel, k: name.k });
+  }
+  candidates.sort(byNewest);
+  for (const { rel } of candidates) {
+    const parsed = readJson(git.readAt(root, tree, rel));
+    if (!isObject(parsed)) return none([`prereg_unparsable:${rel}`], task, source);
+    if (parsed.task !== task) return none([`prereg_name_task_mismatch:${rel}`], task, source);
+    if (parsed.increment !== record.rec.increment) continue;
+    return { prereg: parsed, preregFile: rel, task, source, violations: [] };
+  }
+  return none([], task, source);
+}
+
 /**
  * The ctx for evaluateGate, collected from git. `parsed` = parseArgs' { root, mode, base, target }; `deps` =
  * { git, computeRun, readRegisterText }, every one injectable. An unresolvable base throws `base_not_resolvable` (exit 2).
@@ -289,27 +375,12 @@ export async function buildContext(parsed = {}, deps = {}) {
     }
   }
 
-  // The prereg listing is read at the PRE-ROUND tree: a commit-mode round keeps its prereg in HEAD (it is committed BEFORE the round,
-  // MB-67 rule: HEAD at commit time), so `:index` would never see it. Push and ci read the tip (the prereg lands inside the range; its order is checked by gitPreregHistory).
-  const preregRev = commit ? base : rev;
-  const preregs = listFiles(git, root, preregRev, PREREG_DIR_REL).filter((rel) => PREREG_RE.test(rel)).sort();
-  let prereg = null;
-  let preregFile = null;
-  // O68-05: the prereg is found by FILE NAME, prereg-MB-<digits>-<round>.json (the record's loop round), NEVER by a fixed task
-  // number; its `round` field is the CoA batch counter, so it never joins the record. What must agree is the increment: the prereg
-  // registers this increment's rows. Several matching names: the first whose increment agrees, else none.
-  if (latest && typeof latest.rec.round === 'number') {
-    const nameRe = new RegExp(`^${escapeRe(PREREG_DIR_REL)}/prereg-MB-\\d+-${latest.rec.round}\\.json$`);
-    for (const rel of preregs) {
-      if (!nameRe.test(rel)) continue;
-      const parsedPrereg = readJson(git.readAt(root, preregRev, rel));
-      if (isObject(parsedPrereg) && parsedPrereg.increment === increment) {
-        prereg = parsedPrereg;
-        preregFile = rel;
-        break;
-      }
-    }
-  }
+  // R-MA (amends R-KV; 2026-11-01-batch-ao#CHAT-216.O-28): the landing task's newest prereg of the record's increment, committed
+  // strictly before the commit that adds the record (findPreregFor). Its violations reach evaluateGate through ctx.preregJoin.
+  const join = findPreregFor({ git, root, mode, record: latest, isNew: Boolean(last) && latest === last });
+  const prereg = join.prereg;
+  const preregFile = join.preregFile;
+  const preregJoin = { task: join.task, source: join.source, violations: join.violations };
   const preregHistory = commit || !latest || !preregFile ? null : gitPreregHistory(root, preregFile, latest.path);
   const rowsTouched = asArray(prereg && prereg.rows_touched);
 
@@ -366,6 +437,7 @@ export async function buildContext(parsed = {}, deps = {}) {
     prereg,
     preregFile,
     preregHistory,
+    preregJoin,
     treeBlobs,
     changedBound,
     regression,
@@ -461,8 +533,5 @@ function previousRound(records, increment, round) {
 }
 
 const distinct = (list) => [...new Set(list)];
-
-/** A string made literal for a RegExp (the prereg directory carries no metacharacters today; this keeps it that way). */
-const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const defaultParseRecord = (text) => readJson(text);

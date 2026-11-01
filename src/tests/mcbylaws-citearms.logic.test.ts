@@ -1,12 +1,14 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy_appendix.md R-KV (task trailer), R-KG (OWED = blocked,
 //            except arm C: a commit that also adds the rule's lock + red evidence), R-KH (cites a RULED rule),
 //            R-LE (RULED is a closed list); plan arm C (MB-67), checks CT1..CT11, item L31-01.
+// SPEC LINK: docs/specs/01-pipeline/124a_step_standard_policy_appendix.md R-MA (amends R-KV; 2026-11-01-batch-ao#CHAT-216.O-28): arm C reads the task's newest prereg-<task>-<k>.json; legacy names only while the task has none.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { makeRepo, type Repo } from './fixtures/mcbylaws-gate/repo-helper';
 import { parseMessage, parseOwedTable, parseRegisterRows } from '../../scripts/analysis/mcbylaws/cite-parse.mjs';
 import { boot1Check, citeForCommit, lockLands, PREREG_RE } from '../../scripts/analysis/mcbylaws/cite-arms.mjs';
+import { hooksPathVerdict, readRealHooksPath } from './hooks-path-guard.global';
 
 const FIX = path.join(__dirname, 'fixtures/mcbylaws-gate');
 const read = (n: string) => fs.readFileSync(path.join(FIX, n), 'utf8');
@@ -171,3 +173,94 @@ describe('CT9 / misc — boot1Check, the prereg glob, never throws', () => {
   });
   it('parseMessage seed', () => { expect(parseMessage(read('msg-1d4b20d9.txt')).task).toBeNull(); });
 });
+
+describe('R-MA arm C: the task\'s newest prereg (integer k), legacy names only while the task has none', () => {
+  const f = (task: string, k: number) => `${PREREG_DIR}/prereg-${task}-${String(k)}.json`;
+  const msg = (task: string, id: string) => `fixture cites ${id}\n\nMcBylaws-Task: ${task}`;
+  const build = (files: Array<[string, string]>): Repo => {
+    const r = makeRepo();
+    r.write('base.txt', 'base');
+    r.commit('base');
+    for (const [p, text] of files) r.write(p, text);
+    r.commit('preregs');
+    return r;
+  };
+
+  it('C1 red: newest by integer (commit-msg form): k=2 governs over k=1', () => {
+    const r = build([[f('MB-78', 1), prereg('MB-78', ['M-180'])], [f('MB-78', 2), prereg('MB-78', ['M-252'])]]);
+    try {
+      expect(cite(r, msg('MB-78', 'M-252'))).toEqual([]);
+      expect(cite(r, msg('MB-78', 'M-180'))).toEqual(['FAIL:C:cite-not-in-rules:M-180']);
+    } finally { r.cleanup(); }
+  });
+
+  it('C1 red: newest by integer (range form, push/CI): k=2 governs over k=1 and sha is appended', () => {
+    const r = build([[f('MB-78', 1), prereg('MB-78', ['M-180'])], [f('MB-78', 2), prereg('MB-78', ['M-252'])]]);
+    try {
+      r.write(L2, 'export const x = 1;\n');
+      const sha = r.commit(msg('MB-78', 'M-252'));
+      expect(citeForCommit({ cwd: r.dir, policy, entries: [entry(L2)], message: msg('MB-78', 'M-252'),
+        parentRev: `${sha}^`, ownRev: sha, owed, rows, sha })).toEqual([]);
+      expect(citeForCommit({ cwd: r.dir, policy, entries: [entry(L2)], message: msg('MB-78', 'M-180'),
+        parentRev: `${sha}^`, ownRev: sha, owed, rows, sha })).toEqual([`FAIL:C:cite-not-in-rules:M-180:${sha}`]);
+    } finally { r.cleanup(); }
+  });
+
+  it('C2 red: -1 vs -10, k=10 is the newest', () => {
+    const r = build([[f('MB-78', 1), prereg('MB-78', ['M-180'])], [f('MB-78', 10), prereg('MB-78', ['M-252'])]]);
+    try {
+      expect(cite(r, msg('MB-78', 'M-252'))).toEqual([]);
+    } finally { r.cleanup(); }
+  });
+
+  it('C2 green on old and new: -2 vs -10, byte order already reached -10 here', () => {
+    const r = build([[f('MB-78', 2), prereg('MB-78', ['M-180'])], [f('MB-78', 10), prereg('MB-78', ['M-252'])]]);
+    try {
+      expect(cite(r, msg('MB-78', 'M-252'))).toEqual([]);
+    } finally { r.cleanup(); }
+  });
+
+  it('C3 red: another task\'s form file is not a rules source', () => {
+    const r = build([[f('MB-79', 1), prereg('MB-78', ['M-252'])]]);
+    try {
+      expect(cite(r, msg('MB-78', 'M-252'))).toEqual(['FAIL:C:no-rules']);
+    } finally { r.cleanup(); }
+  });
+
+  it('C4 red: once the task has a form file, the legacy file is not the source', () => {
+    const r = build([[`${PREREG_DIR}/prereg-K18.json`, prereg('MB-18', ['M-252'])], [f('MB-18', 1), prereg('MB-18', ['M-180'])]]);
+    try {
+      expect(cite(r, msg('MB-18', 'M-252'))).toEqual(['FAIL:C:cite-not-in-rules:M-252']);
+    } finally { r.cleanup(); }
+  });
+
+  it('C4 green on both: a legacy file is the source while the task has no form file', () => {
+    const r = build([[`${PREREG_DIR}/prereg-K18.json`, prereg('MB-18', ['M-252'])]]);
+    try {
+      expect(cite(r, msg('MB-18', 'M-252'))).toEqual([]);
+    } finally { r.cleanup(); }
+  });
+
+  it('C5 red: the newest file has empty rules and there is no fall-back to an older file', () => {
+    const r = build([[f('MB-78', 1), prereg('MB-78', ['M-252'])], [f('MB-78', 2), prereg('MB-78', [])]]);
+    try {
+      expect(cite(r, msg('MB-78', 'M-252'))).toEqual(['FAIL:C:no-rules']);
+    } finally { r.cleanup(); }
+  });
+
+  it('C6 red: the newest file\'s name and its JSON task disagree', () => {
+    const r = build([[f('MB-78', 2), prereg('MB-79', ['M-252'])], [f('MB-78', 1), prereg('MB-78', ['M-252'])]]);
+    try {
+      expect(cite(r, msg('MB-78', 'M-252'))).toEqual([`FAIL:C:prereg-task-mismatch:${f('MB-78', 2)}`]);
+    } finally { r.cleanup(); }
+  });
+
+  it('C8 red: the newest form file is unparsable, so it is cannot-decide', () => {
+    const r = build([[f('MB-78', 1), prereg('MB-78', ['M-252'])], [f('MB-78', 2), '{not json\n']]);
+    try {
+      expect(cite(r, msg('MB-78', 'M-252'))).toEqual(['FAIL:C:cannot-decide']);
+    } finally { r.cleanup(); }
+  });
+});
+
+afterAll(() => expect(hooksPathVerdict(readRealHooksPath(path.resolve(__dirname, '../..')), process.env.CI === 'true')).toBeNull());

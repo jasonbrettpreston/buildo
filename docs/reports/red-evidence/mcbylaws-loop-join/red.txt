@@ -1,0 +1,588 @@
+# MB-79 (h) RED run, 2026-11-01T14:49:06Z, worktree ~/Buildo-wt-mb79h (wf1/mb79h @ 5201af12), tests written, code untouched
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79h
+
+ ❯ src/tests/mcbylaws-loop-prereg-join.logic.test.ts (0 test)
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts (33 tests | 8 failed) 1570ms
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C1 red: newest by integer (commit-msg form): k=2 governs over k=1 95ms
+     → expected [ 'FAIL:C:cite-not-in-rules:M-252' ] to deeply equal []
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C1 red: newest by integer (range form, push/CI): k=2 governs over k=1 and sha is appended 107ms
+     → expected [ Array(1) ] to deeply equal []
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C2 red: -1 vs -10, k=10 is the newest 82ms
+     → expected [ 'FAIL:C:cite-not-in-rules:M-252' ] to deeply equal []
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C3 red: another task's form file is not a rules source 80ms
+     → expected [] to deeply equal [ 'FAIL:C:no-rules' ]
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C4 red: once the task has a form file, the legacy file is not the source 87ms
+     → expected [] to deeply equal [ 'FAIL:C:cite-not-in-rules:M-252' ]
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C5 red: the newest file has empty rules and there is no fall-back to an older file 88ms
+     → expected [] to deeply equal [ 'FAIL:C:no-rules' ]
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C6 red: the newest file's name and its JSON task disagree 83ms
+     → expected [] to deeply equal [ Array(1) ]
+   × R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C8 red: the newest form file is unparsable, so it is cannot-decide 80ms
+     → expected [] to deeply equal [ 'FAIL:C:cannot-decide' ]
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts (32 tests | 17 failed) 7908ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > an UNSTAGED register edit is NOT seen in commit mode; the same edit STAGED is 412ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > push mode reads the register at HEAD: a landed ruling is seen, a merely written one is not 534ms
+   ✓ buildContext: push and ci mode > derives base from the merge-base of the target when --base is empty 310ms
+   ✓ buildContext: push and ci mode > N68-2 greenHistory also holds the increments accepted INSIDE the range (never the one under judgement) 315ms
+   ✓ buildContext: push and ci mode > greenHistory from accepted records at the base, prevCases from the previous round of the increment 319ms
+   ✓ buildContext -> evaluateGate (end to end) > the honest round has no violations; an empty reason is accept_without_reason 632ms
+   × R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J1: the MB-78 real case — the task comes from HEAD's added prereg, the newest k with the record's increment wins 185ms
+     → expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > E1: the MB-78 real case raises no prereg_missing and no increment disagreement 213ms
+     → expected [ 'increment_not_one_id:prereg', …(2) ] to not include 'prereg_missing'
+   × R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J1b: a new -3 landed directly under the record is the one taken (the landing order, never HEAD) 209ms
+     → expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J2: the highest k AMONG the increment matches is taken, a newer prereg of another increment is skipped 198ms
+     → expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J3: another task's prereg file is never read (not even a broken one) 194ms
+     → expected 'scripts/analysis/bylaw-validation/coa…' to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J4: k is an integer, so -10 beats -2 202ms
+     → expected 'scripts/analysis/bylaw-validation/coa…' to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J5: a later prereg-only commit does not take over an earlier record (push) 277ms
+     → expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J6: ci mode joins the same record by the same trailer, and computes no run 264ms
+     → expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J6b: the commit that adds the record carries no trailer: prereg_task_unknown:no-trailer 227ms
+     → expected [] to include 'prereg_task_unknown:no-trailer'
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J6c: a WRONG trailer joins another task's preregs only: MB-79 has none, so prereg_missing 268ms
+     → expected { schema: 'coa-round-prereg-v1', …(9) } to be null
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J7: commit mode where HEAD did not add the prereg: prereg_task_unknown:commit and prereg_missing (the disclosed cost) 186ms
+     → expected [] to include 'prereg_task_unknown:commit'
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J8: the file name says MB-78, its JSON says MB-79: prereg_name_task_mismatch 166ms
+     → expected { schema: 'coa-round-prereg-v1', …(9) } to be null
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J9: a non-form file is never the loop gate's prereg (the null-prereg half survives the fix) 159ms
+     → expected [ 'increment_not_one_id:prereg', …(2) ] to include 'prereg_task_unknown:commit'
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J10: the newest k is unparsable and an older one is valid: no fall-back to the older file 184ms
+     → expected { schema: 'coa-round-prereg-v1', …(9) } to be null
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J11: the ROOT commit adds the record: the push rule has no parent to read, prereg_task_unknown:no-parent 123ms
+     → expected [] to include 'prereg_task_unknown:no-parent'
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J12: the record appears only in a merge resolution: no commit ADDS it, prereg_task_unknown:no-add-commit 225ms
+     → expected [] to include 'prereg_task_unknown:no-add-commit'
+   × R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J13: HEAD adds another task's prereg (commit takes MB-79), then push takes MB-78 from the trailer 184ms
+     → expected 'scripts/analysis/bylaw-validation/coa…' to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+ ✓ src/tests/mcbylaws-loop-realdata.logic.test.ts (13 tests) 219082ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 1. honest round (a comment, no scorer row moves) goes green through the real CLI 38469ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 2. dishonest: a code change AFTER the record was written is stale_green 15485ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 2b. a code change with no record at all is record_missing 9076ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 3. dishonest: a forged case status in a COMMITTED record is record_differs_from_run 29386ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 4. dishonest: a hand-edited pin is generated_not_regenerable 10135ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 5. metadata only: a rule-map touch needs no record, but beside a code edit it is record_missing 17983ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 6. prereg-only add: a new prereg file is out of scope 9040ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 7. floors still guard the real data: a raised floor over the real rows is floor_fell 10182ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 8. a real scorer row that moves with no prereg entry is unexpected_move 19042ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 9. the same move registered in the prereg is green, and a registered move that does not happen is missing_move 34947ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 10. the round-0 count floors file holds the real counts and both it and the OWED baseline still guard them 10258ms
+   ✓ MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 11. the OWED baseline cannot be LOWERED by hand: a round may not loosen its own ratchet 10159ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-prereg-join.logic.test.ts [ src/tests/mcbylaws-loop-prereg-join.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcbylaws/prereg-name.mjs (resolved id: ../../scripts/analysis/mcbylaws/prereg-name.mjs) in /Users/brettpreston_macmini/Buildo-wt-mb79h/src/tests/mcbylaws-loop-prereg-join.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/26]⎯
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 25 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C1 red: newest by integer (commit-msg form): k=2 governs over k=1
+AssertionError: expected [ 'FAIL:C:cite-not-in-rules:M-252' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "FAIL:C:cite-not-in-rules:M-252",
++ ]
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:192:46
+    190|     const r = build([[f('MB-78', 1), prereg('MB-78', ['M-180'])], [f('…
+    191|     try {
+    192|       expect(cite(r, msg('MB-78', 'M-252'))).toEqual([]);
+       |                                              ^
+    193|       expect(cite(r, msg('MB-78', 'M-180'))).toEqual(['FAIL:C:cite-not…
+    194|     } finally { r.cleanup(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/26]⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C1 red: newest by integer (range form, push/CI): k=2 governs over k=1 and sha is appended
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "FAIL:C:cite-not-in-rules:M-252:6c66f38b68b6235e308e2c1036df5bef2f365d05",
++ ]
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:203:64
+    201|       const sha = r.commit(msg('MB-78', 'M-252'));
+    202|       expect(citeForCommit({ cwd: r.dir, policy, entries: [entry(L2)],…
+    203|         parentRev: `${sha}^`, ownRev: sha, owed, rows, sha })).toEqual…
+       |                                                                ^
+    204|       expect(citeForCommit({ cwd: r.dir, policy, entries: [entry(L2)],…
+    205|         parentRev: `${sha}^`, ownRev: sha, owed, rows, sha })).toEqual…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/26]⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C2 red: -1 vs -10, k=10 is the newest
+AssertionError: expected [ 'FAIL:C:cite-not-in-rules:M-252' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "FAIL:C:cite-not-in-rules:M-252",
++ ]
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:212:46
+    210|     const r = build([[f('MB-78', 1), prereg('MB-78', ['M-180'])], [f('…
+    211|     try {
+    212|       expect(cite(r, msg('MB-78', 'M-252'))).toEqual([]);
+       |                                              ^
+    213|     } finally { r.cleanup(); }
+    214|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/26]⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C3 red: another task's form file is not a rules source
+AssertionError: expected [] to deeply equal [ 'FAIL:C:no-rules' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:C:no-rules",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:226:46
+    224|     const r = build([[f('MB-79', 1), prereg('MB-78', ['M-252'])]]);
+    225|     try {
+    226|       expect(cite(r, msg('MB-78', 'M-252'))).toEqual(['FAIL:C:no-rules…
+       |                                              ^
+    227|     } finally { r.cleanup(); }
+    228|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/26]⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C4 red: once the task has a form file, the legacy file is not the source
+AssertionError: expected [] to deeply equal [ 'FAIL:C:cite-not-in-rules:M-252' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:C:cite-not-in-rules:M-252",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:233:46
+    231|     const r = build([[`${PREREG_DIR}/prereg-K18.json`, prereg('MB-18',…
+    232|     try {
+    233|       expect(cite(r, msg('MB-18', 'M-252'))).toEqual(['FAIL:C:cite-not…
+       |                                              ^
+    234|     } finally { r.cleanup(); }
+    235|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/26]⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C5 red: the newest file has empty rules and there is no fall-back to an older file
+AssertionError: expected [] to deeply equal [ 'FAIL:C:no-rules' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:C:no-rules",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:247:46
+    245|     const r = build([[f('MB-78', 1), prereg('MB-78', ['M-252'])], [f('…
+    246|     try {
+    247|       expect(cite(r, msg('MB-78', 'M-252'))).toEqual(['FAIL:C:no-rules…
+       |                                              ^
+    248|     } finally { r.cleanup(); }
+    249|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/26]⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C6 red: the newest file's name and its JSON task disagree
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:C:prereg-task-mismatch:scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-2.json",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:254:46
+    252|     const r = build([[f('MB-78', 2), prereg('MB-79', ['M-252'])], [f('…
+    253|     try {
+    254|       expect(cite(r, msg('MB-78', 'M-252'))).toEqual([`FAIL:C:prereg-t…
+       |                                              ^
+    255|     } finally { r.cleanup(); }
+    256|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/26]⎯
+
+ FAIL  src/tests/mcbylaws-citearms.logic.test.ts > R-MA arm C: the task's newest prereg (integer k), legacy names only while the task has none > C8 red: the newest form file is unparsable, so it is cannot-decide
+AssertionError: expected [] to deeply equal [ 'FAIL:C:cannot-decide' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:C:cannot-decide",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-citearms.logic.test.ts:261:46
+    259|     const r = build([[f('MB-78', 1), prereg('MB-78', ['M-252'])], [f('…
+    260|     try {
+    261|       expect(cite(r, msg('MB-78', 'M-252'))).toEqual(['FAIL:C:cannot-d…
+       |                                              ^
+    262|     } finally { r.cleanup(); }
+    263|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J1: the MB-78 real case — the task comes from HEAD's added prereg, the newest k with the record's increment wins
+AssertionError: expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+- Expected: 
+"scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-2.json"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:967:28
+    965| 
+    966|     const ctx = await ctxOf(dir, 'commit');
+    967|     expect(ctx.preregFile).toBe(pre('MB-78', 2));
+       |                            ^
+    968|     expect(ctx.prereg?.increment).toBe('1');
+    969|     expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'head-prereg'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > E1: the MB-78 real case raises no prereg_missing and no increment disagreement
+AssertionError: expected [ 'increment_not_one_id:prereg', …(2) ] to not include 'prereg_missing'
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:982:19
+    980|     const evaluateGate = await evaluateGateOf();
+    981|     const v = evaluateGate(ctx).violations;
+    982|     expect(v).not.toContain('prereg_missing');
+       |                   ^
+    983|     expect(v).not.toContain('increment_not_one_id:prereg');
+    984|     expect(v).not.toContain('increment_differs_prereg_vs_record');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J1b: a new -3 landed directly under the record is the one taken (the landing order, never HEAD)
+AssertionError: expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+- Expected: 
+"scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-3.json"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:996:28
+    994| 
+    995|     const ctx = await ctxOf(dir, 'commit');
+    996|     expect(ctx.preregFile).toBe(pre('MB-78', 3));
+       |                            ^
+    997|     expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'head-prereg'…
+    998|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J2: the highest k AMONG the increment matches is taken, a newer prereg of another increment is skipped
+AssertionError: expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+- Expected: 
+"scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-1.json"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1010:28
+    1008| 
+    1009|     const ctx = await ctxOf(dir, 'commit');
+    1010|     expect(ctx.preregFile).toBe(pre('MB-78', 1));
+       |                            ^
+    1011|     expect(joinOf(ctx)?.violations).toEqual([]);
+    1012|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J3: another task's prereg file is never read (not even a broken one)
+AssertionError: expected 'scripts/analysis/bylaw-validation/coa…' to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+Expected: "scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-2.json"
+Received: "scripts/analysis/bylaw-validation/coa-expected/prereg-MB-79-1.json"
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1026:30
+    1024|       const spy: GitDeps = { ...real, readAt: (r, rev, p) => { seen.pu…
+    1025|       const ctx = await ctxOf(dir, 'commit', '', { git: spy });
+    1026|       expect(ctx.preregFile).toBe(pre('MB-78', 2));
+       |                              ^
+    1027|       expect(seen.some((p) => p.includes('prereg-MB-79-'))).toBe(false…
+    1028|       // positive control: the landing task's own prereg WAS read
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J4: k is an integer, so -10 beats -2
+AssertionError: expected 'scripts/analysis/bylaw-validation/coa…' to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+Expected: "scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-10.json"
+Received: "scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-2.json"
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1042:28
+    1040| 
+    1041|     const ctx = await ctxOf(dir, 'commit');
+    1042|     expect(ctx.preregFile).toBe(pre('MB-18', 10));
+       |                            ^
+    1043|   });
+    1044| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J5: a later prereg-only commit does not take over an earlier record (push)
+AssertionError: expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+- Expected: 
+"scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-2.json"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1058:28
+    1056| 
+    1057|     const ctx = await ctxOf(dir, 'push', base);
+    1058|     expect(ctx.preregFile).toBe(pre('MB-78', 2));
+       |                            ^
+    1059|     expect(ctx.preregFile).not.toBe(pre('MB-78', 3));
+    1060|     expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'trailer', vi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J6: ci mode joins the same record by the same trailer, and computes no run
+AssertionError: expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+- Expected: 
+"scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-2.json"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1073:28
+    1071| 
+    1072|     const ctx = await ctxOf(dir, 'ci', '', { computeRun: noComputeRun …
+    1073|     expect(ctx.preregFile).toBe(pre('MB-78', 2));
+       |                            ^
+    1074|     expect(ctx.run).toBeNull();
+    1075|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J6b: the commit that adds the record carries no trailer: prereg_task_unknown:no-trailer
+AssertionError: expected [] to include 'prereg_task_unknown:no-trailer'
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1085:43
+    1083|     const ctx = await ctxOf(dir, 'push', base);
+    1084|     expect(ctx.prereg).toBeNull();
+    1085|     expect(joinOf(ctx)?.violations ?? []).toContain('prereg_task_unkno…
+       |                                           ^
+    1086|     const violations = (await evaluateGateOf())(ctx).violations;
+    1087|     expect(violations).toContain('prereg_task_unknown:no-trailer');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J6c: a WRONG trailer joins another task's preregs only: MB-79 has none, so prereg_missing
+AssertionError: expected { schema: 'coa-round-prereg-v1', …(9) } to be null
+
+- Expected: 
+null
+
++ Received: 
+Object {
+  "$comment": "pre-registered before the round",
+  "expected_moves": Array [],
+  "expected_totals": Object {
+    "MATCH": 2,
+  },
+  "group": "g-a",
+  "increment": "1",
+  "plan_ref": "MB-68 increment 2 round 1",
+  "round": 1,
+  "rows_touched": Array [
+    Object {
+      "id": "10.20.30.110",
+      "increment": "2",
+    },
+  ],
+  "schema": "coa-round-prereg-v1",
+  "task": "MB-78",
+}
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1100:24
+    1098| 
+    1099|     const ctx = await ctxOf(dir, 'push', base);
+    1100|     expect(ctx.prereg).toBeNull();
+       |                        ^
+    1101|     const violations = (await evaluateGateOf())(ctx).violations;
+    1102|     expect(violations).toContain('prereg_missing');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J7: commit mode where HEAD did not add the prereg: prereg_task_unknown:commit and prereg_missing (the disclosed cost)
+AssertionError: expected [] to include 'prereg_task_unknown:commit'
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1114:24
+    1112|     const ctx = await ctxOf(dir, 'commit');
+    1113|     const violations = (await evaluateGateOf())(ctx).violations;
+    1114|     expect(violations).toContain('prereg_task_unknown:commit');
+       |                        ^
+    1115|     expect(violations).toContain('prereg_missing');
+    1116|     expect(violations).toContain('increment_not_one_id:prereg');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J8: the file name says MB-78, its JSON says MB-79: prereg_name_task_mismatch
+AssertionError: expected { schema: 'coa-round-prereg-v1', …(9) } to be null
+
+- Expected: 
+null
+
++ Received: 
+Object {
+  "$comment": "pre-registered before the round",
+  "expected_moves": Array [],
+  "expected_totals": Object {
+    "MATCH": 2,
+  },
+  "group": "g-a",
+  "increment": "1",
+  "plan_ref": "MB-68 increment 2 round 1",
+  "round": 1,
+  "rows_touched": Array [
+    Object {
+      "id": "10.20.30.110",
+      "increment": "2",
+    },
+  ],
+  "schema": "coa-round-prereg-v1",
+  "task": "MB-79",
+}
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1128:24
+    1126| 
+    1127|     const ctx = await ctxOf(dir, 'commit');
+    1128|     expect(ctx.prereg).toBeNull();
+       |                        ^
+    1129|     const violations = (await evaluateGateOf())(ctx).violations;
+    1130|     expect(violations).toContain(`prereg_name_task_mismatch:${pre('MB-…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J9: a non-form file is never the loop gate's prereg (the null-prereg half survives the fix)
+AssertionError: expected [ 'increment_not_one_id:prereg', …(2) ] to include 'prereg_task_unknown:commit'
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1146:24
+    1144|     expect(ctx.prereg).toBeNull();
+    1145|     const violations = (await evaluateGateOf())(ctx).violations;
+    1146|     expect(violations).toContain('prereg_task_unknown:commit');
+       |                        ^
+    1147|     expect(violations).toContain('prereg_missing');
+    1148|     expect(violations).toContain('increment_not_one_id:prereg');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J10: the newest k is unparsable and an older one is valid: no fall-back to the older file
+AssertionError: expected { schema: 'coa-round-prereg-v1', …(9) } to be null
+
+- Expected: 
+null
+
++ Received: 
+Object {
+  "$comment": "pre-registered before the round",
+  "expected_moves": Array [],
+  "expected_totals": Object {
+    "MATCH": 2,
+  },
+  "group": "g-a",
+  "increment": "1",
+  "plan_ref": "MB-68 increment 2 round 1",
+  "round": 1,
+  "rows_touched": Array [
+    Object {
+      "id": "10.20.30.110",
+      "increment": "2",
+    },
+  ],
+  "schema": "coa-round-prereg-v1",
+  "task": "MB-78",
+}
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1160:24
+    1158| 
+    1159|     const ctx = await ctxOf(dir, 'commit');
+    1160|     expect(ctx.prereg).toBeNull();
+       |                        ^
+    1161|     const violations = (await evaluateGateOf())(ctx).violations;
+    1162|     expect(violations).toContain(`prereg_unparsable:${pre('MB-78', 2)}…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J11: the ROOT commit adds the record: the push rule has no parent to read, prereg_task_unknown:no-parent
+AssertionError: expected [] to include 'prereg_task_unknown:no-parent'
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1176:43
+    1174|     const ctx = await ctxOf(dir, 'commit');
+    1175|     expect(ctx.latest?.path).toBe(RECORD_1);
+    1176|     expect(joinOf(ctx)?.violations ?? []).toContain('prereg_task_unkno…
+       |                                           ^
+    1177|   });
+    1178| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J12: the record appears only in a merge resolution: no commit ADDS it, prereg_task_unknown:no-add-commit
+AssertionError: expected [] to include 'prereg_task_unknown:no-add-commit'
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1196:43
+    1194| 
+    1195|     const ctx = await ctxOf(dir, 'commit');
+    1196|     expect(joinOf(ctx)?.violations ?? []).toContain('prereg_task_unkno…
+       |                                           ^
+    1197|   });
+    1198| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/26]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J13: HEAD adds another task's prereg (commit takes MB-79), then push takes MB-78 from the trailer
+AssertionError: expected 'scripts/analysis/bylaw-validation/coa…' to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+Expected: "scripts/analysis/bylaw-validation/coa-expected/prereg-MB-79-1.json"
+Received: "scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-1.json"
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1208:31
+    1206|     const commit = await ctxOf(dir, 'commit');
+    1207|     // The commit half is red on the old code (HEAD added MB-79), the …
+    1208|     expect(commit.preregFile).toBe(pre('MB-79', 1));
+       |                               ^
+    1209|     expect(joinOf(commit)?.task).toBe('MB-79');
+    1210| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/26]⎯
+
+ Test Files  3 failed | 1 passed (4)
+      Tests  25 failed | 53 passed (78)
+   Start at  09:49:06
+   Duration  219.29s (transform 107ms, setup 34ms, collect 82ms, tests 228.56s, environment 0ms, prepare 107ms)
+
+exit 1
