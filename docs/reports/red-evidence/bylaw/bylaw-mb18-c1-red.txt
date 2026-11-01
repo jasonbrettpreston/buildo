@@ -1,0 +1,13 @@
+== item (c1) red: lock L1 with one code's fixture removed; runs: c1a 20261101T000325Z-5bc03dd7 (11 failed of 14: first synthetic attempt), c1a2 20261101T000519Z-a106afa0, c1b 20261101T000632Z-7c40130e, c1c 20261101T000842Z-708bc03c, c1d 20261101T001056Z-e66e6c6e
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/bylaw-ne-codes.logic.test.ts > M-339 — one fixture per NOT_EVALUATED code > LOCK L1: the fixture table and NOT_EVALUATED_CODES list the same codes, both ways
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 passed (25)
+== item (c1) FIX-c1-1 (fixture candidates from the fixture's own lot, no raw-units fallback; engine run C1e 20261101T124845Z-a38694cd): NO RED EXISTS for this fix. It is a LOW test-quality fix that changes no reason: with the current fixtures the loaded candidate sets give the same reasons either way. The red above is the item's own red (lock L1); nothing below is a red.
+   before FIX-c1-1 (c1-built.patch):
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   after FIX-c1-1 (c1-built.v2.patch):
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   test names with their reasons, before vs after: identical (26 lines, diff empty)
