@@ -49,7 +49,7 @@ function run(args: string[], extra?: Record<string, string>) {
 const planJson = JSON.stringify({
   made_at: 'fixture',
   total: 0,
-  triggers: [],
+  triggers: ['parcels.x'],
   order: ['parcels', 'coa_applications', 'parcel_abutments'],
   tables: [
     { t: 'coa_applications', pk: ['id'], cols: ['id', 'application_number', 'lead_id'], rows: 0 },
@@ -212,25 +212,37 @@ describe('night3 restore wiring W7: usage, read-only block, trigger-state exits'
     expect(blockStart).toBeGreaterThanOrEqual(0);
     const block = ls.slice(blockStart, blockStart + 25).join('\n');
     expect(block).not.toMatch(/\b(INSERT|UPDATE|DELETE|ALTER)\b/);
-    expect(TOOL_TEXT).toContain('READ ONLY');
+    expect(block).toContain('ro(');   // F6: the read goes through ro(), whose transaction is READ ONLY
+    const roAt = ls.findIndex((l) => l.startsWith('async function ro('));
+    expect(roAt).toBeGreaterThanOrEqual(0);
+    expect(ls.slice(roAt, roAt + 4).join('\n')).toContain('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
 
     const file = path.join(DIR, 'states.json');
-    fs.writeFileSync(file, JSON.stringify([{ t: 'parcels', name: 'x', state: 'O' }]));
-    const ok = run(['trigger-state', DIR, '--test-states=' + file]);
+    fs.writeFileSync(file, JSON.stringify([{ t: 'public.parcels', name: 'x', state: 'O' }]));
+    const gate = { N3DB_TEST_STATES: '1' };
+    const noEnv = run(['trigger-state', DIR, '--test-states=' + file]);
+    expect(noEnv.status).toBe(2);   // follow-up: the flag alone is refused
+    const ok = run(['trigger-state', DIR, '--test-states=' + file], gate);
     expect(ok.status).toBe(0);
     expect(lines(ok.out).some((l) => l.includes('trigger-state') && l.includes('PASS'))).toBe(true);
 
-    fs.writeFileSync(file, JSON.stringify([{ t: 'parcels', name: 'x', state: 'D' }]));
-    const bad = run(['trigger-state', DIR, '--test-states=' + file]);
+    fs.writeFileSync(file, JSON.stringify([{ t: 'public.parcels', name: 'x', state: 'D' }]));
+    const bad = run(['trigger-state', DIR, '--test-states=' + file], gate);
     expect(bad.status).toBe(1);
     expect(bad.out).toContain('STOP');
 
+    // F2: zero rows read, an unqualified table name and a wrong trigger set must all FAIL (exit 2), never PASS
+    for (const rows of [[], [{ t: 'parcels', name: 'x', state: 'O' }], [{ t: 'public.parcels', name: 'other', state: 'O' }]]) {
+      fs.writeFileSync(file, JSON.stringify(rows));
+      expect(run(['trigger-state', DIR, '--test-states=' + file], gate).status).toBe(2);
+    }
     const down = run(['trigger-state', DIR], { DATABASE_URL: 'postgres://127.0.0.1:1/none' });
     expect(down.status).toBe(2);
 
     const zsh = fs.readFileSync(RESTORE, 'utf8');
     expect(zsh).not.toContain('--test-states');
     expect(zsh).toContain('COMMITTED but');
+    expect(zsh).toContain('enable the triggers by hand');   // F4
   });
 });
 

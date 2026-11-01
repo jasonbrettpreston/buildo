@@ -202,6 +202,7 @@ describe('night-restore-triggers T7: refusals', () => {
       () => [...lines(SAMPLE).filter((l) => !l.startsWith('DELETE FROM ')), 'DELETE FROM public."a";'].join('\n'),
       /DELETE FROM|before/,
     ],
+    ['text after COMMIT', () => `${SAMPLE}\nSELECT 2;`, /after.*COMMIT/],
     ['already wrapped', () => wrapRestoreScript(SAMPLE, tables), ALREADY],
   ];
 

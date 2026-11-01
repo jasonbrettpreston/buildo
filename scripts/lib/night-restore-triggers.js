@@ -107,6 +107,7 @@ function nrtScriptLines(script) {
   const nrtCommit = nrtLines.findIndex((l) => l === 'COMMIT;');
   if (nrtLock > nrtDelete) throw new Error('SET LOCAL lock_timeout must come before the first DELETE FROM line');
   if (nrtDelete > nrtCommit) throw new Error('the first DELETE FROM line must come before COMMIT;');
+  if (nrtLines.slice(nrtCommit + 1).some((l) => l.trim() !== '')) throw new Error('unexpected text after COMMIT;');
   return nrtLines;
 }
 
