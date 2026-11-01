@@ -1,0 +1,35 @@
+{
+  "task": "MB-79",
+  "item": "h",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-01",
+  "head": "32c35ef940f1cd3cbeae2c1542c230f311cf3d6c",
+  "commits_reviewed": [
+    "32c35ef9"
+  ],
+  "cards": [
+    "CARD-o28-prereg-name"
+  ],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-79/h/plan.md (folded at stage 5, fold validation PASS) and adjudication.md: the prereg join by task under R-MA (124a, amends R-KV; 2026-11-01-batch-ao#CHAT-216.O-28, committed 5201af12). One pure module prereg-name.mjs; the loop gate's findPreregFor (commit: the task of the prereg HEAD adds, tree HEAD; push/ci: the McBylaws-Task trailer of the commit that adds the record, tree its first parent; newest integer k whose increment equals the record's); arm C reads only the task's newest prereg-<task>-<k>.json, legacy names only while the task has none. Tests J1-J13 (+J1b, J6b, J6c), E1, C1-C8, P1-P3, U1-U4, F1.",
+  "output": "OUTPUT panel FIX then PASS. The FIX was GR-1 and GR-2, comment text only, applied by hand and re-checked. Red re-run by the panel on 5201af12 with only the test hunks: 25 failed | 53 passed (78), each at its designed assertion; green 91/91; vitest related 185/185; lint 0 errors. MB-78 case end to end in a scratch clone: prereg-MB-78-3.json committed alone directly under the rebuilt commit 3, whose record is regenerated per R-LZ and carries McBylaws-Task: MB-78. Commit, push and ci all ok and join -3 (head-prereg at commit, trailer at push). The old code on the same state gives prereg_missing plus both increment codes (E1). Compliance: 17/17 R-MA clauses comply; R-LG is not amended. Regression Guardian: every fence (O68-05, O6, eb8ff1bf index fence, f783e774 cannot-decide) is stated, and each is kept or retired knowingly. DeepSeek x4 (spec, security, idempotency, error-paths) on the five whole code files, every finding grounded: 1 kept as GR-1; 3 routed observations K-1..K-3; the rest rejected as out of the diff, false, or as the rule says. All 9 builder departures accepted, including the realdata overlay of scripts/analysis/mcbylaws and the hand-written F1 hooks-path guard lines (plan text, verbatim).",
+  "seats": [
+    "regression-guardian",
+    "grounded-reviewer",
+    "ds-spec",
+    "ds-security",
+    "ds-idempotency",
+    "ds-error-paths",
+    "compliance"
+  ],
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "K-1: at the hook's default --root '.', extractRev (loop-gate-run.mjs:118-121) symlinks a relative node_modules to itself, so the base-tree scorer fails and baseRows is null; preregNotes (loop-prereg.mjs:64-67, O68-04) has no caller, so the unchecked moves are not reported. Live now that the join finds a prereg; new MB-79 gate follow-up at stage 1; MB-78 stage 8 to note that commit 3's zero-move claim rests on totals only",
+    "K-2: commit-time task (HEAD's prereg) and push task (trailer) may disagree unflagged (J13); adjacency is checked only at pre-commit. Observation for the next MB-79 options round",
+    "K-3: under R-MA one prereg may serve several rounds of one increment; per-round freshness (M-321) is not checked by the gate. Observation for the next MB-79 options round",
+    "R-MA status cell flips to RECORDED in the rebuilt MB-78 commit 3, against this lock (plan section 8.3); MB-78 commit 3 regenerates its loop record after prereg-MB-78-3.json lands",
+    "MB-79 (f) returns to stage 2 with plan section 7 and uses findPreregFor"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-79/h/output-panel/adjudication.md"
+}
