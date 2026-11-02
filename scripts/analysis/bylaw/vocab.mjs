@@ -132,6 +132,24 @@ export function checkVocab(vocab) {
     }
     if (Object.hasOwn(vocab.dsl_input, name)) v.push(`vocab_synonym: ${name} is both a dsl_target and a dsl_input`);
   }
+  // MB-18 (k), M-423: vocab.fallback_target entries; the text, the code and the separator are data (vocab.fallback_check)
+  const fc = isMap(vocab.fallback_check) ? vocab.fallback_check : {};
+  const { bad_of, bad_self, bad_layer, bad_flags, bad_ruling, bad_trace, bad_check } = isMap(fc.stems) ? fc.stems : {};
+  const bad = (stem, name) => v.push([fc.code, stem, name].join(fc.separator));
+  const fbs = Object.entries(isMap(vocab.fallback_target) ? vocab.fallback_target : {});
+  if ((vocab.fallback_target !== undefined && !isMap(vocab.fallback_target)) || (fbs.length && !(isStr(fc.code) && REASON_CODES.includes(fc.code) && isStr(fc.separator) && isMap(fc.stems) && Array.isArray(fc.layers)))) bad(bad_check, fbs.length ? fbs[0][0] : fc.code);
+  for (const [name, e] of fbs) {
+    if (!isMap(e)) { bad(bad_of, name); continue; }
+    if (!Object.hasOwn(vocab.dsl_target, e.of)) bad(bad_of, name);
+    if (!Object.hasOwn(vocab.dsl_target, name)) bad(bad_of, name);
+    if (e.self === false && Object.hasOwn(vocab.fallback_target, e.of)) bad(bad_of, name);
+    if (e.self === true ? e.of !== name : (e.self !== false || e.of === name)) bad(bad_self, name);
+    if (!(Array.isArray(fc.layers) && fc.layers.includes(e.layer) && vocab.layer.includes(e.layer))) bad(bad_layer, name);
+    const fl = isMap(e.flags) ? Object.entries(e.flags) : [];
+    if (fl.length !== 1 || fl.some(([t, x]) => x !== true || !Object.hasOwn(vocab.lot_condition, t))) bad(bad_flags, name);
+    if (!isStr(e.ruling)) bad(bad_ruling, name);
+    if (!isStr(e.trace)) bad(bad_trace, name);
+  }
   // dsl_input: unit, and exactly one of definition | null_reason (G-READ map totality lives in definitions.mjs).
   const nullReasons = new Set(vocab.dsl_input_null_reason);
   for (const name of Object.keys(vocab.dsl_input).sort()) {
@@ -355,6 +373,7 @@ export function evaluatorVocab(vocab) {
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
     exception_type_list_closure: vocab.exception_type_list_closure, // CHAT-194.USO-Q1 (Q1e): the exception "only" type lists permitted() reads
+    fallback_target: vocab.fallback_target, // MB-18 (k), M-423: the read-as-if-token-held records evaluate.mjs fallbackRead reads
     permission_input_basis: vocab.permission_input_basis, // CHAT-152 C (M-168): inside permitted() proposed_height_m resolves height_m
     permission_scope: vocab.permission_scope, // CHAT-152 A (M-56 dated note): permitted() reads only use-scope PERMIT / PROHIBIT units
     undetermined_condition_disclosure: vocab.undetermined_condition_disclosure, // M-169 / CHAT-180 (G5): the closed disclosure phrases, incl. permission_effect

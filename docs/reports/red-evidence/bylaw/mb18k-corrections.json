@@ -1,0 +1,5 @@
+{"corrections":[
+{"unit":"10.5.40.70(1)#(1)(A)","field":"target","value":["front_setback_m","averaging_distance_m"],"rule":"M-423; M-75","reason":"MB-18 item k: the 15.0 metres of 10.5.40.70(1)(A) is the keyed value of averaging_distance_m (front_setback_m stays first: the scorer reads the first target)"},
+{"unit":"10.5.40.70(1)#(1)(A)","field":"numeric_expression","value":["front_setback_m = abutting_front_setback_m @(1)(A)","averaging_distance_m = 15.0 m @(1)(A)"],"rule":"M-423; M-75","reason":"MB-18 item k: the distance within which an abutting building counts is expressed as a value of the clause"},
+{"unit":"10.5.40.70(1)#(1)(A)","field":"literals_not_expressed","supersedes":"COR-10.5.40.70(1)#(1)(A)/literals_not_expressed","value":[{"clause":"(1)(A)","literal":"one","reason":"threshold_used_in_application"}],"rule":"M-423; M-75","reason":"MB-18 item k: the 15.0 metres is now expressed as averaging_distance_m; the literal one stays listed (supersedes the M-81 record of 2026-10-08 for this literal)"}
+]}
