@@ -1,0 +1,130 @@
+{
+ "$comment": "M-321 pre-registration, task MB-31 (the Layer 3 step), prereg 2 (Spec 124a R-MA: a task numbers its preregs 1, 2, ...; prereg 1 is prereg-MB-31-1.json, round 33), committed alone on lane branch mb31e, before the MB-31 code commit. It registers the ONE operator ruling of ~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md (answer \"yes cleanup 2-4 approved as long as they are complaint and pass the 5 principles test\", read as option 1, 2026-11-02; Queue Process 1: \"Changing a test assertion, a floor, an oracle case or a worked example is a ruling\"): registering compute_maxbld_scenarios in scripts/manifest.json (Spec 124 R-DL) moves six literal pins in other lanes' tests; five are bumped +1 in the 3c7ca5358 precedent form, and the sixth (the census pending-batch count) is DERIVED from converted.json instead of bumped, because R-AN (124a:167) says a bare count is never a deliberate literal. Each moved line is listed in expected_assertion_changes[]; no other test assertion, floor, oracle case or worked example changes. Naming note: prereg 1's $comment reserved the file name prereg-MB-31-2.json for the Layer 3 moves on the 25 golden lots; that file is now prereg-MB-31-3.json (R-MA numbers a task's preregs in its own order; the golden-lot round is still measured by runRow after B5 and the C1 seeds and committed alone before its code commit). Scope and totals are otherwise those of prereg 1: zero scorer moves, totals and floors unchanged (copied from prereg-MB-31-1.json, itself copied from prereg-MB-79-2.json and re-checked at 2b8282dc with CHECK OK on the 172 and 4d sets; not re-run for this prereg because no scorer, evaluator or oracle file is touched by the six pins). G-07 of the stage 8 panel (output-panel-1102 adjudication note (c)) is corrected here: the no-retired-import file path carries the steps/compute_maxbld_scenarios/ segment. Note (d) is disclosed here: table_version goes stale with the same disclosed re-pin as evaluator_version (plan 21.3). rules[] names only ids the registers read as RULED and not OWED at 60321264b (checked with parseRegisterRows and parseOwedTable; R-LZ, M-321, R-KK, R-KW and the other OWED ids are not listed). Not in this prereg: the lock 135 line lands in the same commit as lane R's Spec 47 section A.5 row (both-or-neither; the parity test stays red on the lane until then).",
+ "schema": "coa-round-prereg-v1",
+ "round": 34,
+ "task": "MB-31",
+ "rules": [
+  "R-AN",
+  "R-DL",
+  "R-MA",
+  "R-KV",
+  "R-KG",
+  "M-72",
+  "M-61"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-31; ~/Buildo-scratch/mcbylaws/MB-31/plan.md; ~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "increment": "1",
+ "expected_repin": "none in this round. The one approved re-pin of dsl.mjs with B5 (bylaw-layer2-input.json, the evaluator_version stamp and the table_version stamp, which goes stale with it) is bundled in the MB-18 window (plan 21.3); until it lands, the dsl.mjs l3 hunks leave the four bylaw-layer2-input tests red (disclosed, plan s2 section 4).",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/no-retired-import.logic.test.ts",
+   "change": "RETIRED_VARS drops compute_maxbld_scenarios_batch_size; count 23 -> 22 (carried from prereg 1; a new file in this build)",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb31-reads-binding.answered.md Q3 yes"
+  },
+  {
+   "file": "src/tests/conversion-roadmap.infra.test.ts",
+   "change": "pin 1, :208-209: convertible files 66 -> 67 and slugs 67 -> 68 (R-AN: one deliberate literal where it is the content proven; the manifest total is the one pinned value)",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md (Queue Process 1, operator ruling 2026-11-02 (option 1))"
+  },
+  {
+   "file": "src/tests/conversion-roadmap.infra.test.ts",
+   "change": "pin 2, :552: totalSlugs 72 -> 73",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md (Queue Process 1, operator ruling 2026-11-02 (option 1))"
+  },
+  {
+   "file": "src/tests/admin-manifest-utils.logic.test.ts",
+   "change": "pin 3, :67: FROZEN_INSPECTABLE_TABLES 32 -> 33 tables; adds parcel_maxbld_scenarios with a no-personal-data review line (precedent 3c7ca5358)",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md (Queue Process 1, operator ruling 2026-11-02 (option 1))"
+  },
+  {
+   "file": "src/tests/sql-witness-fixture.logic.test.ts",
+   "change": "pin 4, :496: ADOPTION zero_statement class count 8 -> 9 (and the title 19 / 8 / 21 -> 19 / 9 / 21); follows the closed adoption map, _witness-guard.ts:90-99",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md (Queue Process 1, operator ruling 2026-11-02 (option 1))"
+  },
+  {
+   "file": "src/tests/pipeline-advisory-lock.infra.test.ts",
+   "change": "pin 5, :341 area: LOCK_ID_REGISTRY gains scripts/compute-maxbld-scenarios.js: 135 (Spec 47 section A.5, registry id 135); lands with lane R's section A.5 row",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md (Queue Process 1, operator ruling 2026-11-02 (option 1))"
+  },
+  {
+   "file": "src/tests/conversion-roadmap.infra.test.ts",
+   "change": "pin 6, :341: pendingBatch.size toBe(19) -> toBe(PENDING_FILES.length), derived from converted.json pending[] (R-AN: a bare count is never a deliberate literal); not bumped to 20",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb31-registration.answered.md (Queue Process 1, operator ruling 2026-11-02 (option 1))"
+  }
+ ]
+}
