@@ -915,3 +915,21 @@ describe('CHAT-218 (batch 2026-11-01-batch-aq): 4 rulings recorded; behaviour lo
     });
   }
 });
+
+// CHAT-220 (batch 2026-11-02-batch-as): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-220 (batch 2026-11-02-batch-as): 1 ruling recorded; the I10 lock is OWED to MB-18 (i)', () => {
+  const CASES: Array<[string, string, string]> = [
+    ["M-406 note", "2026-11-02-batch-as#CHAT-220.M406-SITEFACT", "the 2013-lot assumption is a site fact (M-172 (2)) and does not depend on a design option. Its lock is the I10 lock: the assumption is recorded and disclosed, with `inputs_defaulted` 0, on every result that uses it. When M-400 builds its option key, the M-400 lock asserts the disclosure in every option cell. \"Resolved per design option\" reads accordingly: under M-400, \"options that give no different law answer share the cell\" (69a:531). Every other clause of this row is unchanged."],
+  ];
+  for (const [row, c, rule] of CASES) {
+    it(`${row} carries ${c} and its Rule text`, () => {
+      expect(M, c).toContain(c);
+      expect(M, c + ' rule text').toContain(rule);
+    });
+  }
+  it('M-406 status cell names the I10 lock files', () => {
+    const row = M.split('\n').find((l) => l.startsWith('| **M-406** |')) as string;
+    expect(row).toContain('src/tests/bylaw-mb18i.logic.test.ts');
+    expect(row).toContain('src/tests/steps/resolve_bylaws/materialize-mb18i.logic.test.ts');
+  });
+});

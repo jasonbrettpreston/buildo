@@ -1,0 +1,28 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-11-02-batch-as/2026-11-02-batch-as.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-11-02-batch-as",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Got it! proceed with your recommendations - they appear to meet the compliance test and make practical sense",
+    "record": "operator chat 2026-11-02",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-11-02-batch-as/2026-11-02-batch-as.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-220.M406-SITEFACT",
+      "question": "M-406 note: the 2013-lot assumption is a site fact, not per design option; its lock is the I10 lock",
+      "recommendation": "CARD-mb18i-landing (~/Buildo-scratch/p2close/CARD-mb18i-landing.answered.md), O-i2 option 1. Drafted and panel-checked at ~/Buildo-scratch/mcbylaws/R-batch-as/drafts.md. Rule text: the 2013-lot assumption is a site fact (M-172 (2)) and does not depend on a design option. Its lock is the I10 lock: the assumption is recorded and disclosed, with `inputs_defaulted` 0, on every result that uses it. When M-400 builds its option key, the M-400 lock asserts the disclosure in every option cell. \"Resolved per design option\" reads accordingly: under M-400, \"options that give no different law answer share the cell\" (69a:531). Every other clause of this row is unchanged.",
+      "decision": "approve",
+      "decided_at": "2026-11-02",
+      "operator_quote": "Got it! proceed with your recommendations - they appear to meet the compliance test and make practical sense"
+    }
+  ]
+}
