@@ -70,7 +70,8 @@ export function exampleSha(example) {
  * `cityState(approvalRow, sizingRow) -> {status, reason}`: derive the `city` stage from one `city-approvals.json`
  * row and one `sizing.json` row. A `quick` sizing row forces `n/a` with reason `sizing rule <rule>`. No approval
  * row -> `open`. Otherwise the row decides: `approved` true -> approved, rule `blocked` with a disagreement in its
- * reason -> differs (reason = that reason), `below_threshold` -> open, anything else -> `n/a` with the row's reason.
+ * reason -> differs (reason = that reason), `below_threshold` -> `n/a` with the reason `thin` (MCPROOF.md C1:
+ * thin data is `n/a` with the reason `thin`), anything else -> `n/a` with the row's reason.
  */
 export function cityState(approvalRow, sizingRow) {
   const sizing = isPlainObject(sizingRow) ? sizingRow : null;
@@ -83,7 +84,7 @@ export function cityState(approvalRow, sizingRow) {
   if (row.rule === 'blocked' && hasReason(row.reason) && /disagreement/i.test(row.reason)) {
     return { status: 'differs', reason: row.reason };
   }
-  if (row.rule === 'below_threshold') return { status: 'open' };
+  if (row.rule === 'below_threshold') return { status: 'n/a', reason: 'thin' };
   const out = { status: 'n/a' };
   if (hasReason(row.reason)) out.reason = row.reason;
   return out;

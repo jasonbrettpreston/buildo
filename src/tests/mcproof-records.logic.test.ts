@@ -295,9 +295,11 @@ describe('MB-77 (b) records: stageState reason and config citations (item 2)', (
         reason: 'blocked by 9.10.40.10(2)',
       },
       {
+        // MCPROOF.md C1 "Thin data": a below_threshold row is n/a with the reason thin.
         row: { id: 'e4', layer: 'Arithmetic', approved: false, rule: 'below_threshold', reason: 'thin evidence' },
         sizing: null,
-        status: 'open',
+        status: 'n/a',
+        reason: 'thin',
       },
       {
         row: { id: 'e5', layer: 'Arithmetic', approved: false, rule: 'excluded_layer', reason: 'no matching rule' },
@@ -474,7 +476,24 @@ describe('MB-77 (b) records: mergeStageFiles shape and city seeding (item 6)', (
     expect(merged.records['e1']?.['city']?.['status']).toBe('approved');
     expect(merged.records['e2']?.['city']?.['status']).toBe('n/a');
     expect(merged.records['e2']?.['city']?.['reason']).toBe('sizing rule low_risk_arithmetic');
-    expect(merged.records['e10']?.['city']?.['status']).toBe('open');
+    // MCPROOF.md C1 "Thin data": a below_threshold row seeds the city stage as n/a with the reason thin.
+    expect(merged.records['e10']?.['city']?.['status']).toBe('n/a');
+    expect(merged.records['e10']?.['city']?.['reason']).toBe('thin');
+  });
+
+  it('MB-77 (c) fixes cityState thin: a below_threshold row is n/a with the reason thin and seeds the city stage', () => {
+    const c = ctx();
+    const thinRow: Json = {
+      id: 'e1',
+      layer: 'Arithmetic',
+      approved: false,
+      rule: 'below_threshold',
+      reason: 'thin evidence',
+    };
+    expect(c.cityState(thinRow, { id: 'e1', path: 'full' })).toEqual({ status: 'n/a', reason: 'thin' });
+    const merged = c.mergeStageFiles({}, ids, { cityRows: [thinRow], sizingRows: [], config: c.cfg() });
+    expect(merged.records['e1']?.['city']?.['status']).toBe('n/a');
+    expect(merged.records['e1']?.['city']?.['reason']).toBe('thin');
   });
 
   it('MB-77 (b) records: empty, non-object or shaped files throw malformed, unknown ids throw unknown_id', () => {

@@ -415,3 +415,387 @@ describe('MB-77 (c) McProof prompts: batching by size', () => {
     expect(missing).toThrow(/maxChars/);
   });
 });
+
+// ---------------------------------------------------------------------------------------------------------------------
+// MB-77 (c) fixes: answer mode, the not_buildable status, prose cells for text ids, the committed builder's prompt
+// ---------------------------------------------------------------------------------------------------------------------
+// The review CLI itself (scripts/deepseek-review.js) is covered by its own test file, not here.
+describe('MB-77 (c) fixes McProof prompts: answer mode, not_buildable, prose text ids', () => {
+  it('MB-77 (c) fixes not_buildable, and not_buildable:<reason>, are answers; an empty reason is not', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003');
+    const out = P.classifyReply(
+      answerRows({ 'INC1-AR-001': 'not_buildable', 'INC1-AR-002': 'not_buildable:10.20.40.70(3)' }),
+      IDS,
+      c,
+    );
+    expect(out.answers['INC1-AR-001']).toBe('not_buildable');
+    expect(out.answers['INC1-AR-002']).toBe('not_buildable:10.20.40.70(3)');
+    expect(out.errored['INC1-AR-003']).toBe('errored:missing');
+    // A blank reason after the colon is not an answer, in any casing or spacing.
+    const blank = P.classifyReply(answerRows({ 'INC1-AR-001': 'not_buildable:', 'INC1-AR-002': 'not_buildable:   ' }), IDS, c);
+    expect(blank.errored['INC1-AR-001']).toBe('errored:not_in_answer_format');
+    expect(blank.errored['INC1-AR-002']).toBe('errored:not_in_answer_format');
+    expect(blank.answers).toEqual({});
+  });
+
+  it('MB-77 (c) fixes a prose cell is accepted only for an id listed in textIds', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003');
+    const TEXT = ids('INC1-AR-001', 'INC1-AR-002');
+    const rows = answerRows({
+      'INC1-AR-001': '25 m2: livable',
+      'INC1-AR-002': 'pitched 480; flat 396 (headline: pitched 480)',
+      'INC1-AR-003': '25 m2: livable',
+    });
+    const out = P.classifyReply(rows, IDS, c, { textIds: TEXT });
+    expect(out.answers['INC1-AR-001']).toBe('25 m2: livable');
+    expect(out.answers['INC1-AR-002']).toBe('pitched 480; flat 396 (headline: pitched 480)');
+    // An id OUTSIDE textIds keeps the closed grammar: the very same prose is not an answer for it.
+    expect(out.errored['INC1-AR-003']).toBe('errored:not_in_answer_format');
+    expect(Object.keys(out.answers)).toEqual(['INC1-AR-001', 'INC1-AR-002']);
+    // Without textIds the closed grammar is unchanged for every id.
+    const strict = P.classifyReply(rows, IDS, c);
+    expect(strict.answers).toEqual({});
+    expect(strict.errored['INC1-AR-001']).toBe('errored:not_in_answer_format');
+  });
+
+  it('MB-77 (c) fixes a verdict word and a blank cell are still errored for a text id, and cannot decide stays cannot decide', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003');
+    const TEXT = ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003');
+    const out = P.classifyReply(
+      answerRows({ 'INC1-AR-001': 'pass', 'INC1-AR-002': '', 'INC1-AR-003': 'cannot decide' }),
+      IDS,
+      c,
+      { textIds: TEXT },
+    );
+    expect(out.errored['INC1-AR-001']).toBe('errored:verdict_not_answer');
+    expect(out.errored['INC1-AR-002']).toBe('errored:empty');
+    expect(out.answers['INC1-AR-003']).toBe('cannot decide');
+    expect(out.answers).toEqual({ 'INC1-AR-003': 'cannot decide' });
+  });
+
+  it('MB-77 (c) fixes a critique-only reply is still errored for every id, text ids included', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002');
+    const out = P.classifyReply(CRITIQUE_REPLY, IDS, c, { textIds: IDS });
+    expect(Object.keys(out.answers)).toHaveLength(0);
+    for (const id of IDS) expect(out.errored[id]).toBe('errored:no_answer_table');
+  });
+
+  it('MB-77 (c) fixes the prompt names the text ids, says one short sentence, and lists not_buildable', () => {
+    const c = config();
+    const examples = [ex('INC1-AR-001'), ex('INC1-AR-002'), ex('INC1-AR-003')];
+    const TEXT = ids('INC1-AR-002');
+    const prompt = P.buildStagePrompt('blind', examples, c, { textIds: TEXT });
+    // The preamble names exactly the text ids, and says what cell they take.
+    expect(prompt).toContain('INC1-AR-002');
+    expect(prompt).toMatch(/short sentence/);
+    const textLine = prompt.split('\n').find((line: string) => line.includes('INC1-AR-002') && /sentence/.test(line));
+    expect(typeof textLine).toBe('string');
+    expect(String(textLine)).not.toContain('INC1-AR-001');
+    expect(String(textLine)).not.toContain('INC1-AR-003');
+    // not_buildable is part of the closed set, listed in the preamble and on the closed-set line.
+    expect(prompt).toContain('not_buildable');
+    expect(prompt).toContain('not_buildable:<reason>');
+    const closed = prompt.split('\n').filter((line: string) => line.includes('closed status set'));
+    expect(closed.length).toBeGreaterThan(0);
+    for (const line of closed) expect(line).toContain('not_buildable');
+    // no textIds: no text-id sentence, but the closed set still lists not_buildable.
+    const plain = P.buildStagePrompt('blind', examples, c);
+    expect(plain).not.toMatch(/short sentence/);
+    expect(plain).toContain('not_buildable:<reason>');
+  });
+
+  it('MB-77 (c) fixes buildBatches carries textIds: a prose-table reply is accepted for the text ids only', () => {
+    const c = config();
+    const FIVE = [ex('INC1-AR-001'), ex('INC1-AR-002'), ex('INC1-AR-003'), ex('INC1-AR-004'), ex('INC1-AR-005')];
+    const TEXT = ids('INC1-AR-001', 'INC1-AR-003');
+    const got = P.buildBatches('blind', FIVE, c, { maxChars: 4000, textIds: TEXT });
+    for (const prompt of got) {
+      expect(prompt).toContain('short sentence');
+      expect(prompt).toContain('not_buildable:<reason>');
+      // The text-id sentence at least once for the batch that carries a text id.
+      const carried = TEXT.filter((id) => prompt.includes(`"id":"${id}"`));
+      if (carried.length > 0) for (const id of carried) expect(prompt).toContain(id);
+    }
+    const rows = answerRows({ 'INC1-AR-001': '25 m2: livable', 'INC1-AR-002': '25 m2: livable', 'INC1-AR-003': 'pitched 480; flat 396' });
+    const out = P.classifyReply(rows, ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003'), c, { textIds: TEXT });
+    expect(out.answers['INC1-AR-001']).toBe('25 m2: livable');
+    expect(out.answers['INC1-AR-003']).toBe('pitched 480; flat 396');
+    expect(out.errored['INC1-AR-002']).toBe('errored:not_in_answer_format');
+  });
+
+  it('MB-77 (c) fixes answerSystemPrompt() frames a plain answer, never an adversarial review', () => {
+    const fn = (P as Record<string, unknown>)['answerSystemPrompt'];
+    expect(typeof fn).toBe('function');
+    const system = (fn as () => unknown)();
+    expect(typeof system).toBe('string');
+    const text = String(system);
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).toMatch(/table/);
+    expect(text).toMatch(/fill/i);
+    expect(text).not.toMatch(/adversarial/i);
+    expect(text).not.toMatch(/ADVERSARIAL/);
+    // The same string answers two calls: it is a constant, not a counter.
+    expect((fn as () => unknown)()).toBe(system);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// MB-77 (c) fixes, red run: the settled grammar of the new status and of prose cells, and the answer-mode system prompt.
+// Access `answerSystemPrompt` through the module record so a missing export FAILS the test instead of failing the compile.
+// ---------------------------------------------------------------------------------------------------------------------
+describe('MB-77 (c) fixes McProof prompts: the not_buildable status is an answer', () => {
+  it('MB-77 (c) fixes not_buildable and not_buildable:<reason> are answers, and not_buildable: is not', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003');
+    const out = P.classifyReply(
+      answerRows({ 'INC1-AR-001': 'not_buildable', 'INC1-AR-002': 'not_buildable:10.20.40.70(3)' }),
+      IDS,
+      c,
+    );
+    // The bare status stands alone, like `permitted`, with NO reason key written.
+    expect(out.answers['INC1-AR-001']).toBe('not_buildable');
+    expect(out.answers['INC1-AR-002']).toBe('not_buildable:10.20.40.70(3)');
+    expect(out.errored['INC1-AR-003']).toBe('errored:missing');
+    expect(Object.keys(out.answers)).toEqual(['INC1-AR-001', 'INC1-AR-002']);
+    // An empty reason after the colon is not an answer (spacing included), exactly like not_permitted:.
+    const blank = P.classifyReply(answerRows({ 'INC1-AR-001': 'not_buildable:', 'INC1-AR-002': 'not_buildable:   ' }), IDS, c);
+    expect(blank.errored['INC1-AR-001']).toBe('errored:not_in_answer_format');
+    expect(blank.errored['INC1-AR-002']).toBe('errored:not_in_answer_format');
+    expect(blank.answers).toEqual({});
+  });
+
+  it('MB-77 (c) fixes the preamble and the closed-set line both list not_buildable', () => {
+    const c = config();
+    const prompt = P.buildStagePrompt('blind', [ex('INC1-AR-001')], c);
+    expect(prompt).toContain('not_buildable');
+    expect(prompt).toContain('not_buildable:<reason>');
+    const closed = prompt.split('\n').filter((line: string) => line.includes('closed status set'));
+    expect(closed.length).toBeGreaterThan(0);
+    for (const line of closed) expect(line).toContain('not_buildable');
+  });
+});
+
+describe('MB-77 (c) fixes McProof prompts: prose cells for the text ids', () => {
+  it('MB-77 (c) fixes a non-empty one-line prose cell is the answer for a text id, and prose only for those ids', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003');
+    const TEXT = ids('INC1-AR-001', 'INC1-AR-002');
+    const rows = answerRows({
+      'INC1-AR-001': '25 m2: livable',
+      'INC1-AR-002': 'pitched 480; flat 396 (headline: pitched 480)',
+      'INC1-AR-003': '25 m2: livable',
+    });
+    const out = P.classifyReply(rows, IDS, c, { textIds: TEXT });
+    // The value IS the prose: it is kept verbatim, never coerced to a number.
+    expect(out.answers['INC1-AR-001']).toBe('25 m2: livable');
+    expect(out.answers['INC1-AR-002']).toBe('pitched 480; flat 396 (headline: pitched 480)');
+    // The same prose for an id OUTSIDE textIds stays refused: the closed grammar is unchanged for other ids.
+    expect(out.errored['INC1-AR-003']).toBe('errored:not_in_answer_format');
+    expect(Object.keys(out.answers)).toEqual(['INC1-AR-001', 'INC1-AR-002']);
+    // No textIds at all: the closed grammar is unchanged for every id.
+    const strict = P.classifyReply(rows, IDS, c);
+    expect(strict.answers).toEqual({});
+    expect(strict.errored['INC1-AR-001']).toBe('errored:not_in_answer_format');
+    expect(strict.errored['INC1-AR-003']).toBe('errored:not_in_answer_format');
+  });
+
+  it('MB-77 (c) fixes a verdict word, a blank and a multi-line cell are still errored for a text id', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002', 'INC1-AR-003');
+    const out = P.classifyReply(answerRows({ 'INC1-AR-001': 'pass', 'INC1-AR-002': '', 'INC1-AR-003': 'cannot decide' }), IDS, c, {
+      textIds: IDS,
+    });
+    // Prose does not license a verdict or an empty cell.
+    expect(out.errored['INC1-AR-001']).toBe('errored:verdict_not_answer');
+    expect(out.errored['INC1-AR-002']).toBe('errored:empty');
+    // `cannot decide` stays the cannot-decide answer, it is not folded into prose.
+    expect(out.answers['INC1-AR-003']).toBe('cannot decide');
+    expect(out.answers).toEqual({ 'INC1-AR-003': 'cannot decide' });
+    // A second row for the same id is a duplicate: the first row wins (as for any id) and the repeat is errored.
+    const wrapped = ['| id | answer |', '| --- | --- |', '| INC1-AR-001 | 25 m2: livable and |', '| INC1-AR-001 | pitched, 480 |', ''].join('\n');
+    const two = P.classifyReply(wrapped, ids('INC1-AR-001'), c, { textIds: ids('INC1-AR-001') });
+    expect(two.answers['INC1-AR-001']).toBe('25 m2: livable and');
+    expect(two.errored['INC1-AR-001']).toBe('errored:duplicate_id');
+  });
+
+  it('MB-77 (c) fixes a critique-only reply is still errored for every id, the text ids included', () => {
+    const c = config();
+    const IDS = ids('INC1-AR-001', 'INC1-AR-002');
+    const out = P.classifyReply(CRITIQUE_REPLY, IDS, c, { textIds: IDS });
+    expect(Object.keys(out.answers)).toHaveLength(0);
+    for (const id of IDS) expect(out.errored[id]).toBe('errored:no_answer_table');
+  });
+
+  it('MB-77 (c) fixes the preamble names the text ids and asks for one short sentence for them', () => {
+    const c = config();
+    const examples = [ex('INC1-AR-001'), ex('INC1-AR-002'), ex('INC1-AR-003')];
+    const TEXT = ids('INC1-AR-002');
+    const prompt = P.buildStagePrompt('blind', examples, c, { textIds: TEXT });
+    const textLine = prompt.split('\n').find((line: string) => line.includes('INC1-AR-002') && /short sentence/.test(line));
+    expect(typeof textLine).toBe('string');
+    // The sentence names exactly the text ids: never a non-text id.
+    expect(String(textLine)).not.toContain('INC1-AR-001');
+    expect(String(textLine)).not.toContain('INC1-AR-003');
+    // Without textIds no text-id sentence is rendered, and the closed set still lists not_buildable.
+    const plain = P.buildStagePrompt('blind', examples, c);
+    expect(plain).not.toMatch(/short sentence/);
+    expect(plain).toContain('not_buildable:<reason>');
+  });
+
+  it('MB-77 (c) fixes buildBatches passes textIds through to its prompts and to the classifier', () => {
+    const c = config();
+    const FIVE = [ex('INC1-AR-001'), ex('INC1-AR-002'), ex('INC1-AR-003'), ex('INC1-AR-004'), ex('INC1-AR-005')];
+    const TEXT = ids('INC1-AR-001', 'INC1-AR-003');
+    const got = P.buildBatches('blind', FIVE, c, { maxChars: 4000, textIds: TEXT });
+    expect(got.length).toBeGreaterThan(0);
+    for (const prompt of got) {
+      expect(prompt).toContain('short sentence');
+      expect(prompt).toContain('not_buildable:<reason>');
+      for (const id of TEXT) expect(prompt).toContain(id);
+    }
+    // Same size, no textIds: the sentence is absent, so the passing-through is what renders it.
+    const bare = P.buildBatches('blind', FIVE, c, { maxChars: 4000 });
+    expect(bare.length).toBeGreaterThan(0);
+    for (const prompt of bare) expect(prompt).not.toMatch(/short sentence/);
+  });
+});
+
+describe('MB-77 (c) fixes McProof prompts: answerSystemPrompt()', () => {
+  it('MB-77 (c) fixes answerSystemPrompt() is a non-empty plain-answer frame, never an adversarial review', () => {
+    const fn = (P as Record<string, unknown>)['answerSystemPrompt'];
+    expect(typeof fn).toBe('function');
+    const system = (fn as () => unknown)();
+    expect(typeof system).toBe('string');
+    const text = String(system);
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).toMatch(/table/);
+    expect(text).toMatch(/fill/i);
+    expect(text).not.toMatch(/adversarial/i);
+    expect(text).not.toMatch(/ADVERSARIAL/);
+    expect(text).not.toMatch(/review/i);
+    // A constant: two calls answer the same string.
+    expect((fn as () => unknown)()).toBe(system);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// MB-77 (c) fixes fold: the review findings — textIds as an Array OR a Set everywhere, a status-like prose cell that is
+// not the closed grammar is errored, the preamble names only the batch's own text ids, and the width helpers measure
+// with the same options as the real prompts.
+// ---------------------------------------------------------------------------------------------------------------------
+describe('MB-77 (c) fixes fold McProof prompts: textIds, status-like cells, per-batch text ids, width helpers', () => {
+  it('MB-77 (c) fixes fold classifyReply accepts textIds as a Set (prose for e1)', () => {
+    const c = config();
+    const out = P.classifyReply(answerRows({ e1: '25 m2: livable' }), ids('e1'), c, { textIds: new Set(['e1']) });
+    expect(out.answers['e1']).toBe('25 m2: livable');
+    expect(out.errored).toEqual({});
+    // An Array is still accepted (the settled surface), and a bare Set without the option changes nothing.
+    const arr = P.classifyReply(answerRows({ e1: '25 m2: livable' }), ids('e1'), c, { textIds: ['e1'] });
+    expect(arr.answers['e1']).toBe('25 m2: livable');
+    const strict = P.classifyReply(answerRows({ e1: '25 m2: livable' }), ids('e1'), c);
+    expect(strict.errored['e1']).toBe('errored:not_in_answer_format');
+  });
+
+  it('MB-77 (c) fixes fold a status-like text-id cell outside the closed grammar is errored, not prose', () => {
+    const c = config();
+    const TEXT = new Set(['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']);
+    const IDS = ids('e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7');
+    const rows = answerRows({
+      e1: 'not_permitted',
+      e2: 'not_evaluated',
+      e3: 'not_buildable:',
+      e4: 'permitted maybe',
+      e5: 'not_buildable:10.20.40.70(3)',
+      e6: 'permitted',
+      e7: '25 m2: livable',
+    });
+    const out = P.classifyReply(rows, IDS, c, { textIds: TEXT });
+    for (const id of ['e1', 'e2', 'e3', 'e4']) expect(out.errored[id]).toBe('errored:not_in_answer_format');
+    expect(out.answers['e5']).toBe('not_buildable:10.20.40.70(3)');
+    expect(out.answers['e6']).toBe('permitted');
+    expect(out.answers['e7']).toBe('25 m2: livable');
+    expect(Object.keys(out.answers).sort()).toEqual(['e5', 'e6', 'e7']);
+    // Case-insensitive on the status prefix: an upper-case bare status is still not prose.
+    const upper = P.classifyReply(answerRows({ e1: 'NOT_PERMITTED' }), ids('e1'), c, { textIds: ['e1'] });
+    expect(upper.errored['e1']).toBe('errored:not_in_answer_format');
+    expect(upper.answers).toEqual({});
+  });
+
+  it('MB-77 (c) fixes fold the preamble names only the text ids of the batch, never another batch id', () => {
+    const c = config();
+    const prompt = P.buildStagePrompt('blind', [ex('e1')], c, { textIds: ['e1', 'e2', 'e3'] });
+    const textLine = prompt.split('\n').find((line: string) => line.includes('e1') && /short sentence/.test(line));
+    expect(typeof textLine).toBe('string');
+    expect(String(textLine)).not.toContain('e2');
+    expect(String(textLine)).not.toContain('e3');
+    expect(prompt).not.toMatch(/\be2\b/);
+    expect(prompt).not.toMatch(/\be3\b/);
+    // A Set is treated the same way.
+    const asSet = P.buildStagePrompt('blind', [ex('e1')], c, { textIds: new Set(['e1', 'e2']) });
+    expect(asSet).not.toContain('e2');
+  });
+
+  it('MB-77 (c) fixes fold buildBatches measures with the same options, so no prompt is longer than maxChars', () => {
+    const c = config();
+    const FIVE = [ex('e1'), ex('e2'), ex('e3'), ex('e4'), ex('e5')];
+    const TEXT = ['e1', 'e3'];
+    const maxChars = P.buildStagePrompt('blind', [FIVE[0]], c, { textIds: TEXT }).length;
+    const got = P.buildBatches('blind', FIVE, c, { maxChars, textIds: TEXT });
+    expect(got.length).toBeGreaterThan(1);
+    const seen: string[] = [];
+    for (const prompt of got) {
+      expect(prompt.length).toBeLessThanOrEqual(maxChars);
+      for (const e of FIVE) {
+        const n = countOf(prompt, `"id":"${e.id}"`);
+        expect(n).toBeLessThanOrEqual(1);
+        for (let i = 0; i < n; i += 1) seen.push(String(e.id));
+      }
+    }
+    expect(seen.slice().sort()).toEqual(FIVE.map((e) => String(e.id)).sort());
+    // A Set of text ids sizes exactly the same way.
+    const asSet = P.buildBatches('blind', FIVE, c, { maxChars, textIds: new Set(TEXT) });
+    for (const prompt of asSet) expect(prompt.length).toBeLessThanOrEqual(maxChars);
+  });
+
+  it('MB-77 (c) fixes fold trailing punctuation is stripped before the verdict check and a second cell is not an answer', () => {
+    const c = config();
+    const TEXT = ['e1', 'e2'];
+    const out = P.classifyReply(answerRows({ e1: 'Approved.', e2: 'pitched 480.' }), ids('e1', 'e2'), c, { textIds: TEXT });
+    expect(out.errored['e1']).toBe('errored:verdict_not_answer');
+    // A prose cell keeps its own words verbatim: only the verdict check strips the trailing punctuation.
+    expect(out.answers['e2']).toBe('pitched 480.');
+    const semi = P.classifyReply(answerRows({ e1: 'fail!;' }), ids('e1'), c, { textIds: TEXT });
+    expect(semi.errored['e1']).toBe('errored:verdict_not_answer');
+    // A second non-empty cell is not a one-cell answer: the row is errored, never prose.
+    const two = ['| id | answer |', '| --- | --- |', '| e1 | pitched 480 | flat 396 |', ''].join('\n');
+    const out2 = P.classifyReply(two, ids('e1'), c, { textIds: TEXT });
+    expect(out2.errored['e1']).toBe('errored:not_in_answer_format');
+    expect(out2.answers).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// MB-77 (c) fixes, records: a below-threshold sizing rule is not a City evidence gap but a thin sample.
+// ---------------------------------------------------------------------------------------------------------------------
+describe('MB-77 (c) fixes McProof records: below_threshold is n/a with reason thin', () => {
+  const REC = CFG.importError === undefined ? load('scripts/analysis/mcproof/records.mjs') : null;
+
+  it('MB-77 (c) fixes cityState below_threshold reads n/a/thin, and a below-threshold row past a quick sizing is n/a', async () => {
+    const R = await REC;
+    expect(R).not.toBeNull();
+    const rec = R as Json;
+    expect(typeof rec['cityState']).toBe('function');
+    const cityState = rec['cityState'] as (a: Json | null, s: Json | null) => Json;
+    const approval = { approved: false, rule: 'below_threshold', reason: '2 of the 8 required approvals' };
+    expect(cityState(approval, null)).toEqual({ status: 'n/a', reason: 'thin' });
+    // A quick sizing still wins: the sizing path, not the approval rule, decides there.
+    expect(cityState(approval, { path: 'quick', rule: 'AREA-1' })).toEqual({ status: 'n/a', reason: 'sizing rule AREA-1' });
+    // The other branches are unchanged.
+    expect(cityState({ approved: true, rule: 'below_threshold' }, null)).toEqual({ status: 'approved' });
+    expect(cityState(null, null)).toEqual({ status: 'open' });
+  });
+});
