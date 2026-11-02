@@ -1,0 +1,113 @@
+{
+ "_about": "PROPOSED externalized thresholds for the McProof sizing generator (sizing.mjs, to be built by lane T). Same pattern as city-approve.config.json: each value has a one-line reason; changing one is a ruling (MCPROOF-10). Values are the orchestrator's proposal; the operator confirms. v4.1 (fold-validation/v4.md folded). v4 added stage_order_gate, quick_arithmetic_skips_stage5 and answer_table_required (CARD-mcproof-lessons items 1 to 3).",
+ "full_review_increments": {
+  "value": [
+   1
+  ],
+  "reason": "Increment 1 is the foundation; the operator approved a full six-stage review once (CARD-mcproof-sizing)."
+ },
+ "quick_path_stages": {
+  "value": [
+   "question",
+   "arithmetic"
+  ],
+  "reason": "Operator card: quick path = stage 0 Reality check + stage 5 Calculation check."
+ },
+ "agreement_min_share": {
+  "value": 0.95,
+  "reason": "DeepSeek blind and the Claude check must agree on at least 95% of the examples reviewed in full, so one stray miss does not block sampling but a pattern of misses does (mirrors city-approve min_share_overall)."
+ },
+ "agreement_min_sample": {
+  "value": 20,
+  "reason": "A share on fewer than 20 fully reviewed examples is too thin to trust (mirrors city-approve min_n_overall)."
+ },
+ "agreement_scope": {
+  "value": [
+   "increment",
+   "layer"
+  ],
+  "reason": "Agreement is counted within one increment and one layer: agreement in one layer says nothing about another; Reading and Inputs examples fail differently from Arithmetic ones."
+ },
+ "sample_seed": {
+  "value": "mcproof-1",
+  "reason": "A fixed seed makes the seeded hash of the example id reproducible, so the sample is never hand-picked and can be re-derived."
+ },
+ "tolerance_area_m2": {
+  "value": 0.005,
+  "reason": "Areas agree within 0.005 m2 (the rounding contract of the stage 5 prompt, promoted to config so the pass rule cannot change by editing a prompt)."
+ },
+ "tolerance_other": {
+  "value": 1e-9,
+  "reason": "Other numbers agree within 1e-9 on the 9-place figure (same contract)."
+ },
+ "operator_spot_check_share": {
+  "value": 0.1,
+  "reason": "Operator card 2026-10-31 item 2: 10 percent of all-approved examples, at least 1 per chapter."
+ },
+ "sample_share": {
+  "value": 0.2,
+  "reason": "Once sampling starts, 20% of examples are reviewed in full, chosen by a seeded hash of the example id so the choice is not hand-picked."
+ },
+ "sample_min_per_layer": {
+  "value": 3,
+  "reason": "Every layer in the increment keeps at least 3 fully reviewed examples."
+ },
+ "sample_miss_reverts": {
+  "value": true,
+  "reason": "Any disagreement inside a sample puts the whole layer back to full review for that increment."
+ },
+ "never_quick_layers": {
+  "value": [
+   "Ruling"
+  ],
+  "reason": "A Ruling is the operator's product decision; no data or agreement can stand in for it."
+ },
+ "max_fix_rounds": {
+  "value": 2,
+  "reason": "After 2 failed fix rounds the example is parked and goes to the operator (queue MB-27 'After K rounds')."
+ },
+ "max_retries_per_stage": {
+  "value": 2,
+  "reason": "A crashed or empty seat run is retried twice, then recorded as errored; it is never n/a."
+ },
+ "recent_min_distinct_applications": {
+  "value": 2,
+  "reason": "PROPOSED change to city-approve.config.json: five recent lines from one application are one voice, not five."
+ },
+ "stage_order_gate": {
+  "value": {
+   "complete_before_stages_3_and_5": [
+    "question",
+    "city"
+   ],
+   "finished_means": [
+    "approved",
+    "differs_routed_to_fix",
+    "needs_you",
+    "errored_after_max_retries_per_stage_becomes_parked"
+   ]
+  },
+  "reason": "CARD-mcproof-lessons item 1: stage 0 and City data found almost every defect (MB-64/review/REVIEW.round2.md:5-11), so they finish over the whole set before any blind or recompute call."
+ },
+ "low_risk_arithmetic": {
+  "value": {
+   "layer": "Arithmetic",
+   "sizing_path": "quick"
+  },
+  "reason": "CARD-mcproof-lessons item 2 'per the approved sizing': no criterion beyond CARD-mcproof-sizing's quick path."
+ },
+ "quick_arithmetic_skips_stage5": {
+  "value": true,
+  "reason": "Operator decision, CARD-mcproof-lessons.answered.md item 2 ('Skip the blind check and the recompute on low-risk Arithmetic examples'): stages 3 and 5 are skipped, stages 0 and 4 kept (no arithmetic error found: MB-64/review/REVIEW.md:36, REVIEW.round2.md:92). Overrides CARD-mcproof-sizing's stage-5 quick path for low-risk Arithmetic only. Changing the value is a ruling and invalidates the recorded n/a reasons."
+ },
+ "answer_table_required": {
+  "value": {
+   "stages": [
+    "blind",
+    "arithmetic"
+   ],
+   "no_table_state": "errored"
+  },
+  "reason": "CARD-mcproof-lessons item 3: critique-only replies (MB-64/review/REVIEW.md:37, REVIEW.round2.md:98) never count as an answer; the stage is errored and retried up to max_retries_per_stage."
+ }
+}

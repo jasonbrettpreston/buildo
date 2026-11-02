@@ -1,0 +1,23 @@
+{
+  "_source": "MCPROOF.md A7 mandatory stages by layer, M-446",
+  "Source": {
+    "required": ["question", "claude", "arithmetic"],
+    "may_na": ["city", "blind", "regression"]
+  },
+  "Reading": {
+    "required": ["question", "regression", "blind", "claude"],
+    "may_na": ["city", "arithmetic"]
+  },
+  "Ruling": {
+    "required": ["question", "regression", "blind", "claude", "operator_answered"],
+    "may_na": ["city", "arithmetic"]
+  },
+  "Inputs": {
+    "required": ["question", "regression", "claude"],
+    "may_na": ["blind", "city", "arithmetic"]
+  },
+  "Arithmetic": {
+    "required": ["question", "blind", "claude", "arithmetic"],
+    "may_na": ["city", "regression"]
+  }
+}
