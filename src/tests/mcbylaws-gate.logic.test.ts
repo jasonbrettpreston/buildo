@@ -214,7 +214,7 @@ describe('O67-11: the loop arm is called as its CLI defines (argv and verdicts)'
     fs.rmSync(path.join(repo.dir, LOG), { force: true });
     const c = run(repo, ['--ci', '--base', base]);
     expect(c.status).toBe(0);
-    expect(logged(repo)).toContain(`check --mode ci --base ${base}`);
+    expect(logged(repo)).toContain(`check --mode ci --base ${base} --tip HEAD`);
     done();
   });
   it('an arm that exits 2 is FAIL:X:arm-failed:loop', () => {
@@ -232,7 +232,7 @@ describe('O67-11: the loop arm is called as its CLI defines (argv and verdicts)'
     const local = repo.commit('MB-67 a Layer 2/3 change');
     const input = `refs/heads/main ${local} refs/heads/main ${remote}\n`;
     runB(repo, ['--push'], rootOf(repo)!, 'real', input);
-    expect(logged(repo)).toContain(`check --mode push --base ${remote}`);
+    expect(logged(repo)).toContain(`check --mode push --base ${remote} --tip ${local}`);
     done();
   });
 });
@@ -788,7 +788,7 @@ describe('EB (CARD-gate-scope-from-bootstrap, option A): a base older than the b
     expect(out.out).not.toContain('pre-string-aaa');
     expect(out.out).toContain('FAIL:L:json-string:post-string-bbb');
     expect(out.out).toContain('FAIL:X:arm-failed:loop');
-    expect(logOf(b.r)).toContain(`check --mode ci --base ${b.boot}`);
+    expect(logOf(b.r)).toContain(`check --mode ci --base ${b.boot} --tip HEAD`);
     expect(out.out).toContain(`effective base: ${b.boot.slice(0, 8)}`);
     done();
   });
@@ -798,7 +798,7 @@ describe('EB (CARD-gate-scope-from-bootstrap, option A): a base older than the b
     const out = runB(b.r, ['--ci', '--base', b.boot], b.boot);
     expect(out.out).not.toContain('effective base');
     expect(out.out).toContain('FAIL:L:json-string:post-string-bbb');
-    expect(logOf(b.r)).toContain(`check --mode ci --base ${b.boot}`);
+    expect(logOf(b.r)).toContain(`check --mode ci --base ${b.boot} --tip HEAD`);
     done();
   });
 
@@ -826,6 +826,186 @@ describe('EB (CARD-gate-scope-from-bootstrap, option A): a base older than the b
     const out = runB(b.r, ['--ci', '--base', b.old], b.boot, 'ancestry-error');
     expect(out.out).toContain('FAIL:X:cannot-decide');
     expect(out.out).not.toContain('effective base');
+    done();
+  });
+});
+
+// MB-79 (o) R-KP/R-LF: the pushed sha is what the loop arm judges, so the gate passes `--tip`: the ref's LOCAL sha
+// from the pre-push stdin for --push, `HEAD` for --ci. Commit mode keeps `check --mode commit` unchanged.
+describe('MB-79 (o) T-o4a: the loop arm judges the pushed sha', () => {
+  const LOOP = 'scripts/analysis/mcbylaws-loop/loop-gate.mjs';
+  const echo = "process.stdout.write('argv: ' + process.argv.slice(2).join(' ') + '\\n');\nprocess.exit(0);\n";
+  it('--push passes the ref local sha as --tip and --ci passes HEAD; a later commit is never the tip of the push', () => {
+    const repo = mk();
+    repo.write(LOOP, echo);
+    seed(repo, policy({ external_arms: [{ id: 'loop', required: true }] }));
+    approve(repo);
+    const b = repo.git(['rev-parse', 'HEAD']);
+    repo.write('docs/c1.md', '# c1\n');
+    const c1 = repo.commit('MB-67 c1');
+    repo.write('docs/c2.md', '# c2\n');
+    repo.commit('MB-67 c2');
+    expect(repo.git(['rev-parse', 'HEAD'])).not.toBe(c1);
+    const pushed = runB(repo, ['--push'], rootOf(repo)!, 'real', `refs/heads/main ${c1} refs/heads/main ${b}\n`);
+    expect(pushed.out).toContain(`loop: argv: check --mode push --base ${b} --tip ${c1}`);
+    const ci = run(repo, ['--ci', '--base', b]);
+    expect(ci.out).toContain(`loop: argv: check --mode ci --base ${b} --tip HEAD`);
+    done();
+  });
+});
+
+// MB-79 (n) R-LF: "a gate reading its policy from the commit it judges can loosen itself" — arm C at --commit-msg
+// reads the 69a/124a/131 register rows and the 133 OWED table from HEAD (the parent), never from the index.
+describe('MB-79 (n): arm C reads the register in the PARENT at --commit-msg', () => {
+  const D = 'docs/specs/01-pipeline';
+  const REG = `${D}/69a_mcbylaw_register.md`;
+  const SPEC = `${D}/133_bylaw_handbook.md`;
+  const PREREG = 'scripts/analysis/bylaw-validation/coa-expected/prereg-mb-67.json';
+  const EVAL = 'scripts/analysis/bylaw/evaluate.mjs';
+  const MSG = '.git/COMMIT_EDITMSG';
+  /** G67-06 sentinels are ALWAYS present, so an empty parse is never read as "nothing to check". */
+  const OWED = (extra: string) => `## 3. Rows with an OWED marker\n\n| M-361 | m.361 | RULED 2026-10-29 · OWED |\n| LC-15 | lc.15 | RULED · OWED |\n${extra}`;
+  const SENTINEL_ROW = '| **M-180** | x | y | z | RATIFIED 2026-10-18 |\n';
+  const row = (id: string, cell: string) => `| **${id}** | x | y | z | ${cell} |\n`;
+  /** The PARENT commit: seed, the panel record for MB-67 (arm P), the registers, the prereg; then the staged set. */
+  const build = (o: { reg: string; spec: string; rules: string[]; stage?: (repo: Repo) => void; message: string }) => {
+    const repo = mk();
+    seed(repo);
+    approve(repo);
+    repo.write('docs/reports/panels/MB-67.json', '{"task":"MB-67","plan":"p","output":"o"}');
+    repo.write(SPEC, o.spec);
+    repo.write(REG, o.reg);
+    repo.write(`${D}/124a_step_standard_policy_appendix.md`, '');
+    repo.write(`${D}/131_lot_configuration_policy.md`, '');
+    repo.write(PREREG, JSON.stringify({ task: 'MB-67', rules: o.rules }));
+    repo.commit('MB-67 registers and prereg');
+    if (o.stage) o.stage(repo);
+    else {
+      repo.write(EVAL, 'export const evaluate = 1;\n');
+      repo.stage(EVAL);
+    }
+    repo.write(MSG, o.message);
+    return repo;
+  };
+  const cites = (id: string) => `MB-67 cites ${id}\n\nMcBylaws-Task: MB-67\n`;
+
+  it('T-n1: a RATIFIED row staged in the same commit does not rescue the cite', () => {
+    const repo = build({
+      reg: SENTINEL_ROW + row('M-190', 'OWED -> MB-9'),
+      spec: OWED(''),
+      rules: ['M-190'],
+      message: cites('M-190'),
+      stage: (r: Repo) => {
+        r.write(REG, SENTINEL_ROW + row('M-190', 'RATIFIED 2026-11-01'));
+        r.write(EVAL, 'export const evaluate = 1;\n');
+        r.stage(REG, EVAL);
+      },
+    });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:C:not-ruled:M-190');
+    done();
+  });
+
+  it('T-n1-green: the RATIFIED row already in the parent passes', () => {
+    const repo = build({
+      reg: SENTINEL_ROW + row('M-190', 'RATIFIED 2026-11-01'),
+      spec: OWED(''),
+      rules: ['M-190'],
+      message: cites('M-190'),
+    });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(0);
+    expect(r.out).toContain('GATE OK');
+    expect(r.out).not.toContain('FAIL:C:');
+    done();
+  });
+
+  it('T-n2: an OWED marker dropped in the same commit does not clear the cite', () => {
+    const repo = build({
+      reg: SENTINEL_ROW + row('M-372', 'RULED 2026-10-29'),
+      spec: OWED('| M-372 | m.372 | RULED 2026-10-29 · OWED |\n'),
+      rules: ['M-372'],
+      message: cites('M-372'),
+      stage: (r: Repo) => {
+        r.write(SPEC, OWED(''));
+        r.write(EVAL, 'export const evaluate = 1;\n');
+        r.stage(SPEC, EVAL);
+      },
+    });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:C:owed:M-372');
+    done();
+  });
+
+  it('T-n2-green: no OWED marker in the parent passes', () => {
+    const repo = build({
+      reg: SENTINEL_ROW + row('M-372', 'RULED 2026-10-29'),
+      spec: OWED(''),
+      rules: ['M-372'],
+      message: cites('M-372'),
+    });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(0);
+    expect(r.out).not.toContain('FAIL:C:');
+    done();
+  });
+
+  it('T-n3: a staged register edit with no Layer 2/3 path passes (a lane R commit)', () => {
+    const repo = build({
+      reg: SENTINEL_ROW + row('M-190', 'OWED -> MB-9'),
+      spec: OWED(''),
+      rules: ['M-190'],
+      message: cites('M-190'),
+      stage: (r: Repo) => {
+        r.write(REG, SENTINEL_ROW + row('M-190', 'RATIFIED 2026-11-01'));
+        r.stage(REG);
+      },
+    });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(0);
+    expect(r.out).not.toContain('FAIL:C:');
+    done();
+  });
+
+  it('T-n4: an OWED marker ADDED in the same commit still refuses the cite (both reads)', () => {
+    const repo = build({
+      reg: SENTINEL_ROW + row('M-372', 'RULED 2026-10-29'),
+      spec: OWED(''),
+      rules: ['M-372'],
+      message: cites('M-372'),
+      stage: (r: Repo) => {
+        r.write(SPEC, OWED('| M-372 | m.372 | RULED 2026-10-29 · OWED |\n'));
+        r.write(EVAL, 'export const evaluate = 1;\n');
+        r.stage(SPEC, EVAL);
+      },
+    });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:C:owed:M-372');
+    done();
+  });
+
+  it('T-n5: a cited row demoted from RULED in the same commit is refused (both reads)', () => {
+    const repo = build({
+      reg: SENTINEL_ROW + row('M-372', 'RULED 2026-10-29'),
+      spec: OWED(''),
+      rules: ['M-372'],
+      message: cites('M-372'),
+      stage: (r: Repo) => {
+        r.write(REG, SENTINEL_ROW + row('M-372', 'PROPOSED'));
+        r.write(EVAL, 'export const evaluate = 1;\n');
+        r.stage(REG, EVAL);
+      },
+    });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(1);
+    const fails = r.out
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.startsWith('FAIL:C:'));
+    expect(fails).toEqual(['FAIL:C:not-ruled:M-372']);
     done();
   });
 });

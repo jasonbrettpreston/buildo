@@ -1,0 +1,64 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts (41 tests | 2 failed) 9608ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > an UNSTAGED register edit is NOT seen in commit mode; the same edit STAGED is 349ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > push mode reads the register at HEAD: a landed ruling is seen, a merely written one is not 467ms
+   ✓ buildContext -> evaluateGate (end to end) > the honest round has no violations; an empty reason is accept_without_reason 558ms
+   ✓ R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J3: another task's prereg file is never read (not even a broken one) 329ms
+   × MB-79 (m): a prereg committed alone binds no other record > T-m1: a side-branch prereg committed alone, merged in, binds nothing 295ms
+     → expected [ Array(1) ] to deeply equal []
+   × MB-79 (m): a prereg committed alone binds no other record > T-m1b: a prereg committed alone after the record binds nothing (linear) 251ms
+     → expected [ Array(1) ] to deeply equal []
+   ✓ MB-79 (m): a prereg committed alone binds no other record > T-m8: the same prereg added alone on one side and beside code on the other stays bound 323ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > MB-79 (m): a prereg committed alone binds no other record > T-m1: a side-branch prereg committed alone, merged in, binds nothing
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "input_not_bound:scripts/analysis/bylaw-validation/coa-expected/prereg-MB-30-1.json",
++ ]
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1262:28
+    1260| 
+    1261|     const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base))…
+    1262|     expect(naming(v, M30)).toEqual([]);
+       |                            ^
+    1263|   });
+    1264| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > MB-79 (m): a prereg committed alone binds no other record > T-m1b: a prereg committed alone after the record binds nothing (linear)
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "input_not_bound:scripts/analysis/bylaw-validation/coa-expected/prereg-MB-30-1.json",
++ ]
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1273:28
+    1271| 
+    1272|     const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base))…
+    1273|     expect(naming(v, M30)).toEqual([]);
+       |                            ^
+    1274|   });
+    1275| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 39 passed (41)
+   Start at  16:10:03
+   Duration  9.78s (transform 63ms, setup 6ms, collect 21ms, tests 9.61s, environment 0ms, prepare 17ms)
+

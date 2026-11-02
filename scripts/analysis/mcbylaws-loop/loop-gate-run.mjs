@@ -115,7 +115,7 @@ export function extractRev(root, rev, deps = {}) {
     } finally {
       fs.rmSync(tarFile, { force: true });
     }
-    const modules = path.join(root, 'node_modules');
+    const modules = path.resolve(root, 'node_modules');
     if (fs.existsSync(modules)) {
       try {
         fs.symlinkSync(modules, path.join(tmp, 'node_modules'), 'dir');
@@ -131,10 +131,67 @@ export function extractRev(root, rev, deps = {}) {
 }
 
 /**
+ * MB-79 (o) F-11: the extracted tree of `rev` is exactly git's tree, so an attribute (export-ignore, export-subst, any archive-time
+ * conversion) cannot change what is scored. The file list under `tree` (symlinks counted, never followed; the `node_modules` link
+ * excluded) must equal the blob paths of `git ls-tree -r -z --full-tree <rev>` (with `node_modules` paths excluded on both sides), and
+ * every non-symlink file's `git hash-object --no-filters --stdin-paths` id must equal its ls-tree blob id. Otherwise it throws
+ * `tip_extract_mismatch: <first path>`. Every git call scrubs GIT_*. IO.
+ */
+export function checkTipTree(root, rev, tree, deps = {}) {
+  const file = typeof deps.execFileSync === 'function' ? deps.execFileSync : execFileSync;
+  const gitArgs = (args, input) => {
+    const opts = { env: cleanEnv(), maxBuffer: MAX_BUFFER, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], shell: false };
+    if (input !== undefined) opts.input = input;
+    return String(file('git', ['-C', root, ...args], opts));
+  };
+  // git's own tree: every blob of the revision, `node_modules` paths excluded (the extracted tree never holds them).
+  const blobs = new Map();
+  for (const entry of gitArgs(['ls-tree', '-r', '-z', '--full-tree', rev]).split('\0')) {
+    if (!entry) continue;
+    const tab = entry.indexOf('\t');
+    if (tab < 0) continue;
+    const meta = entry.slice(0, tab).split(' ');
+    const rel = entry.slice(tab + 1);
+    if (meta[1] !== 'blob') continue;
+    if (rel === 'node_modules' || rel.startsWith('node_modules/')) continue;
+    blobs.set(rel, { mode: meta[0], sha: meta[2] });
+  }
+  // the extracted tree on disk: a directory recurses; a symlink is a path of its own (never followed); a file is a path.
+  const onDisk = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (dir === tree && entry.name === 'node_modules') continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory() && !entry.isSymbolicLink()) {
+        walk(full);
+        continue;
+      }
+      onDisk.push(path.relative(tree, full).split(path.sep).join('/'));
+    }
+  };
+  walk(tree);
+  const left = [...blobs.keys()].sort();
+  onDisk.sort();
+  const count = Math.max(left.length, onDisk.length);
+  for (let i = 0; i < count; i += 1) {
+    if (left[i] !== onDisk[i]) throw new Error(`tip_extract_mismatch: ${left[i] === undefined ? String(onDisk[i]) : left[i]}`);
+  }
+  // the content: a regular file's git id must equal its ls-tree blob id (the symlink mode is a link target string, never file bytes).
+  const hashed = left.filter((rel) => blobs.get(rel).mode !== '120000');
+  if (hashed.length) {
+    const input = `${hashed.map((rel) => path.join(tree, rel)).join('\n')}\n`;
+    const ids = gitArgs(['hash-object', '--no-filters', '--stdin-paths'], input).split('\n').map((s) => s.trim());
+    for (let i = 0; i < hashed.length; i += 1) {
+      if (ids[i] !== blobs.get(hashed[i]).sha) throw new Error(`tip_extract_mismatch: ${hashed[i]}`);
+    }
+  }
+}
+
+/**
  * The base rows of the SAME groups, scored on the tree of `baseRev`: one producer spawn per group with the extracted base tree as its
  * root (the DATA stays the group's external data_dir), in the shape of curRows ({group, id, status: <class>, clause}, ids
- * group-qualified). A tree that cannot be extracted or scored is `{ rows: null, error }`, never a throw (the gate then prints the
- * existing "no base rows" note). The temp dir is always removed. IO.
+ * group-qualified). A tree that cannot be extracted or scored is `{ rows: null, error }`, never a throw (the gate then refuses a
+ * joined prereg at commit and push: prereg_moves_unchecked, MB-79 j-1). The temp dir is always removed. IO.
  */
 export function baseRowsFrom({ root, baseRev, groups, deps = {} }) {
   let baseRoot = null;
@@ -211,7 +268,9 @@ const floorsOf = (root, group) => {
  * baseRowsError, curRows, regenMismatch, inputsFresh, groups, ranGroups, floorsOk }`, or null when no group runs (ci with only
  * external groups: the CI note says those cases are not run). `baseRev` (a git revision) gives baseRows: the same groups scored on
  * that revision's extracted tree; without it, or when that tree cannot be built or scored, baseRows is null and baseRowsError says
- * why (the gate's own note). `groups` is the set's whole universe; `ranGroups` the ids of the groups this run actually ran (a
+ * why (evaluateGate refuses a joined prereg at commit and push: prereg_moves_unchecked, MB-79 j-1). `runRoot` (default `root`;
+ * MB-79 (o)) is the tree that is scored: at push and ci the tip's extracted tree; the base extraction always reads the repo `root`.
+ * `groups` is the set's whole universe; `ranGroups` the ids of the groups this run actually ran (a
  * commit run runs the fast ones only). curRows carry the printed CLASS (the prereg totals are by class). `inputsFresh` holds the
  * recomputed value of every
  * non-git input a `run --write` binds (the `data:<group>` content hashes and the `pin / <group> / <key>` values; O68-02), from the one
@@ -219,11 +278,12 @@ const floorsOf = (root, group) => {
  * The canary re-checks each case's own value against itself through canon, so a red canary proves the comparison detects a mutation.
  * IO (spawns the producer per group, reads floors, pins and the data files).
  */
-export function computeRun({ root, regression, mode, registerText, baseRev = null, deps = {} }) {
+export function computeRun({ root, runRoot = root, regression, mode, registerText, baseRev = null, deps = {} }) {
   const groups = groupsForMode(regression, mode);
   if (groups.length === 0) return null;
   // B1 (plan s7): the base side is the SAME groups scored on the tree of baseRev (an extracted temp tree), so a round's moves can be
-  // diffed against its prereg. Without baseRev there is no baseline (the gate says so), and a base tree that cannot be built is null.
+  // diffed against its prereg. Without baseRev there is no baseline (evaluateGate refuses a joined prereg at commit and push:
+  // prereg_moves_unchecked, MB-79 j-1), and a base tree that cannot be built is null.
   const base = baseRev ? baseRowsFrom({ root, baseRev, groups, deps }) : { rows: null, error: null };
   const cases = [];
   const counts = {};
@@ -232,8 +292,8 @@ export function computeRun({ root, regression, mode, registerText, baseRev = nul
   const owed = [];
   const regenMismatch = [];
   for (const group of groups) {
-    const produced = runProducer(root, group, deps);
-    const floorsFile = floorsOf(root, group);
+    const produced = runProducer(runRoot, group, deps);
+    const floorsFile = floorsOf(runRoot, group);
     // O68-03: a group with `"floors": "none"` has no percent floors: no per-article rule, no violation, no OWED line
     if (floorsFile !== null) {
       const floors = checkPercentFloors(floorsFile, produced.rows, registerText || '');
@@ -242,7 +302,7 @@ export function computeRun({ root, regression, mode, registerText, baseRev = nul
       // groups can never ratchet each other's baseline and a floors-write records every OWED baseline under its own group's name.
       for (const o of floors.owed) owed.push({ group: group.id, ...o });
     }
-    for (const m of pinMismatch(group, produced.rows, root)) regenMismatch.push(`${group.id} ${m}`);
+    for (const m of pinMismatch(group, produced.rows, runRoot)) regenMismatch.push(`${group.id} ${m}`);
     cases.push(...produced.cases);
     counts[`${group.id} cases`] = produced.cases.length;
     for (const c of produced.cases) curRows.push({ group: group.id, id: c.id, status: c.class, clause: c.clause });
@@ -253,7 +313,7 @@ export function computeRun({ root, regression, mode, registerText, baseRev = nul
   );
   const all = regression && Array.isArray(regression.groups) ? regression.groups : [];
   const runGroups = new Set(groups.map((g) => (g ? g.id : '')));
-  const inputsFresh = Object.assign({}, pinInputs(readPins(root, groups)), dataInputs(root, { groups: all.filter((g) => runGroups.has(g && g.id)) }));
+  const inputsFresh = Object.assign({}, pinInputs(readPins(runRoot, groups)), dataInputs(runRoot, { groups: all.filter((g) => runGroups.has(g && g.id)) }));
   return {
     cases,
     skipped: 0,

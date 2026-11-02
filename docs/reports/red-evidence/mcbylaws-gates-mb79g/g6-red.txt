@@ -1,0 +1,209 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts (11 tests | 10 failed) 4196ms
+   × MB-79 (o) G6: the loop gate judges the pushed tip > T-o3a: --tip c1 while HEAD is c2 judges c1, scored from c1 own tree (never the dirty worktree) 374ms
+     → expected [ …(6) ] to not include 'scripts/seeds/bylaw/layer3-catalogue-…'
+   × MB-79 (o) G6: the loop gate judges the pushed tip > T-o3b: no tip means HEAD: c2 code is unbound, and the tree scored is HEAD committed, not the dirty edit 345ms
+     → expected 'undefined' to be 'string' // Object.is equality
+   × MB-79 (o) G6: the loop gate judges the pushed tip > T-o3c: no temp tree is left behind (success, a throwing scorer, and a failing regression read) 648ms
+     → expected [] to have a length of 1 but got +0
+   × MB-79 (o) G6: the loop gate judges the pushed tip > T-o3d: an unresolvable tip fails closed with exit 2 and tip_not_resolvable 341ms
+     → expected 'loop-gate: cannot run: unknown_produc…' to contain 'tip_not_resolvable'
+   ✓ MB-79 (o) G6: the loop gate judges the pushed tip > T-o3e: ci with --tip HEAD is today ci (the same facts, the same null run) 471ms
+   × MB-79 (o) G6: the loop gate judges the pushed tip > T-o3f: a default-branch commit HEAD does not hold is judged when it is the tip 324ms
+     → expected [] to deeply equal [ Array(1) ]
+   × MB-79 (o) G6: the loop gate judges the pushed tip > T-o3f-b: a record landed on such a branch is joined at the tip 171ms
+     → expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+   × MB-79 (o) G6: the loop gate judges the pushed tip > T-o3h: the MB-79 (m) exclusion is judged at the tip 524ms
+     → expected [ Array(1) ] to deeply equal []
+   × MB-79 (o) G6: the real run scores the tip tree, and the tip tree is checked > T-o3g: the REAL computeRun at --tip c1 != HEAD scores the tip tree; the base keeps the repo 347ms
+     → expected undefined to be '7839cba2737adcc40f9370283f1ca47481d92…' // Object.is equality
+   × MB-79 (o) G6: the real run scores the tip tree, and the tip tree is checked > T-o3i: an export-ignore attribute that drops a scored input is tip_extract_mismatch, exit 2 322ms
+     → expected 'loop-gate: cannot run: unknown_produc…' to contain 'tip_extract_mismatch'
+   × MB-79 (o) G6: the real run scores the tip tree, and the tip tree is checked > T-o3j: an export-subst attribute that rewrites the scorer is tip_extract_mismatch, exit 2 321ms
+     → expected 'loop-gate: cannot run: unknown_produc…' to contain 'tip_extract_mismatch'
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the loop gate judges the pushed tip > T-o3a: --tip c1 while HEAD is c2 judges c1, scored from c1 own tree (never the dirty worktree)
+AssertionError: expected [ …(6) ] to not include 'scripts/seeds/bylaw/layer3-catalogue-…'
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:502:48
+    500|     expect(ctx.treeBlobs[CATALOGUE_NEXT]).toBe(gitQ(dir, ['rev-parse',…
+    501|     // RED today: the range is read at HEAD, so c2's code change is in…
+    502|     expect(ctx.nameStatus.map((r) => r.p)).not.toContain(C2_FILE);
+       |                                                ^
+    503| 
+    504|     // GREEN today: root is still the repo dir (the base extraction ne…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the loop gate judges the pushed tip > T-o3b: no tip means HEAD: c2 code is unbound, and the tree scored is HEAD committed, not the dirty edit
+AssertionError: expected 'undefined' to be 'string' // Object.is equality
+
+Expected: "string"
+Received: "undefined"
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:532:37
+    530|     // GREEN today: root is the repo dir and a different tree is hande…
+    531|     expect(seen[0]?.root).toBe(dir);
+    532|     expect(typeof seen[0]?.runRoot).toBe('string');
+       |                                     ^
+    533|     expect(seen[0]?.runRoot).not.toBe(dir);
+    534|     // RED today: that tree is HEAD's own extraction (an empty base tr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the loop gate judges the pushed tip > T-o3c: no temp tree is left behind (success, a throwing scorer, and a failing regression read)
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:572:22
+    570|     expect(fs.existsSync(`${String(captured[0])}.tar`)).toBe(false);
+    571|     // RED today: no tip tree is made at all, so nothing was extracted…
+    572|     expect(captured).toHaveLength(1);
+       |                      ^
+    573| 
+    574|     // 3. the regression read at the tip fails: no tree was made at al…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the loop gate judges the pushed tip > T-o3d: an unresolvable tip fails closed with exit 2 and tip_not_resolvable
+AssertionError: expected 'loop-gate: cannot run: unknown_produc…' to contain 'tip_not_resolvable'
+
+Expected: "tip_not_resolvable"
+Received: "loop-gate: cannot run: unknown_producer: undefined"
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:597:28
+    595|     });
+    596|     // RED today: an unresolvable tip is never read, so the reason is …
+    597|     expect(out.join('\n')).toContain('tip_not_resolvable');
+       |                            ^
+    598|     expect(code).toBe(2);
+    599|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the loop gate judges the pushed tip > T-o3f: a default-branch commit HEAD does not hold is judged when it is the tip
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- Array [
+-   "input_not_bound:scripts/seeds/bylaw/layer3-catalogue-c2.json",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:633:15
+    631|     const v = (await evaluateGateOf())(ctx).violations;
+    632|     // RED today: HEAD's view is green, and nothing names c2's code fi…
+    633|     expect(v).toEqual([`input_not_bound:${C2_FILE}`]);
+       |               ^
+    634|   });
+    635| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the loop gate judges the pushed tip > T-o3f-b: a record landed on such a branch is joined at the tip
+AssertionError: expected null to be 'scripts/analysis/bylaw-validation/coa…' // Object.is equality
+
+- Expected: 
+"scripts/analysis/bylaw-validation/coa-expected/prereg-MB-78-1.json"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:648:28
+    646|     // RED today: HEAD does not hold the record, so the join finds no …
+    647|     expect(ctx.preregJoin?.violations ?? []).not.toContain('prereg_tas…
+    648|     expect(ctx.preregFile).toBe(pre('MB-78', 1));
+       |                            ^
+    649|     expect(ctx.preregHistory?.roundCommit).toEqual({ sha: add });
+    650|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the loop gate judges the pushed tip > T-o3h: the MB-79 (m) exclusion is judged at the tip
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "input_not_bound:scripts/analysis/bylaw-validation/coa-expected/prereg-MB-30-1.json",
++ ]
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:681:30
+    679|     // RED today: at c1 the prereg was committed alone, so the MB-79 (…
+    680|     const tip = (await evaluateGateOf())(await ctxAt(dir, 'push', base…
+    681|     expect(naming(tip, M30)).toEqual([]);
+       |                              ^
+    682|   });
+    683| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the real run scores the tip tree, and the tip tree is checked > T-o3g: the REAL computeRun at --tip c1 != HEAD scores the tip tree; the base keeps the repo
+AssertionError: expected undefined to be '7839cba2737adcc40f9370283f1ca47481d92…' // Object.is equality
+
+- Expected: 
+"7839cba2737adcc40f9370283f1ca47481d92472"
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:750:31
+    748|       expect(baseArchive?.C).toBe(dir);
+    749|       const tipArchive = archives.find((a) => a.rev === c1);
+    750|       expect(tipArchive?.rev).toBe(c1);
+       |                               ^
+    751|       const tipTree = tars.find((t) => t.file === tipArchive?.out)?.di…
+    752|       expect(typeof tipTree).toBe('string');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the real run scores the tip tree, and the tip tree is checked > T-o3i: an export-ignore attribute that drops a scored input is tip_extract_mismatch, exit 2
+AssertionError: expected 'loop-gate: cannot run: unknown_produc…' to contain 'tip_extract_mismatch'
+
+Expected: "tip_extract_mismatch"
+Received: "loop-gate: cannot run: unknown_producer: undefined"
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:797:28
+    795|     });
+    796|     // RED today: no tip tree is checked against git, so the attribute…
+    797|     expect(out.join('\n')).toContain('tip_extract_mismatch');
+       |                            ^
+    798|     expect(code).toBe(2);
+    799|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-tip.logic.test.ts > MB-79 (o) G6: the real run scores the tip tree, and the tip tree is checked > T-o3j: an export-subst attribute that rewrites the scorer is tip_extract_mismatch, exit 2
+AssertionError: expected 'loop-gate: cannot run: unknown_produc…' to contain 'tip_extract_mismatch'
+
+Expected: "tip_extract_mismatch"
+Received: "loop-gate: cannot run: unknown_producer: undefined"
+
+ ❯ src/tests/mcbylaws-loop-gate-tip.logic.test.ts:817:28
+    815|     });
+    816|     // RED today: the substituted scorer is never compared with its co…
+    817|     expect(out.join('\n')).toContain('tip_extract_mismatch');
+       |                            ^
+    818|     expect(code).toBe(2);
+    819|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 1 passed (11)
+   Start at  16:30:03
+   Duration  4.36s (transform 63ms, setup 6ms, collect 15ms, tests 4.20s, environment 0ms, prepare 17ms)
+

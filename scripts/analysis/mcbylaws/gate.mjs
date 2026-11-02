@@ -32,9 +32,9 @@ const CITE_INPUTS = {
   registers: [`${DOCS}/69a_mcbylaw_register.md`, `${DOCS}/124a_step_standard_policy_appendix.md`, `${DOCS}/131_lot_configuration_policy.md`],
 };
 // G67-12: the arms that live outside the repo are a fixed table; the policy names them by `id` only.
-// O67-11: MB-68's CLI is `check --mode <commit|push|ci> [--base <rev>]`; exit 0 green, 1 red, 2 could not run.
+// O67-11: MB-68's CLI is `check --mode <commit|push|ci> [--base <rev>] [--tip <rev>]`; exit 0 green, 1 red, 2 could not run. MB-79 (o) F-10: push and ci always pass --tip (the pushed local sha; HEAD in CI).
 const EXTERNAL_ARMS = {
-  loop: { file: 'scripts/analysis/mcbylaws-loop/loop-gate.mjs', argv: (mode, base) => ['check', '--mode', mode, ...(base ? ['--base', base] : [])] },
+  loop: { file: 'scripts/analysis/mcbylaws-loop/loop-gate.mjs', argv: (mode, base, tip) => ['check', '--mode', mode, ...(base ? ['--base', base] : []), ...((mode === 'push' || mode === 'ci') && tip ? ['--tip', tip] : [])] },
 };
 const LOOP_LINES = 20;
 // Operator CARD-gates-recheck item 1: a one-time, EXACT list of shas; never a pattern, never a rule.
@@ -111,7 +111,7 @@ function citeInputs(cwd, rev) {
   return { owed: parseOwedTable(spec), rows };
 }
 
-function externalArmLines(cwd, policy, mode, base) {
+function externalArmLines(cwd, policy, mode, base, tip) {
   const out = [];
   for (const arm of Array.isArray(policy.external_arms) ? policy.external_arms : []) {
     if (!arm || typeof arm.id !== 'string') return [CANNOT];
@@ -122,7 +122,7 @@ function externalArmLines(cwd, policy, mode, base) {
       else out.push(`external arm ${arm.id}: pending`);
       continue;
     }
-    const r = spawnSync(process.execPath, [file, ...spec.argv(mode, base)], { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    const r = spawnSync(process.execPath, [file, ...spec.argv(mode, base, tip)], { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     // O67-11: the arm's own first lines are shown, prefixed; exit 1 or 2 (or a spawn error) is a failure.
     const shown = r.stdout ? String(r.stdout).split('\n').filter(Boolean).slice(0, LOOP_LINES) : [];
     for (const l of shown) out.push(`loop: ${l}`);
@@ -192,11 +192,18 @@ function commitMsg(cwd, msgFile) {
   if (entries === null) return [CANNOT];
   const res = resolvePolicy(cwd, 'HEAD', { ownRev: '', entries });
   if (!res.ok) return ['FAIL:H:cannot-decide'];
-  const inputs = citeInputs(cwd, '') || { owed: new Set(), rows: new Map() }; // empty sentinels make arm C fail closed on a Layer 2/3 path
+  // MB-79 (n) both-reads rule (fold 5; R-LF): arm C runs on the PARENT register (HEAD) and on the INDEX (''); the commit fails if
+  // either run fails. A staged edit can neither rescue a cite (parent read) nor hide one (index read). Empty sentinels fail closed.
+  const parentInputs = citeInputs(cwd, 'HEAD') || { owed: new Set(), rows: new Map() };
+  const indexInputs = citeInputs(cwd, '') || { owed: new Set(), rows: new Map() };
+  const cite = [...new Set([
+    ...citeForCommit({ cwd, policy: res.policy, entries, message: text, parentRev: 'HEAD', ownRev: '', ...parentInputs }),
+    ...citeForCommit({ cwd, policy: res.policy, entries, message: text, parentRev: 'HEAD', ownRev: '', ...indexInputs }),
+  ])];
   const onDisk = exists(path.join(cwd, 'mcbylaws/APPROVED'));
   return [
     ...holdForCommit({ cwd, policy: res.policy, entries, parentRev: 'HEAD', onDiskApproved: onDisk }),
-    ...citeForCommit({ cwd, policy: res.policy, entries, message: text, parentRev: 'HEAD', ownRev: '', ...inputs }),
+    ...cite,
     ...panelForCommit({ cwd, policy: res.policy, entries, message: text, ownRev: '' }),
   ];
 }
@@ -427,7 +434,7 @@ function summaryInput({ cwd, refs, ci, ctx }) {
       arms.push(`pre-policy: ${[...pre.set].slice(0, 3).map((x) => x.slice(0, 7)).join(',')}${pre.set.size > 3 ? ',...' : ''} (${pre.set.size} commit(s), ancestors of the bootstrap ${ctx.bootstrap.slice(0, 8)}; arms H, C, P skipped)`);
     }
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy, pre }));
-    arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b));
+    arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b, r.localSha));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
     let tipLimit = res.policy.held_limit;
     try { tipLimit = JSON.parse(readAt(cwd, r.localSha, POLICY_PATH) ?? '{}').held_limit ?? tipLimit; } catch { arms.push(CANNOT); }

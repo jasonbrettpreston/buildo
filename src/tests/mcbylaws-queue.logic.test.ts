@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 describe('Q1 missingCommitErrors', () => {
-  it('red for an unknown sha, green for an ancestor, red for a side branch', () => {
+  it('red for an unknown sha, green for an ancestor, red for a side branch (MB-79 (q) T-q1)', () => {
     const r = makeRepo();
     repos.push(r);
     r.write('a.txt', 'a\n');
@@ -35,10 +35,28 @@ describe('Q1 missingCommitErrors', () => {
       ['- MB-99@deadbeef', ['FAIL:Q:missing-commit:MB-99']],
       [`- MB-01@${tip}`, []],
       [`- MB-01@${tip.slice(0, 7)}`, []],
-      [`- MB-01@${side}`, []],
+      [`- MB-01@${side}`, ['FAIL:Q:not-on-branch:MB-01']],
       ['- MB-02 no sha, nothing to judge', []],
     ];
     for (const [text, expected] of rows) expect(q.missingCommitErrors({ cwd: r.dir, text, tipRev: tip })).toEqual(expected);
+  });
+  it('T-q2..T-q4 (MB-79 (q)): one line per sha, short ancestors pass, an undecidable tip never passes', () => {
+    const r = makeRepo();
+    repos.push(r);
+    r.write('a.txt', 'a\n');
+    const base = r.commit('base');
+    r.write('b.txt', 'b\n');
+    const tip = r.commit('tip');
+    r.git(['checkout', '-q', '-b', 'side', base]);
+    r.write('c.txt', 'c\n');
+    r.commit('side');
+    r.git(['checkout', '-q', '-']);
+    // T-q2: an unknown sha yields exactly one line, never a second one for the same id.
+    expect(q.missingCommitErrors({ cwd: r.dir, text: '- MB-99@deadbeef', tipRev: tip })).toEqual(['FAIL:Q:missing-commit:MB-99']);
+    // T-q3: the short sha of an ancestor is on the branch.
+    expect(q.missingCommitErrors({ cwd: r.dir, text: `- MB-01@${base.slice(0, 7)}`, tipRev: tip })).toEqual([]);
+    // T-q4: a tip that does not resolve can never pass.
+    expect(q.missingCommitErrors({ cwd: r.dir, text: `- MB-01@${tip}`, tipRev: 'refs/heads/nope' })).toEqual(['FAIL:Q:cannot-decide']);
   });
   it('a repo that cannot run git fails closed as missing-commit', () => {
     expect(q.missingCommitErrors({ cwd: '/nonexistent-mb67', text: '- MB-01@abc1234', tipRev: 'HEAD' })).toEqual([

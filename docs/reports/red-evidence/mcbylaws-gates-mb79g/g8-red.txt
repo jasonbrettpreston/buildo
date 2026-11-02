@@ -1,0 +1,59 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-queue.logic.test.ts (8 tests | 2 failed) 394ms
+   × Q1 missingCommitErrors > red for an unknown sha, green for an ancestor, red for a side branch (MB-79 (q) T-q1) 115ms
+     → expected [] to deeply equal [ 'FAIL:Q:not-on-branch:MB-01' ]
+   × Q1 missingCommitErrors > T-q2..T-q4 (MB-79 (q)): one line per sha, short ancestors pass, an undecidable tip never passes 105ms
+     → expected [] to deeply equal [ 'FAIL:Q:cannot-decide' ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-queue.logic.test.ts > Q1 missingCommitErrors > red for an unknown sha, green for an ancestor, red for a side branch (MB-79 (q) T-q1)
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:not-on-branch:MB-01' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:not-on-branch:MB-01",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue.logic.test.ts:41:107
+     39|       ['- MB-02 no sha, nothing to judge', []],
+     40|     ];
+     41|     for (const [text, expected] of rows) expect(q.missingCommitErrors(…
+       |                                                                                                           ^
+     42|   });
+     43|   it('T-q2..T-q4 (MB-79 (q)): one line per sha, short ancestors pass, …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/mcbylaws-queue.logic.test.ts > Q1 missingCommitErrors > T-q2..T-q4 (MB-79 (q)): one line per sha, short ancestors pass, an undecidable tip never passes
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:cannot-decide' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:cannot-decide",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue.logic.test.ts:59:102
+     57|     expect(q.missingCommitErrors({ cwd: r.dir, text: `- MB-01@${base.s…
+     58|     // T-q4: a tip that does not resolve can never pass.
+     59|     expect(q.missingCommitErrors({ cwd: r.dir, text: `- MB-01@${tip}`,…
+       |                                                                                                      ^
+     60|   });
+     61|   it('a repo that cannot run git fails closed as missing-commit', () =…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  16:10:15
+   Duration  551ms (transform 29ms, setup 6ms, collect 8ms, tests 394ms, environment 0ms, prepare 16ms)
+

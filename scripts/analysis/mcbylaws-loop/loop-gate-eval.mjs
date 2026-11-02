@@ -142,6 +142,20 @@ function stageScopeAndRecords(ctx) {
   return { early: hasViolation(violations, 'record_missing'), outOfScope: false, violations };
 }
 
+/**
+ * MB-79 (j) j-1: why a joined prereg's moves cannot be compared, as violations. No base rows: `base_not_scored` when the run says why
+ * (baseRowsError), else `no_base_rows` (reachable only through an injected run). A run whose `ranGroups` array omits the prereg's group
+ * (`group`, default coa172): `group_not_run:<group>`. A run without a `ranGroups` array is not judged for that (ranGroupsOf's reading:
+ * "or null when the run does not say"). The violation never carries the error text (it holds a temp path).
+ */
+function preregMovesUnchecked(pre, run) {
+  if (run.baseRows == null) {
+    return [`prereg_moves_unchecked:${typeof run.baseRowsError === 'string' && run.baseRowsError ? 'base_not_scored' : 'no_base_rows'}`];
+  }
+  const group = pre && typeof pre.group === 'string' && pre.group ? pre.group : 'coa172';
+  return Array.isArray(run.ranGroups) && !run.ranGroups.includes(group) ? [`prereg_moves_unchecked:group_not_run:${group}`] : [];
+}
+
 /** Stage 3: the newest record of the current increment — shape, binding, decision, one increment, skip-ahead, prereg. */
 function stageRecord(ctx, rec) {
   const out = [];
@@ -169,6 +183,8 @@ function stageRecord(ctx, rec) {
     out.push(...checkPreregFile(ctx.prereg));
     const run = ctx.run;
     if (run) {
+      // MB-79 (j) j-1 (M-321; CARD-mb79-gapj-p "1. fail"): at commit and push a joined prereg whose moves cannot be compared is refused.
+      if (ctx.mode !== 'ci') out.push(...preregMovesUnchecked(ctx.prereg, run));
       const moves = checkPreregMoves(ctx.prereg, run.baseRows, run.curRows);
       out.push(...moves);
       out.push(...preregRefusesAccept(moves, rec.decision));

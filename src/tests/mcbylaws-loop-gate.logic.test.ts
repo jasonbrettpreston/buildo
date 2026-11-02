@@ -36,6 +36,7 @@ type Parsed = {
   base: string;
   findings: string;
   target: string;
+  tip: string;
   error: string;
 };
 type GateModule = {
@@ -97,7 +98,7 @@ function commitAll(dir: string, message: string): string {
 }
 
 // The parseArgs usage error IS the usage line the CLI prints (main writes it verbatim and returns 2).
-const USAGE_LINE = 'usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--json]';
+const USAGE_LINE = 'usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--tip <rev>] [--json]';
 
 describe('parseArgs', () => {
   it('parses --mode=<v> as the check command with defaults for everything else', async () => {
@@ -192,6 +193,35 @@ describe('parseArgs', () => {
     expect(parseArgs(['--mode=commit', '--nope=1']).error).toBe('unknown_flag:--nope');
     expect(parseArgs(['--mode=commit', '--mode=commit']).error).toBe('');
   });
+
+  it('T-o1 (MB-79 (o)): --tip <sha> is read for check at push and ci; omitted it is empty', async () => {
+    const { parseArgs } = await load();
+    const space = parseArgs(['check', '--mode', 'push', '--base', 'b', '--tip', 't']);
+    expect(space.tip).toBe('t');
+    expect(space.error).toBe('');
+    const equals = parseArgs(['check', '--mode=ci', '--tip=abc']);
+    expect(equals.tip).toBe('abc');
+    expect(equals.error).toBe('');
+    const omitted = parseArgs(['--mode=push']);
+    expect(omitted.tip).toBe('');
+    expect(omitted.error).toBe('');
+  });
+
+  it('T-o1b (MB-79 (o)): --tip anywhere else, empty, or flag-like is tip_not_allowed', async () => {
+    const { parseArgs } = await load();
+    for (const argv of [
+      ['check', '--mode', 'commit', '--tip', 't'],
+      ['--mode=commit', '--tip=t'],
+      ['run', '--increment', '7', '--tip', 't'],
+      ['verify', '--tip', 't'],
+      ['check', '--mode', 'push', '--tip='],
+      ['check', '--mode', 'push', '--tip', '--json'],
+      ['check', '--mode', 'push', '--tip'],
+      ['check', '--mode', 'push', '--tip', '-x'],
+    ]) {
+      expect(parseArgs(argv).error).toBe('tip_not_allowed');
+    }
+  });
 });
 
 describe('exitCodeFor', () => {
@@ -280,6 +310,20 @@ describe('main with injected deps', () => {
     expect(await main(['--mode=bogus'], deps)).toBe(2);
     expect(called).toBe(0);
     expect(sink.out.join('\n')).toContain('usage');
+  });
+
+  it('T-o1b (MB-79 (o)): main exits 2 on tip_not_allowed and never builds a context', async () => {
+    const { main } = await load();
+    const sink = collect();
+    let called = false;
+    const code = await main(['--mode=commit', '--tip=t'], {
+      buildContext: async () => { called = true; return {}; },
+      evaluateGate: () => ({ violations: [], notes: [] }),
+      write: sink.write,
+    });
+    expect(code).toBe(2);
+    expect(called).toBe(false);
+    expect(sink.out.join('\n')).toContain('loop-gate: tip_not_allowed');
   });
 });
 
@@ -443,13 +487,20 @@ describe('alternate index (O68-08)', () => {
     fs.writeFileSync(inside, '');
     const outside = path.join(dir, 'alt-index');
     fs.writeFileSync(outside, '');
-    expect(process.env.GIT_INDEX_FILE).toBeUndefined();
-    expect(trustedIndexFile(dir)).toBe(null);
-    expect(stagedEnv(dir).GIT_INDEX_FILE).toBeUndefined();
-    expect(withIndexFile(inside, () => trustedIndexFile(dir))).toBe(fs.realpathSync(inside));
-    expect(withIndexFile(inside, () => stagedEnv(dir).GIT_INDEX_FILE)).toBe(fs.realpathSync(inside));
-    expect(withIndexFile(outside, () => trustedIndexFile(dir))).toBe(null);
-    expect(withIndexFile(outside, () => stagedEnv(dir).GIT_INDEX_FILE)).toBeUndefined();
+    // fold 6 (s): a hook exports GIT_INDEX_FILE (git 2.56 pre-commit); save and remove every inherited GIT_* so the test judges only its own values.
+    const inherited: Record<string, string | undefined> = {};
+    for (const k of Object.keys(process.env)) if (k.startsWith('GIT_')) { inherited[k] = process.env[k]; delete process.env[k]; }
+    try {
+      expect(process.env.GIT_INDEX_FILE).toBeUndefined();
+      expect(trustedIndexFile(dir)).toBe(null);
+      expect(stagedEnv(dir).GIT_INDEX_FILE).toBeUndefined();
+      expect(withIndexFile(inside, () => trustedIndexFile(dir))).toBe(fs.realpathSync(inside));
+      expect(withIndexFile(inside, () => stagedEnv(dir).GIT_INDEX_FILE)).toBe(fs.realpathSync(inside));
+      expect(withIndexFile(outside, () => trustedIndexFile(dir))).toBe(null);
+      expect(withIndexFile(outside, () => stagedEnv(dir).GIT_INDEX_FILE)).toBeUndefined();
+    } finally {
+      for (const [k, v] of Object.entries(inherited)) if (v !== undefined) process.env[k] = v;
+    }
   });
 
   it('stagedNameStatus reads the alternate index inside .git and ignores one outside it', async () => {

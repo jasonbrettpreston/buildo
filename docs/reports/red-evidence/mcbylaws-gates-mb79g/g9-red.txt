@@ -1,0 +1,50 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts (46 tests | 1 failed) 11660ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > an UNSTAGED register edit is NOT seen in commit mode; the same edit STAGED is 338ms
+   ✓ buildContext: N68-1 the register and the closed increment list are read at the round revision > push mode reads the register at HEAD: a landed ruling is seen, a merely written one is not 482ms
+   ✓ buildContext: push and ci mode > push over two commits: commits per commit, base explicit, preregHistory present 305ms
+   ✓ buildContext: push and ci mode > derives base from the merge-base of the target when --base is empty 312ms
+   ✓ buildContext: push and ci mode > greenHistory from accepted records at the base, prevCases from the previous round of the increment 303ms
+   ✓ buildContext -> evaluateGate (end to end) > the honest round has no violations; an empty reason is accept_without_reason 587ms
+   ✓ R-MA (amends R-KV): the loop gate joins the landing task's newest prereg of the record's increment > J3: another task's prereg file is never read (not even a broken one) 331ms
+   ✓ R-MA: the push / ci join reads the trailer of the commit that adds the record, and the disclosed costs > J13: HEAD adds another task's prereg (commit takes MB-79), then push takes MB-78 from the trailer 336ms
+   ✓ MB-79 (m): a prereg committed alone binds no other record > T-m1: a side-branch prereg committed alone, merged in, binds nothing 337ms
+   ✓ MB-79 (m): a prereg committed alone binds no other record > T-m2: a prereg edited after its add stays bound 313ms
+   ✓ MB-79 (m): a prereg committed alone binds no other record > T-m3: a prereg added beside a code file stays bound, and so does the code 304ms
+   ✓ MB-79 (m): a prereg committed alone binds no other record > T-m5: a prereg whose content the merge resolution changed stays bound 343ms
+   ✓ MB-79 (m): a prereg committed alone binds no other record > T-m8: the same prereg added alone on one side and beside code on the other stays bound 357ms
+   × MB-79 (p): a lane merge in progress joins its record by the push-and-CI source > T-p1: one merge head, the record's index blob is MERGE_HEAD's: the trailer join 207ms
+     → expected [ 'prereg_task_unknown:commit' ] to deeply equal []
+   ✓ MB-79 (p): a lane merge in progress joins its record by the push-and-CI source > T-p4: an octopus merge (two heads) keeps the commit join 555ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-context.logic.test.ts > MB-79 (p): a lane merge in progress joins its record by the push-and-CI source > T-p1: one merge head, the record's index blob is MERGE_HEAD's: the trailer join
+AssertionError: expected [ 'prereg_task_unknown:commit' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "prereg_task_unknown:commit",
++ ]
+
+ ❯ src/tests/mcbylaws-loop-gate-context.logic.test.ts:1407:66
+    1405|     const ctx = await ctxOf(dir, 'commit');
+    1406|     const v = (await evaluateGateOf())(ctx).violations;
+    1407|     expect(v.filter((x) => x.startsWith('prereg_task_unknown'))).toEqu…
+       |                                                                  ^
+    1408|     expect(v).not.toContain('prereg_missing');
+    1409|     expect(ctx.preregFile).toBe(pre('MB-78', 1));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 45 passed (46)
+   Start at  16:39:51
+   Duration  11.83s (transform 69ms, setup 6ms, collect 24ms, tests 11.66s, environment 0ms, prepare 16ms)
+

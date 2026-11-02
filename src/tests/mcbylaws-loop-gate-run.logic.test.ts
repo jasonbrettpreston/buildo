@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(__dirname, '../..');
 const M = await import(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-gate-run.mjs'));
@@ -472,7 +473,7 @@ describe('computeRun: base rows from a base revision (B1 / plan s7)', () => {
     // the same move, pre-registered: green (the totals are the cur run's own)
     const listed = { group: '172', expected_moves: [{ clause: '10.20.40.40(1)', from: 'DIFFER', to: 'MATCH' }], expected_totals: { MATCH: 2 } };
     expect(checkPreregMoves(listed, unqualified(run.baseRows), unqualified(run.curRows))).toEqual([]);
-    // with no base rows there is nothing to diff: no move is claimed (preregNotes says so instead)
+    // with no base rows there is nothing to diff: no move is claimed (evaluateGate refuses it: prereg_moves_unchecked, MB-79 j-1)
     expect(checkPreregMoves(unlisted, null, unqualified(run.curRows)).filter((m: string) => m.startsWith('unexpected_move:'))).toEqual([]);
   });
 
@@ -574,4 +575,115 @@ describe.skipIf(!have)('the real 172 group (MB-68 B7d)', () => {
     if (!second) return;
     expect(second.cases.map((c) => `${c.id}:${c.got_sha}`)).toEqual(first.cases.map((c) => `${c.id}:${c.got_sha}`));
   }, 60000);
+});
+
+// SPEC LINK: ~/Buildo-scratch/mcbylaws/MB-79/gates/plan.md section 2 (T-j1a-c): every hook spawns the loop gate with cwd = the repo
+// root and no --root, so `root` is '.'. extractRev must link node_modules by its ABSOLUTE path there, or the link points at itself
+// (ELOOP) and the base scorer cannot run. Red first: T-j1a and T-j1b fail until extractRev resolves the root.
+describe('MB-79 K-1: extractRev at a relative root', () => {
+  // A throw-away repo outside this checkout: one committed file under the scorer's directory, and node_modules/marker/x.txt left
+  // UNTRACKED (written after the commit) so it exists only in the live worktree, never in `git archive HEAD`.
+  const R = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mb79-k1-')));
+  // the git child env: every GIT_* variable scrubbed (a hook or a CI checkout must not redirect this throw-away repo)
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))) as NodeJS.ProcessEnv;
+  afterAll(() => {
+    fs.rmSync(R, { recursive: true, force: true });
+  });
+  fs.mkdirSync(path.join(R, 'scripts/analysis/bylaw-validation'), { recursive: true });
+  fs.writeFileSync(path.join(R, 'scripts/analysis/bylaw-validation/coa-scorecard.mjs'), '// scorer stand-in\n');
+  execFileSync('git', ['init', '-q', R], { env });
+  execFileSync('git', ['-C', R, 'config', '--file', path.join(R, '.git/config'), 'user.email', 'k1@example.invalid'], { env });
+  execFileSync('git', ['-C', R, 'config', '--file', path.join(R, '.git/config'), 'user.name', 'k1'], { env });
+  execFileSync('git', ['-C', R, 'add', '-A'], { env });
+  execFileSync('git', ['-C', R, 'commit', '-q', '--no-verify', '-m', 'k1 base'], { env });
+  fs.mkdirSync(path.join(R, 'node_modules/marker'), { recursive: true });
+  fs.writeFileSync(path.join(R, 'node_modules/marker/x.txt'), 'k1\n');
+
+  it('T-j1a: a relative root links node_modules by its absolute path', () => {
+    const tmp = M.extractRev(path.relative(process.cwd(), R), 'HEAD') as string;
+    try {
+      // RED today: the link is the relative `node_modules`, so it points at itself (ENOENT / ELOOP)
+      expect(fs.readFileSync(path.join(tmp, 'node_modules/marker/x.txt'), 'utf8')).toBe('k1\n');
+      expect(path.isAbsolute(fs.readlinkSync(path.join(tmp, 'node_modules')))).toBe(true);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('T-j1b: the hook case, cwd = the repo and root "."', () => {
+    const moduleHref = pathToFileURL(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-gate-run.mjs')).href;
+    const SCRIPT = [
+      "import fs from 'node:fs';",
+      "import path from 'node:path';",
+      `const M = await import(${JSON.stringify(moduleHref)});`,
+      "const tmp = M.extractRev('.', 'HEAD');",
+      'let link = null;',
+      'let read = null;',
+      'try {',
+      "  link = fs.readlinkSync(tmp + '/node_modules');",
+      '} catch (err) {',
+      "  link = 'ERR:' + err.code;",
+      '}',
+      'try {',
+      "  read = fs.readFileSync(path.join(tmp, 'node_modules/marker/x.txt'), 'utf8');",
+      '} catch (err) {',
+      "  read = 'ERR:' + err.code;",
+      '}',
+      'fs.rmSync(tmp, { recursive: true, force: true });',
+      "process.stdout.write(JSON.stringify({ link, read }) + '\\n');",
+    ].join('\n');
+    const stdout = execFileSync('node', ['--input-type=module', '-e', SCRIPT], { cwd: R, encoding: 'utf8', env });
+    const out = JSON.parse(stdout.trim().split('\n').pop() ?? '{}') as { link: unknown; read: unknown };
+    // RED today: link is the relative `node_modules` and read is ERR:ELOOP (the link points at itself)
+    expect(path.isAbsolute(String(out.link))).toBe(true);
+    expect(out.read).toBe('k1\n');
+  });
+
+  it('T-j1c: baseRowsFrom leaves no temp tree or tar behind, on success and when the scorer throws', () => {
+    // a data dir that exists, and a group that names no notices/parcels/plan_facts (so only --root and --out reach the scorer)
+    const DATA_DIR_K1 = fs.mkdtempSync(path.join(os.tmpdir(), 'mb79-k1-data-'));
+    afterAll(() => {
+      fs.rmSync(DATA_DIR_K1, { recursive: true, force: true });
+    });
+    const k1Group: Group = { id: '172', introduced_in: '1', fast: true, external: true, producer: { kind: 'coa-scorecard', data_dir: DATA_DIR_K1 } };
+    const captured: string[] = [];
+    // the real execFileSync, recording the temp dir each `tar -xf ... -C <tmp>` unpacks into
+    const recordingExec = (cmd: string, args: string[], opts: Parameters<typeof execFileSync>[2]): string | Buffer => {
+      if (cmd === 'tar') {
+        const i = args.indexOf('-C');
+        captured.push(String(args[i + 1]));
+      }
+      return execFileSync(cmd, args, opts);
+    };
+    const deps = { execFileSync: recordingExec, spawn: undefined as SpawnFn | undefined };
+
+    // 1. the scorer succeeds: it writes an empty scorecard to --out, like coa-scorecard.mjs does
+    const successSpawn: SpawnFn = (cmd, args) => {
+      const out = args[args.indexOf('--out') + 1] ?? '';
+      fs.writeFileSync(out, JSON.stringify({ rows: [] }));
+      return Buffer.from('');
+    };
+    const ok = M.baseRowsFrom({ root: R, baseRev: 'HEAD', groups: [k1Group], deps: { ...deps, spawn: successSpawn } }) as { rows: unknown; error: string | null };
+    expect(ok.error).toBeNull();
+    expect(captured.length).toBeGreaterThan(0);
+    const okTmp = captured[captured.length - 1] ?? '';
+    expect(okTmp.length).toBeGreaterThan(0);
+    expect(fs.existsSync(okTmp)).toBe(false);
+    expect(fs.existsSync(`${okTmp}.tar`)).toBe(false);
+
+    // 2. the scorer throws: baseRowsFrom reports the error and still removes the tree it extracted
+    const countBefore = captured.length;
+    const boomSpawn: SpawnFn = () => {
+      throw new Error('scorer boom');
+    };
+    const bad = M.baseRowsFrom({ root: R, baseRev: 'HEAD', groups: [k1Group], deps: { ...deps, spawn: boomSpawn } }) as { rows: unknown; error: string | null };
+    expect(bad.rows).toBeNull();
+    expect(String(bad.error)).toContain('scorer boom');
+    expect(captured.length).toBeGreaterThan(countBefore);
+    const badTmp = captured[captured.length - 1] ?? '';
+    expect(badTmp.length).toBeGreaterThan(0);
+    expect(badTmp).not.toBe(okTmp);
+    expect(fs.existsSync(badTmp)).toBe(false);
+    expect(fs.existsSync(`${badTmp}.tar`)).toBe(false);
+  });
 });

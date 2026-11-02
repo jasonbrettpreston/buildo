@@ -55,21 +55,10 @@ const counts = (rows) => {
   return out;
 };
 
-const BASE_ROWS_NOTE = 'prereg moves not checked: no base rows';
-
-/**
- * The notes a prereg verdict owes the operator (O68-04), never a violation: a prereg checked with no base rows cannot compare moves,
- * so `evaluateGate` must SAY so instead of passing silently. Returns ['prereg moves not checked: no base rows'] when baseRows is null.
- */
-export function preregNotes(pre, baseRows) {
-  void pre;
-  return baseRows == null ? [BASE_ROWS_NOTE] : [];
-}
-
 /**
  * Expected against actual on the gate's rows, for ONLY the group the prereg registers (`pre.group`, default 'coa172'): the totals
- * of one group are never compared with another group's rows (O68-04). baseRows null = no baseline, so moves are not checked (the
- * totals still are; preregNotes reports the unchecked moves).
+ * of one group are never compared with another group's rows (O68-04). baseRows null = no baseline, so moves are not compared here;
+ * evaluateGate refuses that round (prereg_moves_unchecked, MB-79 j-1)
  */
 export function checkPreregMoves(pre, baseRows, curRows) {
   const group = groupOf(pre);
@@ -115,20 +104,24 @@ const gitTemp = (root, args) => execFileSync('git', ['-C', root, ...args], { enc
 const nonEmpty = (s) => s.split('\n').map((x) => x.trim()).filter(Boolean);
 
 /**
- * The commit that adds `rel`: the LAST line of `git log --diff-filter=A --format=%H -- <rel>` from HEAD (the oldest add), or null.
+ * The commit that adds `rel`: the LAST line of `git log --diff-filter=A --format=%H <rev> -- <rel>` from `rev` (default HEAD; MB-79 (o):
+ * the pushed tip), i.e. the oldest add, or null.
  * `git(root, args)` returns stdout and throws on a git failure (the throw is the caller's to handle). R-MA (MB-79 h) and gitPreregHistory share it.
  */
-export function recordAddCommit(git, root, rel) {
-  const added = nonEmpty(String(git(root, ['log', '--diff-filter=A', '--format=%H', '--', rel]) ?? ''));
+export function recordAddCommit(git, root, rel, rev = 'HEAD') {
+  const added = nonEmpty(String(git(root, ['log', '--diff-filter=A', '--format=%H', rev, '--', rel]) ?? ''));
   return added.length ? added[added.length - 1] : null;
 }
 
-/** The argument checkPreregHistory takes, read from git. The round record's first add is its last log line; the round is unwritten until then. */
-export function gitPreregHistory(root, preregFile, recordFile) {
+/**
+ * The argument checkPreregHistory takes, read from git. The round record's first add is its last log line; the round is unwritten until then.
+ * Every log reads from `rev` (default HEAD; MB-79 (o)).
+ */
+export function gitPreregHistory(root, preregFile, recordFile, rev = 'HEAD') {
   const g = (args) => gitTemp(root, args);
-  const add = recordAddCommit(gitTemp, root, recordFile);
+  const add = recordAddCommit(gitTemp, root, recordFile, rev);
   const roundCommit = add ? { sha: add } : null;
-  const preregCommits = nonEmpty(g(['log', '--reverse', '--format=%H', '--', preregFile])).map((sha) => ({ sha, files: nonEmpty(g(['show', '--name-only', '--format=', sha])) }));
+  const preregCommits = nonEmpty(g(['log', '--reverse', '--format=%H', rev, '--', preregFile])).map((sha) => ({ sha, files: nonEmpty(g(['show', '--name-only', '--format=', sha])) }));
   const isStrictAncestor = (a, b) => {
     if (!a || !b || a === b) return false;
     try {

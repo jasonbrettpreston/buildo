@@ -2,15 +2,17 @@
 // SPEC LINK: ~/Buildo-scratch/mcbylaws/MB-68/plan.md sections 2, 3, 6, 7, 8 (revisions, policy and classes, register, records, prereg, the bound set, regression and floors, the run)
 //
 // B7b: buildContext(parsed, deps) -> the plain `ctx` object evaluateGate reads (see loop-gate-eval.mjs). Every fact is read at the
-// round's revision (`':index'` for commit, `HEAD` for push/ci) and the base copy decides the base side (the policy, the regression
+// round's revision (`':index'` for commit, the tip for push/ci) and the base copy decides the base side (the policy, the regression
 // set, the floors and the green history). Nothing here decides a rule: this module only reports what git and the JSON files say.
 // loop-gate.mjs (the git readers) is imported LAZILY, inside the function: loop-gate.mjs imports this module lazily too, and a
 // top-level import in either direction would make the other half of the cycle eagerly evaluated. `deps` is the test seam.
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseMessage } from '../mcbylaws/cite-parse.mjs';
 import { byNewest, parsePreregName } from '../mcbylaws/prereg-name.mjs';
 import { recordAddCommit } from './loop-prereg.mjs';
+import { preregOnly, nameStatusOf } from './loop-oracle.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_OF_MODULE = path.resolve(HERE, '../../..');
@@ -220,6 +222,24 @@ export function headPreregTask(git, root) {
   return tasks.size === 1 ? [...tasks][0] : null;
 }
 
+/**
+ * MB-79 (p), R-MA dated note 2026-11-01: the ONE merge head of a merge in progress, or null. `git rev-parse --git-path MERGE_HEAD`
+ * prints the path relative to `root` in a plain repo (`.git/MERGE_HEAD`), so it is read at path.resolve(root, <printed path>). No
+ * file, a read that fails, or more than one head (an octopus) is null.
+ */
+function singleMergeHead(git, root) {
+  const printed = tryGitText(git, root, ['rev-parse', '--git-path', 'MERGE_HEAD']);
+  if (printed === null || !printed.trim()) return null;
+  let text;
+  try {
+    text = fs.readFileSync(path.resolve(root, printed.trim()), 'utf8');
+  } catch {
+    return null;
+  }
+  const heads = text.split('\n').map((s) => s.trim()).filter(Boolean);
+  return heads.length === 1 ? heads[0] : null;
+}
+
 /** R-MA, push and ci: the McBylaws-Task trailer of a commit (cite-parse owns the trailer form), or null. */
 export function trailerTask(git, root, sha) {
   const text = tryGitText(git, root, ['log', '-1', '--format=%B', sha]);
@@ -232,9 +252,10 @@ export function trailerTask(git, root, sha) {
  * commit that adds the record (the tree is that commit's first parent: "committed strictly before"). Candidates: T's
  * prereg-<T>-<k>.json files in the tree, filtered by NAME before any read (another task's file is never read), newest integer k
  * first: unparsable stops (prereg_unparsable), a JSON task that is not T stops (prereg_name_task_mismatch), another increment is
- * skipped, else it is the prereg. `record` = {path, rec}. Returns {prereg, preregFile, task, source, violations}.
+ * skipped, else it is the prereg. `record` = {path, rec}. `rev` is the history the record's add commit is looked up in: the commit
+ * that adds the record in `rev`'s history (default HEAD; MB-79 (o): the tip). Returns {prereg, preregFile, task, source, violations}.
  */
-export function findPreregFor({ git, root, mode, record, isNew }) {
+export function findPreregFor({ git, root, mode, record, isNew, rev = 'HEAD' }) {
   const none = (violations, task = null, source = null) => ({ prereg: null, preregFile: null, task, source, violations });
   if (!record || typeof record.path !== 'string' || !isObject(record.rec)) return none([]);
   let task;
@@ -249,7 +270,7 @@ export function findPreregFor({ git, root, mode, record, isNew }) {
     source = 'trailer';
     let add = null;
     try {
-      add = recordAddCommit((r, args) => git.git(r, args), root, record.path);
+      add = recordAddCommit((r, args) => git.git(r, args), root, record.path, rev);
     } catch {
       add = null;
     }
@@ -277,20 +298,52 @@ export function findPreregFor({ git, root, mode, record, isNew }) {
 }
 
 /**
- * The ctx for evaluateGate, collected from git. `parsed` = parseArgs' { root, mode, base, target }; `deps` =
- * { git, computeRun, readRegisterText }, every one injectable. An unresolvable base throws `base_not_resolvable` (exit 2).
- * `parsed` is the WHOLE parseArgs object: the user-facing flags are `command`, `mode`, `root`, `base`, `target`.
+ * MB-79 (m) (R-MA, R-LZ, M-321, R-LE; rule.md s2.4): true when range path `p` is a prereg ADDED by exactly one non-merge commit of
+ * `base..tip` (--full-history), that commit is prereg-only under the BASE classifier, and the tip blob is that commit's blob: such a
+ * prereg "opens the increment ... and has no run to bind" (O68-01), so it is not an input of another record. Push and CI only. Any
+ * git read that fails answers false (the path stays bound).
+ */
+function preregCommittedAlone(git, root, base, tip, nameStatus, classify, p) {
+  const rows = asArray(nameStatus).filter((row) => row && row.p === p);
+  if (!rows.some((row) => row.s === 'A')) return false;
+  if (!preregOnly([{ s: 'A', p }], classify)) return false;
+  // default history simplification hides a side-branch commit whose blob equals the main-line one: --full-history is required.
+  const commits = String(tryGitText(git, root, ['rev-list', '--no-merges', '--full-history', `${base}..${tip}`, '--', p]) || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (commits.length !== 1) return false;
+  const sha = commits[0];
+  const shown = tryGitText(git, root, ['diff-tree', '--no-commit-id', '-r', '--name-status', '--root', sha]);
+  if (shown === null) return false;
+  if (!preregOnly(nameStatusOf(shown), classify)) return false;
+  const atCommit = tryGitText(git, root, ['rev-parse', `${sha}:${p}`]);
+  const atTip = tryGitText(git, root, ['rev-parse', `${tip}:${p}`]);
+  if (atCommit === null || atTip === null) return false;
+  return atCommit.trim() === atTip.trim();
+}
+
+/**
+ * The ctx for evaluateGate, collected from git. `parsed` = parseArgs' { root, mode, base, target, tip }; `deps` =
+ * { git, computeRun, readRegisterText, execFileSync }, every one injectable. An unresolvable base throws `base_not_resolvable` (exit 2).
+ * `parsed` is the WHOLE parseArgs object: the user-facing flags are `command`, `mode`, `root`, `base`, `target`, and (MB-79 (o)) `tip`
+ * for push and ci, which also carries an unresolvable tip (`tip_not_resolvable`), an extraction failure (`tip_extract_failed`) and a
+ * tree that is not git's tree (`tip_extract_mismatch`); all exit 2.
  */
 export async function buildContext(parsed = {}, deps = {}) {
   const { git, parseRulings, makeClassifier, boundPaths, loadRegression, parseRecord, RECORD_RE,
-    gitPreregHistory, DEFAULT_LAYER23, computeRun } = await resolveDeps(deps);
+    gitPreregHistory, DEFAULT_LAYER23, computeRun, extractRev, checkTipTree } = await resolveDeps(deps);
 
   const p = isObject(parsed) ? parsed : {};
   const mode = typeof p.mode === 'string' ? p.mode : '';
   const root = typeof p.root === 'string' && p.root ? p.root : '.';
   const commit = mode === 'commit';
+  // MB-79 (o) (R-KP, R-LF): push and ci judge the pushed tip (--tip, default HEAD); commit mode reads the index as before.
+  const tipRef = commit ? 'HEAD' : (typeof p.tip === 'string' && p.tip ? p.tip : 'HEAD');
+  const tip = commit ? 'HEAD' : revOf(git, root, tipRef);
+  if (!tip) throw new Error('tip_not_resolvable');
 
-  // 1. The revisions: commit reads the index, push and ci read HEAD against a base.
+  // 1. The revisions: commit reads the index, push and ci read the tip (MB-79 (o)) against a base.
   let base;
   let rev;
   let nameStatus;
@@ -313,14 +366,14 @@ export async function buildContext(parsed = {}, deps = {}) {
       if (!base) throw new Error('base_not_resolvable');
     }
   }
-  // The ref the range is read at: commit reads the index below, push and ci read HEAD.
-  rev = commit ? ':index' : 'HEAD';
+  // The ref the range is read at: commit reads the index below, push and ci read the tip (MB-79 (o)).
+  rev = commit ? ':index' : tip;
   if (!commit) {
-    nameStatus = git.rangeNameStatus(root, base, 'HEAD');
+    nameStatus = git.rangeNameStatus(root, base, tip);
     // O68-22: the per-commit lists skip merge commits, so a hand-oracle edit made only in a merge's conflict resolution would never
     // be seen. The whole range name-status (git diff merges everything, a merge's resolution included) is appended as ONE extra list:
     // checkOracleFirst then sees that edit, while the per-commit lists themselves stay as the reader hands them.
-    commits = [...asArray(git.perCommitNameStatus(root, base, 'HEAD')), asArray(nameStatus)];
+    commits = [...asArray(git.perCommitNameStatus(root, base, tip)), asArray(nameStatus)];
   }
 
   // 2. The policy is the BASE copy (a round cannot widen its own classes), the classes and the closed increment set.
@@ -377,11 +430,30 @@ export async function buildContext(parsed = {}, deps = {}) {
 
   // R-MA (amends R-KV; 2026-11-01-batch-ao#CHAT-216.O-28): the landing task's newest prereg of the record's increment, committed
   // strictly before the commit that adds the record (findPreregFor). Its violations reach evaluateGate through ctx.preregJoin.
-  const join = findPreregFor({ git, root, mode, record: latest, isNew: Boolean(last) && latest === last });
+  // MB-79 (p) (R-MA dated note 2026-11-01): at commit time, a lane merge in progress with ONE merge head joins the round's NEW record by
+  // the push-and-CI source (the trailer of the commit that adds it in MERGE_HEAD's history) when the record is absent from HEAD's tree
+  // and its index blob equals its MERGE_HEAD blob. Every other case keeps the join by the prereg HEAD's commit adds.
+  const isNew = Boolean(last) && latest === last;
+  let joinRev = commit ? 'HEAD' : tip;
+  let joinIsNew = isNew;
+  if (commit && isNew) {
+    const mergeHead = singleMergeHead(git, root);
+    if (mergeHead) {
+      const rec = latest.path;
+      const atHead = git.blobIdsAt(root, 'HEAD', [rec]);
+      const atIndex = git.blobIdsAt(root, ':index', [rec]);
+      const atMerge = git.blobIdsAt(root, mergeHead, [rec]);
+      if (!atHead[rec] && atIndex[rec] && atIndex[rec] === atMerge[rec]) {
+        joinRev = mergeHead;
+        joinIsNew = false;
+      }
+    }
+  }
+  const join = findPreregFor({ git, root, mode, record: latest, isNew: joinIsNew, rev: joinRev });
   const prereg = join.prereg;
   const preregFile = join.preregFile;
   const preregJoin = { task: join.task, source: join.source, violations: join.violations };
-  const preregHistory = commit || !latest || !preregFile ? null : gitPreregHistory(root, preregFile, latest.path);
+  const preregHistory = commit || !latest || !preregFile ? null : gitPreregHistory(root, preregFile, latest.path, tip);
   const rowsTouched = asArray(prereg && prereg.rows_touched);
 
   // 6. The bound set: every changed path of a class, plus every input the record names, at the round's revision. A record is
@@ -389,7 +461,10 @@ export async function buildContext(parsed = {}, deps = {}) {
   // O68-06: a DELETED path (name-status `D`) and the OLD side of a rename (`R` names both paths) have no blob at the round's
   // revision, so they cannot bind: an honest deletion of a bound file with a fresh record is not `input_not_bound`. recordMissing
   // still sees the deletion through `nameStatus`, which keeps every row.
-  const changedBound = boundPaths(livingPaths(nameStatus), classify).filter((p) => !RECORD_RE.test(p));
+  // MB-79 (m): a prereg committed alone in the range binds no record (rule.md s2.4); every other changed bound path still binds.
+  const changedBound = boundPaths(livingPaths(nameStatus), classify)
+    .filter((p) => !RECORD_RE.test(p))
+    .filter((p) => commit || !preregCommittedAlone(git, root, base, tip, nameStatus, classify, p));
   const inputs = latest && isObject(latest.rec.inputs) ? Object.keys(latest.rec.inputs) : [];
   const treeBlobs = git.blobIdsAt(root, rev, [...new Set([...changedBound, ...inputs])]);
 
@@ -416,7 +491,25 @@ export async function buildContext(parsed = {}, deps = {}) {
   // A computeRun that supplied its own base rows keeps them (O68-04): forcing null here is why moves were never compared.
   // B1 (re-check): with a prereg the moves are compared with the BASE revision's own scorer rows (plan s7); CI runs no external group.
   const baseRev = prereg && mode !== 'ci' ? base : undefined;
-  const run = computeRun({ root, regression: regression.cur, mode, registerText, ...(baseRev ? { baseRev } : {}) }) || null;
+  let run;
+  if (commit) {
+    run = computeRun({ root, regression: regression.cur, mode, registerText, ...(baseRev ? { baseRev } : {}) }) || null;
+  } else {
+    // MB-79 (o): score the tip's own committed tree, never the (possibly dirty) worktree; `root` stays the repo for the base side.
+    const treeDeps = typeof deps.execFileSync === 'function' ? { execFileSync: deps.execFileSync } : {};
+    let tipTree;
+    try {
+      tipTree = extractRev(root, tip, treeDeps);
+    } catch (err) {
+      throw new Error(`tip_extract_failed: ${String(err && err.message ? err.message : err).split('\n')[0]}`);
+    }
+    try {
+      checkTipTree(root, tip, tipTree, treeDeps);
+      run = computeRun({ root, runRoot: tipTree, regression: regression.cur, mode, registerText, ...(baseRev ? { baseRev } : {}) }) || null;
+    } finally {
+      fs.rmSync(tipTree, { recursive: true, force: true });
+    }
+  }
   if (run && run.baseRows === undefined) {
     run.baseRows = null;
   }
@@ -457,6 +550,7 @@ async function resolveDeps(deps) {
   const oracleMod = await import('./loop-oracle.mjs');
   const regressionMod = await import('./loop-regression.mjs');
   const preregMod = await import('./loop-prereg.mjs');
+  const runMod = await import('./loop-gate-run.mjs');
   return {
     git: gate,
     parseRulings: asyncRulings(await import(pathToFileURL(path.join(ROOT_OF_MODULE, 'scripts/analysis/bylaw/universe.mjs')).href)),
@@ -467,9 +561,9 @@ async function resolveDeps(deps) {
     parseRecord: recordMod.parseRecord || defaultParseRecord,
     RECORD_RE: recordMod.RECORD_RE,
     gitPreregHistory: preregMod.gitPreregHistory,
-    computeRun: typeof deps.computeRun === 'function'
-      ? deps.computeRun
-      : (await import('./loop-gate-run.mjs')).computeRun,
+    extractRev: runMod.extractRev,
+    checkTipTree: runMod.checkTipTree,
+    computeRun: typeof deps.computeRun === 'function' ? deps.computeRun : runMod.computeRun,
   };
 }
 

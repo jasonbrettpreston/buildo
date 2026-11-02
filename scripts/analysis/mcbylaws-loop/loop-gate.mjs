@@ -12,18 +12,19 @@ import { nameStatusOf } from './loop-oracle.mjs';
 
 export const COMMANDS = ['check', 'run', 'verify', 'regression-remove', 'floors-write'];
 export const MODES = ['commit', 'push', 'ci'];
-export const USAGE = 'usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--json]';
+export const USAGE = 'usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--tip <rev>] [--json]';
 
 const BOOL_FLAGS = { json: true, write: true, 'write-ids': true };
-const VALUE_FLAGS = ['mode', 'root', 'ruling', 'group', 'ids', 'increment', 'decision', 'reason', 'base', 'findings', 'target', 'owed-ruling'];
+const VALUE_FLAGS = ['mode', 'root', 'ruling', 'group', 'ids', 'increment', 'decision', 'reason', 'base', 'findings', 'target', 'owed-ruling', 'tip'];
 
 /** argv without node and script -> the full argument object. `error` is a plain string ('' when the arguments are well formed). */
 export function parseArgs(argv) {
   const a = {
     command: '', mode: '', root: '.', json: false, write: false, writeIds: false, ruling: '', owedRuling: '', group: '', ids: '',
-    increment: '', decision: '', reason: '', base: '', findings: '', target: '', error: '',
+    increment: '', decision: '', reason: '', base: '', findings: '', target: '', tip: '', error: '',
   };
   const list = Array.isArray(argv) ? argv.map(String) : [];
+  let tipSeen = false;
   for (let i = 0; i < list.length; i++) {
     const tok = list[i];
     if (tok.startsWith('--')) {
@@ -39,6 +40,7 @@ export function parseArgs(argv) {
         const v = inline !== null ? inline : nextValue(list, i);
         if (inline === null) i += 1;
         a[toKey(name)] = v;
+        if (name === 'tip') tipSeen = true;
         continue;
       }
       if (!a.error) a.error = `unknown_flag:--${name}`;
@@ -60,6 +62,11 @@ export function parseArgs(argv) {
     else if (!MODES.includes(a.mode)) a.error = `bad_mode:${a.mode}`;
   }
   if (!a.error && a.command === 'regression-remove' && !a.ruling && !a.group && !a.ids) a.error = 'removal_needs:ruling|group|ids';
+  // MB-79 (o) (R-KP, R-LF): --tip names the pushed sha; it is read only by check at push and ci, and never as an empty or flag-like value.
+  if (!a.error && tipSeen) {
+    const allowed = a.command === 'check' && (a.mode === 'push' || a.mode === 'ci');
+    if (!allowed || a.tip === '' || a.tip.startsWith('-')) a.error = 'tip_not_allowed';
+  }
   return a;
 }
 

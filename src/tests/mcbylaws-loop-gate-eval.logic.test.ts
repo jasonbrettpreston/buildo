@@ -42,6 +42,8 @@ type Run = {
   inputsFresh?: { [key: string]: string } | undefined;
   groups: { id: string; introduced_in: string }[];
   floorsOk: boolean;
+  // MB-79 (j): set by a run whose base could not be scored (an injected run only, never a scored one).
+  baseRowsError?: string | null | undefined;
 };
 type Group = { id: string; introduced_in: string; ids: string[]; ids_sha256: string };
 type RegressionSet = { groups: Group[]; pending: unknown[]; removals: unknown[] };
@@ -1238,5 +1240,89 @@ describe('stage 6: an accept names every not-green reason', () => {
     const owed = v.violations.indexOf(line);
     expect(move).toBeGreaterThanOrEqual(0);
     expect(owed).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ---- MB-79 (j) / j-1: a prereg whose moves cannot be compared is refused ------------------------------
+// SPEC LINK: 69a (M-321): "an unexpected move is a finding, not a pass". A joined prereg whose base rows are missing
+// (or whose group was never run) cannot have its moves compared, so the pass is not silent: it fails loud.
+describe('MB-79 (j) M-321: a prereg whose moves cannot be compared', () => {
+  const unchecked = (v: string[]): string[] => v.filter((x) => x.startsWith('prereg_moves_unchecked'));
+
+  it('T-j2a: push, base not scored', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'push';
+      const run = runOrThrow(c);
+      // An injected run only: a JSON clone cannot carry null, so the test sets the pair by hand.
+      (run as { baseRows: Run['baseRows'] | null }).baseRows = null;
+      run.baseRowsError = '/tmp/base-dir-that-failed/x';
+    });
+    expect(v.violations).toContain('prereg_moves_unchecked:base_not_scored');
+    // The error text (a temp path) is never the violation text: the code names the class, not the path.
+    expect(v.violations.every((s) => !s.endsWith(':x'))).toBe(true);
+  });
+
+  it('T-j2b: commit, no base rows and no error (an injected run only)', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'commit';
+      const run = runOrThrow(c);
+      (run as { baseRows: Run['baseRows'] | null }).baseRows = null;
+      run.baseRowsError = null;
+    });
+    expect(v.violations).toContain('prereg_moves_unchecked:no_base_rows');
+  });
+
+  it('T-j2c: ci is unchanged', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'ci';
+      const run = runOrThrow(c);
+      (run as { baseRows: Run['baseRows'] | null }).baseRows = null;
+    });
+    expect(unchecked(v.violations)).toEqual([]);
+  });
+
+  it('T-j2d: push, a scored empty base', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'push';
+      runOrThrow(c).baseRows = [];
+    });
+    expect(unchecked(v.violations)).toEqual([]);
+  });
+
+  it('T-j2e: push, base rows equal to cur rows', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'push';
+    });
+    expect(v.violations).toEqual([]);
+  });
+
+  it('T-j2f: no prereg', () => {
+    const v = verdictOf((c) => {
+      c.prereg = null;
+    });
+    expect(v.violations).toContain('prereg_missing');
+    expect(unchecked(v.violations)).toEqual([]);
+  });
+
+  it('T-j2g: push, the prereg\u2019s group was not run', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'push';
+      const prereg = c.prereg as NonNullable<Ctx['prereg']>;
+      prereg.group = 'coa999';
+      prereg.expected_totals = {};
+      prereg.expected_moves = [];
+      runOrThrow(c).ranGroups = ['g-a'];
+    });
+    expect(v.violations).toContain('prereg_moves_unchecked:group_not_run:coa999');
+  });
+
+  it('T-j2h: commit, a slow group\u2019s prereg (coa4d is not run at commit)', () => {
+    const v = verdictOf((c) => {
+      c.mode = 'commit';
+      const prereg = c.prereg as NonNullable<Ctx['prereg']>;
+      prereg.group = 'coa4d';
+      runOrThrow(c).ranGroups = ['coa172'];
+    });
+    expect(v.violations).toContain('prereg_moves_unchecked:group_not_run:coa4d');
   });
 });

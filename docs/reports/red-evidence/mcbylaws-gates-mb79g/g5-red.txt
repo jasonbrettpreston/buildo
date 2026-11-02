@@ -1,0 +1,92 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts (44 tests | 4 failed) 959ms
+   × parseArgs > errors when there is neither a command nor a mode 2ms
+     → expected 'usage: loop-gate [check|run|verify|re…' to be 'usage: loop-gate [check|run|verify|re…' // Object.is equality
+   × parseArgs > T-o1 (MB-79 (o)): --tip <sha> is read for check at push and ci; omitted it is empty 0ms
+     → expected undefined to be 't' // Object.is equality
+   × parseArgs > T-o1b (MB-79 (o)): --tip anywhere else, empty, or flag-like is tip_not_allowed 0ms
+     → expected 'unknown_flag:--tip' to be 'tip_not_allowed' // Object.is equality
+   × main with injected deps > T-o1b (MB-79 (o)): main exits 2 on tip_not_allowed and never builds a context 1ms
+     → expected 'loop-gate: unknown_flag:--tip\nusage:…' to contain 'loop-gate: tip_not_allowed'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > errors when there is neither a command nor a mode
+AssertionError: expected 'usage: loop-gate [check|run|verify|re…' to be 'usage: loop-gate [check|run|verify|re…' // Object.is equality
+
+Expected: "usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--tip <rev>] [--json]"
+Received: "usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--json]"
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts:172:33
+    170|   it('errors when there is neither a command nor a mode', async () => {
+    171|     const { parseArgs } = await load();
+    172|     expect(parseArgs([]).error).toBe(USAGE_LINE);
+       |                                 ^
+    173|     expect(parseArgs(['--json']).error).toBe(USAGE_LINE);
+    174|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > T-o1 (MB-79 (o)): --tip <sha> is read for check at push and ci; omitted it is empty
+AssertionError: expected undefined to be 't' // Object.is equality
+
+- Expected: 
+"t"
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts:200:23
+    198|     const { parseArgs } = await load();
+    199|     const space = parseArgs(['check', '--mode', 'push', '--base', 'b',…
+    200|     expect(space.tip).toBe('t');
+       |                       ^
+    201|     expect(space.error).toBe('');
+    202|     const equals = parseArgs(['check', '--mode=ci', '--tip=abc']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > parseArgs > T-o1b (MB-79 (o)): --tip anywhere else, empty, or flag-like is tip_not_allowed
+AssertionError: expected 'unknown_flag:--tip' to be 'tip_not_allowed' // Object.is equality
+
+Expected: "tip_not_allowed"
+Received: "unknown_flag:--tip"
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts:222:37
+    220|       ['check', '--mode', 'push', '--tip', '-x'],
+    221|     ]) {
+    222|       expect(parseArgs(argv).error).toBe('tip_not_allowed');
+       |                                     ^
+    223|     }
+    224|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > main with injected deps > T-o1b (MB-79 (o)): main exits 2 on tip_not_allowed and never builds a context
+AssertionError: expected 'loop-gate: unknown_flag:--tip\nusage:…' to contain 'loop-gate: tip_not_allowed'
+
+- Expected
++ Received
+
+- loop-gate: tip_not_allowed
++ loop-gate: unknown_flag:--tip
++ usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--json]
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts:326:33
+    324|     expect(code).toBe(2);
+    325|     expect(called).toBe(false);
+    326|     expect(sink.out.join('\n')).toContain('loop-gate: tip_not_allowed'…
+       |                                 ^
+    327|   });
+    328| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 40 passed (44)
+   Start at  16:10:14
+   Duration  1.09s (transform 35ms, setup 5ms, collect 13ms, tests 959ms, environment 0ms, prepare 16ms)
+

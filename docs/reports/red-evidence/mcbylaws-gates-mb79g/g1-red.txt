@@ -1,0 +1,50 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-loop-gate-run.logic.test.ts (30 tests | 2 failed) 6851ms
+   ✓ the real 172 group (MB-68 B7d) > 698 cases with unique ids, the pin regenerated, canary red, floors checked, and a second run hashes identically 6737ms
+   × MB-79 K-1: extractRev at a relative root > T-j1a: a relative root links node_modules by its absolute path 10ms
+     → ENOENT: no such file or directory, open '/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-loop-gate-base-qI9akE/node_modules/marker/x.txt'
+   × MB-79 K-1: extractRev at a relative root > T-j1b: the hook case, cwd = the repo and root "." 37ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-run.logic.test.ts > MB-79 K-1: extractRev at a relative root > T-j1a: a relative root links node_modules by its absolute path
+Error: ENOENT: no such file or directory, open '/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-loop-gate-base-qI9akE/node_modules/marker/x.txt'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ src/tests/mcbylaws-loop-gate-run.logic.test.ts:606:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate-run.logic.test.ts > MB-79 K-1: extractRev at a relative root > T-j1b: the hook case, cwd = the repo and root "."
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/mcbylaws-loop-gate-run.logic.test.ts:638:47
+    636|     const out = JSON.parse(stdout.trim().split('\n').pop() ?? '{}') as…
+    637|     // RED today: link is the relative `node_modules` and read is ERR:…
+    638|     expect(path.isAbsolute(String(out.link))).toBe(true);
+       |                                               ^
+    639|     expect(out.read).toBe('k1\n');
+    640|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 28 passed (30)
+   Start at  16:09:55
+   Duration  7.11s (transform 49ms, setup 6ms, collect 113ms, tests 6.85s, environment 0ms, prepare 19ms)
+

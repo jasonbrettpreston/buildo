@@ -152,15 +152,6 @@ describe('checkPreregMoves: expected against actual, a surprise is a finding (M-
   });
 });
 
-describe('preregNotes: unchecked moves are said out loud (O68-04)', () => {
-  it('no base rows: the note names the gap instead of passing silently', () => {
-    expect(M.preregNotes(pre(), null)).toEqual(['prereg moves not checked: no base rows']);
-  });
-  it('with base rows there is nothing to say', () => {
-    expect(M.preregNotes(pre(), [])).toEqual([]);
-  });
-});
-
 describe('preregRefusesAccept: a finding cannot be accepted into the record (M-321)', () => {
   it('accept over a finding is refused', () => {
     expect(M.preregRefusesAccept(['totals_diff:MATCH expected 401 got 400'], 'accept')).toEqual(['accept_with_prereg_finding']);
@@ -304,5 +295,56 @@ describe('gitPreregHistory: the real repository argument, then the four twins', 
   });
   it('no git written outside the temp dirs: every twin commits to itself', () => {
     for (const d of twins) expect(fs.realpathSync(gitQ(d, ['rev-parse', '--absolute-git-dir']))).toBe(path.join(fs.realpathSync(d), '.git'));
+  });
+});
+
+// MB-79 (o), plan section 2 T-o2a/T-o2b: at push the loop gate must judge the PUSHED sha, which may not be HEAD, so the history
+// readers take an optional last argument `rev` (default 'HEAD'). One throw-away repo whose work sits on a side branch.
+describe('MB-79 (o): history read from the tip', () => {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mb79-o2-')));
+  const write = (rel: string, body: unknown): void => {
+    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+    fs.writeFileSync(path.join(dir, rel), JSON.stringify(body));
+  };
+  const commit = (files: string[], msg: string): string => {
+    for (const f of files) gitQ(dir, ['add', '-f', '--', f]);
+    gitQ(dir, ['commit', '-q', '--no-verify', '-m', msg]);
+    return gitQ(dir, ['rev-parse', 'HEAD']);
+  };
+  // the git callback the module takes: stdout only, the same scrubbed environment as every other git call here
+  const g = (r: string, args: string[]): string => gitQ(r, args);
+
+  execFileSync('git', ['init', '-q', dir], { env: cleanEnv() });
+  gitQ(dir, ['config', '--file', path.join(dir, '.git/config'), 'user.email', 'o2@example.invalid']);
+  gitQ(dir, ['config', '--file', path.join(dir, '.git/config'), 'user.name', 'o2']);
+  write('seed.txt', 'seed');
+  commit(['seed.txt'], 'seed');
+  const baseBranch = gitQ(dir, ['rev-parse', '--abbrev-ref', 'HEAD']);
+  gitQ(dir, ['checkout', '-q', '-b', 'side']);
+  write(PREREG_REL, { task: 'MB-68' });
+  const preSha = commit([PREREG_REL], 'prereg');
+  write(RECORD_REL, { schema: 'loop-record-v1', increment: '1', round: 1, decision: 'accept' });
+  const addSha = commit([RECORD_REL], 'round');
+  // back on the default branch: HEAD holds neither file, the round lives on `side` only
+  gitQ(dir, ['checkout', '-q', baseBranch]);
+
+  afterAll(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('T-o2a: recordAddCommit reads the add commit from a given rev, HEAD by default', () => {
+    expect(M.recordAddCommit(g, dir, RECORD_REL, 'side')).toBe(addSha);
+    // HEAD is still the default: neither file exists there
+    expect(M.recordAddCommit(g, dir, RECORD_REL)).toBeNull();
+  });
+
+  it('T-o2b: gitPreregHistory reads roundCommit and preregCommits from a given rev', () => {
+    const h = M.gitPreregHistory(dir, PREREG_REL, RECORD_REL, 'side') as History;
+    expect(h.roundCommit).toEqual({ sha: addSha });
+    expect(h.preregCommits.map((c) => c.sha)).toEqual([preSha]);
+    expect(h.preregCommits[0]?.files).toEqual([PREREG_REL]);
+    expect(M.checkPreregHistory(h)).toEqual([]);
+    // the default is unchanged: HEAD's view is unwritten
+    expect((M.gitPreregHistory(dir, PREREG_REL, RECORD_REL) as History).roundCommit).toBeNull();
   });
 });

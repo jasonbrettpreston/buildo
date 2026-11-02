@@ -68,19 +68,48 @@ export function doneWithoutCommitErrors(text) {
   return [...out];
 }
 
-/** (Q1): every `MB-nn@<sha>` in the text must exist as a commit and be an ancestor of `tipRev`. */
+/**
+ * (Q1): every `MB-nn@<sha>` in the text must exist as a commit (missing-commit) and be an ancestor of the resolved
+ * `tipRev` (not-on-branch, MB-79 (q)); a tip or an ancestry answer that cannot be decided is one cannot-decide,
+ * never a pass.
+ */
 export function missingCommitErrors({ cwd, text, tipRev } = {}) {
   const ls = lines(text);
   if (ls === null || typeof tipRev !== 'string' || tipRev === '') return [CANNOT];
   const out = new Map();
+  // The tip is resolved ONCE, lazily (the first sha that exists needs it). A failed resolve is ONE cannot-decide.
+  let tipSha;
+  let tipAsked = false;
+  let undecided = false;
+  const resolveTip = () => {
+    if (tipAsked) return;
+    tipAsked = true;
+    const r = git(cwd, ['rev-parse', '--verify', '--quiet', `${tipRev}^{commit}`]);
+    const sha = typeof r.stdout === 'string' ? r.stdout.trim() : '';
+    if (r.status === 0 && sha !== '') tipSha = sha;
+    else undecided = true;
+  };
   for (const line of ls) {
     for (const [, n, sha] of line.matchAll(SHA)) {
       if (out.has(n)) continue;
       const exists = git(cwd, ['cat-file', '-e', `${sha}^{commit}`]).status === 0;
-      if (!exists) out.set(n, `FAIL:Q:missing-commit:MB-${n}`);
+      if (!exists) {
+        out.set(n, `FAIL:Q:missing-commit:MB-${n}`);
+        continue;
+      }
+      resolveTip();
+      if (undecided || tipSha === undefined) {
+        undecided = true;
+        continue;
+      }
+      const ancestor = git(cwd, ['merge-base', '--is-ancestor', sha, tipSha]).status;
+      if (ancestor === 0) continue;
+      if (ancestor === 1) out.set(n, `FAIL:Q:not-on-branch:MB-${n}`);
+      else undecided = true;
     }
   }
-  return [...out.values()];
+  const values = [...out.values()];
+  return undecided ? [...values, CANNOT] : values;
 }
 
 /** (Q4): the queue file must be tracked at `rev`. */

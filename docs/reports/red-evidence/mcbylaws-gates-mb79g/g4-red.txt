@@ -1,0 +1,57 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-loop-prereg.logic.test.ts (38 tests | 2 failed) 620ms
+   × MB-79 (o): history read from the tip > T-o2a: recordAddCommit reads the add commit from a given rev, HEAD by default 6ms
+     → expected null to be '767c3477aa5edaa5e69efd513bf17b72fa641…' // Object.is equality
+   × MB-79 (o): history read from the tip > T-o2b: gitPreregHistory reads roundCommit and preregCommits from a given rev 8ms
+     → expected null to deeply equal { Object (sha) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-prereg.logic.test.ts > MB-79 (o): history read from the tip > T-o2a: recordAddCommit reads the add commit from a given rev, HEAD by default
+AssertionError: expected null to be '767c3477aa5edaa5e69efd513bf17b72fa641…' // Object.is equality
+
+- Expected: 
+"767c3477aa5edaa5e69efd513bf17b72fa641231"
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-prereg.logic.test.ts:336:59
+    334| 
+    335|   it('T-o2a: recordAddCommit reads the add commit from a given rev, HE…
+    336|     expect(M.recordAddCommit(g, dir, RECORD_REL, 'side')).toBe(addSha);
+       |                                                           ^
+    337|     // HEAD is still the default: neither file exists there
+    338|     expect(M.recordAddCommit(g, dir, RECORD_REL)).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/mcbylaws-loop-prereg.logic.test.ts > MB-79 (o): history read from the tip > T-o2b: gitPreregHistory reads roundCommit and preregCommits from a given rev
+AssertionError: expected null to deeply equal { Object (sha) }
+
+- Expected: 
+Object {
+  "sha": "767c3477aa5edaa5e69efd513bf17b72fa641231",
+}
+
++ Received: 
+null
+
+ ❯ src/tests/mcbylaws-loop-prereg.logic.test.ts:343:27
+    341|   it('T-o2b: gitPreregHistory reads roundCommit and preregCommits from…
+    342|     const h = M.gitPreregHistory(dir, PREREG_REL, RECORD_REL, 'side') …
+    343|     expect(h.roundCommit).toEqual({ sha: addSha });
+       |                           ^
+    344|     expect(h.preregCommits.map((c) => c.sha)).toEqual([preSha]);
+    345|     expect(h.preregCommits[0]?.files).toEqual([PREREG_REL]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 36 passed (38)
+   Start at  16:10:13
+   Duration  849ms (transform 39ms, setup 6ms, collect 105ms, tests 620ms, environment 0ms, prepare 20ms)
+

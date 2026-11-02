@@ -1,0 +1,34 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mb79g
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts (44 tests | 1 failed) 1006ms
+   × alternate index (O68-08) > keeps GIT_INDEX_FILE only when it resolves inside the git dir 21ms
+     → expected '.git/index' to be undefined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-gate.logic.test.ts > alternate index (O68-08) > keeps GIT_INDEX_FILE only when it resolves inside the git dir
+AssertionError: expected '.git/index' to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+".git/index"
+
+ ❯ src/tests/mcbylaws-loop-gate.logic.test.ts:490:40
+    488|     const outside = path.join(dir, 'alt-index');
+    489|     fs.writeFileSync(outside, '');
+    490|     expect(process.env.GIT_INDEX_FILE).toBeUndefined();
+       |                                        ^
+    491|     expect(trustedIndexFile(dir)).toBe(null);
+    492|     expect(stagedEnv(dir).GIT_INDEX_FILE).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 43 passed (44)
+   Start at  20:15:22
+   Duration  1.19s (transform 37ms, setup 6ms, collect 13ms, tests 1.01s, environment 0ms, prepare 15ms)
+

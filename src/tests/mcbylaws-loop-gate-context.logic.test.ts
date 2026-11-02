@@ -1215,5 +1215,253 @@ describe('R-MA: the push / ci join reads the trailer of the commit that adds the
   });
 });
 
+// ---- MB-79 (m): a prereg committed ALONE binds no other record ---------------------------------------------------------------
+
+/** Merge `side` into the checked-out branch (no-ff, default merge message), returning the merge commit. */
+function mergeSide(dir: string, branch: string): string {
+  gitQ(dir, ['merge', '--no-ff', '-q', '--no-edit', branch]);
+  return gitQ(dir, ['rev-parse', 'HEAD']);
+}
+
+/**
+ * Merge `side` and RESOLVE the conflict on `rel` to `content`: the merge stops on the conflict (a non-zero exit, swallowed), the
+ * resolution is written, staged and committed with `--no-verify`, so `rel`'s blob at the merge commit is NOT either parent's blob.
+ */
+function conflictMerge(dir: string, branch: string, rel: string, content: unknown): string {
+  try {
+    gitQ(dir, ['merge', '--no-ff', '--no-commit', '-q', branch]);
+  } catch {
+    // expected: the merge stopped on the conflict on `rel` (that is the point of this helper)
+  }
+  writeFile(dir, rel, content);
+  gitQ(dir, ['add', '--', rel]);
+  gitQ(dir, ['commit', '-q', '--no-verify', '-m', `merge ${branch} (resolved)`]);
+  return gitQ(dir, ['rev-parse', 'HEAD']);
+}
+
+describe('MB-79 (m): a prereg committed alone binds no other record', () => {
+  const M30 = pre('MB-30', 1);
+  const M78 = pre('MB-78', 1);
+  /** The default branch's name: `git checkout -q -` needs an earlier checkout to return from. */
+  const branchOf = (dir: string): string => gitQ(dir, ['rev-parse', '--abbrev-ref', 'HEAD']);
+  /** Only the violations naming THIS path: the other violations of these fixtures are not under test. */
+  const naming = (violations: string[], rel: string): string[] => violations.filter((x) => x.endsWith(`:${rel}`));
+
+  it('T-m1: a side-branch prereg committed alone, merged in, binds nothing', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    const main = branchOf(dir);
+    gitQ(dir, ['checkout', '-q', '-b', 'side']);
+    commitAlone(dir, M30, inc1('MB-30'));
+    gitQ(dir, ['checkout', '-q', main]);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    mergeSide(dir, 'side');
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(naming(v, M30)).toEqual([]);
+  });
+
+  it('T-m1b: a prereg committed alone after the record binds nothing (linear)', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    commitAlone(dir, M30, inc1('MB-30'));
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(naming(v, M30)).toEqual([]);
+  });
+
+  it('T-m2: a prereg edited after its add stays bound', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    commitAlone(dir, M30, inc1('MB-30'));
+    commitAlone(dir, M30, inc1('MB-30', { expected_totals: { MATCH: 9 } }), 'edit');
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(naming(v, M30)).toEqual([`input_not_bound:${M30}`]);
+  });
+
+  it('T-m3: a prereg added beside a code file stays bound, and so does the code', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    writeFile(dir, M30, inc1('MB-30'));
+    writeFile(dir, 'scripts/seeds/bylaw/layer3-catalogue-more.json', { rows: [2] });
+    commitAll(dir, 'prereg plus code');
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(v).toContain(`input_not_bound:${M30}`);
+    expect(v).toContain('input_not_bound:scripts/seeds/bylaw/layer3-catalogue-more.json');
+  });
+
+  it('T-m4: code bound by the record and changed after it is stale_green only', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    commitAlone(dir, CATALOGUE, { rows: [7] }, 'code after the record');
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(naming(v, CATALOGUE)).toEqual([`stale_green:${CATALOGUE}`]);
+  });
+
+  it('T-m5: a prereg whose content the merge resolution changed stays bound', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    const main = branchOf(dir);
+    gitQ(dir, ['checkout', '-q', '-b', 'side']);
+    commitAlone(dir, M30, inc1('MB-30'));
+    gitQ(dir, ['checkout', '-q', main]);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    conflictMerge(dir, 'side', M30, inc1('MB-30', { expected_totals: { MATCH: 5 } }));
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(naming(v, M30)).toEqual([`input_not_bound:${M30}`]);
+  });
+
+  it('T-m6: commit mode, a prereg staged alone, is out of scope', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    writeFile(dir, M30, inc1('MB-30'));
+    gitQ(dir, ['add', '--', M30]);
+
+    void base;
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'commit')).violations;
+    expect(naming(v, M30)).toEqual([]);
+  });
+
+  it('T-m7: the record\'s own prereg is still judged through rec.inputs', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    commitAlone(dir, M78, inc1('MB-78'));
+    writeFile(dir, CATALOGUE_NEXT, { rows: [1] });
+    gitQ(dir, ['add', '--', CATALOGUE_NEXT]);
+    writeFile(dir, RECORD_1, bind(recordPayload({ increment: '1', round: 1, decision: 'revert', reason: 'MB-79 (m) T-m7', inputs: inputsOf(dir, [...BOUND_PATHS, M78]) })));
+    gitQ(dir, ['add', '--', RECORD_1]);
+    gitQ(dir, ['commit', '-q', '--no-verify', '-m', 'round\n\nMcBylaws-Task: MB-78']);
+    commitAlone(dir, M78, inc1('MB-78', { expected_totals: { MATCH: 4 } }), 'edit own prereg');
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(naming(v, M78)).toEqual([`stale_green:${M78}`]);
+  });
+
+  it('T-m8: the same prereg added alone on one side and beside code on the other stays bound', async () => {
+    const dir = makeRepo();
+    const base = seedJoinBase(dir);
+    const main = branchOf(dir);
+    gitQ(dir, ['checkout', '-q', '-b', 'side']);
+    writeFile(dir, M30, inc1('MB-30'));
+    writeFile(dir, 'scripts/seeds/bylaw/layer3-catalogue-side.json', { rows: [3] });
+    commitAll(dir, 'side: prereg plus code');
+    gitQ(dir, ['checkout', '-q', main]);
+    commitAlone(dir, M78, inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    // IDENTICAL content on this side: only the other side's commit adds it beside code, so the one-commit-alone rule must not fire.
+    commitAlone(dir, M30, inc1('MB-30'));
+    mergeSide(dir, 'side');
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'push', base)).violations;
+    expect(v).toContain(`input_not_bound:${M30}`);
+  });
+});
+
+// ---- MB-79 (p): a lane merge in progress joins its record's prereg (R-MA, dated note 2026-11-01) ------------------------------------
+
+describe('MB-79 (p): a lane merge in progress joins its record by the push-and-CI source', () => {
+  /**
+   * The lane: the fork (`base`), a side branch that lands the prereg alone and then increment 1's round (`add`, with the trailer),
+   * and main moved on with an unrelated commit, so merging the lane is a REAL merge. Returns the lane tip (`add`).
+   */
+  const seedLane = (dir: string): string => {
+    seedJoinBase(dir);
+    const home = gitQ(dir, ['rev-parse', '--abbrev-ref', 'HEAD']);
+    gitQ(dir, ['checkout', '-q', '-b', 'lane']);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    const add = landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    gitQ(dir, ['checkout', '-q', home]);
+    commitUnrelated(dir, 'main');
+    return add;
+  };
+  /** The merge in progress (no commit yet): MERGE_HEAD holds the lane tip. */
+  const mergeLane = (dir: string): void => {
+    gitQ(dir, ['merge', '--no-ff', '--no-commit', '-q', 'lane']);
+  };
+
+  it('T-p1: one merge head, the record\'s index blob is MERGE_HEAD\'s: the trailer join', async () => {
+    const dir = makeRepo();
+    const add = seedLane(dir);
+    mergeLane(dir);
+    // Fixture fact: exactly one merge head, and it is the lane tip (the commit that ADDS the record, with the trailer).
+    expect(gitQ(dir, ['rev-parse', 'MERGE_HEAD'])).toBe(add);
+
+    const ctx = await ctxOf(dir, 'commit');
+    const v = (await evaluateGateOf())(ctx).violations;
+    expect(v.filter((x) => x.startsWith('prereg_task_unknown'))).toEqual([]);
+    expect(v).not.toContain('prereg_missing');
+    expect(ctx.preregFile).toBe(pre('MB-78', 1));
+    expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'trailer', violations: [] });
+  });
+
+  it('T-p2: the resolution edits the record: the commit join is kept', async () => {
+    const dir = makeRepo();
+    seedLane(dir);
+    mergeLane(dir);
+    // The resolution rewrites the record: its index blob is MERGE_HEAD's no longer, so the record is the round under judgement.
+    writeFile(dir, RECORD_1, bind(recordPayload({ increment: '1', round: 1, decision: 'revert', reason: 'edited in the resolution', inputs: inputsOf(dir, BOUND_PATHS) })));
+    gitQ(dir, ['add', '--', RECORD_1]);
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'commit')).violations;
+    expect(v).toContain('prereg_task_unknown:commit');
+  });
+
+  it('T-p3: base-side code changed since the fork stays bound', async () => {
+    const dir = makeRepo();
+    seedLane(dir);
+    // main moves a bound catalogue since the fork: the merged index and HEAD both carry it, so it must stay bound.
+    commitAlone(dir, CATALOGUE, { rows: [5] }, 'main moves the catalogue');
+    mergeLane(dir);
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'commit')).violations;
+    const bound = [`stale_green:${CATALOGUE}`, `input_not_bound:${CATALOGUE}`];
+    expect(v.some((x) => bound.includes(x))).toBe(true);
+  });
+
+  it('T-p4: an octopus merge (two heads) keeps the commit join', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    const home = gitQ(dir, ['rev-parse', '--abbrev-ref', 'HEAD']);
+    gitQ(dir, ['checkout', '-q', '-b', 'lane']);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    gitQ(dir, ['checkout', '-q', '-b', 'lane2', home]);
+    commitUnrelated(dir, 'lane2');
+    gitQ(dir, ['checkout', '-q', home]);
+    gitQ(dir, ['merge', '--no-ff', '--no-commit', '-q', 'lane', 'lane2']);
+
+    const v = (await evaluateGateOf())(await ctxOf(dir, 'commit')).violations;
+    expect(v).toContain('prereg_task_unknown:commit');
+  });
+
+  it('T-p5: no MERGE_HEAD and a record already committed: unchanged', async () => {
+    const dir = makeRepo();
+    seedJoinBase(dir);
+    commitAlone(dir, pre('MB-78', 1), inc1('MB-78'));
+    landRound(dir, 'round\n\nMcBylaws-Task: MB-78');
+    // Nothing staged, no merge in progress: the record is already committed, so the join is the push-and-CI rule.
+    expect(fs.existsSync(path.join(dir, '.git', 'MERGE_HEAD'))).toBe(false);
+
+    const ctx = await ctxOf(dir, 'commit');
+    expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'trailer', violations: [] });
+  });
+});
+
 // F1 (MB-79 (h); ba05d889): a hooks-path leak is pinned on the file that caused it.
 afterAll(() => expect(hooksPathVerdict(readRealHooksPath(ROOT), process.env.CI === 'true')).toBeNull());
