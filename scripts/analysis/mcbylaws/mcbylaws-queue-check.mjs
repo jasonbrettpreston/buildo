@@ -16,33 +16,38 @@ export const QUEUE_PATH = '.cursor/MCBYLAWS-QUEUE.md';
 /** Status words a heading may carry. READY is recognised but never legal: it is derived, not written by hand. */
 const STATUS = /\b(DONE|RUNNING|WAITS|OPERATOR|HELD|LATER|READY)\b/g;
 const CANNOT = 'FAIL:Q:cannot-decide';
-const HEADING = /^\*\*MB-(\d+)\b.*\*\*/;
 const SHA = /MB-(\d+)@([0-9a-f]{7,40})\b/g;
 
 const lines = (text) => (typeof text === 'string' ? text.split('\n') : null);
 
-/** The part of a heading line after the first ` - ` or ` — ` separator (the whole line when there is none). */
-function headingBody(line) {
+/**
+ * PURE (O67-15 c): the one heading reader for Q2, Q3 and Q5. `null` when the line is not a heading
+ * (`**MB-nn`, leading spaces allowed); else `{n, body}`, where body is the rest of the LINE after the first
+ * ` - ` or ` — ` separator, or `null` when the heading has no separator.
+ */
+export function headingBody(line) {
+  const m = /^\s*\*\*MB-(\d+)\b/.exec(line);
+  if (!m) return null;
   const cut = [line.indexOf(' - '), line.indexOf(' — ')].filter((i) => i >= 0);
-  return cut.length === 0 ? line : line.slice(Math.min(...cut) + 3);
+  return { n: m[1], body: cut.length === 0 ? null : line.slice(Math.min(...cut) + 3) };
 }
 
 /**
- * PURE (Q2): one status word per heading. OPERATOR is a marker, not a status: WAITS with OPERATOR is one legal
- * status. READY is recognised but never legal (it is derived). Judged per heading, so one bad heading never hides
- * the heading after it.
+ * PURE (Q2): one status word per heading, read from `headingBody` (the rest of the line after the first separator).
+ * A heading without a separator fails (O67-15 b). OPERATOR is a marker, not a status: WAITS with OPERATOR is one
+ * legal status. READY is recognised but never legal (it is derived). Judged per heading, so one bad heading never
+ * hides the heading after it.
  */
 export function statusWordErrors(text) {
   const ls = lines(text);
   if (ls === null) return [CANNOT];
   const out = [];
   for (const line of ls) {
-    const m = /^\s*\*\*MB-(\d+)\b/.exec(line);
-    if (!m) continue;
-    const open = line.indexOf('**'); const heading = line.slice(open + 2, line.indexOf('**', open + 2)); const cut = heading.search(/ [-—] /); const body = cut === -1 ? '' : heading.slice(cut);
-    const words = [...new Set(body.match(STATUS) ?? [])].filter((w) => w !== 'OPERATOR');
-    const ok = words.length <= 1 && !words.includes('READY');
-    if (!ok) out.push(`FAIL:Q:status-words:MB-${m[1]}`);
+    const h = headingBody(line);
+    if (!h) continue;
+    const words = [...new Set((h.body ?? '').match(STATUS) ?? [])].filter((w) => w !== 'OPERATOR');
+    const ok = h.body !== null && words.length <= 1 && !words.includes('READY');
+    if (!ok) out.push(`FAIL:Q:status-words:MB-${h.n}`);
   }
   return out;
 }
@@ -61,9 +66,9 @@ export function doneWithoutCommitErrors(text) {
       }
       continue;
     }
-    const m = HEADING.exec(line);
-    if (!m || !/\bDONE\b/.test(headingBody(line))) continue;
-    if (!new RegExp(`MB-${m[1]}@[0-9a-f]{7,40}\\b`).test(line)) out.add(`FAIL:Q:done-without-commit:MB-${m[1]}`);
+    const h = headingBody(line);
+    if (!h || !/\bDONE\b/.test(h.body ?? line)) continue;
+    if (!new RegExp(`MB-${h.n}@[0-9a-f]{7,40}\\b`).test(line)) out.add(`FAIL:Q:done-without-commit:MB-${h.n}`);
   }
   return [...out];
 }
@@ -128,11 +133,11 @@ export function readyDerivedErrors(text) {
   const done = new Set();
   const headings = [];
   for (const line of ls) {
-    const m = HEADING.exec(line);
-    if (!m) continue;
-    const body = headingBody(line);
-    headings.push({ n: m[1], body });
-    if (/\bDONE\b/.test(body)) done.add(m[1]);
+    const h = headingBody(line);
+    if (!h) continue;
+    const body = h.body ?? line;
+    headings.push({ n: h.n, body });
+    if (/\bDONE\b/.test(body)) done.add(h.n);
   }
   const out = new Set();
   for (const { n, body } of headings) {

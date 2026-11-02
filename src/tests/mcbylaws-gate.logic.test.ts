@@ -58,7 +58,8 @@ function l23Change(repo: Repo) {
 }
 
 const repos: Repo[] = [];
-const mk = () => { const r = makeRepo(); repos.push(r); return r; };
+// Arm Q runs at --ci and --push (O67-15), so every fixture repo carries a tracked queue from its first commit.
+const mk = () => { const r = makeRepo(); r.write('.cursor/MCBYLAWS-QUEUE.md', '# McBylaws queue (fixture)\n'); repos.push(r); return r; };
 const done = () => { for (const r of repos.splice(0)) r.cleanup(); };
 
 describe('mcbylaws gate CLI', () => {
@@ -143,6 +144,12 @@ describe('mcbylaws gate CLI', () => {
   it('P3: the gate source carries no environment switch', () => {
     const src = fs.readFileSync(GATE, 'utf8');
     for (const word of ['process.env', 'SKIP', 'BYPASS', 'no-gate']) expect(src).not.toContain(word);
+  });
+
+  it('arm Q is wired: the placeholder comment is gone and the gate imports the queue checker (O67-15)', () => {
+    const src = fs.readFileSync(GATE, 'utf8');
+    expect(src).not.toContain('arm Q: wired after');
+    expect(src).toContain("from './mcbylaws-queue-check.mjs'");
   });
 
   it('the real policy file is valid and this repo has an APPROVED record', () => {
@@ -1006,6 +1013,90 @@ describe('MB-79 (n): arm C reads the register in the PARENT at --commit-msg', ()
       .map((l) => l.trim())
       .filter((l) => l.startsWith('FAIL:C:'));
     expect(fails).toEqual(['FAIL:C:not-ruled:M-372']);
+    done();
+  });
+});
+
+describe('arm Q wired at push and ci (O67-15; R-KK, R-KW)', () => {
+  const QF = '.cursor/MCBYLAWS-QUEUE.md';
+  const BAD = '**MB-01 One - DONE** (M)\n- MB-01\n';
+  const good = (s: string) => `**MB-01 One - DONE** (M) MB-01@${s}\n- MB-01@${s}\n`;
+  const seeded = () => { const repo = mk(); seed(repo); return { repo, base: repo.git(['rev-parse', 'HEAD']) }; };
+  const push = (repo: Repo, tip: string, base: string) => runB(repo, ['--push'], rootOf(repo)!, 'real', `refs/heads/x ${tip} refs/heads/x ${base}\n`);
+
+  it('red: a DONE entry without a commit fails at --ci and at --push', () => {
+    const { repo, base } = seeded();
+    repo.write(QF, BAD);
+    const tip = repo.commit('MB-67 queue');
+    const c = run(repo, ['--ci', '--base', base]);
+    expect(c.status).toBe(1);
+    expect(c.out).toContain('FAIL:Q:done-without-commit:MB-01');
+    expect(c.out).toContain('GATE FAIL');
+    const p = push(repo, tip, base);
+    expect(p.status).toBe(1);
+    expect(p.out).toContain('FAIL:Q:done-without-commit:MB-01');
+    done();
+  });
+
+  it('green: a stamped DONE entry passes at --ci and at --push', () => {
+    const { repo, base } = seeded();
+    repo.write(QF, good(base));
+    const tip = repo.commit('MB-67 queue');
+    for (const r of [run(repo, ['--ci', '--base', base]), push(repo, tip, base)]) {
+      expect(r.status).toBe(0);
+      expect(r.out).toContain('GATE OK');
+      expect(r.out).not.toContain('FAIL:Q:');
+    }
+    done();
+  });
+
+  it('the revision is the tip: never the base, never the worktree', () => {
+    const a = seeded();
+    a.repo.write(QF, BAD);
+    const badBase = a.repo.commit('MB-67 bad queue');
+    a.repo.write(QF, good(a.base));
+    a.repo.commit('MB-67 fixed queue');
+    const fixed = run(a.repo, ['--ci', '--base', badBase]);
+    expect(fixed.status).toBe(0);
+    expect(fixed.out).not.toContain('FAIL:Q:');
+
+    const b = seeded();
+    b.repo.write(QF, good(b.base));
+    const goodBase = b.repo.commit('MB-67 good queue');
+    b.repo.write(QF, BAD);
+    b.repo.commit('MB-67 bad queue');
+    const broken = run(b.repo, ['--ci', '--base', goodBase]);
+    expect(broken.status).toBe(1);
+    expect(broken.out).toContain('FAIL:Q:done-without-commit:MB-01');
+
+    const c = seeded();
+    c.repo.write(QF, good(c.base));
+    c.repo.commit('MB-67 good queue');
+    c.repo.write(QF, BAD);
+    const unstaged = run(c.repo, ['--ci', '--base', c.base]);
+    expect(unstaged.status).toBe(0);
+    expect(unstaged.out).not.toContain('FAIL:Q:');
+    done();
+  });
+
+  it('an untracked queue fails at --ci (Q4)', () => {
+    const { repo, base } = seeded();
+    repo.git(['rm', '-q', QF]);
+    repo.commit('MB-67 drop queue');
+    const r = run(repo, ['--ci', '--base', base]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:Q:queue-untracked');
+    done();
+  });
+
+  it('arm Q does not run at commit time (--staged, --commit-msg)', () => {
+    const { repo } = seeded();
+    repo.write(QF, BAD);
+    repo.stage(QF);
+    expect(run(repo, ['--staged']).out).not.toContain('FAIL:Q:');
+    const f = path.join(repo.dir, '.git', 'COMMIT_EDITMSG');
+    fs.writeFileSync(f, 'MB-67 queue\n');
+    expect(run(repo, ['--commit-msg', f]).out).not.toContain('FAIL:Q:');
     done();
   });
 });

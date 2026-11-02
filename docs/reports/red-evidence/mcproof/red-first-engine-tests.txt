@@ -1,0 +1,576 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /private/tmp/claude-501/-Users-brettpreston-macmini/a2ac84b6-e97f-4c25-8402-5da8d80292f5/scratchpad/mb77-wt
+
+ ❯ src/tests/mcproof-approval.logic.test.ts (0 test)
+ ❯ src/tests/mcproof-sizing.logic.test.ts (0 test)
+ ❯ src/tests/mcproof-prompts.logic.test.ts (19 tests | 19 failed) 4ms
+   × MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a critique-only reply gives errored for every id, never an answer 2ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a reply with a valid table gives answers 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a table plus critique gives the table only 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a partial table keeps the answered ids and marks the rest missing 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a duplicate id keeps the first row and errors duplicate_id 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a retry re-prompts only the errored ids and never re-asks an answered id 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer-cell grammar > MB-77 (c) a verdict word, a blank cell and free text are errored with its reason 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer-cell grammar > MB-77 (c) not_permitted:<reason> is a status, not a verdict 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the answer-cell grammar > MB-77 (c) bold and backticked ids normalise, and a unit suffix on a number is accepted 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the blind projection > MB-77 (c) a real-shaped example builds a blind prompt with no answer, working or City line 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the blind projection > MB-77 (c) a nested expected value inside inputs throws field_not_allowed 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the blind projection > MB-77 (c) a value containing "City evidence:" throws 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: the blind projection > MB-77 (c) part B needs a valid part A and part A has no key while part B has it 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: one JSON line and every instruction > MB-77 (c) an imperative, a fence and a fake sentinel in clause_text stay inside the JSON line 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: one JSON line and every instruction > MB-77 (c) the prompt states the table skeleton, one row per id, the override, cannot decide, data-not-instructions, both tolerances, the 3-place rule and the closed status set 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: one JSON line and every instruction > MB-77 (c) a changed config value changes the rendered prompt 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: batching by size > MB-77 (c) buildBatches splits at maxChars with the preamble included and every id exactly once 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: batching by size > MB-77 (c) one example larger than maxChars throws prompt_too_large:<id> 0ms
+     → CFG.loadConfig is not a function
+   × MB-77 (c) McProof prompts: batching by size > MB-77 (c) buildBatches without maxChars throws 0ms
+     → CFG.loadConfig is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts (16 tests | 16 failed) 7ms
+   × MB-77 (b) records: config helpers > MB-77 (b) records: loadConfig exposes values and a sha16 config_sha, cv throws on a missing key 2ms
+     → c.cfg is not a function
+   × MB-77 (b) records: config helpers > MB-77 (b) records: compareIds orders digit runs numerically with a total, non-locale fallback 2ms
+     → expected [ 'e09', 'e1', 'e10', 'e2', 'e9' ] to deeply equal [ 'e1', 'e2', 'e9', 'e09', 'e10' ]
+   × MB-77 (b) records: config helpers > MB-77 (b) records: assertSafeKeys refuses __proto__, constructor and prototype 1ms
+     → expected [Function] to throw error including 'forbidden_key:__proto__' but got 'config.assertSafeKeys is not a functi…'
+   × MB-77 (b) records: exampleSha and stale stages (item 1) > MB-77 (b) records: a changed layer, is_new, increment, formula_row or branch changes exampleSha; prose does not 0ms
+     → c.exampleSha is not a function
+   × MB-77 (b) records: exampleSha and stale stages (item 1) > MB-77 (b) records: a stage recording another example_sha reads open, the matching one reads approved 0ms
+     → c.cfg is not a function
+   × MB-77 (b) records: stageState reason and config citations (item 2) > MB-77 (b) records: n/a without reason reads open; a differing config_key_sha reads open; another key does not reopen 0ms
+     → c.cfg is not a function
+   × MB-77 (b) records: stageState reason and config citations (item 2) > MB-77 (b) records: cityState derives open, approved, differs, n/a and the quick sizing override 0ms
+     → c.cfg is not a function
+   × MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: resolveAttempt retries attempts 1 and 2, parks attempt 3, answers and resets on stale 0ms
+     → c.cfg is not a function
+   × MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: errored blocks approval and retries exhausted parks into needs_you via parkedList 0ms
+     → c.cfg is not a function
+   × MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: mergeStageFiles throws malformed for missing attempts or NaN attempts 0ms
+     → expected [Function] to throw error including 'malformed:question:e2' but got 'c.mergeStageFiles is not a function'
+   × MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: resolveFixRound parks at max_fix_rounds 0ms
+     → c.cfg is not a function
+   × MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: a missing file leaves its stage open and is named in missing; no files lists all 0ms
+     → c.mergeStageFiles is not a function
+   × MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: a quick or approved City row seeds the city stage from cityState 0ms
+     → c.mergeStageFiles is not a function
+   × MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: empty, non-object or shaped files throw malformed, unknown ids throw unknown_id 0ms
+     → expected [Function] to throw error including 'malformed:question:empty' but got 'c.mergeStageFiles is not a function'
+   × MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: a city file, a city field and a hand-written overall are refused 0ms
+     → expected [Function] to throw error matching /city/ but got 'c.mergeStageFiles is not a function'
+   × MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: __proto__ in a stage file throws forbidden_key 0ms
+     → expected [Function] to throw error including 'forbidden_key:__proto__' but got 'c.mergeStageFiles is not a function'
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcproof-approval.logic.test.ts [ src/tests/mcproof-approval.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcproof/approval.mjs (resolved id: ../../scripts/analysis/mcproof/approval.mjs) in /private/tmp/claude-501/-Users-brettpreston-macmini/a2ac84b6-e97f-4c25-8402-5da8d80292f5/scratchpad/mb77-wt/src/tests/mcproof-approval.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../../../../Users/brettpreston_macmini/Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/37]⎯
+
+ FAIL  src/tests/mcproof-sizing.logic.test.ts [ src/tests/mcproof-sizing.logic.test.ts ]
+Error: Failed to load url ../../scripts/analysis/mcproof/config.mjs (resolved id: ../../scripts/analysis/mcproof/config.mjs) in /private/tmp/claude-501/-Users-brettpreston-macmini/a2ac84b6-e97f-4c25-8402-5da8d80292f5/scratchpad/mb77-wt/src/tests/mcproof-sizing.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../../../../Users/brettpreston_macmini/Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/37]⎯
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 35 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a critique-only reply gives errored for every id, never an answer
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:93:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a reply with a valid table gives answers
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:104:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a table plus critique gives the table only
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:113:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a partial table keeps the answered ids and marks the rest missing
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:127:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a duplicate id keeps the first row and errors duplicate_id
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:138:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer table is mandatory > MB-77 (c) a retry re-prompts only the errored ids and never re-asks an answered id
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:148:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer-cell grammar > MB-77 (c) a verdict word, a blank cell and free text are errored with its reason
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:163:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer-cell grammar > MB-77 (c) not_permitted:<reason> is a status, not a verdict
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:173:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the answer-cell grammar > MB-77 (c) bold and backticked ids normalise, and a unit suffix on a number is accepted
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:182:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the blind projection > MB-77 (c) a real-shaped example builds a blind prompt with no answer, working or City line
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:197:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the blind projection > MB-77 (c) a nested expected value inside inputs throws field_not_allowed
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:214:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the blind projection > MB-77 (c) a value containing "City evidence:" throws
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:221:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: the blind projection > MB-77 (c) part B needs a valid part A and part A has no key while part B has it
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:227:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: one JSON line and every instruction > MB-77 (c) an imperative, a fence and a fake sentinel in clause_text stay inside the JSON line
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:252:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: one JSON line and every instruction > MB-77 (c) the prompt states the table skeleton, one row per id, the override, cannot decide, data-not-instructions, both tolerances, the 3-place rule and the closed status set
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:268:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: one JSON line and every instruction > MB-77 (c) a changed config value changes the rendered prompt
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:288:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: batching by size > MB-77 (c) buildBatches splits at maxChars with the preamble included and every id exactly once
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:307:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: batching by size > MB-77 (c) one example larger than maxChars throws prompt_too_large:<id>
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:336:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/37]⎯
+
+ FAIL  src/tests/mcproof-prompts.logic.test.ts > MB-77 (c) McProof prompts: batching by size > MB-77 (c) buildBatches without maxChars throws
+TypeError: CFG.loadConfig is not a function
+ ❯ config src/tests/mcproof-prompts.logic.test.ts:23:32
+     21| const P = await load('scripts/analysis/mcproof/prompts.mjs');
+     22| 
+     23| const config = (): Json => CFG.loadConfig();
+       |                                ^
+     24| const cv = (c: Json, key: string): any => CFG.cv(c, key); // eslint-di…
+     25| 
+ ❯ src/tests/mcproof-prompts.logic.test.ts:342:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: config helpers > MB-77 (b) records: loadConfig exposes values and a sha16 config_sha, cv throws on a missing key
+TypeError: c.cfg is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:129:19
+    127|   it('MB-77 (b) records: loadConfig exposes values and a sha16 config_…
+    128|     const c = ctx();
+    129|     const cfg = c.cfg();
+       |                   ^
+    130|     expect(Object.keys(cfg.values).length).toBeGreaterThan(10);
+    131|     expect(cfg.values['max_retries_per_stage']).toBe(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: config helpers > MB-77 (b) records: compareIds orders digit runs numerically with a total, non-locale fallback
+AssertionError: expected [ 'e09', 'e1', 'e10', 'e2', 'e9' ] to deeply equal [ 'e1', 'e2', 'e9', 'e09', 'e10' ]
+
+- Expected
++ Received
+
+  Array [
++   "e09",
+    "e1",
++   "e10",
+    "e2",
+    "e9",
+-   "e09",
+-   "e10",
+  ]
+
+ ❯ src/tests/mcproof-records.logic.test.ts:142:20
+    140|     const c = ctx();
+    141|     const sorted = ['e10', 'e2', 'e1', 'e9', 'e09'].slice().sort(c.com…
+    142|     expect(sorted).toEqual(['e1', 'e2', 'e9', 'e09', 'e10']);
+       |                    ^
+    143|     expect(c.compareIds('e2', 'e10')).toBeLessThan(0);
+    144|     expect(c.compareIds('e1', 'e1')).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: config helpers > MB-77 (b) records: assertSafeKeys refuses __proto__, constructor and prototype
+AssertionError: expected [Function] to throw error including 'forbidden_key:__proto__' but got 'config.assertSafeKeys is not a functi…'
+
+Expected: "forbidden_key:__proto__"
+Received: "config.assertSafeKeys is not a function"
+
+ ❯ src/tests/mcproof-records.logic.test.ts:152:57
+    150|     const c = ctx();
+    151|     for (const bad of ['__proto__', 'constructor', 'prototype']) {
+    152|       expect(() => config.assertSafeKeys({ [bad]: 1 })).toThrow(`forbi…
+       |                                                         ^
+    153|     }
+    154|     expect(() => config.assertSafeKeys({ e1: 1 })).not.toThrow();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: exampleSha and stale stages (item 1) > MB-77 (b) records: a changed layer, is_new, increment, formula_row or branch changes exampleSha; prose does not
+TypeError: c.exampleSha is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:165:20
+    163|   it('MB-77 (b) records: a changed layer, is_new, increment, formula_r…
+    164|     const c = ctx();
+    165|     const base = c.exampleSha(example());
+       |                    ^
+    166|     expect(base).toMatch(/^[0-9a-f]{16}$/);
+    167|     const changed: Json[] = [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: exampleSha and stale stages (item 1) > MB-77 (b) records: a stage recording another example_sha reads open, the matching one reads approved
+TypeError: c.cfg is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:201:19
+    199|   it('MB-77 (b) records: a stage recording another example_sha reads o…
+    200|     const c = ctx();
+    201|     const cfg = c.cfg();
+       |                   ^
+    202|     const sha = c.exampleSha(example());
+    203|     expect(c.stageState(stage({ example_sha: sha }), { example_sha: sh…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: stageState reason and config citations (item 2) > MB-77 (b) records: n/a without reason reads open; a differing config_key_sha reads open; another key does not reopen
+TypeError: c.cfg is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:213:19
+    211|   it('MB-77 (b) records: n/a without reason reads open; a differing co…
+    212|     const c = ctx();
+    213|     const cfg = c.cfg();
+       |                   ^
+    214|     const sha = 'sha-e1';
+    215|     const why = 'quick arithmetic: stages 3 and 5 skipped (quick_arith…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: stageState reason and config citations (item 2) > MB-77 (b) records: cityState derives open, approved, differs, n/a and the quick sizing override
+TypeError: c.cfg is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:254:19
+    252|     const c = ctx();
+    253|     const sha = 'sha-e1';
+    254|     const cfg = c.cfg();
+       |                   ^
+    255|     const cases: Array<{ row: Json | null; sizing: Json | null; status…
+    256|       { row: null, sizing: null, status: 'open' },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: resolveAttempt retries attempts 1 and 2, parks attempt 3, answers and resets on stale
+TypeError: c.cfg is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:300:19
+    298|   it('MB-77 (b) records: resolveAttempt retries attempts 1 and 2, park…
+    299|     const c = ctx();
+    300|     const cfg = c.cfg();
+       |                   ^
+    301|     expect(cfg.values['max_retries_per_stage']).toBe(2);
+    302|     const unanswered = { answers: {} as Json };
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: errored blocks approval and retries exhausted parks into needs_you via parkedList
+TypeError: c.cfg is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:338:19
+    336|   it('MB-77 (b) records: errored blocks approval and retries exhausted…
+    337|     const c = ctx();
+    338|     const cfg = c.cfg();
+       |                   ^
+    339|     const sha = 'sha-e10';
+    340|     const errored = stage({ status: 'errored', attempts: 3, example_sh…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: mergeStageFiles throws malformed for missing attempts or NaN attempts
+AssertionError: expected [Function] to throw error including 'malformed:question:e2' but got 'c.mergeStageFiles is not a function'
+
+Expected: "malformed:question:e2"
+Received: "c.mergeStageFiles is not a function"
+
+ ❯ src/tests/mcproof-records.logic.test.ts:358:90
+    356|     const c = ctx();
+    357|     const { attempts: _dropped, ...noAttempts } = stage();
+    358|     expect(() => c.mergeStageFiles({ question: file({ e2: noAttempts }…
+       |                                                                                          ^
+    359|       'malformed:question:e2',
+    360|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: attempts, retries and fix rounds (item 3) > MB-77 (b) records: resolveFixRound parks at max_fix_rounds
+TypeError: c.cfg is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:374:19
+    372|   it('MB-77 (b) records: resolveFixRound parks at max_fix_rounds', () …
+    373|     const c = ctx();
+    374|     const cfg = c.cfg();
+       |                   ^
+    375|     expect(cfg.values['max_fix_rounds']).toBe(2);
+    376|     expect(c.resolveFixRound({ fix_rounds: 0 }, cfg)).toEqual({ parked…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: a missing file leaves its stage open and is named in missing; no files lists all
+TypeError: c.mergeStageFiles is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:386:23
+    384|   it('MB-77 (b) records: a missing file leaves its stage open and is n…
+    385|     const c = ctx();
+    386|     const partial = c.mergeStageFiles({ question: file() }, ids, noCit…
+       |                       ^
+    387|     expect(partial.missing.slice().sort()).toEqual(['arithmetic', 'bli…
+    388|     for (const id of ids) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: a quick or approved City row seeds the city stage from cityState
+TypeError: c.mergeStageFiles is not a function
+ ❯ src/tests/mcproof-records.logic.test.ts:412:22
+    410|     ];
+    411|     const sizingRows: Json[] = [{ example_id: 'e2', sizing_path: 'quic…
+    412|     const merged = c.mergeStageFiles({}, ids, { cityRows, sizingRows }…
+       |                      ^
+    413|     expect(merged.records['e1']?.['city']?.['status']).toBe('approved'…
+    414|     expect(merged.records['e2']?.['city']?.['status']).toBe('n/a');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: empty, non-object or shaped files throw malformed, unknown ids throw unknown_id
+AssertionError: expected [Function] to throw error including 'malformed:question:empty' but got 'c.mergeStageFiles is not a function'
+
+Expected: "malformed:question:empty"
+Received: "c.mergeStageFiles is not a function"
+
+ ❯ src/tests/mcproof-records.logic.test.ts:421:68
+    419|   it('MB-77 (b) records: empty, non-object or shaped files throw malfo…
+    420|     const c = ctx();
+    421|     expect(() => c.mergeStageFiles({ question: {} }, ids, noCity)).toT…
+       |                                                                    ^
+    422|     expect(() => c.mergeStageFiles({ question: [] as unknown as Json }…
+    423|       'malformed:question:shape',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: a city file, a city field and a hand-written overall are refused
+AssertionError: expected [Function] to throw error matching /city/ but got 'c.mergeStageFiles is not a function'
+
+- Expected: 
+/city/
+
++ Received: 
+"c.mergeStageFiles is not a function"
+
+ ❯ src/tests/mcproof-records.logic.test.ts:456:68
+    454|   it('MB-77 (b) records: a city file, a city field and a hand-written …
+    455|     const c = ctx();
+    456|     expect(() => c.mergeStageFiles({ city: file() }, ids, noCity)).toT…
+       |                                                                    ^
+    457|     expect(() => c.mergeStageFiles({ overall: file() }, ids, noCity)).…
+    458|     expect(() =>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/37]⎯
+
+ FAIL  src/tests/mcproof-records.logic.test.ts > MB-77 (b) records: mergeStageFiles shape and city seeding (item 6) > MB-77 (b) records: __proto__ in a stage file throws forbidden_key
+AssertionError: expected [Function] to throw error including 'forbidden_key:__proto__' but got 'c.mergeStageFiles is not a function'
+
+Expected: "forbidden_key:__proto__"
+Received: "c.mergeStageFiles is not a function"
+
+ ❯ src/tests/mcproof-records.logic.test.ts:474:75
+    472|     const protoFile: Json = JSON.parse(`{"e1": ${JSON.stringify(stage(…
+    473|     expect(Object.keys(protoFile)).toContain('__proto__');
+    474|     expect(() => c.mergeStageFiles({ question: protoFile }, ids, noCit…
+       |                                                                           ^
+    475|     expect(() => c.mergeStageFiles({ question: file({ constructor: sta…
+    476|       'forbidden_key:constructor',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/37]⎯
+
+ Test Files  4 failed (4)
+      Tests  35 failed (35)
+   Start at  12:04:35
+   Duration  191ms (transform 75ms, setup 34ms, collect 43ms, tests 11ms, environment 0ms, prepare 80ms)
+

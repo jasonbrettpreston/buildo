@@ -1,0 +1,38 @@
+{
+  "task": "MB-31",
+  "item": "Layer 3 step compute_maxbld_scenarios (briefs B0, B1-B4, B6-B13, C2) plus the registration consequence (six pins, O-37) and Spec 47 §A.5 row 135",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-02",
+  "head": "the code commit carrying this record, directly on prereg a0b35a6a (prereg-MB-31-2) over 60321264b (prereg-MB-31-1)",
+  "commits_reviewed": [
+    "build.patch v3 678616df1312018511812fecb32da53a984bcf2cfb4067d424a33cb5cc2f58a6",
+    "row135.patch"
+  ],
+  "cards": [
+    "CARD-mb31-start",
+    "CARD-mb31-reads-binding",
+    "CARD-mb31-registration"
+  ],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-31 plan (fold 1102 validated FIX then re-check 1 PASS, fold-validation-1102.md)",
+  "output": "OUTPUT panel REVISE (5 product defects, 1 ruling) then re-check 1 WAIT-RULING (REVISE 1-7 fixed and rebuilt through the engine) then re-check 2 PASS on v3: six pins equal what registration makes true, pin 6 derived from converted.json, only expect changes are the six registered pins and the 23 to 22 line; Spec 47 row 135 lands in the same commit so the lock parity test is green (222/222 with v3 plus the row). C2 registries were built by the claude seat, not the engine; the logged downgrade reason: C2 edits registry_reserved files, which the orchestrator edits at landing (Spec 08 §B/§C). Reads 5 and 6 WAIT the runner batch_binds build and are not run.",
+  "seats": [
+    "ds-spec",
+    "ds-security",
+    "ds-idempotency",
+    "ds-error-paths",
+    "regression-guardian",
+    "grounded-reviewer",
+    "reality-check",
+    "compliance"
+  ],
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "read 6 ring_lots SQL does not parse (recursive CTE in subquery), planar ST_DWithin in degrees, onePerLot keying: on the reads 5-6 rebuild list",
+    "prereg-MB-31-1 rules[] lists ids that carry OWED in the Spec 133 register; the code commit cites none",
+    "table_version also goes stale under the disclosed 21.3 re-pin",
+    "runner batch_binds build before the real runs of reads 1-6"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-31/output-panel-1102/adjudication.md and recheck-2.md"
+}

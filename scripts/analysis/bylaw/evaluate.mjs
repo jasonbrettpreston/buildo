@@ -152,6 +152,8 @@ export function makeContext(vocab, extra = {}) {
     // main-wall share tiers are minimums) is resolved in that direction whatever the bound of the unit that carries it
     // (a main-wall unit is a max on main_wall_height_m and lists the share beside it, Spec 69 M-76 A10).
     targetBound: Object.fromEntries(Object.entries(vocab.dsl_target || {}).filter(([, t]) => t && ['min', 'max', 'exact'].includes(t.bound)).map(([k, t]) => [k, t.bound])),
+    // MB-18 (k), M-423: target -> the read-as-if-token-held record (read by effective() only through fallbackRead)
+    fallbackTarget: vocab.fallback_target || {},
     // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
     // M-180(1): zone → {exception building type → the houseplex class it also binds}, read for exception-layer units only
@@ -833,6 +835,8 @@ const resultKey = (r) => stableJson({ s: r.status, v: r.value, r: r.reason ?? nu
 export function effective(lot, target, candidates, ctx, _env = {}) {
   const C = ctxOf(ctx);
   if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return NE_RESULT('no_569_2013_zone', { trace: ['rule 0: the lot has no 569-2013 residential zone'], inputs: ['zone'] });
+  // MB-18 (k), M-423: after rule 0, the fallback read runs its own lot gate on the FULL list first
+  if (!_env.noFallback && Object.hasOwn(C.fallbackTarget, target)) return fallbackRead(lot, C.fallbackTarget[target], candidates, C, _env);
   const depth = (_env.depth || 0) + 1;
   if (depth > 8) return NE_RESULT('target_cycle');
   // a nested call (memo present: same lot label / exception, same sorted candidates) reuses the gate per target
@@ -846,6 +850,16 @@ export function effective(lot, target, candidates, ctx, _env = {}) {
   // nested calls share it through _env (perf only, outputs unchanged)
   const r = effResolve(lot, target, cands, C, { ...(_env), depth, sorted: true, memo: _env.memo || new Map() });
   return { ...r, inputs: [...new Set([...(r.inputs || []), ...GATE_READS])].sort(cmpStr) };
+}
+
+/** MB-18 (k), M-423: read fb.of on fb.layer with the lot's exception cleared and fb.flags held, after the normal lot gate on the FULL list. */
+function fallbackRead(lot, fb, candidates, C, _env) {
+  const gate = lotGate(lot, fb.of, candidates, C, Array.isArray(candidates) ? infoOf(candidates) : null);
+  if (gate) return gate;
+  const own = Array.isArray(candidates) ? candidates.filter((u) => u.layer === fb.layer) : candidates;
+  const nested = { ...lot, exception: null, flags: { ...lot.flags, ...fb.flags } };
+  const r = effective(nested, fb.of, own, C, { noFallback: true, memo: new Map(), depth: _env.depth });
+  return r.winner ? { ...r, trace: [...(r.trace || []), fb.trace] } : r; // a target nothing keys keeps its plain answer, byte for byte
 }
 
 /**

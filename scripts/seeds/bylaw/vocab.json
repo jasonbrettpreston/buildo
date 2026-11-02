@@ -266,7 +266,7 @@
       "concept": "the distance back from the front lot line at which a measurement (lot frontage) is taken",
       "patterns": ["measured", "from the front lot line"]
     },
-    "averaging_distance_m": { "unit": "m", "aspect": "measurement", "concept": "the distance within which abutting buildings are counted for front-yard averaging", "patterns": ["within 15.0 metres", "abutting lot"] },
+    "averaging_distance_m": { "unit": "m", "aspect": "measurement", "bound": "max", "concept": "the distance within which abutting buildings are counted for front-yard averaging. The by-law threshold used as a comparison operand, not a measured distance (MB-18 k, M-423).", "patterns": ["within 15.0 metres", "abutting lot"] },
     "lot_area_per_unit_min_m2": { "unit": "m2", "aspect": "lot", "concept": "required minimum lot area for each dwelling unit (label au)", "patterns": ["lot area for each dwelling unit", "lot area per dwelling unit"] }
   },
   "dsl_input": {
@@ -4275,5 +4275,30 @@
     "900.6.10(379)": { "clause": "(A)", "types": ["detached_house","townhouse"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" },
     "900.6.10(475)": { "clause": "(A)", "types": ["detached_house","semi_detached_house","duplex","triplex","townhouse","apartment_building"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1; 2026-10-26-batch-u#CHAT-194.USO-Q1d" },
     "900.6.10(51)": { "clause": "(B)", "types": ["apartment_building"], "ruling": "2026-10-26-batch-u#CHAT-194.USO-Q1" }
+  },
+  "fallback_target": {
+    "averaging_distance_m": {
+      "of": "averaging_distance_m",
+      "self": true,
+      "layer": "base",
+      "flags": { "one_abutting_building_within_15_m": true },
+      "ruling": "M-423",
+      "trace": "averaging_distance_m: the 15.0 metres of 10.5.40.70(1)(A) read on the base layer as if one_abutting_building_within_15_m held; it does not depend on a neighbour (M-423)"
+    }
+  },
+  "fallback_check": {
+    "$comment": "MB-18 (k): the closed text of the fallback_target validator, kept as data so no string literal enters evaluate.mjs or vocab.mjs (arm L). Reported under the existing reason code.",
+    "code": "vocab_reference_invalid",
+    "separator": ":",
+    "layers": ["base"],
+    "stems": {
+      "bad_of": "fallback_target.of",
+      "bad_self": "fallback_target.self",
+      "bad_layer": "fallback_target.layer",
+      "bad_flags": "fallback_target.flags",
+      "bad_ruling": "fallback_target.ruling",
+      "bad_trace": "fallback_target.trace",
+      "bad_check": "fallback_check"
+    }
   }
 }

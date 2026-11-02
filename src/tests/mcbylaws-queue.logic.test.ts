@@ -72,10 +72,34 @@ describe('Q2 statusWordErrors', () => {
       ['**MB-58 Notice parser: never carry an applicant\'s name - DONE** (M)', []],
       ['**MB-67 The commit gate ... - WAITS MB-66, OPERATOR (O-3)** (G)', []],
       ['**MB-67 The commit gate ... - WAITS MB-66, HELD** (G)', ['FAIL:Q:status-words:MB-67']],
-      ['**MB-67 The commit gate ... - LATER** (G) **MB-68 x - READY** (M)', []],
+      // Ruled 2026-11-02 (CARD-mb73-q2-row75 option 1; O67-15 (c)): one reader reads the rest of the line.
+      ['**MB-67 The commit gate ... - LATER** (G) **MB-68 x - READY** (M)', ['FAIL:Q:status-words:MB-67']],
       ['**MB-58 - nothing here** (M)\n- MB-01@abc1234', []],
+      // O67-15 (b): a heading without a separator fails, even with a legal word.
+      ['**MB-5 READY**', ['FAIL:Q:status-words:MB-5']],
+      ['**MB-5 DONE**', ['FAIL:Q:status-words:MB-5']],
+      ['**MB-5 Title - READY**', ['FAIL:Q:status-words:MB-5']],
     ];
     for (const [text, expected] of rows) expect(q.statusWordErrors(text)).toEqual(expected);
+  });
+});
+
+describe('headingBody, one grammar (O67-15 c)', () => {
+  it('returns {n, body|null}; Q2, Q3 and Q5 read headings through it', () => {
+    expect(q.headingBody('**MB-5 READY**')).toEqual({ n: '5', body: null });
+    expect(q.headingBody('**MB-7 T - DONE** (M) MB-7@abc1234')).toEqual({
+      n: '7',
+      body: 'DONE** (M) MB-7@abc1234',
+    });
+    expect(q.headingBody('**MB-7 T — LATER**')).toEqual({ n: '7', body: 'LATER**' });
+    expect(q.headingBody('  **MB-8 x - WAITS**')?.n).toBe('8');
+    expect(q.headingBody('- MB-01@abc1234')).toBeNull();
+  });
+  it('an indented heading is judged by Q3 too; Q3 keeps its no-separator reading', () => {
+    expect(q.doneWithoutCommitErrors('  **MB-07 T - DONE** (M)')).toEqual([
+      'FAIL:Q:done-without-commit:MB-07',
+    ]);
+    expect(q.doneWithoutCommitErrors('**MB-07 DONE**')).toEqual(['FAIL:Q:done-without-commit:MB-07']);
   });
 });
 

@@ -1,0 +1,44 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 <worktree>
+
+ ✓ src/tests/mcbylaws-queue.logic.test.ts (10 tests) 521ms
+ ✓ src/tests/mcbylaws-gate.logic.test.ts (55 tests) 19849ms
+   ✓ O67-11: the loop arm is called as its CLI defines (argv and verdicts) > --staged calls check --mode commit; --ci --base <rev> calls check --mode ci --base <rev> 417ms
+   ✓ O67-11: the loop arm is called as its CLI defines (argv and verdicts) > --push calls the arm once per ref with the ref base 307ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > one commit that adds 0.45 and raises its own baseline fails; a baseline already in the base passes 527ms
+   ✓ E5 (O67-01): arm L reads the baseline from the BASE, never from the commit under review > a deleted or renamed scope file neither cannot-scan nor cannot-decide; only the rename target is scanned 532ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > red: no APPROVED -> FAIL:H:no-approved on the second commit, exit 1; green twin: no H failure with APPROVED 670ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-04: a range whose base has no policy passes when its first commit is the policy alone, and fails when it is not 653ms
+   ✓ W4: the CI mode judges each commit of the range from the event base (a Layer 2/3 change in commit 2 of 3 is caught) > O67-20: arm C reads the register in each commit's PARENT; a later RATIFIED row does not rescue an earlier cite 450ms
+   ✓ O67-02: a merge commit is judged by its own combined diff (an "evil" merge cannot hide from --no-merges) > a conflict resolved off Layer 2/3 fails on the merge sha; a clean merge adds no H failure 868ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B1: an evil merge alone in the range fails on its sha; a docs-only merge passes 732ms
+   ✓ K1 (O67-02/O67-03): a merge-only range is judged; arm L uses every policy before the commits > B2: a narrowing commit does not switch arm L off for a later literal; the control without narrowing fails too 461ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a base file listing the sha announces it and has no FAIL line for it 372ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > a decoy sha in the base file excuses nothing, and neither does an absent base file 763ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > RED X1: a list added by a LATER commit of the range names the earlier sha and still does not excuse it 449ms
+   ✓ L1 (re-check X1, R-LS): the landing exception is the frozen six plus the list at the range BASE > an invalid base file fails closed (FAIL:X:cannot-decide) and the frozen six still apply 391ms
+   ✓ S11: a large range pages the summary and writes the full list, instead of FAIL:S:overflow > 60 protected files on one docs-only commit pass at --ci with a full list 358ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit skips H, C and P, is shown as pre-policy (not exempt), still fails V; the bootstrap and a later commit are judged 467ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a pre-policy commit still fails arm L 404ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a commit AFTER the bootstrap with no citation still fails H, and nothing after the bootstrap is pre-policy 369ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a commit on a side branch that is not an ancestor of the bootstrap still fails H 329ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > a bootstrap sha missing from the repository is FAIL:X:cannot-decide, and the commits are still judged 493ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > an ancestry check that errors is FAIL:X:cannot-decide and exempts nothing 483ms
+   ✓ PP (CARD-prepolicy-exempt, option A): a commit that is an ancestor of the frozen bootstrap skips H, C and P only > the CLI uses the frozen sha only: a repo without c500c249 is cannot-decide, and the source reads no environment 451ms
+   ✓ RM (CARD-rulemap-literal-exempt, R-KR): exactly the generated rule map is exempt from arm L, and nothing else in scope > arm L does not scan the exempt map, but still fails a new string in any other JSON file of the scope 940ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > an old base is judged from the bootstrap: pre-bootstrap work is not judged, post-bootstrap work still fails arm L and the loop arm, and the summary names the effective base 350ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a base at the bootstrap is unchanged: no effective-base line, the same post-bootstrap failures 349ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a side-branch commit after the bootstrap (not its ancestor) is still judged 454ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > a missing bootstrap is FAIL:X:cannot-decide and the old base is not widened to the bootstrap 425ms
+   ✓ EB (CARD-gate-scope-from-bootstrap, option A): a base older than the bootstrap is judged from the bootstrap, for every range-diff arm > an ancestry error is FAIL:X:cannot-decide and the base stays as given 432ms
+   ✓ MB-79 (o) T-o4a: the loop arm judges the pushed sha > --push passes the ref local sha as --tip and --ci passes HEAD; a later commit is never the tip of the push 568ms
+   ✓ arm Q wired at push and ci (O67-15; R-KK, R-KW) > red: a DONE entry without a commit fails at --ci and at --push 409ms
+   ✓ arm Q wired at push and ci (O67-15; R-KK, R-KW) > green: a stamped DONE entry passes at --ci and at --push 460ms
+   ✓ arm Q wired at push and ci (O67-15; R-KK, R-KW) > the revision is the tip: never the base, never the worktree 810ms
+
+ Test Files  2 passed (2)
+      Tests  65 passed (65)
+   Start at  08:12:20
+   Duration  20.07s (transform 60ms, setup 18ms, collect 42ms, tests 20.37s, environment 0ms, prepare 53ms)
+

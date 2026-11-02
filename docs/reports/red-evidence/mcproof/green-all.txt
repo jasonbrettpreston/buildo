@@ -1,0 +1,14 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /private/tmp/claude-501/-Users-brettpreston-macmini/a2ac84b6-e97f-4c25-8402-5da8d80292f5/scratchpad/mb77-wt
+
+ ✓ src/tests/mcproof-approval.logic.test.ts (29 tests) 5ms
+ ✓ src/tests/mcproof-records.logic.test.ts (17 tests) 6ms
+ ✓ src/tests/mcproof-prompts.logic.test.ts (22 tests) 8ms
+ ✓ src/tests/mcproof-sizing.logic.test.ts (35 tests) 19ms
+
+ Test Files  4 passed (4)
+      Tests  103 passed (103)
+   Start at  12:39:51
+   Duration  214ms (transform 98ms, setup 32ms, collect 126ms, tests 37ms, environment 0ms, prepare 80ms)
+

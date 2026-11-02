@@ -153,7 +153,23 @@ async function cmdTest() {
   console.log('\n✅ Connection working');
 }
 
-async function cmdReviewFile(filePath, contextPath = null, sections = []) {
+async function cmdReviewFile(filePath, contextPath = null, sections = [], { answer = false, dryRun = false } = {}) {
+  if (answer) {
+    // MB-77 (c) — answer mode: answerSystemPrompt() + the file verbatim, no review wrapper. --context is ignored.
+    const { pathToFileURL } = require('url');
+    const { answerSystemPrompt } = await import(pathToFileURL(path.join(__dirname, 'analysis', 'mcproof', 'prompts.mjs')).href);
+    const text = readFileOrFail(filePath);
+    const messages = [{ role: 'system', content: answerSystemPrompt() }, { role: 'user', content: text }];
+    if (dryRun) {
+      console.log(`DRY-RUN ${JSON.stringify({ messages })}`);
+      return;
+    }
+    const result = await callDeepSeek(text, answerSystemPrompt());
+    console.log(result.text);
+    printUsage(result.usage, result.durationMs);
+    return;
+  }
+
   console.log(`🔍 Adversarial review of ${filePath} (model: ${MODEL})\n`);
   const code = readFileOrFail(filePath);
   const rawContext = contextPath ? readFileOrFail(contextPath) : null;
@@ -178,6 +194,11 @@ End with a 1-paragraph overall verdict.`;
     console.log(`📝 Included review_notes from sibling .notes.json: ${notes.notesPath}\n`);
   }
   prompt += '\n\nReview this code adversarially. Find what the author missed.';
+
+  if (dryRun) {
+    console.log(`DRY-RUN ${JSON.stringify({ messages: [{ role: 'system', content: systemInstruction }, { role: 'user', content: prompt }] })}`);
+    return;
+  }
 
   const result = await callDeepSeek(prompt, systemInstruction);
   console.log(result.text);
@@ -287,6 +308,8 @@ Commands:
   test                          Sanity check the API connection
   review <file>                 Adversarial code review of a file
   review <file> --context <f>   Code review with extra context
+       [--answer]               Answer mode: file verbatim + answerSystemPrompt()
+       [--dry-run]              Print the messages as one DRY-RUN line instead of calling the API
   spec <spec-path>              Adversarial spec review
   plan                          Review .cursor/active_task.md (legacy hardcoded prompt)
   plan --template <path>        Review with a structured template
@@ -325,7 +348,9 @@ Examples:
       const contextIdx = args.indexOf('--context');
       const contextFile = contextIdx !== -1 ? args[contextIdx + 1] : null;
       const sections = args.flatMap((a, i) => (a === '--section' && args[i + 1] ? [args[i + 1]] : []));
-      await cmdReviewFile(file, contextFile, sections);
+      const answer = args.includes('--answer');
+      const dryRun = args.includes('--dry-run');
+      await cmdReviewFile(file, contextFile, sections, { answer, dryRun });
     } else if (command === 'spec') {
       const file = args[1];
       if (!file) {

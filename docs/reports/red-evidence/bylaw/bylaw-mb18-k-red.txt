@@ -1,0 +1,39 @@
+== item (k) red: averaging_distance_m (MB-18 k, M-423); test files src/tests/bylaw-mb18k.logic.test.ts and src/tests/bylaw-mb18k-validate.logic.test.ts run on the base tree 8b6b91ad (no hook, no data); engine runs k0a 20261102T181317Z-35cd2f08, k0b 20261102T181317Z-2fe2c3f6 (tests), k2a 20261102T181626Z-5e37849c (vocab data), k1 20261102T181708Z-c371fad1 (hook), k2b 20261102T181910Z-a6db9ebb (validator)
+   × V2 negative fixtures (red on base: nothing is validated yet) > fallback_check declares the seven stems and the reason code it reports under 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > of names something that is not a dsl_target fails under vocab_reference_invalid 2ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > self is true but of differs from the key fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > self is false and of equals the key fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > layer not in fallback_check.layers fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > flags has two keys fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > flags has a key that is not a lot_condition fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > a flag value false fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > empty ruling fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > empty trace fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > self missing fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > of is itself a key of fallback_target while self is false fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > the entry present but fallback_check deleted fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > the entry key is not a dsl_target fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > fallback_check.code is not a reason code fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > fallback_target is not a map fails under vocab_reference_invalid 1ms
+   × V2 negative fixtures (red on base: nothing is validated yet) > the entry present and fallback_check.stems deleted fails under vocab_reference_invalid 1ms
+   × V3 independent structure of the committed fallback data (red until the data exists) > fallback_check declares code, separator, layers and stems 0ms
+   × V3 independent structure of the committed fallback data (red until the data exists) > every fallback layer is a vocab.layer value (the fallback reads a layer fact) 0ms
+   × V3 independent structure of the committed fallback data (red until the data exists) > every entry names a dsl_target, lot_condition flags, a declared layer and a resolvable unit 0ms
+   ✓ V5 arm L lock (green on base): no string literal in evaluate.mjs / vocab.mjs > literal-scan --scan reports nothing 444ms
+   × MB-18 k — G1 vocab: the target is bounded max, the fallback maps exist and are consistent > averaging_distance_m is unit m, bound max; fallback_target holds it (sorted, unique) with the M-423 record 3ms
+   × MB-18 k — G1 vocab: the target is bounded max, the fallback maps exist and are consistent > fallback_check is the closed vocab_reference_invalid gate for the layers the map uses 0ms
+   × MB-18 k — G2 unit shape: the averaging distance is expressed on (A), unchanged on (B) > (1)(A) carries both targets and the 15.0 m expression, and no longer leaves the 15.0 metres literal unexpressed 0ms
+   × MB-18 k — G2 unit shape: the averaging distance is expressed on (A), unchanged on (B) > adjudications: the superseded record stays and a ~s1 correction supersedes it 9ms
+   × MB-18 k — G3 value matrix: the lot reads its own 15.0 m on the base layer > every zone x residential type x token flag reads value 15 from unit (A) 5ms
+   × MB-18 k — G3 value matrix: the lot reads its own 15.0 m on the base layer > an authored exception lot still reads 15; a refused exception lot is gated for averaging_distance_m too 3ms
+   × MB-18 k — G4 memo isolation: the fallback never leaks into the front setback read > front_setback_m is condition_unknown before, after and around an averaging_distance_m read, twice each 9ms
+   ✓ MB-18 k — G5 regression lock (green on base): cutting the target off (A) changes no other answer > every other target reads the same on the trimmed unit set 392ms
+   × MB-18 k — G6 hook off when the fallback map is empty > an empty fallback_target leaves averaging_distance_m undecided on the unknown token 1ms
+   × MB-18 k — G7 noFallback turns the hook off > with noFallback the unknown token is undecided; the gate reason is the same with and without it 0ms
+ Test Files  2 failed (2)
+      Tests  29 failed | 8 passed (37)
+
+== arm L red: the naive text of plan sections 8.2 / 16.3 (a typed layer name, a vocab_fallback_invalid message, a typed trace line) added to a base copy; node scripts/analysis/mcbylaws/literal-scan.mjs --scan scripts/analysis/bylaw/evaluate.mjs scripts/analysis/bylaw/vocab.mjs prints:
+scripts/analysis/bylaw/evaluate.mjs FAIL:L:string:averaging_distance_m = 15.0 read as if the token held, base layer (M-423)
+scripts/analysis/bylaw/vocab.mjs FAIL:L:string:base
+scripts/analysis/bylaw/vocab.mjs FAIL:L:string:vocab_fallback_invalid:

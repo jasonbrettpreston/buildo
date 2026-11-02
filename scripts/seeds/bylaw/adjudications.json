@@ -114545,6 +114545,52 @@
       "rule": "MB-18 (~/Buildo/.cursor/MCBYLAWS-QUEUE.md:128); Spec 133 §m.75 (M-75 correction form)",
       "unit": "10.5.100.1(1)#(1)(D)",
       "value": "The 2.6 m arm for lots with all parking in the rear yard is not evaluated; the modelled cap is the lesser of 9.0 m and the parking space width."
+    },
+    {
+      "adjudicated_on": "2026-11-02",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.70(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "MB-18 item k: the 15.0 metres of 10.5.40.70(1)(A) is the keyed value of averaging_distance_m (front_setback_m stays first: the scorer reads the first target)",
+      "rule": "M-423; M-75",
+      "unit": "10.5.40.70(1)#(1)(A)",
+      "value": [
+        "front_setback_m",
+        "averaging_distance_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-02",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.70(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "MB-18 item k: the distance within which an abutting building counts is expressed as a value of the clause",
+      "rule": "M-423; M-75",
+      "unit": "10.5.40.70(1)#(1)(A)",
+      "value": [
+        "front_setback_m = abutting_front_setback_m @(1)(A)",
+        "averaging_distance_m = 15.0 m @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-02",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.70(1)#(1)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "MB-18 item k: the 15.0 metres is now expressed as averaging_distance_m; the literal one stays listed (supersedes the M-81 record of 2026-10-08 for this literal)",
+      "rule": "M-423; M-75",
+      "supersedes": "COR-10.5.40.70(1)#(1)(A)/literals_not_expressed",
+      "unit": "10.5.40.70(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "one",
+          "reason": "threshold_used_in_application"
+        }
+      ]
     }
   ]
 }
