@@ -1,0 +1,102 @@
+{
+ "$comment": "M-321 pre-registration, task MB-73, prereg 2 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-73-1.json is the promises check build, bcd6ffe0), the wire-q build: O67-15 (b) and (c) (one shared headingBody() reader for Q2, Q3 and Q5) and arm Q wired into the gate at push and ci (queue ~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-73; plan ~/Buildo-scratch/mcbylaws/MB-73/wire-q/plan.md sections 4 to 7, stage 6), committed alone before the build. The build edits only scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs, scripts/analysis/mcbylaws/gate.mjs, src/tests/mcbylaws-queue.logic.test.ts, src/tests/mcbylaws-gate.logic.test.ts and docs/reports/red-evidence/mcbylaws-wire-q/. It touches no Layer 2 value, no evaluator, no scorer, no oracle row and no floor. One existing test assertion changes, by operator ruling (Queue Process 1): src/tests/mcbylaws-queue.logic.test.ts:75 goes from [] to [\"FAIL:Q:status-words:MB-67\"] (a tightening, O67-15 (c)), authority ~/Buildo-scratch/p2close/CARD-mb73-q2-row75.answered.md option 1 (operator 2026-11-02); no other expect line changes. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the floors file is unchanged and the floors check stays OK. Expected totals copied from prereg-MB-73-1.json (equal to prereg-MB-79-2.json at f15097a8), on the same unchanged scorer tree. rules[] names only rules the registers read as RULED at 2b8282dc (R-KK and R-KW are OWED, so the plan cites them as context and not as rules here); round 32 is the next free CoA counter on any branch at 2b8282dc.",
+ "schema": "coa-round-prereg-v1",
+ "round": 32,
+ "task": "MB-73",
+ "rules": [
+  "R-KP",
+  "R-LF",
+  "R-MA",
+  "M-321"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-73; ~/Buildo-scratch/mcbylaws/MB-73/wire-q/plan.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/mcbylaws-queue.logic.test.ts",
+   "line": 75,
+   "row": "**MB-67 The commit gate ... - LATER** (G) **MB-68 x - READY** (M)",
+   "from": [],
+   "to": [
+    "FAIL:Q:status-words:MB-67"
+   ],
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104); O67-15 (c)",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb73-q2-row75.answered.md option 1 (operator 2026-11-02)"
+  }
+ ],
+ "increment": "1"
+}
