@@ -1,19 +1,18 @@
 {
   "task": "MB-73",
+  "item": "wire-q (O67-15 (b) and (c), arm Q wired at push and ci)",
   "class": "G",
   "stage": 8,
-  "date": "2026-10-31",
-  "head": "d619dfb4",
+  "date": "2026-11-02",
+  "head": "83368b5a16592f7116a9d97e41ce55ec907ce819",
   "commits_reviewed": [
-    "bcd6ffe0",
-    "79d0b8f6",
-    "18e8f66e",
-    "7e18688c",
-    "d619dfb4"
+    "83368b5a"
   ],
-  "cards": [],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-73/plan.md (v4) and adjudication.md",
-  "output": "OUTPUT panel PASS after re-check 1: first pass FAIL on B1-B5 (guard dropped cannot-decide, zero promises green, --base optional, run on working tree and drift arm not called, audit counts hardcoded); all five fixed in d619dfb4 and re-broken by hand on temp repos without escape (cwd=42 exit 2, no-promises exit 2, no-base exit 2, dirty worktree exit 1, real audit counts). 312 tests green at 8 forks. WAIT lines for withdrawn-has-commits and untraced-number are printed, not failed. Residual: a forged binding passes if the test really passes at the ref.",
+  "cards": [
+    "CARD-mb73-q2-row75"
+  ],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-73/wire-q/plan.md (fold 1 validated PASS); prereg-MB-73-2.json at 86588d44",
+  "output": "OUTPUT panel PASS on build.patch v2 (e236ba4619163bb4; B1 through the DeepSeek engine, B2 the claude wiring seat). Red 3/10 and 4/55 at designed assertions; green 65/65; typecheck OK; lint 0 errors; live queue [] and GATE OK. Gate-level monotonicity: no queue failing Q at 86588d44 now passes. Only expect change row :75 per operator ruling. Clean full suite after disk cleanup: 981/983 files passed (2 skipped), 22395 tests passed, 0 failed.",
   "seats": [
     "regression-guardian",
     "grounded-reviewer",
@@ -25,11 +24,46 @@
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "wiring and stage-10 close must fail on any WAIT line",
-    "wire withdrawnLines after WAIT-P67-2",
-    "wire W:untraced-number after MB-31",
-    "amend plan section 10 write scope",
-    "audit counts are per file, not per promise"
+    "R-new-1: a second **MB-n heading on one line is judged only through Q2 word count; split headings per line (MB-73 (f))",
+    "optional: readyDerivedErrors pin for an indented DONE blocker",
+    "optional: commit-time test with an L2/3 change staged"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-73/output-panel/stage8.md"
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-73/wire-q/output-panel/adjudication.md",
+  "previous": [
+    {
+      "task": "MB-73",
+      "class": "G",
+      "stage": 8,
+      "date": "2026-10-31",
+      "head": "d619dfb4",
+      "commits_reviewed": [
+        "bcd6ffe0",
+        "79d0b8f6",
+        "18e8f66e",
+        "7e18688c",
+        "d619dfb4"
+      ],
+      "cards": [],
+      "plan": "~/Buildo-scratch/mcbylaws/MB-73/plan.md (v4) and adjudication.md",
+      "output": "OUTPUT panel PASS after re-check 1: first pass FAIL on B1-B5 (guard dropped cannot-decide, zero promises green, --base optional, run on working tree and drift arm not called, audit counts hardcoded); all five fixed in d619dfb4 and re-broken by hand on temp repos without escape (cwd=42 exit 2, no-promises exit 2, no-base exit 2, dirty worktree exit 1, real audit counts). 312 tests green at 8 forks. WAIT lines for withdrawn-has-commits and untraced-number are printed, not failed. Residual: a forged binding passes if the test really passes at the ref.",
+      "seats": [
+        "regression-guardian",
+        "grounded-reviewer",
+        "ds-spec",
+        "ds-security",
+        "ds-idempotency",
+        "ds-error-paths"
+      ],
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "wiring and stage-10 close must fail on any WAIT line",
+        "wire withdrawnLines after WAIT-P67-2",
+        "wire W:untraced-number after MB-31",
+        "amend plan section 10 write scope",
+        "audit counts are per file, not per promise"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/MB-73/output-panel/stage8.md"
+    }
+  ]
 }
