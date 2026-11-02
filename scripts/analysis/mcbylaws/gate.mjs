@@ -24,6 +24,7 @@ import { scanScope, allowSet, deadScopeLines, RULE_FILE, ALLOW_REL } from './lit
 import { buildSummary, parseRefLines, isZeroSha } from './pre-push-summary.mjs';
 import { collectRef, heldCount, worktreeScan, pendingCount } from './summary-collect.mjs';
 import { scanDbTargetsInFiles, isDbScopePath } from './db-target.mjs';
+import { queueCheck } from './mcbylaws-queue-check.mjs';
 
 const CANNOT = 'FAIL:X:cannot-decide';
 const DOCS = 'docs/specs/01-pipeline';
@@ -435,6 +436,7 @@ function summaryInput({ cwd, refs, ci, ctx }) {
     }
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy, pre }));
     arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b, r.localSha));
+    arms.push(...queueCheck({ cwd, rev: r.localSha }));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
     let tipLimit = res.policy.held_limit;
     try { tipLimit = JSON.parse(readAt(cwd, r.localSha, POLICY_PATH) ?? '{}').held_limit ?? tipLimit; } catch { arms.push(CANNOT); }
@@ -532,8 +534,6 @@ function run(argv, opts = {}) {
   }
   return { cwd: null, lines: [CANNOT] };
 }
-
-// arm Q: wired after the queue-tracking commit (plan section 10)
 
 export function main(argv, opts = {}) {
   let lines;

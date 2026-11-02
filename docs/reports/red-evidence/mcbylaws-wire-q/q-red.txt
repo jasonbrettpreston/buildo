@@ -1,0 +1,79 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 <worktree>
+
+ ❯ src/tests/mcbylaws-queue.logic.test.ts (10 tests | 3 failed) 429ms
+   × Q2 statusWordErrors > table 3ms
+     → expected [] to deeply equal [ 'FAIL:Q:status-words:MB-67' ]
+   × headingBody, one grammar (O67-15 c) > returns {n, body|null}; Q2, Q3 and Q5 read headings through it 0ms
+     → headingBody is not a function
+   × headingBody, one grammar (O67-15 c) > an indented heading is judged by Q3 too; Q3 keeps its no-separator reading 0ms
+     → expected [] to deeply equal [ 'FAIL:Q:done-without-commit:MB-07' ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-queue.logic.test.ts > Q2 statusWordErrors > table
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:status-words:MB-67' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:status-words:MB-67",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue.logic.test.ts:83:75
+     81|       ['**MB-5 Title - READY**', ['FAIL:Q:status-words:MB-5']],
+     82|     ];
+     83|     for (const [text, expected] of rows) expect(q.statusWordErrors(tex…
+       |                                                                           ^
+     84|   });
+     85| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tests/mcbylaws-queue.logic.test.ts > headingBody, one grammar (O67-15 c) > returns {n, body|null}; Q2, Q3 and Q5 read headings through it
+TypeError: headingBody is not a function
+ ❯ src/tests/mcbylaws-queue.logic.test.ts:89:14
+     87| describe('headingBody, one grammar (O67-15 c)', () => {
+     88|   it('returns {n, body|null}; Q2, Q3 and Q5 read headings through it',…
+     89|     expect(q.headingBody('**MB-5 READY**')).toEqual({ n: '5', body: nu…
+       |              ^
+     90|     expect(q.headingBody('**MB-7 T - DONE** (M) MB-7@abc1234')).toEqua…
+     91|       n: '7',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/tests/mcbylaws-queue.logic.test.ts > headingBody, one grammar (O67-15 c) > an indented heading is judged by Q3 too; Q3 keeps its no-separator reading
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:done-without-commit:MB-07' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:done-without-commit:MB-07",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue.logic.test.ts:99:67
+     97|   });
+     98|   it('an indented heading is judged by Q3 too; Q3 keeps its no-separat…
+     99|     expect(q.doneWithoutCommitErrors('  **MB-07 T - DONE** (M)')).toEq…
+       |                                                                   ^
+    100|       'FAIL:Q:done-without-commit:MB-07',
+    101|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 7 passed (10)
+   Start at  08:10:50
+   Duration  601ms (transform 37ms, setup 6ms, collect 8ms, tests 429ms, environment 0ms, prepare 20ms)
+
+
+## per-row probe of the HEAD checker (86588d44), Q2 table rows the loop hides behind row :75
+RED   "**MB-67 The commit gate ... - LATER** (G) **MB-68 x - READY** (M)" got [] want ["FAIL:Q:status-words:MB-67"]
+RED   "**MB-5 READY**" got [] want ["FAIL:Q:status-words:MB-5"]
+RED   "**MB-5 DONE**" got [] want ["FAIL:Q:status-words:MB-5"]
+green "**MB-5 Title - READY**" got ["FAIL:Q:status-words:MB-5"] want ["FAIL:Q:status-words:MB-5"]
