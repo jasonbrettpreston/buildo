@@ -917,7 +917,7 @@ describe('CHAT-218 (batch 2026-11-01-batch-aq): 4 rulings recorded; behaviour lo
 });
 
 // CHAT-220 (batch 2026-11-02-batch-as): the rule text is present in the register that carries it and cites its decision.
-describe('CHAT-220 (batch 2026-11-02-batch-as): 1 ruling recorded; the I10 lock is OWED to MB-18 (i)', () => {
+describe('CHAT-220 (batch 2026-11-02-batch-as): 2 rulings recorded; the I10 lock is OWED to MB-18 (i) and the per-move check to MB-79 (x)', () => {
   const CASES: Array<[string, string, string]> = [
     ["M-406 note", "2026-11-02-batch-as#CHAT-220.M406-SITEFACT", "the 2013-lot assumption is a site fact (M-172 (2)) and does not depend on a design option. Its lock is the I10 lock: the assumption is recorded and disclosed, with `inputs_defaulted` 0, on every result that uses it. When M-400 builds its option key, the M-400 lock asserts the disclosure in every option cell. \"Resolved per design option\" reads accordingly: under M-400, \"options that give no different law answer share the cell\" (69a:531). Every other clause of this row is unchanged."],
   ];
@@ -927,6 +927,15 @@ describe('CHAT-220 (batch 2026-11-02-batch-as): 1 ruling recorded; the I10 lock 
       expect(M, c + ' rule text').toContain(rule);
     });
   }
+  it('R-LZ note carries 2026-11-02-batch-as#CHAT-220.RLZ-MOVING and its Rule text, in the 124a row', () => {
+    expect(A, 'CHAT-220.RLZ-MOVING').toContain("2026-11-02-batch-as#CHAT-220.RLZ-MOVING");
+    expect(A, 'CHAT-220.RLZ-MOVING rule text').toContain("a pre-registered moving landing. While increment 1 cannot be green, a commit may also land a `revert` round of increment 1 whose prereg lists each moving row, each `expected_moves[]` entry naming its authority in a `ruling` field: a register id that reads RULED with no OWED marker, or an OWED id whose own lock lands in the same commit (the exception R-KG gives arm C). The run must show exactly those moves, every other total equal, and floors held or up. Pins move only through the tool to the prereg totals (R-LI 124a:1053). This note is in force from the lane G check (MB-79 (x), lane G); until that check lands, this row's zero-move text governs. From then, the gate will refuse a move the prereg does not list and a listed move whose `ruling` is missing or not usable. The zero-move landing of this row is unchanged.");
+  });
+  it('R-LZ last cell names the lock test files for the lane G check', () => {
+    const row = A.split('\n').find((l) => l.startsWith('| R-LZ |')) as string;
+    expect(row.split(' | ').pop()).toContain('src/tests/mcbylaws-loop-prereg.logic.test.ts');
+    expect(row.split(' | ').pop()).toContain('src/tests/mcbylaws-loop-gate-eval.logic.test.ts');
+  });
   it('M-406 status cell names the I10 lock files', () => {
     const row = M.split('\n').find((l) => l.startsWith('| **M-406** |')) as string;
     expect(row).toContain('src/tests/bylaw-mb18i.logic.test.ts');
