@@ -942,3 +942,25 @@ describe('CHAT-220 (batch 2026-11-02-batch-as): 2 rulings recorded; the I10 lock
     expect(row).toContain('src/tests/steps/resolve_bylaws/materialize-mb18i.logic.test.ts');
   });
 });
+
+// CHAT-221 (batch 2026-11-02-batch-at): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-221 (batch 2026-11-02-batch-at): 4 rulings recorded; the key edits are OWED to MB-80 (lane T)', () => {
+  it('M-455 carries 2026-11-02-batch-at#CHAT-221.MB80-SIGNOFF and its Rule text; the 22 cases are named', () => {
+    expect(M, 'CHAT-221.MB80-SIGNOFF').toContain("2026-11-02-batch-at#CHAT-221.MB80-SIGNOFF");
+    expect(M, 'CHAT-221.MB80-SIGNOFF rule text').toContain("The signed MB-64 increment-1 key (MB64-CLOSE) changes in these cases only, plus the header version line (one step; the recorder confirms which). No expected number moves except UN-4 (its reason word) and GFA-8 (its zone and clause); PERM-10's key changes by this ruling. (a) The Rulings cell gains the ruling the answer rests on: FY-1, FY-3, FY-4 (M-245), FY-5 (M-423, M-456, FS-SB1, M-245), FY-29 (M-245, M-414, R3-03, R3-01), FOOT-16 (R3-03), GFA-5 (S-1, M-425), UN-4 (R3-01, M-385), LV-6 (MINSIZE, APPROVE-4); the Basis of FY-1 is filled. (b) Made-up heights are labelled in the Basis: ST-5, ST-9,");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-455** |')) as string;
+    for (const c of ['PERM-10', 'FOOT-18', 'ST-11', 'FY-5', 'made-up-shape-fit-audit.json', 'Give both parts']) expect(row, c).toContain(c);
+  });
+  it('M-456 carries 2026-11-02-batch-at#CHAT-221.FY5-INCLUSIVE and its Rule text', () => {
+    expect(M, 'CHAT-221.FY5-INCLUSIVE').toContain("2026-11-02-batch-at#CHAT-221.FY5-INCLUSIVE");
+    expect(M, 'CHAT-221.FY5-INCLUSIVE rule text').toContain("A neighbouring house at exactly 15.0 m from the lot counts: \"15.0 metres or less\" in 10.5.40.70(1) is inclusive, so the averaging rule 10.5.40.70(1)(B) and the single-neighbour rule 10.5.40.70(1)(A) apply to a building at 15.0 m, and a building beyond 15.0 m does not count. M-423 stores the number 15.0 m (as averaging_distance_m); this row decides the boundary it is compared with. MB-64 FY-5 (a neighbour at exactly 15.0 m; the answer 5 m) follows this row.");
+  });
+  it('R-LJ note carries 2026-11-02-batch-at#CHAT-221.RLJ-PATH and its Rule text, in the 124a row', () => {
+    expect(A, 'CHAT-221.RLJ-PATH').toContain("2026-11-02-batch-at#CHAT-221.RLJ-PATH");
+    expect(A, 'CHAT-221.RLJ-PATH rule text').toContain("the closed set of increment ids is held in `scripts/analysis/mcbylaws-loop/data/increments.json` (key `ids`: 1, 2, 3, 4, 5, 6, 6b, 7, 8, 9, 10), where the MB-68 build put it and where it exists today; the path `mcbylaws/loop/data/increments.json`, which the rule text above calls \"absent today\", was the path named before the file existed, and that directory holds only the two CoA id lists. The set itself is unchanged. Every other clause of this row is unchanged.");
+  });
+  it('M-394 note carries 2026-11-02-batch-at#CHAT-221.PERM10-RECON and its Rule text', () => {
+    expect(M, 'CHAT-221.PERM10-RECON').toContain("2026-11-02-batch-at#CHAT-221.PERM10-RECON");
+    expect(M, 'CHAT-221.PERM10-RECON rule text').toContain("for a lot whose Chapter 900 exception is not authored, the route is undecided, not refused. The words \"or a lot gate applies\" in the not_permitted clause above mean a decided refusal; an unauthored exception is the gate of M-231 (Spec 134 section 5), which takes no winner on any target and writes not_evaluated:exception_not_authored on the lot. By R3-01 (M-385, undecided never means zero) the route for such a lot carries not_evaluated:exception_not_authored and is never not_permitted. Every other statement of this row is unchanged.");
+  });
+});

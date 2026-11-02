@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 484** (415 M-rows, 69 LC-rows): 481 in force (176 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 486** (417 M-rows, 69 LC-rows): 483 in force (178 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -238,6 +238,10 @@ First clause cited: x.40.40, 10.20.40.40, 10.10.40.40.
 - **m.215** Two scope statements. (1) R FSI default 0.6: 10.10.40.40(1)(B), *"if the zone label does not include a "d" value … the permitted maximum floor space index is 0.6"*; RD/RS/RT/RM say "not limited".
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
   Rules: `M-215` (Spec 69a)
+
+- **m.455** MB-80 (2): post-signing edits to the MB-64 increment-1 key from the McProof sign-off, as one ledger row (cases PERM-10, FY-1, FY-3, FY-4, FY-5, FY-14, FY-29, FOOT-14, FOOT-16, FOOT-18, ST-5, ST-9, ST-10, ST-11, ST-12, GFA-5, GFA-8, UN-1, UN-4, LV-1, LV-3, LV-6).
+  Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): the edits of ~/Buildo-scratch/mcbylaws/MB-64/m…
+  Rules: `M-455` (Spec 69a)
 
 ### 40.50 — Decks and Platforms
 
@@ -510,6 +514,10 @@ First clause cited: 10.5.40.70.
 - **m.423** RL-7 (a): the 10.5.40.70(1) 15.0 m is keyed into Phase 2 averaging_distance_m; decided and built with FS-SB2a as one change set.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-18 item (k): the three corrections and the read-as-if-token-held hook, built with M-422 and…
   Rules: `M-423` (Spec 69a)
+
+- **m.456** A neighbouring house at exactly 15.0 m qualifies: "15.0 metres or less" is inclusive (10.5.40.70(1)).
+  Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): FY-5 Status and Basis cite this row (the key shows the boundary) and Part A for FY-5…
+  Rules: `M-456` (Spec 69a)
 
 ### 10.5.40.71 — Setbacks Exemptions
 
@@ -2119,7 +2127,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
   Rules: `LC-69` (Spec 131)
 
-## 3. Rows with an OWED marker (176 in force)
+## 3. Rows with an OWED marker (178 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -2265,6 +2273,8 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-452 | m.452 | RULED 2026-11-01 · OWED |
 | M-453 | m.453 | RULED 2026-11-01 · OWED |
 | M-454 | m.454 | RULED 2026-11-01 · OWED |
+| M-455 | m.455 | RULED 2026-11-02 · OWED |
+| M-456 | m.456 | RULED 2026-11-02 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |
