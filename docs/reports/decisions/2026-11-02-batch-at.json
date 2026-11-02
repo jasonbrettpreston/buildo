@@ -23,6 +23,14 @@
       "decision": "approve",
       "decided_at": "2026-11-02",
       "operator_quote": "I like the perm 10 decision now - keep - no keying investigation required"
+    },
+    {
+      "id": "CHAT-221.RLJ-PATH",
+      "question": "R-LJ note: the increments file is at scripts/analysis/mcbylaws-loop/data/increments.json (the path the rule text names does not exist)",
+      "recommendation": "CARD-mb31-inc1-plan (~/Buildo-scratch/p2close/CARD-mb31-inc1-plan.answered.md), question 2, \"2. plan approved if compliant\"; plan ~/Buildo-scratch/mcbylaws/MB-31/inc1-plan.md section 1.2 (1). Rule text: the closed set of increment ids is held in `scripts/analysis/mcbylaws-loop/data/increments.json` (key `ids`: 1, 2, 3, 4, 5, 6, 6b, 7, 8, 9, 10), where the MB-68 build put it and where it exists today; the path `mcbylaws/loop/data/increments.json`, which the rule text above calls \"absent today\", was the path named before the file existed, and that directory holds only the two CoA id lists. The set itself is unchanged. Every other clause of this row is unchanged.",
+      "decision": "approve",
+      "decided_at": "2026-11-02",
+      "operator_quote": "2. plan approved if compliant"
     }
   ]
 }

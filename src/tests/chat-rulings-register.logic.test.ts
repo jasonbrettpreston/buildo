@@ -944,7 +944,11 @@ describe('CHAT-220 (batch 2026-11-02-batch-as): 2 rulings recorded; the I10 lock
 });
 
 // CHAT-221 (batch 2026-11-02-batch-at): the rule text is present in the register that carries it and cites its decision.
-describe('CHAT-221 (batch 2026-11-02-batch-at): 1 ruling recorded; the PERM-10 key follows the MB-80 ledger row', () => {
+describe('CHAT-221 (batch 2026-11-02-batch-at): 2 rulings recorded; the PERM-10 key follows the MB-80 ledger row', () => {
+  it('R-LJ note carries 2026-11-02-batch-at#CHAT-221.RLJ-PATH and its Rule text, in the 124a row', () => {
+    expect(A, 'CHAT-221.RLJ-PATH').toContain("2026-11-02-batch-at#CHAT-221.RLJ-PATH");
+    expect(A, 'CHAT-221.RLJ-PATH rule text').toContain("the closed set of increment ids is held in `scripts/analysis/mcbylaws-loop/data/increments.json` (key `ids`: 1, 2, 3, 4, 5, 6, 6b, 7, 8, 9, 10), where the MB-68 build put it and where it exists today; the path `mcbylaws/loop/data/increments.json`, which the rule text above calls \"absent today\", was the path named before the file existed, and that directory holds only the two CoA id lists. The set itself is unchanged. Every other clause of this row is unchanged.");
+  });
   it('M-394 note carries 2026-11-02-batch-at#CHAT-221.PERM10-RECON and its Rule text', () => {
     expect(M, 'CHAT-221.PERM10-RECON').toContain("2026-11-02-batch-at#CHAT-221.PERM10-RECON");
     expect(M, 'CHAT-221.PERM10-RECON rule text').toContain("for a lot whose Chapter 900 exception is not authored, the route is undecided, not refused. The words \"or a lot gate applies\" in the not_permitted clause above mean a decided refusal; an unauthored exception is the gate of M-231 (Spec 134 section 5), which takes no winner on any target and writes not_evaluated:exception_not_authored on the lot. By R3-01 (M-385, undecided never means zero) the route for such a lot carries not_evaluated:exception_not_authored and is never not_permitted. Every other statement of this row is unchanged.");
