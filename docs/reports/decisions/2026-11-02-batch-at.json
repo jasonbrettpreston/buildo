@@ -1,0 +1,28 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-11-02-batch-at/2026-11-02-batch-at.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-11-02-batch-at",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "I like the perm 10 decision now - keep - no keying investigation required",
+    "record": "operator chat 2026-11-02",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-11-02-batch-at/2026-11-02-batch-at.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-221.PERM10-RECON",
+      "question": "M-394 note: an unauthored exception gives not_evaluated:exception_not_authored, not not_permitted (R3-01 over R4-01 for that case; M-231, Spec 134 section 5)",
+      "recommendation": "Operator sign-off answers (signoff/answers.md): \"sounds good!\" in reply to \"PERM-10: can't decide yet\", and \"I like the perm 10 decision now - keep - no keying investigation required\". Rule text: for a lot whose Chapter 900 exception is not authored, the route is undecided, not refused. The words \"or a lot gate applies\" in the not_permitted clause above mean a decided refusal; an unauthored exception is the gate of M-231 (Spec 134 section 5), which takes no winner on any target and writes not_evaluated:exception_not_authored on the lot. By R3-01 (M-385, undecided never means zero) the route for such a lot carries not_evaluated:exception_not_authored and is never not_permitted. Every other statement of this row is unchanged.",
+      "decision": "approve",
+      "decided_at": "2026-11-02",
+      "operator_quote": "I like the perm 10 decision now - keep - no keying investigation required"
+    }
+  ]
+}

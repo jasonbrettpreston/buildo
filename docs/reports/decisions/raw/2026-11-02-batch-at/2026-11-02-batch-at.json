@@ -1,0 +1,15 @@
+{
+  "source": "operator chat 2026-11-02",
+  "operator_quote": "I like the perm 10 decision now - keep - no keying investigation required",
+  "context": "Recorded by lane R (McBylaws queue, lane R), stage 9, the first commit of batch 2026-11-02-batch-at. One dated note on 69a M-394 (R4-01) reconciling it with R3-01 and Spec 134 section 5 / M-231, from the MB-64 increment-1 sign-off (PERM-10), signoff/answers.md. The MB-80 sign-off ledger row and the FY-5 inclusive-boundary row are appended to this record by their own commits, after the re-pin card is answered.",
+  "decisions": [
+    {
+      "id": "CHAT-221.PERM10-RECON",
+      "subject": "M-394 note: an unauthored exception gives not_evaluated:exception_not_authored, not not_permitted (R3-01 over R4-01 for that case; M-231, Spec 134 section 5)",
+      "decision": "approve",
+      "recommendation": "Operator sign-off answers (signoff/answers.md): \"sounds good!\" in reply to \"PERM-10: can't decide yet\", and \"I like the perm 10 decision now - keep - no keying investigation required\". Rule text: for a lot whose Chapter 900 exception is not authored, the route is undecided, not refused. The words \"or a lot gate applies\" in the not_permitted clause above mean a decided refusal; an unauthored exception is the gate of M-231 (Spec 134 section 5), which takes no winner on any target and writes not_evaluated:exception_not_authored on the lot. By R3-01 (M-385, undecided never means zero) the route for such a lot carries not_evaluated:exception_not_authored and is never not_permitted. Every other statement of this row is unchanged.",
+      "quote_ref": "q_p"
+    }
+  ],
+  "q_p": "I like the perm 10 decision now - keep - no keying investigation required"
+}

@@ -942,3 +942,11 @@ describe('CHAT-220 (batch 2026-11-02-batch-as): 2 rulings recorded; the I10 lock
     expect(row).toContain('src/tests/steps/resolve_bylaws/materialize-mb18i.logic.test.ts');
   });
 });
+
+// CHAT-221 (batch 2026-11-02-batch-at): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-221 (batch 2026-11-02-batch-at): 1 ruling recorded; the PERM-10 key follows the MB-80 ledger row', () => {
+  it('M-394 note carries 2026-11-02-batch-at#CHAT-221.PERM10-RECON and its Rule text', () => {
+    expect(M, 'CHAT-221.PERM10-RECON').toContain("2026-11-02-batch-at#CHAT-221.PERM10-RECON");
+    expect(M, 'CHAT-221.PERM10-RECON rule text').toContain("for a lot whose Chapter 900 exception is not authored, the route is undecided, not refused. The words \"or a lot gate applies\" in the not_permitted clause above mean a decided refusal; an unauthored exception is the gate of M-231 (Spec 134 section 5), which takes no winner on any target and writes not_evaluated:exception_not_authored on the lot. By R3-01 (M-385, undecided never means zero) the route for such a lot carries not_evaluated:exception_not_authored and is never not_permitted. Every other statement of this row is unchanged.");
+  });
+});
