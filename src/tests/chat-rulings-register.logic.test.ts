@@ -900,9 +900,12 @@ describe('CHAT-217 (batch 2026-11-01-batch-ap): 1 rulings recorded; behaviour lo
 
 // CHAT-218 (batch 2026-11-01-batch-aq): each Rule text line is present in the register that carries it and cites its decision.
 // CHAT-218.B-2 is a no_ruling decision resting on M-409; it has no row of its own.
-describe('CHAT-218 (batch 2026-11-01-batch-aq): 1 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+describe('CHAT-218 (batch 2026-11-01-batch-aq): 4 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
   const CASES: Array<[string, string, string, string]> = [
     ["R-MA note", "A", "2026-11-01-batch-aq#CHAT-218.MB79-P", "At commit time, during a merge in progress with exactly one merge head (`MERGE_HEAD` holds one sha), a record that the index adds against HEAD is joined by this row's push-and-CI source"],
+    ["M-452", "M", "2026-11-01-batch-aq#CHAT-218.A-2", "In a Spec 69a row, a status-cell note of one fixed form, for example `` · *Dated note <date> (lane R; <source>):* LOCK L"],
+    ["M-453", "M", "2026-11-01-batch-aq#CHAT-218.MB80-GAP1", "The signed MB-64 increment-1 key (MB64-CLOSE) changes in these cases only, plus the header version line (v4 to v5) and t"],
+    ["M-454", "M", "2026-11-01-batch-aq#CHAT-218.MB80-GAP3", "Follow R-G (124a:121) in its own scope: \"VALIDITY is per-variable via the closed `on_invalid` enum — `fail` MANDATORY fo"],
   ];
   const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
   for (const [row, reg, c, rule] of CASES) {

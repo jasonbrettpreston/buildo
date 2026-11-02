@@ -1848,6 +1848,18 @@
       "section": "fam-general"
     },
     {
+      "id": "m.452",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.453",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.454",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -6655,6 +6667,39 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-451**"
+      }
+    },
+    {
+      "id": "M-452",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.452",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-452**"
+      }
+    },
+    {
+      "id": "M-453",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.453",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-453**"
+      }
+    },
+    {
+      "id": "M-454",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.454",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-454**"
       }
     },
     {
