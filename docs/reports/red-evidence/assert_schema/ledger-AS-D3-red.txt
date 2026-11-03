@@ -1,0 +1,20 @@
+kind: mutation
+row: AS-D3
+lock: src/tests/assert-schema-ledger-locks.logic.test.ts -t "AS-D3"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/assert-schema-ledger-locks.logic.test.ts -t "AS-D3" --reporter=json --outputFile=docs/reports/red-evidence/assert_schema/ledger-AS-D3-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["AS-D3 — openLedgerRow logs the failed INSERT and returns null"]
+restore: scripts/lib/step/ledger.js restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/lib/step/ledger.js b/scripts/lib/step/ledger.js
+index 93bc7336..ec4df5c2 100644
+--- a/scripts/lib/step/ledger.js
++++ b/scripts/lib/step/ledger.js
+@@ -230,7 +230,6 @@ async function openLedgerRow(pool, slug) {
+     );
+     return res.rows[0].id;
+   } catch (err) {
+-    pipeline.log.warn(`[${slug}]`, `Could not insert pipeline_runs row: ${err.message}`);
+     return null;
+   }
+ }

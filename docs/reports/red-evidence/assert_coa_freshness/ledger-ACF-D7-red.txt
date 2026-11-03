@@ -1,0 +1,21 @@
+kind: mutation
+row: ACF-D7
+lock: src/tests/steps/assert_coa_freshness/violations.test.ts -t "C3"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/assert_coa_freshness/violations.test.ts -t "C3" --reporter=json --outputFile=docs/reports/red-evidence/assert_coa_freshness/ledger-ACF-D7-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["C3 — tiers at the defaults are INCLUSIVE ceilings (ACF-D7, R-DC): 45 PASS, 46 WARN, 135 WARN, 136 FAIL — one day later than L4 at each boundary"]
+restore: scripts/lib/step/verdict.js restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/lib/step/verdict.js b/scripts/lib/step/verdict.js
+index efdad8e4..6c254c96 100644
+--- a/scripts/lib/step/verdict.js
++++ b/scripts/lib/step/verdict.js
+@@ -190,7 +190,7 @@ function evaluateLimit(limit, observation) {
+   const valueMax = typeof limit === 'string' ? limit.match(VALUE_MAX_RE) : null;
+   if (valueMax) {
+     if (!Number.isFinite(observation.value)) return { unevaluable: 'check reported no numeric value for value_max' };
+-    return { ok: observation.value <= Number(valueMax[1]) };
++    return { ok: observation.value < Number(valueMax[1]) };
+   }
+ 
+   const m = typeof limit === 'string' ? limit.match(VIOL_RE) : null;

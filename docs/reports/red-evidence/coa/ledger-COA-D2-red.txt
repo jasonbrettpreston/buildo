@@ -1,0 +1,19 @@
+kind: mutation
+row: COA-D2
+lock: src/tests/steps/coa/ledger-locks.logic.test.ts -t "COA-D2"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/coa/ledger-locks.logic.test.ts -t "COA-D2" --reporter=json --outputFile=docs/reports/red-evidence/coa/ledger-COA-D2-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["COA-D2 — one inclusive bound: 45 PASS, 46 WARN; no second (log) comparison in compute"]
+restore: scripts/lib/compute/load-coa.js restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/lib/compute/load-coa.js b/scripts/lib/compute/load-coa.js
+index 22d13f94..ad19108f 100644
+--- a/scripts/lib/compute/load-coa.js
++++ b/scripts/lib/compute/load-coa.js
+@@ -416,6 +416,7 @@ async function max_days_stale(ctx) {
+     return;
+   }
+   // COA-D15: the row renders the day count its value_max bound reads (the legacy row value), never the hearing date.
++  if (daysSince(newest, ctx.clock()) > 45) ctx.log.warn('portal rot: coa data stale');
+   ctx.report('max_days_stale', { value: daysSince(newest, ctx.clock()) });
+ }

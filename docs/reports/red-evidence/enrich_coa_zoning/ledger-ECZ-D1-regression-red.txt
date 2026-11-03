@@ -1,0 +1,7 @@
+kind: natural
+row: ECZ-D1 (the regression lock updated with the Regression Guardian, CHAT-191.CL-Q7)
+lock: src/tests/permits-coa-zoning-columns.regression.test.ts -t "registers both modes"
+command (in the build worktree, before the manifest edit): npx vitest run src/tests/permits-coa-zoning-columns.regression.test.ts -t "registers both modes" --reporter=json --outputFile=docs/reports/red-evidence/enrich_coa_zoning/ledger-ECZ-D1-regression-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch; the test edit unstaged beside it)
+result: exit 1; the updated lock reads enrich_coa_zoning.env undefined, the manifest still carries {"ENRICH_TARGET":"coa"}
+fix: the manifest env field is dropped in the same commit; the lock is green after it
