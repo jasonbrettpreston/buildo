@@ -1,39 +1,65 @@
 {
   "task": "MB-79",
-  "item": "gate bundle (j, m, n, o, p, q, s)",
+  "item": "v (K-4)",
   "class": "G",
   "stage": 8,
-  "date": "2026-11-01",
-  "head": "2faaa65166f65bfd2027d5d5481f530f3e0e8be0",
+  "date": "2026-11-03",
+  "head": "66b374410c54d2195d21490c246d8e143be50ff4",
   "commits_reviewed": [
-    "2faaa651"
+    "801dea2f",
+    "66b37441"
   ],
   "cards": [
-    "CARD-mb79-gate-bundle",
-    "CARD-mb79-gapj-p",
-    "CARD-mb79g-hook-env"
+    "Q-K4 (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, operator \"confirmed as long as they are complaint\")"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-79/gates/plan.md (stage 3 REVISE folded; folds 4, 5 and 6 each fold-validated PASS): briefs G1-G9 for (j) the absolute node_modules link and fail on no base rows (j-1), (m) a prereg committed alone is not bound at push/ci, (o) loop-gate --tip scores the pushed tree and gate.mjs passes the pushed sha, (n) arm C at commit-msg on the parent and the index with failures unioned, (q) Q1 ancestry, (p) the lane-merge join per the R-MA dated note, (s) the hook-environment test fix.",
-  "output": "OUTPUT panel PASS, then re-check 1 PASS (v3, fold 5: K-3 fixed instead of disclosed) and re-check 2 PASS (v4, fold 6; real-hook commit in a scratch clone). Red 34 + 2 + 1 at designed assertions; green; related 1296/1296 incl. real-data 13/13; full suite 22359 passed, 1 failed (2 environmental files). Plan replays old to new: (m) FAIL to GATE OK; (j) baseRows null to 1194; (o) ok through gate.mjs; (p) 4 failures to violations []. Not weakening checked per brief (compliance.md). D-1..D-16 accepted.",
+  "plan": "~/Buildo-scratch/mcbylaws/MB-79/v/ (lane G stage 3/4 notes): the test file src/tests/mcbylaws-loop-gate-run.logic.test.ts classifies null under the loop gate (not oracle, code or layer23; protected src/tests/mcbylaws-*), so no oracle-only split; commits: prereg-MB-79-4.json alone (round 44, rules M-321 and R-MA, one expected_assertion_changes entry, totals equal prereg-MB-83-1.json, coa-scorecard --check on expected-172 CHECK OK at 7eb6daf9), then the test-only commit directly on it, then this record. Red first: red-1 (old form fails on a foreign mcbylaws-loop-gate-base-* dir made during the run), red-2 (new form with a cleanup-skipping test double fails at the removal assertion).",
+  "output": "OUTPUT panel PASS, 2 MINOR (~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md). F1 (the prereg assertion line pointed at the call site 531, not the assertion at 557) fixed before the prereg commit; F2 (the leak test regex is message-based) note only, adequately specific per red-2. Lens checks: the gate is not weakened (the check is stricter: base tree made in the private dir, gone after, private dir empty), both directions proven by tests, TMPDIR and the spy restored in finally, prereg round 44 unique, scope one test file. File 32/32 green.",
   "seats": [
-    "regression-guardian",
-    "grounded-reviewer",
-    "ds-spec",
-    "ds-security",
-    "ds-idempotency",
-    "ds-error-paths",
-    "compliance"
+    "output-panel (lens checks 1-6, ~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md)"
   ],
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "K-1: base extraction has no tip-tree check under a local .git/info/attributes (fails closed in practice); route to MB-79",
-    "K-2: --tip without --base takes the merge-base from HEAD; unreachable through gate.mjs; route",
-    "K-4: a run-test lock counts temp dirs and G6 tip trees share its prefix, so a concurrent run turns it red; a test-side fix is Process 1; route",
-    "MB-79 (r): arm C at push/CI reads only the parent; pre-dates the bundle; queue item at stage 1"
+    "F2 (MINOR, note only): the leak-test toThrow regex is message-based"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-79/gates/output-panel/adjudication.md",
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md",
   "previous": [
+    {
+      "task": "MB-79",
+      "item": "gate bundle (j, m, n, o, p, q, s)",
+      "class": "G",
+      "stage": 8,
+      "date": "2026-11-01",
+      "head": "2faaa65166f65bfd2027d5d5481f530f3e0e8be0",
+      "commits_reviewed": [
+        "2faaa651"
+      ],
+      "cards": [
+        "CARD-mb79-gate-bundle",
+        "CARD-mb79-gapj-p",
+        "CARD-mb79g-hook-env"
+      ],
+      "plan": "~/Buildo-scratch/mcbylaws/MB-79/gates/plan.md (stage 3 REVISE folded; folds 4, 5 and 6 each fold-validated PASS): briefs G1-G9 for (j) the absolute node_modules link and fail on no base rows (j-1), (m) a prereg committed alone is not bound at push/ci, (o) loop-gate --tip scores the pushed tree and gate.mjs passes the pushed sha, (n) arm C at commit-msg on the parent and the index with failures unioned, (q) Q1 ancestry, (p) the lane-merge join per the R-MA dated note, (s) the hook-environment test fix.",
+      "output": "OUTPUT panel PASS, then re-check 1 PASS (v3, fold 5: K-3 fixed instead of disclosed) and re-check 2 PASS (v4, fold 6; real-hook commit in a scratch clone). Red 34 + 2 + 1 at designed assertions; green; related 1296/1296 incl. real-data 13/13; full suite 22359 passed, 1 failed (2 environmental files). Plan replays old to new: (m) FAIL to GATE OK; (j) baseRows null to 1194; (o) ok through gate.mjs; (p) 4 failures to violations []. Not weakening checked per brief (compliance.md). D-1..D-16 accepted.",
+      "seats": [
+        "regression-guardian",
+        "grounded-reviewer",
+        "ds-spec",
+        "ds-security",
+        "ds-idempotency",
+        "ds-error-paths",
+        "compliance"
+      ],
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "K-1: base extraction has no tip-tree check under a local .git/info/attributes (fails closed in practice); route to MB-79",
+        "K-2: --tip without --base takes the merge-base from HEAD; unreachable through gate.mjs; route",
+        "K-4: a run-test lock counts temp dirs and G6 tip trees share its prefix, so a concurrent run turns it red; a test-side fix is Process 1; route",
+        "MB-79 (r): arm C at push/CI reads only the parent; pre-dates the bundle; queue item at stage 1"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/MB-79/gates/output-panel/adjudication.md"
+    },
     {
       "task": "MB-79",
       "item": "h",
