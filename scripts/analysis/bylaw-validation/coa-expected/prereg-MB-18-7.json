@@ -1,0 +1,100 @@
+{
+ "$comment": "M-321 pre-registration, task MB-18, prereg 7 (Spec 124a R-MA: the task's own number; R-LZ revert round of increment 1), the loop round that lands MB-18 item j (front_setback_fallback_m: the zone x.40.70(1) front yard setback stored as a 54th Layer 2 slot; migration 293, vocab target and fallback_target entry, scope and lineage entries, scope-derived tests, the regenerated files and pins; M-245); committed alone directly under that commit. Increment 1, zero moves: coa-scorecard --check on the tree gives 698 and 496 rows with totals equal to this file's expected_totals and expected_totals_4d, floors OK; no scorer row, oracle row or floor moves (the scorer reads the first target of a unit and no City row cites front_setback_fallback_m). The Layer 2 rows that gain the new target are stored at the MB-26 night under its own procedure, not by this commit. Build: ~/Buildo-scratch/mcbylaws/MB-18/j/README.md. Two assertion changes in src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts land with the code commit and are listed in expected_assertion_changes (the two tests that held the waiting state now guard the finished state).",
+ "schema": "coa-round-prereg-v1",
+ "round": 41,
+ "task": "MB-18",
+ "rules": [
+  "M-245",
+  "M-158",
+  "R-DA"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-18 (j); ~/Buildo-scratch/mcbylaws/MB-18/j/README.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 400,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 75,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 280,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 53,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 452,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 80,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "change": "front row test (was :135 'front row: l2(front_setback_fallback_m) waits MB-18 (j)'): checkRowL3 of the front row expects [] instead of ['unknown_target: front_setback_fallback_m']; retitled 'front row: l2(front_setback_fallback_m) names a stored target, no violation'",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb18j-catalogue-flip.answered.md (Queue Process 1, operator ruling 2026-11-03, option 1)"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "change": "validateCatalogue test (was :140 'the only violation is the front row's l2(front_setback_fallback_m) (waits MB-18 (j))'): expects 0 violations instead of 1; retitled 'validateCatalogue on the real seeds: no violation'",
+   "authority": "~/Buildo-scratch/p2close/CARD-mb18j-catalogue-flip.answered.md (Queue Process 1, operator ruling 2026-11-03, option 1)"
+  }
+ ]
+}
