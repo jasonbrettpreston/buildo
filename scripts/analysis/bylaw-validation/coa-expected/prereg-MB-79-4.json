@@ -1,0 +1,98 @@
+{
+ "$comment": "M-321 pre-registration, task MB-79, prereg 4 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-79-1.json is the gate bundle's, prereg-MB-79-2.json batch aq part 2's and prereg-MB-79-3.json the sign-off landing's, so this file is the task's fourth; round 44 is the next free CoA counter on every ref, the highest being round 43, prereg-MB-83-1.json), committed alone directly under the MB-79 (v) K-4 test commit. The change is test-only: src/tests/mcbylaws-loop-gate-run.logic.test.ts runs its base-tree removal check with TMPDIR pointed at a private dir made per test and restored after, so a loop push elsewhere on the host (whose base trees share the mcbylaws-loop-gate-base- prefix in the shared temp dir) cannot turn it red; two tests are added, a foreign base dir made in the shared temp dir during the run leaves the check green, and a test double that skips removing the base tree still turns it red. It touches no gate code, no evaluator, no scorer, no oracle row and no floor. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the totals equal prereg-MB-83-1.json's (coa-scorecard --check on expected-172 at 7eb6daf9: CHECK OK, 698 rows), the floors file is unchanged and the floors check stays OK. One existing test assertion changes by operator ruling under Queue Process 1, listed in expected_assertion_changes. rules[] names only rules the registers read as RULED with no OWED marker.",
+ "schema": "coa-round-prereg-v1",
+ "round": 44,
+ "task": "MB-79",
+ "rules": [
+  "M-321",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-79 (v) K-4 (:373); ~/Buildo-scratch/mcbylaws/MB-79/v/ (build.patch, red-1-foreign-old-form.txt, red-2-leak-new-form.txt, green-file.txt); ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (Q-K4, operator \"confirmed as long as they are complaint\")",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/mcbylaws-loop-gate-run.logic.test.ts",
+   "line": 557,
+   "row": "the extracted temp dir is removed afterwards: the directory the leftover-dir assertion lists",
+   "from": "os.tmpdir() (the shared host temp dir), entries starting mcbylaws-loop-gate-base- that were not there before the run, expected []",
+   "to": "a private TMPDIR made for the test and restored after: the base tree is made in it (dirname equals the private dir), is gone afterwards, and readdirSync of the private dir is [] (nothing left at all)",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "operator answer to Q-K4, \"confirmed as long as they are complaint\" (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, 2026-11-03)"
+  }
+ ]
+}
