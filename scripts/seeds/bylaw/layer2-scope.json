@@ -28,6 +28,7 @@
       "dwelling_units_max",
       "element_width_pct",
       "entrance_height_m",
+      "front_setback_fallback_m",
       "front_setback_m",
       "fsi",
       "height_m",

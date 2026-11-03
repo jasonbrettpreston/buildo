@@ -21,11 +21,12 @@ const sha = (s: string): string => crypto.createHash('sha256').update(s).digest(
 
 /** The scope pairs in scope order: structures in declared order, each structure's targets in declared (sorted) order. */
 const PAIRS: Array<{ structure: string; target: string }> = (SCOPE.structures as string[]).flatMap((structure) => (SCOPE.targets[structure] as string[]).map((target) => ({ structure, target })));
+const NPAIRS = (SCOPE.structures as string[]).reduce((n: number, s: string) => n + (SCOPE.targets[s] as string[]).length, 0);
 
 describe('R-JA: scopePairs — the pointer order is the scope seed order', () => {
-  it('lists every (structure, target) of layer2-scope.json, structures first, 53 today', () => {
+  it('lists every (structure, target) of layer2-scope.json, structures first, one per scope pair', () => {
     expect(rb().scopePairs(SCOPE)).toEqual(PAIRS);
-    expect(PAIRS).toHaveLength(53);
+    expect(PAIRS).toHaveLength(NPAIRS);
   });
 });
 

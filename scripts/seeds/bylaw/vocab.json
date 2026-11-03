@@ -266,6 +266,7 @@
       "concept": "the distance back from the front lot line at which a measurement (lot frontage) is taken",
       "patterns": ["measured", "from the front lot line"]
     },
+    "front_setback_fallback_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "the zone's x.40.70(1) front yard setback, the zone value and not an exception's: front_setback_m read on the base layer as if front-yard averaging did not apply (M-245, MB-18 j)", "patterns": ["zone front yard setback fallback"] },
     "averaging_distance_m": { "unit": "m", "aspect": "measurement", "bound": "max", "concept": "the distance within which abutting buildings are counted for front-yard averaging. The by-law threshold used as a comparison operand, not a measured distance (MB-18 k, M-423).", "patterns": ["within 15.0 metres", "abutting lot"] },
     "lot_area_per_unit_min_m2": { "unit": "m2", "aspect": "lot", "concept": "required minimum lot area for each dwelling unit (label au)", "patterns": ["lot area for each dwelling unit", "lot area per dwelling unit"] }
   },
@@ -4284,6 +4285,14 @@
       "flags": { "one_abutting_building_within_15_m": true },
       "ruling": "M-423",
       "trace": "averaging_distance_m: the 15.0 metres of 10.5.40.70(1)(A) read on the base layer as if one_abutting_building_within_15_m held; it does not depend on a neighbour (M-423)"
+    },
+    "front_setback_fallback_m": {
+      "of": "front_setback_m",
+      "self": false,
+      "layer": "base",
+      "flags": { "front_averaging_not_applicable": true },
+      "ruling": "M-245",
+      "trace": "front_setback_fallback_m: front_setback_m read on the base layer as if front_averaging_not_applicable held, the zone x.40.70(1) value (M-245)"
     }
   },
   "fallback_check": {

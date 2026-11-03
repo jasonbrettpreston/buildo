@@ -1,0 +1,26 @@
+== item (j) red: front_setback_fallback_m (MB-18 j, M-245); new test src/tests/bylaw-mb18j.logic.test.ts and the scope-derived edits to src/tests/steps/resolve_bylaws/{migration,materialize,frozen-row,profiles}.logic.test.ts and violations.test.ts, run on the base tree ac3f96d0 (no data, no migration 293); engine runs ja 20261102T194014Z-9e4828a3 (tests), jd 20261102T194242Z-22ea4392 (commit j0, green on base), jc 20261102T194330Z-7fac518f (data), jb 20261102T194631Z-826760bd (scope-derived tests)
+   × closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) > codes: one slot per scope pair, every element a result code of layer2-map (status x value_kind) 2ms
+   × closed-column CHECKs equal their sources both ways (Spec 134 §3, §4) > every other array is empty-or-full width (one slot per pair) 0ms
+   × the view names every array position by its target (CHAT-80.QP) > its pair list equals layer2-scope.json pairs in scope order, both ways, with 1-based positions 0ms
+   × the view names every array position by its target (CHAT-80.QP) > it returns only full-width rows: a stale narrower row is hidden, not decoded against the wrong positions 0ms
+   × the view names every array position by its target (CHAT-80.QP) > its class list equals layer2-scope.json classes in order 0ms
+   × the view names every array position by its target (CHAT-80.QP) > its status, value_kind and evidence_kind decodes equal layer2-map in code order 0ms
+   × the view names every array position by its target (CHAT-80.QP) > it joins both dictionaries and exposes the eight stored fields by name 0ms
+ ✓ src/tests/steps/resolve_bylaws/violations.test.ts (27 tests) 320ms
+ ✓ src/tests/steps/resolve_bylaws/materialize.logic.test.ts (44 tests) 974ms
+ ✓ src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts (6 tests) 572ms
+   ✓ CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whatever the physical form > the stored fields and the recomputed fields equal the uncached evaluator, for an RD lot and an RM lot
+   × MB-18 j — J1 data (red): the fallback target, its entry, the scope position and the lineage key > front_setback_fallback_m is a dsl_target (m, envelope, min) and fallback_target holds EXACTLY two
+   × MB-18 j — J1 data (red): the fallback target, its entry, the scope position and the lineage key > the entry reads front_setback_m on the base layer (self false, token held true) under M-245 0ms
+   × MB-18 j — J1 data (red): the fallback target, its entry, the scope position and the lineage key > layer2-scope principal lists it at position 12 (index 11) and stays sorted 1ms
+   × MB-18 j — J1 data (red): the fallback target, its entry, the scope position and the lineage key > the lineage field main_front_setback_m keys the target in keyed.layer2_targets 1ms
+   × MB-18 j — J2 matrix (red): undecided averaging still answers the 6.0 m zone value > every zone x residential type reads front_setback_m gated and the fallback as the 6.0 m zone value 7ms
+   × MB-18 j — J3 averaging applies (red on the fallback half): the averaged yard, never the 6.0 m floor > a neighbour at 4.5 m gives front_setback_m 4.5 while the fallback stays the plain 6.0 m zone 
+   × MB-18 j — J4 exceptions (red): the gate runs for front_setback_m, the read on the base layer > (a) an authored exception lot reads the 6.0 m zone value on a base unit 3ms
+   × MB-18 j — J4 exceptions (red): the gate runs for front_setback_m, the read on the base layer > (c) a partial naming only the fallback key stays gated (the gate runs for the target read) 1ms
+   × MB-18 j — J4 exceptions (red): the gate runs for front_setback_m, the read on the base layer > (d) a partial naming front_setback_m lets the fallback read its 6.0 m 0ms
+   × MB-18 j — J5 an exception that keys front_setback_m (red): the fallback stays the zone value > 900.3.10(70) authored: the fallback is 6 from a base unit, not the exception value 1ms
+   × MB-18 j — J6 memo isolation (red on the fallback half): a fallback read never moves the direct read > with one shared env memo the front setback stays gated and both fallback reads are deep-equal
+ ✓ src/tests/steps/resolve_bylaws/profiles.logic.test.ts (11 tests) 4ms
+ Test Files  2 failed | 4 passed (6)
+      Tests  18 failed | 111 passed | 5 skipped (134)

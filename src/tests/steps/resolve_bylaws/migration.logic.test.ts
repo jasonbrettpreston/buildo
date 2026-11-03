@@ -30,6 +30,8 @@ const KEYS: Record<string, string> = { units: 'unit_key', texts: 'text_key', lot
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const lr = (): Json => require(path.join(ROOT, 'scripts/lib/bylaw-lot-row.js')) as Json;
 const PAIRS = (SCOPE.structures as string[]).flatMap((structure) => (SCOPE.targets[structure] as string[]).map((target) => ({ structure, target })));
+const MIG_FB = 'migrations/293_resolve_bylaws_fallback_slot.sql';
+const sqlFb = (): string => read(MIG_FB);
 
 let sql = '';
 let tree: Json[] = [];
@@ -109,7 +111,7 @@ describe('closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)
 
   it('codes: one slot per scope pair, every element a result code of layer2-map (status x value_kind)', () => {
     const codes = lr().resultCodes(MAP) as string[];
-    const m = /cardinality\(codes\) = (\d+) AND codes <@ ARRAY\[([0-9, ]+)\]::smallint\[\]/.exec(sql);
+    const m = /cardinality\(codes\) = (\d+) AND codes <@ ARRAY\[([0-9, ]+)\]::smallint\[\]/.exec(sqlFb());
     expect(m).toBeTruthy();
     expect(Number((m as RegExpExecArray)[1])).toBe(PAIRS.length);
     expect((m as RegExpExecArray)[2]!.split(',').map((x) => Number(x))).toEqual(codes.map((_, i) => i));
@@ -124,9 +126,11 @@ describe('closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)
   });
 
   it('every other array is empty-or-full width (one slot per pair)', () => {
-    const w = /bylaw_resolution_lots_array_width CHECK \(([\s\S]*?)\),\n/.exec(sql);
+    const fb = sqlFb();
+    const w = /bylaw_resolution_lots_array_width CHECK \(([\s\S]*?)\) NOT VALID;/.exec(fb);
     expect(w).toBeTruthy();
     for (const c of ['numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) expect((w as RegExpExecArray)[1], c).toContain(`${c} IS NULL OR cardinality(${c}) = ${PAIRS.length}`);
+    expect(fb).toMatch(/bylaw_resolution_lots_codes_closed CHECK \(cardinality\(codes\) =/);
   });
 
   it('I4: a gated lot has only not_evaluated results and no winner (the code is the one of status not_evaluated)', () => {
@@ -140,11 +144,15 @@ describe('closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)
 });
 
 describe('the view names every array position by its target (CHAT-80.QP)', () => {
-  const view = (): string => /CREATE OR REPLACE VIEW bylaw_resolution_results AS([\s\S]*?);\n\nALTER TABLE/.exec(sql)![1]!;
+  // The latest view text is migration 293's (it replaces 282's); it runs from the CREATE to the statement's own semicolon.
+  const view = (): string => /CREATE OR REPLACE VIEW bylaw_resolution_results AS([\s\S]*?);\n/.exec(sqlFb())![1]!;
   it('its pair list equals layer2-scope.json pairs in scope order, both ways, with 1-based positions', () => {
     const v = view();
     const list = [...v.matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
     expect(list).toEqual(PAIRS.map((p, i) => ({ i: i + 1, ...p })));
+  });
+  it('it returns only full-width rows: a stale narrower row is hidden, not decoded against the wrong positions', () => {
+    expect(view()).toContain(`WHERE cardinality(l.codes) = ${PAIRS.length}`);
   });
   it('its class list equals layer2-scope.json classes in order', () => {
     const m = /CROSS JOIN \(VALUES ((?:\('[a-z_]+'\)(?:, )?)+)\) AS c \(class\)/.exec(view());
@@ -243,5 +251,53 @@ describe('the step\'s logic variables (R-CV): seeded here, mirrored in the seed 
       expect(SEEDS[k].default, k).toBeGreaterThanOrEqual(SEEDS[k].min);
       expect(SEEDS[k].default, k).toBeLessThanOrEqual(SEEDS[k].max);
     }
+  });
+});
+
+describe('migration 293 (item j: one more slot)', () => {
+  let fb = '';
+  beforeAll(async () => {
+    fb = sqlFb();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const q = require('libpg-query') as Json;
+    await q.loadModule();
+    expect(q.parseSync(fb).stmts.length).toBeGreaterThan(0);
+  });
+  /** The file with comments stripped, so a commented-out DROP or INSERT above/below is not read as a statement. */
+  const bare = (): string => fb.split('\n').filter((l) => !l.trimStart().startsWith('--')).join('\n');
+  const UP = ['bylaw_resolution_lots_codes_closed', 'bylaw_resolution_lots_array_width'];
+
+  it('exists, is parseable, has UP and DOWN markers, and cites M-245 and the SPEC LINK', () => {
+    expect(fs.existsSync(path.join(ROOT, MIG_FB))).toBe(true);
+    expect(fb).toMatch(/^-- UP$/m);
+    expect(fb).toMatch(/^-- DOWN/m);
+    expect(fb).toContain('M-245');
+    expect(fb).toContain('SPEC LINK: docs/specs/01-pipeline/134_resolve_bylaws.md');
+  });
+
+  it('drops both width CHECKs IF EXISTS and re-adds them NOT VALID under the same names', () => {
+    for (const c of UP) {
+      expect(fb).toContain(`ALTER TABLE bylaw_resolution_lots DROP CONSTRAINT IF EXISTS ${c};`);
+      expect(fb).toMatch(new RegExp(`ALTER TABLE bylaw_resolution_lots ADD CONSTRAINT ${c} CHECK \\([^;]*\\n?[^;]*\\) NOT VALID;`));
+    }
+  });
+
+  it('moves no data: no TRUNCATE, DELETE, INSERT or UPDATE statement', () => {
+    expect(bare()).not.toMatch(/\b(TRUNCATE|DELETE\s+FROM|INSERT\s+INTO|UPDATE\s+\w+\s+SET)\b/i);
+  });
+
+  it('the foot comment names the two VALIDATE CONSTRAINT statements the night runs after the reload', () => {
+    const foot = fb.slice(fb.indexOf('AFTER THE LAYER 2 RELOAD'));
+    expect(foot).toBeTruthy();
+    for (const c of UP) expect(foot).toContain(`ALTER TABLE bylaw_resolution_lots VALIDATE CONSTRAINT ${c};`);
+  });
+
+  it('its view pair list equals layer2-scope.json pairs both ways, and its pair count equals the 293 cardinality text', () => {
+    const v = /CREATE OR REPLACE VIEW bylaw_resolution_results AS([\s\S]*?);\n/.exec(fb)![1]!;
+    const list = [...v.matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
+    expect(list).toEqual(PAIRS.map((p, i) => ({ i: i + 1, ...p })));
+    const n = /cardinality\(codes\) = (\d+) AND codes/.exec(fb);
+    expect(n).toBeTruthy();
+    expect(PAIRS.length).toBe(Number((n as RegExpExecArray)[1]));
   });
 });

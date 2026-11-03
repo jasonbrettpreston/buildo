@@ -687,7 +687,8 @@
     "units": [],
     "layer2_targets": [
      "front_setback_m",
-     "averaging_distance_m"
+     "averaging_distance_m",
+     "front_setback_fallback_m"
     ],
     "owed": [
      {

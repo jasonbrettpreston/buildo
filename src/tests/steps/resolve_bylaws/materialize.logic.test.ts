@@ -49,7 +49,7 @@ const authoredNumber = (zone: string): number => {
 const UNAUTHORED = 999999; // no units, so never authored (a missing state is not authored, EV:126)
 const withX = (z: string, n: number, letters = 'f10.0; a245'): Json => ({ zoning_class: z, zoning_zn_string: `${z} (${letters}) (x${n})`, exception_number: n });
 
-describe('materializeBatch (option 4): one plain lot gives ONE lot row with 53 positional results and the dictionary rows it names', () => {
+describe('materializeBatch (option 4): one plain lot gives ONE lot row with scope-pair positional results and the dictionary rows it names', () => {
   let out: Json;
   beforeAll(() => { out = mz().materializeBatch([row(1)], mkEnv()); });
 
@@ -63,16 +63,16 @@ describe('materializeBatch (option 4): one plain lot gives ONE lot row with 53 p
     expect(lot.inputs_defaulted).toBe(0);
   });
 
-  it('every positional array has one slot per scope pair, in layer2-scope.json order (53); permitted has one slot per class', () => {
+  it('every positional array has one slot per scope pair, in layer2-scope.json order; permitted has one slot per class', () => {
     const lot = out.rows.lots[0];
-    expect(PAIRS).toHaveLength(53);
-    for (const k of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) if (lot[k] !== null) expect(lot[k], k).toHaveLength(53);
-    expect(lot.codes).toHaveLength(53);
+    expect(PAIRS).toHaveLength(SCOPE.structures.reduce((n: number, s: string) => n + (SCOPE.targets[s] as string[]).length, 0));
+    for (const k of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) if (lot[k] !== null) expect(lot[k], k).toHaveLength(PAIRS.length);
+    expect(lot.codes).toHaveLength(PAIRS.length);
     expect(lot.permitted).toHaveLength(SCOPE.classes.length);
   });
 
   it('the decoded results have a closed status, a closed reason code where not_evaluated, and value_kind only for applies (I3, I13)', () => {
-    expect(decoded(out)).toHaveLength(53 * SCOPE.classes.length);
+    expect(decoded(out)).toHaveLength(PAIRS.length * SCOPE.classes.length);
     for (const c of decoded(out)) {
       expect(MAP.status).toContain(c.status);
       if (c.status === 'not_evaluated') expect(MAP.reason_code).toContain(String(c.reason).split(':')[0]);
@@ -166,7 +166,7 @@ describe('Spec 134 §5 / I4: the unauthored-exception gate is lot-wide, written 
 
   it('the lot row carries the gate and every result is not_evaluated:exception_not_authored:<id> with no winner', () => {
     expect(out.rows.lots[0].lot_gate).toBe('exception_not_authored');
-    expect(decoded(out)).toHaveLength(53 * SCOPE.classes.length);
+    expect(decoded(out)).toHaveLength(PAIRS.length * SCOPE.classes.length);
     for (const c of decoded(out)) {
       expect(c.status).toBe('not_evaluated');
       expect(c.reason).toBe(`exception_not_authored:900.${chapterOf('RD')}.10(${UNAUTHORED})`);
@@ -204,11 +204,11 @@ describe('the other lot gates (R-IQ order) are written per target too', () => {
     ['label_exception_mismatch', { exception_number: 940 }, 'label_exception_mismatch'],
   ];
   for (const [gate, patch, reason] of cases) {
-    it(`${gate}: gate on the lot row, not_evaluated:${reason} on all 53 targets`, () => {
+    it(`${gate}: gate on the lot row, not_evaluated:${reason} on all scope-pair targets`, () => {
       const out = mz().materializeBatch([row(1, patch)], env);
       expect(out.rows.lots[0].lot_gate).toBe(gate);
       const rep = repOf(out);
-      expect(rep).toHaveLength(53);
+      expect(rep).toHaveLength(PAIRS.length);
       for (const c of rep) expect({ s: c.status, r: c.reason, w: c.winner_unit_id }).toEqual({ s: 'not_evaluated', r: reason, w: null });
     });
   }
@@ -370,9 +370,9 @@ describe('Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in 
     expect(out.matched.order_disagreements).toBe(0);
   });
 
-  it('lots whose id modulo N equals the offset are checked: 53 pairs each, and the real evaluator agrees with what the lot row decodes to and with itself in reverse order', () => {
+  it('lots whose id modulo N equals the offset are checked: one check per scope pair each, and the real evaluator agrees with what the lot row decodes to and with itself in reverse order', () => {
     const out = mz().materializeBatch([row(1), row(2), row(3), row(4)], real(2, 1)); // ids 1 and 3
-    expect(out.matched.equivalence_checked).toBe(2 * 53);
+    expect(out.matched.equivalence_checked).toBe(2 * PAIRS.length);
     expect(out.matched.equivalence_disagreements).toBe(0);
     expect(out.matched.order_disagreements).toBe(0);
   });
@@ -387,8 +387,8 @@ describe('Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in 
     const direct = (): Json => ({ ...cached(), value: 11 });
     const env = mkEnv({ audit: { everyNth: 1, offset: 0 }, hooks: { evaluate: cached, evaluateDirect: direct, permitted: () => ({ status: 'permitted', winners: [] }) } });
     const out = mz().materializeBatch([row(1)], env);
-    expect(out.matched.equivalence_checked).toBe(53);
-    expect(out.matched.equivalence_disagreements).toBe(53);
+    expect(out.matched.equivalence_checked).toBe(PAIRS.length);
+    expect(out.matched.equivalence_disagreements).toBe(PAIRS.length);
   });
 
   it('a result that depends on candidate order is counted (a stub that answers by the first candidate)', () => {
@@ -412,7 +412,7 @@ describe('Q-F / I13 and the winner-layer histogram: tallies the descriptor check
 
   it('counts a needs_user_input result on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, roof_type, pool, suite_wall_openings)', () => {
     const bad = mz().materializeBatch([row(1)], stubWith('needs_user_input:has_secondary_suite'));
-    expect(bad.matched.scenario_axis_results).toBe(53);
+    expect(bad.matched.scenario_axis_results).toBe(PAIRS.length);
     for (const axis of ['existing_footprint_sqm', 'current_stories', 'lawfully_existing_status', 'roof_type', 'pool', 'suite_wall_openings']) {
       expect(mz().materializeBatch([row(1)], stubWith(`needs_user_input:${axis}`)).matched.scenario_axis_results, axis).toBe(0);
     }
@@ -423,7 +423,7 @@ describe('Q-F / I13 and the winner-layer histogram: tallies the descriptor check
     const out = mz().materializeBatch([row(1)], mkEnv());
     const total = Object.values(out.matched.winner_layers as Record<string, number>).reduce((a, b) => a + b, 0);
     expect(total).toBe(repOf(out).filter((c) => c.winner_unit_id !== null).length);
-    expect(Object.values(out.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(53);
+    expect(Object.values(out.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(PAIRS.length);
     for (const k of Object.keys(out.matched.winner_layers)) expect(['base', 'overlay', 'exception', 'provincial']).toContain(k);
   });
 });

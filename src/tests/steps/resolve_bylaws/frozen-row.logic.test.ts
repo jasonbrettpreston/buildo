@@ -27,6 +27,8 @@ const INPUT = read('docs/reference/bylaw-layer2-input.json');
 const VOCAB = read('scripts/seeds/bylaw/vocab.json');
 const MAP = read('scripts/seeds/bylaw/layer2-map.json');
 const SCOPE = read('scripts/seeds/bylaw/layer2-scope.json');
+/** One positional slot per (structure, target) pair of the scope seed (Spec 134 §3). */
+const NPAIRS = (SCOPE.structures as string[]).reduce((n, s) => n + (SCOPE.targets[s] as string[]).length, 0);
 /** CHAT-77.freeze, spelled out (not derived from the code under test). */
 const FROZEN = ['status', 'reason', 'value', 'value_kind', 'winner_unit_id', 'winner_layer', 'evidence_kind', 'evidence_ref', 'inputs_used', 'losers', 'disclosures'];
 
@@ -59,7 +61,7 @@ describe('CHAT-77.freeze: the logical row is exactly the 11 frozen fields, whate
     const env = mkEnv();
     const v = logical(parcel(1), env);
     expect(Object.keys(v).sort()).toEqual(['lot_gate', 'permission_disclosures', 'permitted_by_class', 'rows']); // CHAT-180 (G5): disclosures recomputed on read; the 11 row fields and the words are unchanged (CHAT-77.freeze)
-    expect(v.rows).toHaveLength(SCOPE.classes.length * 53);
+    expect(v.rows).toHaveLength(SCOPE.classes.length * NPAIRS);
     const seen = new Set<string>();
     for (const r of v.rows as Json[]) {
       expect(Object.keys(r).sort(), `${r.class}/${r.structure}/${r.target}`).toEqual(['class', 'structure', 'target', ...FROZEN].sort());

@@ -21,6 +21,7 @@ const D = readJson('scripts/resolve-bylaws.descriptor.json');
 const SEEDS = readJson('scripts/seeds/logic_variables.json');
 const VOCAB = readJson('scripts/seeds/bylaw/vocab.json');
 const SCOPE = readJson('scripts/seeds/bylaw/layer2-scope.json');
+const NPAIRS = (SCOPE.structures as string[]).reduce((n: number, s: string) => n + (SCOPE.targets[s] as string[]).length, 0);
 const MAP = readJson('scripts/seeds/bylaw/layer2-map.json');
 const INPUT = readJson('docs/reference/bylaw-layer2-input.json');
 const compute = (): Json => req('scripts/lib/compute/resolve-bylaws.js');
@@ -169,11 +170,11 @@ describe('materializeRows (the compute\'s rows-arm hook) hands the runner the de
     }
   });
 
-  it('the one jsonb column (lots.class_results) reaches the runner as JSON text, the typed arrays as JS arrays (node-pg sends a JS array as a Postgres array literal), 53 slots wide', () => {
+  it('the one jsonb column (lots.class_results) reaches the runner as JSON text, the typed arrays as JS arrays (node-pg sends a JS array as a Postgres array literal), one slot per scope pair', () => {
     const l = out.rows.e4[0];
     expect(typeof l.class_results).toBe('string');
     JSON.parse(l.class_results);
-    for (const c of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) if (l[c] !== null) { expect(Array.isArray(l[c]), c).toBe(true); expect(l[c], c).toHaveLength(53); }
+    for (const c of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) if (l[c] !== null) { expect(Array.isArray(l[c]), c).toBe(true); expect(l[c], c).toHaveLength(NPAIRS); }
     expect(l.permitted).toHaveLength(SCOPE.classes.length);
     expect(out.rows.e1.length).toBeGreaterThan(0);
     expect(out.rows.e2.length).toBeGreaterThan(0);

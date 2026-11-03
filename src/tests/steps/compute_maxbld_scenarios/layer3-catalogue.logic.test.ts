@@ -132,15 +132,13 @@ describe('MB-31 catalogue invariants (B8)', () => {
     for (const row of exprRows(CAT)) expect(D.checkRowL3(row, U), row.id).toEqual([]);
   });
 
-  it('front row: l2(front_setback_fallback_m) waits MB-18 (j)', () => {
+  it('front row: l2(front_setback_fallback_m) names a stored target, no violation', () => {
     const U = C.unitsFor(CAT, SEEDS.vocab);
-    expect(D.checkRowL3(rowOf(CAT, 'front_setback_used_m'), U)).toEqual(['unknown_target: front_setback_fallback_m']);
+    expect(D.checkRowL3(rowOf(CAT, 'front_setback_used_m'), U)).toEqual([]);
   });
 
-  it("validateCatalogue on the real seeds: the only violation is the front row's l2(front_setback_fallback_m) (waits MB-18 (j))", () => {
-    const errs = C.validateCatalogue(SEEDS, ['1']);
-    expect(errs).toHaveLength(1);
-    expect(errs[0]).toContain('front_setback_fallback_m');
+  it('validateCatalogue on the real seeds: no violation', () => {
+    expect(C.validateCatalogue(SEEDS, ['1'])).toHaveLength(0);
   });
 
   it('validateCatalogue rejects a renamed fact, a deleted switchboard row, a 6 ratio and a fact named fsi', () => {
