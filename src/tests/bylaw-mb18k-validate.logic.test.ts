@@ -125,7 +125,7 @@ describe('V3 independent structure of the committed fallback data (red until the
   it('every fallback layer is a vocab.layer value (the fallback reads a layer fact)', () => {
     for (const l of fc().layers) expect(I.vocab.layer, l).toContain(l);
   });
-  it('every entry names a dsl_target, lot_condition flags, a declared layer and a resolvable unit', () => {
+  it('every entry names a dsl_target, lot_condition flags, a declared layer, and a resolvable unit for the clause it reads (e.of)', () => {
     const targets = data(I.vocab.fallback_target);
     expect(targets.length).toBeGreaterThan(0);
     const units = [...ag.units.values()].map((r: Json) => r.unit);
@@ -136,10 +136,10 @@ describe('V3 independent structure of the committed fallback data (red until the
       for (const fl of flags) expect(data(I.vocab.lot_condition), `flag ${fl} of ${key}`).toContain(fl);
       expect(I.vocab.layer, `layer of ${key}`).toContain(e.layer);
       expect(fc().layers, `layer of ${key}`).toContain(e.layer);
-      // a resolved unit carries KEY in its target list and every flag token in its condition
+      // a resolved unit carries the clause the fallback reads (e.of) in its target list and every flag token in its condition
       const hit = units.some((u: Json) => {
         const t = u?.target;
-        const namesKey = Array.isArray(t) ? t.includes(key) : t === key;
+        const namesKey = Array.isArray(t) ? t.includes(e.of) : t === e.of;
         if (!namesKey) return false;
         const body = JSON.stringify(u?.condition ?? null);
         return flags.every((fl) => body.includes(`"${fl}"`));

@@ -98,10 +98,13 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     const h = crypto.createHash('sha256');
     const hLeftOut = crypto.createHash('sha256'); // the same walk with the dsl_targets added since the 2026-10-26 pin left out
     const NEW_TARGETS = new Set(['platform_side_setback_street_m']);
+    // MB-18 j: a dsl_target added after the pin is left out of BOTH hashes, as the earlier re-pins argued: its cells move no
+    // existing cell; its own cells are locked by bylaw-mb18j.logic.test.ts.
+    const SINCE_PIN = new Set(['front_setback_fallback_m']);
     for (const L of lots) {
       for (const lot of [L, { ...L, building_type: null }, { ...L, flags: {} }, { ...L, building_type: null, flags: {} }]) {
         const cands = E.loadCandidates(lot, UNITS).candidates;
-        for (const t of targets) { const s = stable(noLosers(E.effective(lot, t, cands, C))); h.update(s); if (!NEW_TARGETS.has(t)) hLeftOut.update(s); }
+        for (const t of targets) { if (SINCE_PIN.has(t)) continue; const s = stable(noLosers(E.effective(lot, t, cands, C))); h.update(s); if (!NEW_TARGETS.has(t)) hLeftOut.update(s); }
         for (const bt of EV.building_type_residential) { const s = stable(noLosers(E.permitted(lot, bt, cands, C))); h.update(s); hLeftOut.update(s); }
       }
     }
