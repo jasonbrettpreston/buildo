@@ -19,7 +19,7 @@ As a lead generator, I need Committee of Adjustment variance hearing records ing
 | **Format** | JSON via SQL endpoint |
 | **Schedule** | Daily (via `chain_coa`) |
 | **Script** | `scripts/load-coa.js` |
-| **Modes** | Incremental (default, last 90 days) / Full (`--full`, both resources) |
+| **Modes** | Incremental (default, the whole Active resource) / Full (`--full`, both resources) |
 
 ### Target Table: `coa_applications`
 | Column | Type | CKAN Source Field | Notes |
@@ -44,7 +44,7 @@ As a lead generator, I need Committee of Adjustment variance hearing records ing
 ## 3. Behavioral Contract
 
 ### Inputs
-- Incremental: CKAN SQL query filtering last 90 days from active resource
+- Incremental: every record of the Active resource (CKAN DataStore `datastore_search`, no date filter; COA-D5)
 - Full: All records from both active + closed resources
 
 ### Core Logic

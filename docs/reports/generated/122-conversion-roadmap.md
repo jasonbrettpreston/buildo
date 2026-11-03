@@ -44,7 +44,7 @@ Remaining files: **18** (+ **20** pending) · remaining slugs: **19** (+ **20** 
 | INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); EP-PIN-D17 (permits) |
 | LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: runner_wired] | coa (1) | — | — | LDG-10 (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
 | LINK | `scripts/link-coa.js` | link_coa [pending: red_suite] | coa+permits (2) | — | supports_full | LDG-10 (link_coa); EP-PIN-D17 (link_coa) |
-| MATERIALIZER | `scripts/classify-coa-trades.js` | classify_coa_trades [pending: runner_wired] | coa (1) | — | supports_full | LDG-10 (classify_coa_trades); EP-PIN-D17 (classify_coa_trades) |
+| MATERIALIZER | `scripts/classify-coa-trades.js` | classify_coa_trades [pending: runner_wired] | coa (1) | — | — | LDG-10 (classify_coa_trades); EP-PIN-D17 (classify_coa_trades) |
 | MATERIALIZER | `scripts/compute-coa-cost-estimates.js` | compute_coa_cost_estimates [pending: runner_wired] | coa (1) | — | supports_full, supports_dry_run | LDG-10 (compute_coa_cost_estimates); EP-PIN-D17 (compute_coa_cost_estimates) |
 | MATERIALIZER | `scripts/compute-maxbld-scenarios.js` | compute_maxbld_scenarios [pending: compute_ported] |  (0) | — | — | EP-PIN-D17 (compute_maxbld_scenarios) |
 | MATERIALIZER | `scripts/compute-phase-calibration.js` | compute_phase_calibration [pending: red_suite] | coa+permits (2) | — | — | LDG-10 (compute_phase_calibration); EP-PIN-D17 (compute_phase_calibration) |

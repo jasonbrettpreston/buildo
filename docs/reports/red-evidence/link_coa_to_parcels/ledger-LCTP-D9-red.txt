@@ -1,0 +1,24 @@
+kind: mutation
+row: LCTP-D9
+lock: src/tests/steps/link_coa_to_parcels/ledger-locks.logic.test.ts -t "LCTP-D9"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/link_coa_to_parcels/ledger-locks.logic.test.ts -t "LCTP-D9" --reporter=json --outputFile=docs/reports/red-evidence/link_coa_to_parcels/ledger-LCTP-D9-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["LCTP-D9"]
+restore: scripts/link-coa-to-parcels.descriptor.json restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/link-coa-to-parcels.descriptor.json b/scripts/link-coa-to-parcels.descriptor.json
+index ced170ac..0943b9a2 100644
+--- a/scripts/link-coa-to-parcels.descriptor.json
++++ b/scripts/link-coa-to-parcels.descriptor.json
+@@ -291,11 +291,6 @@
+     }
+   ],
+   "limitations": [
+-    {
+-      "what": "lead_parcels is co-written by the trigger trg_mirror_permit_parcels_to_lead_parcels on permit_parcels (migrations/144_*.sql:66; 245,270 permit: rows), i.e. by converted link_parcels. This step never touches a permit: row (every statement is scoped lead_id LIKE 'coa:%'), but the table has two writers (LCTP-D9; R-BC (c) for coa owes the writer declaration).",
+-      "measured": "assessment §1.4 (pg_trigger; lead_parcels coa: 29,627 / permit: 245,270)",
+-      "check_id": "none"
+-    },
+     {
+       "what": "The first converted run re-matches every eligible CoA (about 33,800): the 3,773 stamped-but-unlinked CoAs are the upper bound for new links, and departed-pair retractions are unknown until the night-P4 POST measures them.",
+       "measured": "assessment §5.1 / §R (LOW-CONFIDENCE)",

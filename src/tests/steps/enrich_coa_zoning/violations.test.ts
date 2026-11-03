@@ -11,7 +11,8 @@
 // enrich_permits, so it shares the legacy oracle `../enrich_permits/fixtures/legacy-harness` (the frozen
 // enrich-permits text plus the frozen split shell). Commit form compressed (R-PACE-1).
 // PART 1 = the legacy ORACLE PINS L1–L10 for the coa target: plain `it(...)`, GREEN today.
-// PART 2 = the CONVERTED claims: D1–D4, D4b, D6 GREEN since ② (compute_ported); D5 (env), D7 (shell), D8 (registry) `it.fails` until ③.
+// PART 2 = the CONVERTED claims: D1–D4, D4b, D6 GREEN since ② (compute_ported); D7 (shell) GREEN since the R-EQ swap;
+// D5 (env) GREEN since the ECZ-D1 retirement (124a R-JD dated note 2026-10-26-batch-r#CHAT-191.CL-Q7); D8 (registry) `it.fails` until ③.
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -69,7 +70,7 @@ describe('enrich_coa_zoning ① — legacy oracle pins A: identity split and the
     const m = readJson<{ scripts: Record<string, { file: string; env?: Record<string, string> }> }>('scripts/manifest.json');
     expect(m.scripts.enrich_coa_zoning?.file).toBe(SHELL_REL);
     expect(m.scripts.enrich_permits?.file).toBe('scripts/enrich-permits.js');
-    expect(m.scripts.enrich_coa_zoning?.env).toEqual({ ENRICH_TARGET: 'coa' });
+    // The live manifest env retired with ECZ-D1 (CHAT-191.CL-Q7, D5 below); the legacy selector stays pinned in the frozen ① shim text.
     const shim = legacyCoaShellText();
     expect(shim).toMatch(/const \{ main \} = require\('\.\/enrich-permits'\);/);
     expect(shim).toMatch(/process\.env\.ENRICH_TARGET = 'coa';\npipeline\.run\('enrich-permits', main\);/);
@@ -161,8 +162,8 @@ describe('enrich_coa_zoning ① — legacy oracle pins B: gate, floors, audit an
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
-// PART 2 — the converted claims. ② (compute_ported, 2026-10-18) flipped D1–D4 and D6 to `it`; D5 (the env
-// selector retires with the shell), D7 (the frozen shell) and D8 (registry) stay `it.fails` until ③.
+// PART 2 — the converted claims. ② (compute_ported, 2026-10-18) flipped D1–D4 and D6 to `it`; D7 (the frozen shell)
+// flipped at the R-EQ swap; D5 (the env selector) flipped 2026-10-26 by CHAT-191.CL-Q7; D8 (registry) stays `it.fails` until ③.
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 type Col = { name: string; set_value?: boolean | null; source?: string };
 type Descriptor = {
@@ -184,7 +185,7 @@ const code = (rel: string): string => readText(rel).replace(/\/\*[\s\S]*?\*\//g,
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const core = (): Core => require(path.join(REPO_ROOT, COMPUTE_REL)) as Core;
 
-describe('enrich_coa_zoning ② — converted claims (D1–D4, D6 GREEN at ②; D5/D7/D8 flip at ③)', () => {
+describe('enrich_coa_zoning ② — converted claims (D1–D4, D6 GREEN at ②; D7 at the R-EQ swap; D5 by CHAT-191.CL-Q7; D8 flips at ③)', () => {
   it('D1 — the descriptor exists: archetype ENRICHER, lock 66, spec "66", name enrich_coa_zoning; its compute entry is one line over the shared module (flips at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     expect(d.identity).toMatchObject({ name: 'enrich_coa_zoning', archetype: 'ENRICHER', lock: LOCK_ID, spec: '66' });
@@ -233,7 +234,9 @@ describe('enrich_coa_zoning ② — converted claims (D1–D4, D6 GREEN at ②; 
     expect(d.checks.map((c) => c.id)).toEqual(['coa_row_count_zero', ...rows(o).map((r) => r.metric)]);
   });
 
-  it.fails('D5 — the ENRICH_TARGET env retires: manifest enrich_coa_zoning has no env once the frozen shell lands (flips at ③)', () => {
+  // FLIPPED 2026-10-26 (124a R-JD dated note 2026-10-26-batch-r#CHAT-191.CL-Q7: ECZ-D1 retired now, not at ③): the frozen shell
+  // never reads the env (D7) and scripts/enrich-permits.js:601 reads it for the permits slug only.
+  it('D5 — the ENRICH_TARGET env retires: manifest enrich_coa_zoning has no env (flipped by CHAT-191.CL-Q7)', () => {
     const m = readJson<{ scripts: Record<string, { env?: Record<string, string> }> }>('scripts/manifest.json');
     expect(m.scripts.enrich_coa_zoning?.env).toBeUndefined();
   });
@@ -243,7 +246,7 @@ describe('enrich_coa_zoning ② — converted claims (D1–D4, D6 GREEN at ②; 
   });
 
   // FLIPPED at the Night P4 shell swap (Spec 124 R-EQ, operator y 2026-10-19: "A step whose ② landed at `compute_ported` moves to
-  // `runner_wired` in its swap commit"): the frozen shell is the live writer from runner_wired; D5 (env) and D8 (converted[]) stay at ③.
+  // `runner_wired` in its swap commit"): the frozen shell is the live writer from runner_wired; D8 (converted[]) stays at ③ (D5 flipped by CHAT-191.CL-Q7).
   it('D7 — the frozen shell: pipeline.step() over ./lib/compute/enrich-coa-zoning (flipped at the R-EQ shell swap, stage runner_wired)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toMatch(/pipeline\.step\(/);

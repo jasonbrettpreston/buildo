@@ -1,0 +1,21 @@
+kind: mutation
+row: CCT-D1
+lock: src/tests/steps/classify_coa_trades/violations.test.ts -t "D7 — the legacy parity defect CCT-D1"
+command (in a scratch `git archive` copy of the build tree, never the build worktree): npx vitest run src/tests/steps/classify_coa_trades/violations.test.ts -t "D7 — the legacy parity defect CCT-D1" --reporter=json --outputFile=docs/reports/red-evidence/classify_coa_trades/ledger-CCT-D1-red.json
+tree: 872ebaf0ed6d35cddcf9c7630281bfac92eedab5 (git rev-parse HEAD^{tree} of the build branch before the lock files were added; the lock file was copied in)
+result: exit 1; failed assertions: ["D7 — the legacy parity defect CCT-D1 (stale lead_trades never retracted) is a declared deviation on the lead_trades write, not a silent gap (flipped at row 7)"]
+restore: scripts/classify-coa-trades.descriptor.json restored byte-for-byte and compared equal to HEAD after the run
+mutation diff:
+diff --git a/scripts/classify-coa-trades.descriptor.json b/scripts/classify-coa-trades.descriptor.json
+index 636bd334..b024f16f 100644
+--- a/scripts/classify-coa-trades.descriptor.json
++++ b/scripts/classify-coa-trades.descriptor.json
+@@ -162,7 +162,7 @@
+           "idempotent_rerun": "zero_writes",
+           "txn_scope": "batch",
+           "why": {
+-            "text": "CCT-D1 (declared deviation, operator y 2026-10-18 wave-4 Q12): a trade that drops out of a CoA scope is never retracted (legacy :203-215 is upsert-only, pinned L10). retract \"none\" is the truthful declaration; the fix is a separate behaviour change with its own capture.",
++            "text": "(declared deviation, operator y 2026-10-18 wave-4 Q12): a trade that drops out of a CoA scope is never retracted (legacy :203-215 is upsert-only, pinned L10). retract \"none\" is the truthful declaration; the fix is a separate behaviour change with its own capture.",
+             "liveness": {
+               "kind": "check",
+               "ref": "slug_resolution_miss_count"
