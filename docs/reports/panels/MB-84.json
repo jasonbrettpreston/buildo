@@ -1,0 +1,22 @@
+{
+  "task": "MB-84",
+  "item": "the CoA ledger landing (wf2/coa-ledger-1, e7820bd4c) on wf1/mb-rulings, with the R-MB landing exception (0b1a792be) and the lane-entry merge",
+  "class": "O",
+  "stage": 8,
+  "date": "2026-11-03",
+  "head": "a8a80b456",
+  "commits_reviewed": [
+    "range eff11630e..a8a80b456 (0b1a792be, 06759b814, 5decd05e4, a8a80b456 and the 14 pre-policy CoA ledger commits)"
+  ],
+  "cards": [
+    "~/Buildo-scratch/p2close/CARD-coa-park.answered.md (Q-COA A, Q-Ledger-A, Q-MB84, Q-L1)"
+  ],
+  "plan": "~/Buildo-scratch/archive/coa-park-1103/ledger-landing-plan.md (lane O); relevance check ~/Buildo-scratch/archive/coa-park-1103/coa-ledger-integration-check.md",
+  "output": "verify-50 OUTPUT panel ~/Buildo-scratch/verify-50/output-panel.md (stage 8, range eff11630e..a8a80b456): PASS; findings V1-V7 and V9 INFO, V8 MINOR (gate --ci --base 0b1a792be GATE OK; --base 7eb6daf95 FAIL:H:cannot-decide for the 14, the designed landing order: X pushed first). 0 BLOCKER, 0 MAJOR. The file names no seat.",
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "V8: push 0b1a792be first, then a8a80b456 (the gate reads the exceptions list at the range base)"
+  ],
+  "evidence": "~/Buildo-scratch/verify-50/output-panel.md"
+}
