@@ -8,6 +8,7 @@
 //   expr      := literal | variable | unlimited | unregulated | "(" expr ")" | max(arg; …) | min(arg; …)
 //              | band(variable; armcond:literal; …) | if(cond; expr; expr) | by_type(type:expr; …[; other:expr])
 //              | existing(variable; date | enacted(bylaw)) | label(letter) | overlay(code) | expr op expr
+//              | [Layer 3 only, M-72 / M-466] lv(id) | l2(target) | floor/ceil/round(expr) | sqrt(expr)  (sqrt: a ratio argument only)
 //   arg       := expr ["@" clause_path]
 //   cond      := atom { (and | or) atom }          atom := variable cmp literal | mapped(code) | labelled(letter) | not atom
 //   literal   := number unit                       unit ∈ { m, m2, pct, storeys, units, ratio }
@@ -44,6 +45,8 @@ const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'en
 const L3_REF_FNS = [LEX.w.lv, LEX.w.l2];
 const L3_INT_FNS = [LEX.w.floor, LEX.w.ceil, LEX.w.round];
 const L3_REFUSED_FNS = [LEX.w.label, LEX.w.overlay, LEX.w.mapped, LEX.w.labelled];
+// MB-27 (sqrt; Spec 69a M-466, the M-377 form of a note on M-72): the one-argument root form, Layer 3 only.
+const L3_ROOT_FNS = [LEX.w.sqrt];
 const OPS = { '+': '+', '-': '−', '−': '−', '*': '×', '×': '×', '/': '÷', '÷': '÷' };
 const CMPS = { '<': '<', '<=': '≤', '≤': '≤', '>': '>', '>=': '≥', '≥': '≥', '=': '=' };
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*/;
@@ -158,6 +161,8 @@ class Parser {
       node = { type: name, id: this.expect(LEX.w.id).v };
     } else if (this.l3 && L3_INT_FNS.includes(name)) {
       node = { type: LEX.w.int, fn: name, a: this.expr() };
+    } else if (this.l3 && L3_ROOT_FNS.includes(name)) {
+      node = { type: LEX.w.root, fn: name, a: this.expr() }; // M-466
     } else if (this.l3 && L3_REFUSED_FNS.includes(name)) {
       throw new DslError(LEX.w.unknown_function, `${name}${LEX.p.is_not_a_layer_3_form_in} ${this.src}`);
     } else if (name === LEX.w.max || name === LEX.w.min) {
@@ -335,6 +340,7 @@ function canonCore(e) {
     case LEX.w.lv: return `${LEX.p.lv}${e.id}${LEX.p.close}`;
     case LEX.w.l2: return `${LEX.p.l2}${e.id}${LEX.p.close}`;
     case LEX.w.int: return `${e.fn}${LEX.p.open}${canonExpr(e.a)}${LEX.p.close}`;
+    case LEX.w.root: return `${e.fn}${LEX.p.open}${canonExpr(e.a)}${LEX.p.close}`; // M-466
     case 'call': return `${e.fn}(${e.args.map(canonExpr).sort(byStr).join(';')})`;
     case 'band': return `band(${e.v.name};${e.arms.map((a) => a.conds.map((c) => c.cmp + canonExpr(c.lit)).join('and') + ':' + canonExpr(a.value)).join(';')})`;
     case 'if': return `if(${canonCond(e.cond)};${canonExpr(e.a)};${canonExpr(e.b)})`;
@@ -421,7 +427,7 @@ export function valueFormOf(e) {
     case 'call': return 'formula';
     case 'bin': return 'formula';
     case 'var': return 'formula';
-    case LEX.w.lv: case LEX.w.l2: case LEX.w.int: return LEX.w.formula; // MB-31 Layer 3 forms (plan section 3 E1)
+    case LEX.w.lv: case LEX.w.l2: case LEX.w.int: case LEX.w.root: return LEX.w.formula; // MB-31 Layer 3 forms (plan section 3 E1); root: M-466
     case 'by_type': return 'by_building_type';
     case 'if': return 'if';
     case 'label': case 'overlay': return 'map_lookup';
@@ -544,6 +550,13 @@ function staticExprL3(e, U, errs) {
     case LEX.w.int: {
       const a = staticExprL3(e.a, U, errs);
       return a === LEX.w.ratio ? LEX.w.count : a;
+    }
+    case LEX.w.root: {
+      // M-466: a unitless (ratio) argument gives ratio; a null argument unit stays null (an unknown is never hidden); any other unit is refused
+      const a = staticExprL3(e.a, U, errs);
+      if (a === null || a === LEX.w.ratio) return a;
+      errs.push(`${LEX.p.unit_mismatch} ${e.fn} ${a}`);
+      return null;
     }
     case LEX.w.bin: {
       const a = staticExprL3(e.l, U, errs);

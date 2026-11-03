@@ -1,0 +1,29 @@
+== MB-27 (sqrt) red: M-466 lock src/tests/bylaw-m72-sqrt.logic.test.ts (new), run on the base tree 7eb6daf95 (dsl.mjs and evaluate-l3.mjs without sqrt); S2 (Layer 1 refuses sqrt) is green on base by design
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the grammar (Layer 3 only) > S1 parses in Layer 3 and canonicalises stably (argument order inside + does not matter)
+   → unknown_function: sqrt() in: sqrt(1 ratio + 2 ratio × 3 ratio)
+ ✓ src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the grammar (Layer 3 only) > S2 Layer 1 is unchanged: sqrt is an unknown function there
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the grammar (Layer 3 only) > S9 exactly one argument: sqrt() and sqrt(a; b) are syntax errors
+   → expected [ 'sqrt()', 'unknown_function' ] to deeply equal [ 'sqrt()', 'syntax' ]
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the grammar (Layer 3 only) > S10 no new DslError code; MAX_NEST still bounds a deep sqrt chain
+   → expected 'unknown_function' to be 'too_deep' // Object.is equality
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the static unit rule > S3 a ratio argument gives ratio; m × sqrt(ratio) is m
+   → unknown_function: sqrt() in: sqrt(2 ratio)
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the static unit rule > S3 a unit-bearing argument is refused (unit_mismatch)
+   → unknown_function: sqrt() in: sqrt(2 m)
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the static unit rule > S3 (F-13) an argument with a null static unit gives a null unit, never ratio, and no error
+   → unknown_function: sqrt() in: sqrt(unregulated)
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: run time > S4 worked examples at the exact 0.2572 m (M-462, M-463)
+   → expected [ 'ne', undefined, NaN ] to deeply equal [ 'num', 'ratio', 1.414213562 ]
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: run time > S5 a unit-bearing argument is not_evaluated expression_error:unit_mismatch (never 0, never NaN)
+   → expected [ 'ne', …(2) ] to deeply equal [ 'ne', …(2) ]
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: run time > S6 a negative argument is expression_error; sqrt(0) is 0
+   → expected [ 'ne', …(1) ] to deeply equal [ 'ne', …(1) ]
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: run time > S7 a not_evaluated argument carries its reason (R3-01); unlimited and unregulated pass through (M-72)
+   → expected [ 'ne', …(1) ] to deeply equal [ 'ne', …(1) ]
+ × src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: run time > S8 flags propagate (R3-02)
+   → E.applySqrt is not a function
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+DslError: unknown_function: sqrt() in: sqrt(1 ratio + 2 ratio × 3 ratio)
+ FAIL  src/tests/bylaw-m72-sqrt.logic.test.ts > M-466 sqrt: the static unit rule > S3 a ratio argument gives ratio; m × sqrt(ratio) is m
+     80|     const p1 = run('0.2572 m × sqrt(1 ratio + 1 ratio × 1 ratio)');
+      Tests  11 failed | 1 passed (12)

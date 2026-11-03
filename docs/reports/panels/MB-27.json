@@ -1,0 +1,22 @@
+{
+  "task": "MB-27",
+  "item": "the sqrt item: the Layer 3 grammar gains sqrt for unitless arguments only (M-466; the vertical roof thickness of M-463)",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-03",
+  "head": "cb1c6f6f4",
+  "commits_reviewed": [
+    "staged code commit over cb1c6f6f4 (prereg-MB-27-1 alone, on cb361d7af, on e67b80546)"
+  ],
+  "cards": [
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (OP-2 \"Op-2 approved\"; Q-SLOPE \"Q-slope confirmed\"; plan approval \"confirmed as long as they are complaint\"; \"Rp- 5 and RP-6 approved\")"
+  ],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-sqrt.v3.md (FINAL FOR BUILD); PLAN panel ~/Buildo-scratch/mcbylaws/MB-27L2/panel-1.md, re-checks panel-recheck-1.md and panel-recheck-2.md: plan-sqrt PASS",
+  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-27L2/build/output-panel.md (stage 8): PASS, 0 BLOCKER, 0 MAJOR. F-1 MINOR applied (the code commit Operator-Ruling trailer adds \"Op-2 approved\"); F-2 MINOR noted (expected-172/4d commit field is the prereg sha; the pin is live through the inputs match, as RP-1).",
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "F-2: none needed (pinned through inputs, coa-scorecard.mjs:565)"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-27L2/build/output-panel.md"
+}

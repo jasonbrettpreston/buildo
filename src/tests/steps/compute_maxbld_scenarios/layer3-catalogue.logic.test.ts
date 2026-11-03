@@ -29,7 +29,8 @@ const SEED_FILES = {
 };
 const PINNED_SHA: Record<string, string> = {
   // re-pinned 2026-11-02 (MB-31, operator D2 option 1): the catalogue gained the `lexicon` key (the Layer 3 words that arm L, R-LA, moves out of the code).
-  catalogue: 'e0f0700fa96e25d99b72c854a7758c43bc492320e4664526d6025a19441833f0',
+  // re-pinned 2026-11-03 (MB-27 sqrt, operator RP-5 'Rp- 5 and RP-6 approved'): the lexicon gained root, sqrt and expression_error_sqrt_negative (M-466).
+  catalogue: '60ba5dc6aeafe9fe58bacc7c5aab5188dc47a03e6d7aad212e162f4ca8f7dcb0',
   switchboard: 'a64dde7ec125b5e0a95c39656dd6a468b3c0000b66f31ba94ed92392bab486a1',
   buildingTypes: '1a10625b9c7821b7db5642ffaa64b1f9b2118eb3285163cce61e3747c09b2e39',
 };

@@ -134,6 +134,19 @@ export function applyInt(fn, a, env) {
   return num(v, a.u === LEX.w.ratio ? LEX.w.count : a.u, flagsOf(a), a.clause);
 }
 
+/**
+ * `sqrt` of a unitless value (Spec 69a M-466; M-463's vertical roof thickness). A non-num value passes through whole (R3-01 and
+ * M-72's propagation table); a unit other than ratio, or a negative argument (rounded at 9 places first), is an expression_error
+ * carrying the argument's flags, never 0 and never NaN. The result keeps the flags and clause, unit ratio.
+ */
+export function applySqrt(a, env) {
+  if (!isNum(a)) return a;
+  if (a.u !== LEX.w.ratio) return fail(LEX.p.expression_error_unit_mismatch, flagsOf(a));
+  const x = env.round9(a.v);
+  if (x < 0) return fail(LEX.p.expression_error_sqrt_negative, flagsOf(a));
+  return num(Math.sqrt(x), LEX.w.ratio, flagsOf(a), a.clause);
+}
+
 const family = (u) => (u === LEX.w.count ? [LEX.w.count, LEX.w.storeys, LEX.w.units] : [u]);
 const sameUnit = (a, b) => family(a).includes(b) || family(b).includes(a);
 
@@ -456,6 +469,7 @@ export function evalExprL3(e, env) {
   if (e.type === LEX.w.l2) return readL2(e.id, env);
   if (e.type === LEX.w.var) return readName(e.name, env);
   if (e.type === LEX.w.int) return applyInt(e.fn, evalExprL3(e.a, env), env);
+  if (e.type === LEX.w.root) return applySqrt(evalExprL3(e.a, env), env); // M-466
   if (e.type === LEX.w.bin) return arith(e.op, evalExprL3(e.l, env), evalExprL3(e.r, env), env);
   if (e.type === LEX.w.call) return minMax(e.fn, e.args.map((x) => evalExprL3(x, env)), env);
   if (e.type === LEX.w.if) {
