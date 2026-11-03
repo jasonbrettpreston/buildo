@@ -1,0 +1,264 @@
+{
+ "$comment": "M-321 pre-registration, task MB-26, prereg 1 (R-MA): the first Layer 2 night (Q-NIGHT B): the TRUNCATE-RELOAD of bylaw_resolution_lots, _texts and _units from the MB-18 (k), (j), (i) and MB-27 sqrt trees, with migration 293 alone, the notes patch and the #44 witness recapture. It touches no scorer row and no oracle row (the scorer evaluates in memory, not on the stored tables), so the scorer fields below are zero moves with totals equal; the stored-row figures the night is checked against are in layer2_night. Committed alone on wf1/mb-rulings before the operator go, directly under the night-recapture commit. Same form as prereg-MB-30-1 (a task with no scorer move).",
+ "schema": "coa-round-prereg-v1",
+ "round": 46,
+ "task": "MB-26",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-KG",
+  "M-368",
+  "M-466",
+  "M-406",
+  "M-245",
+  "M-75",
+  "Q-NIGHT B",
+  "Q-MIG 1",
+  "O-n1 1",
+  "O-n2 1",
+  "O-n3 1"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-26/night-checklist-final.md; ~/Buildo-scratch/mcbylaws/MB-27L2/night-plan-mb26.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every scorer row of the 172, 4d and cumulative sets: class and City figure (the night writes stored Layer 2 rows only)",
+ "increment": "1",
+ "layer2_night": {
+  "night_id": "MB26-NIGHT-1",
+  "go": "the operator go typed for this night id, recorded in the night record: OPERATOR-GO MB26-NIGHT-1",
+  "tree": {
+   "tip_before_prereg": "b31ca6845ba5457f589bf3b881dd7440a7b611c8",
+   "prereg_commit": "this file's own commit (the capture worktree is created at the commit that holds this file)",
+   "capture_worktree": "~/Buildo-wt-mb26cap (detached at the prereg commit + notes patch only)"
+  },
+  "landed_items": {
+   "k": "ac3f96d0c (prereg-MB-18-5 21b981243)",
+   "j": "34567ff62 (prereg-MB-18-7 5b8ead294)",
+   "i": "ff601b393 (prereg-MB-18-8 b436e01ca)",
+   "sqrt": "404653635 (prereg-MB-27-1 cb1c6f6f4)"
+  },
+  "excluded": [
+   "held patches MB-53/54/55/56/45d/45f (O-n1 1)",
+   "migration 295 and any roof-axis (P3) item (Q-NIGHT B)",
+   "P3-0 oracle-only commit (moved to the axis night)",
+   "migrations 276, 279, 288, 291, 292, 294 and checksum drifts 254, 255, 281 (Q-MIG 1)"
+  ],
+  "write_set": {
+   "db": [
+    "bylaw_resolution_lots",
+    "bylaw_resolution_texts",
+    "bylaw_resolution_units (TRUNCATE + forced-full reload)",
+    "migration 293 (DDL: CHECKs 53 to 54, view with the 54-pair list; then VALIDATE of both CHECKs)",
+    "a 20-row disposable table bylaw_resolution_lots_cohort_bak_<ts> (forced-cohort capture; decision D2)",
+    "pipeline_runs rows written by the step and the capture ledger"
+   ],
+   "repo_working_tree_only_until_commit": [
+    "scripts/resolve-bylaws.notes.json (3 lines, night-adds/resolve-bylaws-notes-54.patch)",
+    "docs/reports/golden/resolve_bylaws/post/standalone.json",
+    "docs/reports/golden/resolve_bylaws/post/standalone.forced.json",
+    "docs/reports/witness/resolve_bylaws/post/standalone.trace.json",
+    "docs/reports/witness/resolve_bylaws/post/standalone.forced.trace.json",
+    "docs/reports/golden/resolve_bylaws/explained-diffs.json (the (j) explained-diff group, RB-D10 removal, the (i) by_reason counts: R-DA protected path, MB-18 plan 16.4 F-3, MB-18/i/plan.md R-2)"
+   ]
+  },
+  "down_step": "whole-DB restore from ~/Buildo-scratch/mcbylaws/MB-26/night/pre293.dump (pg_dump -Fc -n public, taken after the table backup and before migration 293); table restore only if 293 was never applied (O-n2 1)",
+  "versions": {
+   "before": {
+    "table_version": "4d18b9c1bdfda0ed478b3d8c01934827f36cee35f8f70a42a347343b8cd8babc",
+    "evaluator_version": "51a759e1c7fb84e8442d38d4ed581c9f6310c8701330574b846d582bdf7b5be0",
+    "rows": 440093
+   },
+   "after": {
+    "table_version": "c4ede8d03bd79796b171296d93ded318d71ea858895d1b0a1d677a89025bcef6",
+    "evaluator_version": "4b58908141d197301f1b3aa111ca6c7006cfd1a054bc78b40075a3cda79b2435",
+    "rows": 440093,
+    "note": "one pair on every row; the sqrt item (RP-6) restamps evaluator_version; the pair is what generate-bylaw-layer2-input.mjs --check prints on the tip tree"
+   }
+  },
+  "baseline_before_night": {
+   "lots": 440093,
+   "array_width": 53,
+   "tables_mib": 708,
+   "pipeline_runs_last_resolve_bylaws": "4409 completed_with_warnings 2026-10-28",
+   "migrate_verify": "7 missing (276,279,288,291,292,293,294), 3 drift (254,255,281)",
+   "image_25_lots_equals": "MB-18/golden-q1.txt (275 rows)",
+   "table_backup_estimate_mib": 205
+  },
+  "expected_after": {
+   "lots": 440093,
+   "array_width": 54,
+   "checks_validated": [
+    "bylaw_resolution_lots_codes_closed",
+    "bylaw_resolution_lots_array_width"
+   ],
+   "k_averaging_distance_m_principal": {
+    "applies": 1991285,
+    "value": 15,
+    "winner_unit_id": "10.5.40.70(1)#(1)(A)",
+    "not_evaluated": 209180,
+    "scorer_moves": 0,
+    "basis": "MB-18 plan 16.5; 398,257 ungated x 5 classes; 41,836 gated x 5"
+   },
+   "j_front_setback_fallback_m_principal": {
+    "applies": 1991285,
+    "not_evaluated": 209180,
+    "new_rows_total": 2200465,
+    "parcel_428050_detached_house": {
+     "status": "applies",
+     "value": 6
+    },
+    "existing_rows": "every existing (parcel, class, target) value, status, reason and winner unchanged; front_setback_m rows 2,200,465 with 0 change",
+    "basis": "MB-18 plan 8.1b, 16.4"
+   },
+   "i_detached_house_principal_applies_deltas": {
+    "building_depth_m": 47605,
+    "building_length_m": 47605,
+    "side_setback_m": 4496,
+    "side_setback_street_m": 987,
+    "basis": "MB-18/i/plan.md section 6, F-3; CONFIRMED read-only 2026-11-03 on the local DB: detached_house principal rows not_evaluated with reason existing_building_facts:lot_frontage_m are building_depth_m 47,605, building_length_m 47,605, side_setback_m 4,496, side_setback_street_m 987 (the separate required_lot_frontage_m reason, 872 parcels, is not cleared by (i)); today applies are depth 344,115, length 344,115, side_setback_m 390,139, side_setback_street_m 86,426",
+    "no_scorer_row_moves": true
+   },
+   "image_25_lots": {
+    "may_differ_from_golden_q1_only_in": [
+     "averaging_distance_m: all 25 lots, becomes applies|number|15",
+     "building_depth_m, building_length_m, side_setback_m, side_setback_street_m: parcels 205238 (A0067) and 274216 (A0097) only"
+    ],
+    "building_depth_length_numeric_for": [
+     205238,
+     274216
+    ],
+    "expected_values": "~/Buildo-scratch/mcbylaws/MB-64/data/expected-25.jsonl"
+   },
+   "invariants": {
+    "I10_sum_inputs_defaulted": 0,
+    "row_sha": "all 64 lower-case hex",
+    "step_audit_rows_status_FAIL": 0,
+    "I1_to_I15": "from the step's own audit_table in pipeline_runs.records_meta (authority); the runbook 5.6 SQL is not used (returns 4,584,766 today)",
+    "lots_gated": 40908
+   },
+   "step_terminal": {
+    "status": "completed or completed_with_warnings",
+    "terminal": "resolved or resolved_with_warnings",
+    "warnings": [
+     "scenario_axis_cells: 597"
+    ],
+    "errors": []
+   },
+   "rerun_zero": {
+    "capture_run_2_rerun_proof": "PASS",
+    "rows_rewritten_all_three_tables": 0
+   },
+   "storage": {
+    "tables_mib_expected_band": [
+     715,
+     730
+    ],
+    "ratio_band": [
+     0.55,
+     0.56
+    ],
+    "hard_stop_mib_above": 780,
+    "hard_stop_ratio_above": 0.6,
+    "budget_mib": 1300,
+    "rule": "held, never raised; a miss of the band is a stop-and-report, above 780 MiB is the hard stop (the roof-axis re-cut is a later night)"
+   }
+  },
+  "stop_conditions": [
+   "any check in C1 to C4 off its figure",
+   "pg_dump or n3db verify not equal to live",
+   "migrate --only=293 dry-run runs anything but 293",
+   "view rows after 293 not 0 before the reload",
+   "capture exit code not 0, rerun proof not PASS, lots not 440093",
+   "storage outside 715-730 MiB; above 780 MiB hard stop",
+   "any warning other than scenario_axis_cells: 597",
+   "a 25-lot row outside the allowed set changed",
+   "no re-run without a new plan and a new go (go card)"
+  ],
+  "durations_estimated": {
+   "c1": "3-5 min (dry run 2026-11-03: under 1 min)",
+   "c2_backup_and_dump": "30-45 min",
+   "c3_capture_run_1": "81 min (measured 2026-10-24)",
+   "c3_rerun_proof": "about 81 min",
+   "c3_forced_cohort": "about 81 min",
+   "c4": "5 min",
+   "total": "4.5-5 h detached"
+  },
+  "operator_rulings": [
+   "\"Mb-26 is approved assuming its complaint\" (CARD-mb26-increment1-night.answered.md, 2026-11-03)",
+   "\"approval for first db night if required\" (CARD-mb26-go.answered.md, 2026-10-31; local DB 127.0.0.1:54322 only)",
+   "Q-NIGHT B, Q-MIG 1, Q-WRAP 1, O-n1 1, O-n2 1, O-n3 1 (same card)"
+  ]
+ }
+}
