@@ -1,29 +1,52 @@
 {
   "task": "MB-79",
-  "item": "v (K-4)",
-  "class": "G",
+  "item": "(f) record: batch 2026-11-03-batch-aw (the oracle-first door R-MC and its two dated notes on R-LI and R-LH; decision CHAT-224.O-29)",
+  "class": "R",
   "stage": 8,
   "date": "2026-11-03",
-  "head": "66b374410c54d2195d21490c246d8e143be50ff4",
+  "head": "404653635",
   "commits_reviewed": [
-    "801dea2f",
-    "66b37441"
+    "the staged recording commit on 404653635 (9 files)"
   ],
   "cards": [
-    "Q-K4 (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, operator \"confirmed as long as they are complaint\")"
+    "CARD-o26-loop-arm",
+    "CARD-o28-prereg-name",
+    "CARD-o29-door-pushed",
+    "CARD-o30-m180-note"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-79/v/ (lane G stage 3/4 notes): the test file src/tests/mcbylaws-loop-gate-run.logic.test.ts classifies null under the loop gate (not oracle, code or layer23; protected src/tests/mcbylaws-*), so no oracle-only split; commits: prereg-MB-79-4.json alone (round 44, rules M-321 and R-MA, one expected_assertion_changes entry, totals equal prereg-MB-83-1.json, coa-scorecard --check on expected-172 CHECK OK at 7eb6daf9), then the test-only commit directly on it, then this record. Red first: red-1 (old form fails on a foreign mcbylaws-loop-gate-base-* dir made during the run), red-2 (new form with a cleanup-skipping test double fails at the removal assertion).",
-  "output": "OUTPUT panel PASS, 2 MINOR (~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md). F1 (the prereg assertion line pointed at the call site 531, not the assertion at 557) fixed before the prereg commit; F2 (the leak test regex is message-based) note only, adequately specific per red-2. Lens checks: the gate is not weakened (the check is stricter: base tree made in the private dir, gone after, private dir empty), both directions proven by tests, TMPDIR and the spy restored in finally, prereg round 44 unique, scope one test file. File 32/32 green.",
-  "seats": [
-    "output-panel (lens checks 1-6, ~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md)"
-  ],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-79/f/laneR-record-list.md; ~/Buildo-scratch/mcbylaws/MB-79/f/pr79f1-redraft.v9.1.md (Draft 1, sha256 1556a424); ~/Buildo-scratch/mcbylaws/R-batch-ao/drafts.md (Drafts 1a, 1b)",
+  "output": "Record OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-79/f/record-output-panel.md: PASS. Checks 1-7 PASS (R-MC equals Draft 1 apart from the placeholder fills, \"(= R-MC)\" and the verdict words; the two notes byte-exact before each Conflict check; quotes verbatim; arm K stagedRowConflictProblems []; decision-log clean, 751 decisions; ceiling 99->100; message ids all ruled; scope 9 files). Item 4: M-358 \"no conflict\" stands. One advisory (the added \"(no conflict)\" on the M-180/RATIFIED sentence) is covered by the message.",
   "verdict": "PASS",
   "blockers": [],
-  "followups": [
-    "F2 (MINOR, note only): the leak-test toThrow regex is message-based"
-  ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md",
+  "followups": [],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-79/f/record-output-panel.md",
   "previous": [
+    {
+      "task": "MB-79",
+      "item": "v (K-4)",
+      "class": "G",
+      "stage": 8,
+      "date": "2026-11-03",
+      "head": "66b374410c54d2195d21490c246d8e143be50ff4",
+      "commits_reviewed": [
+        "801dea2f",
+        "66b37441"
+      ],
+      "cards": [
+        "Q-K4 (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, operator \"confirmed as long as they are complaint\")"
+      ],
+      "plan": "~/Buildo-scratch/mcbylaws/MB-79/v/ (lane G stage 3/4 notes): the test file src/tests/mcbylaws-loop-gate-run.logic.test.ts classifies null under the loop gate (not oracle, code or layer23; protected src/tests/mcbylaws-*), so no oracle-only split; commits: prereg-MB-79-4.json alone (round 44, rules M-321 and R-MA, one expected_assertion_changes entry, totals equal prereg-MB-83-1.json, coa-scorecard --check on expected-172 CHECK OK at 7eb6daf9), then the test-only commit directly on it, then this record. Red first: red-1 (old form fails on a foreign mcbylaws-loop-gate-base-* dir made during the run), red-2 (new form with a cleanup-skipping test double fails at the removal assertion).",
+      "output": "OUTPUT panel PASS, 2 MINOR (~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md). F1 (the prereg assertion line pointed at the call site 531, not the assertion at 557) fixed before the prereg commit; F2 (the leak test regex is message-based) note only, adequately specific per red-2. Lens checks: the gate is not weakened (the check is stricter: base tree made in the private dir, gone after, private dir empty), both directions proven by tests, TMPDIR and the spy restored in finally, prereg round 44 unique, scope one test file. File 32/32 green.",
+      "seats": [
+        "output-panel (lens checks 1-6, ~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md)"
+      ],
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "F2 (MINOR, note only): the leak-test toThrow regex is message-based"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/MB-79/v/output-panel.md"
+    },
     {
       "task": "MB-79",
       "item": "gate bundle (j, m, n, o, p, q, s)",

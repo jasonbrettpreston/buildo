@@ -7602,6 +7602,20 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-MC",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The oracle-first door: a hand-authored oracle file may change beside code only when the prereg lists each changed line, cites a ruling the operator already pushed, and the listed case is one that ruling's text names.",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -8099,6 +8113,11 @@
       "id": "R-MB",
       "class": "none",
       "reason": "OWED MB-84: the lock is the gate exceptions test and the MB-84 push-gate run (recorded 2026-11-03-batch-av)"
+    },
+    {
+      "id": "R-MC",
+      "class": "none",
+      "reason": "OWED MB-79 (f): no test names R-MC yet (recorded 2026-11-03-batch-aw)"
     }
   ]
 }
