@@ -59,7 +59,9 @@ describe('manifest-utils — STEP_TELEMETRY_TABLES allow-list', () => {
       'lead_parcels', 'lead_trades', 'neighbourhood_build_norms', 'neighbourhood_storey_norms', 'neighbourhoods',
       'parcel_abutments', // reviewed 2026-10-16: parcel-id pairs, distances, flags only, no personal data (Spec 130)
       'parcel_address_points',
-      'parcel_buildings', 'parcels', 'permit_inspections', 'permit_parcels', 'permit_trades',
+      'parcel_buildings',
+      'parcel_maxbld_scenarios', // reviewed 2026-11-02: parcel id, building type, field id, status, value, unit, reason, flags, trace and hashes only, no personal data (MB-31 Layer 3 step)
+      'parcels', 'permit_inspections', 'permit_parcels', 'permit_trades',
       'permits', 'phase_calibration', 'phase_stay_calibration', 'pipeline_runs', 'ravines',
       'toronto_centreline', 'trade_forecasts', 'wsib_registry', 'zoning_bylaw_areas',
     ];

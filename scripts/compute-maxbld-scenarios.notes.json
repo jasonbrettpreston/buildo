@@ -1,0 +1,75 @@
+{
+  "$comment": [
+    "Spec 120 §3.4 / Spec 122 §8 — the INTERPRETATION file for compute_maxbld_scenarios, capped at 12 prose entries (notes-cap.mjs).",
+    "MB-31 lane E stage 7 (plan section 5 Identity). Edits never improve a measured value: numbers are filled at the first run (MB-35)."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "A row is one field of one building type on one lot. Its `trace` is what the evaluator read, in read order (target, setting, fact, geometry, flag, upstream row, switch) — it is the audit trail for that one value, not a log of the run.",
+      "measured": {
+        "value": "filled at the first run (MB-35)",
+        "date": "pending",
+        "query": "parcel_maxbld_scenarios.trace"
+      }
+    },
+    {
+      "what": "A row that gave up is `not_evaluated`, never a guessed number, and it propagates: every row that names it is `not_evaluated` with the same reason first seen (R3-01). `undecided` lists every input the row is waiting on, so a single missing Phase 2 cell explains a whole column.",
+      "measured": {
+        "value": "filled at the first run (MB-35)",
+        "date": "pending",
+        "query": "count(*) by status, reason"
+      }
+    },
+    {
+      "what": "The front-yard chain is the only place where a user number is mixed with a survey number: every non-user value carries a survey flag on the row (`front_yard_needs_survey` and friends, held in the catalogue, never in code), so a reader can tell which link of the chain is unchecked. The FS-SB2a ring placeholder is calibration provisional (L31-18).",
+      "measured": {
+        "value": "filled at the first run (MB-35)",
+        "date": "pending",
+        "query": "count(*) filter (where flags && survey flags)"
+      }
+    },
+    {
+      "what": "S-1 and S-2 are logic variables with citations, not by-law numbers, and the S-1 storey count is flagged as a theoretical maximum (L31-14) — an S-1-derived value is the ceiling of the reading, not its typical value.",
+      "measured": {
+        "value": "filled at the first run (MB-35)",
+        "date": "pending",
+        "query": "logic_variables where id like 'S-%'"
+      }
+    },
+    {
+      "what": "A box-shaped building footprint is an assumption: when the shape is not known the value is marked with the box flag, and the shape_calibration switch records that the box was assumed rather than the shape read (LC-69)."
+    },
+    {
+      "what": "A re-run that writes zero rows is healthy: the runner's guarded upsert compares `content_sha` first, so an unchanged environment is a no-op write, and any write means something upstream moved."
+    },
+    {
+      "what": "Numeric values are not reproduced here. They are measured at the first real run (MB-35) and pasted back; an entry still reading `pending` has never been observed."
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "`status` of `not_applicable` and `unlimited` are ordinary answers, not failures: the by-law says the field does not apply or does not cap it."
+    }
+  ],
+  "known_bad": [
+    {
+      "what": "A `reason` beginning `expression_error:` means the catalogue and the evaluator disagree (unknown target, unit mismatch) — a data or code defect, never a lot property."
+    }
+  ],
+  "limitations": [
+    {
+      "what": "`permitted` is provisional (M-417): the permission code is read as stored, not re-derived here."
+    },
+    {
+      "what": "The 15.0 m averaging radius is read from `l2(averaging_distance_m)` only once Phase 2 stores it (MB-18 (k)); until then the ring chain stays `not_evaluated`."
+    },
+    {
+      "what": "No clause switch is in use: `clause:<id>` is honoured when the switchboard declares it off, and today the switchboard declares none."
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 0,
+    "unpromoted_suspicious_if": 0
+  }
+}

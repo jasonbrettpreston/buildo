@@ -1,0 +1,14 @@
+MB-31 increment 1 · red evidence (R-KG lockLands / red-first): the 25-case acceptance test against the BASE.
+Date: 2026-11-02. Base: mb31e d996999f (merge e32addf6 of wf1/mb-rulings 3a31e2ef, then prereg-MB-31-3), with scripts/analysis/bylaw/evaluate.mjs and scripts/seeds/logic_variables.json restored to the base versions (no B5 hook, no C1 seeds); every other file of the build (walker, fixtures, test) in place.
+Command: npx vitest run src/tests/steps/compute_maxbld_scenarios/golden-25.logic.test.ts --run
+Result: 25 failed (every case: the Layer 3 rows answer not_evaluated:expression_error:layer3_hooks_missing), 3 passed (the manifest, McProof and census cases).
+After B5 (evaluate.mjs hook, 3 lines) and C1 (9 seeds) the same file runs the step on the 25 cases: see the green run recorded in the build README.
+--- first lines of the failing output ---
+     → case A0067_26SC/front: computed status: expected 'not_evaluated' to be 'computed' // Object.is equality
+     → case A0094_26SC/front: computed status: expected 'not_evaluated' to be 'computed' // Object.is equality
+     → case A0097_26SC/front: computed status: expected 'not_evaluated' to be 'computed' // Object.is equality
+⎯⎯⎯⎯⎯⎯ Failed Tests 25 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: case A0067_26SC/front: computed status: expected 'not_evaluated' to be 'computed' // Object.is equality
+AssertionError: case A0094_26SC/front: computed status: expected 'not_evaluated' to be 'computed' // Object.is equality
+AssertionError: case A0097_26SC/front: computed status: expected 'not_evaluated' to be 'computed' // Object.is equality
+ Test Files  1 failed (1)

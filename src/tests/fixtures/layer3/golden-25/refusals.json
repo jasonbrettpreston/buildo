@@ -1,0 +1,126 @@
+{
+ "schema": "golden25-refusals-v2",
+ "note": "Hand-authored companion of expected.jsonl: the 13 not_evaluated cells of the 25 golden cases and the reason stem the step result must carry (the stored row keeps the first reason, not the full undecided list). Stems were lifted from the expected file's why text and confirmed once against the first real run of the step (mode A, MB-18 (k) in, (j) (i) (l) out); they are not tuned. The flag set of every cell is in expected.jsonl. See MB-31 inc1-plan.md Appendix A. A0553 accepts two stems because MB-18 (j) turns the unknown target into an absent stored cell (missing_input:absent_target) without changing the answer.",
+ "cells": [
+  {
+   "case": "A0067_26SC",
+   "cell": "footprint",
+   "why": "building_depth_m=existing_building_facts:lot_frontage_m; building_length_m=existing_building_facts:lot_frontage_m",
+   "moves_with": "(i)",
+   "reason_stems_any": [
+    "existing_building_facts"
+   ]
+  },
+  {
+   "case": "A0067_26SC",
+   "cell": "gfa",
+   "why": "footprint=building_depth_m=existing_building_facts:lot_frontage_m; building_length_m=existing_building_facts:lot_frontage_m",
+   "moves_with": "(i)",
+   "reason_stems_any": [
+    "existing_building_facts"
+   ]
+  },
+  {
+   "case": "A0097_26SC",
+   "cell": "footprint",
+   "why": "building_depth_m=existing_building_facts:lot_frontage_m; building_length_m=existing_building_facts:lot_frontage_m",
+   "moves_with": "(i)",
+   "reason_stems_any": [
+    "existing_building_facts"
+   ]
+  },
+  {
+   "case": "A0097_26SC",
+   "cell": "gfa",
+   "why": "footprint=building_depth_m=existing_building_facts:lot_frontage_m; building_length_m=existing_building_facts:lot_frontage_m",
+   "moves_with": "(i)",
+   "reason_stems_any": [
+    "existing_building_facts"
+   ]
+  },
+  {
+   "case": "A0166_26EYK",
+   "cell": "footprint",
+   "why": "side_setback_m=unlimited_in_arithmetic",
+   "moves_with": "permanent",
+   "reason_stems_any": [
+    "unlimited_in_arithmetic"
+   ]
+  },
+  {
+   "case": "A0166_26EYK",
+   "cell": "height",
+   "why": "condition_unknown:flat_or_shallow_roof",
+   "moves_with": "permanent",
+   "reason_stems_any": [
+    "condition_unknown:flat_or_shallow_roof"
+   ]
+  },
+  {
+   "case": "A0166_26EYK",
+   "cell": "storeys",
+   "why": "phase2 storeys unlimited: S-1 needs the height; height_m=condition_unknown:flat_or_shallow_roof (R3-08, M-404)",
+   "moves_with": "permanent",
+   "reason_stems_any": [
+    "condition_unknown:flat_or_shallow_roof"
+   ]
+  },
+  {
+   "case": "A0166_26EYK",
+   "cell": "gfa",
+   "why": "footprint=side_setback_m=unlimited_in_arithmetic; storeys=phase2 storeys unlimited: S-1 needs the height; height_m=condition_unknown:flat_or_shallow_roof (R3-08, M-404)",
+   "moves_with": "permanent",
+   "reason_stems_any": [
+    "unlimited_in_arithmetic"
+   ]
+  },
+  {
+   "case": "A0375_26TEY",
+   "cell": "footprint",
+   "why": "side_setback_street_m=no_candidate",
+   "moves_with": "permanent",
+   "reason_stems_any": [
+    "no_candidate"
+   ]
+  },
+  {
+   "case": "A0375_26TEY",
+   "cell": "gfa",
+   "why": "footprint=side_setback_street_m=no_candidate",
+   "moves_with": "permanent",
+   "reason_stems_any": [
+    "no_candidate"
+   ]
+  },
+  {
+   "case": "A0553_26TEY",
+   "cell": "front",
+   "why": "chain_step_4: averaging does not apply, 10.5.40.70(1)(B) needs both abutters within 15.0 m (M-414, strict); front_setback_fallback_m not in Phase 2 (MB-18 (j))",
+   "moves_with": "(j)",
+   "reason_stems_any": [
+    "unknown_target",
+    "absent_target"
+   ]
+  },
+  {
+   "case": "A0553_26TEY",
+   "cell": "footprint",
+   "why": "front_setback_used_m=chain_step_4: averaging does not apply, 10.5.40.70(1)(B) needs both abutters within 15.0 m (M-414, strict); front_setback_fallback_m not in Phase 2 (MB-18 (j))",
+   "moves_with": "(j)",
+   "reason_stems_any": [
+    "unknown_target",
+    "absent_target"
+   ]
+  },
+  {
+   "case": "A0553_26TEY",
+   "cell": "gfa",
+   "why": "footprint=front_setback_used_m=chain_step_4: averaging does not apply, 10.5.40.70(1)(B) needs both abutters within 15.0 m (M-414, strict); front_setback_fallback_m not in Phase 2 (MB-18 (j))",
+   "moves_with": "(j)",
+   "reason_stems_any": [
+    "unknown_target",
+    "absent_target"
+   ]
+  }
+ ]
+}

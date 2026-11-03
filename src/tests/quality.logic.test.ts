@@ -522,7 +522,8 @@ describe('Pipeline Registry', () => {
     // +1 load_bylaw_map_areas (Spec 58 §11.3, H6 2026-10-16)
     // +1 link_parcel_abutments (Spec 130, H6 A2 2026-10-16)
     // +1 resolve_bylaws (Spec 134 Layer 2, commit ①; FreshnessTimeline PIPELINE_REGISTRY, group classify)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(72);
+    // +1 compute_maxbld_scenarios (MB-31 Layer 3 step, increment 1; FreshnessTimeline PIPELINE_REGISTRY, group classify)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(73);
   });
 
   it('groups are correct: 16 ingest, 23 link, 17 classify, 2 snapshot, 10 quality', () => {
@@ -550,9 +551,10 @@ describe('Pipeline Registry', () => {
     // +1 ingest: load_bylaw_map_areas (Spec 58 §11.3, H6 2026-10-16)
     // +1 link: link_parcel_abutments (Spec 130, H6 A2 2026-10-16)
     // +1 classify: resolve_bylaws (Spec 134 Layer 2, commit ①)
+    // +1 classify: compute_maxbld_scenarios (MB-31 Layer 3 step, increment 1)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(16);
     expect(groups.filter((g) => g === 'link')).toHaveLength(23);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(19); // +dispatch_notifications (P25 25A, group 'classify'); +resolve_bylaws (Spec 134)
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(20); // +dispatch_notifications (P25 25A, group 'classify'); +resolve_bylaws (Spec 134); +compute_maxbld_scenarios (MB-31)
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(12); // +assert_parcel_sanity (WF2); +reconcile (Spec 122 §7.4 / A3, S3 2026-08-24)
   });

@@ -648,7 +648,16 @@ const GROUP_ORDER = [
       "load_zoning_duration_warn_factor",
       "load_zoning_base_invalid_polygon_warn_max_count",
       "load_zoning_base_invalid_polygon_warn_max_pct",
-      "load_zoning_distribution_top_n"
+      "load_zoning_distribution_top_n",
+      "fya_placeholder_ring_depth",
+      "fya_placeholder_ring_min_n",
+      "s1_ceiling_min_m",
+      "s1_floor_assembly_m",
+      "s1_parapet_m",
+      "s2_first_floor_above_grade_m",
+      "footprint_shape_factor",
+      "compute_maxbld_scenarios_population_parcel_ids",
+      "compute_maxbld_scenarios_batch_size"
     ]
   },
   {

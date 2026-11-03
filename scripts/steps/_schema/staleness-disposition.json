@@ -330,6 +330,42 @@
     "docs/reference/bylaw-layer2-input.json": {
       "disposition": "descriptive",
       "why": "measured 2026-10-22 (resolve_bylaws commit ①, Spec 134): the generated Layer 1 input the compute requires statically (Spec 124 R-IL); its table_version and evaluator_version are stamped on every row. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step is a full rescan (staleness.mode_select none, trigger none, Spec 134 §7): it re-derives every lot row on every run behind the IS DISTINCT FROM guard, so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/compute/compute-maxbld-scenarios.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the step compute: row assembly, the shas and the census, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/compute/maxbld/catalogue.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the catalogue invariants and the seed shas, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/compute/maxbld/rows.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the row runner that calls the evaluator for every catalogue row, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/compute/maxbld/neighbour-facts.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the neighbour facts reader (abutters, street, zone and ring pools), a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/compute/maxbld/layer2-cells.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the decoder of the stored Layer 2 cells, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/analysis/bylaw/evaluate.mjs": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the shared evaluator, entered through the layer l3 hook, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/analysis/bylaw/evaluate-l3.mjs": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the Layer 3 value algebra, readers and expression walker, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/analysis/bylaw/dsl.mjs": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the expression parser and the Layer 3 lexicon reader, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/seeds/bylaw/layer3-catalogue.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-02 (MB-31 increment 1 landing): the Layer 3 catalogue (rows, facts, settings) and its lexicon, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
     }
   }
 }

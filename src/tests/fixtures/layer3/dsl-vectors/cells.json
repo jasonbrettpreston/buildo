@@ -1,0 +1,137 @@
+{
+  "$comment": "MB-31 B0f oracle vectors (B6, E31-10): one decode case per stored status of bylaw_resolution_results",
+  "classes": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house", "house_with_secondary_suite"],
+  "permissionKeys": ["permitted", "prohibited", "not_evaluated"],
+  "cases": [
+    {
+      "name": "applies number keeps value, clause and null reason",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "height_m", "status": "applies", "value_kind": "number", "value": 9, "reason": null, "winner_unit_id": "10.20.40.10(1)#(1)(A)" }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "height_m": { "s": "applies", "kind": "number", "value": 9, "clause": "10.20.40.10(1)#(1)(A)", "reason": null } }, "malformed": 0 }
+    },
+    {
+      "name": "applies unlimited keeps kind and clause",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "fsi", "status": "applies", "value_kind": "unlimited", "value": null, "reason": null, "winner_unit_id": "10.20.30.40(2)" }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "fsi": { "s": "applies", "kind": "unlimited", "value": null, "clause": "10.20.30.40(2)", "reason": null } }, "malformed": 0 }
+    },
+    {
+      "name": "applies unregulated keeps kind and clause",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "dwelling_units_max", "status": "applies", "value_kind": "unregulated", "value": null, "reason": null, "winner_unit_id": "10.20.30.40(3)" }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "dwelling_units_max": { "s": "applies", "kind": "unregulated", "value": null, "clause": "10.20.30.40(3)", "reason": null } }, "malformed": 0 }
+    },
+    {
+      "name": "not_applicable keeps the winner clause",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "height_storeys", "status": "not_applicable", "value_kind": null, "value": null, "reason": null, "winner_unit_id": "10.20.40.10(1)#(1)(B)" }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "height_storeys": { "s": "not_applicable", "kind": null, "value": null, "clause": "10.20.40.10(1)#(1)(B)", "reason": null } }, "malformed": 0 }
+    },
+    {
+      "name": "not_evaluated no_candidate keeps its reason",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "averaging_distance_m", "status": "not_evaluated", "value_kind": null, "value": null, "reason": "no_candidate", "winner_unit_id": null }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "averaging_distance_m": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "no_candidate" } }, "malformed": 0 }
+    },
+    {
+      "name": "not_evaluated existing building facts reason",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "lot_frontage_m", "status": "not_evaluated", "value_kind": null, "value": null, "reason": "existing_building_facts:lot_frontage_m", "winner_unit_id": null }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "lot_frontage_m": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "existing_building_facts:lot_frontage_m" } }, "malformed": 0 }
+    },
+    {
+      "name": "not_evaluated condition_unknown reason",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "front_averaging_m", "status": "not_evaluated", "value_kind": null, "value": null, "reason": "condition_unknown:front_averaging_not_applicable", "winner_unit_id": null }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "front_averaging_m": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "condition_unknown:front_averaging_not_applicable" } }, "malformed": 0 }
+    },
+    {
+      "name": "conflict reason layer2_conflict",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "rear_setback_m", "status": "conflict", "value_kind": null, "value": null, "reason": "layer2_conflict", "winner_unit_id": null }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "rear_setback_m": { "s": "conflict", "kind": null, "value": null, "clause": null, "reason": "layer2_conflict" } }, "malformed": 0 }
+    },
+    {
+      "name": "rows of another class and another structure are ignored",
+      "rows": [
+        { "parcel_id": "p1", "lot_gate": null, "class": "semi_detached_house", "structure": "principal", "target": "height_m", "status": "applies", "value_kind": "number", "value": 8, "reason": null, "winner_unit_id": "other" },
+        { "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "garden_suite", "target": "height_m", "status": "applies", "value_kind": "number", "value": 4, "reason": null, "winner_unit_id": "other2" },
+        { "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "height_m", "status": "applies", "value_kind": "number", "value": 9, "reason": null, "winner_unit_id": "10.20.40.10(1)#(1)(A)" }
+      ],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "height_m": { "s": "applies", "kind": "number", "value": 9, "clause": "10.20.40.10(1)#(1)(A)", "reason": null } }, "malformed": 0 }
+    },
+    {
+      "name": "a negative number is a malformed cell",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "height_m", "status": "applies", "value_kind": "number", "value": -3, "reason": null, "winner_unit_id": "10.20.40.10(1)#(1)(A)" }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "height_m": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "condition_unknown:cell_malformed" } }, "malformed": 1 }
+    },
+    {
+      "name": "a pct target above 100 is a malformed cell",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "lot_coverage_pct", "status": "applies", "value_kind": "number", "value": 150, "reason": null, "winner_unit_id": "10.20.30.40(4)" }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "lot_coverage_pct": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "condition_unknown:cell_malformed" } }, "malformed": 1 }
+    },
+    {
+      "name": "an unlimited kind with a value is a malformed cell",
+      "rows": [{ "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "fsi", "status": "applies", "value_kind": "unlimited", "value": 5, "reason": null, "winner_unit_id": "10.20.30.40(2)" }],
+      "cls": "detached_house",
+      "structure": "principal",
+      "want": { "cells": { "fsi": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "condition_unknown:cell_malformed" } }, "malformed": 1 }
+    },
+    {
+      "name": "two rows for one target throw",
+      "rows": [
+        { "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "height_m", "status": "applies", "value_kind": "number", "value": 9, "reason": null, "winner_unit_id": "a" },
+        { "parcel_id": "p1", "lot_gate": null, "class": "detached_house", "structure": "principal", "target": "height_m", "status": "applies", "value_kind": "number", "value": 8, "reason": null, "winner_unit_id": "b" }
+      ],
+      "cls": "detached_house",
+      "structure": "principal",
+      "throws": true
+    }
+  ],
+  "permCases": [
+    {
+      "name": "permitted with null ids",
+      "perm": { "lotRow": { "lot_gate": null, "permitted": [0, 0, 2, 2, 0], "permitted_text_ids": [null, null, null, null, null] }, "cls": "detached_house", "classes": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house", "house_with_secondary_suite"], "permissionKeys": ["permitted", "prohibited", "not_evaluated"], "texts": {} },
+      "want": { "code": 0, "gate": null, "clause": null, "reason": null }
+    },
+    {
+      "name": "prohibited keeps its clause text",
+      "perm": { "lotRow": { "lot_gate": null, "permitted": [1, 0, 0, 0, 0], "permitted_text_ids": [7, null, null, null, null] }, "cls": "detached_house", "classes": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house", "house_with_secondary_suite"], "permissionKeys": ["permitted", "prohibited", "not_evaluated"], "texts": { "7": "10.20.20.40(1)" } },
+      "want": { "code": 1, "clause": "10.20.20.40(1)" }
+    },
+    {
+      "name": "not_evaluated keeps its reason text",
+      "perm": { "lotRow": { "lot_gate": null, "permitted": [0, 0, 2, 2, 0], "permitted_text_ids": [null, null, null, 8, null] }, "cls": "semi_detached_house", "classes": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house", "house_with_secondary_suite"], "permissionKeys": ["permitted", "prohibited", "not_evaluated"], "texts": { "8": "condition_unknown:x" } },
+      "want": { "code": 2, "reason": "condition_unknown:x" }
+    },
+    {
+      "name": "the lot gate is carried through",
+      "perm": { "lotRow": { "lot_gate": "lot_metric_missing", "permitted": [0, 0, 2, 2, 0], "permitted_text_ids": [null, null, null, null, null] }, "cls": "detached_house", "classes": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house", "house_with_secondary_suite"], "permissionKeys": ["permitted", "prohibited", "not_evaluated"], "texts": {} },
+      "want": { "gate": "lot_metric_missing" }
+    },
+    {
+      "name": "an unknown class throws",
+      "perm": { "lotRow": { "lot_gate": null, "permitted": [0, 0, 2, 2, 0] }, "cls": "nope", "classes": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house", "house_with_secondary_suite"], "permissionKeys": ["permitted", "prohibited", "not_evaluated"], "texts": {} },
+      "throws": true
+    },
+    {
+      "name": "an unknown permission code throws",
+      "perm": { "lotRow": { "lot_gate": null, "permitted": [9, 0, 2, 2, 0] }, "cls": "detached_house", "classes": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house", "house_with_secondary_suite"], "permissionKeys": ["permitted", "prohibited", "not_evaluated"], "texts": {} },
+      "throws": true
+    }
+  ]
+}

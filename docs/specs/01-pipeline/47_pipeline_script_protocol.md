@@ -1915,6 +1915,7 @@ and registry-vs-code agreement.
 | **130** | `scripts/link-parcel-abutments.js` | 2 — Link (Spec 130, McBylaw Phase 2 inputs B; the spec number, globally unique) | YES — `parcel_abutments.linked_at` (RUN_AT-bound) |
 | **131** | `scripts/one-time/heal-coa-link-street-type.js` | n/a — one-off (WF2 address street type, Spec 54 §3 level 0; not a chain step), next-free after the H6 port claims (127 load_bylaw_map_areas, 130 link_parcel_abutments) → **131** | NO — deletes the measured wrong-type `lead_parcels` rows and NULLs `coa_applications.parcel_linked_at` (binds no timestamp); probes `link-coa-to-parcels`' own lock 4201 via `pipeline.withAdvisoryLock` |
 | **134** | `scripts/resolve-bylaws.js` | 3 — Enrich/Materialize (Spec 134, Layer 2 by-law resolution; the spec number, globally unique) | YES — `bylaw_resolution_*.resolved_at` (RUN_AT-bound, outside the write guard) |
+| **135** | `scripts/compute-maxbld-scenarios.js` | 3 — Enrich/Materialize (MB-31, McBylaw Phase 3 Layer 3, `compute_maxbld_scenarios`; next free id after resolve_bylaws' 134, globally unique) | YES — `parcel_maxbld_scenarios.computed_at` (RUN_AT-bound, outside `content_sha`) |
 | **5** | `scripts/geocode-permits.js` | 4 — Load/Ingest | YES — `geocoded_at` |
 | **11** | `scripts/extract-builders.js` | 4 — Load/Ingest | YES — `last_seen_at` |
 | **30** | `scripts/link-similar.js` | 2 — Link | YES — `scope_classified_at` |

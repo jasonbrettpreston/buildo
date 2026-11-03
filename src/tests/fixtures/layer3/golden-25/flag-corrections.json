@@ -1,0 +1,258 @@
+{
+ "schema": "golden25-flag-corrections-v1",
+ "note": "Operator answer CARD-mb31-inc1-flags (option 1): flags only; no value and no refusal reason changes. expected.jsonl differs from MB-64 data/expected-25.jsonl (v4) exactly in these cells.",
+ "cells": [
+  {
+   "case": "A0067_26SC",
+   "cell": "footprint",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ]
+  },
+  {
+   "case": "A0067_26SC",
+   "cell": "gfa",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ]
+  },
+  {
+   "case": "A0097_26SC",
+   "cell": "footprint",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ]
+  },
+  {
+   "case": "A0097_26SC",
+   "cell": "gfa",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0166_26EYK",
+   "cell": "footprint",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ]
+  },
+  {
+   "case": "A0166_26EYK",
+   "cell": "storeys",
+   "from": [],
+   "to": [
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0166_26EYK",
+   "cell": "gfa",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0170_26EYK",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0175_26NY",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0179_26EYK",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0193_26EYK",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0354_26TEY",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0375_26TEY",
+   "cell": "footprint",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ]
+  },
+  {
+   "case": "A0375_26TEY",
+   "cell": "gfa",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0388_26TEY",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0399_24EYK",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0464_26TEY",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0553_26TEY",
+   "cell": "footprint",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ]
+  },
+  {
+   "case": "A0553_26TEY",
+   "cell": "gfa",
+   "from": [
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0561_26TEY",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  },
+  {
+   "case": "A0578_26TEY",
+   "cell": "gfa",
+   "from": [
+    "front_yard_needs_survey",
+    "shape_box_assumed"
+   ],
+   "to": [
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ]
+  }
+ ]
+}

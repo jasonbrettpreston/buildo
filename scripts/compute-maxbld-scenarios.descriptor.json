@@ -1,0 +1,374 @@
+{
+  "identity": {
+    "name": "compute_maxbld_scenarios",
+    "display_name": "Compute Max-Build Scenarios (Layer 3)",
+    "owner": "data",
+    "description": "Layer 3: for every population parcel, computes the catalogue rows of each building type from the stored Phase 2 (Layer 2) cells and the seeded settings only, writing one long-format parcel_maxbld_scenarios row per parcel x building type x field, with the increment, status, value, unit, reason, flags, trace and the four content hashes.",
+    "lock": 135,
+    "why_lock": {
+      "text": "Spec 47 §A.5: the next free advisory lock id after resolve_bylaws' 134; mutual exclusion with every other writer of parcel_maxbld_scenarios. The shell keeps `const ADVISORY_LOCK_ID = 135;` as a source-text constant, asserted equal by the pipeline advisory-lock suite (L31-04).",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "78",
+    "spec_version": "1.0",
+    "archetype": "MATERIALIZER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "resolve_bylaws" },
+        { "step": "link_parcel_abutments" },
+        { "step": "parcels" },
+        { "step": "enrich_parcels" },
+        { "step": "enrich_centreline" }
+      ],
+      "tables": [
+        {
+          "table": "bylaw_resolution_results",
+          "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "status", "value_kind", "value", "reason", "winner_unit_id"]
+        },
+        {
+          "table": "bylaw_resolution_lots",
+          "columns": ["parcel_id", "lot_gate", "permitted", "permitted_text_ids", "table_version"]
+        },
+        {
+          "table": "bylaw_resolution_units",
+          "columns": ["unit_key", "unit_id"],
+          "role": "lookup",
+          "unique_on": ["unit_key"],
+          "on_empty": "warn"
+        },
+        {
+          "table": "bylaw_resolution_texts",
+          "columns": ["text_key", "text"],
+          "role": "lookup",
+          "unique_on": ["text_key"],
+          "on_empty": "warn"
+        },
+        {
+          "table": "parcels",
+          "columns": ["id", "lot_size_sqm", "frontage_m", "depth_m", "is_corner_lot", "zoning_class", "primary_frontage_street_name", "geom"]
+        },
+        {
+          "table": "parcel_abutments",
+          "columns": ["parcel_id", "neighbour_id", "shared_len_m", "same_frontage_street", "neighbour_residential", "bldg_to_subject_m", "front_setback_est_m", "est_status"]
+        },
+        {
+          "table": "logic_variables",
+          "columns": ["variable_key", "variable_value", "variable_value_json"],
+          "role": "lookup",
+          "unique_on": ["variable_key"],
+          "on_empty": "fail"
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcel_maxbld_scenarios",
+        "key": ["parcel_id", "building_type", "field_id"],
+        "columns": [
+          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "building_type", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "field_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "increment", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          {
+            "name": "status",
+            "vocabulary": {
+              "values": ["computed", "unlimited", "unregulated", "not_applicable", "not_buildable", "not_evaluated", "permitted", "not_permitted", "not_modelled"],
+              "on_unknown": "fail",
+              "source": "scripts/seeds/bylaw/layer3-catalogue.json vocabulary"
+            },
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          { "name": "value", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "unit", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "reason", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "flags", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trace", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "content_sha", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "switches", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "catalogue_sha", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "switchboard_sha", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "settings_sha", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "layer2_table_version", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "computed_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": ["content_sha"],
+          "scope": "parcel_id = ANY(<the batch source keys>) — parcel_maxbld_scenarios is written by this step alone",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "E31-13: content_sha is the digest of the row's whole content (value, reason, trace, settings_sha and the other hashes; computed_at excluded), so a re-run of an unchanged parcel rewrites nothing and a moved Layer 2 cell rewrites only the rows whose content moved. E31-14: a parcel still in the population keeps its rows under the guard; a parcel that left a NON-EMPTY population list loses its rows (building_type detached_house only), bounded by this scope; an empty population list or unmatched ids HALT the run instead of retracting. Retraction (retract_when: always): E31-14: a row set is EITHER upserted OR retracted, never both. The departure DELETE keys on one column (parcel_id) and fires only for parcels that LEFT a NON-EMPTY population list, its rows cast to detached_house only; every parcel still in the list is re-asserted by the guarded upsert, so no row this run derives can be deleted. An empty population list, or population ids matching no parcel, HALT the run instead of retracting (the empty-set guard). E31-14: a row set is EITHER upserted OR retracted, never both. The departure DELETE keys on one column (parcel_id) and fires only for parcels that LEFT a NON-EMPTY population list, its rows cast to detached_house only; every parcel still in the list is re-asserted by the guarded upsert, so no row this run derives can be deleted. An empty population list, or population ids matching no parcel, HALT the run instead of retracting (the empty-set guard).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/compute-maxbld-scenarios.js"
+            }
+          }
+        },
+        "retract": "departed",
+        "retract_when": "always"
+      }
+    ],
+    "invalidates": [],
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Per batch, one transaction: one guarded upsert into parcel_maxbld_scenarios; the retraction rides the declared retract scope.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": "none",
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/compute/compute-maxbld-scenarios.js",
+      "scripts/lib/compute/maxbld/catalogue.js",
+      "scripts/lib/compute/maxbld/rows.js",
+      "scripts/lib/compute/maxbld/neighbour-facts.js",
+      "scripts/lib/compute/maxbld/layer2-cells.js",
+      "scripts/analysis/bylaw/evaluate.mjs",
+      "scripts/analysis/bylaw/evaluate-l3.mjs",
+      "scripts/analysis/bylaw/dsl.mjs",
+      "scripts/seeds/bylaw/layer3-catalogue.json"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "fail_step",
+    "pins": [
+      {
+        "step": "resolve_bylaws",
+        "stamp": "bylaw_resolution_lots.table_version",
+        "why": {
+          "text": "Layer 2 is the whole input (cells, lot gate, permitted classes): a new Layer 2 table_version re-derives every Layer 3 row, and the value is copied into layer2_table_version.",
+          "liveness": {
+            "kind": "column",
+            "ref": "bylaw_resolution_lots.table_version"
+          }
+        }
+      },
+      {
+        "step": "link_parcel_abutments",
+        "stamp": "parcel_abutments.updated_at",
+        "why": {
+          "text": "The neighbour facts (ring, street and zone pools, front setback estimate) are read from parcel_abutments; a new abutment row moves the averaged front setback and must re-derive the rows.",
+          "liveness": {
+            "kind": "table",
+            "ref": "parcel_abutments"
+          }
+        }
+      }
+    ]
+  },
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "bylaw_resolution_lots",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "materialize",
+    "materialize_form": "rows",
+    "materialize_source": {
+      "table": "parcels",
+      "key": "id",
+      "why": {
+        "text": "The population is a list of parcels ids (the population_parcel_ids setting); every population parcel is pending and the full rescan sits behind the content_sha guard.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/compute-maxbld-scenarios.js"
+        }
+      },
+      "pending": {
+        "table": "parcels",
+        "predicate": "every population parcel (full rescan behind the content_sha guard)",
+        "invalidated_by": "bylaw_resolution_lots.table_version"
+      }
+    },
+    "txn_scope": "batch",
+    "statement_timeout": "none",
+    "step_timeout": "90m",
+    "batch": 500,
+    "batch_size_from_config": "compute_maxbld_scenarios_batch_size",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every declared check reads a value the step measured in the same run; a check that throws is a defect.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/compute-maxbld-scenarios.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    { "id": "rows_written", "kind": "field_coverage", "expect": { "reports": "COUNT of parcel_maxbld_scenarios rows this run inserted or updated" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "A purely descriptive count of what this run wrote; no threshold can bound it.", "liveness": { "kind": "table", "ref": "parcel_maxbld_scenarios" } } },
+    { "id": "closure_violations", "kind": "field_coverage", "expect": { "reports": "COUNT of rows whose trace names a fact no catalogue row or Layer 2 cell supplies" }, "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "The catalogue dependency graph is closed: a number with no name to cite is a defect.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-maxbld-scenarios.js" } } },
+    { "id": "status_outside_closed_set", "kind": "field_coverage", "expect": { "reports": "COUNT of rows whose status is outside the catalogue vocabulary" }, "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "The status set is closed; an unlisted status is a defect, never a warning.", "liveness": { "kind": "file", "ref": "scripts/seeds/bylaw/layer3-catalogue.json" } } },
+    { "id": "numbers_without_trace", "kind": "field_coverage", "expect": { "reports": "COUNT of rows carrying a number whose trace is empty" }, "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Every number is traceable to the cells and rows it read; a bare number cannot be audited.", "liveness": { "kind": "table", "ref": "parcel_maxbld_scenarios" } } },
+    { "id": "flags_missing", "kind": "field_coverage", "expect": { "reports": "COUNT of not_applicable or not_evaluated rows with no flag naming why" }, "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "A refusal without a named reason is an invisible answer (the disclosure posture, P5.12).", "liveness": { "kind": "table", "ref": "parcel_maxbld_scenarios" } } },
+    { "id": "not_buildable_with_value", "kind": "field_coverage", "expect": { "reports": "COUNT of not_buildable rows that still carry a value" }, "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "not_buildable means the geometry leaves no room; a number beside it is contradictory (blank is not zero).", "liveness": { "kind": "table", "ref": "parcel_maxbld_scenarios" } } },
+    { "id": "layer2_cell_unparseable", "kind": "field_coverage", "expect": { "reports": "COUNT of Layer 2 cells the reader could not parse into a value kind" }, "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "A stored Layer 2 cell that cannot be read is an upstream contract break, never defaulted (Spec 134 I10).", "liveness": { "kind": "file", "ref": "scripts/lib/compute/maxbld/layer2-cells.js" } } }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    {
+      "key": "rows_emitted",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "layer2_cell_unparseable",
+      "type": "number",
+      "consumers": []
+    }
+  ],
+  "deviations": [
+    {
+      "from": "buildSourceSql (MB-31 plan section 19.2: the ring depth bound as a parameter on the ring read)",
+      "why": {
+        "text": "Not built: the runner's materialize binds are a closed set (MATERIALIZE_BIND_NAMES = last_key, batch_size, run_at in scripts/lib/step/index.js), so the ring depth cannot be bound as a run-time parameter the way the plan section 19.2 requires; reads 5 and 6 and the population binds of every read WAIT the runner bind build named in MB-31 plan section 22.1 (operator answer (b) option 1); until it lands the ring read keeps its depth as a declared read parameter and this deviation stays open.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "MB-31 plan conflicts, item b (~/Buildo-scratch/mcbylaws/MB-31/build/plan-conflicts.md)",
+      "date": "2026-11-02"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "MB-35: the T64-21 WARN list (0 < footprint <= 0.65 x lot area; 0 < front <= lot depth) lives in the compute's checks, not as a declared plausibility entry — no first run has measured it yet.",
+      "measured": "none",
+      "check_id": "rows_written"
+    },
+    {
+      "what": "M-417: permitted is provisional — the permitted/not_permitted reading is carried as a declared status, not yet adjudicated.",
+      "measured": "none",
+      "check_id": "none"
+    },
+    {
+      "what": "MB-18 (k): the 15.0 m averaging distance comes from l2(averaging_distance_m) only once Phase 2 stores that target; until then the neighbour facts read it as an absent Layer 2 cell.",
+      "measured": "none",
+      "check_id": "layer2_cell_unparseable"
+    },
+    {
+      "what": "MB-31: staleness.fingerprint_inputs does not list scripts/seeds/bylaw/switchboard.json and building-types.json, because gate P2-C3 admits only real imports of the step and the step's runtime seed loader is not built yet (it waits the runner batch binds). A change to either file still moves every row: switchboard_sha and building_types_sha are inside each row's content_sha.",
+      "measured": "none",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": { "file": "compute-maxbld-scenarios.notes.json" },
+  "recovery": {
+    "reset": "DELETE FROM parcel_maxbld_scenarios WHERE building_type = 'detached_house'; the next run re-derives every row (an operator action, MB-35 only, after a dump; scoped like the retraction).",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "No destructive target beyond the declared retraction: each batch commits atomically, and the guarded upsert on content_sha means a re-run rewrites nothing (a killed batch simply stays pending).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "No before-image: there is no destructive write beyond the declared retraction, and the guarded upsert overwrites only rows whose content_sha moved.",
+      "liveness": {
+        "kind": "table",
+        "ref": "parcel_maxbld_scenarios"
+      }
+    }
+  },
+  "database": { "class": "primary", "min_migration": 0, "assert_current_database": "postgres" },
+  "counters": { "records_total": { "source": "matched.processed" }, "records_new": { "source": "written.e1.inserted" }, "records_updated": { "source": "written.e1.updated" } },
+  "config": {
+    "logic_variables": [
+      { "name": "fya_porch_allowance_m", "min": 0, "max": 3, "on_invalid": "fail" },
+      { "name": "fya_placeholder_street_radius_m", "min": 10, "max": 1000, "on_invalid": "fail" },
+      { "name": "fya_placeholder_street_min_n", "min": 1, "max": 20, "on_invalid": "fail" },
+      { "name": "fya_placeholder_zone_radius_m", "min": 50, "max": 3000, "on_invalid": "fail" },
+      { "name": "fya_placeholder_zone_min_n", "min": 1, "max": 50, "on_invalid": "fail" },
+      { "name": "fya_placeholder_ring_depth", "min": 2, "max": 4, "on_invalid": "fail" },
+      { "name": "fya_placeholder_ring_min_n", "min": 1, "max": 4, "on_invalid": "fail" },
+      { "name": "fya_est_min_m", "min": 0, "max": 5, "on_invalid": "fail" },
+      { "name": "fya_est_max_m", "min": 5, "max": 200, "on_invalid": "fail" },
+      { "name": "s1_ceiling_min_m", "min": 2.3, "max": 2.3, "on_invalid": "fail" },
+      { "name": "s1_floor_assembly_m", "min": 0.212, "max": 0.212, "on_invalid": "fail" },
+      { "name": "s1_parapet_m", "min": 0.3, "max": 0.3, "on_invalid": "fail" },
+      { "name": "s2_first_floor_above_grade_m", "min": 0, "max": 0, "on_invalid": "fail" },
+      { "name": "footprint_shape_factor", "min": 1, "max": 1, "on_invalid": "fail" },
+      { "name": "compute_maxbld_scenarios_population_parcel_ids", "min": "none", "max": "none", "on_invalid": "fail", "list_of": ["6640","30065","30554","33830","119522","120669","122034","153191","159079","169742","170105","173273","205238","216666","258388","274216","283723","304365","313999","403569","410720","427312","428050","442123","461807"] },
+      { "name": "compute_maxbld_scenarios_batch_size", "min": 50, "max": 5000, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": [
+      { "name": "compute_maxbld_scenarios_basement_livable_share", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_circulation_share", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_coxwell_generous_reading", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_depth_search_step_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_existing_confidence_min", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_existing_shared_footprint_penalty", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_first_floor_elevation_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_houseplex_min_units", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_lane_buffer_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_lot_max_sqm", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_lot_min_sqm", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_lot_viability_margin_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_min_dimension_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_not_evaluated_max_pct", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_roof_assembly_depth_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_roof_pitch", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_storey_height_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_suite_gfa_strict_margin_sqm", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_suite_weight", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_triangle_simplify_tol_m", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_trust_high_min_pass_pct", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } },
+      { "name": "compute_maxbld_scenarios_unit_min_interior_sqm", "since": "2026-11-01", "ledger": "L31-10 (MB-31 plan section 12)", "why": { "text": "Variable of the superseded compute_maxbld_scenarios engine (migrations 283, 286); the Layer 3 rebuild reads none of them; deleted by MB-35 with a dump (ledger L31-10).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } } }
+    ]
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": { "checks": "none", "phase": "none", "audit_table": "one", "scope": "none" },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    { "id": "materialized_incremental", "kind": "success", "status": "completed", "records_meta": { "audit_table": "object", "terminal": "string" }, "why": { "text": "Normal completion: every population parcel re-derived behind the content_sha guard; zero writes on an unchanged re-run.", "liveness": { "kind": "check", "ref": "rows_written" } } },
+    { "id": "failed_missing_precondition", "kind": "fail_error", "status": "failed", "records_meta": { "audit_table": "object", "terminal": "string" }, "why": { "text": "An empty population list, unmatched population ids, an empty Layer 2 read or an out-of-bounds setting halts the run before compute.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-maxbld-scenarios.js" } } }
+  ]
+}

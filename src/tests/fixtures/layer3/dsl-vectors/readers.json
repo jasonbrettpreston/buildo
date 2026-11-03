@@ -1,0 +1,66 @@
+{
+  "$comment": "MB-31 B0a oracle vectors (C3, B4): Layer 3 readers — readL2 cells, readLv settings, readName row/fact/geometry lookup, readHolds and readRegulated, over one makeL3Env base.",
+  "base": {
+    "targetUnits": { "height_m": "m", "height_storeys": "storeys", "lot_coverage_pct": "pct", "gfa_m2": "m2", "fsi": "ratio" },
+    "optionalTargets": ["gfa_m2"],
+    "settingDecls": {
+      "fya_porch_allowance_m": { "unit": "m", "citation": "M-245", "min": 0, "max": 3, "default": 1 },
+      "fya_est_min_m": { "unit": "m", "citation": "Spec 130", "min": 0, "max": 20, "default": 0 },
+      "fya_est_max_m": { "unit": "m", "citation": "Spec 130", "min": 0, "max": 30, "default": 20 },
+      "footprint_shape_factor": { "unit": "ratio", "citation": "LC-69", "min": 1, "max": 1, "default": 1, "switch": "reading:shape_calibration", "flags_off": ["shape_box_assumed"], "flags_on": ["shape_calibrated"], "provenance_required_when_on": true }
+    },
+    "settingVals": {
+      "fya_porch_allowance_m": { "value": 1 },
+      "fya_est_min_m": { "value": 0 },
+      "fya_est_max_m": { "value": 20 },
+      "footprint_shape_factor": { "value": 1 }
+    },
+    "switches": { "reading:shape_calibration": "off" },
+    "geometryDecls": { "lot_area_m2": { "unit": "m2" }, "lot_depth_m": { "unit": "m" } },
+    "factDecls": {
+      "user_mean_m": { "unit": "m", "flags": ["user_supplied"], "bounds_lv": ["fya_est_min_m", "fya_est_max_m"] },
+      "nbr_q_n": { "unit": "units", "flags": ["front_yard_needs_survey"] }
+    },
+    "rowIds": ["front_setback_used_m"]
+  },
+  "cases": [
+    { "name": "readL2 returns a stored number with its clause", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "applies", "kind": "number", "value": 9, "clause": "c", "reason": null } } }, "want": { "k": "num", "v": 9, "u": "m", "clause": "c" } },
+    { "name": "readL2 of a not_applicable cell is unregulated", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "not_applicable", "kind": "number", "value": null, "clause": "c", "reason": null } } }, "want": { "k": "unregulated", "clause": "c", "na": true } },
+    { "name": "readL2 of an applies unlimited cell is unlimited", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "applies", "kind": "unlimited", "value": null, "clause": "c", "reason": null } } }, "want": { "k": "unlimited", "clause": "c" } },
+    { "name": "readL2 of an applies unregulated cell is unregulated", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "applies", "kind": "unregulated", "value": null, "clause": "c", "reason": null } } }, "want": { "k": "unregulated", "clause": "c" } },
+    { "name": "readL2 of a not_evaluated cell carries its reason", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "no_candidate" } } }, "want": { "k": "ne", "reason": "no_candidate", "undecided": [{ "id": "l2(height_m)", "reason": "no_candidate" }] } },
+    { "name": "readL2 of a conflict cell is layer2_conflict", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "conflict", "kind": null, "value": null, "clause": null, "reason": null } } }, "want": { "k": "ne", "reason": "layer2_conflict" } },
+    { "name": "readL2 of an optional target with no cell is absent", "fn": "readL2", "id": "gfa_m2", "env": { "cells": {} }, "want": { "k": "absent", "id": "gfa_m2" } },
+    { "name": "readL2 of a required target with no cell is a missing input", "fn": "readL2", "id": "height_storeys", "env": { "cells": {} }, "want": { "k": "ne", "reason": "missing_input:absent_target" } },
+    { "name": "readL2 of an unknown target", "fn": "readL2", "id": "nope_m", "env": { "cells": {} }, "want": { "k": "ne", "reason": "expression_error:unknown_target" } },
+    { "name": "readL2 rejects a string value", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "applies", "kind": "number", "value": "9", "clause": "c", "reason": null } } }, "want": { "k": "ne", "reason": "condition_unknown:cell_malformed" } },
+    { "name": "readL2 rejects a negative value", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "applies", "kind": "number", "value": -3, "clause": "c", "reason": null } } }, "want": { "k": "ne", "reason": "condition_unknown:cell_malformed" } },
+    { "name": "readL2 rejects an unlimited kind carrying a value", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "applies", "kind": "unlimited", "value": 5, "clause": "c", "reason": null } } }, "want": { "k": "ne", "reason": "condition_unknown:cell_malformed" } },
+    { "name": "readL2 rejects a percentage above 100", "fn": "readL2", "id": "lot_coverage_pct", "env": { "cells": { "lot_coverage_pct": { "s": "applies", "kind": "number", "value": 150, "clause": "c", "reason": null } } }, "want": { "k": "ne", "reason": "condition_unknown:cell_malformed" } },
+    { "name": "readL2 rejects an unknown status word", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "weird", "kind": "number", "value": 9, "clause": "c", "reason": null } } }, "want": { "k": "ne", "reason": "condition_unknown:cell_malformed" } },
+    { "name": "readL2 honours a clause switched off", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "applies", "kind": "number", "value": 9, "clause": "c", "reason": null } }, "switches": { "clause:c": "off" } }, "want": { "k": "ne", "reason": "clause_switched_off:c" } },
+    { "name": "readL2 adds the row input flags to a not_evaluated cell", "fn": "readL2", "id": "height_m", "env": { "cells": { "height_m": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "no_candidate" } }, "inputFlags": { "l2(height_m)": ["f1"] } }, "want": { "k": "ne", "reason": "no_candidate", "flags": ["f1"] } },
+    { "name": "readLv returns the setting value", "fn": "readLv", "id": "fya_porch_allowance_m", "env": {}, "want": { "k": "num", "v": 1, "u": "m" } },
+    { "name": "readLv of an unknown setting", "fn": "readLv", "id": "nope_m", "env": {}, "want": { "k": "ne", "reason": "expression_error:unknown_variable" } },
+    { "name": "readLv of a null value is a missing input, never the default", "fn": "readLv", "id": "fya_porch_allowance_m", "env": { "settingVals": { "fya_porch_allowance_m": { "value": null } } }, "want": { "k": "ne", "reason": "missing_input:lv(fya_porch_allowance_m)" } },
+    { "name": "readLv refuses an out-of-bounds setting", "fn": "readLv", "id": "fya_porch_allowance_m", "env": { "settingVals": { "fya_porch_allowance_m": { "value": 5 } } }, "throws": { "code": "setting_out_of_bounds", "setting": "fya_porch_allowance_m" } },
+    { "name": "readLv with its switch off contributes flags_off", "fn": "readLv", "id": "footprint_shape_factor", "env": {}, "want": { "k": "num", "v": 1, "flags": ["shape_box_assumed"] } },
+    { "name": "readLv with its switch on demands a provenance", "fn": "readLv", "id": "footprint_shape_factor", "env": { "switches": { "reading:shape_calibration": "on" } }, "want": { "k": "ne", "reason": "setting_not_fitted:footprint_shape_factor" } },
+    { "name": "readLv with its switch on and a provenance contributes flags_on", "fn": "readLv", "id": "footprint_shape_factor", "env": { "switches": { "reading:shape_calibration": "on" }, "settingVals": { "footprint_shape_factor": { "value": 1, "provenance": "fit-1" } } }, "want": { "k": "num", "v": 1, "flags": ["shape_calibrated"] } },
+    { "name": "readName reads an upstream row", "fn": "readName", "id": "front_setback_used_m", "env": {}, "want": { "k": "num", "v": 6, "u": "m" } },
+    { "name": "readName refuses a fact above its bounds", "fn": "readName", "id": "user_mean_m", "env": { "facts": { "user_mean_m": 25 } }, "want": { "k": "ne", "reason": "fact_out_of_bounds:user_mean_m" } },
+    { "name": "readName reads a fact inside its bounds", "fn": "readName", "id": "user_mean_m", "env": { "facts": { "user_mean_m": 4 } }, "want": { "k": "num", "v": 4, "flags": ["user_supplied"] } },
+    { "name": "readName carries a fact's not_evaluated reason", "fn": "readName", "id": "nbr_q_n", "env": { "facts": { "nbr_q_n": { "not_evaluated": "no_candidate" } } }, "want": { "k": "ne", "reason": "no_candidate", "flags": ["front_yard_needs_survey"] } },
+    { "name": "readName of a missing fact", "fn": "readName", "id": "nbr_q_n", "env": { "facts": {} }, "want": { "k": "ne", "reason": "missing_input:nbr_q_n" } },
+    { "name": "readName reads a geometry input", "fn": "readName", "id": "lot_area_m2", "env": { "geometry": { "lot_area_m2": 600 } }, "want": { "k": "num", "v": 600, "u": "m2" } },
+    { "name": "readName of a missing geometry input", "fn": "readName", "id": "lot_depth_m", "env": { "geometry": {} }, "want": { "k": "ne", "reason": "missing_input:lot_depth_m" } },
+    { "name": "readName refuses a Layer 2 target used as a name", "fn": "readName", "id": "fsi", "env": {}, "want": { "k": "ne", "reason": "expression_error:target_not_via_l2" } },
+    { "name": "readName of an unknown name", "fn": "readName", "id": "nope_x", "env": {}, "want": { "k": "ne", "reason": "expression_error:unknown_variable" } },
+    { "name": "readHolds reads a known lot flag", "fn": "readHolds", "id": "corner_lot", "env": { "lotFlags": { "corner_lot": true } }, "want": true },
+    { "name": "readHolds of an unknown lot flag", "fn": "readHolds", "id": "corner_lot", "env": { "lotFlags": {} }, "want": { "k": "ne", "reason": "condition_unknown:corner_lot" } },
+    { "name": "readRegulated of a not_applicable target is false", "fn": "readRegulated", "id": "height_storeys", "env": { "cells": { "height_storeys": { "s": "not_applicable", "kind": "number", "value": null, "clause": "c", "reason": null } } }, "want": false },
+    { "name": "readRegulated of an unlimited target is false", "fn": "readRegulated", "id": "height_storeys", "env": { "cells": { "height_storeys": { "s": "applies", "kind": "unlimited", "value": null, "clause": "c", "reason": null } } }, "want": false },
+    { "name": "readRegulated of a number is true", "fn": "readRegulated", "id": "height_storeys", "env": { "cells": { "height_storeys": { "s": "applies", "kind": "number", "value": 3, "clause": "c", "reason": null } } }, "want": true },
+    { "name": "readRegulated passes a not_evaluated cell through", "fn": "readRegulated", "id": "height_storeys", "env": { "cells": { "height_storeys": { "s": "not_evaluated", "kind": null, "value": null, "clause": null, "reason": "r1" } } }, "want": { "k": "ne", "reason": "r1" } }
+  ]
+}

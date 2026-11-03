@@ -32,6 +32,8 @@
 // in the S6b report (`ARG_SUBSTITUTION`), not a ruling.
 
 import { DslError, combineUnits, parseCond, parseExpr, parseStatement, unitTable } from './dsl.mjs';
+import { LEX } from './dsl.mjs';
+import { evaluateL3Source } from './evaluate-l3.mjs';
 
 export const LAYER_RANK = Object.freeze({ base: 0, overlay: 1, exception: 2, provincial: 3 });
 /**
@@ -217,6 +219,7 @@ export function enactedDatesFromText(text) {
  * ctx: a vocab or a context from makeContext(); optional ctx.resolveVariable(name) and ctx.argEdits {path: null|AST}.
  */
 export function evaluate(expr, lot, ctx) {
+  if (ctx && ctx.layer === LEX.w.l3) return evaluateL3Source(expr, ctx.l3);
   const C = ctxOf(ctx);
   let ast; let clausePath = null;
   try {

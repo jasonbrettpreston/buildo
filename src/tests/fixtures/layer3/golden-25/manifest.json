@@ -1,0 +1,52 @@
+{
+ "schema": "golden25-manifest-v1",
+ "note": "sha256 of every file of this folder (the test pins the sha256 of this manifest). Mode A: the Layer 2 half is recomputed by materializeBatch with MB-18 (k) in and (j) (i) (l) out. See ~/Buildo-scratch/mcbylaws/MB-31/inc1-plan.md.",
+ "files": {
+  "inputs.jsonl": "563eed60ae7f0b7774036fd765ff1a120fc3b3ba259881401ffcd4cbcb6778c4",
+  "expected.jsonl": "0c4bbc40c20a9d51c11b9674e2e3687c95727bfca2876b94b8ecc009b0c331e3",
+  "refusals.json": "ef48b4da14665b797c76e3f1a5d30034e0ea0b51a72b116897191fd588fdfd8e",
+  "mcproof-e25.json": "4bfcc1603aed1d62a3933e20b3fc73c0e0a2d936dd9998d39c5545e0d401d33f",
+  "source-inputs.jsonl": "a1b9636109786c481b5c75add26fa611c39de5fe966733cc5e5f91505a0fec24",
+  "parcels-rows.json": "9f71124b0823dcfb62fba539904424196cdbb4f9e7a5b3192a92e3174e40969d",
+  "flag-corrections.json": "eb265910f83145a7f59f51994c696a1b0987c0d27b45aa53c0fe63976ad02350"
+ },
+ "provenance": {
+  "parcels_rows": "one read-only SELECT of the 17 parcels columns resolve_bylaws reads, for these parcel ids, on the local stack 127.0.0.1:54322, by scripts/analysis/bylaw-validation/golden25-db-rows.mjs on 2026-11-02",
+  "parcel_ids": [
+   6640,
+   30065,
+   30554,
+   33830,
+   119522,
+   120669,
+   122034,
+   153191,
+   159079,
+   169742,
+   170105,
+   173273,
+   205238,
+   216666,
+   258388,
+   274216,
+   283723,
+   304365,
+   313999,
+   403569,
+   410720,
+   427312,
+   428050,
+   442123,
+   461807
+  ],
+  "migration_level_in_repo": 294,
+  "source_inputs": "verbatim copy of MB-64 data/expected-25-inputs.jsonl (the McProof read-back against the local database found all 25 equal)",
+  "expected": "copy of MB-64 data/expected-25.jsonl (v4) with the flag sets of 21 cells corrected (flags only; operator answer CARD-mb31-inc1-flags, option 1; the cells are listed in flag-corrections.json)",
+  "regenerate": "node scripts/analysis/bylaw-validation/golden25-inputs.mjs   (and --check)"
+ },
+ "mcproof": {
+  "result": "mcproof-e25.json: the 25-row result of e25-check.mjs after the one-line fix of line 37",
+  "checker_sha256": "cda2eb67c3bdbb07b0a83e6231a1e3a830d7d334ed26c0370dea78d3b205d628",
+  "checker_fix": "chk('storeys', st + FAULT, ...) -> chk('storeys', st == null ? null : st + FAULT, ...)  (null + 0 is 0; lane T applies the same fix)"
+ }
+}

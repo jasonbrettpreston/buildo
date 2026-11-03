@@ -27,6 +27,9 @@
 // · unknown_function · mixed_and_or · band_arm_not_literal · min_max_arity · duplicate_by_type_key · value_form_mixed
 // · too_deep (nesting past MAX_NEST — parse and canonicalize are bounded, so no input ever overflows the stack).
 
+import L3_CATALOGUE from '../../seeds/bylaw/layer3-catalogue.json' with { type: 'json' };
+export const LEX = L3_CATALOGUE.lexicon;
+
 export const LITERAL_UNITS = Object.freeze(['m', 'm2', 'pct', 'storeys', 'units', 'ratio']);
 export const VALUE_FORMS = Object.freeze(['literal', 'band', 'formula', 'by_building_type', 'if', 'map_lookup', 'existing_as_of', 'none']);
 export const DSL_ERROR_CODES = Object.freeze([
@@ -37,6 +40,10 @@ export const DSL_ERROR_CODES = Object.freeze([
 export const MAX_NEST = 200;
 
 const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'enacted', 'label', 'overlay', 'unlimited', 'unregulated', 'mapped', 'labelled', 'holds', 'not', 'and', 'or']);
+// MB-31 (M-72 Layer 3 forms, plan section 3 E1): enabled only by { layer: 'l3' }; Layer 1/2 parsing is unchanged.
+const L3_REF_FNS = [LEX.w.lv, LEX.w.l2];
+const L3_INT_FNS = [LEX.w.floor, LEX.w.ceil, LEX.w.round];
+const L3_REFUSED_FNS = [LEX.w.label, LEX.w.overlay, LEX.w.mapped, LEX.w.labelled];
 const OPS = { '+': '+', '-': '−', '−': '−', '*': '×', '×': '×', '/': '÷', '÷': '÷' };
 const CMPS = { '<': '<', '<=': '≤', '≤': '≤', '>': '>', '>=': '≥', '≥': '≥', '=': '=' };
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*/;
@@ -92,7 +99,7 @@ function tokenize(src) {
 
 // ---------------------------------------------------------------- parser
 class Parser {
-  constructor(src) { this.src = src; this.toks = tokenize(src); this.i = 0; this.depth = 0; }
+  constructor(src, opts) { this.src = src; this.toks = tokenize(src); this.i = 0; this.depth = 0; this.l3 = !!(opts && opts.layer === LEX.w.l3); }
   nest(fn) {
     if (++this.depth > MAX_NEST) throw new DslError('too_deep', `nesting deeper than ${MAX_NEST} in: ${this.src.slice(0, 120)}`);
     try { return fn(); } finally { this.depth--; }
@@ -146,7 +153,14 @@ class Parser {
     }
     this.next();
     let node;
-    if (name === 'max' || name === 'min') {
+    // MB-31 (M-72 Layer 3 forms, plan section 3 E1): enabled only by { layer: 'l3' }; Layer 1/2 parsing is unchanged.
+    if (this.l3 && L3_REF_FNS.includes(name)) {
+      node = { type: name, id: this.expect(LEX.w.id).v };
+    } else if (this.l3 && L3_INT_FNS.includes(name)) {
+      node = { type: LEX.w.int, fn: name, a: this.expr() };
+    } else if (this.l3 && L3_REFUSED_FNS.includes(name)) {
+      throw new DslError(LEX.w.unknown_function, `${name}${LEX.p.is_not_a_layer_3_form_in} ${this.src}`);
+    } else if (name === LEX.w.max || name === LEX.w.min) {
       const args = [this.arg()];
       while (this.isTok(';')) { this.next(); args.push(this.arg()); }
       if (args.length < 2) throw new DslError('min_max_arity', `${name} needs ≥ 2 arguments in: ${this.src}`);
@@ -231,6 +245,10 @@ class Parser {
   atom() { return this.nest(() => this.atom0()); }
   atom0() {
     if (this.isId('not')) { this.next(); return { type: 'not', x: this.atom() }; }
+    // MB-31 (M-72 Layer 3 forms, plan section 3 E1): enabled only by { layer: 'l3' }; Layer 1/2 parsing is unchanged.
+    if (this.l3 && this.isId(LEX.w.mapped) && this.isTok(LEX.p.open, 1)) throw new DslError(LEX.w.unknown_function, `${LEX.p.mapped_is_not_a_layer_3_form_in} ${this.src}`);
+    if (this.l3 && this.isId(LEX.w.labelled) && this.isTok(LEX.p.open, 1)) throw new DslError(LEX.w.unknown_function, `${LEX.p.labelled_is_not_a_layer_3_form_in} ${this.src}`);
+    if (this.l3 && this.isId(LEX.w.regulated) && this.isTok(LEX.p.open, 1)) { this.next(); this.next(); const id = this.expect(LEX.w.id).v; this.expect(LEX.p.close); return { type: LEX.w.regulated, id }; }
     if (this.isId('mapped') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'mapped', code: c }; }
     if (this.isId('labelled') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'labelled', letter: c }; }
     // M-241 (N-2, operator approved 2026-10-20): holds(<lot condition token>) — one statement's own condition when a clause
@@ -238,7 +256,11 @@ class Parser {
     if (this.isId('holds') && this.isTok('(', 1)) { this.next(); this.next(); const t = this.expect('id').v; this.expect(')'); return { type: 'holds', token: t }; }
     if (this.isTok('(')) { this.next(); const c = this.cond(); this.expect(')'); return c; }
     const lhs = this.expr();
-    const cmp = this.expect('cmp').v;
+    const cmp = this.expect(LEX.w.cmp).v;
+    if (this.l3) {
+      const node = this.expr();
+      return node.type === LEX.w.lit ? { type: 'cmp', lhs, cmp, lit: node } : { type: 'cmp', lhs, cmp, rhs: node };
+    }
     return { type: 'cmp', lhs, cmp, lit: this.literal() };
   }
 }
@@ -261,7 +283,7 @@ export function parseStatement(src) {
 }
 
 /** Parse a bare expression (no target, no final @). */
-export function parseExpr(src) { const p = new Parser(src); const e = p.expr(); p.done(); return e; }
+export function parseExpr(src, opts) { const p = new Parser(src, opts); const e = p.expr(); p.done(); return e; }
 
 // M-242 (N-3, operator approved 2026-10-20, 2026-10-20-bylaw-fix-rulings#N-3): a whole condition may be the complement of
 // one or more sibling arms, complement(<unit id>, …) — "in all other cases" takes not (the condition of each arm it
@@ -269,14 +291,14 @@ export function parseExpr(src) { const p = new Parser(src); const e = p.expr(); 
 const COMPLEMENT_RE = /^\s*complement\s*\(([\s\S]*)\)\s*$/;
 const UNIT_REF_RE = /^[0-9][0-9A-Za-z.()@-]*#[0-9A-Za-z().-]+$/;
 /** Parse a condition (`condition.if`). */
-export function parseCond(src) {
+export function parseCond(src, opts) {
   const m = typeof src === 'string' ? COMPLEMENT_RE.exec(src) : null;
   if (m) {
     const of = m[1].split(',').map((x) => x.trim());
     if (!of.length || of.some((x) => !UNIT_REF_RE.test(x))) throw new DslError('syntax', `complement(…) names sibling unit ids: ${src}`);
     return { type: 'complement', of };
   }
-  const p = new Parser(src); const c = p.cond(); p.done(); return c;
+  const p = new Parser(src, opts); const c = p.cond(); p.done(); return c;
 }
 
 /** A unit's numeric_expression: "none" | string | string[] → statement ASTs ([] for "none"). */
@@ -309,6 +331,10 @@ function canonCore(e) {
     case 'label': return `label(${e.letter})`;
     case 'overlay': return `overlay(${e.code})`;
     case 'existing': return `existing(${e.var};${e.date ?? `enacted(${e.enacted})`})`;
+    // MB-31 (M-72 Layer 3 forms, plan section 3 E1): enabled only by { layer: 'l3' }; Layer 1/2 parsing is unchanged.
+    case LEX.w.lv: return `${LEX.p.lv}${e.id}${LEX.p.close}`;
+    case LEX.w.l2: return `${LEX.p.l2}${e.id}${LEX.p.close}`;
+    case LEX.w.int: return `${e.fn}${LEX.p.open}${canonExpr(e.a)}${LEX.p.close}`;
     case 'call': return `${e.fn}(${e.args.map(canonExpr).sort(byStr).join(';')})`;
     case 'band': return `band(${e.v.name};${e.arms.map((a) => a.conds.map((c) => c.cmp + canonExpr(c.lit)).join('and') + ':' + canonExpr(a.value)).join(';')})`;
     case 'if': return `if(${canonCond(e.cond)};${canonExpr(e.a)};${canonExpr(e.b)})`;
@@ -344,7 +370,9 @@ function canonCond0(c) {
     case 'mapped': return `mapped(${c.code})`;
     case 'labelled': return `labelled(${c.letter})`;
     case 'holds': return `holds(${c.token})`;
-    case 'cmp': return canonExpr(c.lhs) + c.cmp + canonExpr(c.lit);
+    // MB-31 (M-72 Layer 3 forms, plan section 3 E1): enabled only by { layer: 'l3' }; Layer 1/2 parsing is unchanged.
+    case LEX.w.regulated: return `${LEX.p.regulated}${c.id}${LEX.p.close}`;
+    case LEX.w.cmp: return c.rhs ? canonExpr(c.lhs) + c.cmp + canonExpr(c.rhs) : canonExpr(c.lhs) + c.cmp + canonExpr(c.lit);
     default: throw new DslError('syntax', `canonical: unknown condition ${c.type}`);
   }
 }
@@ -393,6 +421,7 @@ export function valueFormOf(e) {
     case 'call': return 'formula';
     case 'bin': return 'formula';
     case 'var': return 'formula';
+    case LEX.w.lv: case LEX.w.l2: case LEX.w.int: return LEX.w.formula; // MB-31 Layer 3 forms (plan section 3 E1)
     case 'by_type': return 'by_building_type';
     case 'if': return 'if';
     case 'label': case 'overlay': return 'map_lookup';
@@ -443,6 +472,130 @@ export function combineUnits(op, a, b) {
   if (b === 'ratio') return a;
   if (a === 'm2' && b === 'm') return 'm';
   return null;
+}
+
+// MB-31 (M-72, E2; E31-09): Layer 3 unit algebra; Layer 1 combineUnits is unchanged.
+// A count (a computed storeys / units figure) behaves exactly like `units` inside a product.
+const asUnits = (u) => (u === LEX.w.count ? LEX.w.units : u);
+
+/** Layer 3 product / quotient units: an area scales by a storey count, a percentage never multiplies itself or divides. */
+export function combineUnitsL3(op, a, b) {
+  const x = asUnits(a);
+  const y = asUnits(b);
+  if (op === LEX.p.times) {
+    if (a === LEX.w.pct && b === LEX.w.pct) return null;
+    if (a === LEX.w.m2 && b === LEX.w.storeys) return LEX.w.m2;
+    if (b === LEX.w.m2 && a === LEX.w.storeys) return LEX.w.m2;
+  }
+  if (op === LEX.p.divide && a === LEX.w.pct) return null;
+  return combineUnits(op, x, y);
+}
+
+/** Unify two Layer 3 units: `count` equals `storeys` or `units` and yields the other unit; otherwise equality. */
+function unifyL3(a, b) {
+  if (a === null || b === null) return { ok: true, unit: a ?? b };
+  if (a === b) return { ok: true, unit: a };
+  if (a === LEX.w.count && (b === LEX.w.storeys || b === LEX.w.units)) return { ok: true, unit: b };
+  if (b === LEX.w.count && (a === LEX.w.storeys || a === LEX.w.units)) return { ok: true, unit: a };
+  return { ok: false, unit: null };
+}
+function unifyAllL3(us) {
+  let out = null;
+  for (const u of us) {
+    const r = unifyL3(out, u);
+    if (!r.ok) return r;
+    out = r.unit;
+  }
+  return { ok: true, unit: out };
+}
+
+/**
+ * Static unit of a Layer 3 expression: `U = { lv:{id:unit}, l2:{id:unit}, names:{id:unit}, flags:string[] }`.
+ * Returns `{ unit, errs }`; an unknown reference is reported, never thrown.
+ */
+export function staticUnitL3(ast, U) {
+  const errs = [];
+  const u = { lv: (U && U.lv) || {}, l2: (U && U.l2) || {}, names: (U && U.names) || {}, flags: (U && U.flags) || [] };
+  const unit = staticExprL3(ast, u, errs);
+  return { unit, errs };
+}
+
+function staticExprL3(e, U, errs) {
+  switch (e.type) {
+    case LEX.w.lit: return e.unit;
+    case LEX.w.unlimited: case LEX.w.unregulated: return null; // terminal in Layer 3: no unit, no error
+    case LEX.w.lv: {
+      const out = U.lv[e.id];
+      if (!out) errs.push(`${LEX.p.unknown_variable_lv}${e.id}${LEX.p.close}`);
+      return out ?? null;
+    }
+    case LEX.w.l2: {
+      const out = U.l2[e.id];
+      if (!out) errs.push(`${LEX.p.unknown_target} ${e.id}`);
+      return out ?? null;
+    }
+    case LEX.w.var: {
+      const out = U.names[e.name];
+      if (out) return out;
+      if (Object.prototype.hasOwnProperty.call(U.l2, e.name)) errs.push(`${LEX.p.target_not_via_l2} ${e.name}`);
+      else errs.push(`${LEX.p.unknown_variable} ${e.name}`);
+      return null;
+    }
+    case LEX.w.int: {
+      const a = staticExprL3(e.a, U, errs);
+      return a === LEX.w.ratio ? LEX.w.count : a;
+    }
+    case LEX.w.bin: {
+      const a = staticExprL3(e.l, U, errs);
+      const b = staticExprL3(e.r, U, errs);
+      if (!a || !b) return null;
+      const out = combineUnitsL3(e.op, a, b);
+      if (!out) errs.push(`${LEX.p.unit_mismatch} ${a} ${e.op} ${b}`);
+      return out;
+    }
+    case LEX.w.call: {
+      const r = unifyAllL3(e.args.map((a) => staticExprL3(a, U, errs)));
+      if (!r.ok) errs.push(`${LEX.p.unit_mismatch} ${e.fn} ${LEX.p.mixes_units}`);
+      return r.unit;
+    }
+    case LEX.w.if: {
+      condUnitsL3(e.cond, U, errs);
+      const r = unifyAllL3([staticExprL3(e.a, U, errs), staticExprL3(e.b, U, errs)]);
+      if (!r.ok) errs.push(LEX.p.unit_mismatch_if_branches_mix_units);
+      return r.unit;
+    }
+    default: errs.push(`${LEX.p.unknown_node} ${e.type}`); return null;
+  }
+}
+
+function condUnitsL3(c, U, errs) {
+  switch (c.type) {
+    case LEX.w.cmp: {
+      const a = staticExprL3(c.lhs, U, errs);
+      const b = c.lit ? c.lit.unit : staticExprL3(c.rhs, U, errs);
+      if (a && b && !unifyL3(a, b).ok) errs.push(`${LEX.p.unit_mismatch_condition} ${a} ${c.cmp} ${b}`);
+      return;
+    }
+    case LEX.w.regulated: if (!U.l2[c.id]) errs.push(`${LEX.p.unknown_target} ${c.id}`); return;
+    case LEX.w.holds: if (!U.flags.includes(c.token)) errs.push(`${LEX.p.unknown_flag} ${c.token}`); return;
+    case LEX.w.and: case LEX.w.or: for (const x of c.xs) condUnitsL3(x, U, errs); return;
+    case LEX.w.not: condUnitsL3(c.x, U, errs); return;
+    default: errs.push(`${LEX.p.unknown_node} ${c.type}`);
+  }
+}
+
+/** Row-level Layer 3 unit check: parse, static unit, then compare with the catalogue row's declared unit. */
+export function checkRowL3(row, U) {
+  if (!row || row.form === LEX.w.status) return [];
+  let ast;
+  try { ast = parseExpr(row.expression, { layer: LEX.w.l3 }); } catch (e) {
+    if (e instanceof DslError) return [`${LEX.p.parse_error} ${e.code}`];
+    throw e;
+  }
+  const { unit, errs } = staticUnitL3(ast, U);
+  if (!errs.length && unit && row.unit && !unifyL3(unit, row.unit).ok) errs.push(`${LEX.p.unit_mismatch_expression} ${unit} ${LEX.p.row} ${row.unit}`);
+  // one error per distinct violation, first occurrence order kept: a row that names the same bad target twice reports it once
+  return [...new Set(errs)];
 }
 
 /**
@@ -562,6 +715,28 @@ export function variablesOf(node, out = new Set()) {
     else if (v && typeof v === 'object') variablesOf(v, out);
   }
   return out;
+}
+
+// MB-31 (M-72 Layer 3 forms, plan section 3 E1): enabled only by { layer: 'l3' }; Layer 1/2 parsing is unchanged.
+/** Every reference a Layer 3 AST names: lv(...) ids, l2(...)/regulated(...) ids, and bare variable names. Each sorted, unique. */
+export function l3RefsOf(node) {
+  const lv = new Set();
+  const l2 = new Set();
+  const names = new Set();
+  const walk = (n) => {
+    if (!n || typeof n !== LEX.w.object) return;
+    if (n.type === LEX.w.lv) lv.add(n.id);
+    else if (n.type === LEX.w.l2 || n.type === LEX.w.regulated) l2.add(n.id);
+    else if (n.type === LEX.w.var) names.add(n.name);
+    for (const k of Object.keys(n)) {
+      const v = n[k];
+      if (Array.isArray(v)) for (const x of v) walk(x);
+      else if (v && typeof v === LEX.w.object) walk(v);
+    }
+  };
+  walk(node);
+  const sorted = (s) => [...s].sort(byStr);
+  return { lv: sorted(lv), l2: sorted(l2), names: sorted(names) };
 }
 
 /** Argument clause paths (`arg @clause`) inside an AST — the targets argument-level displacement may name. */

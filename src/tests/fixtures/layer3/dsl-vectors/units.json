@@ -1,0 +1,37 @@
+{
+  "$comment": "MB-31 B0a oracle vectors (C1, B2): combineUnitsL3 (area × storeys, pct rules), the unchanged Layer 1 combineUnits, and checkRowL3 row errors over the catalogue unit table U.",
+  "base": {
+    "U": {
+      "lv": { "fya_porch_allowance_m": "m", "s1_ceiling_min_m": "m", "s1_floor_assembly_m": "m", "s1_parapet_m": "m", "s2_first_floor_above_grade_m": "m", "footprint_shape_factor": "ratio" },
+      "l2": { "height_m": "m", "height_storeys": "storeys", "fsi": "ratio", "lot_coverage_pct": "pct", "gfa_m2": "m2", "rear_setback_m": "m", "side_setback_m": "m", "side_setback_street_m": "m", "building_depth_m": "m", "building_length_m": "m", "dwelling_units_max": "units" },
+      "names": { "lot_area_m2": "m2", "lot_frontage_m": "m", "lot_depth_m": "m", "front_setback_used_m": "m", "depth_room_m": "m", "buildable_width_m": "m", "buildable_depth_m": "m", "footprint_max_m2": "m2", "storeys_max": "storeys", "bt_units": "units" },
+      "flags": ["corner_lot"]
+    }
+  },
+  "cases": [
+    { "name": "m2 × storeys is an area", "combine": ["×", "m2", "storeys"], "want": "m2" },
+    { "name": "storeys × m2 is an area", "combine": ["×", "storeys", "m2"], "want": "m2" },
+    { "name": "pct × pct is illegal", "combine": ["×", "pct", "pct"], "want": null },
+    { "name": "pct ÷ ratio is illegal", "combine": ["÷", "pct", "ratio"], "want": null },
+    { "name": "pct ÷ m is illegal", "combine": ["÷", "pct", "m"], "want": null },
+    { "name": "m × m is an area", "combine": ["×", "m", "m"], "want": "m2" },
+    { "name": "m ÷ m is a ratio", "combine": ["÷", "m", "m"], "want": "ratio" },
+    { "name": "pct × m2 is an area", "combine": ["×", "pct", "m2"], "want": "m2" },
+    { "name": "m + m is a length", "combine": ["+", "m", "m"], "want": "m" },
+    { "name": "m − m2 is illegal", "combine": ["−", "m", "m2"], "want": null },
+    { "name": "Layer 1 m2 × storeys stays a mismatch", "layer1": ["×", "m2", "storeys"], "want": null },
+    { "name": "row footprint checks clean", "row": { "expression": "min(buildable_width_m × buildable_depth_m; l2(lot_coverage_pct) × lot_area_m2) × lv(footprint_shape_factor)", "unit": "m2", "form": "expr" }, "errs": [] },
+    { "name": "row gfa checks clean", "row": { "expression": "min(footprint_max_m2 × storeys_max; l2(fsi) × lot_area_m2; l2(gfa_m2))", "unit": "m2", "form": "expr" }, "errs": [] },
+    { "name": "row storeys checks clean", "row": { "expression": "if(regulated(height_storeys); l2(height_storeys); floor((l2(height_m) − lv(s2_first_floor_above_grade_m) − (lv(s1_floor_assembly_m) + lv(s1_parapet_m))) ÷ (lv(s1_ceiling_min_m) + lv(s1_floor_assembly_m))))", "unit": "storeys", "form": "expr" }, "errs": [] },
+    { "name": "row units checks clean", "row": { "expression": "min(bt_units; l2(dwelling_units_max))", "unit": "units", "form": "expr" }, "errs": [] },
+    { "name": "row buildable width checks clean", "row": { "expression": "min(depth_room_m; l2(building_depth_m); l2(building_length_m))", "unit": "m", "form": "expr" }, "errs": [] },
+    { "name": "row depth room checks clean", "row": { "expression": "lot_depth_m − front_setback_used_m − l2(rear_setback_m)", "unit": "m", "form": "expr" }, "errs": [] },
+    { "name": "a target used as a name is reported", "row": { "expression": "fsi × lot_area_m2", "unit": "m2", "form": "expr" }, "errs": ["target_not_via_l2: fsi"] },
+    { "name": "an unknown lv id is reported", "row": { "expression": "lv(nope_m)", "unit": "m", "form": "expr" }, "errs": ["unknown_variable: lv(nope_m)"] },
+    { "name": "an unknown l2 id is reported", "row": { "expression": "l2(nope_m)", "unit": "m", "form": "expr" }, "errs": ["unknown_target: nope_m"] },
+    { "name": "pct × pct is a unit mismatch", "row": { "expression": "l2(lot_coverage_pct) × l2(lot_coverage_pct)", "unit": "pct", "form": "expr" }, "errs": ["unit_mismatch"] },
+    { "name": "an unknown flag is reported", "row": { "expression": "if(holds(nope_flag); 1 m; 2 m)", "unit": "m", "form": "expr" }, "errs": ["unknown_flag: nope_flag"] },
+    { "name": "a row unit that disagrees with the expression is reported", "row": { "expression": "l2(height_m)", "unit": "m2", "form": "expr" }, "errs": ["unit_mismatch"] },
+    { "name": "an unparsable expression is reported as a parse error", "row": { "expression": "l2(height_m", "unit": "m", "form": "expr" }, "errs": ["parse_error"] }
+  ]
+}

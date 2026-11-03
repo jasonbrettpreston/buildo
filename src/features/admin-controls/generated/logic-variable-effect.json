@@ -1475,6 +1475,20 @@
       "label": "Not read — scheduled for retirement",
       "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
     },
+    "compute_maxbld_scenarios_batch_size": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_population_parcel_ids": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
     "enrich_permits_bylaw_max_coverage_null_warn_pct": {
       "badge": "takes_effect_at_cutover",
       "label": "Takes effect at cutover",

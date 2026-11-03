@@ -7130,7 +7130,7 @@
     "type": "number",
     "min": 0,
     "max": 3,
-    "description": "Front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) dated note; Spec 131 LC-58). Where 10.5.40.70(1) averaging applies, the front setback is max(averaged neighbour estimate + this allowance, the zone default of x.40.70(1)), always flagged needs survey. The neighbour estimates are measured to building outlines that take in porches and steps; against 219 CoA notices they sit at or below the examiner's figure 89 % of the time. At 1.0 m: mean error 1.39 m, 55 % within 1 m, 22 % below the examiner (6.0 m alone: 2.53 m, 64 %). CONSUMED by scripts/analysis/bylaw/front-averaging.mjs and scripts/analysis/bylaw-validation/front-setback-oracle.cjs.",
+    "description": "Front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) dated note; Spec 131 LC-58). Where 10.5.40.70(1) averaging applies (both abutters within 15.0 m, M-414), the front setback is the mean of the qualifying neighbour estimates + this allowance, always flagged needs survey; the earlier \"max with the zone default of x.40.70(1)\" wording is dropped: the catalogue row front_setback_used_m ends the chain at the stored fallback (front_setback_fallback_m) instead (FS-SB2a, CARD-fs-sb2a). The neighbour estimates are measured to building outlines that take in porches and steps; against 219 CoA notices they sit at or below the examiner's figure 89 % of the time. At 1.0 m: mean error 1.39 m, 55 % within 1 m, 22 % below the examiner (6.0 m alone: 2.53 m, 64 %). CONSUMED by scripts/analysis/bylaw/front-averaging.mjs and scripts/analysis/bylaw-validation/front-setback-oracle.cjs.",
     "admin": { "group": "Source Ingestion" }
   },
   "fya_placeholder_street_radius_m": {
@@ -7138,7 +7138,7 @@
     "type": "number",
     "min": 10,
     "max": 1000,
-    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: radius (metres) within which other lots on the same street feed the same-street median. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: radius (metres) within which other lots on the same street feed the same-street median. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs. Amended by FS-SB2a (operator 2026-10-31, CARD-fs-sb2a): the neighbour ring (fya_placeholder_ring_depth lots beyond the abutters, at least fya_placeholder_ring_min_n measurable) is tried first; this variable is unchanged and applies only when the ring falls short.",
     "admin": { "group": "Source Ingestion" }
   },
   "fya_placeholder_street_min_n": {
@@ -7146,7 +7146,7 @@
     "type": "number",
     "min": 1,
     "max": 20,
-    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: minimum number of other same-street lots within that radius for the same-street median to count. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: minimum number of other same-street lots within that radius for the same-street median to count. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs. Amended by FS-SB2a (operator 2026-10-31, CARD-fs-sb2a): the neighbour ring (fya_placeholder_ring_depth lots beyond the abutters, at least fya_placeholder_ring_min_n measurable) is tried first; this variable is unchanged and applies only when the ring falls short.",
     "admin": { "group": "Source Ingestion" }
   },
   "fya_placeholder_zone_radius_m": {
@@ -7154,7 +7154,7 @@
     "type": "number",
     "min": 50,
     "max": 3000,
-    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: radius (metres) within which same-zone lots feed the zone median. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: radius (metres) within which same-zone lots feed the zone median. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs. Amended by FS-SB2a (operator 2026-10-31, CARD-fs-sb2a): the neighbour ring (fya_placeholder_ring_depth lots beyond the abutters, at least fya_placeholder_ring_min_n measurable) is tried first; this variable is unchanged and applies only when the ring falls short.",
     "admin": { "group": "Source Ingestion" }
   },
   "fya_placeholder_zone_min_n": {
@@ -7162,7 +7162,7 @@
     "type": "number",
     "min": 1,
     "max": 50,
-    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: minimum number of same-zone lots within that radius for the zone median to count. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
+    "description": "Front setback placeholder (operator ruling 2026-10-29, card FS-SB2; Spec 69a M-245, M-256, CHAT-198.NN-Q4): where neighbours exist but their front setbacks cannot be measured, the placeholder is the mean of the subject lot's own footprint front setback + fya_porch_allowance_m and the same-street median + fya_porch_allowance_m, else the same-zone median + the allowance, else 6.0 m, always needs survey. This variable: minimum number of same-zone lots within that radius for the zone median to count. A fitted value, not law: bounded, fit_basis the held-out test of ~/Buildo-scratch/p2close/front-setback-placeholder.md (264 lots, radius choice flat between 50 and 400 m), re-fit by re-running that audit. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs. Amended by FS-SB2a (operator 2026-10-31, CARD-fs-sb2a): the neighbour ring (fya_placeholder_ring_depth lots beyond the abutters, at least fya_placeholder_ring_min_n measurable) is tried first; this variable is unchanged and applies only when the ring falls short.",
     "admin": { "group": "Source Ingestion" }
   },
   "abut_parcels_with_abutments_warn_pct": {
@@ -10116,6 +10116,120 @@
     "description": "Spec 134 §7 WARN: the share (percent) of results that are not_evaluated. Interim 100 (never warns) until the first POST capture measures it; retighten to the measured share plus margin (Spec 124 R-H). Migration 282. CONSUMED by scripts/lib/compute/resolve-bylaws.js.",
     "admin": {
       "group": "Layer 2 By-law Resolution"
+    }
+  },
+  "s1_ceiling_min_m": {
+    "default": 2.3,
+    "type": "number",
+    "min": 2.3,
+    "max": 2.3,
+    "description": "S-1 (M-404, 69a:541; card CARD-aj3-four item 1): minimum finished ceiling height in living, dining and kitchen space, over at least 75 % of the area. CITE: Ontario Building Code 2024, Part 9, Table 9.5.3.1. Floor-to-floor f = s1_ceiling_min_m + s1_floor_assembly_m. Pinned: changes only by a ruling. CONSUMED by the catalogue row storeys_max (scripts/analysis/bylaw evaluator, lv()).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "s1_floor_assembly_m": {
+    "default": 0.212,
+    "type": "number",
+    "min": 0.212,
+    "max": 0.212,
+    "description": "S-1 (M-404): one floor assembly = joist 184 mm (Table 9.23.4.2.-A) + subfloor 15.5 mm (Table 9.23.15.5.-A) + ceiling board 12.7 mm (Table 9.29.5.3) = 212.2 mm; finished floor and furring are 0 and disclosed as not cited; the 184 mm joist is a disclosed design choice. CITE: OBC 2024 Part 9 tables named. Roof allowance a = s1_floor_assembly_m + s1_parapet_m. Pinned. CONSUMED by storeys_max.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "s1_parapet_m": {
+    "default": 0.3,
+    "type": "number",
+    "min": 0.3,
+    "max": 0.3,
+    "description": "S-1 (M-404): roof allowance beyond one floor assembly. CITE: 10.20.40.10(5); that regulation governs RD main wall height only, so its use for building height is a disclosed extension. Pinned. CONSUMED by storeys_max.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "s2_first_floor_above_grade_m": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 0,
+    "description": "S-2 (M-405, 69a:542; card wave0 section B): first floor height above established grade, taken as 0 and disclosed as an assumption; subtracted from the height before S-1 converts it. Changes only by a ruling. Pinned. CONSUMED by storeys_max.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "footprint_shape_factor": {
+    "default": 1,
+    "type": "number",
+    "min": 1,
+    "max": 1,
+    "description": "LC-69 (131:119), M-392, M-418: the footprint is a box, disclosed 'box shape assumed; entrances and projections not modelled'. This factor is 1.0 while the switchboard reading shape_calibration is off; it is read only when that switch is on AND a fitted value with provenance (n cases, date, audit file) exists (R3-10 fails closed). Bounds are pinned 1..1 because M-392 was approved without the proposed [0.5, 1.0]; a later ruling sets them. CONSUMED by the catalogue row footprint_max_m2.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_population_parcel_ids": {
+    "default": [
+      "6640",
+      "30065",
+      "30554",
+      "33830",
+      "119522",
+      "120669",
+      "122034",
+      "153191",
+      "159079",
+      "169742",
+      "170105",
+      "173273",
+      "205238",
+      "216666",
+      "258388",
+      "274216",
+      "283723",
+      "304365",
+      "313999",
+      "403569",
+      "410720",
+      "427312",
+      "428050",
+      "442123",
+      "461807"
+    ],
+    "type": "list",
+    "description": "Increment-1 population of compute_maxbld_scenarios (R-BT: the population is a query; this list narrows it): the 25 golden parcel ids of MB-64 (data/golden-parcel-map.json). An empty list means no parcel is computed. Widened by a setting change in the later increments (Q:85-94), never by code. List-typed: stored in variable_value_json (seed type list, Q-J), as DECIMAL STRINGS because the step library validates a list as distinct members of a closed list_of of strings (scripts/lib/step/config.js); the step converts them to integers (populationIds) before it binds them. Widening the population changes this seed AND the descriptor list_of together (operator answer CARD-mb31-inc1-blockers, blocker 2 option 2). CONSUMED by the step's population query.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "fya_placeholder_ring_depth": {
+    "default": 2,
+    "type": "number",
+    "min": 2,
+    "max": 4,
+    "description": "CARD-fs-sb2a (FS-SB2a, operator 2026-10-31, amends FS-SB2 / card CARD-front-setback-placeholder; Spec 69a M-245, M-256; evidence ~/Buildo-scratch/mcbylaws/research/Q4-neighbour-ring-vs-FS-SB2.md, 264 lots: FS-SB2 MAE 1.28 m, ring hybrid 1.10 m): where neighbours exist but their front setbacks cannot be measured, the street term of the placeholder is the mean of the measurable footprint estimates + fya_porch_allowance_m of the ring lots beyond the abutters along the frontage street, else the same-street median + the allowance; the term is averaged with the lot's own front setback + the allowance; always needs survey. This variable: ring depth, the number of lots along the frontage street in each walked direction counting the abutter as lot 1 (2 means the lot beyond each abutter). A fitted value, not law: bounded, fit_basis the held-out audit of Q4 (depth 2 MAE 1.10 m, depth 3 1.13 m), re-fit by a split-sample check now and a true re-fit when newly measured lots exist (L31-18). CONSUMED by the step compute_maxbld_scenarios declared read 6 (ring lots); the catalogue row does not read it. Calibration provisional (CARD-l31-15-16-18).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "fya_placeholder_ring_min_n": {
+    "default": 1,
+    "type": "number",
+    "min": 1,
+    "max": 4,
+    "description": "CARD-fs-sb2a (FS-SB2a, operator 2026-10-31, amends FS-SB2 / card CARD-front-setback-placeholder; Spec 69a M-245, M-256; evidence ~/Buildo-scratch/mcbylaws/research/Q4-neighbour-ring-vs-FS-SB2.md, 264 lots: FS-SB2 MAE 1.28 m, ring hybrid 1.10 m): where neighbours exist but their front setbacks cannot be measured, the street term of the placeholder is the mean of the measurable footprint estimates + fya_porch_allowance_m of the ring lots beyond the abutters along the frontage street, else the same-street median + the allowance; the term is averaged with the lot's own front setback + the allowance; always needs survey. This variable: minimum number of measurable ring lots for the ring term to count; below it the same-street median is the street term. A fitted value, not law (min 1: MAE 1.10 m; min 2: 1.16 m). CONSUMED by the catalogue row front_setback_used_m (lv). Calibration provisional (CARD-l31-15-16-18).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_batch_size": {
+    "default": 500,
+    "type": "number",
+    "min": 50,
+    "max": 5000,
+    "description": "McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): executed batch (R-DE (i)). Default 500, bounds [50, 5000]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). Inserted by migration 283; mirrored here because the descriptor declares it and the step library resolves a declared name through this seed (Spec 122 section 1.2a P4).",
+    "admin": {
+      "group": "Source Ingestion"
     }
   }
 }

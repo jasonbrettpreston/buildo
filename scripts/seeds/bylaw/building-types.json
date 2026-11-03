@@ -1,0 +1,7 @@
+{
+  "$comment": "MB-31, copied from the stage 2 draft: scripts/seeds/bylaw/building-types.json (queue (b); LC-16). Increment 1: one row. A type with no Phase 2 class answers not_modelled (R3-11, M-393).",
+  "schema": "building-types-v1",
+  "rows": [
+    {"id":"detached_house","class":"detached_house","structure":"principal","units":1,"increment":"1","switch":"building_type:detached_house","rules":["LC-16","M-377"]}
+  ]
+}

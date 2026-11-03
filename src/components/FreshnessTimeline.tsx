@@ -55,6 +55,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_massing:       { name: 'Link Massing',          group: 'link' },
   link_parcel_abutments: { name: 'Link Parcel Abutments', group: 'link' },
   resolve_bylaws:     { name: 'Resolve By-laws (Layer 2)', group: 'classify' },
+  compute_maxbld_scenarios: { name: 'Compute Max-Build Scenarios (Layer 3)', group: 'classify' },
   link_coa:           { name: 'Link CoA',              group: 'link' },
   link_coa_to_parcels:{ name: 'Link CoA to Parcels',   group: 'link' },
   classify_coa_scope: { name: 'Classify CoA Scope',    group: 'classify' },

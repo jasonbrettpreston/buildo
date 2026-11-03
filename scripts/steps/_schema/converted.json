@@ -200,6 +200,13 @@
       "reason": "McBylaw Phase 2 Layer 2 resolve_bylaws (MATERIALIZER rows form, net-new, converted from day one; Spec 134; Spec 124 R-HB, R-HC, R-DK, R-IX; operator CHAT-69 (R-JA form C) and CHAT-73). Commit ① lands the red suites, the descriptor, notes, shell, compute module, migration 282 (written, NOT applied) and the logic-variable seeds as ONE commit (R-IX). Stage compute_ported: no POST capture exists until the DB night that applies migration 282 and takes the R-DK evidence set (bracket --op=delete_reinsert keyed parcel_id, R-DP; rerun-zero; storage check). Chain placement (after enrich_parcels, before link_parcel_abutments, Spec 124 R-HD) is ③.",
       "declared": "2026-10-22",
       "stage": "compute_ported"
+    },
+    {
+      "file": "scripts/compute-maxbld-scenarios.js",
+      "registers_at": "MB-35 first run (applies migration 287 and the settings migration 294, chain placement after resolve_bylaws and link_parcel_abutments, E31-28)",
+      "reason": "McBylaws Phase 3 Layer 3 compute_maxbld_scenarios (MB-31, lane E; MATERIALIZER rows form, net-new, converted from day one; Spec 78 step identity, Spec 69a M-377, M-384, M-415). The build lands the red suites, the catalogue/switchboard/building-types seeds, the evaluator extension module, the step compute, descriptor, notes and shell; NOT the evaluate.mjs hooks (B5, waits MB-18), migrations 287/294 and the logic-variable seeds (C1), or reads 5 and 6 (they wait the runner bind build, MB-31 plan section 22.1). Registered in manifest.scripts with no chain membership (MB-31 plan section 21.1, precedent resolve_bylaws); MB-35 does the chain placement (E31-28).",
+      "declared": "2026-11-01",
+      "stage": "compute_ported"
     }
   ],
   "converted": [

@@ -63,6 +63,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/load-bylaw-map-areas.js':  127, // Spec 58 — load_bylaw_map_areas (600.60 map seed)
   'scripts/link-parcel-abutments.js':  130, // Spec 130 — link_parcel_abutments
   'scripts/resolve-bylaws.js':  134, // Spec 134 — resolve_bylaws (Layer 2)
+  'scripts/compute-maxbld-scenarios.js':  135, // Spec 47 §A.5 — compute_maxbld_scenarios (MB-31 Layer 3, registry id 135)
   'scripts/load-coa.js':             95,
   'scripts/load-address-points.js':  96,
   'scripts/load-wsib.js':            97,
