@@ -1,0 +1,33 @@
+{
+  "task": "MB-26",
+  "item": "the first Layer 2 night MB26-NIGHT-1 (2026-11-03): TRUNCATE-RELOAD of the three Layer 2 tables at 54 slots from dd7c080f2, migration 293 alone, the notes lines and the #44 witness recapture; the night itself gets an OUTPUT panel record (queue MB-26 F-35)",
+  "class": "D",
+  "stage": 8,
+  "date": "2026-11-03",
+  "head": "87f992dd4",
+  "commits_reviewed": [
+    "87f992dd4 (the night recapture: notes lines, both POST goldens, both witness traces, _catalog.json, explained-diffs.json; amended after the panel only by its fixes and the Q-NC3 a value.ratio entry)",
+    "the next commits' texts, reviewed before commit: docs/reports/nights/MB26-NIGHT-1.md (in this record's commit), the Q-C4 a dated note on prereg-MB-26-1.json (sha256 0faf8668d1a8a14d9af38bcfb448183822cfb8a4e48b2f5d126d36fc243b846b) and the queue dated note (~/Buildo-scratch/mcbylaws/MB-26/queue-note.line.md, sha256 a91728723752fe04960270cdac834cc8e6e978d22eda7693466707070d5dfac9)"
+  ],
+  "cards": [
+    "~/Buildo-scratch/p2close/CARD-mb26-increment1-night.answered.md (night go, Q-NIGHT B, Q-MIG 1, Q-WRAP 1, O-n1..n3, night fix, Q-C4 a)",
+    "~/Buildo-scratch/p2close/CARD-mb18j-notes-hunk.answered.md (option 1)",
+    "~/Buildo-scratch/p2close/CARD-mb26-increment1-night.answered.md (Q-NC1, Q-NC2, Q-NC3, ruled after this panel)"
+  ],
+  "plan": "~/Buildo-scratch/mcbylaws/MB-26/night-checklist-final.md (C1-C6, sections 7 and 8); prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-26-1.json; MB-18 plan 16.4 F-3, M18-15 and MB-18/i/plan.md R-2 for the explained diffs; night evidence ~/Buildo-scratch/mcbylaws/MB-26/night/",
+  "output": "OUTPUT panel over the bundle ~/Buildo-scratch/mcbylaws/MB-26/output-panel/bundle.md: ds-spec and ds-errorpaths (deepseek-reasoner) and one grounded-reviewer + reality-check seat (read-only DB; re-derived the dictionary counts, gate counts, slot counts, the 199-lot audit sample and every by_reason delta: all exact). Accepted and fixed before the commits (recapture amended to 955e05820): the per-suite row count, the ungated versus slot-gated lot wording (399,185 ungated; 398,257 where the slot applies; 41,836 = 40,908 + 928), the verbatim Q-C4 quotation, the no_candidate wording, the suite-move mechanism, the value-level compare (no cell that stayed applies changed value, kind or winner; no reason-text-only change), the grain statement, the forward citation and the stop wording. Rejected with evidence: the stale UNEX column (only value.ratio is unexplained after the file), the M-409 second seat (tooling landed earlier), the dirty-tree claim (#44 witness PASS on the committed notes), the C2 backup table (files, not a table). Push-blocking open item: the stored move of the no-number-rules round d01e14584 (garden_suite and laneway_suite gfa_m2 -> missing_input:main_building_gfa_m2 on 386,380 lots, 5 classes), not pre-registered and not ruled by Q-C4 a (M-321). Operator rulings after the panel (2026-11-03): D-1 accepted as a disclosed finding for increment 4 (\"approved ptions: - (a) Accept it as a disclosed finding (recommended)\", Q-NC1 a; dated queue note); D-2 closed by \"Q-Nc3 a\" (one new value.ratio entry per path; G8 against dd7c080f2: 100 diffs, 0 unexplained); the record_missing refusal of the Q-C4 note answered by \"Q-NC2 a\" (the loop runner generates round-15.json beside the note); D-3 done as its own defect-ledger commit (MB-18 plan 16.4 F-3). D-4 not done: editing scripts/resolve-bylaws.notes.json makes both POST goldens stale and the pre-commit #44 witness check FAIL, so its figures wait for the next recapture. The commits after this one (the prereg note with its loop record, the queue note, the ledger row) were made after the panel from the texts it reviewed and the rulings above.",
+  "seats": [
+    "ds-spec",
+    "ds-errorpaths",
+    "grounded-reviewer",
+    "reality-check"
+  ],
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "D-4: the night-D figures in scripts/resolve-bylaws.notes.json wait for the next Layer 2 recapture (#44 witness hard stop on any notes edit)",
+    "the RB-D10 ledger row close is lane R",
+    "INFO: rows[].value key breadth, the resolved_at content hash card, scenario_axis_cells value_max 0, C4-tail prints ruled values as want, no check of the M-406 per-option disclosure"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-26/output-panel/adjudication.md (out-spec.md, out-errorpaths.md, seat-grounded/report.md)"
+}
