@@ -110,12 +110,15 @@ The 199 RD lots (side_setback_m needs_user_input to applies 0.9, winner `900.3.1
   - By operator ruling Q-NC3 a, one new entry per path explains that drop: 0.5446574519230769 -> 0.5698798076923077 (forced 0.5446875 -> 0.5699098557692308), about 740 MiB, PASS, under the 780 MiB stop, pointing at M-406, M-245, M-423 and Q-C4 a. The G8 compare of the recapture against `dd7c080f2` reads 100 diffs, 0 unexplained.
   - Closing the RB-D10 ledger row is a lane R edit and is not in this record.
 - **Not done here:**
-  - MB-18 plan 16.4 F-3 names "a NEW defect-ledger row for the 54-slot change". It is added in its own commit (lane R work done by lane D).
-  - The `scripts/resolve-bylaws.notes.json` prose still gives the night-D figures (23,324,929 results, 2,840 texts, 992 units, warning 597). Updating them was asked for in the recapture commit, but the file is in resolve_bylaws' source fingerprint. The edit makes both POST goldens stale and the pre-commit #44 witness check FAIL (`FAIL:STALE:resolve_bylaws:standalone`, `standalone.forced`). So the figures wait for the next Layer 2 recapture. The prepared edit is at `~/Buildo-scratch/mcbylaws/MB-26/resolve-bylaws.notes.d4-figures.json`.
+  - MB-18 plan 16.4 F-3 names "a NEW defect-ledger row for the 54-slot change". It is added in its own commit as RB-D11 (lane R work done by lane D).
+  - The `scripts/resolve-bylaws.notes.json` prose still gives the night-D figures (23,324,929 results, 2,840 texts, 992 units, warning 597). Updating them was asked for in the recapture commit, but the file is in resolve_bylaws' source fingerprint. The edit makes both POST goldens stale and the pre-commit #44 witness check FAIL (`FAIL:STALE:resolve_bylaws:standalone`, `standalone.forced`). So the figures wait for the next Layer 2 recapture (D-4, deferred by the orchestrator, recorded in the queue note). The prepared edit is at `~/Buildo-scratch/mcbylaws/MB-26/resolve-bylaws.notes.d4-figures.json`.
 
 ## Commits (throwaway worktree `~/Buildo-wt-mb26cap`, branch `wf1/mb26-cap` off `dd7c080f2`; not pushed)
-1. The night recapture (`test(134_resolve_bylaws): MB-26 night MB26-NIGHT-1 recapture ...`). It holds the notes lines, both POST goldens, both witness traces, the catalog and `explained-diffs.json`.
-2. This record and the OUTPUT panel record `docs/reports/panels/MB-26.json`.
-3. The Q-C4 a dated note on `prereg-MB-26-1.json`, with the loop record `docs/reports/loop-records/1/round-15.json` (Q-NC2 a).
-4. The queue dated note (`.cursor/MCBYLAWS-QUEUE.md`, MB-26), with the Q-NC1 a sentence.
-5. The defect-ledger row for the 54-slot change (MB-18 plan 16.4 F-3).
+Dated touch-up 2026-11-03: the commits as they landed. This list replaces the planned five-item list of the first version of this record (in git history):
+1. `87f992dd4`, the night recapture. It holds the notes lines, both POST goldens, both witness traces, the catalog and `explained-diffs.json` (G8 against `dd7c080f2`: 100 diffs, 0 unexplained).
+2. `b6df1fd81`, this record and the OUTPUT panel record `docs/reports/panels/MB-26.json`.
+3. `1a041a6ea`, the defect-ledger row RB-D11 for the 54-slot change (MB-18 plan 16.4 F-3), CLOSED at `87f992dd`.
+4. `422b0024b`, `prereg-MB-26-2.json` (round 47, zero moves), committed alone. The loop gate joins a new loop record to a prereg that the commit directly below adds, and `prereg-MB-26-1.json` already exists, so this prereg is that commit (Q-NC2 a).
+5. `9265a886a`, the Q-C4 a dated note on `prereg-MB-26-1.json`, with the loop record `docs/reports/loop-records/1/round-15.json` written by the loop runner: 1,194 cases, 0 moved against round-14.
+6. `fbfe4f630`, the queue dated note (`.cursor/MCBYLAWS-QUEUE.md`, MB-26): the Q-NC1 a finding for increment 4, the D-4 deferral and the prereg round shift.
+7. This touch-up of the night record and the panel record.
