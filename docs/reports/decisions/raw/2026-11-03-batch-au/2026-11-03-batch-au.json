@@ -1,0 +1,79 @@
+{
+  "source": "operator chat 2026-11-03",
+  "operator_quote": "batch part 1 approved",
+  "context": "Recorded by lane R (MB-83, McBylaws queue, lane R), stage 9: decision batch 2026-11-03-batch-au, part 1. The increment-2 operator answers of 2026-11-03, recorded verbatim in ~/Buildo-scratch/mcbylaws/inc2/open-questions.md, as Spec 69a rows M-457..M-464 and M-466 (drafts ~/Buildo-scratch/mcbylaws/R-batch-inc2/drafts.md after fold 4; verify-1, recheck-1, recheck-2). The batch was approved by the operator (\"batch part 1 approved\"); the re-pin by \"RP-1 approved\". Part 2 (Q-ROOF, M-465) is not in this record.",
+  "decisions": [
+    {
+      "id": "CHAT-222.Q-SCOPE",
+      "subject": "M-457: Increment 2 builds both roof forms with the main-wall share caps (Q-SCOPE)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Q-scope - build roof forms in increment 2\". Rule text: Increment 2 adds the main-wall share caps (x.40.10(2)) and both roof forms of M-184: (a) the flat roof with the set-back storey above the main-wall limit, and (b) the pitched roof with its attic counted by 10.5.40.40(1); the larger is headlined and the other is shown (M-184). Increment 6b's roof forms move into increment 2. Card G-2 (queue :91, \"rules the geometry\") is taken as answered by Q4-W, Q-PITCH, Q-RAFTER, Q-SLOPE and Q-ATTIC (M-460, M-461, M-462, M-463, M-464). Orchestrator disclosure, as recorded with the answer: \"the earlier Q4 a was offered without stating that it pulled 6b forward (queue :82, :91).\" (At the tip, the rule it means is at queue :81; :82 is blank.)",
+      "quote_ref": "q_qscope"
+    },
+    {
+      "id": "CHAT-222.Q2",
+      "subject": "M-458: The street side uses the ordinary side yard where the zone has no street-side clause (Q2 a)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Q2 a\". Rule text: Where Phase 2 stores `side_setback_street_m` as unregulated, the footprint reads the stored `side_setback_m` on the street side too, because 800.50(765) \"(765) Side Lot Line means any lot line other than a front lot line or a rear lot line.\" The catalogue row `buildable_width_m` reads `if(regulated(side_setback_street_m); l2(side_setback_street_m); l2(side_setback_m))` (stored values only). Disclosed as a reading. Its re-pin is named at landing (RP-1).",
+      "quote_ref": "q_q2"
+    },
+    {
+      "id": "CHAT-222.Q3",
+      "subject": "M-459: Storeys under the main-wall limit use the S-1 floor-to-floor, with no parapet deducted (Q3 b)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Q3b\". Rule text: the wall storeys under `Hw` = floor((Hw − s1_floor_assembly_m) / (s1_ceiling_min_m + s1_floor_assembly_m)), from stored settings only; no new number. The parapet is not deducted under the wall limit, because 10.20.40.10(5): \"A parapet on a residential building in the RD zone may exceed the permitted maximum main wall height in regulation 10.20.40.10(4) by a maximum of 0.3 metres\". Status of its case results: DRAFT until McProof Part A (the answer: on the 25, 23 equal to option (a); A0375 and A0464 get 4).",
+      "quote_ref": "q_q3"
+    },
+    {
+      "id": "CHAT-222.Q4-W",
+      "subject": "M-460: W in the set-back plate is the narrowest width that fits the footprint (Q4-W)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Q4-W confirmed\". Rule text: W (the front/rear wall width in the set-back plate F − 2 × 1.4 m × W, M-200 69a:339) = footprint ÷ buildable depth, where buildable depth = min(lot depth − front − rear, building_depth_m, building_length_m) (the G-1 terms). Disclosed \"front and rear walls taken at the narrowest width that fits the footprint\" (M-176(1), a build-more design choice; not a by-law condition, so the M-172 2026-10-29 note does not apply). One catalogue row, existing grammar (min, divide); no M-72 change. Lane T's earlier \"W = buildable_width_m\" is withdrawn (it builds less where coverage binds).",
+      "quote_ref": "q_q4w"
+    },
+    {
+      "id": "CHAT-222.Q-PITCH",
+      "subject": "M-461: The pitched roof is taken at the steepest pitch the height limit allows, floored by the by-law flat-or-shallow threshold (Q-PITCH, OP-1)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Q-pitch confirmed\". Rule text: pitch = (height − wall limit) ÷ half the roof span, capped at the stored `roof_slope_max` where Phase 2 stores it (R 10.10.40.10(4)); no new setting. Disclosed \"roof taken at the steepest pitch the height limit allows\" (M-176(1), M-184(2)). The pitched form exists only where the steepest pitch that fits reaches the by-law's own flat-or-shallow-roof threshold for the clause; below it only the flat form counts (operator OP-1, \"OP-1 confirmed\", ~/Buildo-scratch/mcbylaws/inc2/open-questions.md, end). The threshold is keyed and stored in Phase 2 beside the roof-form rows (M-387), never a Layer 3 setting. In the base-zone clauses it is 1.0 vertical per 10.0 horizontal (R 10.10.40.10(11) and (12), RD 10.20.40.10(4), RS 10.40.40.10(6), RM 10.80.40.10(6): \"a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units\"); it is 1.0 per 4.0 where a clause uses that test. The OBC 1-in-3 setting of the earlier draft is withdrawn (it built less, M-176(1)). The R \"above the second storey or higher\" reading is disclosed (both readings agree for 2 or more storeys).",
+      "quote_ref": "q_qpitch"
+    },
+    {
+      "id": "CHAT-222.Q-RAFTER",
+      "subject": "M-462: Roof assembly depth from the smallest Building Code rafter that spans the half-width (Q-RAFTER)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Q-rafter confirmed\". Rule text: roof assembly depth = the smallest OBC 2024 Table 9.23.4.2.-F rafter (SPF No.1/No.2, 400 mm o.c., 1.5 kPa column; Toronto S ≈ 1.0-1.06 kPa per SB-1 Table 2 and 9.4.2.2) whose span covers the half-width, plus sheathing 9.5 mm (Table 9.23.16.7.-A, edges unsupported, a disclosed choice) plus ceiling board 12.7 mm (Table 9.29.5.3). The settings table is seeded with the exact sums: 38x140, span 3.89 m, depth 0.1622 m (140 + 9.5 + 12.7 mm); 38x184, 5.11 m, 0.2062 m; 38x235, 6.52 m, 0.2572 m; 38x286, 7.66 m, 0.3082 m. The values shown to the operator (0.162 / 0.206 / 0.257 / 0.308 m) were rounded to the millimetre. One catalogue row selects (min, if). A half-span over 7.66 m makes the pitched form `not_evaluated` with the new reason word \"no cited rafter span\" (R3-01). Disclosed: \"roof thickness taken at the smallest Building Code rafter that spans the house\" (M-176(1), the M-404 pattern). Not read, disclosed: A-9.23.4.2's span measurement basis; which SB-1 Toronto row governs (all within 1.5 kPa).",
+      "quote_ref": "q_qrafter"
+    },
+    {
+      "id": "CHAT-222.Q-SLOPE",
+      "subject": "M-463: Roof thickness is measured vertically (Q-SLOPE)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Q-slope confirmed\". Rule text: the attic clearance subtracts the roof assembly depth measured vertically, depth × √(1 + pitch²), because 10.5.40.40(1) measures a \"vertical clearance\". The square root takes unitless arguments only; a unit-bearing argument is expression_error (M-466). Lane T's flat-depth recommendation is withdrawn.",
+      "quote_ref": "q_qslope"
+    },
+    {
+      "id": "CHAT-222.Q-ATTIC",
+      "subject": "M-464: In the attic 80 % test, the area is the floor with clearance over 1.4 m (Q-ATTIC A)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"option A\". Rule text: \"the area\" in \"if at least 80% of the area has\" is the portion of the attic floor with vertical clearance of more than 1.4 m, and test (B) (an area of at least 10.0 m²) applies to that portion. Disclosed as `attic_area_reading`. Added to the M-29 expert sample (69a:71) for a City zoning examiner or RPP to confirm. The orchestrator's recorded summary of the option as presented: \"If wrong it under-reports (never over-reports).\"",
+      "quote_ref": "q_qattic"
+    },
+    {
+      "id": "CHAT-222.M72-SQRT",
+      "subject": "M-466: The Layer 3 grammar gains sqrt for unitless arguments only (OP-2)",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md): \"Op-2 approved\". Rule text: M-72's closed function list gains `sqrt(x)`; `x` must be unitless, and a unit-bearing argument is `expression_error`; a negative argument is `expression_error` (R3-01, M-385 69a:522: undecided never means zero, so no value is guessed); no new error code. Built red-first in its own test file, with worked examples at the exact 0.2572 m: 0.2572 × √2 and 0.2572 × √(1 + (5/3)²). It lands before the MB-26 night. The catalogue sha re-pin (RP-5) is a separate named approval at landing. No other function is added.",
+      "quote_ref": "q_m72sqrt"
+    }
+  ],
+  "q_qscope": "Q-scope - build roof forms in increment 2",
+  "q_q2": "Q2 a",
+  "q_q3": "Q3b",
+  "q_q4w": "Q4-W confirmed",
+  "q_qpitch": "Q-pitch confirmed",
+  "q_qrafter": "Q-rafter confirmed",
+  "q_qslope": "Q-slope confirmed",
+  "q_qattic": "option A",
+  "q_m72sqrt": "Op-2 approved"
+}

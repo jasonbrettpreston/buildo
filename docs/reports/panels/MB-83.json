@@ -1,0 +1,26 @@
+{
+  "task": "MB-83",
+  "item": "decision batch 2026-11-03-batch-au, part 1 (nine Spec 69a rows; one named Layer 2 re-pin, RP-1)",
+  "class": "R",
+  "stage": 8,
+  "date": "2026-11-03",
+  "head": "267fea312",
+  "commits_reviewed": [
+    "1c8b9dd95",
+    "267fea312",
+    "the staged batch commit (13 files)"
+  ],
+  "cards": [
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers; \"batch part 1 approved\"; \"RP-1 approved\")"
+  ],
+  "plan": "Draft ~/Buildo-scratch/mcbylaws/R-batch-inc2/drafts.md, reviewed before recording: ~/Buildo-scratch/mcbylaws/R-batch-inc2/verify-1.md (stage 3, seat 1, independent): FIX; ~/Buildo-scratch/mcbylaws/R-batch-inc2/recheck-1.md: PASS WITH TWO MINOR FIXES; ~/Buildo-scratch/mcbylaws/R-batch-inc2/recheck-2.md: FIX (record-keeping only), folded as fold 4.",
+  "output": "Stage 8 OUTPUT panel ~/Buildo-scratch/mcbylaws/R-batch-inc2/output-panel.md: FIX (OP-1 BLOCKER, decision-log arm K RED with 46 problems; OP-2 MINOR, status cells in recording form; OP-3 MINOR, prereg wording; OP-4 MINOR, Co-Authored-By trailer, owner's choice). Re-check 1 ~/Buildo-scratch/mcbylaws/R-batch-inc2/output-panel-recheck-1.md: PASS (one MINOR wording item, RC-1, fixed in the commit message): decision-log --check clean (749 decisions); rows equal the approved draft before the Conflict check except the M-466 Five words lock name; RP-1 files, round-13.json and prereg-MB-83-1.json unchanged since the first review; generate-bylaw-handbook --check up to date (495 rules); generate-bylaw-layer2-input --check clean.",
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "OP-2 status cells are recording form, disclosed in the commit message",
+    "OP-4 trailer kept as Opus 5.5 (coordinator)",
+    "RC-1 fixed in the commit message"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/R-batch-inc2/ (verify-1.md, recheck-1.md, recheck-2.md, output-panel.md, output-panel-recheck-1.md)"
+}

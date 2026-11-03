@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 486** (417 M-rows, 69 LC-rows): 483 in force (178 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 495** (426 M-rows, 69 LC-rows): 492 in force (187 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -186,6 +186,18 @@ First clause cited: 10.40.40.10, 10.60.40.10, x.40.10, 10.10.40.10, 10.80.40.10,
 - **m.404** S-1: storeys from height use cited logic variables (2.3 m ceiling, 212 mm floor assembly, roof allowance one assembly plus 0.3 m).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic: each S-1 variable is seeded with its value and citation (MB-31);…
   Rules: `M-404` (Spec 69a)
+
+- **m.457** Increment 2 builds the roof forms: increment 6b's flat set-back storey and pitched roof with attic move into increment 2, with the main-wall share caps; the larger is headlined.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the increment-2 rows tagged "2", locked by src/tests/st…
+  Rules: `M-457` (Spec 69a)
+
+- **m.459** Storeys under the main-wall limit use the S-1 floor-to-floor, with no parapet deducted.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the wall-storeys row and its examples, locked by layer3-catalogue.logic.test.ts and…
+  Rules: `M-459` (Spec 69a)
+
+- **m.461** The pitched roof is taken at the steepest pitch the height limit allows, capped in R by the stored roof slope cap.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the pitch row, reading the stored roof_slope_max, locked by layer3-catalogue.logic.test.ts…
+  Rules: `M-461` (Spec 69a)
 
 - **lc.59** Review-page rulings, batch 4 (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-evaluator-fixes.logic.test.ts (1); INV-21 (2)
@@ -458,6 +470,14 @@ First clause cited: 10.5.40.40.
 - **m.398** The basement is read, not assumed (R4-05).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: basement read-from-rows fixture (MB-31); record: chat-rulings-register.logic.test.ts ›…
   Rules: `M-398` (Spec 69a)
+
+- **m.463** Roof thickness is measured vertically: depth × √(1 + pitch²).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the vertical-thickness row, locked by layer3-catalogue.logic.test.ts and…
+  Rules: `M-463` (Spec 69a)
+
+- **m.464** In 10.5.40.40(1)'s "80% of the area", the area is the attic floor with vertical clearance over 1.4 m; test (B) applies to that portion.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the reading lock for the Phase 1-2 attic targets (a red-first test naming this row, beside…
+  Rules: `M-464` (Spec 69a)
 
 ### 10.5.40.50 — Decks, Platforms and Amenities
 
@@ -750,6 +770,10 @@ First clause cited: 800.50.
 - **m.313** A survey frontage measured along a CURVED front lot line is not preferred by the CoA scorer; the calculated frontage stays.
   Status: RULED 2026-10-21 · Enforced by: coa-scorecard.logic.test.ts › "CHAT-46", "A0385", "F-4D-SC-245", "the regression lock is live",…
   Rules: `M-313` (Spec 69a)
+
+- **m.458** On a corner lot whose zone has no street-side clause, the street-side yard is the ordinary side yard.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the buildable_width_m edit and STS-n examples (only A0375 moves; through McProof first),…
+  Rules: `M-458` (Spec 69a)
 
 ### Chapter 900
 
@@ -1895,6 +1919,18 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-31: the step shell names setting_out_of_bounds in the refusal (config.js:92-93 gives below_min /…
   Rules: `M-454` (Spec 69a)
 
+- **m.460** W, the front and rear wall width in the set-back plate, is the narrowest width that fits the footprint.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the W row, locked by layer3-catalogue.logic.test.ts and golden-25.logic.test.ts; record:…
+  Rules: `M-460` (Spec 69a)
+
+- **m.462** Roof assembly depth is the smallest Building Code rafter that spans the half-width, plus sheathing and ceiling board, from one cited settings table.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the settings table (RP-3), the selector row and the reason word, locked by…
+  Rules: `M-462` (Spec 69a)
+
+- **m.466** The Layer 3 grammar gains sqrt, for unitless arguments only (dated note on M-72, as a row because M-72 sits in the frozen M19 block, the M-377 form).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> the M-72 sqrt item (lane E): src/tests/bylaw-m72-sqrt.logic.test.ts (new), red first (RP-5); record:…
+  Rules: `M-466` (Spec 69a)
+
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
   Rules: `LC-1` (Spec 131)
@@ -2127,7 +2163,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
   Rules: `LC-69` (Spec 131)
 
-## 3. Rows with an OWED marker (178 in force)
+## 3. Rows with an OWED marker (187 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -2275,6 +2311,15 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-454 | m.454 | RULED 2026-11-01 · OWED |
 | M-455 | m.455 | RULED 2026-11-02 · OWED |
 | M-456 | m.456 | RULED 2026-11-02 · OWED |
+| M-457 | m.457 | RULED 2026-11-03 · OWED |
+| M-458 | m.458 | RULED 2026-11-03 · OWED |
+| M-459 | m.459 | RULED 2026-11-03 · OWED |
+| M-460 | m.460 | RULED 2026-11-03 · OWED |
+| M-461 | m.461 | RULED 2026-11-03 · OWED |
+| M-462 | m.462 | RULED 2026-11-03 · OWED |
+| M-463 | m.463 | RULED 2026-11-03 · OWED |
+| M-464 | m.464 | RULED 2026-11-03 · OWED |
+| M-466 | m.466 | RULED 2026-11-03 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |
