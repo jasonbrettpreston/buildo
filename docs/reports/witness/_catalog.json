@@ -215,6 +215,25 @@
       "table_version",
       "winner_ids"
     ],
+    "bylaw_resolution_lots_cohort_bak_20261103t2006z": [
+      "chain_run_id",
+      "class_results",
+      "codes",
+      "evaluator_version",
+      "evidence_kinds",
+      "evidence_ref_ids",
+      "inputs_defaulted",
+      "lot_gate",
+      "numbers",
+      "parcel_id",
+      "permitted",
+      "permitted_text_ids",
+      "reason_ids",
+      "resolved_at",
+      "row_sha",
+      "table_version",
+      "winner_ids"
+    ],
     "bylaw_resolution_results": [
       "class",
       "evidence_kind",

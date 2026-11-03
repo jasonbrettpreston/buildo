@@ -14,7 +14,7 @@
   ],
   "expected_shape": [
     {
-      "what": "A healthy run writes ONE lot row per in-population parcel (440,093 parcels in zones R, RD, RS, RT, RM, of 496,536 scanned) holding its results as positional arrays (53 slots: 25 principal + 14 garden-suite + 14 laneway-suite targets, in layer2-scope.json order), plus two closed dictionary tables: bylaw_resolution_units (992 unit ids) and bylaw_resolution_texts (2,840 reasons, evidence references and permission clause lists). About 9 % of lots are gated (40,908; every result not_evaluated). A full run emits 23,324,929 results in about 81 min, the lots table is about 733 MB (of the 1,300 MB budget) and the one expected WARN is scenario_axis_cells 597 (needs_user_input). An unchanged re-run writes ZERO rows (the IS DISTINCT FROM guard over the result columns).",
+      "what": "A healthy run writes ONE lot row per in-population parcel (440,093 parcels in zones R, RD, RS, RT, RM, of 496,536 scanned) holding its results as positional arrays (54 slots: 26 principal + 14 garden-suite + 14 laneway-suite targets, in layer2-scope.json order), plus two closed dictionary tables: bylaw_resolution_units (992 unit ids) and bylaw_resolution_texts (2,840 reasons, evidence references and permission clause lists). About 9 % of lots are gated (40,908; every result not_evaluated). A full run emits 23,324,929 results in about 81 min, the lots table is about 733 MB (of the 1,300 MB budget) and the one expected WARN is scenario_axis_cells 597 (needs_user_input). An unchanged re-run writes ZERO rows (the IS DISTINCT FROM guard over the result columns).",
       "measured": {
         "value": {
           "parcels_scanned": 496536,
@@ -40,7 +40,7 @@
       "measured": {
         "value": {
           "array_order": "layer2-scope.json structures then targets",
-          "pairs": 53,
+          "pairs": 54,
           "representative_class": "detached_house",
           "lots_with_class_overrides_in_sample": "2401 of 3000"
         },
@@ -105,7 +105,7 @@
       }
     },
     {
-      "what": "The class dimension multiplies the evaluator work: each lot is evaluated for 5 classes x 53 target-structure pairs (the cell cache serves most). A 300-parcel read-only sample took 3.5 s (about 13 ms per resolved lot including the audit), which projects to about 1.6 h for 440,093 lots; the real figure is measured at the first POST capture and seeds execution.budget (R-AJ). STORAGE: a random 3,000-lot sample averages 2,112 raw bytes per lot row (class_results alone 994 bytes: about 16 differing positions on the 80 % of lots whose classes differ), which models at about 1.0 GB for 440,093 lots plus under 10 MB of dictionaries, against the 1,300 MB budget (the 10 % kill line leaves about 1.35 GB). TOAST compression of rows over 2 kB is not modelled, so the figure is an upper bound. Reading losers, inputs_used and disclosures re-runs the evaluator for that lot (about 1 to 7 ms per class and pair).",
+      "what": "The class dimension multiplies the evaluator work: each lot is evaluated for 5 classes x 54 target-structure pairs (the cell cache serves most). A 300-parcel read-only sample took 3.5 s (about 13 ms per resolved lot including the audit), which projects to about 1.6 h for 440,093 lots; the real figure is measured at the first POST capture and seeds execution.budget (R-AJ). STORAGE: a random 3,000-lot sample averages 2,112 raw bytes per lot row (class_results alone 994 bytes: about 16 differing positions on the 80 % of lots whose classes differ), which models at about 1.0 GB for 440,093 lots plus under 10 MB of dictionaries, against the 1,300 MB budget (the 10 % kill line leaves about 1.35 GB). TOAST compression of rows over 2 kB is not modelled, so the figure is an upper bound. Reading losers, inputs_used and disclosures re-runs the evaluator for that lot (about 1 to 7 ms per class and pair).",
       "detected_by": "storage_within_budget",
       "measured": {
         "value": {
