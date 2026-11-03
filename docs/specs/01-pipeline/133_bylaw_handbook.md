@@ -241,7 +241,7 @@ First clause cited: x.40.40, 10.20.40.40, 10.10.40.40.
 
 - **m.455** MB-80 (2): post-signing edits to the MB-64 increment-1 key from the McProof sign-off, as one ledger row (cases PERM-10, FY-1, FY-3, FY-4, FY-5, FY-14, FY-29, FOOT-14, FOOT-16, FOOT-18, ST-5, ST-9, ST-10, ST-11, ST-12, GFA-5, GFA-8, UN-1, UN-4, LV-1, LV-3, LV-6).
   Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): the edits of ~/Buildo-scratch/mcbylaws/MB-64/m…
-  Rules: `M-455` (Spec 69a)
+  Rules: `M-455` (Spec 69a) · +1 dated note
 
 ### 40.50 — Decks and Platforms
 
