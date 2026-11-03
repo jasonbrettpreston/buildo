@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md PR-68 / M-3xx (the loop gate runs the committed set and reports what it saw)
 // SPEC LINK: ~/Buildo-scratch/mcbylaws/MB-68/plan.md sections 2, 3, 8 (got_sha G68-11; the producer is spawned, never inlined; per-mode groups)
 // Red first. The scorer is spawned only through an injected fake `spawn` (unit tests) or the real one (the 172 test, skipped without the data dir).
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -505,32 +505,91 @@ describe('computeRun: base rows from a base revision (B1 / plan s7)', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('the extracted temp dir is removed afterwards', () => {
-    const before = new Set(fs.readdirSync(os.tmpdir()).filter((n) => n.startsWith('mcbylaws-loop-gate-base-')));
-    seenReset();
-    const calls: Call[] = [];
-    const regression: Regression = { groups: [group()] };
-    let seen = '';
-    M.computeRun({
-      ...INPUT,
-      regression,
-      mode: 'push',
-      registerText: '',
-      deps: {
-        // atBase records what the base tree carries (the marker only the base commit has) into SEEN, so this test checks the same
-        // extraction the other base tests do, not just that a callback ran
-        spawn: rootSpawn(calls, [baseRow(1)], [baseRow(1)], (root) => {
-          seen = root;
-          expect(fs.existsSync(root)).toBe(true);
-          return atBase(root);
-        }),
-      },
+  // MB-79 (v) K-4: the removal check runs with TMPDIR pointed at a private dir that only this test writes to, restored after.
+  // extractRev and runProducer take their temp dirs from os.tmpdir(), which reads TMPDIR on every call, so the base tree is
+  // made inside the private dir; a loop push elsewhere on the host makes its own `mcbylaws-loop-gate-base-*` dirs in the
+  // shared temp dir, which this check no longer reads. The check is not weaker: the base tree must be made in the private
+  // dir, be gone afterwards, and the private dir must hold nothing at all (no base tree, no tar, no producer dir).
+  const SHARED_TMP = os.tmpdir();
+  function inPrivateTmpdir(body: (dir: string) => void): void {
+    const dir = fs.realpathSync(fs.mkdtempSync(path.join(SHARED_TMP, 'mcbylaws-loop-gate-run-tmpdir-')));
+    const had = Object.prototype.hasOwnProperty.call(process.env, 'TMPDIR');
+    const prior = process.env.TMPDIR;
+    process.env.TMPDIR = dir;
+    try {
+      expect(os.tmpdir()).toBe(dir);
+      body(dir);
+    } finally {
+      if (had) process.env.TMPDIR = prior;
+      else delete process.env.TMPDIR;
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+    expect(os.tmpdir()).toBe(SHARED_TMP);
+  }
+  // One base run in a private TMPDIR; `during` runs while the base tree exists (stands for anything else on the host).
+  function checkBaseTreeRemoved(during: () => void = () => {}): void {
+    inPrivateTmpdir((dir) => {
+      seenReset();
+      const calls: Call[] = [];
+      const regression: Regression = { groups: [group()] };
+      let seen = '';
+      M.computeRun({
+        ...INPUT,
+        regression,
+        mode: 'push',
+        registerText: '',
+        deps: {
+          // atBase records what the base tree carries (the marker only the base commit has) into SEEN, so this test checks the same
+          // extraction the other base tests do, not just that a callback ran
+          spawn: rootSpawn(calls, [baseRow(1)], [baseRow(1)], (root) => {
+            seen = root;
+            expect(fs.existsSync(root)).toBe(true);
+            during();
+            return atBase(root);
+          }),
+        },
+      });
+      expect(seen).not.toBe('');
+      expect(SEEN).toEqual(['base-only']);
+      expect(path.dirname(seen)).toBe(dir);
+      expect(path.basename(seen).startsWith('mcbylaws-loop-gate-base-')).toBe(true);
+      expect(fs.existsSync(seen)).toBe(false);
+      expect(fs.readdirSync(dir)).toEqual([]);
     });
-    expect(seen).not.toBe('');
-    expect(SEEN).toEqual(['base-only']);
-    expect(fs.existsSync(seen)).toBe(false);
-    const after = fs.readdirSync(os.tmpdir()).filter((n) => n.startsWith('mcbylaws-loop-gate-base-'));
-    expect(after.filter((n) => !before.has(n))).toEqual([]);
+  }
+
+  it('the extracted temp dir is removed afterwards', () => {
+    checkBaseTreeRemoved();
+  });
+
+  it('MB-79 (v) K-4: a base dir another run makes in the shared temp dir during the run does not turn the check red', () => {
+    let foreign = '';
+    try {
+      checkBaseTreeRemoved(() => {
+        foreign = fs.mkdtempSync(path.join(SHARED_TMP, 'mcbylaws-loop-gate-base-'));
+      });
+      // the foreign dir really was there, in the shared temp dir, while the check ran
+      expect(foreign).not.toBe('');
+      expect(fs.existsSync(foreign)).toBe(true);
+    } finally {
+      if (foreign) fs.rmSync(foreign, { recursive: true, force: true });
+    }
+  });
+
+  it('MB-79 (v) K-4: a run that leaves its base tree behind still turns the check red', () => {
+    // the test double: rmSync skips the base tree (only that dir), so the extraction leaks exactly as a missing cleanup would
+    const realRm = fs.rmSync.bind(fs);
+    const spy = vi.spyOn(fs, 'rmSync').mockImplementation(((p: fs.PathLike, o?: fs.RmOptions) => {
+      if (path.basename(String(p)).startsWith('mcbylaws-loop-gate-base-') && !String(p).endsWith('.tar')) return;
+      realRm(p, o);
+    }) as typeof fs.rmSync);
+    try {
+      // red at the removal assertion itself (the base tree still exists), not at some earlier step
+      expect(() => checkBaseTreeRemoved()).toThrow(/expected true to be false/);
+      expect(spy).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
