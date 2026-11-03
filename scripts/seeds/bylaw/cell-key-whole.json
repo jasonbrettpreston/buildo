@@ -1,0 +1,4 @@
+{
+  "$comment": "MB-18 (i), M-406: extra lot fields the evaluator cell cache keys whole (the path equals the lot field). Data so cell-cache.mjs holds no new string literal (arm L).",
+  "paths": ["assumptions"]
+}

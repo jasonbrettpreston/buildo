@@ -35,6 +35,8 @@ const FA = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/fr
 const MB = await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/bylaw/main-building-gfa.mjs')).href); // CHAT-198.NN-Q3
 const defaults = {}; for (const [k, v] of Object.entries((I.vocab.design_choice_disclosure || {}).default_overrides || {})) if (k !== '$comment' && v && typeof v.taken_as === 'boolean') defaults[k] = v.taken_as;
 const SCU = I.vocab.scenario_class_units || {};
+const { assumptionsOf } = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')); // MB-18 (i), M-306: the helper of the tree being scored (--root), not of this file's own tree
+const ASSUMED = assumptionsOf({ existingAssumption: I.vocab.existing_assumption }); // MB-18 (i): the recorded 2013-lot assumption, on every scored lot
 const PROV_BY = new Map(JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/bylaw-provisions.json'), 'utf8')).rows.map((r) => [r.regulation_id, r]));
 const AMD_STATUSES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/amendments.json'), 'utf8')).statuses;
 const notices = JSON.parse(fs.readFileSync(NOT, 'utf8')); const parcels = JSON.parse(fs.readFileSync(PAR, 'utf8'));
@@ -88,6 +90,7 @@ function lotFromParcel(p) {
     primary_frontage_street_name: p.primary_frontage_street_name ?? p.linear_name_full ?? undefined, // M-285 (F-4D-7)
     building_type: 'detached_house', exception: exc != null ? `900.${EXC_CH[p.zoning_class]}.10(${exc})` : null, parcel_id: p.parcel_id,
     address: [p.address_number, p.linear_name_full].filter(Boolean).join(' '),
+    ...(ASSUMED.length ? { assumptions: ASSUMED } : {}),
   };
 }
 

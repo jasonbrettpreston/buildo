@@ -15,6 +15,8 @@
 //   makeCellCache({ evaluator, ctx, keyInputs?, maxEntries? }) → { effective(lot, target, candidates), stats() }
 //   inputValue(lot, path) → the key token of one inputs[] path (null for a derived target.* entry)
 
+import WHOLE_EXTRA from '../../seeds/bylaw/cell-key-whole.json' with { type: 'json' };
+
 export class CellCacheError extends Error {}
 
 const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -23,7 +25,7 @@ const stableJson = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object
 const tok = (v) => (v === undefined ? 'U' : `J${stableJson(v)}`);
 /** A value inside a lot sub-object: the container being absent is its own token (map_area_not_held ≠ map_value_absent). */
 const inside = (obj, key) => (obj === undefined || obj === null ? `NC${obj === null ? 'n' : 'u'}` : tok(obj[key]));
-const WHOLE = new Set(['zone', 'building_type', 'exception', 'label', 'map_areas', 'address', 'parcel_id', 'primary_frontage_street_name']);
+const WHOLE = new Set([...['zone', 'building_type', 'exception', 'label', 'map_areas', 'address', 'parcel_id', 'primary_frontage_street_name'], ...WHOLE_EXTRA.paths]);
 const NESTED = new Map([['label.', 'label'], ['overlays.', 'overlays'], ['vars.', 'vars'], ['flags.', 'flags'], ['existing.', 'existing']]);
 
 /** The key token of one inputs[] path on a lot; null for `target.<name>` (derived: its own lot inputs are listed too). */

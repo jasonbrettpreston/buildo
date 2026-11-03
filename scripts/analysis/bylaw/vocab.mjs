@@ -134,7 +134,7 @@ export function checkVocab(vocab) {
   }
   // MB-18 (k), M-423: vocab.fallback_target entries; the text, the code and the separator are data (vocab.fallback_check)
   const fc = isMap(vocab.fallback_check) ? vocab.fallback_check : {};
-  const { bad_of, bad_self, bad_layer, bad_flags, bad_ruling, bad_trace, bad_check } = isMap(fc.stems) ? fc.stems : {};
+  const { bad_of, bad_self, bad_layer, bad_flags, bad_ruling, bad_trace, bad_check, bad_assumption } = isMap(fc.stems) ? fc.stems : {};
   const bad = (stem, name) => v.push([fc.code, stem, name].join(fc.separator));
   const fbs = Object.entries(isMap(vocab.fallback_target) ? vocab.fallback_target : {});
   if ((vocab.fallback_target !== undefined && !isMap(vocab.fallback_target)) || (fbs.length && !(isStr(fc.code) && REASON_CODES.includes(fc.code) && isStr(fc.separator) && isMap(fc.stems) && Array.isArray(fc.layers)))) bad(bad_check, fbs.length ? fbs[0][0] : fc.code);
@@ -149,6 +149,15 @@ export function checkVocab(vocab) {
     if (fl.length !== 1 || fl.some(([t, x]) => x !== true || !Object.hasOwn(vocab.lot_condition, t))) bad(bad_flags, name);
     if (!isStr(e.ruling)) bad(bad_ruling, name);
     if (!isStr(e.trace)) bad(bad_trace, name);
+  }
+  // MB-18 (i), M-406: vocab.existing_assumption entries, reported under fallback_check like the fallback entries
+  for (const [id, a] of Object.entries(isMap(vocab.existing_assumption) ? vocab.existing_assumption : {})) {
+    if (!isMap(a)) { bad(bad_assumption, id); continue; }
+    const placeholders = Array.isArray(a.placeholders) ? a.placeholders : [];
+    const used = isStr(a.sentence) ? [...a.sentence.matchAll(/\{(\w+)\}/g)].map((m) => m[1]) : [];
+    const textual = [a.var, a.enactment, a.reads, a.assumption_read, a.invalid_reason, a.trace, a.separator, a.sentence, a.ruling];
+    if (!textual.every(isStr) || !(vocab.not_evaluated_reason || []).includes(a.invalid_reason) || !placeholders.length
+      || used.length !== placeholders.length || !used.every((n) => placeholders.includes(n))) bad(bad_assumption, id);
   }
   // dsl_input: unit, and exactly one of definition | null_reason (G-READ map totality lives in definitions.mjs).
   const nullReasons = new Set(vocab.dsl_input_null_reason);
@@ -373,6 +382,7 @@ export function evaluatorVocab(vocab) {
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
     exception_type_list_closure: vocab.exception_type_list_closure, // CHAT-194.USO-Q1 (Q1e): the exception "only" type lists permitted() reads
+    existing_assumption: vocab.existing_assumption, // MB-18 (i), M-406
     fallback_target: vocab.fallback_target, // MB-18 (k), M-423: the read-as-if-token-held records evaluate.mjs fallbackRead reads
     permission_input_basis: vocab.permission_input_basis, // CHAT-152 C (M-168): inside permitted() proposed_height_m resolves height_m
     permission_scope: vocab.permission_scope, // CHAT-152 A (M-56 dated note): permitted() reads only use-scope PERMIT / PROHIBIT units

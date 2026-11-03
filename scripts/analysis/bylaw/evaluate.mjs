@@ -156,6 +156,7 @@ export function makeContext(vocab, extra = {}) {
     targetBound: Object.fromEntries(Object.entries(vocab.dsl_target || {}).filter(([, t]) => t && ['min', 'max', 'exact'].includes(t.bound)).map(([k, t]) => [k, t.bound])),
     // MB-18 (k), M-423: target -> the read-as-if-token-held record (read by effective() only through fallbackRead)
     fallbackTarget: vocab.fallback_target || {},
+    existingAssumption: vocab.existing_assumption || {}, // MB-18 (i), M-406: the assumed-read entries
     // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
     // M-180(1): zone → {exception building type → the houseplex class it also binds}, read for exception-layer units only
@@ -242,6 +243,12 @@ export function evaluate(expr, lot, ctx) {
 }
 const addAll = (set, xs) => { for (const x of xs || []) set.add(x); };
 
+/** MB-18 (i), M-406: the [id, entry] pair (if any) that could license reading the lot's own value for existing(var; enacted(id)); whether the lot carries it is the caller's check. */
+function assumedOf(C, e) {
+  for (const a of Object.entries(C.existingAssumption)) if (a[1].var === e.var && a[1].enactment === e.enacted) return a;
+  return null;
+}
+
 function ev(e, env) {
   const { C, lot, trace } = env;
   switch (e.type) {
@@ -273,7 +280,17 @@ function ev(e, env) {
       }
       env.reads.add(`existing.${e.var}@${date}`);
       const v = lot.existing ? lot.existing[`${e.var}@${date}`] : undefined;
-      if (v === undefined || v === null) return ne('existing_building_facts', e.var);
+      if (v === undefined || v === null) {
+        const hit = assumedOf(C, e);
+        if (hit) env.reads.add(hit[1].assumption_read); // the answer depends on whether the lot carries the assumption, so the cell key must see it either way (R-IN)
+        if (!hit || !(lot.assumptions || []).includes(hit[0])) return ne('existing_building_facts', e.var);
+        const a = hit[1];
+        const w = variable(a.reads, env);
+        if (w.ne) return w;
+        if (!(Number.isFinite(w.value) && w.value > 0)) return ne(a.invalid_reason, e.var);
+        trace.push([a.trace, e.var, date, w.value].join(a.separator));
+        return { value: w.value, unit: C.units.input[e.var] ?? C.units.target[e.var] ?? null };
+      }
       trace.push(`existing(${e.var};${date})=${v}`);
       return { value: v, unit: C.units.input[e.var] ?? C.units.target[e.var] ?? null };
     }
@@ -852,7 +869,17 @@ export function effective(lot, target, candidates, ctx, _env = {}) {
   // memo: one per TOP-LEVEL call (lot-dependent results are never kept across calls, so a changed lot is re-read);
   // nested calls share it through _env (perf only, outputs unchanged)
   const r = effResolve(lot, target, cands, C, { ...(_env), depth, sorted: true, memo: _env.memo || new Map() });
-  return { ...r, inputs: [...new Set([...(r.inputs || []), ...GATE_READS])].sort(cmpStr) };
+  return withAssumptionDisclosures({ ...r, inputs: [...new Set([...(r.inputs || []), ...GATE_READS])].sort(cmpStr) }, lot, C, target);
+}
+
+/** MB-18 (i), M-406 / M-169: the closed sentence of every assumption the lot carries and the result's inputs show was used, filled from the result. */
+function withAssumptionDisclosures(r, lot, C, target) {
+  const made = [];
+  for (const a of Object.entries(C.existingAssumption)) {
+    if (!(lot.assumptions || []).includes(a[0]) || !(r.inputs || []).includes(a[1].assumption_read) || r.value === null || r.value === undefined) continue;
+    made.push(a[1].sentence.replace(/\{(\w+)\}/g, (m, k) => String({ ...r, target }[k] ?? m)));
+  }
+  return made.length ? { ...r, disclosures: [...(r.disclosures || []), ...made.filter((s) => !(r.disclosures || []).includes(s))] } : r;
 }
 
 /** MB-18 (k), M-423: read fb.of on fb.layer with the lot's exception cleared and fb.flags held, after the normal lot gate on the FULL list. */

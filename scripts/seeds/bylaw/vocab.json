@@ -4307,7 +4307,22 @@
       "bad_flags": "fallback_target.flags",
       "bad_ruling": "fallback_target.ruling",
       "bad_trace": "fallback_target.trace",
-      "bad_check": "fallback_check"
+      "bad_check": "fallback_check",
+      "bad_assumption": "existing_assumption"
+    }
+  },
+  "existing_assumption": {
+    "lot_unchanged_since_enactment": {
+      "var": "lot_frontage_m",
+      "enactment": "569-2013",
+      "reads": "lot_frontage_m",
+      "assumption_read": "assumptions",
+      "invalid_reason": "missing_input",
+      "trace": "assumed (the lot is unchanged since the enactment):",
+      "separator": " ",
+      "sentence": "If the lot has changed since 9 May 2013 (for example by severance or consent): the {bound} on {target} ({value} {unit}) rests on today's lot frontage standing in for the frontage on that date, so it may differ.",
+      "placeholders": ["bound", "target", "value", "unit"],
+      "ruling": "M-406"
     }
   }
 }

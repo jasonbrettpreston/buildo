@@ -1,0 +1,11 @@
+== item (i) red: 2013-lot frontage assumption (MB-18 i, M-406); new tests src/tests/bylaw-mb18i.logic.test.ts and src/tests/steps/resolve_bylaws/materialize-mb18i.logic.test.ts run on the tree before the item (base 47de326e with commits j0 and j applied, generated input regenerated); engine runs ia 20261102T222122Z-e907ac87, ib 20261102T222122Z-fd999454 (tests; hand-corrected), ic 20261102T222540Z-3406da51 (vocab), id 20261102T222703Z-548b4ba3 (evaluator), ie 20261102T222852Z-6b804925 (cell cache), if 20261102T222931Z-dd177cad (lib and scorer)
+   × T-i7a (red): the M-406 assumption leaves the I10 lock intact and the stored arrays carry the values it unlocks > the stored arrays decode to building_depth_m 19 and building_length_m 17 for the d
+   × T-i7b (red): logicalRowsOf recomputes the assumption disclosure on read for the results that used it (CHAT-180) > depth and length carry the closed "If the lot has changed since" sentence; a heig
+   × MB-18 i / the 2013-lot assumption is a recorded site fact (M-406) > T-i1 (red): parcel 205238 (x155) reads its held frontage into three targets and discloses it once each 4ms
+   × MB-18 i / the 2013-lot assumption is a recorded site fact (M-406) > T-i3 (red): the entry is checked for the variable and the enactment; any other read stays not_evaluated 1ms
+   × MB-18 i / the 2013-lot assumption is a recorded site fact (M-406) > T-i4 (red): the helper reads the env list; the scorer shares it 0ms
+   × MB-18 i / the 2013-lot assumption is a recorded site fact (M-406) > T-i5 (red): the entry is total and checkVocab rejects each defect under the existing code 0ms
+   × MB-18 i / the 2013-lot assumption is a recorded site fact (M-406) > T-i8 (red): a frontage that is not a finite number above 0 is a missing input, never assumed 1ms
+   × MB-18 i / the 2013-lot assumption is a recorded site fact (M-406) > T-i11 (red): a lot with existing undefined and the assumption present takes the assumed branch without throwing 1ms
+ Test Files  2 failed (2)
+      Tests  8 failed | 7 passed (15)

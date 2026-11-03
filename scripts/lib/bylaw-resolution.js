@@ -337,8 +337,18 @@ function parseZoneLabel(zn, labelLetters) {
 }
 
 /**
+ * MB-18 (i), M-406: the recorded 2013-lot assumption ids the vocab carries (`existing_assumption`): sorted, empty when the env has
+ * none. The evaluator reads the assumption itself; the lot only carries its ids so the results can disclose them (M-305).
+ */
+function assumptionsOf(env) {
+  const a = env && env.existingAssumption;
+  if (a === null || typeof a !== 'object' || Array.isArray(a)) return [];
+  return Object.keys(a).sort();
+}
+
+/**
  * R-IV: the lot vector of one parcels row, the shape the golden-lot puller builds (pull-golden-lots.cjs rowToLot) so the two cannot
- * drift. `env`: { vocabZones, labelLetters, exceptionChapter, sentinel, mapAreas, designDefaults }. Returns
+ * drift. `env`: { vocabZones, labelLetters, exceptionChapter, sentinel, mapAreas, designDefaults, existingAssumption }. Returns
  * { lot, gates, inputs_defaulted }. `gates` are the parcel-derived lot gates that fired (a subset of layer2-map.json lot_gate);
  * `exception_not_authored` is decided from the INCLUDE closure (M-231), never here. A missing metric stays null and fires
  * `lot_metric_missing`; a missing map membership leaves `map_areas` absent. Nothing is defaulted, so inputs_defaulted is 0 (I10).
@@ -378,6 +388,8 @@ function buildLotVector(row, env) {
   // Q-E: map membership is the parcels column enrich_parcels derives from bylaw_map_areas; null is unknown, not outside
   const cols = Object.keys(env.mapAreas);
   if (cols.every((c) => typeof row[c] === 'boolean')) lot.map_areas = cols.filter((c) => row[c] === true).map((c) => env.mapAreas[c]);
+  const assumptions = assumptionsOf(env);
+  if (assumptions.length) lot.assumptions = assumptions;
   return { lot, gates, inputs_defaulted: 0 };
 }
 
@@ -497,6 +509,7 @@ module.exports = {
   splitPopulation,
   inPopulation,
   parseZoneLabel,
+  assumptionsOf,
   buildLotVector,
   CLASS_INPUT_PATHS,
   UNSET_LOT_INPUTS,

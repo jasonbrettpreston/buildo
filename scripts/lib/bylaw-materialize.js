@@ -108,7 +108,7 @@ function makeEnv({ body, map, scope, vocab, zoneList, versions, hooks = {}, audi
   return {
     units: body.units, unitInfo, ctx, authored: body.authored, map, scope, classes, classVectors, versions, isIn, audit,
     pairs: rb.scopePairs(scope),
-    lotEnv: { vocabZones: vocab.zone, labelLetters: Object.keys(vocab.label_letter), exceptionChapter: vocab.exception_chapter, sentinel: map.exception_number_sentinel, mapAreas: scope.map_areas, designDefaults },
+    lotEnv: { vocabZones: vocab.zone, labelLetters: Object.keys(vocab.label_letter), exceptionChapter: vocab.exception_chapter, sentinel: map.exception_number_sentinel, mapAreas: scope.map_areas, designDefaults, existingAssumption: vocab.existing_assumption },
     hooks: {
       evaluate: hooks.evaluate || ((lot, target, candidates) => cache.effective(lot, target, candidates)),
       evaluateDirect: hooks.evaluateDirect || ((lot, target, candidates) => E.effective(lot, target, candidates, ctx)),
