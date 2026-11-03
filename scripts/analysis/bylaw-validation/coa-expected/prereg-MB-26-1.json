@@ -259,6 +259,86 @@
    "\"Mb-26 is approved assuming its complaint\" (CARD-mb26-increment1-night.answered.md, 2026-11-03)",
    "\"approval for first db night if required\" (CARD-mb26-go.answered.md, 2026-10-31; local DB 127.0.0.1:54322 only)",
    "Q-NIGHT B, Q-MIG 1, Q-WRAP 1, O-n1 1, O-n2 1, O-n3 1 (same card)"
+  ],
+  "dated_notes": [
+   {
+    "date": "2026-11-03",
+    "rule": "M-246 (prior text kept, dated note added): every registered figure above stays as written; the measured figures below are recorded in their place for this night",
+    "operator_ruling": "Q-C4 a",
+    "ruling_text_verbatim": "(a) keep the reload; dated M-246 note on prereg-MB-26-1.json keeping the old figures and recording the measured ones (depth/length +41,654; side +4,590; street +713; warning scenario_axis_cells: 398; storage 740 MiB, under the 780 stop); finish C4 against them, C6, the night commits, push ready.",
+    "card": "~/Buildo-scratch/p2close/CARD-mb26-increment1-night.answered.md (Q-C4)",
+    "findings": "~/Buildo-scratch/mcbylaws/MB-26/night/c4-stop-findings.md (with its dated correction note)",
+    "stop": "C4 stopped at i_depth = 385769 (want 391720), 2026-11-03 15:53:32; no database write after the stop (the STOP marker and the dblock are files; C4-tail cleared the marker and C6 released the lock on the ruling)",
+    "measured_in_place_of_registered": {
+     "i_detached_house_principal_applies_deltas": {
+      "building_depth_m": {
+       "registered": 47605,
+       "measured": 41654
+      },
+      "building_length_m": {
+       "registered": 47605,
+       "measured": 41654
+      },
+      "side_setback_m": {
+       "registered": 4496,
+       "measured": 4590
+      },
+      "side_setback_street_m": {
+       "registered": 987,
+       "measured": 713
+      }
+     },
+     "step_terminal_warnings": {
+      "registered": [
+       "scenario_axis_cells: 597"
+      ],
+      "measured": [
+       "scenario_axis_cells: 398"
+      ]
+     },
+     "storage": {
+      "registered_band_mib": [
+       715,
+       730
+      ],
+      "measured_mib": 740,
+      "hard_stop_mib_above": 780,
+      "hard_stop_held": true,
+      "cause": "about 11-14 MiB of data growth (the 54th slot, (k), (i)) plus about 18 MiB from rows per page (inferred); under the 780 MiB hard stop"
+     }
+    },
+    "per_parcel_transitions_detached_house_principal": {
+     "basis": "read-only, the before-image decoded from pre293.dump joined per parcel to the live view; the before totals equal base.txt (depth applies 344,115; side 390,139; street 86,426)",
+     "building_depth_m": {
+      "existing_building_facts:lot_frontage_m -> applies": 41654,
+      "-> no_candidate": 5847,
+      "-> named_lots_only": 104,
+      "total": 47605
+     },
+     "building_length_m": {
+      "existing_building_facts:lot_frontage_m -> applies": 41654,
+      "-> no_candidate": 5847,
+      "-> named_lots_only": 104,
+      "total": 47605
+     },
+     "side_setback_m": {
+      "existing_building_facts:lot_frontage_m -> applies": 4391,
+      "-> condition_unknown:abuts_named_street": 105,
+      "needs_user_input:ancillary_contains_parking_space -> applies 0.9 (winner 900.3.10(287)#(287)[SSP](C), all RD)": 199,
+      "applies_delta": 4590
+     },
+     "side_setback_street_m": {
+      "existing_building_facts:lot_frontage_m -> applies": 713,
+      "-> condition_unknown:adjacent_lot_fronts_flanking_street": 274,
+      "applies_delta": 713
+     },
+     "source": "every transition of these four targets comes from item (i) (M-406, ff601b393): the 199 move first appears at ff601b393 (evaluator run on all 199 at 81fe7b8, b436e01ca, ff601b393 and dd7c080f2), because with M-406 only (E) stays undecided, under the limit of 8 undecided units; on the suite slots the worlds disagree, so scenario_axis_cells 597 -> 398",
+     "applies_to_not_evaluated_on_these_targets": 0,
+     "cause_of_the_misses": "one counting fault: the registered deltas counted rows by their stored reason, not rows that become valued (a cell reports one reason; a second blocker now shows), the residual checklist D4 named"
+    },
+    "c4_against_the_measured_figures": "PASS 2026-11-03 17:14:24 (C4-tail: lots 440,093; width 54; inputs_defaulted 0; row_sha 64-hex; one version pair c4ede8d0/4b589081; (k) 1,991,285 / 209,180; (j) 1,991,285 / 209,180 / 2,200,465, parcel 428050 applies 6; (i) depth 385,769, length 385,769, side 394,729, street 87,139; the 25-lot image within the allowed pairs; 740 MiB; runs 4410-4413 errors [], 0 FAIL rows, lots_gated 40,908); C6 released the dblock 17:14:29",
+    "other_moves": "the night record (docs/reports/nights/MB26-NIGHT-1.md) lists every stored-image move of the night, including one this file does not register"
+   }
   ]
  }
 }
