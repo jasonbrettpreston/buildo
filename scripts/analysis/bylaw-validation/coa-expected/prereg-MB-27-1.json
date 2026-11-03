@@ -1,0 +1,100 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 1 (R-MA), the revert round of increment 1 (R-LZ) that lands the M-466 sqrt item (Layer 3 grammar only; no catalogue row uses sqrt). Committed alone directly under the code commit. It touches no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets; totals equal prereg-MB-83-1.json after-totals; floors unchanged. Re-pins (named, operator approvals RP-5 and RP-6): the layer3-catalogue.json sha in layer3-catalogue.logic.test.ts; expected-172.json and expected-4d.json inputs.table_version, inputs.evaluator_version and commit; maxbld-amendment-index.json layer2_table_version; bylaw-layer2-input.json table_version and evaluator_version. rules[] names only rules RULED, or OWED with the lock landing in the code commit (R-KG arm C); no OWED rule without its lock in that commit.",
+ "schema": "coa-round-prereg-v1",
+ "round": 45,
+ "task": "MB-27",
+ "rules": [
+  "M-466",
+  "M-463",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-sqrt.v3.md (FINAL FOR BUILD; operator approval, ~/Buildo-scratch/mcbylaws/inc2/open-questions.md, end)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "RP-6 (operator \"Rp- 5 and RP-6 approved\"): expected-172.json and expected-4d.json inputs.table_version 71b5c602... to c4ede8d0..., inputs.evaluator_version 59c6989d... to 4b589081..., and commit; maxbld-amendment-index.json layer2_table_version (same change); version fields only, totals equal (172 MATCH 406; 4d MATCH 282), scorer_sha unchanged. Generated alongside: bylaw-layer2-input.json table_version and evaluator_version. RP-5: layer3-catalogue.json sha in layer3-catalogue.logic.test.ts (see expected_assertion_changes).",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": 32,
+   "row": "PINNED_SHA.catalogue",
+   "from": "e0f0700fa96e25d99b72c854a7758c43bc492320e4664526d6025a19441833f0",
+   "to": "60ba5dc6aeafe9fe58bacc7c5aab5188dc47a03e6d7aad212e162f4ca8f7dcb0",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "operator \"Rp- 5 and RP-6 approved\" (RP-5; ~/Buildo-scratch/mcbylaws/inc2/open-questions.md, end) and the plan approval \"confirmed as long as they are complaint\" (item 2: the sqrt plan plan-sqrt.v3.md approved; RP-5 and RP-6 stay named approvals at landing)"
+  }
+ ]
+}
