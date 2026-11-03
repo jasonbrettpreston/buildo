@@ -348,3 +348,196 @@ describe('MB-79 (o): history read from the tip', () => {
     expect((M.gitPreregHistory(dir, PREREG_REL, RECORD_REL) as History).roundCommit).toBeNull();
   });
 });
+
+// ---- R-LZ moving-landing note (MB-79 (x)): the per-move RULED-id check -----------------------------------------------------------------
+// Red first: checkMoveRulings does not exist at HEAD (every test below fails with "M.checkMoveRulings is not a function").
+// Authority: R-LZ note (drafts.md:237) "a listed move with no RULED id"; R-LE (124a:1049) RULED is a closed list, OWED is not RULED;
+// R-KG (124a:1015) a rule may be cited OWED only when its own lock lands in the same commit (arm C's landsId is reused, not copied).
+const CP = (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/cite-parse.mjs'))) as unknown as {
+  parseRegisterRows: (t: string) => Map<string, { status: string; locks: string[] }>;
+  parseOwedTable: (t: string) => Set<string>;
+};
+const CA = (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/cite-arms.mjs'))) as unknown as {
+  landsId: (id: string, rows: Map<string, { status: string; locks?: string[] }>, owed: Set<string>, entries: { status: string; path: string }[]) => boolean;
+};
+type Reg = { rows: Map<string, { status: string; locks: string[] }>; owed: Set<string> };
+type Entry = { status: string; path: string };
+type Mv = { clause?: unknown; from?: string; to?: string; ruling?: unknown };
+const LOCK = 'src/tests/lock-fixture.logic.test.ts';
+const EVID = 'docs/reports/red-evidence/bylaw/lock-fixture-red.txt';
+/** A register with the three sentinel facts (M-361 and LC-15 owed, M-180 RULED) and the rows each case needs. */
+const reg = (rows: string[] = [], owed: string[] = []): Reg => ({
+  rows: CP.parseRegisterRows(['| M-180 | t | s | RULED 2026-10-01 |', '| R-MA | t | s | RULED 2026-11-01 |', ...rows].join('\n')),
+  owed: CP.parseOwedTable(['Rows with an OWED marker', '| M-361 | m.361 | t | OWED |', '| LC-15 | lc.15 | t | OWED |', ...owed.map((id) => `| ${id} | m.1 | t | OWED |`)].join('\n')),
+});
+const mv = (ruling?: unknown, clause: unknown = 'c1'): Mv => ({ clause, from: 'OWED', to: 'MATCH', ...(ruling === undefined ? {} : { ruling }) });
+const moving = (...moves: unknown[]): { expected_moves: unknown[] } => ({ expected_moves: moves });
+const check = (pre: unknown, register: unknown, entries?: Entry[]): string[] =>
+  (M.checkMoveRulings as (p: unknown, r: unknown, e?: Entry[]) => string[])(pre, register, entries);
+const LANDING: Entry[] = [{ status: 'A', path: LOCK }, { status: 'A', path: EVID }];
+const OWED_ROW = `| M-777 | t | s | RULED 2026-10-30 (operator); OWED MB-18 · lock \`${LOCK}\` |`;
+
+describe('R-LZ MB-79 (x) U1-U5: a listed move names a RULED id (R-LE)', () => {
+  it('U1: zero moves are green on any register, null included (the zero-move landing is unchanged)', () => {
+    expect(check({ expected_moves: [] }, null)).toEqual([]);
+    expect(check({ expected_moves: [] }, reg())).toEqual([]);
+    expect(check({}, undefined)).toEqual([]);
+  });
+  it('U2: every move with a RULED, not-owed id is green', () => {
+    expect(check(moving(mv('R-MA', 'a'), mv('M-180', 'b')), reg())).toEqual([]);
+  });
+  it('U3: an absent, null or empty ruling is move_ruling_missing:<index>:<clause>', () => {
+    expect(check(moving(mv(undefined, 'a')), reg())).toEqual(['move_ruling_missing:0:"a"']);
+    expect(check(moving(mv(null, 'a')), reg())).toEqual(['move_ruling_missing:0:"a"']);
+    expect(check(moving(mv('', 'a')), reg())).toEqual(['move_ruling_missing:0:"a"']);
+  });
+  it('U3b: a present ruling that is not an id string is move_ruling_not_ruled', () => {
+    for (const bad of [406, ['R-MA'], {}, true]) {
+      const out = check(moving(mv(bad, 'a')), reg());
+      expect(out).toHaveLength(1);
+      expect(out[0]).toMatch(/^move_ruling_not_ruled:0:"a":/);
+    }
+  });
+  it('U4: an id absent from the register is move_ruling_not_ruled', () => {
+    expect(check(moving(mv('M-999', 'a')), reg())).toEqual(['move_ruling_not_ruled:0:"a":"M-999"']);
+  });
+  it('U5: a row whose last cell reads OWED -> X, with no lock named, is not RULED', () => {
+    const r = reg(['| M-555 | t | s | OWED -> MB-1: no lock |']);
+    expect(r.rows.get('M-555')?.status).toBe('OWED');
+    expect(check(moving(mv('M-555', 'a')), r)).toEqual(['move_ruling_not_ruled:0:"a":"M-555"']);
+  });
+});
+
+describe('R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused)', () => {
+  const r = () => reg([OWED_ROW], ['M-777']);
+  it('U6a: RULED row, in the owed table, lock named, nothing landing -> not_ruled', () => {
+    expect(r().rows.get('M-777')?.locks).toEqual([LOCK]);
+    expect(check(moving(mv('M-777', 'a')), r(), [])).toEqual(['move_ruling_not_ruled:0:"a":"M-777"']);
+    expect(check(moving(mv('M-777', 'a')), r())).toEqual(['move_ruling_not_ruled:0:"a":"M-777"']);
+  });
+  it('U6b: the deadlock case -- the lock is added and a new red-evidence file is added in the same commit -> green', () => {
+    expect(check(moving(mv('M-777', 'a')), r(), LANDING)).toEqual([]);
+  });
+  it('U6c: the lock lands without red evidence -> not_ruled', () => {
+    expect(check(moving(mv('M-777', 'a')), r(), [{ status: 'A', path: LOCK }])).toEqual(['move_ruling_not_ruled:0:"a":"M-777"']);
+  });
+  it('U6d: a modified lock plus red evidence -> green', () => {
+    expect(check(moving(mv('M-777', 'a')), r(), [{ status: 'M', path: LOCK }, { status: 'A', path: EVID }])).toEqual([]);
+  });
+  it('U6e: a deleted lock plus red evidence -> not_ruled', () => {
+    expect(check(moving(mv('M-777', 'a')), r(), [{ status: 'D', path: LOCK }, { status: 'A', path: EVID }])).toEqual(['move_ruling_not_ruled:0:"a":"M-777"']);
+  });
+  it('U6f: an owed row with no named lock (the M-361 shape) never lands, whatever the entries', () => {
+    const none = reg(['| M-778 | t | s | RULED 2026-10-30 · OWED MB-9 |'], ['M-778']);
+    expect(none.rows.get('M-778')?.locks).toEqual([]);
+    expect(check(moving(mv('M-778', 'a')), none, LANDING)).toEqual(['move_ruling_not_ruled:0:"a":"M-778"']);
+  });
+  it('U6g: a RETIRED, PROPOSED or SUPERSEDED id is never usable, whatever the entries', () => {
+    const x = reg(['| ~~**M-601**~~ | t | s | RULED |', '| M-602 | t | s | PROPOSED |', '| M-603 | t | s | SUPERSEDED by M-1 |', '| M-604 | t | s | WITHDRAWN |']);
+    for (const id of ['M-601', 'M-602', 'M-603', 'M-604']) {
+      expect(check(moving(mv(id, 'a')), x, LANDING)).toEqual([`move_ruling_not_ruled:0:"a":"${id}"`]);
+    }
+  });
+  it('U6h: arm C landsId and the check agree on the same rows and entries (one implementation)', () => {
+    for (const entries of [[], LANDING, [{ status: 'A', path: LOCK }]]) {
+      const usable = CA.landsId('M-777', r().rows, r().owed, entries);
+      expect(check(moving(mv('M-777', 'a')), r(), entries)).toEqual(usable ? [] : ['move_ruling_not_ruled:0:"a":"M-777"']);
+    }
+  });
+});
+
+describe('R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates', () => {
+  it('U7: ids that look close are not ruled, nothing is trimmed or case-folded', () => {
+    for (const bad of ['R-MA ', 'r-ma', 'BOOT-1', '__proto__', 'constructor', 'toString', 'M-4o6']) {
+      const out = check(moving(mv(bad, 'a')), reg());
+      expect(out).toHaveLength(1);
+      expect(out[0]).toMatch(/^move_ruling_not_ruled:0:"a":/);
+    }
+  });
+  it('U8: a newline in the clause or the id cannot forge a second output line', () => {
+    const out = check(moving(mv('R-MA\nFAIL:X:arm-failed:loop', 'c\nGATE OK')), reg());
+    expect(out).toHaveLength(1);
+    expect(out[0]).not.toMatch(/\n/);
+    expect(out[0]).toContain('\\n');
+  });
+  it('U9: an unreadable register is move_ruling_register_missing; one that fails the sentinels is move_ruling_register_empty', () => {
+    for (const bad of [null, undefined, {}, { rows: {}, owed: {} }, [], 'x']) {
+      expect(check(moving(mv('R-MA', 'a')), bad)).toEqual(['move_ruling_register_missing']);
+    }
+    expect(check(moving(mv('R-MA', 'a')), { rows: new Map(), owed: new Set() })).toEqual(['move_ruling_register_empty']);
+  });
+  it('U10: two bad moves with distinct clauses and a same-clause pair give one code per entry, in array order, labels distinct', () => {
+    const out = check(moving(mv(undefined, 'a'), mv('M-999', 'b'), mv('M-998', 'b'), mv('R-MA', 'b')), reg());
+    expect(out).toEqual(['move_ruling_missing:0:"a"', 'move_ruling_not_ruled:1:"b":"M-999"', 'move_ruling_not_ruled:2:"b":"M-998"']);
+  });
+  it('U11: a non-object prereg or a non-array expected_moves is [] (the shape check owns that)', () => {
+    expect(check(null, reg())).toEqual([]);
+    expect(check({ expected_moves: { a: 1 } }, reg())).toEqual([]);
+    expect(check({ expected_moves: 'x' }, reg())).toEqual([]);
+  });
+  it('U11b: entries that are not objects are move_ruling_missing, with no throw', () => {
+    expect(check({ expected_moves: [null, 1, 'x', {}] }, reg())).toEqual(['move_ruling_missing:0:""', 'move_ruling_missing:1:""', 'move_ruling_missing:2:""', 'move_ruling_missing:3:""']);
+  });
+  it('U12: the inputs are not mutated and two calls agree', () => {
+    const p = moving(mv('M-999', 'a'), mv(undefined, 'b'));
+    const r = reg([OWED_ROW], ['M-777']);
+    const before = JSON.stringify([p, [...r.rows], [...r.owed], LANDING]);
+    const one = check(p, r, LANDING);
+    const two = check(p, r, LANDING);
+    expect(one).toEqual(two);
+    expect(JSON.stringify([p, [...r.rows], [...r.owed], LANDING])).toBe(before);
+  });
+  it('U13: fields the check must ignore do not change the output; the ruling does', () => {
+    const base = moving(mv('R-MA', 'a'));
+    const noisy = { ...base, plan_ref: 'x', notice: 'y', expected_totals: { MATCH: 9 }, expected_moves: [{ ...mv('R-MA', 'a'), notice: 'n', from: 'DIFFER', to: 'MATCH' }] };
+    expect(check(noisy, reg())).toEqual(check(base, reg()));
+    expect(check(moving(mv('M-999', 'a')), reg())).not.toEqual(check(base, reg()));
+  });
+  it('U14: a very long clause or id is capped in the output', () => {
+    const out = check(moving(mv('M-' + '9'.repeat(500), 'x'.repeat(500))), reg());
+    expect(out).toHaveLength(1);
+    expect((out[0] ?? '').length).toBeLessThan(260);
+  });
+});
+
+describe('R-LZ MB-79 (x) U15: totality over hostile values (found by the output fuzz)', () => {
+  it('U15: a null-prototype object, a symbol or a function as a ruling or a clause never throws and is refused by name', () => {
+    const hostile: unknown[] = [Object.create(null), Symbol('x'), () => 1, { toString() { throw new Error('boom'); } }, { valueOf() { throw new Error('boom'); } }];
+    for (const h of hostile) {
+      const out = check(moving(mv(h, 'a'), mv(undefined, h)), reg(), [h as Entry]);
+      expect(out).toHaveLength(2);
+      expect(out[0]).toMatch(/^move_ruling_not_ruled:0:"a":/);
+      expect(out[1]).toBe('move_ruling_missing:1:""');
+    }
+  });
+});
+
+describe('R-LZ MB-79 (x) R1: the real committed preregs and the real register', () => {
+  const COA_DIR = path.join(ROOT, 'scripts/analysis/bylaw-validation/coa-expected');
+  const real = (): Reg => {
+    const D = path.join(ROOT, 'docs/specs/01-pipeline');
+    const rows = new Map<string, { status: string; locks: string[] }>();
+    for (const f of ['69a_mcbylaw_register.md', '124a_step_standard_policy_appendix.md', '131_lot_configuration_policy.md']) {
+      for (const [k, v] of CP.parseRegisterRows(fs.readFileSync(path.join(D, f), 'utf8'))) if (!rows.has(k)) rows.set(k, v);
+    }
+    return { rows, owed: CP.parseOwedTable(fs.readFileSync(path.join(D, '133_bylaw_handbook.md'), 'utf8')) };
+  };
+  it('R1: every committed zero-move prereg is green; the same prereg with one move and no ruling is refused', () => {
+    const r = real();
+    const zero = fs.readdirSync(COA_DIR).filter((f) => /^prereg-MB-\d+-\d+\.json$/.test(f)).map((f) => JSON.parse(fs.readFileSync(path.join(COA_DIR, f), 'utf8')) as { expected_moves?: unknown[] })
+      .filter((p) => Array.isArray(p.expected_moves) && p.expected_moves.length === 0);
+    expect(zero.length).toBeGreaterThan(3);
+    for (const p of zero) {
+      expect(check(p, r)).toEqual([]);
+      expect(check({ ...p, expected_moves: [{ clause: 'c', from: 'OWED', to: 'MATCH' }] }, r)).toEqual(['move_ruling_missing:0:"c"']);
+    }
+  });
+  it('R2: the real register holds the sentinels, accepts R-MA and M-180, and refuses every id of the real owed table that names no landing lock', () => {
+    const r = real();
+    expect(check(moving(mv('R-MA', 'a'), mv('M-180', 'b')), r)).toEqual([]);
+    expect(r.owed.size).toBeGreaterThan(100);
+    for (const id of r.owed) {
+      expect(check(moving(mv(id, 'a')), r, [])).toEqual([`move_ruling_not_ruled:0:"a":"${id}"`]);
+    }
+  });
+});

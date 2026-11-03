@@ -476,7 +476,8 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
   it('9. the same move registered in the prereg is green, and a registered move that does not happen is missing_move', () => {
     cleanState(true);
     // (a) the move the real scorer makes, listed by (notice, n, clause, from, to) exactly as the base and round rows give it
-    const clause = stageRealMoveRound((cl) => [{ notice: MOVE_NOTICE, n: MOVE_N, clause: cl, from: 'DIFFER', to: 'MATCH' }]);
+    // R-LZ note (MB-79 (x)): a moving revert round lists each move with a RULED id, here the real R-MA row of the real register.
+    const clause = stageRealMoveRound((cl) => [{ notice: MOVE_NOTICE, n: MOVE_N, clause: cl, from: 'DIFFER', to: 'MATCH', ruling: 'R-MA' }]);
     writeRecord('e2e: the one registered move happens');
     const listed = gate(['--mode', 'commit']);
     expect(failLines(listed)).toEqual([]);
@@ -485,12 +486,20 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
 
     // (b) the green twin's dishonest pair: the same prereg, but no patched base tree, so base and round agree and the move never happens
     cleanState(true);
-    commitPreregAlone([{ notice: MOVE_NOTICE, n: MOVE_N, clause, from: 'DIFFER', to: 'MATCH' }]);
+    commitPreregAlone([{ notice: MOVE_NOTICE, n: MOVE_N, clause, from: 'DIFFER', to: 'MATCH', ruling: 'R-MA' }]);
     stageComment();
     writeRecord('e2e: the registered move does not happen');
     const missing = gate(['--mode', 'commit']);
     expect(failLines(missing)).toContain(`missing_move:${clause}`);
     expect(missing.status).toBe(1);
+
+    // (c) R-LZ (MB-79 (x)): the same real move listed with no ruling id is refused by name, though the scorer shows exactly that move
+    cleanState(true);
+    stageRealMoveRound((cl) => [{ notice: MOVE_NOTICE, n: MOVE_N, clause: cl, from: 'DIFFER', to: 'MATCH' }]);
+    writeRecord('e2e: the registered move has no ruling id');
+    const unruled = gate(['--mode', 'commit']);
+    expect(failLines(unruled).some((l) => l.startsWith('move_ruling_missing:'))).toBe(true);
+    expect(unruled.status).toBe(1);
   }, ROUND_BUDGET_MS);
 
   it('10. the round-0 count floors file holds the real counts and both it and the OWED baseline still guard them', () => {

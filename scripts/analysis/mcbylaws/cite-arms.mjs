@@ -93,6 +93,15 @@ export function lockLands(id, rows, entries) {
   return evidence && entries.some((e) => locks.some((p) => lands(e, p)));
 }
 
+/**
+ * An OWED rule (per the sentinel set or the row status) whose named lock lands in the same commit, with red evidence.
+ * @param {string} id @param {Map<string, {status:string, locks?:string[]}>} rows
+ * @param {Set<string>} owed @param {Array<{status:string, path:string}>} entries @returns {boolean}
+ */
+export function landsId(id, rows, owed, entries) {
+  return (owed.has(id) || rows.get(id)?.status === 'OWED') && lockLands(id, rows, entries);
+}
+
 /** @returns {string[]} every verdict string; `[]` is a pass */
 function run({ cwd, policy, entries, message, parentRev, ownRev, owed, rows, sha }) {
   const paths = allPaths(entries);
@@ -111,10 +120,10 @@ function run({ cwd, policy, entries, message, parentRev, ownRev, owed, rows, sha
   const rules = prereg.rules;
   const accepted = new Set();
   const out = [];
-  const landsId = (id) => (owed.has(id) || rows.get(id)?.status === 'OWED') && lockLands(id, rows, entries);
+  const landsIdHere = (id) => landsId(id, rows, owed, entries);
   for (const id of rules) {
     if (id === BOOT && bootListed(policy, parsed.task)) { accepted.add(id); continue; }
-    if (!isRuled(rows, id) && !landsId(id)) out.push(`FAIL:C:not-ruled:${id}${suffix(sha)}`);
+    if (!isRuled(rows, id) && !landsIdHere(id)) out.push(`FAIL:C:not-ruled:${id}${suffix(sha)}`);
   }
   for (const id of parsed.ids) {
     if (accepted.has(id)) continue;

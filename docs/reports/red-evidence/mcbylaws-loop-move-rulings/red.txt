@@ -1,0 +1,66 @@
+# MB-79 (x) red evidence: R-LZ per-move RULED-id check. Tests first, run at base 8b6b91ad with the four code files restored to base (the test files are the final ones).
+# command: npx vitest run <5 files> --pool=forks --poolOptions.forks.maxForks=4 --poolOptions.forks.minForks=1
+   × R-LZ MB-79 (x) E1: a moving revert of increment 1 without a ruling is refused in commit, push and ci > E1 commit: move_ruling_missing is raised 4ms
+   × R-LZ MB-79 (x) E1: a moving revert of increment 1 without a ruling is refused in commit, push and ci > E1 push: move_ruling_missing is raised 1ms
+   × R-LZ MB-79 (x) E1: a moving revert of increment 1 without a ruling is refused in commit, push and ci > E1 ci: move_ruling_missing is raised 0ms
+   × R-LZ MB-79 (x) E1: a moving revert of increment 1 without a ruling is refused in commit, push and ci > E1 ci with no run at all: still raised (the id check needs no baseline) 0ms
+   × R-LZ MB-79 (x) E2-E7: the check is exactly the note and nothing else > E6: no register in the ctx is move_ruling_register_missing; an empty one is move_ruling_register_empty 0ms
+   × R-LZ MB-79 (x) E8-E11: order, the twins that must not move, the record shape, and the lock-lands door > E8: the new code comes after the earlier prereg codes and appears once 0ms
+   × R-LZ MB-79 (x) E8-E11: order, the twins that must not move, the record shape, and the lock-lands door > E11: an OWED id is accepted only when its lock and a red-evidence file land in the record commit 0ms
+   × R-LZ MB-79 (x) U1-U5: a listed move names a RULED id (R-LE) > U1: zero moves are green on any register, null included (the zero-move landing is unchanged) 2ms
+   × R-LZ MB-79 (x) U1-U5: a listed move names a RULED id (R-LE) > U2: every move with a RULED, not-owed id is green 1ms
+   × R-LZ MB-79 (x) U1-U5: a listed move names a RULED id (R-LE) > U3: an absent, null or empty ruling is move_ruling_missing:<index>:<clause> 0ms
+   × R-LZ MB-79 (x) U1-U5: a listed move names a RULED id (R-LE) > U3b: a present ruling that is not an id string is move_ruling_not_ruled 0ms
+   × R-LZ MB-79 (x) U1-U5: a listed move names a RULED id (R-LE) > U4: an id absent from the register is move_ruling_not_ruled 0ms
+   × R-LZ MB-79 (x) U1-U5: a listed move names a RULED id (R-LE) > U5: a row whose last cell reads OWED -> X, with no lock named, is not RULED 0ms
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6a: RULED row, in the owed table, lock named, nothing landing -> not_ruled 0ms
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6b: the deadlock case -- the lock is added and a new red-evidence file is added in the same commit -> gre
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6c: the lock lands without red evidence -> not_ruled 0ms
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6d: a modified lock plus red evidence -> green 0ms
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6e: a deleted lock plus red evidence -> not_ruled 0ms
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6f: an owed row with no named lock (the M-361 shape) never lands, whatever the entries 0ms
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6g: a RETIRED, PROPOSED or SUPERSEDED id is never usable, whatever the entries 0ms
+   × R-LZ MB-79 (x) U6: an OWED id is usable only when its own lock lands in the same commit (R-KG, arm C landsId reused) > U6h: arm C landsId and the check agree on the same rows and entries (one implementation) 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U7: ids that look close are not ruled, nothing is trimmed or case-folded 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U8: a newline in the clause or the id cannot forge a second output line 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U9: an unreadable register is move_ruling_register_missing; one that fails the sentinels is move_ruling_register_empty 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U10: two bad moves with distinct clauses and a same-clause pair give one code per entry, in array order, labels distinct 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U11: a non-object prereg or a non-array expected_moves is [] (the shape check owns that) 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U11b: entries that are not objects are move_ruling_missing, with no throw 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U12: the inputs are not mutated and two calls agree 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U13: fields the check must ignore do not change the output; the ruling does 0ms
+   × R-LZ MB-79 (x) U7-U14: malformed input is refused by name and never throws, never mutates > U14: a very long clause or id is capped in the output 0ms
+   × R-LZ MB-79 (x) U15: totality over hostile values (found by the output fuzz) > U15: a null-prototype object, a symbol or a function as a ruling or a clause never throws and is refused by name 0ms
+   × R-LZ MB-79 (x) R1: the real committed preregs and the real register > R1: every committed zero-move prereg is green; the same prereg with one move and no ruling is refused 6ms
+   × R-LZ MB-79 (x) R1: the real committed preregs and the real register > R2: the real register holds the sentinels, accepts R-MA and M-180, and refuses every id of the real owed table that names no landing lock 6ms
+   × R-LZ MB-79 (x) C1-C5: moveRegister and moveLandEntries are read from the prereg's tree > C1: at commit the register is read from HEAD (the prereg commit), not from the index 205ms
+   × R-LZ MB-79 (x) C1-C5: moveRegister and moveLandEntries are read from the prereg's tree > C2: at push and ci the register is read from the parent of the commit that adds the record 322ms
+   × R-LZ MB-79 (x) C1-C5: moveRegister and moveLandEntries are read from the prereg's tree > C3: any of the four copies absent from that tree is moveRegister null, and the rest of the context is unchanged 200ms
+   × R-LZ MB-79 (x) C1-C5: moveRegister and moveLandEntries are read from the prereg's tree > C4: a first row wins across the three registers 223ms
+   × R-LZ MB-79 (x) C1-C5: moveRegister and moveLandEntries are read from the prereg's tree > C5: moveLandEntries is the staged name-status at commit, the add commit's own diff at push and ci 239ms
+   × R-LZ MB-79 (x) C1-C5: moveRegister and moveLandEntries are read from the prereg's tree > C6: the register paths equal the ones arm C reads (gate.mjs CITE_INPUTS) 0ms
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W1 commit: no ruling is refused; the move itself is the listed one (no unexpected or missing move) 213ms
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W3 commit: an OWED id with no landing lock is refused 240ms
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W4 commit: the deadlock case -- an OWED id whose lock and red evidence land in the record commit is accepted; without the
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W1 push: no ruling is refused; the move itself is the listed one (no unexpected or missing move) 314ms
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W3 push: an OWED id with no landing lock is refused 334ms
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W4 push: the deadlock case -- an OWED id whose lock and red evidence land in the record commit is accepted; without the e
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W1 ci: no ruling is refused; the move itself is the listed one (no unexpected or missing move) 307ms
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W3 ci: an OWED id with no landing lock is refused 302ms
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W4 ci: the deadlock case -- an OWED id whose lock and red evidence land in the record commit is accepted; without the evi
+   × R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate > W5: a register edit staged beside the record cannot rescue an id the prereg tree does not rule 194ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G1 --staged: a moving revert with no ruling shows loop: move_ruling_missing and fails the loop arm 281ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G3 --staged: an OWED id with no landing lock is refused 298ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G4 --staged: the deadlock case -- an OWED id whose lock and red evidence land in the record commit shows no move_ruling line 578ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G1 --push: a moving revert with no ruling shows loop: move_ruling_missing and fails the loop arm 571ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G3 --push: an OWED id with no landing lock is refused 577ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G4 --push: the deadlock case -- an OWED id whose lock and red evidence land in the record commit shows no move_ruling line 1163ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G1 --ci: a moving revert with no ruling shows loop: move_ruling_missing and fails the loop arm 566ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G3 --ci: an OWED id with no landing lock is refused 588ms
+   × R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check > G4 --ci: the deadlock case -- an OWED id whose lock and red evidence land in the record commit shows no move_ruling line 1180ms
+   × MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of the working tree, nothing stubbed) > 9. the same move registered in the prereg is green, and a registered move that does not happen is missing_move 54156m
+   × R-LZ MB-79 (x): landsId, the OWED-with-landing-lock door arm C and the loop gate both use > is exported, and is true only for an OWED id whose named lock and a new red-evidence file land together 2ms
+   × R-LZ MB-79 (x): landsId, the OWED-with-landing-lock door arm C and the loop gate both use > an id in the Spec 133 owed table counts as OWED even when its row reads RULED; a plain RULED, PROPOSED or unknown id never lands 0ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 61 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  5 failed (5)
+      Tests  61 failed | 232 passed (293)

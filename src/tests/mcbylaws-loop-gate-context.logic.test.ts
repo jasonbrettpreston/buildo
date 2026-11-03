@@ -10,7 +10,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { hooksPathVerdict, readRealHooksPath } from './hooks-path-guard.global';
 
@@ -1465,3 +1465,209 @@ describe('MB-79 (p): a lane merge in progress joins its record by the push-and-C
 
 // F1 (MB-79 (h); ba05d889): a hooks-path leak is pinned on the file that caused it.
 afterAll(() => expect(hooksPathVerdict(readRealHooksPath(ROOT), process.env.CI === 'true')).toBeNull());
+
+// ---- R-LZ moving-landing note (MB-79 (x)): the register and the landing commit's entries, read from real temp repositories ------
+// Red first: at HEAD buildContext returns no moveRegister and no moveLandEntries. The prereg is read from one tree (R-MA);
+// the register is read from that same tree, so the record's own commit cannot grade itself (R-KG: rule and lock land together).
+const SPEC_DIR = 'docs/specs/01-pipeline';
+const REG_FILES = { a69: `${SPEC_DIR}/69a_mcbylaw_register.md`, a124: `${SPEC_DIR}/124a_step_standard_policy_appendix.md`, s131: `${SPEC_DIR}/131_lot_configuration_policy.md`, s133: `${SPEC_DIR}/133_bylaw_handbook.md` };
+const LZ_LOCK = 'src/tests/lock-fixture.logic.test.ts';
+const LZ_EVID = 'docs/reports/red-evidence/bylaw/lock-fixture-red.txt';
+const LZ_ROWS = ['| M-180 | t | s | RULED 2026-10-01 |', '| R-MA | t | s | RULED 2026-11-01 |', `| M-777 | t | s | RULED 2026-10-30 · OWED MB-18 · lock \`${LZ_LOCK}\` |`, '| M-778 | t | s | RULED 2026-10-30 · OWED MB-9 |'].join('\n');
+const LZ_OWED = ['Rows with an OWED marker', '| M-361 | m.361 | t | OWED |', '| LC-15 | lc.15 | t | OWED |', '| M-777 | m.777 | t | OWED |', '| M-778 | m.778 | t | OWED |'].join('\n');
+function writeRegisters(dir: string, over: { [k: string]: string | null } = {}): void {
+  const body = { a69: `${LZ_ROWS}\n`, a124: '# 124a\n', s131: '# 131\n', s133: `${LZ_OWED}\n`, ...over };
+  for (const [k, rel] of Object.entries(REG_FILES)) {
+    const text = (body as { [k: string]: string | null })[k];
+    if (text === null || text === undefined) fs.rmSync(path.join(dir, rel), { force: true });
+    else writeFile(dir, rel, text);
+  }
+}
+type MoveRegisterShape = { rows: Map<string, { status: string; locks: string[] }>; owed: Set<string> } | null;
+type MoveCtx = Ctx & { moveRegister?: MoveRegisterShape; moveLandEntries?: { status: string; path: string }[] };
+const movingRun = (): Run => {
+  const r = fakeRun();
+  r.curRows = [nx(r.curRows[0]), { ...nx(r.curRows[1]), status: 'DIFFER' }];
+  return r;
+};
+const movingPrereg = (ruling?: unknown): Prereg =>
+  inc1('MB-78', { expected_moves: [{ clause: '10.20.30.113', from: 'MATCH', to: 'DIFFER', ...(ruling === undefined ? {} : { ruling }) }], expected_totals: { MATCH: 1, DIFFER: 1 } });
+/** Registers committed, the moving prereg committed alone, then the round (record + lock + evidence per opts) staged or landed. */
+async function movingLanding(mode: 'commit' | 'push' | 'ci', ruling: unknown, o: { lock?: boolean; evidence?: boolean; registers?: { [k: string]: string | null }; stageRegisterEdit?: string } = {}): Promise<{ ctx: MoveCtx; dir: string }> {
+  const dir = makeRepo();
+  seedJoinBase(dir);
+  writeRegisters(dir, o.registers);
+  const base = commitAll(dir, 'registers');
+  commitAlone(dir, pre('MB-78', 2), movingPrereg(ruling));
+  writeFile(dir, CATALOGUE_NEXT, { rows: [1] });
+  gitQ(dir, ['add', '--', CATALOGUE_NEXT]);
+  stageInc1Record(dir, 1);
+  if (o.lock) { writeFile(dir, LZ_LOCK, 'export {};\n'); gitQ(dir, ['add', '--', LZ_LOCK]); }
+  if (o.evidence) { writeFile(dir, LZ_EVID, 'red\n'); gitQ(dir, ['add', '--', LZ_EVID]); }
+  if (o.stageRegisterEdit !== undefined) { writeFile(dir, REG_FILES.a69, o.stageRegisterEdit); gitQ(dir, ['add', '--', REG_FILES.a69]); }
+  if (mode !== 'commit') gitQ(dir, ['commit', '-q', '--no-verify', '-m', 'round\n\nMcBylaws-Task: MB-78']);
+  const ctx = (await ctxOf(dir, mode, mode === 'commit' ? '' : base, { computeRun: () => movingRun() })) as MoveCtx;
+  return { ctx, dir };
+}
+const lzCodes = async (ctx: MoveCtx): Promise<string[]> => ((await evaluateGateOf())(ctx).violations).filter((v) => v.startsWith('move_ruling_'));
+
+describe('R-LZ MB-79 (x) C1-C5: moveRegister and moveLandEntries are read from the prereg\'s tree', () => {
+  it('C1: at commit the register is read from HEAD (the prereg commit), not from the index', async () => {
+    const { ctx } = await movingLanding('commit', 'R-MA', { stageRegisterEdit: `${LZ_ROWS}\n| M-901 | t | s | RULED 2026-11-02 |\n` });
+    expect(ctx.moveRegister?.rows.has('R-MA')).toBe(true);
+    expect(ctx.moveRegister?.rows.has('M-901')).toBe(false);
+    expect(ctx.moveRegister?.owed.has('M-777')).toBe(true);
+  });
+  it('C2: at push and ci the register is read from the parent of the commit that adds the record', async () => {
+    for (const mode of ['push', 'ci'] as const) {
+      const { ctx } = await movingLanding(mode, 'R-MA', { stageRegisterEdit: `${LZ_ROWS}\n| M-901 | t | s | RULED 2026-11-02 |\n` });
+      expect(ctx.moveRegister?.rows.has('R-MA')).toBe(true);
+      expect(ctx.moveRegister?.rows.has('M-901')).toBe(false);
+    }
+  });
+  it('C3: any of the four copies absent from that tree is moveRegister null, and the rest of the context is unchanged', async () => {
+    const { ctx } = await movingLanding('commit', 'R-MA', { registers: { s131: null } });
+    expect(ctx.moveRegister).toBeNull();
+    expect(ctx.prereg?.task).toBe('MB-78');
+  });
+  it('C4: a first row wins across the three registers', async () => {
+    const { ctx } = await movingLanding('commit', 'R-MA', { registers: { a124: '| R-MA | t | s | PROPOSED |\n| R-ZZ | t | s | RULED 2026-11-02 |\n' } });
+    expect(ctx.moveRegister?.rows.get('R-MA')?.status).toBe('RULED');
+    expect(ctx.moveRegister?.rows.get('R-ZZ')?.status).toBe('RULED');
+  });
+  it('C5: moveLandEntries is the staged name-status at commit, the add commit\'s own diff at push and ci', async () => {
+    const wanted = [{ status: 'A', path: LZ_LOCK }, { status: 'A', path: LZ_EVID }];
+    for (const mode of ['commit', 'push', 'ci'] as const) {
+      const { ctx } = await movingLanding(mode, 'R-MA', { lock: true, evidence: true });
+      const got = ctx.moveLandEntries ?? [];
+      for (const w of wanted) expect(got).toContainEqual(w);
+      expect(got.some((e) => e.path === pre('MB-78', 2))).toBe(false);
+    }
+  });
+  it('C6: the register paths equal the ones arm C reads (gate.mjs CITE_INPUTS)', () => {
+    const src = fs.readFileSync(path.join(ROOT, 'scripts/analysis/mcbylaws/gate.mjs'), 'utf8');
+    for (const f of ['133_bylaw_handbook.md', '69a_mcbylaw_register.md', '124a_step_standard_policy_appendix.md', '131_lot_configuration_policy.md']) {
+      expect(src).toContain(f);
+      expect(Object.values(REG_FILES).some((p) => p.endsWith(f))).toBe(true);
+    }
+    // first row wins across the registers, so the ORDER must be arm C's: 69a, then 124a, then 131
+    const at = (n: string): number => src.indexOf(n, src.indexOf('registers:'));
+    expect(at('69a_mcbylaw_register.md')).toBeLessThan(at('124a_step_standard_policy_appendix.md'));
+    expect(at('124a_step_standard_policy_appendix.md')).toBeLessThan(at('131_lot_configuration_policy.md'));
+    const mine = fs.readFileSync(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-gate-context.mjs'), 'utf8');
+    const own = (n: string): number => mine.indexOf(n, mine.indexOf('const MOVE_REG'));
+    expect(own('69a_mcbylaw_register.md')).toBeLessThan(own('124a_step_standard_policy_appendix.md'));
+    expect(own('124a_step_standard_policy_appendix.md')).toBeLessThan(own('131_lot_configuration_policy.md'));
+  });
+  it('C7: loop-gate parseArgs has no flag that substitutes a register', async () => {
+    const gate = (await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-gate.mjs')).href)) as { parseArgs: (a: string[]) => { error?: string } };
+    expect(gate.parseArgs(['check', '--mode', 'ci', '--register', '/tmp/x']).error).toBeTruthy();
+  });
+  it('C8: the prereg join still reports the same task and source (the tree is an addition)', async () => {
+    const { ctx } = await movingLanding('push', 'R-MA');
+    expect(joinOf(ctx)).toEqual({ task: 'MB-78', source: 'trailer', violations: [] });
+  });
+});
+
+describe('R-LZ MB-79 (x) W1-W5: a moving revert landing through the real buildContext and the real evaluateGate', () => {
+  for (const mode of ['commit', 'push', 'ci'] as const) {
+    it(`W1 ${mode}: no ruling is refused; the move itself is the listed one (no unexpected or missing move)`, async () => {
+      const { ctx } = await movingLanding(mode, undefined);
+      expect(await lzCodes(ctx)).toEqual(['move_ruling_missing:0:"10.20.30.113"']);
+      const v = (await evaluateGateOf())(ctx).violations;
+      expect(v.some((x) => x.startsWith('unexpected_move') || x.startsWith('missing_move') || x.startsWith('totals_diff'))).toBe(false);
+    });
+    it(`W2 ${mode}: a RULED id is green of move_ruling codes`, async () => {
+      const { ctx } = await movingLanding(mode, 'R-MA');
+      expect(await lzCodes(ctx)).toEqual([]);
+    });
+    it(`W3 ${mode}: an OWED id with no landing lock is refused`, async () => {
+      const { ctx } = await movingLanding(mode, 'M-778', { lock: true, evidence: true });
+      expect(await lzCodes(ctx)).toEqual(['move_ruling_not_ruled:0:"10.20.30.113":"M-778"']);
+    });
+    it(`W4 ${mode}: the deadlock case -- an OWED id whose lock and red evidence land in the record commit is accepted; without the evidence it is refused`, async () => {
+      expect(await lzCodes((await movingLanding(mode, 'M-777', { lock: true, evidence: true })).ctx)).toEqual([]);
+      expect(await lzCodes((await movingLanding(mode, 'M-777', { lock: true })).ctx)).toEqual(['move_ruling_not_ruled:0:"10.20.30.113":"M-777"']);
+    });
+  }
+  it('W5: a register edit staged beside the record cannot rescue an id the prereg tree does not rule', async () => {
+    const { ctx } = await movingLanding('commit', 'M-901', { stageRegisterEdit: `${LZ_ROWS}\n| M-901 | t | s | RULED 2026-11-02 |\n` });
+    expect(await lzCodes(ctx)).toEqual(['move_ruling_not_ruled:0:"10.20.30.113":"M-901"']);
+  });
+});
+
+// ---- R-LZ MB-79 (x): the check reached through gate.mjs (--staged, --push, --ci), the one wired entry point ----------------------------
+// The fixture's loop arm file is a shim: it imports the repo's REAL loop-gate.mjs main() and REAL loop-gate-context.mjs buildContext
+// (and so the real evaluateGate), injecting only computeRun (a fixed run that shows the prereg's move) and an empty register text. The
+// scorer is not run: a fixture cannot make a scorer row move. gate.mjs spawns this file exactly as it spawns the real arm.
+const GATE_CLI = path.join(ROOT, 'scripts/analysis/mcbylaws/gate.mjs');
+const GATE_DRIVER = path.join(__dirname, 'fixtures/mcbylaws-gate/gate-driver.mjs');
+const LOOP_ARM_REL = 'scripts/analysis/mcbylaws-loop/loop-gate.mjs';
+const shimSource = (run: unknown): string => `import { pathToFileURL } from 'node:url';
+const u = (p) => pathToFileURL(${JSON.stringify(ROOT)} + '/' + p).href;
+const gate = await import(u('scripts/analysis/mcbylaws-loop/loop-gate.mjs'));
+const ctx = await import(u('scripts/analysis/mcbylaws-loop/loop-gate-context.mjs'));
+const RUN = ${JSON.stringify(run)};
+const buildContext = (a) => ctx.buildContext(a, { computeRun: () => RUN, readRegisterText: () => '' });
+process.exitCode = await gate.main(process.argv.slice(2), { buildContext });
+`;
+const fixturePolicy = (): string => JSON.stringify({
+  pending_globs: [], layer23: ['scripts/seeds/bylaw/**'], protected: [], literal_scope: [], literal_exempt: [], held_dirs: [],
+  held_limit: 12, worktrees: [], boot1: { tasks: ['MB-78'], exempt_ids: ['BOOT-1'] }, external_arms: [{ id: 'loop', required: true }],
+}, null, 2);
+const gateEnv = (): NodeJS.ProcessEnv =>
+  ({ ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0', SKIP_MCBYLAWS_GATE: '1', MCBYLAWS_GATE: 'off' }) as unknown as NodeJS.ProcessEnv;
+function viaGate(dir: string, args: string[], boot: string, input?: string): { status: number | null; out: string } {
+  const r = spawnSync(process.execPath, [GATE_DRIVER, GATE_CLI, boot, 'real', ...args], { cwd: dir, encoding: 'utf8', timeout: 120_000, env: gateEnv(), ...(input === undefined ? {} : { input }) });
+  return { status: r.status, out: `${String(r.stdout)}\n${String(r.stderr)}` };
+}
+/** The W-landing, but through gate.mjs: a shim arm, a full policy, the queue file and APPROVED, all committed before the prereg. */
+function movingViaGate(mode: 'commit' | 'push' | 'ci', ruling: unknown, o: { lock?: boolean; evidence?: boolean } = {}): { status: number | null; out: string } {
+  const dir = makeRepo();
+  seedJoinBase(dir);
+  writeRegisters(dir);
+  writeFile(dir, PROTECTED_REL, fixturePolicy());
+  writeFile(dir, LOOP_ARM_REL, shimSource(movingRun()));
+  writeFile(dir, 'mcbylaws/APPROVED', 'O-1 APPROVED 2026-10-30\n');
+  writeFile(dir, '.cursor/MCBYLAWS-QUEUE.md', '# McBylaws queue (fixture)\n');
+  const base = commitAll(dir, 'fixture: registers, policy, shim arm');
+  commitAlone(dir, pre('MB-78', 2), movingPrereg(ruling));
+  writeFile(dir, CATALOGUE_NEXT, { rows: [1] });
+  gitQ(dir, ['add', '--', CATALOGUE_NEXT]);
+  // the record binds the new catalogue, so the only violations left are the ones this item is about
+  writeFile(dir, RECORD_1, bind(recordPayload({ increment: '1', round: 1, decision: 'revert', reason: 'R-LZ moving landing fixture: a revert round of increment 1', inputs: inputsOf(dir, [...BOUND_PATHS, CATALOGUE_NEXT]) })));
+  gitQ(dir, ['add', '--', RECORD_1]);
+  if (o.lock) { writeFile(dir, LZ_LOCK, 'export {};\n'); gitQ(dir, ['add', '--', LZ_LOCK]); }
+  if (o.evidence) { writeFile(dir, LZ_EVID, 'red\n'); gitQ(dir, ['add', '--', LZ_EVID]); }
+  if (mode === 'commit') return viaGate(dir, ['--staged'], base);
+  gitQ(dir, ['commit', '-q', '--no-verify', '-m', 'round\n\nMcBylaws-Task: MB-78']);
+  const tip = gitQ(dir, ['rev-parse', 'HEAD']);
+  if (mode === 'ci') return viaGate(dir, ['--ci', '--base', base], base);
+  return viaGate(dir, ['--push'], base, `refs/heads/main ${tip} refs/heads/main ${base}\n`);
+}
+
+describe('R-LZ MB-79 (x) G1-G4: gate.mjs --staged, --push and --ci reach the per-move check', () => {
+  for (const [mode, flag] of [['commit', '--staged'], ['push', '--push'], ['ci', '--ci']] as const) {
+    it(`G1 ${flag}: a moving revert with no ruling shows loop: move_ruling_missing and fails the loop arm`, () => {
+      const r = movingViaGate(mode, undefined);
+      expect(r.out).toMatch(/loop: .*move_ruling_missing:0:"10\.20\.30\.113"/);
+      expect(r.out).toContain('FAIL:X:arm-failed:loop');
+      expect(r.status).toBe(1);
+    });
+    it(`G2 ${flag}: the same landing with a RULED id shows no move_ruling line`, () => {
+      const g = movingViaGate(mode, 'R-MA');
+      expect(g.out).not.toContain('move_ruling_');
+      expect(g.out).toContain(`loop: loop-gate ${mode}: ok`);
+      if (mode === 'commit') expect(g.out).toContain('GATE OK');
+    });
+    it(`G3 ${flag}: an OWED id with no landing lock is refused`, () => {
+      expect(movingViaGate(mode, 'M-778', { lock: true, evidence: true }).out).toMatch(/loop: .*move_ruling_not_ruled:0:"10\.20\.30\.113":"M-778"/);
+    });
+    it(`G4 ${flag}: the deadlock case -- an OWED id whose lock and red evidence land in the record commit shows no move_ruling line`, () => {
+      const g = movingViaGate(mode, 'M-777', { lock: true, evidence: true });
+      expect(g.out).not.toContain('move_ruling_');
+      expect(g.out).toContain(`loop: loop-gate ${mode}: ok`);
+      expect(movingViaGate(mode, 'M-777', { lock: true }).out).toMatch(/loop: .*move_ruling_not_ruled:0:"10\.20\.30\.113":"M-777"/);
+    });
+  }
+});

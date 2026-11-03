@@ -13,7 +13,7 @@ import { checkDecision, checkRun } from './loop-decide.mjs';
 import { checkOneIncrement, checkSkipAhead, incrementGreen } from './loop-increment.mjs';
 import { checkRegression, checkCasesPresent } from './loop-regression.mjs';
 import { checkFloorEdit, checkCountFloors, checkOwedRatchet } from './loop-floors.mjs';
-import { checkPreregFile, checkPreregMoves, preregRefusesAccept, checkPreregHistory } from './loop-prereg.mjs';
+import { checkPreregFile, checkPreregMoves, preregRefusesAccept, checkPreregHistory, checkMoveRulings } from './loop-prereg.mjs';
 
 const OUT_OF_SCOPE = 'out of scope: no code, oracle or generated path changed';
 const CI_NO_RUN = 'external groups: not run in CI';
@@ -189,6 +189,8 @@ function stageRecord(ctx, rec) {
       out.push(...moves);
       out.push(...preregRefusesAccept(moves, rec.decision));
     }
+    // R-LZ (drafts.md:237): a moving revert round of increment 1 names a RULED id per listed move (R-LE 124a:1049).
+    if (rec.decision === 'revert' && rec.increment === '1') out.push(...checkMoveRulings(ctx.prereg, ctx.moveRegister ?? null, ctx.moveLandEntries ?? []));
     if (ctx.mode !== 'commit' && ctx.preregHistory) {
       out.push(...checkPreregHistory(ctx.preregHistory));
     }

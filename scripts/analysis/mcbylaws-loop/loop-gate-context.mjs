@@ -13,6 +13,7 @@ import { parseMessage } from '../mcbylaws/cite-parse.mjs';
 import { byNewest, parsePreregName } from '../mcbylaws/prereg-name.mjs';
 import { recordAddCommit } from './loop-prereg.mjs';
 import { preregOnly, nameStatusOf } from './loop-oracle.mjs';
+import { parseOwedTable, parseRegisterRows } from '../mcbylaws/cite-parse.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_OF_MODULE = path.resolve(HERE, '../../..');
@@ -26,6 +27,16 @@ const PREREG_DIR_REL = 'scripts/analysis/bylaw-validation/coa-expected';
 const COUNT_FLOORS_RE = /^mcbylaws\/loop\/floors-[^/]*\.json$/;
 // N68-1: the register (69a + Spec 69, one text) and the closed increment list are read at the round's revision, like every other fact.
 const REGISTER_PARTS = ['docs/specs/01-pipeline/69a_mcbylaw_register.md', 'docs/specs/01-pipeline/69_mcbylaw_policy.md'];
+// R-LZ (drafts.md:237): the FOUR copies the move check reads (gate.mjs CITE_INPUTS: 133's OWED table, then the three registers),
+// each at the tree the prereg was joined from. A copy absent there is no register at all (null), never a partial one.
+const MOVE_REG = {
+  spec133: 'docs/specs/01-pipeline/133_bylaw_handbook.md',
+  registers: [
+    'docs/specs/01-pipeline/69a_mcbylaw_register.md',
+    'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md',
+    'docs/specs/01-pipeline/131_lot_configuration_policy.md',
+  ],
+};
 const INCREMENTS_REL = 'scripts/analysis/mcbylaws-loop/data/increments.json';
 
 const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -253,10 +264,14 @@ export function trailerTask(git, root, sha) {
  * prereg-<T>-<k>.json files in the tree, filtered by NAME before any read (another task's file is never read), newest integer k
  * first: unparsable stops (prereg_unparsable), a JSON task that is not T stops (prereg_name_task_mismatch), another increment is
  * skipped, else it is the prereg. `record` = {path, rec}. `rev` is the history the record's add commit is looked up in: the commit
- * that adds the record in `rev`'s history (default HEAD; MB-79 (o): the tip). Returns {prereg, preregFile, task, source, violations}.
+ * that adds the record in `rev`'s history (default HEAD; MB-79 (o): the tip). Returns {prereg, preregFile, task, source, violations}
+ * and, MB-79 (x) B3 (a), `tree`: the revision the prereg was joined from ('HEAD' at commit time, else the add commit's first parent),
+ * null whenever no prereg is returned, so the register can be read from that SAME tree (a record cannot grade its own commit).
+ * On the one NONE answer that still joins a tree (`[]` with a task: the tree was searched and no prereg of the record's increment
+ * is there), `tree` is that searched tree; the readers below return null/[] for it exactly because no prereg was found.
  */
 export function findPreregFor({ git, root, mode, record, isNew, rev = 'HEAD' }) {
-  const none = (violations, task = null, source = null) => ({ prereg: null, preregFile: null, task, source, violations });
+  const none = (violations, task = null, source = null) => ({ prereg: null, preregFile: null, task, source, violations, tree: null });
   if (!record || typeof record.path !== 'string' || !isObject(record.rec)) return none([]);
   let task;
   let source;
@@ -292,9 +307,62 @@ export function findPreregFor({ git, root, mode, record, isNew, rev = 'HEAD' }) 
     if (!isObject(parsed)) return none([`prereg_unparsable:${rel}`], task, source);
     if (parsed.task !== task) return none([`prereg_name_task_mismatch:${rel}`], task, source);
     if (parsed.increment !== record.rec.increment) continue;
-    return { prereg: parsed, preregFile: rel, task, source, violations: [] };
+    return { prereg: parsed, preregFile: rel, task, source, violations: [], tree };
   }
-  return none([], task, source);
+  // The tree WAS searched: report it, so the context's register/entries read answer null/[] from the same tree the join read.
+  return { ...none([], task, source), tree };
+}
+
+/**
+ * R-LZ (drafts.md:237) + R-LE 124a:1049: the `{rows, owed}` register the move check reads, at the tree the prereg was joined from
+ * (arm C's citeInputs shape: gate.mjs reads 133's OWED table and the three registers at one revision, first row wins across the
+ * three). Every copy is read in its own try/catch: a null `tree` (no prereg), or a copy that is absent or unreadable there, is null
+ * -- never a partial register, which would read as "nothing is ruled". `git` is the reader set buildContext resolved.
+ */
+export function readMoveRegister(git, root, tree) {
+  if (!tree) return null;
+  const read = (rel) => {
+    try {
+      return git.readAt(root, tree, rel);
+    } catch {
+      return null;
+    }
+  };
+  try {
+    const spec = read(MOVE_REG.spec133);
+    const texts = MOVE_REG.registers.map(read);
+    if (typeof spec !== 'string' || texts.some((t) => typeof t !== 'string')) return null;
+    const rows = new Map();
+    for (const text of texts) {
+      for (const [id, v] of parseRegisterRows(text)) if (!rows.has(id)) rows.set(id, v);
+    }
+    return { owed: parseOwedTable(spec), rows };
+  } catch {
+    return null;
+  }
+}
+
+/** `nameStatusZOf`'s `{s, p}` rows as the `{status, path}` the move check's `entries` reads (gate.mjs arms spell them so). */
+const landingEntries = (rows) => asArray(rows)
+  .filter((row) => row && typeof row.p === 'string' && row.p && typeof row.s === 'string' && row.s)
+  .map((row) => ({ status: row.s, path: row.p }));
+
+/**
+ * R-LZ / R-KG (124a:1015): the rows of the commit that LANDS the round, so an OWED rule's own lock may land with it. Commit mode: the
+ * staged name-status, and only when what is staged is the record's own landing under judgement (`isNew`: the round under judgement is
+ * the record the round adds). Push and ci: the diff of the commit that ADDS the record against its first parent, the other `tree`
+ * candidate in the join (`rev` is the history the add commit is found in, tip at push and ci). Never throws: `[]`.
+ */
+export function readMoveLandEntries(git, root, record, { mode, rev = 'HEAD', tree = null, isNew = false } = {}) {
+  try {
+    if (mode === 'commit') return isNew ? landingEntries(git.stagedNameStatus(root)) : [];
+    if (!record || typeof record.path !== 'string' || !tree) return [];
+    const add = recordAddCommit((r, args) => git.git(r, args), root, record.path, rev);
+    if (!add) return [];
+    return landingEntries(nameStatusOf(tryGitText(git, root, ['diff-tree', '--no-commit-id', '-r', '--name-status', '--root', add])));
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -453,6 +521,15 @@ export async function buildContext(parsed = {}, deps = {}) {
   const prereg = join.prereg;
   const preregFile = join.preregFile;
   const preregJoin = { task: join.task, source: join.source, violations: join.violations };
+  // MB-79 (x) B3 (c) (R-LZ, drafts.md:237; R-LE 124a:1049; R-KG 124a:1015): the register and the landing commit's rows, read from the
+  // SAME tree the prereg was joined from, so a round's own staged register edit cannot rule its own move. No joined prereg, no
+  // register (the move check only reads one with a prereg). `deps.readMoveRegister` and `deps.readMoveLandEntries` are the test seam.
+  const moveRegister = !prereg ? null : typeof deps.readMoveRegister === 'function'
+    ? deps.readMoveRegister(root, join.tree)
+    : readMoveRegister(git, root, join.tree);
+  const moveLandEntries = typeof deps.readMoveLandEntries === 'function'
+    ? deps.readMoveLandEntries(root, latest, join.tree)
+    : readMoveLandEntries(git, root, latest, { mode, rev: joinRev, tree: join.tree, isNew: joinIsNew });
   const preregHistory = commit || !latest || !preregFile ? null : gitPreregHistory(root, preregFile, latest.path, tip);
   const rowsTouched = asArray(prereg && prereg.rows_touched);
 
@@ -521,6 +598,8 @@ export async function buildContext(parsed = {}, deps = {}) {
     classify,
     incrementIds,
     rulings,
+    moveRegister,
+    moveLandEntries,
     cardExists,
     latest,
     newRecords,

@@ -1326,3 +1326,112 @@ describe('MB-79 (j) M-321: a prereg whose moves cannot be compared', () => {
     expect(v.violations).toContain('prereg_moves_unchecked:group_not_run:coa4d');
   });
 });
+
+// ---- R-LZ moving-landing note (MB-79 (x)): a moving revert round of increment 1 names a RULED id per move -----------------------------
+// Red first: at HEAD nothing reads an id on a move. Authority: R-LZ note (drafts.md:237), R-LE (124a:1049), R-KG (124a:1015).
+const CPx = (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/cite-parse.mjs'))) as unknown as {
+  parseRegisterRows: (t: string) => Map<string, { status: string; locks: string[] }>;
+  parseOwedTable: (t: string) => Set<string>;
+};
+const MOVE_LOCK = 'src/tests/lock-fixture.logic.test.ts';
+const MOVE_EVID = 'docs/reports/red-evidence/bylaw/lock-fixture-red.txt';
+const moveReg = () => ({
+  rows: CPx.parseRegisterRows(['| M-180 | t | s | RULED 2026-10-01 |', '| R-MA | t | s | RULED 2026-11-01 |', `| M-777 | t | s | RULED 2026-10-30 · OWED MB-18 · lock \`${MOVE_LOCK}\` |`].join('\n')),
+  owed: CPx.parseOwedTable(['Rows with an OWED marker', '| M-361 | m.361 | t | OWED |', '| LC-15 | lc.15 | t | OWED |', '| M-777 | m.777 | t | OWED |'].join('\n')),
+});
+type MoveCtxOpts = { ruling?: unknown; register?: unknown; entries?: unknown; mode?: string; decision?: string; increment?: string; moves?: boolean; run?: boolean };
+/** A revert round of increment 1 whose prereg lists one move (clause 10.20.40.70 MATCH -> DIFFER) that the run shows. */
+function movingCtx(o: MoveCtxOpts = {}): Ctx {
+  const inc = o.increment ?? '1';
+  return withCtx((c) => {
+    const rec = goodRecord({ increment: inc, decision: o.decision ?? 'revert', reason: 'a revert round that lands the moves the prereg lists, each with a RULED id' });
+    c.latest = { path: RECORD_FILE, rec };
+    c.newRecords = [{ path: RECORD_FILE, rec }];
+    const move = { clause: '10.20.40.70', from: 'MATCH', to: 'DIFFER', ...(o.ruling === undefined ? {} : { ruling: o.ruling }) };
+    c.prereg = { ...preregOf(), increment: inc, expected_moves: o.moves === false ? [] : [move], expected_totals: o.moves === false ? { MATCH: 2 } : { MATCH: 1, DIFFER: 1 } };
+    const run = runOrThrow(c);
+    if (o.moves !== false && run.curRows[0]) run.curRows[0].status = 'DIFFER';
+    c.mode = o.mode ?? 'push';
+    if (o.run === false) c.run = null;
+    const x = c as unknown as Record<string, unknown>;
+    x.moveRegister = 'register' in o ? o.register : moveReg();
+    x.moveLandEntries = o.entries ?? [];
+  });
+}
+const moveCodes = (c: Ctx): string[] => (M.evaluateGate(c) as Verdict).violations.filter((v) => v.startsWith('move_ruling_'));
+
+describe('R-LZ MB-79 (x) E1: a moving revert of increment 1 without a ruling is refused in commit, push and ci', () => {
+  for (const mode of ['commit', 'push', 'ci']) {
+    it(`E1 ${mode}: move_ruling_missing is raised`, () => {
+      expect(moveCodes(movingCtx({ mode }))).toEqual(['move_ruling_missing:0:"10.20.40.70"']);
+    });
+  }
+  it('E1 ci with no run at all: still raised (the id check needs no baseline)', () => {
+    expect(moveCodes(movingCtx({ mode: 'ci', run: false }))).toEqual(['move_ruling_missing:0:"10.20.40.70"']);
+  });
+});
+
+describe('R-LZ MB-79 (x) E2-E7: the check is exactly the note and nothing else', () => {
+  it('E2: with a RULED id nothing is raised and the verdict has no move_ruling code; the shown move is not unexpected', () => {
+    const v = (M.evaluateGate(movingCtx({ ruling: 'R-MA' })) as Verdict).violations;
+    expect(v.filter((x) => x.startsWith('move_ruling_'))).toEqual([]);
+    expect(v.some((x) => x.startsWith('unexpected_move') || x.startsWith('missing_move') || x.startsWith('totals_diff'))).toBe(false);
+  });
+  it('E3: an accept round of increment 1 with the same unlisted ids is not judged (the note is silent)', () => {
+    expect(moveCodes(movingCtx({ decision: 'accept' }))).toEqual([]);
+  });
+  it('E4: a revert round of increment 2 is not judged', () => {
+    expect(moveCodes(movingCtx({ increment: '2' }))).toEqual([]);
+  });
+  it('E5: a zero-move revert of increment 1 is unchanged: no move_ruling code, even with a null register', () => {
+    expect(moveCodes(movingCtx({ moves: false, register: null }))).toEqual([]);
+    expect(moveCodes(movingCtx({ moves: false }))).toEqual([]);
+  });
+  it('E6: no register in the ctx is move_ruling_register_missing; an empty one is move_ruling_register_empty', () => {
+    expect(moveCodes(movingCtx({ ruling: 'R-MA', register: undefined }))).toEqual(['move_ruling_register_missing']);
+    expect(moveCodes(movingCtx({ ruling: 'R-MA', register: { rows: new Map(), owed: new Set() } }))).toEqual(['move_ruling_register_empty']);
+  });
+  it('E7: no prereg is prereg_missing and raises no move_ruling code', () => {
+    const c = movingCtx({ ruling: 'R-MA' });
+    c.prereg = null;
+    const v = (M.evaluateGate(c) as Verdict).violations;
+    expect(v).toContain('prereg_missing');
+    expect(v.filter((x) => x.startsWith('move_ruling_'))).toEqual([]);
+  });
+});
+
+describe('R-LZ MB-79 (x) E8-E11: order, the twins that must not move, the record shape, and the lock-lands door', () => {
+  it('E8: the new code comes after the earlier prereg codes and appears once', () => {
+    const c = movingCtx();
+    c.prereg = { ...(c.prereg as Prereg), expected_totals: { MATCH: 1, DIFFER: 9 } };
+    const v = (M.evaluateGate(c) as Verdict).violations;
+    const at = v.findIndex((x) => x.startsWith('move_ruling_missing'));
+    expect(at).toBeGreaterThan(v.findIndex((x) => x.startsWith('totals_diff')));
+    expect(v.filter((x) => x.startsWith('move_ruling_missing'))).toHaveLength(1);
+  });
+  it('E9: the checks the note keeps still fire: an unlisted move, a listed move not shown, a wrong total', () => {
+    const unlisted = movingCtx({ ruling: 'R-MA' });
+    (unlisted.prereg as Prereg).expected_moves = [];
+    (unlisted.prereg as Prereg).expected_totals = { MATCH: 1, DIFFER: 1 };
+    expect((M.evaluateGate(unlisted) as Verdict).violations.some((x) => x.startsWith('unexpected_move:'))).toBe(true);
+    const notShown = movingCtx({ ruling: 'R-MA' });
+    const run = runOrThrow(notShown);
+    if (run.curRows[0]) run.curRows[0].status = 'MATCH';
+    expect((M.evaluateGate(notShown) as Verdict).violations.some((x) => x.startsWith('missing_move:'))).toBe(true);
+    const wrong = movingCtx({ ruling: 'R-MA' });
+    (wrong.prereg as Prereg).expected_totals = { MATCH: 2 };
+    expect((M.evaluateGate(wrong) as Verdict).violations.some((x) => x.startsWith('totals_diff:'))).toBe(true);
+  });
+  it('E10: a record whose increment is not a string carries record_shape:increment (the string compare cannot be dodged)', () => {
+    const c = movingCtx({ ruling: 'M-999' });
+    const rec = { ...(c.latest as { rec: LoopRec }).rec, increment: 1 as unknown as string };
+    c.latest = { path: RECORD_FILE, rec };
+    expect((M.evaluateGate(c) as Verdict).violations).toContain('record_shape:increment');
+  });
+  it('E11: an OWED id is accepted only when its lock and a red-evidence file land in the record commit', () => {
+    const landing = [{ status: 'A', path: MOVE_LOCK }, { status: 'A', path: MOVE_EVID }];
+    expect(moveCodes(movingCtx({ ruling: 'M-777', entries: landing }))).toEqual([]);
+    expect(moveCodes(movingCtx({ ruling: 'M-777', entries: [{ status: 'A', path: MOVE_LOCK }] }))).toEqual(['move_ruling_not_ruled:0:"10.20.40.70":"M-777"']);
+    expect(moveCodes(movingCtx({ ruling: 'M-777' }))).toEqual(['move_ruling_not_ruled:0:"10.20.40.70":"M-777"']);
+  });
+});

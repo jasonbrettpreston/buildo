@@ -264,3 +264,27 @@ describe('R-MA arm C: the task\'s newest prereg (integer k), legacy names only w
 });
 
 afterAll(() => expect(hooksPathVerdict(readRealHooksPath(path.resolve(__dirname, '../..')), process.env.CI === 'true')).toBeNull());
+
+// ---- R-LZ moving-landing note (MB-79 (x)): the OWED-with-landing-lock door of arm C, exported once and reused ----------------------
+// R-KG (124a:1015): "a Layer 2/3 code commit may cite one only when its own lock lands in the same commit". Red first: landsId is not exported at HEAD.
+const { landsId } = (await import('../../scripts/analysis/mcbylaws/cite-arms.mjs')) as unknown as {
+  landsId: (id: string, r: typeof rows, o: typeof owed, e: { status: string; path: string }[]) => boolean;
+};
+describe('R-LZ MB-79 (x): landsId, the OWED-with-landing-lock door arm C and the loop gate both use', () => {
+  const entry = (p: string, status: string) => ({ status, path: p });
+  it('is exported, and is true only for an OWED id whose named lock and a new red-evidence file land together', () => {
+    expect(typeof landsId).toBe('function');
+    expect(landsId('R-QA', rows, owed, [entry(QA, 'A'), entry(RED, 'A')])).toBe(true);
+    expect(landsId('R-QA', rows, owed, [entry(QA, 'M'), entry(RED, 'A')])).toBe(true);
+    expect(landsId('R-QA', rows, owed, [entry(QA, 'A')])).toBe(false);
+    expect(landsId('R-QA', rows, owed, [entry(QA, 'D'), entry(RED, 'A')])).toBe(false);
+    expect(landsId('R-QA', rows, owed, [])).toBe(false);
+  });
+  it('an id in the Spec 133 owed table counts as OWED even when its row reads RULED; a plain RULED, PROPOSED or unknown id never lands', () => {
+    expect(owed.has('M-361')).toBe(true);
+    expect(landsId('M-361', rows, owed, [entry(QA, 'A'), entry(RED, 'A')])).toBe(false);
+    expect(landsId('M-180', rows, owed, [entry(QA, 'A'), entry(RED, 'A')])).toBe(false);
+    expect(landsId('M-385', rows, owed, [entry(QA, 'A'), entry(RED, 'A')])).toBe(false);
+    expect(landsId('M-000', rows, owed, [entry(QA, 'A'), entry(RED, 'A')])).toBe(false);
+  });
+});

@@ -5,6 +5,8 @@
 // The only IO is gitPreregHistory, which reads git; it scrubs every GIT_* variable so a -C <dir> argument alone decides the repository.
 import { execFileSync } from 'node:child_process';
 import { diffMoves, checkPrereg, checkPreregShape } from '../bylaw-validation/coa-round.mjs';
+import { isRuled, sentinelsOk } from '../mcbylaws/cite-parse.mjs';
+import { landsId } from '../mcbylaws/cite-arms.mjs';
 
 const PREREG_DIR = 'scripts/analysis/bylaw-validation/coa-expected';
 const TASK_ID = /^MB-\d+$/;
@@ -132,4 +134,47 @@ export function gitPreregHistory(root, preregFile, recordFile, rev = 'HEAD') {
     }
   };
   return { preregCommits, roundCommit, isStrictAncestor, preregFile };
+}
+
+// The label a per-move finding carries: the entry's index and its clause, capped, JSON-escaped so a newline cannot forge a second line.
+const moveLabel = (i, entry) => {
+  const clause = entry && typeof entry === 'object' && typeof entry.clause === 'string' ? entry.clause : '';
+  return `${i}:${JSON.stringify(clause.slice(0, 80))}`;
+};
+
+// R-LE (124a:1049): an unreadable input is refused by name, never a crash that loses the whole verdict. String(v)
+// throws for a null-prototype object and for an object whose toString throws; fall back to the value's typeof.
+const safeText = (v) => { try { return String(v); } catch { return typeof v; } };
+
+const isRegister = (register) => Boolean(register) && typeof register === 'object' && register.rows instanceof Map && register.owed instanceof Set;
+
+/**
+ * R-LZ (drafts.md:237): "the gate will refuse a move the prereg does not list and a listed move with no RULED id".
+ * R-LE (124a:1049): RULED is the closed list of in-force Status words the generator emits (RETIRED, SUPERSEDED,
+ * PROPOSED and OWED are not RULED). R-KG (124a:1015): an OWED rule is usable only when its own lock lands in the
+ * same commit, so the arm C landsId is reused for it, never copied.
+ * Pure: never throws, never mutates; [] is green. `entries` are the commit's {status, path} rows (default []).
+ * @returns {string[]} one code per refused move, in array order
+ */
+export function checkMoveRulings(pre, register, entries = []) {
+  const moves = pre && typeof pre === 'object' && Array.isArray(pre.expected_moves) ? pre.expected_moves : [];
+  if (moves.length === 0) return [];
+  if (!isRegister(register)) return ['move_ruling_register_missing'];
+  const { rows, owed } = register;
+  if (!sentinelsOk(owed, rows)) return ['move_ruling_register_empty'];
+  const list = Array.isArray(entries) ? entries : [];
+  const out = [];
+  moves.forEach((entry, i) => {
+    const ruling = entry && typeof entry === 'object' ? entry.ruling : undefined;
+    const label = moveLabel(i, entry);
+    if (ruling === undefined || ruling === null || ruling === '') {
+      out.push(`move_ruling_missing:${label}`);
+      return;
+    }
+    const id = typeof ruling === 'string' ? ruling : '';
+    const lands = () => { try { return landsId(id, rows, owed, list); } catch { return false; } };
+    const usable = id !== '' && ((isRuled(rows, id) && !owed.has(id)) || lands());
+    if (!usable) out.push(`move_ruling_not_ruled:${label}:${JSON.stringify(safeText(ruling).slice(0, 80))}`);
+  });
+  return out;
 }
