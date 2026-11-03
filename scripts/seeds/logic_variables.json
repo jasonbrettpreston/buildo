@@ -10199,7 +10199,7 @@
     "type": "list",
     "description": "Increment-1 population of compute_maxbld_scenarios (R-BT: the population is a query; this list narrows it): the 25 golden parcel ids of MB-64 (data/golden-parcel-map.json). An empty list means no parcel is computed. Widened by a setting change in the later increments (Q:85-94), never by code. List-typed: stored in variable_value_json (seed type list, Q-J), as DECIMAL STRINGS because the step library validates a list as distinct members of a closed list_of of strings (scripts/lib/step/config.js); the step converts them to integers (populationIds) before it binds them. Widening the population changes this seed AND the descriptor list_of together (operator answer CARD-mb31-inc1-blockers, blocker 2 option 2). CONSUMED by the step's population query.",
     "admin": {
-      "group": "Source Ingestion"
+      "hidden": "internal"
     }
   },
   "fya_placeholder_ring_depth": {

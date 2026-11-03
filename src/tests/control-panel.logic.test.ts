@@ -67,7 +67,7 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Q-J: list-typed seed variables (hidden "internal"): never in LOGIC_VAR_DEFAULTS or LOGIC_VAR_ENUMS, so they sit outside the expected numeric/enum set. */
-const LIST_SEED_KEYS = ['resolve_bylaws_population_zone_classes'];
+const LIST_SEED_KEYS = ['resolve_bylaws_population_zone_classes', 'compute_maxbld_scenarios_population_parcel_ids'];
 
 const EXPECTED_LOGIC_VAR_KEYS = [
   // batch-2 Phase 0.9 I5 (2026-09-16) — geocode_permits' three. THREE and not one: the
@@ -197,6 +197,16 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'fya_placeholder_street_min_n', // front setback placeholder (operator ruling 2026-10-29, card FS-SB2)
   'fya_placeholder_zone_radius_m', // front setback placeholder (operator ruling 2026-10-29, card FS-SB2)
   'fya_placeholder_zone_min_n', // front setback placeholder (operator ruling 2026-10-29, card FS-SB2)
+  // Spec 131 compute_maxbld_scenarios (Layer 3, MB-31 increment 1, 2026-11-02) — admin group "Source Ingestion"; the population parcel-id list is a list-typed
+  // variable (Q-J, seed loader type "list") hidden "internal" and sits in LIST_SEED_KEYS, not here (operator answer CARD-mb31-fullsuite-pins, pending).
+  's1_ceiling_min_m',
+  's1_floor_assembly_m',
+  's1_parapet_m',
+  's2_first_floor_above_grade_m',
+  'footprint_shape_factor',
+  'fya_placeholder_ring_depth',
+  'fya_placeholder_ring_min_n',
+  'compute_maxbld_scenarios_batch_size',
   'fya_porch_allowance_m', // front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) note; Spec 131 LC-58)
   'abut_parcels_with_abutments_warn_pct', // H6 QA ruling 2026-10-16 item 2 — the abutment-share WARN floor
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate

@@ -656,7 +656,6 @@ const GROUP_ORDER = [
       "s1_parapet_m",
       "s2_first_floor_above_grade_m",
       "footprint_shape_factor",
-      "compute_maxbld_scenarios_population_parcel_ids",
       "compute_maxbld_scenarios_batch_size"
     ]
   },
