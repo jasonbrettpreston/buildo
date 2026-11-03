@@ -1,11 +1,25 @@
 {
-  "$comment": "ONE-TIME landing exception (operator CARD-gates-recheck item 1, 2026-10-31; ledger row in batch 2026-10-31-am): these exact commits of the MB-67 branch were made before the gate's policy existed (42521481..ce116571) or renamed the prereg (3e3212b9), so the per-commit arms H, C and P cannot judge them. The gate skips arms H, C and P for these shas and for no others. There is no general rule: a sha not listed here is judged in full. Protected path: every change shows in the pre-push summary.",
+  "$comment": "ONE-TIME landing exception (operator CARD-gates-recheck item 1, 2026-10-31; ledger row in batch 2026-10-31-am): these exact commits of the MB-67 branch were made before the gate's policy existed (42521481..ce116571) or renamed the prereg (3e3212b9), so the per-commit arms H, C and P cannot judge them. The gate skips arms H, C and P for these shas and for no others. There is no general rule: a sha not listed here is judged in full. Protected path: every change shows in the pre-push summary. MB-84 (operator \"Q-MB84 confirmed\", ~/Buildo-scratch/p2close/CARD-coa-park.answered.md; register row R-MB, batch 2026-11-03-batch-av): the 14 CoA ledger commits below were made before the gate's policy existed; the same skip of arms H, C and P applies to them and to no others.",
   "commits": [
     { "sha": "42521481cab1ad58b848600367c8d11f1a185b8c", "reason": "MB-67 prereg, before the policy file existed" },
     { "sha": "3e7b592e9a21862c93db18bca890f74604c22db3", "reason": "MB-67 gate fixtures, before the policy file existed" },
     { "sha": "bef5585e65ccc2a02169902dd18da1ba2fa9349a", "reason": "MB-67 git helpers, before the policy file existed" },
     { "sha": "6474b00ef0f558f675a9c240a801a3aef05eb1b4", "reason": "MB-67 name-status parser, before the policy file existed" },
     { "sha": "ce116571ba381a0a1b51734820f45ccce2981244", "reason": "MB-67 policy validator and the policy file itself (carries code, so not a policy-alone bootstrap)" },
-    { "sha": "3e3212b99131a49441e06e8c655c8b9663ee36d3", "reason": "MB-67 prereg rename to prereg-MB-67-1.json (a rename, and R-KF..R-LF were OWED)" }
+    { "sha": "3e3212b99131a49441e06e8c655c8b9663ee36d3", "reason": "MB-67 prereg rename to prereg-MB-67-1.json (a rename, and R-KF..R-LF were OWED)" },
+    { "sha": "dfe1f23d695ff16cb0934e12c675d1948f098346", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "d07bca70c8c3e6db34aefed7d03465577cd3483a", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "72ce5b55cd645a02da4797421d3dc0fb701c1383", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "95e6c0931541bfe65903c7d05489976562f90b85", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "5b53f0229cc3f440dc66d5c83e5b42ef30bd3ef0", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "c1d4968692f8e6edf1ef5e7eceab2a34fd01a548", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "eea40c1d0511fd52d68c27d520c50068608a57ea", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "d3f12cc8ea8812a33fe76d30a8a61bf8622d1254", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "b9971d4254705c38b6e7217a538702eedc051080", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "528ac744aabbb3910d31642356ebf0e36917479b", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "13951d9e4d8c83c104a7c1320f4e7fc9a58fc5ab", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "c8258757d5c7870f058a355ca32a9b3adf201075", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "e7820bd4c3db28f6db8f15cc5a5ca4a30ff90c7c", "reason": "CoA ledger commit made before the gate's policy existed" },
+    { "sha": "9c720d8fa3e1ae0d158cbee9aa53daf3d760c034", "reason": "CoA ledger commit made before the gate's policy existed" }
   ]
 }

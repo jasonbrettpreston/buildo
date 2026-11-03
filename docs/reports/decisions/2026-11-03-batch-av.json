@@ -1,0 +1,28 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-11-03-batch-av/2026-11-03-batch-av.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-11-03-batch-av",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Q-MB84 confirmed",
+    "record": "operator chat 2026-11-03",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-11-03-batch-av/2026-11-03-batch-av.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-223.MB84-EXC",
+      "question": "R-MB: a one-time landing exception in the R-LS form for exactly the 14 pre-policy CoA ledger commits of MB-84",
+      "recommendation": "Operator answer (CARD-coa-park.answered.md, Q-MB84): \"Q-MB84 confirmed\". Rule text: A one-time landing exception in the R-LS form (124a:1032): exactly the 14 pre-policy CoA ledger commits (dfe1f23d695ff16cb0934e12c675d1948f098346, d07bca70c8c3e6db34aefed7d03465577cd3483a, 72ce5b55cd645a02da4797421d3dc0fb701c1383, 95e6c0931541bfe65903c7d05489976562f90b85, 5b53f0229cc3f440dc66d5c83e5b42ef30bd3ef0, c1d4968692f8e6edf1ef5e7eceab2a34fd01a548, eea40c1d0511fd52d68c27d520c50068608a57ea, d3f12cc8ea8812a33fe76d30a8a61bf8622d1254, b9971d4254705c38b6e7217a538702eedc051080, 528ac744aabbb3910d31642356ebf0e36917479b, 13951d9e4d8c83c104a7c1320f4e7fc9a58fc5ab, c8258757d5c7870f058a355ca32a9b3adf201075, e7820bd4c3db28f6db8f15cc5a5ca4a30ff90c7c, 9c720d8fa3e1ae0d158cbee9aa53daf3d760c034) are added to mcbylaws/landing-exceptions.json (\"CoA ledger commit made before the gate's policy existed\"); arms H, C, P skip them only; every other arm and the MB-84 merge commit 5decd05e4 are judged in full. Not a general code rule.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q-MB84 confirmed"
+    }
+  ]
+}

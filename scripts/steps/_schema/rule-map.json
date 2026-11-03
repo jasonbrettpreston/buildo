@@ -7588,6 +7588,20 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-MB",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "MB-84 landing exception: the 14 pre-policy CoA ledger commits.",
+      "source": {
+        "register": true
+      }
     }
   ],
   "unenforced": [
@@ -8080,6 +8094,11 @@
       "id": "R-LZ",
       "class": "none",
       "reason": "OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an)"
+    },
+    {
+      "id": "R-MB",
+      "class": "none",
+      "reason": "OWED MB-84: the lock is the gate exceptions test and the MB-84 push-gate run (recorded 2026-11-03-batch-av)"
     }
   ]
 }

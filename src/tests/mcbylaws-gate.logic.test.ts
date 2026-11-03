@@ -520,10 +520,30 @@ describe('L1 (re-check X1, R-LS): the landing exception is the frozen six plus t
 
   it('the frozen constant: the real list holds exactly the six shas, and the gate source names each once', () => {
     const real = JSON.parse(fs.readFileSync(path.join(REAL_ROOT, EXC), 'utf8')) as { commits: { sha: string }[] };
-    expect(real.commits.map((c) => c.sha)).toEqual(FROZEN);
-    expect(real.commits).toHaveLength(6);
+    // MB-84 (operator "Q-L1 confirmed", 124a R-MB): the real list is the frozen six, then exactly the 14 pre-policy CoA ledger commits.
+    const MB84 = [
+      'dfe1f23d695ff16cb0934e12c675d1948f098346',
+      'd07bca70c8c3e6db34aefed7d03465577cd3483a',
+      '72ce5b55cd645a02da4797421d3dc0fb701c1383',
+      '95e6c0931541bfe65903c7d05489976562f90b85',
+      '5b53f0229cc3f440dc66d5c83e5b42ef30bd3ef0',
+      'c1d4968692f8e6edf1ef5e7eceab2a34fd01a548',
+      'eea40c1d0511fd52d68c27d520c50068608a57ea',
+      'd3f12cc8ea8812a33fe76d30a8a61bf8622d1254',
+      'b9971d4254705c38b6e7217a538702eedc051080',
+      '528ac744aabbb3910d31642356ebf0e36917479b',
+      '13951d9e4d8c83c104a7c1320f4e7fc9a58fc5ab',
+      'c8258757d5c7870f058a355ca32a9b3adf201075',
+      'e7820bd4c3db28f6db8f15cc5a5ca4a30ff90c7c',
+      '9c720d8fa3e1ae0d158cbee9aa53daf3d760c034',
+    ];
+    expect(real.commits.slice(0, 6).map((c) => c.sha)).toEqual(FROZEN);
+    expect(real.commits.slice(6).map((c) => c.sha)).toEqual(MB84);
+    expect(real.commits.map((c) => c.sha)).toEqual([...FROZEN, ...MB84]);
+    expect(real.commits).toHaveLength(20);
     const src = fs.readFileSync(GATE, 'utf8');
     for (const sha of FROZEN) expect(src.split(sha).length - 1).toBe(1);
+    for (const sha of MB84) expect(src.split(sha).length - 1).toBe(0);
   });
 
   it('a base file listing the sha announces it and has no FAIL line for it', () => {

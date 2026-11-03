@@ -1022,3 +1022,13 @@ describe('CHAT-222 (batch 2026-11-03-batch-au): 9 rulings recorded; the incremen
     expect(row, 'M-466 row').toContain("2026-11-03-batch-au#CHAT-222.M72-SQRT");
   });
 });
+
+// CHAT-223 (batch 2026-11-03-batch-av): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-223 (batch 2026-11-03-batch-av): 1 ruling recorded; the lock is OWED to MB-84', () => {
+  it('R-MB carries 2026-11-03-batch-av#CHAT-223.MB84-EXC and its Rule text, in the 124a row', () => {
+    expect(A, 'CHAT-223.MB84-EXC').toContain("2026-11-03-batch-av#CHAT-223.MB84-EXC");
+    expect(A, 'CHAT-223.MB84-EXC rule text').toContain("A one-time landing exception in the R-LS form (124a:1032): exactly the 14 pre-policy CoA ledger commits (dfe1f23d695ff16cb0934e12c675d1948f098346, d07bca70c8c3e6db34aefed7d03465577cd3483a, 72ce5b55cd645a02da4797421d3dc0fb701c1383, 95e6c0931541bfe65903c7d05489976562f90b85, 5b53f0229cc3f440dc66d5c83e5b42ef30bd3ef0, c1d4968692f8e6edf1ef5e7eceab2a34fd01a548, eea40c1d0511fd52d68c27d520c50068608a57ea, d3f12cc8ea8812a33fe76d30a8a61bf8622d1254, b9971d4254705c38b6e7217a538702eedc051080, 528ac744aabbb3910d31642356ebf0e36917479b, 13951d9e4d8c83c104a7c1320f4e7fc9a58fc5ab, c8258757d5c7870f058a355ca32a9b3adf201075, e7820bd4c3db28f6db8f15cc5a5ca4a30ff90c7c, 9c720d8fa3e1ae0d158cbee9aa53daf3d760c034) are added to mcbylaws/landing-exceptions.json (\"CoA ledger commit made before the gate's policy existed\"); arms H, C, P skip them only; every other arm and the MB-84 merge commit 5decd05e4 are judged in full. Not a general code rule.");
+    const row = A.split('\n').find((l) => l.startsWith('| R-MB |')) as string;
+    for (const s of ["dfe1f23d695ff16cb0934e12c675d1948f098346","d07bca70c8c3e6db34aefed7d03465577cd3483a","72ce5b55cd645a02da4797421d3dc0fb701c1383","95e6c0931541bfe65903c7d05489976562f90b85","5b53f0229cc3f440dc66d5c83e5b42ef30bd3ef0","c1d4968692f8e6edf1ef5e7eceab2a34fd01a548","eea40c1d0511fd52d68c27d520c50068608a57ea","d3f12cc8ea8812a33fe76d30a8a61bf8622d1254","b9971d4254705c38b6e7217a538702eedc051080","528ac744aabbb3910d31642356ebf0e36917479b","13951d9e4d8c83c104a7c1320f4e7fc9a58fc5ab","c8258757d5c7870f058a355ca32a9b3adf201075","e7820bd4c3db28f6db8f15cc5a5ca4a30ff90c7c","9c720d8fa3e1ae0d158cbee9aa53daf3d760c034"]) expect(row, s).toContain(s);
+  });
+});
