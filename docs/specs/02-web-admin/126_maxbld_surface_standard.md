@@ -1,6 +1,8 @@
 # SPEC 126 — MaxBLD Surface Standard (the surface descriptor as contract)
 
-> **Status: DRAFT** — authored 2026-09-15 (WF1, Admin domain). Not authorized for implementation. A WF1 plan with PLAN LOCKED gates every phase below; `.cursor/wf1_spec126_128_active_task.md` is the authoring plan this spec was written under.
+> **Status: DRAFT** — Authorized for McFrontend Phase 1 only (card answer Q-FE a: "A Spec 126-128 plan is authorized as documents only, named McFrontend. ... The build starts after McBylaws increment 2 closes"; scope mobile, web, admin and PDF). Phase 1 = the REPORT section (§11a) and the report-page conversion only. Every other phase stays "Not authorized for implementation" until touched for a product reason (card answer Q-MFS a: "Other screens convert only when touched for a product reason"). Companion specs, RULED 2026-11-04 (Q-MF1 a): 135 (decisions register) and 136 (generated handbook), in docs/specs/02-web-admin. Source of the rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`.
+>
+> Prior status line (2026-09-15, kept, M-246): authored 2026-09-15 (WF1, Admin domain). Not authorized for implementation. A WF1 plan with PLAN LOCKED gates every phase below; `.cursor/wf1_spec126_128_active_task.md` is the authoring plan this spec was written under.
 >
 > **Placement note (measured, not chosen).** These three specs span mobile, web and admin, so `docs/specs/04-platform/` was the natural home. It is **not supported today**: `scripts/generate-system-map.mjs:24-31` defines `SECTIONS` as a hard-coded directory allow-list (`00-architecture`, `01-pipeline`, `02-web-admin`, `03-mobile`, `archive`, `reference`) and a directory absent from it is **silently dropped** from the system map — no throw, `collectSpecs` is simply never called for it. `src/tests/system-map.infra.test.ts` hard-codes the same four sub-directories at `:49`, `:300` and `:325`. Creating `04-platform/` therefore means a code change to a generator and a test that are outside this spec's Target Files. **Specs 126/127/128 land in `docs/specs/02-web-admin/` next to Spec 125, and the folder question is filed as `ASK-06` in Spec 128 §6.**
 >
@@ -48,6 +50,19 @@ Each row is a deliberate retirement, not an oversight. Retiring it here is the S
 | **`supagen`** | §3 | Not a dependency and not needed; `drizzle-kit introspect` already generates the DB types. |
 | **"Treat the engine as a one-time core infrastructure build"** | §8 | Retired as a mitigation. The estate's own evidence is that a one-time build is how `/api/leads/view` became a 153-line meter with 44 green tests and zero callers. The engine is built pilot-first, with a kill criterion (§8.3). |
 
+### 0a. The six principles (McFrontend, added 2026-11-04)
+
+Operator verbatim, Q-MFP: "Q-MFP a". The card text of the six, adopted by that answer:
+
+1. **Declared, not coded:** a screen is a descriptor; the only code is the shared archetype components; a new scenario reaches the report with no code.
+2. **Proven, not reviewed (no errors):** every declaration is checked against the live contracts and the McBylaws catalogue, with golden render states and both-directions locks; observability (usage and drift in-product, Spec 126 P6/P8) sits inside this.
+3. **Fast:** a performance budget per archetype (load, payload) for the user; for the team, a new field or scenario ships in hours.
+4. **Single source:** the front end may show more, never derive differently (Spec 126 P2); every number comes from McBylaws; no maths in the UI.
+5. **Honest display:** disclosures, confidence, "at least", not_evaluated and not_modelled always shown, never hidden; status words come from a closed list.
+6. **Same everywhere:** mobile, web, admin and PDF render the same declaration; parity is a test (Spec 128 Rule 15).
+
+Each principle has a Lock in Spec 135 (FE-02..FE-07). The principles table of §2.2.1 reads P2 = no derive differently, P6 = drift shown in-product and P8 = orphans (not "usage"); the operator's "P6/P8" is kept in the operator's words, with no gloss.
+
 ---
 
 <requirements>
@@ -81,6 +96,8 @@ The operator's proposed unit was **SURFACE = screen + its API contract + its tab
 | **3** | **JOB** | server work with no screen and no request — schedule · target · idempotency · ledger rows | **6** non-pipeline, all archetype `SCHEDULED` (4 `pg_cron` + `pipeline-watchdog.yml` + `mutation.yml`); `chain-wsib.yml` has no `schedule:` block and is not a JOB | `jobs/_schema/job.schema.json` — **its own schema; R-14** |
 | **4** | *registry* **ENTITLEMENT** | the closed product vocabulary · per-product statuses · gate sites | **2** products today (`lead_gen`, `flight_center`) → **4** after a single CHECK widening that adds **`parcel_tool`** (R-01) **and `agent_reports`** (R-09) in the same statement | `seeds/entitlements.json`, mirrored into `docs/specs/_contracts.json` |
 | **5** | *registry* **LEDGER** | the closed event vocabulary the usage spine records | 4 existing event tables; **exactly 1** new — `usage_events`. **There is no second ledger:** an earlier draft added a `surface_ledger` for the fan-out graph and it is deleted (R-25) — those edges are the CONTRACT's own `consumers[]`, and a table recording the same join would be a second source of truth for a fact the descriptor already declares | `seeds/usage-events.json` |
+
+> Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): counts are the 2026-09-15 census; the generated registry is the live count (`docs/reports/generated/127-surface-registry.md:20` read 73 surfaces, 62 contracts, 6 jobs at `ac9200aa8`); do not restate a count in prose. The reconcile and generation work is deferred to convert-on-touch (MF-31, `.cursor/MCFRONTEND-QUEUE.md`).
 
 **Two things deliberately NOT units** — this is the scope reduction:
 
@@ -700,6 +717,107 @@ CREATE TABLE usage_events (
 
 **Budget, stated up front (the P3 discipline).** No descriptor in this repo is under 200 lines; the smallest real one is **388** (`scripts/compute-centroids.descriptor.json`), the largest **8,225**. Fifty-three surfaces at 388 lines is ~20,000 lines of declaration. **The archetype required-field profiles are the only mechanism that keeps that from being 53 × 400 lines of `"none"`.** A REPORT should answer perhaps 12 of the categories in substance and `"none"` the rest in one line each. **Kill criterion, declared before commit 1: if the pilot descriptor lands over ~250 lines, the profile design is wrong.**
 
+## 11a. REPORT: the generated report fields (McFrontend Phase 1, added 2026-11-04)
+
+Why here: operator verbatim, doc-set answer 3: "generator lives in the spec". Scope: the REPORT archetype only (card answer Q-MFS a, lean McFrontend). Spec 128 Rules 16-18 apply to REPORT now. Line cites in this section were read at `ac9200aa8`, before this section landed. "(unverified)" marks a fact the drafting lane did not confirm; it is confirmed at build.
+
+### 11a.1 The binding rule (Q-MF3, 2026-11-04)
+
+Operator verbatim: "isnt that the point of the schema - there might be exceptions ie user input fields but overall teh databse fields are the key we also have ads as well. we just need to be aware of this."
+
+- Every displayed field binds to a source. The schema references the field and nothing else: no old engine names, no older-rule text, no code. The CLOSED binding set (`source`):
+
+  | source | what it binds to |
+  |---|---|
+  | `catalogue` | the Layer 3 output, keyed by catalogue row id (`scripts/seeds/bylaw/layer3-catalogue.json`, schema `layer3-catalogue-v1`; rows gated by `switchboard.json`, schema `switchboard-v1`) |
+  | `content` | the label, help-text and legal-copy table (a seed or a DB content table). Labels, help text and legal copy are NOT an exception: they are content fields and bind like any field |
+  | `user_input` | an id in the input contract (the form archetype), e.g. neighbour setbacks, the parking-space question |
+  | `ad_slot` | an id in the ad contract (§11a.10) |
+  | `external_embed` | a declared external embed: map tiles, payment checkout, analytics. Declared, never coded. RULED 2026-11-04 (Q-MF4 a; Spec 135 FE-21) |
+
+- A field with any other source fails the check.
+- The set lives in a PROTECTED file (proposed `scripts/surfaces/_schema/binding-sources.json`, path unverified; to be added to `protected-paths.json` at the freeze lift). Adding a source or a member needs a register row and a panel. The binding lock has a RED fixture: a node with an invented field (Spec 128 Rule 20, Spec 135 FE-18).
+- Generation: scenario fields are GENERATED from the catalogue and switchboard into the SEED (`scripts/surfaces/_schema/report-v2-seed/` via `seed-report-v2.mjs`), never into the generated `report-v2.decl.json` (its header is re-checked at build, unverified). A row on in the switchboard yields a field set; off yields none; off beats on (the switchboard `$comment`).
+- The retired lineage and `_sqm` names are removed from the report schema. Spec 78 needs no dated note for the report (card answer Q-MF3).
+
+### 11a.2 `variants[]` (RULED, operator verbatim "Q-MF2 a")
+
+Card answer: one card per building type, with a `variants[]` list inside: one entry per roof form (flat, pitched A, pitched B) and unit class (houseplex 2-4 at 4; 6 `not_modelled` until its increment), generated from the catalogue. Each variant is a full field set, rendered. Ad slots stay outside the card list and outside `variants[]`.
+
+Headline: the generator emits `headline: true` on exactly one variant per card, by the existing rule (largest permitted and buildable; ties flat, then A, then B per the increment-2 note; exact text unverified, resolved against McBylaws). The renderer reads the flag and never chooses.
+
+### 11a.3 Closed status list and disclosure codes (Honest display)
+
+`status` is one of: `permitted` | `not_permitted:<clause>` | `not_buildable` | `not_evaluated:<reason>` | `not_modelled` | `at_least` (a lower bound; the catalogue row carries the flag).
+
+`coa_required:<clause>` is NOT in the list; it is added by amendment at the McBylaws increment that lands that route (no later-increment work pulled forward).
+
+Disclosure codes are a closed list generated from the catalogue/content (a declared field set), extended only by an amendment to this section plus a lock. A status or code outside the list: the generator fails AND the renderer throws (never skips).
+
+Rule: an `at_least` value renders "at least" beside the number on every target.
+
+### 11a.4 Per-reading confidence and provenance
+
+Every reading carries `confidence` (closed set `high | medium | medium-low | low`, the switchboard confidence row of McBylaws, M-378 dated amendment), an `evidence` pointer, and `source` provenance: `estimated` | `permit` | `plan` | `user` (exact source values against the McBylaws catalogue unverified). `entered_at` is present for `user`. Confidence by source (Q-MF4 a): estimated low, user medium, verified high. Shown beside each reading, never hidden.
+
+### 11a.5 Disclosures
+
+Per reading and per variant, from the closed code set, with parameters. A disclosure the catalogue marks required that the render omits is a FAIL: the oracle is the catalogue flags, not the goldens (Spec 128 Rule 17).
+
+### 11a.6 Fields that must exist (catalogue row ids; labels from `content`)
+
+| Field | Source | Note |
+|---|---|---|
+| dual FSI reading | catalogue: capped and uncapped | headline = capped, uncapped beside it (M-397, 69a:538; cite unverified) |
+| `gfa_max_m2` (counted GFA) | catalogue (exists) | label from `content` |
+| mechanical outside GFA | catalogue mechanical rows | own labelled figure (M-472) |
+| total floor area | computed by the CATALOGUE (GFA + mechanical), not the UI | Single source |
+| `wall_storeys`, setback plate, free share, roof pitch, counted attic per arm | catalogue increment-2 rows | do not exist today (unverified that `wall_storeys`, `headline_lower_bound`, `units_at_least` are absent) |
+| `headline_lower_bound`, `units_at_least` | catalogue | "at least" qualifiers |
+
+The UI computes none of these. A sum in any file is a Rule 16 failure (Spec 128).
+
+### 11a.7 Golden render states: structured render trees
+
+A golden = the pair in Spec 127 §4.3 (API fixture + rendered tree; 126:435-439, 127:129-134). Rendered tree = nodes in declared order:
+
+```
+{ "field": "gfa_max_m2", "source": "catalogue", "label": "<from content>", "value": "212.4 m2", "status": "at_least", "confidence": "medium", "provenance": "estimated", "disclosures": ["..."] }
+```
+
+`value` is the formatted string; `label` includes any "at least". A screenshot is never a golden.
+
+Render states (minimum): permitted, not_permitted, not_buildable, not_evaluated, not_modelled, at_least, at_least_with_disclosure, one per closed confidence value, variants (flat vs pitched), houseplex 4 and 6, dual FSI, exception lot, basement line, user_entry (§11a.9), no_user_entry, user_entry_outranked (a verified fact outranks a user entry, Q-MF4 a), ad_slot_present, ad_slot_absent (§11a.10), loading, miss, error. Derived from the catalogue plus the 25 golden lots (card answer Q-MFS a). The honest check scans every node of every golden for the required fields.
+
+### 11a.8 Performance budget (REPORT only; other archetypes on conversion)
+
+Operator verbatim, Q-MF5: "QMf5 a". Card answer: measure first, then set. The first McFrontend build task times the current report screen and the 25 golden lots on mobile and web, then proposes budget numbers for the operator to rule. Ruled numbers go in a protected, tighten-only file. Spec 135 FE-04's lock stays OWED until the numbers are ruled.
+
+| Archetype | First render | Payload (gz) | Measured by |
+|---|---|---|---|
+| REPORT | TBD (measured, then ruled) | TBD (measured, then ruled) | payload bytes on golden fixtures vs limit in protected archetype data (tighten-only) |
+
+Load time and "a new field ships in hours" are PROSE-ONLY until there is an in-product measure (no mechanical lock; vitest on fixtures measures payload, not device load).
+
+### 11a.9 User-input fields (shared, not private)
+
+Operator verbatim: "I dont think these need to be private - I think it will update the database with higher confidence information that will stay - its not a secret."
+
+Flow: form (declared in the descriptor, `source: user_input`, bound to the input contract) -> input contract -> McBylaws re-evaluates -> stored, shared results with provenance and confidence by source (estimated low, user medium, verified high) -> shown to every viewer.
+
+- Each entered fact keeps provenance: `source: user`, `entered_at`.
+- McFrontend declares the form and renders results only. The on-demand one-lot re-evaluation is a McBylaws increment-6 capability (card answer Q-MF4 a); it is not built by McFrontend.
+- RULED 2026-11-04 (Q-MF4 a; Spec 135 FE-20): verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history, so a bad entry can be reverted.
+- Goldens: no_user_entry, user_entry (confidence medium, provenance user), user_entry_outranked.
+- Targeting or sharing a user-entered input is not an ad matter except as §11a.10 states.
+
+### 11a.10 Ad slots
+
+- A slot is `source: ad_slot`, bound to the ad contract. Slots sit outside `variants[]` and outside the card list (Q-MF2 a).
+- Spec 128 R-17 (disclosure) renders on every target for every slot; R-34 (never inside a card) is enforced by golden (the R-17/R-34 text at 128:139-172 is re-read at build).
+- RULED 2026-11-04 (Q-MF4 a; Spec 135 FE-22): ads target only declared database keys (the generator fails otherwise), never user-entered facts without consent.
+- Goldens: ad_slot_present, ad_slot_absent.
+
 ## 12. Phases
 
 **There is ONE sequence in this programme, and it lives in Spec 127 §4.4** (batching by archetype). The table below is that sequence rendered at spec altitude — same rows, same order, same ids. It is not a second plan: if a batch moves, it moves in Spec 127 and this table follows. The one thing stated *here* rather than there is the rule that reordered it.
@@ -719,6 +837,8 @@ CREATE TABLE usage_events (
 | **P6** | **B5 — GATE / SLOT / STATIC / SHELL** | the paywall family, `SponsorSlot`'s remaining placements, the landing page, AuthGate | AuthGate is the sole routing authority and converts last |
 | **P7** | **(web projection)** | the RSC renderer over the same descriptors; the public-route decision; the MaxBLD consumer surface | one contract, three surfaces, visible to a customer |
 | **never** | **(fenced)** | `mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx` (1,302 lines) — they talk to the Supabase Auth SDK, not to our contracts | — |
+
+> Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): **P2-REPORT** = Phase 1 of McFrontend: the catalogue-to-report generator, one REPORT renderer, the goldens and their locks (§11a). It precedes P2b. The admin pilot (P2b) is convert-on-touch: operator verbatim, Q-MF6: "Q-Mf6 a"; card answer: no fixed admin pilot; admin screens convert when changed for a product reason, and `/admin/surfaces` is built when the admin next needs that view. Admin market-metrics stays DASHBOARD (P4 above); its descriptor's REPORT is an error, fixed at its conversion (operator doc-set answer 5).
 
 ### 12.1 What the pilot must carry, because it cannot be deferred
 

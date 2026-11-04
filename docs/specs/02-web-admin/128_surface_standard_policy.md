@@ -64,6 +64,22 @@ The thirteen above are mirrored. Two more exist only here, because the surface e
 
 Both rules are scored in Spec 127 §5's policy-coverage matrix alongside rules 1–13, and both are `PROSE-ONLY GAP` until Phase 1 lands their artifacts — which is the honest status, not a placeholder.
 
+### §2.2a McFrontend rules 16-20, and a real lock for Rule 15 (added 2026-11-04)
+
+Added by the McFrontend Phase 0 documents (prior text kept, M-246). Rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`; principles: Spec 126 §0a; register: Spec 135. Scope: the REPORT archetype now. Each lock is OWED until Phase 1, one lock per row in Spec 135. Task ids are the McFrontend queue's (`.cursor/MCFRONTEND-QUEUE.md`).
+
+| Rule | Text | Lock (OWED until Phase 1) |
+|---|---|---|
+| **16 Single source** | A REPORT surface displays values read from the contract; it does not add, subtract, round or compare to produce a displayed number. Formatting is the only transformation, from one named helper with its own test (output = input digits only). | `src/tests/surfaces/report-no-maths.logic.test.ts`: an AST scan of EVERY file under the projection dirs AND the generator; bans arithmetic BinaryExpression, `Math.*`, `reduce`, `Number()`/`parseFloat` on field values, numeric literals other than 0 and 1 outside the formatter; allow-lists the formatter by name; plus a generator pass-through check (output value = catalogue value). One RED fixture per bypass. |
+| **17 Honest display** | Status words come from the closed list (Spec 126 §11a.3). `at_least` renders "at least"; a required disclosure renders; `not_modelled`/`not_evaluated` render as such. The renderer throws on an unknown field or status. | `src/tests/surfaces/report-honest.logic.test.ts`: oracle = the catalogue flags (at_least, not_modelled, not_evaluated, required disclosure): for each flagged row the real per-target output contains the marker. Plant: drop "at least" from renderer output. |
+| **18 Performance budget (REPORT)** | REPORT declares a payload limit (and load) in protected archetype data, tighten-only. Load time is PROSE-ONLY. The numbers are measured first, then ruled (operator "QMf5 a"; Spec 126 §11a.8). | `src/tests/surfaces/budget.infra.test.ts`: payload bytes on golden fixtures <= limit; RED fixture = padded payload. |
+| **15 Parity (existing) gets a real lock** | Rule 15 above says parity by golden comparison, and the paragraph after it admits PROSE-ONLY GAP. Lock: compare what each target actually emits (React Native test-renderer text, server-rendered DOM text, admin render, extracted PDF text), each normalised to `{field, label, value, status, confidence, provenance, disclosures}`, over the WHOLE declaration; any per-target difference fails. A comparison of one builder's tree does not count. | `src/tests/surfaces/parity.golden.test.ts`; RED fixture: change one value in ONE real target's output (one RED per target, admin included). |
+| **19 No hand-written scenario field** | Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern). | `src/tests/surfaces/report-generated-only.infra.test.ts` (a hand edit of generated output: `--check` red) |
+| **20 Binding** | Every displayed field's `source` is in the closed set (Spec 126 §11a.1): catalogue row id, content id, input-contract id, ad-contract id, declared external embed. The set is in a protected file; adding a member needs a register row and a panel. | `src/tests/surfaces/report-binding.logic.test.ts`; RED fixture: a node with an invented field. |
+
+Principle map: 1 = rules 1, 19; 2 = §4.4, rule 14, surface-validate; 3 = 18; 4 = 16; 5 = 17; 6 = 15; binding = 20.
+Canary b = three checks: generator `--check` (hand edit), the Rule 20 lock (invented field), the Rule 16 AST numeric-literal scan. Arm L (literal-scan) is not used for surfaces.
+
 ### §2.3 Archetype variance
 
 The Spec 124 §3 variance table has a surface analogue: `✓` = must answer per the archetype's required-field profile, `N/A` = the profile forces `"none"`. The full table is generated per archetype from `surface.schema.json`'s `allOf` blocks once Phase 1 lands, on exactly the mechanism Spec 126 §3 mirrors. Until then, the per-archetype MUST/MUST-BE-`"none"` columns in Spec 126 §3.1–§3.3 are the register of record.
@@ -126,9 +142,37 @@ Therefore, in this register:
 3. The same commit that records a ruling adds its both-directions test. **A rule without a lock is not yet a rule** — which is why `Lock` is a column here and was prose in Spec 124.
 4. Ask rows (§6) carry a recommended default and a reversibility note, never a lock — an Ask is not a ruling.
 
+### §4.9 The six-principle check (McFrontend, added 2026-11-04) — FE rows only
+
+A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions, one per Spec 126 §0a principle: Declared, Proven, Fast, Single source, Honest, Same everywhere, each `pass`, `n/a (reason)` or `FAIL`; a FAIL row is not RULED. It applies to FE rows only; R-rows moved later are not re-checked (deferred).
+
+### §4.10 Status vocabulary and one lock per row (McFrontend, added 2026-11-04)
+
+The McBylaws gate's `statusOf` (`scripts/analysis/mcbylaws/cite-parse.mjs:57-70`, comment at :67, read at `ac9200aa8`) maps RETIRED/SUPERSEDED/WITHDRAWN to RETIRED; PROPOSED; a leading `OWED` or `OWED:`/`OWED ->` anywhere to OWED; else RULED. Spec 135 words: `RULED <date>`, `PROPOSED`, `RETIRED`, `OWED`. The form `RULED <date>. **OWED:** x` reads OWED (not RULED) to arm C; an OWED marker is never written with zero lock paths (it would be permanently uncitable). A row that is ruled and whose lock is not yet built reads OWED with its lock path.
+
+One lock per register row (multi-lock rows are split). `lockLands` uses `some` (`cite-arms.mjs`); changing it to `every` is NOT proposed (it would change McBylaws gate behaviour).
+
+### §4.11 What arm C needs before it judges FE rows (all code changes WAIT for the named freeze lift; McBylaws owner review)
+
+A change list, written now; no code lands with it.
+
+1. **Register list:** `CITE_INPUTS.registers` (`gate.mjs:31-34`, three paths). Add 135. `citeInputs` returns null if any file is missing (`gate.mjs:106-113`); the caller substitutes the empty sentinel (`gate.mjs:198-199`, :269, :323); fail-closed comes from `sentinelsOk` in cite-arms.mjs `run` (needs M-361, LC-15 owed and M-180 RULED), and only for commits touching a layer23 path. Arm C reads the PARENT (HEAD) and the index: Spec 135 must land in an EARLIER commit than the registers-array change (the same commit is not enough).
+2. **Row form:** `parseRegisterRows` (`cite-parse.mjs:78-91`), `ROW_HEAD_RE` at :13; id `[A-Z]{1,2}-\d+`; the first id wins (:85). FE-nn and R-nn both match.
+3. **Status and locks:** status = the LAST pipe cell (`lastCell`, `cite-parse.mjs:41`); locks = backticked paths ending .test.ts/.tsx/.mjs (`locksOf`, :44-55). The OWED exception also needs the lock added or modified in the SAME commit AND a new file under docs/reports/red-evidence/ (existence only).
+4. **Ids and trailer:** `ID_RE` (`cite-parse.mjs:8`): add `FE-\d+`. `TRAILER_RE` (:9): accept `McFrontend-Task: MF-n`.
+5. **Prereg machinery:** `prereg-<task>-<k>.json` under scripts/analysis/bylaw-validation/coa-expected/ with non-empty `rules[]`, each RULED; the task shape is `MB-\d+`: change `prereg-name.mjs` and `PREREG_RE` (cite-arms.mjs `findPrereg`) to accept MF-n.
+6. **Policy:** surface paths (`scripts/surfaces/**`, `src/lib/surfaces/**`, `src/tests/surfaces/**`) are NOT layer23 today, so gate `staged()` returns [] and arm C never runs on them. Until Phase 1 opens, put them in `pending_globs`/held (hold.mjs) so a commit is refused (this makes FE-01 mechanical); at Phase 1 open move them to `layer23` (`paths.mjs:9, :100`). Add the FE register and golden dirs to `protected`.
+7. **Arm Q** (`mcbylaws-queue-check.mjs`): hard-wired to `.cursor/MCBYLAWS-QUEUE.md` and `MB-nn`. Parameterise the queue path and id prefix; convert the MF queue to the heading+status+@sha form; add: a DONE MF task whose FE row is still OWED is refused (MF-24).
+8. **Hooks and CI:** `.husky/pre-commit` + test.yml: `surface-validate.mjs --check`, generator `--check`, handbook `--check` lines (.husky/* is protected: panel arm P + APPROVED). Add a CI step in test.yml that runs the `*.db.test.ts` locks (npm test and pre-push exclude them).
+9. **Lock-must-run:** `register-locks-resolve` fails an OWED/RULED lock that is a `.db.test.ts` and is not named in a CI step.
+
+Order: Spec 135 landed first; then the gate changes; then the policy globs flip from held to layer23. Not changed: `lockLands` some/every. The pre-push summary may print the count of OWED FE rows: visibility, not a lock.
+
 ---
 
 ## §5. Register of rulings
+
+> Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): new McFrontend rulings are `FE-nn` rows in Spec 135 (`docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`). The move of R-01..R-34 into Spec 135 (the Spec 124 to 124a pattern) touches gate-cited rows and is not needed for the REPORT: it is DEFERRED to convert-on-touch (MF-31). The ids stay R-01..R-34 here meanwhile.
 
 **Columns:** `#` · `Ruling (one line)` · `Amends` · `Lock` · `Status`. `Status` ∈ `PROPOSED | ACCEPTED | BUILT | SUPERSEDED`.
 
