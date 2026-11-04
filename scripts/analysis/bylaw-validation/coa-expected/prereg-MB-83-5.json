@@ -1,0 +1,100 @@
+{
+ "$comment": "M-321 pre-registration, task MB-83, prereg 5 (R-MA; prereg-MB-83-4.json is batch part 4), the loop round that lands decision batch 2026-11-04-batch-ba (CHAT-228), part 5: no new Spec 69a row; dated notes on the mechanical-area row (Q-MECH0 a: the refuse word no_permitted_gfa_base joins M-64's closed list, the M-428 form, with the named ATTIC-23 fixture correction; and the storage half of Q-M1 b+), on the pitched-roof row (Q-T61 a), on the option row and the runRow seam row (the Layer 3 reader R2: L3-F2 a, Q-r1 a, Q-r2 a and its trace convention; Q-RND a), on the switched-off formula row (Q-default a, Q-k1a) on the mechanical attic row M-229 (lane MK's keying note: Q-M1 b+, Q-M2 a) and on the blank-wall row (the 4D-S4e label as built, Q-L18-4), with queue notes Q-G25B a, Q9-1 a and Q9-2 a. No re-pin: measured on ec1624221, the regenerated Spec 133, the rule map and the Layer 2 table_version (24dd1c9de5c1) are byte-identical, and expected-172.json, expected-4d.json, maxbld-amendment-index.json and bylaw-layer2-input.json are not changed (the part 4 form). If any of the four changes at landing, the landing stops and returns to the operator for a named re-pin in the RP-2 form. Prepared on ec1624221 as round 61, the round the orchestrator assigned at landing, in landing order. It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the totals equal the after-totals of prereg-MB-18-10.json (MB-18 (l), the round below), the floors file is unchanged and the floors check stays OK. One existing test assertion changes: the decision-log decisions count 780 to 791 (the eleven new decisions). rules[] names only rules the registers read as RULED with no OWED marker.",
+ "schema": "coa-round-prereg-v1",
+ "round": 61,
+ "task": "MB-83",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-IL"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-83; ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers Q-MECH0, Q-T61, Q-R1, Q-M1, Q-G25B); ~/Buildo-scratch/mcbylaws/inc3/open-questions.md (Q9-1, Q9-2); ~/Buildo-scratch/p2close/CARD-l3-schema-forms.md (L3-F2); ~/Buildo-scratch/mcbylaws/MB-27/rows/ (Q-MECH0.md, Q-T61.md, LANDING-NOTES.md); ~/Buildo-scratch/mcbylaws/MB-27L2/mech-keying.patch; drafts ~/Buildo-scratch/mcbylaws/MB-83/part5/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "none in this round: the four files are not changed (measured: Spec 133, the rule map and table_version 24dd1c9de5c1 regenerate byte-identical); any change to them stops the landing and returns to the operator for a named re-pin in the RP-2 form",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 780,
+   "to": 791,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "the batch 2026-11-04-batch-ba decisions CHAT-228.* (eleven: Q-MECH0, Q-T61, L3-F2, Q-R1, Q-M1, Q-R2, Q-M2, Q-DEFAULT, Q-K1, Q-L18-4, Q-RND; operator answers in ~/Buildo-scratch/mcbylaws/inc2/open-questions.md and ~/Buildo-scratch/p2close/CARD-l3-schema-forms.md)"
+  }
+ ]
+}
