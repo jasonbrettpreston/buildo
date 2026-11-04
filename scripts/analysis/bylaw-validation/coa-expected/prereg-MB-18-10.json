@@ -1,0 +1,200 @@
+{
+ "$comment": "M-321 pre-registration, task MB-18, prereg 10 (R-MA), the loop round that lands MB-18 item (l), commit l: the blank_side_wall design-choice default is not met (M-435: the R-zone side yard maximum uses 0.9 m, the 0.45 m blank-wall reduction is a disclosure), the (4) units' adjudications carry the M-435 sentence and gaps (O-l4 b), and scorer arm 4D-S4e (O-l1; the label 4D-S4d is a retired R5-7 label) scores a notice citing 10.10.40.70(4) on the blank-wall arm. Class moves: two rows on each set (expected_moves*). Our-value moves with no class move (not checked by --prereg, listed here): 172/cumulative A0486/26TEY #3 900.2.10(931)(E)(ii) DIFFER stays DIFFER, 0.45 -> 0.9 (City 1.8); 172/cumulative A0396/26TEY #2 10.10.40.70(4)(D) MATCH 0.45 held by 4D-S4e; cumulative A0262/26NY #7 and #8 10.10.40.70(4)(A) MATCH 0.45 held by 4D-S4e; cumulative A0262/26NY #10 and #11 10.5.40.50(2) ANSWERED stays ANSWERED, 0.45 -> 0.9 (no City figure). expected_value_changes[] lists every changed line of the two oracle tests through the R-MC door, each with ruling M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); the case names the path. Stored Layer 2 move (registered for the reload night, not stored by this round): +488,625 cells, 97,725 R lots x 5 classes (detached_house and house_with_secondary_suite at (4)(A), semi_detached_house (4)(B), detached_houseplex (4)(D), semi_detached_houseplex (4)(E)), each 0.45 at 10.10.40.70(4) -> 0.9 at 10.10.40.70(3)#(3)(A), R only; measured by the lane D2 combined-tree dry run over all 440,093 lots, read-only (~/Buildo-scratch/mcbylaws/MB-27L2/combo/dry/transitions.tsv lines 2133, 2968, 2970, 2973, 2976), and by the 1-in-30 whole-row sample on f55dc170f (3,285 lots x 5, no other cell; ~/Buildo-scratch/mcbylaws/MB-18/l/exec/l2-diff-F55.out). Round number provisional: assigned at landing.",
+ "schema": "coa-round-prereg-v1",
+ "round": 60,
+ "task": "MB-18",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "M-435",
+  "M-259",
+  "M-289",
+  "M-205",
+  "R-DA"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-18; ~/Buildo-scratch/mcbylaws/MB-18/l/plan.v2.md (sections 2, 3.1-3.3); ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (O-l1..O-l5, O-v2-1)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0251/26TEY",
+   "n": 3,
+   "clause": "10.5.40.71(4)(A)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "with the (4) reduction not taken (M-435) both (3)(A) and (3)(B) apply to the townhouse and 7.5 m wins (City 0.76); the townhouse qualifiers are not keyed, defect RB-D12 (operator O-l2 \"0-12 1\")",
+   "ruling": "M-435"
+  },
+  {
+   "notice": "A0594/26TEY",
+   "n": 6,
+   "clause": "10.20.40.70(3)(B)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "the stored R side yard is 0.9 m at 10.10.40.70(3)(A) (was 0.45 m at (4)(A)); City 0.9",
+   "ruling": "M-435"
+  }
+ ],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [
+  {
+   "notice": "A0251/26TEY",
+   "n": 3,
+   "clause": "10.5.40.71(4)(A)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "with the (4) reduction not taken (M-435) both (3)(A) and (3)(B) apply to the townhouse and 7.5 m wins (City 0.76); the townhouse qualifiers are not keyed, defect RB-D12 (operator O-l2 \"0-12 1\")",
+   "ruling": "M-435"
+  },
+  {
+   "notice": "A0594/26TEY",
+   "n": 6,
+   "clause": "10.20.40.70(3)(B)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "the stored R side yard is 0.9 m at 10.10.40.70(3)(A) (was 0.45 m at (4)(A)); City 0.9",
+   "ruling": "M-435"
+  }
+ ],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0251/26TEY",
+   "n": 3,
+   "clause": "10.5.40.71(4)(A)",
+   "from": "OWED",
+   "to": "DIFFER",
+   "reason": "with the (4) reduction not taken (M-435) both (3)(A) and (3)(B) apply to the townhouse and 7.5 m wins (City 0.76); the townhouse qualifiers are not keyed, defect RB-D12 (operator O-l2 \"0-12 1\")",
+   "ruling": "M-435"
+  },
+  {
+   "notice": "A0594/26TEY",
+   "n": 6,
+   "clause": "10.20.40.70(3)(B)",
+   "from": "DIFFER",
+   "to": "MATCH",
+   "reason": "the stored R side yard is 0.9 m at 10.10.40.70(3)(A) (was 0.45 m at (4)(A)); City 0.9",
+   "ruling": "M-435"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK on the 172 and cumulative sets (the OWED line of 10.5.40 stays the one listed OWED line, M-372)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure (our value moves only on the rows the $comment lists)",
+ "expected_repin": "expected-172.json and expected-4d.json: totals (MATCH +1, OWED -1), commit, inputs.table_version and inputs.scorer_sha; bylaw-layer2-input.json table_version and body; the generated docs of the new vocab text",
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-answers-batch-3.logic.test.ts",
+   "case": "src/tests/bylaw-answers-batch-3.logic.test.ts: the (4) units' closed sentence and gaps (M-435)",
+   "old": "\"BLANK\": \"Side walls are taken without windows or doors, so the side yard is 0.45 m; with windows or doors in that side the zone side yard applies.\",",
+   "new": "\"BLANK\": \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\",",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/bylaw-answers-batch-3.logic.test.ts",
+   "case": "src/tests/bylaw-answers-batch-3.logic.test.ts: the (4) units' closed sentence and gaps (M-435)",
+   "old": "describe('M-205(2) — the R 0.45 m side yard is taken without windows or doors, and says so (10.10.40.70(4)(A)–(E))', () => {",
+   "new": "describe('M-435 — the R side yard is 0.9 m and the 0.45 m blank-wall reduction is disclosed, and says so (10.10.40.70(4)(A)–(E))', () => {",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/bylaw-answers-batch-3.logic.test.ts",
+   "case": "src/tests/bylaw-answers-batch-3.logic.test.ts: the (4) units' closed sentence and gaps (M-435)",
+   "old": "expect(u.calculation_handling.gaps).toMatch(/M-205\\(2\\)/);",
+   "new": "expect(u.calculation_handling.gaps).toMatch(/M-435/);",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/bylaw-fix-5.logic.test.ts",
+   "case": "src/tests/bylaw-fix-5.logic.test.ts: blank_side_wall default and its why (M-435 supersedes M-205(2))",
+   "old": "it('vocab declares blank_side_wall: a user-input design choice licensed by the text, taken as met by default (M-205(2))', () => {",
+   "new": "it('vocab declares blank_side_wall: a user-input design choice licensed by the text, taken as not met by default (M-435: 0.45 m is the disclosure)', () => {",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/bylaw-fix-5.logic.test.ts",
+   "case": "src/tests/bylaw-fix-5.logic.test.ts: blank_side_wall default and its why (M-435 supersedes M-205(2))",
+   "old": "expect(dc.default_overrides.blank_side_wall.taken_as).toBe(true);",
+   "new": "expect(dc.default_overrides.blank_side_wall.taken_as).toBe(false);",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/bylaw-fix-5.logic.test.ts",
+   "case": "src/tests/bylaw-fix-5.logic.test.ts: blank_side_wall default and its why (M-435 supersedes M-205(2))",
+   "old": "expect(dc.default_overrides.blank_side_wall.why).toContain('M-205(2)');",
+   "new": "expect(dc.default_overrides.blank_side_wall.why).toContain('M-435');",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  }
+ ],
+ "increment": "1"
+}
