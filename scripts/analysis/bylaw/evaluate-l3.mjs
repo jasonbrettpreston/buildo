@@ -13,7 +13,7 @@
 // B4 appends the Layer 3 readers (contract C3): makeL3Env · readL2 · readLv · readName · readHolds · readRegulated ·
 // L3RefusalError. Every reader pushes ONE trace entry to `env.trace` in call order, BEFORE it returns (E9).
 
-import { combineUnitsL3, DslError, LEX, parseExpr } from './dsl.mjs';
+import { canonExpr, combineUnitsL3, DslError, flagWordOf, L3_DECLARED, LEX, parseExpr } from './dsl.mjs';
 
 /** Union of flag lists: deduplicated and sorted, so a flag comparison is a plain array equality. */
 export function unionFlags(...lists) {
@@ -146,6 +146,50 @@ export function applySqrt(a, env) {
   if (x < 0) return fail(LEX.p.expression_error_sqrt_negative, flagsOf(a));
   return num(Math.sqrt(x), LEX.w.ratio, flagsOf(a), a.clause);
 }
+
+/**
+ * `flag(<word>; <expr>)` (Spec 69a M-480): the value of `<expr>`, of any kind, with the disclosure word added to its flags (R3-02
+ * carries it onward). Nothing else of the value changes.
+ */
+export function applyFlag(word, a) {
+  return { ...a, flags: unionFlags(flagsOf(a), [word]) };
+}
+
+/**
+ * `best_of(<c1>; <c2>; …[; ceiling: <cap>])` (Spec 69a M-480; Q-HEAD B, R3-01, R3-02, R3-05). `cands` are `{ label, value }` in
+ * argument order; `ceiling` is a value or null.
+ *   - not_buildable is dropped as `max` drops it, unless every candidate is not_buildable (then their clauses union).
+ *   - a not_evaluated candidate (an absent target counts as one) whose reason is a declared drop reason is dropped with
+ *     `dropped:<label>`; every other one adds `headline_lower_bound:<label>`, unless the result equals the ceiling (at 9 places).
+ *   - among the rest the `max` preference holds (unlimited, then unregulated, then the largest number); a tie goes to the earliest.
+ *   - the result keeps every flag of the winner, plus `headline:<label>` and the drop and lower-bound flags, never a loser's own.
+ *   - every candidate not_evaluated: the first one's reason, with every undecided list, never a number.
+ */
+export function bestOf(cands, ceiling, env) {
+  const list = Array.isArray(cands) ? cands : [];
+  const nbs = list.filter((c) => isNb(c.value));
+  if (nbs.length === list.length) return nb(nbs.flatMap((c) => c.value.clauses), flagsOf(nbs[0] && nbs[0].value));
+  const asNe = (v) => (isKind(v, LEX.w.absent)
+    ? ne(LEX.p.missing_input_absent_target, [{ id: `${LEX.p.l2}${v.id}${LEX.p.close}`, reason: LEX.p.missing_input_absent_target }], flagsOf(v))
+    : v);
+  const live = list.filter((c) => !isNb(c.value)).map((c) => ({ label: c.label, value: asNe(c.value) }));
+  const missing = live.filter((c) => isNe(c.value));
+  const rest = live.filter((c) => !isNe(c.value));
+  if (!rest.length) return fail(missing[0].value.reason, flagsOf(missing[0].value), missing.flatMap((c) => undecidedOf(c.value)));
+  const r9 = env && typeof env.round9 === LEX.w.function ? env.round9 : (x) => x;
+  const winner = rest.find((c) => isKind(c.value, LEX.w.unlimited))
+    || rest.find((c) => isKind(c.value, LEX.w.unregulated))
+    || rest.filter((c) => isNum(c.value)).reduce((best, c) => (best === null || r9(c.value.v) > r9(best.value.v) ? c : best), null);
+  if (!winner) return fail(LEX.p.expression_error_unknown_variable, []);
+  const w = winner.value;
+  const atCeiling = isNum(w) && isNum(ceiling) && sameUnit(w.u, ceiling.u) && r9(w.v) === r9(ceiling.v);
+  const drops = L3_DECLARED.drop_reasons;
+  const marks = missing.map((c) => (drops.includes(c.value.reason) ? `${LEX.p.dropped_}${c.label}` : atCeiling ? null : `${LEX.p.headline_lower_bound_}${c.label}`));
+  return { ...w, flags: unionFlags(flagsOf(w), [`${LEX.p.headline_}${winner.label}`], marks.filter(Boolean)) };
+}
+
+/** A best_of candidate's label: its row id when it is a bare name, otherwise its canonical text (M-480). */
+const labelOf = (e) => (e.type === LEX.w.var ? e.name : canonExpr(e));
 
 const family = (u) => (u === LEX.w.count ? [LEX.w.count, LEX.w.storeys, LEX.w.units] : [u]);
 const sameUnit = (a, b) => family(a).includes(b) || family(b).includes(a);
@@ -470,6 +514,12 @@ export function evalExprL3(e, env) {
   if (e.type === LEX.w.var) return readName(e.name, env);
   if (e.type === LEX.w.int) return applyInt(e.fn, evalExprL3(e.a, env), env);
   if (e.type === LEX.w.root) return applySqrt(evalExprL3(e.a, env), env); // M-466
+  if (e.type === LEX.w.refuse) return ne(e.word); // M-480: not_evaluated:<word>, reading nothing
+  if (e.type === LEX.w.flag) return applyFlag(flagWordOf(e), evalExprL3(e.a, env)); // M-480; a parameterised word raises <word>:<reason> (Q-K5 a)
+  if (e.type === LEX.w.best_of) { // M-480: every candidate is evaluated, in argument order, then the ceiling
+    const cands = e.args.map((x) => ({ label: labelOf(x), value: evalExprL3(x, env) }));
+    return bestOf(cands, e.ceiling ? evalExprL3(e.ceiling, env) : null, env);
+  }
   if (e.type === LEX.w.bin) return arith(e.op, evalExprL3(e.l, env), evalExprL3(e.r, env), env);
   if (e.type === LEX.w.call) return minMax(e.fn, e.args.map((x) => evalExprL3(x, env)), env);
   if (e.type === LEX.w.if) {

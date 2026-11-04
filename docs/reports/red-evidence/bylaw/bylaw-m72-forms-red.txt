@@ -1,0 +1,70 @@
+== MB-27 (Layer 3 forms) red: M-480 lock src/tests/bylaw-m72-forms.logic.test.ts (new), run on the base tree 523cdc9c1 (dsl.mjs, evaluate-l3.mjs and layer3-catalogue.json without refuse, flag and best_of); F1 (Layer 1 refuses the three forms; DSL_ERROR_CODES unchanged) is green on base by design
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 declared data (layer3-catalogue.json) > F0 the lexicon gains the three forms and the ceiling key; the three declared lists exist
+   → expected [ 'refuse', undefined ] to deeply equal [ 'refuse', 'refuse' ]
+ ✓ src/tests/bylaw-m72-forms.logic.test.ts > M-480 the grammar (Layer 3 only) > F1 Layer 1 is unchanged: refuse, flag and best_of are unknown functions there; no new DslError code
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the grammar (Layer 3 only) > F2 each form parses in Layer 3 and has one canonical text; value form is formula
+   → unknown_function: refuse() in: refuse(no_cited_rafter_span)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the grammar (Layer 3 only) > F2 best_of keeps argument order in its canonical text (the order is the tie order); ceiling is optional
+   → unknown_function: best_of() in: best_of(gfa_flat_m2; gfa_pitched_a_m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the grammar (Layer 3 only) > F2 arity and placement: refuse(), flag(w), best_of(a) and a ceiling that is not last are syntax errors
+   → expected [ 'refuse()', 'unknown_function' ] to deeply equal [ 'refuse()', 'syntax' ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the grammar (Layer 3 only) > F2 l3RefsOf sees best_of candidates and the ceiling, never a reason or flag word as a name
+   → unknown_function: best_of() in: best_of(gfa_flat_m2; gfa_pitched_a_m2; ceiling: l2(fsi) × lot_area_m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the static unit rule > F3 refuse has no unit of its own (it unifies with any branch); an undeclared reason word is refused
+   → unknown_function: refuse() in: if(half_span_a_m > 7.66 m; refuse(no_cited_rafter_span); 3 m)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the static unit rule > F3 flag takes the unit of its expression; an undeclared flag word is refused
+   → unknown_function: flag() in: flag(setback_storey_not_built; 0 m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the static unit rule > F3 best_of unifies every candidate and the ceiling; a mix of units is unit_mismatch
+   → unknown_function: best_of() in: best_of(gfa_flat_m2; gfa_pitched_a_m2; ceiling: 360 m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 the static unit rule > F3 checkRowL3 refuses a row that names an undeclared reason word
+   → expected false to be true // Object.is equality
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 refuse at run time > F4 refuse(<word>) is not_evaluated with that word as its reason, never 0
+   → expected [ 'ne', …(2) ] to deeply equal [ 'ne', 'no_cited_rafter_span', …(1) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 refuse at run time > F4 the rafter selector through runRow: 7.70 m refused, 7.60 m gives 0.3082 m, 7.66 m (not more than) gives 0.3082 m
+   → expected [ 'not_evaluated', …(2) ] to deeply equal [ 'not_evaluated', …(2) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 flag at run time > F5 the word is added on every kind (num, ne, nb, unlimited); flags stay sorted and unique
+   → expected [ 'ne', undefined, undefined, [] ] to deeply equal [ 'num', +0, 'm2', …(1) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 flag at run time > F5 the M-474 plate: the flag is raised only when the set-back storey is not built
+   → expected [ 'ne', undefined, [] ] to deeply equal [ 'num', +0, …(1) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6a all candidates computed: the largest wins; a tie goes to the first in argument order
+   → expected [ 'ne', undefined, [] ] to deeply equal [ 'num', 280, …(1) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6b one arm not_evaluated (no_cited_rafter_span): the evaluated larger wins with a lower-bound flag naming the arm
+   → expected [ 'ne', undefined, [] ] to deeply equal [ 'num', 280, [ …(2) ] ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6c a pitched_form_not_offered candidate is dropped with its reason and raises no lower bound (R3-05)
+   → expected [ 'ne', undefined, [] ] to deeply equal [ 'num', 250, [ …(3) ] ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6d the result equals the ceiling: no lower-bound flag; below it, or an undecided ceiling, keeps the flag
+   → expected [ undefined, [] ] to deeply equal [ 360, [ 'headline:gfa_flat_m2' ] ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6e every candidate not_evaluated: the first one's reason, never a number, every undecided list kept (R3-01)
+   → expected [ 'ne', …(2) ] to deeply equal [ 'ne', …(2) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6e (M-480 text) every candidate not_evaluated and the first is a dropped one: the first one's reason
+   → expected [ 'ne', …(1) ] to deeply equal [ 'ne', 'pitched_form_not_offered' ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6f not_buildable is dropped as max drops it, unless every candidate is not_buildable
+   → expected [ 'ne', undefined, [] ] to deeply equal [ 'num', 200, …(1) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6g the max preference: unlimited beats a number, then unregulated, then the largest number
+   → expected [ 'ne', [] ] to deeply equal [ 'unlimited', …(1) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 best_of at run time (Q-HEAD B, the McProof cases) > F6h the flag contract: every flag of the winner is kept, never a losing candidate's own flags
+   → expected [ undefined, [] ] to deeply equal [ 300, …(1) ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 propagation through the runner (R3-01, R3-02) > F7 a missing candidate never counts as 0, and the headline row keeps its winner's flags
+   → expected [ 'not_evaluated', null ] to deeply equal [ 'computed', 120 ]
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K0 the reason is a closed declared word (flag_params, data)
+   → Cannot read properties of undefined (reading 'headline_lower_bound')
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K1 it parses in Layer 3 only, with one canonical text; arity and placement are syntax errors
+   → unknown_function: flag() in: flag(headline_lower_bound: main_wall_shares_not_resolved; flat_m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K2 static: the unit of its expression; an unknown reason word is refused; the word needs its reason and only it takes one
+   → unknown_function: flag() in: flag(headline_lower_bound: main_wall_shares_not_resolved; flat_m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K3 run time: exactly that one flag is raised, and the best_of winner carries it to the headline
+   → expected [ 'ne', undefined, [] ] to deeply equal [ 'num', 120, …(1) ]
+⎯⎯⎯⎯⎯⎯ Failed Tests 27 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  27 failed | 1 passed (28)
+
+== MB-27 (Layer 3 forms) red, part 2 (Q-K5 a, dated note on M-480): the four K tests run on the forms build without the parameterised word (dsl.mjs, evaluate-l3.mjs and layer3-catalogue.json as staged on 523cdc9c1 before this change); the 24 earlier tests stay green
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K0 the reason is a closed declared word (flag_params, data)
+   → Cannot read properties of undefined (reading 'headline_lower_bound')
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K1 it parses in Layer 3 only, with one canonical text; arity and placement are syntax errors
+   → syntax: expected ;, got : in: flag(headline_lower_bound: main_wall_shares_not_resolved; flat_m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K2 static: the unit of its expression; an unknown reason word is refused; the word needs its reason and only it takes one
+   → syntax: expected ;, got : in: flag(headline_lower_bound: main_wall_shares_not_resolved; flat_m2)
+ × src/tests/bylaw-m72-forms.logic.test.ts > M-480 dated note (Q-K5 a): flag() takes the parameterised word headline_lower_bound: <reason> > K3 run time: exactly that one flag is raised, and the best_of winner carries it to the headline
+   → expected [ 'ne', undefined, [] ] to deeply equal [ 'num', 120, …(1) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 24 passed (28)

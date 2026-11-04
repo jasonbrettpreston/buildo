@@ -9,6 +9,7 @@
 //              | band(variable; armcond:literal; …) | if(cond; expr; expr) | by_type(type:expr; …[; other:expr])
 //              | existing(variable; date | enacted(bylaw)) | label(letter) | overlay(code) | expr op expr
 //              | [Layer 3 only, M-72 / M-466] lv(id) | l2(target) | floor/ceil/round(expr) | sqrt(expr)  (sqrt: a ratio argument only)
+//              | [Layer 3 only, M-480] refuse(word) | flag(word; expr) | best_of(expr; expr[; …][; ceiling: expr])
 //   arg       := expr ["@" clause_path]
 //   cond      := atom { (and | or) atom }          atom := variable cmp literal | mapped(code) | labelled(letter) | not atom
 //   literal   := number unit                       unit ∈ { m, m2, pct, storeys, units, ratio }
@@ -47,6 +48,15 @@ const L3_INT_FNS = [LEX.w.floor, LEX.w.ceil, LEX.w.round];
 const L3_REFUSED_FNS = [LEX.w.label, LEX.w.overlay, LEX.w.mapped, LEX.w.labelled];
 // MB-27 (sqrt; Spec 69a M-466, the M-377 form of a note on M-72): the one-argument root form, Layer 3 only.
 const L3_ROOT_FNS = [LEX.w.sqrt];
+// MB-27 (M-72 forms; Spec 69a M-480, the M-377 form of a note on M-72): refuse, flag and best_of, Layer 3 only. The reason and
+// flag words are the catalogue's declared lists (data, never code); a word outside them is a static error, never a parse error.
+export const L3_DECLARED = Object.freeze({
+  refuse_reasons: Object.freeze([...(L3_CATALOGUE.refuse_reasons || [])]),
+  drop_reasons: Object.freeze([...(L3_CATALOGUE.drop_reasons || [])]),
+  flag_words: Object.freeze([...(L3_CATALOGUE.flag_words || [])]),
+  // M-480 dated note (Q-K5 a): a parameterised flag word, written `<word>: <reason>`, takes its reason from its own closed list
+  flag_params: Object.freeze(Object.fromEntries(Object.entries(L3_CATALOGUE.flag_params || {}).map(([w, rs]) => [w, Object.freeze([...rs])]))),
+});
 const OPS = { '+': '+', '-': '−', '−': '−', '*': '×', '×': '×', '/': '÷', '÷': '÷' };
 const CMPS = { '<': '<', '<=': '≤', '≤': '≤', '>': '>', '>=': '≥', '≥': '≥', '=': '=' };
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*/;
@@ -163,6 +173,16 @@ class Parser {
       node = { type: LEX.w.int, fn: name, a: this.expr() };
     } else if (this.l3 && L3_ROOT_FNS.includes(name)) {
       node = { type: LEX.w.root, fn: name, a: this.expr() }; // M-466
+    } else if (this.l3 && name === LEX.w.refuse) {
+      node = { type: LEX.w.refuse, word: this.expect(LEX.w.id).v }; // M-480: exactly one reason word
+    } else if (this.l3 && name === LEX.w.flag) {
+      const word = this.expect(LEX.w.id).v; // M-480: one disclosure word, then the expression
+      let param = null; // M-480 dated note (Q-K5 a): `<word>: <reason>`, one reason word
+      if (this.isTok(LEX.p.colon)) { this.next(); param = this.expect(LEX.w.id).v; }
+      this.expect(LEX.p.semi);
+      node = param === null ? { type: LEX.w.flag, word, a: this.expr() } : { type: LEX.w.flag, word, param, a: this.expr() };
+    } else if (this.l3 && name === LEX.w.best_of) {
+      node = this.bestOf(); // M-480
     } else if (this.l3 && L3_REFUSED_FNS.includes(name)) {
       throw new DslError(LEX.w.unknown_function, `${name}${LEX.p.is_not_a_layer_3_form_in} ${this.src}`);
     } else if (name === LEX.w.max || name === LEX.w.min) {
@@ -215,6 +235,26 @@ class Parser {
     } else throw new DslError('unknown_function', `${name}() in: ${this.src}`);
     this.expect(')');
     return node;
+  }
+  /** M-480: best_of(<expr>; <expr>[; …][; ceiling: <expr>]): two or more candidates in argument order, at most one ceiling, last. */
+  bestOf() {
+    const args = [];
+    let ceiling = null;
+    for (;;) {
+      if (this.isId(LEX.w.ceiling) && this.isTok(LEX.p.colon, 1)) {
+        if (ceiling) throw new DslError(LEX.w.syntax, `${LEX.p.ceiling_once_in} ${this.src}`);
+        this.next();
+        this.next();
+        ceiling = this.expr();
+      } else {
+        if (ceiling) throw new DslError(LEX.w.syntax, `${LEX.p.ceiling_must_be_last_in} ${this.src}`);
+        args.push(this.expr());
+      }
+      if (!this.isTok(LEX.p.semi)) break;
+      this.next();
+    }
+    if (args.length < 2) throw new DslError(LEX.w.syntax, `${LEX.p.best_of_needs_2_candidates_in} ${this.src}`);
+    return ceiling ? { type: LEX.w.best_of, args, ceiling } : { type: LEX.w.best_of, args };
   }
   arg() {
     const e = this.expr();
@@ -341,6 +381,14 @@ function canonCore(e) {
     case LEX.w.l2: return `${LEX.p.l2}${e.id}${LEX.p.close}`;
     case LEX.w.int: return `${e.fn}${LEX.p.open}${canonExpr(e.a)}${LEX.p.close}`;
     case LEX.w.root: return `${e.fn}${LEX.p.open}${canonExpr(e.a)}${LEX.p.close}`; // M-466
+    // M-480: never sorted (best_of's argument order is its tie order); the ceiling, when given, is last
+    case LEX.w.refuse: return `${LEX.w.refuse}${LEX.p.open}${e.word}${LEX.p.close}`;
+    case LEX.w.flag: return `${LEX.w.flag}${LEX.p.open}${flagWordOf(e)}${LEX.p.semi}${canonExpr(e.a)}${LEX.p.close}`;
+    case LEX.w.best_of: {
+      const parts = e.args.map(canonExpr);
+      if (e.ceiling) parts.push(`${LEX.w.ceiling}${LEX.p.colon}${canonExpr(e.ceiling)}`);
+      return `${LEX.w.best_of}${LEX.p.open}${parts.join(LEX.p.semi)}${LEX.p.close}`;
+    }
     case 'call': return `${e.fn}(${e.args.map(canonExpr).sort(byStr).join(';')})`;
     case 'band': return `band(${e.v.name};${e.arms.map((a) => a.conds.map((c) => c.cmp + canonExpr(c.lit)).join('and') + ':' + canonExpr(a.value)).join(';')})`;
     case 'if': return `if(${canonCond(e.cond)};${canonExpr(e.a)};${canonExpr(e.b)})`;
@@ -358,6 +406,10 @@ function canonCore(e) {
     }
     default: throw new DslError('syntax', `canonical: unknown node ${e.type}`);
   }
+}
+/** The flag text a flag() node raises: its word, or `<word>:<reason>` for a parameterised word (M-480 dated note, Q-K5 a). */
+export function flagWordOf(e) {
+  return e.param === undefined ? e.word : `${e.word}${LEX.p.colon}${e.param}`;
 }
 function wrap(n) { return n.type === 'bin' && !n.argPath ? `(${canonExpr(n)})` : canonExpr(n); }
 
@@ -427,7 +479,7 @@ export function valueFormOf(e) {
     case 'call': return 'formula';
     case 'bin': return 'formula';
     case 'var': return 'formula';
-    case LEX.w.lv: case LEX.w.l2: case LEX.w.int: case LEX.w.root: return LEX.w.formula; // MB-31 Layer 3 forms (plan section 3 E1); root: M-466
+    case LEX.w.lv: case LEX.w.l2: case LEX.w.int: case LEX.w.root: case LEX.w.refuse: case LEX.w.flag: case LEX.w.best_of: return LEX.w.formula; // MB-31 Layer 3 forms (plan section 3 E1); root: M-466; refuse, flag, best_of: M-480
     case 'by_type': return 'by_building_type';
     case 'if': return 'if';
     case 'label': case 'overlay': return 'map_lookup';
@@ -557,6 +609,27 @@ function staticExprL3(e, U, errs) {
       if (a === null || a === LEX.w.ratio) return a;
       errs.push(`${LEX.p.unit_mismatch} ${e.fn} ${a}`);
       return null;
+    }
+    case LEX.w.refuse: // M-480: no unit of its own (it unifies with any branch, like unlimited); the word must be declared
+      if (!L3_DECLARED.refuse_reasons.includes(e.word)) errs.push(`${LEX.p.unknown_reason} ${e.word}`);
+      return null;
+    case LEX.w.flag: { // M-480: the unit of its expression; the word must be declared
+      const a = staticExprL3(e.a, U, errs);
+      const reasons = Object.prototype.hasOwnProperty.call(L3_DECLARED.flag_params, e.word) ? L3_DECLARED.flag_params[e.word] : null;
+      if (e.param === undefined) {
+        if (!L3_DECLARED.flag_words.includes(e.word)) errs.push(`${LEX.p.unknown_flag} ${e.word}`);
+      } else if (!reasons) {
+        errs.push(`${LEX.p.unknown_flag} ${e.word}`); // only a declared parameterised word takes a reason (Q-K5 a)
+      } else if (!reasons.includes(e.param)) {
+        errs.push(`${LEX.p.unknown_reason} ${e.param}`);
+      }
+      return a;
+    }
+    case LEX.w.best_of: { // M-480: every candidate and the ceiling share one unit
+      const all = e.ceiling ? [...e.args, e.ceiling] : e.args;
+      const r = unifyAllL3(all.map((a) => staticExprL3(a, U, errs)));
+      if (!r.ok) errs.push(`${LEX.p.unit_mismatch} ${LEX.w.best_of} ${LEX.p.mixes_units}`);
+      return r.unit;
     }
     case LEX.w.bin: {
       const a = staticExprL3(e.l, U, errs);
