@@ -1,26 +1,57 @@
 {
   "task": "MB-83",
-  "item": "decision batch 2026-11-03-batch-au, part 1 (nine Spec 69a rows; one named Layer 2 re-pin, RP-1)",
+  "item": "decision batch 2026-11-03-batch-ax, part 2 (sixteen Spec 69a rows M-465 and M-467..M-481, six dated notes; one named Layer 2 re-pin, RP-2), with the Spec 133 leaner rendering commit below its prereg (Q-133 3, Q-133b)",
   "class": "R",
   "stage": 8,
-  "date": "2026-11-03",
-  "head": "267fea312",
+  "date": "2026-11-04",
+  "head": "05b45b79e",
   "commits_reviewed": [
-    "1c8b9dd95",
-    "267fea312",
-    "the staged batch commit (13 files)"
+    "b8e1c9b91",
+    "05b45b79e",
+    "the staged batch commit (13 files, with round-17.json)"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers; \"batch part 1 approved\"; \"RP-1 approved\")"
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers; \"RP-2 approved\"; Q-RP2X \"approved\"; \"Q-M475 a as long as its compliant - lanes G and E go\")",
+    "~/Buildo-scratch/mcbylaws/inc3/open-questions.md (\"Q-LC18 a\")",
+    "~/Buildo-scratch/p2close/CARD-spec133-cap.md (\"Q-133 3\"; \"Q-133b b as long as it in compliance\")",
+    "~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md (\"Q CONF a\")",
+    "~/Buildo-scratch/p2close/CARD-l3-schema-forms.md"
   ],
-  "plan": "Draft ~/Buildo-scratch/mcbylaws/R-batch-inc2/drafts.md, reviewed before recording: ~/Buildo-scratch/mcbylaws/R-batch-inc2/verify-1.md (stage 3, seat 1, independent): FIX; ~/Buildo-scratch/mcbylaws/R-batch-inc2/recheck-1.md: PASS WITH TWO MINOR FIXES; ~/Buildo-scratch/mcbylaws/R-batch-inc2/recheck-2.md: FIX (record-keeping only), folded as fold 4.",
-  "output": "Stage 8 OUTPUT panel ~/Buildo-scratch/mcbylaws/R-batch-inc2/output-panel.md: FIX (OP-1 BLOCKER, decision-log arm K RED with 46 problems; OP-2 MINOR, status cells in recording form; OP-3 MINOR, prereg wording; OP-4 MINOR, Co-Authored-By trailer, owner's choice). Re-check 1 ~/Buildo-scratch/mcbylaws/R-batch-inc2/output-panel-recheck-1.md: PASS (one MINOR wording item, RC-1, fixed in the commit message): decision-log --check clean (749 decisions); rows equal the approved draft before the Conflict check except the M-466 Five words lock name; RP-1 files, round-13.json and prereg-MB-83-1.json unchanged since the first review; generate-bylaw-handbook --check up to date (495 rules); generate-bylaw-layer2-input --check clean.",
+  "plan": "Drafts ~/Buildo-scratch/mcbylaws/R-batch-inc2/drafts-part2.md (fold 3) and drafts-m72-forms.md, reviewed before recording: verify-part2-1.md, verify-part2-recheck-1.md, verify-part2-recheck-2.md (PASS WITH TWO FIXES, folded: arm K clean on every row); the Q-CONF row drafted at the rebuild from the Q-CONF card and lane E build-plan.md Build B (lock bylaw-switchboard-confidence.logic.test.ts); the Spec 133 rendering per CARD-spec133-cap.md options 3 and Q-133b, red first (~/Buildo-scratch/mcbylaws/MB-83/q133/red.txt).",
+  "output": "Stage 8 OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-83/part2-output-panel.md (one independent read-only seat, brief ~/Buildo-scratch/mcbylaws/MB-83/part2-panel-brief.md): PASS WITH MINOR, 0 BLOCKER, 0 MAJOR. F-1 MINOR: the M-184 pointer note (draft N-3) carries no operator quote of its own; disclosed in the batch commit message as a pointer with no new rule, recorded under the part 2 approval. F-2 MINOR: the seat could not compare M-471 with the verified staged text; the recorder checked it by script: M-471 equals the staged text plus exactly the two L3-F3 (a) alignment edits, and every other register line equals the staged text. Verified by the seat: every quote verbatim; RP-2 holds (four files differ only in version/hash/commit fields); decision-log, spec-split-check, handbook and layer2-input --check clean; Spec 133 1,952 lines / 127,637 B under the unchanged cap; arm K [] on all 16 rows; prereg round 49 with zero moves and totals equal prereg-MB-79-5.json; round-17 zero moves; no LC-18 note; nothing needs the MB-79 (f) door.",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "OP-2 status cells are recording form, disclosed in the commit message",
-    "OP-4 trailer kept as Opus 5.5 (coordinator)",
-    "RC-1 fixed in the commit message"
+    "F-1 disclosed in the batch commit message",
+    "F-2 checked by script (see output)"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/R-batch-inc2/ (verify-1.md, recheck-1.md, recheck-2.md, output-panel.md, output-panel-recheck-1.md)"
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-83/ (part2-panel-brief.md, part2-output-panel.md, q133/red.txt)",
+  "previous": [
+    {
+      "task": "MB-83",
+      "item": "decision batch 2026-11-03-batch-au, part 1 (nine Spec 69a rows; one named Layer 2 re-pin, RP-1)",
+      "class": "R",
+      "stage": 8,
+      "date": "2026-11-03",
+      "head": "267fea312",
+      "commits_reviewed": [
+        "1c8b9dd95",
+        "267fea312",
+        "the staged batch commit (13 files)"
+      ],
+      "cards": [
+        "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers; \"batch part 1 approved\"; \"RP-1 approved\")"
+      ],
+      "plan": "Draft ~/Buildo-scratch/mcbylaws/R-batch-inc2/drafts.md, reviewed before recording: ~/Buildo-scratch/mcbylaws/R-batch-inc2/verify-1.md (stage 3, seat 1, independent): FIX; ~/Buildo-scratch/mcbylaws/R-batch-inc2/recheck-1.md: PASS WITH TWO MINOR FIXES; ~/Buildo-scratch/mcbylaws/R-batch-inc2/recheck-2.md: FIX (record-keeping only), folded as fold 4.",
+      "output": "Stage 8 OUTPUT panel ~/Buildo-scratch/mcbylaws/R-batch-inc2/output-panel.md: FIX (OP-1 BLOCKER, decision-log arm K RED with 46 problems; OP-2 MINOR, status cells in recording form; OP-3 MINOR, prereg wording; OP-4 MINOR, Co-Authored-By trailer, owner's choice). Re-check 1 ~/Buildo-scratch/mcbylaws/R-batch-inc2/output-panel-recheck-1.md: PASS (one MINOR wording item, RC-1, fixed in the commit message): decision-log --check clean (749 decisions); rows equal the approved draft before the Conflict check except the M-466 Five words lock name; RP-1 files, round-13.json and prereg-MB-83-1.json unchanged since the first review; generate-bylaw-handbook --check up to date (495 rules); generate-bylaw-layer2-input --check clean.",
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "OP-2 status cells are recording form, disclosed in the commit message",
+        "OP-4 trailer kept as Opus 5.5 (coordinator)",
+        "RC-1 fixed in the commit message"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/R-batch-inc2/ (verify-1.md, recheck-1.md, recheck-2.md, output-panel.md, output-panel-recheck-1.md)"
+    }
+  ]
 }

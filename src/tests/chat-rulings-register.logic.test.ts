@@ -1049,3 +1049,121 @@ describe('CHAT-224 (batch 2026-11-03-batch-aw): 1 ruling recorded (the MB-79 (f)
     }
   });
 });
+
+// CHAT-225 (batch 2026-11-03-batch-ax): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-225 (batch 2026-11-03-batch-ax): 18 rulings recorded in 16 rows (increment 2, part 2); the builds are OWED to MB-27 and MB-27.L2', () => {
+  it('M-465 carries 2026-11-03-batch-ax#CHAT-225.Q-ROOF and its Rule text', () => {
+    expect(M, 'CHAT-225.Q-ROOF').toContain("2026-11-03-batch-ax#CHAT-225.Q-ROOF");
+    expect(M, 'CHAT-225.Q-ROOF rule text').toContain("(1) **The option.** Phase 2 resolves every target of a Layer 1 unit whose condition carries `flat_or_shallow_roof` once with the token held (\"flat or shallow roof\") and once not held (\"pitched roof\"), and stores both rows labelled, keyed by option like class (M-400). The row without an option stays the M-60 answer. (2) **Share the cell.** Where the two worlds agree, an option row is the closed cod");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-465** |')) as string;
+    expect(row, 'M-465 row').toContain("2026-11-03-batch-ax#CHAT-225.Q-ROOF");
+  });
+  it('M-467 carries 2026-11-03-batch-ax#CHAT-225.Q-HEAD and its Rule text', () => {
+    expect(M, 'CHAT-225.Q-HEAD').toContain("2026-11-03-batch-ax#CHAT-225.Q-HEAD");
+    expect(M, 'CHAT-225.Q-HEAD rule text').toContain("\"When one roof form (or arm) is not evaluated, the headline is the evaluated form as 'at least X m²', flagged `headline_lower_bound` naming the missing form, with the other form shown as not evaluated with its reason (M-184, M-397, R3-01/M-385, M-172 2026-10-29 note). Needs one new disclosure word. When both are evaluated, the larger is headlined (tie to flat).\"");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-467** |')) as string;
+    expect(row, 'M-467 row').toContain("2026-11-03-batch-ax#CHAT-225.Q-HEAD");
+  });
+  it('M-468 carries 2026-11-03-batch-ax#CHAT-225.Q-PAIR and its Rule text', () => {
+    expect(M, 'CHAT-225.Q-PAIR').toContain("2026-11-03-batch-ax#CHAT-225.Q-PAIR");
+    expect(M, 'CHAT-225.Q-PAIR rule text').toContain("both x.40.10(2) wall pairs are computed as labelled arms (arm A: sides held, roof spans the width, half-span W/2; arm B: front and rear held, roof spans the depth, half-span depth/2); the larger is headlined and the other shown (M-172 2026-10-29 note, M-184); under Q-HEAD B an arm that is not evaluated (e.g. \"no cited rafter span\") gives an \"at least X\" headline. Spec 78:777's single build-more pa");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-468** |')) as string;
+    expect(row, 'M-468 row').toContain("2026-11-03-batch-ax#CHAT-225.Q-PAIR");
+  });
+  it('M-469 carries 2026-11-03-batch-ax#CHAT-225.Q-FREE and its Rule text', () => {
+    expect(M, 'CHAT-225.Q-FREE').toContain("2026-11-03-batch-ax#CHAT-225.Q-FREE");
+    expect(M, 'CHAT-225.Q-FREE rule text').toContain("\"Dormers now at 40 % (M-185), computed in closed form inside the attic test (M-464); the free share of the held wall pair (x.40.10(2)) is UNDECIDED until its geometry is ruled: on every lot where it could add area the headline reads 'at least X', flagged `headline_lower_bound: free_share` (Q-HEAD B, R3-01).\" The four defaults, \"no objection ... taken as stated\": (1) the 40 % dormer base = the held");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-469** |')) as string;
+    expect(row, 'M-469 row').toContain("2026-11-03-batch-ax#CHAT-225.Q-FREE");
+  });
+  it('M-470 carries 2026-11-03-batch-ax#CHAT-225.G-I and its Rule text', () => {
+    expect(M, 'CHAT-225.G-I').toContain("2026-11-03-batch-ax#CHAT-225.G-I");
+    expect(M, 'CHAT-225.G-I rule text').toContain("\"the free share of the held pair is modelled in the pitched route (2) as a full-span end block, maximal share (M-176(1)); the flat route keeps the plain set-back plate (RD (4)(A) 'despite (2) ... all main walls'); in R, RS, RM the union is not computed, disclosed `free_share_union_not_taken`, flagged `headline_lower_bound: free_share_union` only where the flat form is the headline below min(n × F,");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-470** |')) as string;
+    expect(row, 'M-470 row').toContain("2026-11-03-batch-ax#CHAT-225.G-I");
+  });
+  it('M-470 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-3 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-3').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-3");
+    expect(M, 'CHAT-225.MCPROOF-3 rule text').toContain("\"the free share of the held pair is modelled in the pitched route (2) as a full-span end block, maximal share (M-176(1)); the flat route keeps the plain set-back plate (RD (4)(A) 'despite (2) ... all main walls'); in R, RS, RM the union is not computed, disclosed `free_share_union_not_taken`, flagged `headline_lower_bound: free_share_union` only where the flat form is the headline below min(n × F,");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-470** |')) as string;
+    expect(row, 'M-470 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-3");
+  });
+  it('M-471 carries 2026-11-03-batch-ax#CHAT-225.DESPITE and its Rule text', () => {
+    expect(M, 'CHAT-225.DESPITE').toContain("2026-11-03-batch-ax#CHAT-225.DESPITE");
+    expect(M, 'CHAT-225.DESPITE rule text').toContain("RD 10.20.40.10(4)(A) reads \"despite regulation 10.20.40.10(2), the permitted maximum height of all main walls is the higher of 7.2 metres above established grade or 2.5 metres less than the permitted maximum height in regulation 10.20.40.10(1)\", so on an RD flat roof there is no pair and no free share. R 10.10.40.10(11)(A) reads \"despite regulation 10.10.40.10(2) above, additional main walls are p");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-471** |')) as string;
+    expect(row, 'M-471 row').toContain("2026-11-03-batch-ax#CHAT-225.DESPITE");
+  });
+  it('M-472 carries 2026-11-03-batch-ax#CHAT-225.Q-MECH and its Rule text', () => {
+    expect(M, 'CHAT-225.Q-MECH').toContain("2026-11-03-batch-ax#CHAT-225.Q-MECH");
+    expect(M, 'CHAT-225.Q-MECH rule text').toContain("\"M-229 applied in increment 2: where the pitched form has a counted attic (M-464 test) and an FSI cap exists, X = min(5 % × the FSI-capped GFA, 20 m²) is reported as mechanical-equipment area outside GFA (alongside M-203's attic_outside_gfa), with M-229's achieved-if sentence and the without-mechanical figure shown labelled (M-172 2026-10-29 note). The headline GFA is unchanged (ranked by GFA, M-3");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-472** |')) as string;
+    expect(row, 'M-472 row').toContain("2026-11-03-batch-ax#CHAT-225.Q-MECH");
+  });
+  it('M-472 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-5 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-5').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-5");
+    expect(M, 'CHAT-225.MCPROOF-5 rule text').toContain("\"M-229 applied in increment 2: where the pitched form has a counted attic (M-464 test) and an FSI cap exists, X = min(5 % × the FSI-capped GFA, 20 m²) is reported as mechanical-equipment area outside GFA (alongside M-203's attic_outside_gfa), with M-229's achieved-if sentence and the without-mechanical figure shown labelled (M-172 2026-10-29 note). The headline GFA is unchanged (ranked by GFA, M-3");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-472** |')) as string;
+    expect(row, 'M-472 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-5");
+  });
+  it('M-473 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-2 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-2').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-2");
+    expect(M, 'CHAT-225.MCPROOF-2 rule text').toContain("\"RD 10.20.40.10(8) (a qualifying attic ≤ 20 m² used for mechanical equipment is not a storey): increment 2 discloses it (a new disclosure word naming 10.20.40.10(8)) and keeps 382.494 on A0182, A0203, A0205, A0229, A0277; lane T drafts the 20 m² mechanical-attic geometry card with worked examples before increment 2 closes. No golden number moves now.\" The geometry card is a process item, not a rul");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-473** |')) as string;
+    expect(row, 'M-473 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-2");
+  });
+  it('M-474 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-4 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-4').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-4");
+    expect(M, 'CHAT-225.MCPROOF-4 rule text').toContain("\"The set-back plate (F − 2 × s_up × W) is floored at 0: the additional storey is not built and the flat form = n_w × F, disclosed; the lower storeys stay buildable (not not_buildable; the sheet's G3 text is withdrawn). FLAT-12, FLAT-13, PITCH-6, PITCH-8, ATTIC-9, ATTIC-10 stay as labelled boundary tests ('lot below 3 m'). max_build_min_dimension_m (logic_variables.json:102, old engine) is not used");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-474** |')) as string;
+    expect(row, 'M-474 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-4");
+  });
+  it('M-475 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-1 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-1').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-1");
+    expect(M, 'CHAT-225.MCPROOF-1 rule text').toContain("\"A0375 street side: fix the stored input, not the rule. Phase 2 (MB-27.L2, the roof-axis night) stores side_setback_street_m as unregulated by absence where the zone has no street-side article (M-361 Q1, 69a:497; the M-220 / INV-19 pattern); Layer 3 never reads not_evaluated:no_candidate as unregulated (R3-01, M-385); M-458 unchanged. STS-2..6 and REG-5 keep their expected answers (A0375 → 156.63 ");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-475** |')) as string;
+    expect(row, 'M-475 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-1");
+  });
+  it('M-476 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-6 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-6').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-6");
+    expect(M, 'CHAT-225.MCPROOF-6 rule text').toContain("\"A switched-off increment-2 formula row reverts its target to the increment-1 formula; the result's trace lists the switch as off (queue :11 'Off always wins. Every result says which switches were on.'). REG-11 keeps its key.\"");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-476** |')) as string;
+    expect(row, 'M-476 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-6");
+  });
+  it('M-477 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-8 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-8').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-8");
+    expect(M, 'CHAT-225.MCPROOF-8 rule text').toContain("\"The attic-floor datum is recorded as a register reading row in batch part 2: attic headroom (10.5.40.40(1) 'between the ceiling joists and the roof rafters') is measured from the top of the attic-floor joists at c0 = Hw − n_w × 2.512 (S-1 floor-to-floor, M-404; wall storeys per Q3 b / M-459), disclosed. No number changes.\"");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-477** |')) as string;
+    expect(row, 'M-477 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-8");
+  });
+  it('M-478 carries 2026-11-03-batch-ax#CHAT-225.ROOF-5 and its Rule text', () => {
+    expect(M, 'CHAT-225.ROOF-5').toContain("2026-11-03-batch-ax#CHAT-225.ROOF-5");
+    expect(M, 'CHAT-225.ROOF-5 rule text').toContain("\"Phase 2 reading (with the axis reload, MB-27.L2): where a roof row's stored height is below its main-wall limit (e.g. A0166 flat row: height 6.5 m by 900.3.10(21)(A), RD 10.20.40.10(4)(A) wall limit 7.2 m), the wall limit is not binding and the walls are bounded by the height; disclosed `main_wall_limit_above_height`. Layer 3 does not choose silently (M-387). No golden number moves (A0166 GFA not");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-478** |')) as string;
+    expect(row, 'M-478 row').toContain("2026-11-03-batch-ax#CHAT-225.ROOF-5");
+  });
+  it('M-479 carries 2026-11-03-batch-ax#CHAT-225.MCPROOF-A7 and its Rule text', () => {
+    expect(M, 'CHAT-225.MCPROOF-A7').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-A7");
+    expect(M, 'CHAT-225.MCPROOF-A7 rule text').toContain("\"The 81 re-run examples (~/Buildo-scratch/mcbylaws/inc2/mcproof/RESIGN-LIST.md) are re-signed: 55 clean; 17 with residual notes (no number moves); the 7 one-line wording fixes applied (ATTIC-6, ATTIC-16, FLAT-11, ROOF-12, PITCH-10, PITCH-11, ATTIC-3); ROOF-13 accepted as a note. ROOF-5 is held for its own question. One ledger row (MCPROOF A7) names the changed cases.\" The cases (RESIGN-LIST.md): S");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-479** |')) as string;
+    expect(row, 'M-479 row').toContain("2026-11-03-batch-ax#CHAT-225.MCPROOF-A7");
+  });
+  it('M-480 carries 2026-11-03-batch-ax#CHAT-225.M72-FORMS and its Rule text', () => {
+    expect(M, 'CHAT-225.M72-FORMS').toContain("2026-11-03-batch-ax#CHAT-225.M72-FORMS");
+    expect(M, 'CHAT-225.M72-FORMS rule text').toContain("M-72's closed Layer 3 grammar gains three forms, Layer 3 only (Layer 1 is unchanged). (1) `refuse(<reason word>)` returns `not_evaluated:<reason word>`, where the word is from the closed reason list (M-64); for example `if(half_span_a_m > lv(rafter_span_4_m); refuse(no_cited_rafter_span); <selector>)`. (2) `flag(<word>; <expr>)` returns the value of `<expr>` with the disclosure word added to its f");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-480** |')) as string;
+    expect(row, 'M-480 row').toContain("2026-11-03-batch-ax#CHAT-225.M72-FORMS");
+  });
+  it('M-481 carries 2026-11-03-batch-ax#CHAT-225.Q-CONF and its Rule text', () => {
+    expect(M, 'CHAT-225.Q-CONF').toContain("2026-11-03-batch-ax#CHAT-225.Q-CONF");
+    expect(M, 'CHAT-225.Q-CONF rule text').toContain("M-378's switchboard (scripts/seeds/bylaw/switchboard.json) gains, on every row of kind `reading`, `confidence` (closed list: high, medium, medium-low, low) and `evidence` (a pointer to the data or ruling the confidence rests on); a row of another kind carries neither. Every result shows the confidence beside each reading it rests on: each reading switch on its path is listed with its confidence (M");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-481** |')) as string;
+    expect(row, 'M-481 row').toContain("2026-11-03-batch-ax#CHAT-225.Q-CONF");
+  });
+  it('the dated notes of part 2 are on M-183, M-400, M-184, M-464, M-461 and M-229', () => {
+    for (const id of ['M-183', 'M-400', 'M-184', 'M-464', 'M-461', 'M-229']) {
+      const row = M.split('\n').find((l) => l.startsWith('| **' + id + '** |')) as string;
+      expect(row, id).toContain('*Dated note 2026-11-03 (M-246, prior');
+    }
+  });
+});
