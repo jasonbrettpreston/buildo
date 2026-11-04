@@ -28,6 +28,8 @@ const lr = require('../../lib/bylaw-lot-row.js');
 const DEFAULT_DIR = 'src/tests/fixtures/layer3/golden-25';
 const TOLERANCE = 0.01;
 const ADDED_TARGET = 'averaging_distance_m'; // always written when the source line does not carry it
+// golden-25 mode B (MB-31 inc1 plan 2.2): the MB-18 (j) slot, written so the chain-step-4 front fallback reaches the 25
+const ADDED_TARGETS = [ADDED_TARGET, 'front_setback_fallback_m'];
 
 function parseArgs(argv) {
   const opts = { dir: DEFAULT_DIR, check: false };
@@ -112,7 +114,7 @@ function main() {
 
   // The targets written: the first source line's phase2 keys plus averaging_distance_m, sorted.
   if (source.length === 0) throw new Error(`${path.join(dir, 'source-inputs.jsonl')} is empty`);
-  const targets = [...new Set([...Object.keys(source[0].phase2), ADDED_TARGET])].sort();
+  const targets = [...new Set([...Object.keys(source[0].phase2), ...ADDED_TARGETS])].sort();
 
   const lines = [];
   const report = [];
