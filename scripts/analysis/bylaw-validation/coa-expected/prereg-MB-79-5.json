@@ -1,0 +1,88 @@
+{
+ "$comment": "M-321 pre-registration, task MB-79, prereg 5 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-79-1.json to prereg-MB-79-4.json exist and no ref holds a prereg-MB-79-5.json, so this file is the task's fifth; round 48 is the next free CoA counter on every ref, the highest being round 47, prereg-MB-26-2.json), committed alone directly under the MB-79 (f) code commit: the oracle-first door (R-MC, recorded in 2026-11-03-batch-aw, b31ca6845). The change is gate code and its tests only: new modules loop-oracle-door.mjs, loop-door-authority.mjs, loop-door-git.mjs and loop-door-remote.mjs under scripts/analysis/mcbylaws-loop/, the joinArgsFor extraction and ctx.door in loop-gate-context.mjs, the composition and notes threading in loop-gate-eval.mjs, two exports in loop-oracle.mjs and one in loop-gate.mjs, seven new test files, and red evidence. It touches no evaluator, no scorer, no oracle row and no floor; with no ctx.door the gate behaves exactly as today. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the totals equal those of the newest prereg at the landing tip (prereg-MB-26-2.json), the floors file is unchanged and the floors check stays OK. No existing test assertion changes. rules[] names M-321 and R-MA (RULED) and R-MC, whose own lock (the seven test files) and red evidence land in the code commit.",
+ "schema": "coa-round-prereg-v1",
+ "round": 48,
+ "task": "MB-79",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-MC"
+ ],
+ "plan_ref": "MB-79 (f) plan v9.1 (fold check PASS); the PR-79f-1 redraft v9.1, recorded as R-MC in b31ca6845 (2026-11-03-batch-aw)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "increment": "1"
+}
