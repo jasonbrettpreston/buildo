@@ -77,9 +77,9 @@ const METADATA_RE = toRegexes(METADATA_GLOBS);
 const PREREG_RE = toRegexes(PREREG_GLOBS);
 
 const isGen = (p) => GEN_RE.some((r) => r.test(p));
-const isOraclePath = (p) => ORACLE_GLOB_RE.some((r) => r.test(p)) || ORACLE_PATTERN_RE.some((r) => r.test(p));
+export const isOraclePath = (p) => ORACLE_GLOB_RE.some((r) => r.test(p)) || ORACLE_PATTERN_RE.some((r) => r.test(p));
 const isMetadata = (p) => METADATA_RE.some((r) => r.test(p));
-const isPrereg = (p) => PREREG_RE.some((r) => r.test(p));
+export const isPrereg = (p) => PREREG_RE.some((r) => r.test(p));
 
 // The layer23 list in effect: mcbylaws/protected-paths.json `layer23` when it is an array of strings, else the default.
 export function loadLayer23(root) {

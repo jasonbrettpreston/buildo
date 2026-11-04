@@ -1,0 +1,184 @@
+# MB-79 (f) the oracle-first door (R-MC = PR-79f-1): red-first evidence, 2026-11-03 (reworded after the OUTPUT panel, F-3)
+# D1/D2 (T1, T2) and D3/D3b (T3, T3b) reds are MODULE-ABSENT reds: the files failed to load because the module did not exist. They are
+# not assertion reds. D3 disclosure: loop-door-git.mjs and loop-door-remote.mjs were written BEFORE the T3/T3b test text; for the red run the
+# two modules were moved aside (mv keeps their mtimes) and then moved back, so the D3 red proves only that T3/T3b cannot pass without the
+# modules. The D5a and D5b reds exercise the same readers at their designed assertions. D4 (T4), D5a-0 (T5 #11), D5a (T5) and D5b (T6) are
+# ASSERTION reds. Built on the prereg-MB-79-5 commit (re-made at the landing tip). Lines below are the vitest summary and failing-test lines of each red run.
+
+## red-d1d2: MODULE-ABSENT red (the module did not exist yet, so the file failed to load; not an assertion red)
+ FAIL  src/tests/mcbylaws-loop-door-authority.logic.test.ts [ src/tests/mcbylaws-loop-door-authority.logic.test.ts ]
+Error: Failed to load url scripts/analysis/mcbylaws-loop/loop-door-authority.mjs (resolved id: scripts/analysis/mcbylaws-loop/loop-door-authority.mjs). Does the file exist?
+ FAIL  src/tests/mcbylaws-loop-oracle-door.logic.test.ts [ src/tests/mcbylaws-loop-oracle-door.logic.test.ts ]
+Error: Failed to load url scripts/analysis/mcbylaws-loop/loop-oracle-door.mjs (resolved id: scripts/analysis/mcbylaws-loop/loop-oracle-door.mjs). Does the file exist?
+ Test Files  2 failed (2)
+      Tests  no tests
+
+## red-d3: MODULE-ABSENT red (the module did not exist yet, so the file failed to load; not an assertion red)
+ FAIL  src/tests/mcbylaws-loop-door-git.logic.test.ts [ src/tests/mcbylaws-loop-door-git.logic.test.ts ]
+Error: Failed to load url scripts/analysis/mcbylaws-loop/loop-door-git.mjs (resolved id: scripts/analysis/mcbylaws-loop/loop-door-git.mjs). Does the file exist?
+ FAIL  src/tests/mcbylaws-loop-door-remote.logic.test.ts [ src/tests/mcbylaws-loop-door-remote.logic.test.ts ]
+Error: Failed to load url scripts/analysis/mcbylaws-loop/loop-door-remote.mjs (resolved id: scripts/analysis/mcbylaws-loop/loop-door-remote.mjs). Does the file exist?
+ Test Files  2 failed (2)
+      Tests  no tests
+
+## red-d5a0: ASSERTION red (failed at its designed assertion)
+   × PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > one merge head and the record's index blob is MERGE_HEAD's: the join reads the merge head (T-p1 shape) 90ms
+     → loop-gate-context.mjs must export joinArgsFor
+   × PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > the resolution edits the record: the commit join is kept (T-p2 shape) 93ms
+     → loop-gate-context.mjs must export joinArgsFor
+   × PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > no MERGE_HEAD (T-p5 shape), and isNew false: unchanged 34ms
+     → loop-gate-context.mjs must export joinArgsFor
+   × PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > push and ci read the tip and leave isNew as given 90ms
+     → loop-gate-context.mjs must export joinArgsFor
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-loop-door-context.logic.test.ts > PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > one merge head and the record's index blob is MERGE_HEAD's: the join reads the merge head (T-p1 shape)
+ FAIL  src/tests/mcbylaws-loop-door-context.logic.test.ts > PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > the resolution edits the record: the commit join is kept (T-p2 shape)
+ FAIL  src/tests/mcbylaws-loop-door-context.logic.test.ts > PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > no MERGE_HEAD (T-p5 shape), and isNew false: unchanged
+ FAIL  src/tests/mcbylaws-loop-door-context.logic.test.ts > PR-79f-1 (= R-MC) T5 #11 (step D5a-0): joinArgsFor, the (p) merge-head rule as one helper > push and ci read the tip and leave isNew as given
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+
+## red-d4: ASSERTION red (failed at its designed assertion)
+   × PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #2 commit mode: violations exactly [], one summary line and 11 entry lines 2ms
+     → expected [ Array(1) ] to deeply equal []
+   × PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #2 with 14 entries: 12 entry lines then oracle_door_entries_more:2 1ms
+     → expected [] to have a length of 12 but got +0
+   × PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #9 ci mode: violations [], the pass lines and the ci note 0ms
+     → expected [ Array(1) ] to deeply equal []
+   × PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #11 the note budget: 3 rulings and 14 entries in ci 0ms
+     → expected undefined to be 'oracle_door_entries_more:5' // Object.is equality
+   × PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #11 the item-a shape: 1 ruling, 11 entries: 12 door lines, every entry printed 0ms
+     → expected [] to have a length of 12 but got +0
+   × PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #11 a fifth ruling becomes oracle_door_rulings_more:<n> 0ms
+     → expected [] to have a length of 4 but got +0
+   × PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #4 an unlisted move: oracle_moved_with_code stays AND the door code is present 0ms
+     → expected false to be true // Object.is equality
+   × PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #4 an edited prereg: oracle_moved_with_code stays AND the door code is present 0ms
+     → expected false to be true // Object.is equality
+   × PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #4 a missing prereg: oracle_moved_with_code stays AND the door code is present 0ms
+     → expected false to be true // Object.is equality
+   × PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #4 a ruling not pushed: oracle_moved_with_code stays AND the door code is present 0ms
+     → expected false to be true // Object.is equality
+   × PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #4 an empty list: oracle_moved_with_code stays AND the door code is present 0ms
+     → expected false to be true // Object.is equality
+   × PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #10 the status at the revision (adversary R1-2): RETIRED at the revision, RATIFIED at the parent 0ms
+     → expected [ Array(1) ] to include 'oracle_door_ruling_not_authority:M-180'
+   × PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #12 two preregs with different first commits; the ruling RATIFIED only after the first prereg's parent (R-8) 0ms
+     → expected [ Array(1) ] to include 'oracle_door_ruling_not_authority:M-180'
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-loop-door-eval.logic.test.ts > PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #2 commit mode: violations exactly [], one summary line and 11 entry lines
+AssertionError: expected [ Array(1) ] to deeply equal []
+ FAIL  src/tests/mcbylaws-loop-door-eval.logic.test.ts > PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #2 with 14 entries: 12 entry lines then oracle_door_entries_more:2
+AssertionError: expected [] to have a length of 12 but got +0
+ FAIL  src/tests/mcbylaws-loop-door-eval.logic.test.ts > PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #9 ci mode: violations [], the pass lines and the ci note
+AssertionError: expected [ Array(1) ] to deeply equal []
+ FAIL  src/tests/mcbylaws-loop-door-eval.logic.test.ts > PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #11 the note budget: 3 rulings and 14 entries in ci
+AssertionError: expected undefined to be 'oracle_door_entries_more:5' // Object.is equality
+ FAIL  src/tests/mcbylaws-loop-door-eval.logic.test.ts > PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #11 the item-a shape: 1 ruling, 11 entries: 12 door lines, every entry printed
+AssertionError: expected [] to have a length of 12 but got +0
+ FAIL  src/tests/mcbylaws-loop-door-eval.logic.test.ts > PR-79f-1 (= R-MC) T4 #2, #9, #11: a green door drops oracle_moved_with_code and prints the pass notes > #11 a fifth ruling becomes oracle_door_rulings_more:<n>
+AssertionError: expected [] to have a length of 4 but got +0
+ FAIL  src/tests/mcbylaws-loop-door-eval.logic.test.ts > PR-79f-1 (= R-MC) T4 #3, #4, #5, #10, #12: refusals keep oracle_moved_with_code > #4 an unlisted move: oracle_moved_with_code stays AND the door code is present
+
+## red-d5a: ASSERTION red (failed at its designed assertion)
+   × PR-79f-1 (= R-MC) T5 #1 to #3: the item-a shape through buildContext and evaluateGate (commit mode) > #1 GREEN: one listed move, ruling pushed, prereg alone directly under: no door code, no oracle_moved_with_code, one pass note 267ms
+     → expected undefined to be truthy
+   × PR-79f-1 (= R-MC) T5 #1 to #3: the item-a shape through buildContext and evaluateGate (commit mode) > #2 RED unlisted move 236ms
+     → expected [ …(9) ] to include 'oracle_door_unlisted_move:src/tests/b…'
+   × PR-79f-1 (= R-MC) T5 #1 to #3: the item-a shape through buildContext and evaluateGate (commit mode) > #3 RED extra listed move 230ms
+     → expected [ …(9) ] to include 'oracle_door_extra_listed:src/tests/by…'
+   × PR-79f-1 (= R-MC) T5 #4: rulings that are not an authority > PROPOSED 228ms
+     → expected [ …(9) ] to include 'oracle_door_ruling_not_authority:M-900'
+   × PR-79f-1 (= R-MC) T5 #4: rulings that are not an authority > absent 232ms
+     → expected [ …(9) ] to include 'oracle_door_ruling_not_authority:M-999'
+   × PR-79f-1 (= R-MC) T5 #4: rulings that are not an authority > the ruling row added in the SAME staged commit 234ms
+     → expected [ …(9) ] to include 'oracle_door_ruling_not_authority:M-180'
+   × PR-79f-1 (= R-MC) T5 #4: rulings that are not an authority > a LOCAL-ONLY ruling row (the forge, P-1): RULED in a local commit before the prereg, never pushed 245ms
+     → expected [ …(9) ] to include 'oracle_door_ruling_not_pushed:M-180'
+   × PR-79f-1 (= R-MC) T5 #5, #6: the prereg history > #5 edited in an earlier commit (added, deleted, added again directly under the round): oracle_door_prereg_edited 267ms
+     → expected [ …(9) ] to include 'oracle_door_prereg_edited'
+   × PR-79f-1 (= R-MC) T5 #5, #6: the prereg history > #5 modified in the staged commit: BOTH oracle_door_prereg_edited AND oracle_door_path_ineligible:M:<prereg> 237ms
+     → expected [ …(10) ] to include 'oracle_door_prereg_edited'
+   × PR-79f-1 (= R-MC) T5 #5, #6: the prereg history > #6 the prereg commit carries another file: oracle_door_prereg_not_alone 257ms
+     → expected [ …(9) ] to include 'oracle_door_prereg_not_alone'
+   × PR-79f-1 (= R-MC) T5 #7, #10: renames and mode-only changes > #7 a content-equal rename R100 of the oracle file with a listing for it: both paths ineligible 253ms
+     → expected [ …(9) ] to include 'oracle_door_path_ineligible:R:src/tes…'
+   × PR-79f-1 (= R-MC) T5 #7, #10: renames and mode-only changes > #10 a mode-only change to the oracle file: oracle_door_empty_diff 253ms
+     → expected [ …(9) ] to include 'oracle_door_empty_diff:src/tests/byla…'
+   × PR-79f-1 (= R-MC) T5 #8: the R-MA join, as the gate finds it > (a) a prereg without increment: BOTH oracle_door_prereg_missing AND prereg_missing 234ms
+     → expected [ …(9) ] to include 'oracle_door_prereg_missing'
+   × PR-79f-1 (= R-MC) T5 #8: the R-MA join, as the gate finds it > (b) an unrelated commit between the prereg and the staged record: plus the gate's prereg_task_unknown:commit 241ms
+     → expected [ …(10) ] to include 'oracle_door_prereg_missing'
+   × PR-79f-1 (= R-MC) T5 #8: the R-MA join, as the gate finds it > (c) the name says MB-18, the JSON task another: plus prereg_name_task_mismatch from ctx.preregJoin, not repeated by the door 236ms
+     → expected [ …(10) ] to include 'oracle_door_prereg_missing'
+   × PR-79f-1 (= R-MC) T5 #9: a git failure while collecting cannot be read as green > a missing object: buildContext throws and main exits 2 237ms
+     → promise resolved "{ mode: 'commit', …(26) }" instead of rejecting
+   × PR-79f-1 (= R-MC) T5 #12, #12a, #12b: two staged records (v9.1, F-1) > #12 B (increment 2) is ctx.latest: findPreregFor gives prereg null and no violations; the door gives oracle_door_prereg_missing alone 233ms
+     → Cannot read properties of undefined (reading 'latestRecordPath')
+   × PR-79f-1 (= R-MC) T5 #12, #12a, #12b: two staged records (v9.1, F-1) > #12a B is NOT ctx.latest: plus oracle_door_join:<B>:no_prereg_for_increment (R-9) 245ms
+     → Cannot read properties of undefined (reading 'latestRecordPath')
+   × PR-79f-1 (= R-MC) T5 #12, #12a, #12b: two staged records (v9.1, F-1) > #12b (i) shared increment, one commit, one trailer: B joins task A's prereg and its lines are judged against A's list (MB-79 (k) owns the task mismatch) 242ms
+     → Cannot read properties of undefined (reading 'unjoined')
+   × PR-79f-1 (= R-MC) T5 #12, #12a, #12b: two staged records (v9.1, F-1) > #12b (ii) B's record added by its own later commit with its own trailer, over its own prereg: B joins prereg-MB-77-1 at push 383ms
+     → Cannot read properties of undefined (reading 'records')
+
+## red-d5a-9: ASSERTION red (failed at its designed assertion)
+   × PR-79f-1 (= R-MC) T5 #9: a git failure while collecting cannot be read as green > a missing object: buildContext throws and main exits 2 312ms
+     → promise resolved "{ mode: 'commit', …(26) }" instead of rejecting
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-loop-door-context.logic.test.ts > PR-79f-1 (= R-MC) T5 #9: a git failure while collecting cannot be read as green > a missing object: buildContext throws and main exits 2
+AssertionError: promise resolved "{ mode: 'commit', …(26) }" instead of rejecting
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 skipped (26)
+
+## red-d5b: ASSERTION red (failed at its designed assertion)
+   × PR-79f-1 (= R-MC) T6 #1 to #5: one item in a push > #1 GREEN: the prereg commit, then one work commit (code + oracle + record); push and ci 436ms
+     → expected true to be false // Object.is equality
+   × PR-79f-1 (= R-MC) T6 #1 to #5: one item in a push > #2 RED the oracle edit committed BEFORE the prereg commit: oracle_door_prereg_not_before 464ms
+     → expected { violations: [ …(9) ], notes: [] } to deeply equal ObjectContaining{…}
+   × PR-79f-1 (= R-MC) T6 #1 to #5: one item in a push > #3 RED split: oracle edit in commit 1, code in commit 2, no prereg 361ms
+     → expected [ …(9) ] to include 'oracle_door_prereg_missing'
+   × PR-79f-1 (= R-MC) T6 #1 to #5: one item in a push > #4 RED an oracle file added in commit 1 and edited in commit 2 (net A) 442ms
+     → expected [ …(9) ] to include 'oracle_door_path_ineligible:A:src/tes…'
+   × PR-79f-1 (= R-MC) T6 #1 to #5: one item in a push > #5 RED the prereg edited in commit 3 412ms
+     → expected [ …(11) ] to include 'oracle_door_prereg_edited'
+   × PR-79f-1 (= R-MC) T6 #6, #7, #18: merge topologies at range level > #6 (a) GREEN a clean merge of a branch that predates the prereg 505ms
+     → expected true to be false // Object.is equality
+   × PR-79f-1 (= R-MC) T6 #6, #7, #18: merge topologies at range level > #6 (b) GREEN the prereg arriving by merge 479ms
+     → expected true to be false // Object.is equality
+   × PR-79f-1 (= R-MC) T6 #6, #7, #18: merge topologies at range level > #6 (d) RED a plain edit of the prereg 398ms
+     → expected [ …(11) ] to include 'oracle_door_prereg_edited'
+   × PR-79f-1 (= R-MC) T6 #6, #7, #18: merge topologies at range level > #6 (c) / #18 RED the prereg edited on a side branch and put back (X, Y, X), merged before the record commit 490ms
+     → expected [ …(10) ] to include 'oracle_door_prereg_edited'
+   × PR-79f-1 (= R-MC) T6 #6, #7, #18: merge topologies at range level > #7 RED a predating fork merged after the prereg: its oracle edit W is not a descendant of the prereg commit 462ms
+     → expected [ …(9) ] to include 'oracle_door_prereg_not_before'
+   × PR-79f-1 (= R-MC) T6 #8, #9, #13 to #16: several records in one push (P-14) > #8 GREEN two door items of two tasks, each prereg covering its own path: one pass note per ruling group 465ms
+     → expected true to be false // Object.is equality
+   × PR-79f-1 (= R-MC) T6 #8, #9, #13 to #16: several records in one push (P-14) > #9 RED the second item's change predates its own prereg 514ms
+     → expected [ …(10) ] to include 'oracle_door_prereg_not_before'
+   × PR-79f-1 (= R-MC) T6 #8, #9, #13 to #16: several records in one push (P-14) > #13 RED two records of one task, the EARLIER record commit has no trailer 431ms
+     → expected [ …(9) ] to include 'oracle_door_prereg_missing'
+   × PR-79f-1 (= R-MC) T6 #8, #9, #13 to #16: several records in one push (P-14) > #14 GREEN two tasks in one push, and a later prereg-only commit at the tip takes over neither; under MB-79 (m) it binds nothing 518ms
+     → Cannot read properties of undefined (reading 'records')
+   × PR-79f-1 (= R-MC) T6 #8, #9, #13 to #16: several records in one push (P-14) > #15 GREEN two records both joined to the same prereg (no prereg between them): entries counted once 419ms
+     → expected true to be false // Object.is equality
+   × PR-79f-1 (= R-MC) T6 #8, #9, #13 to #16: several records in one push (P-14) > #16 GREEN one door item plus one non-door R-LZ round (another task, a prereg with no list) 457ms
+     → expected true to be false // Object.is equality
+   × PR-79f-1 (= R-MC) T6 #10, #11: delete and re-add, a merge resolution > #10 RED delete in commit 1 and re-add in commit 2 (net M, a per-commit D) 397ms
+     → expected [ …(9) ] to include 'oracle_door_path_ineligible:D:src/tes…'
+   × PR-79f-1 (= R-MC) T6 #10, #11: delete and re-add, a merge resolution > #11 RED a merge whose resolution edits the oracle (the O68-22 appended list) 478ms
+     → expected 0 to be greater than 0
+   × PR-79f-1 (= R-MC) T6 #12: a sibling lane's door edit merged into this lane (X-8) > GREEN with the sibling's prereg, record trailer and edit landed before this lane's prereg 703ms
+     → expected true to be false // Object.is equality
+   × PR-79f-1 (= R-MC) T6 #12: a sibling lane's door edit merged into this lane (X-8) > RED with the sibling's prereg absent 625ms
+     → expected [ …(10) ] to include 'oracle_door_prereg_missing'
+
+## green (same files, with the build)
+green-d1d2:  Tests 97 passed (97)
+green-d3:  Tests 31 passed (31)
+green-d5a0:  Tests 4 passed (4)
+green-d4:  Tests 122 passed (122)
+green-d5a:  Tests 26 passed (26)
+green-d5b:  Tests 22 passed (22)
+green-loop-suites:  Tests 948 passed (948)
+parity D5a-0 (75 buildContext results of mcbylaws-loop-gate-context.logic.test.ts before and after the extraction, temp-dir names normalised): {"before":75,"after":75,"differing":0,"Tp":5,"J":18}

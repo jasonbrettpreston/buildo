@@ -181,7 +181,7 @@ export function git(root, args) {
 }
 
 /** A STAGED read (`:index` / `--cached`): the scrubbed env with the hook's trusted index kept (see stagedEnv). */
-const gitStaged = (root, args) => readGit(root, args, stagedEnv(root));
+export const gitStaged = (root, args) => readGit(root, args, stagedEnv(root));
 
 const tryGit = (root, args) => {
   try {

@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseMessage } from '../mcbylaws/cite-parse.mjs';
 import { byNewest, parsePreregName } from '../mcbylaws/prereg-name.mjs';
 import { recordAddCommit } from './loop-prereg.mjs';
-import { preregOnly, nameStatusOf } from './loop-oracle.mjs';
+import { preregOnly, nameStatusOf, checkOracleFirst } from './loop-oracle.mjs';
 import { parseOwedTable, parseRegisterRows } from '../mcbylaws/cite-parse.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -249,6 +249,32 @@ function singleMergeHead(git, root) {
   }
   const heads = text.split('\n').map((s) => s.trim()).filter(Boolean);
   return heads.length === 1 ? heads[0] : null;
+}
+
+/**
+ * MB-79 (p) (R-MA dated note 2026-11-01), extracted unchanged by MB-79 (f) step D5a-0 (R-MC; plan.v9.1.md 2.3, V8-4) so the gate's join
+ * of `ctx.latest` and the door's join of every new record apply ONE rule: the history a record's prereg is joined in and whether it is
+ * new. Push and ci read the tip. At commit time a lane merge in progress with ONE merge head joins a NEW record by the push-and-CI source
+ * (the merge head's history, isNew false) when the record is absent from HEAD's tree and its index blob equals its MERGE_HEAD blob.
+ */
+export function joinArgsFor({ git, root, mode, record, isNew, tip }) {
+  const commit = mode === 'commit';
+  let rev = commit ? 'HEAD' : tip;
+  let joinIsNew = isNew;
+  if (commit && isNew && record) {
+    const mergeHead = singleMergeHead(git, root);
+    if (mergeHead) {
+      const rec = record.path;
+      const atHead = git.blobIdsAt(root, 'HEAD', [rec]);
+      const atIndex = git.blobIdsAt(root, ':index', [rec]);
+      const atMerge = git.blobIdsAt(root, mergeHead, [rec]);
+      if (!atHead[rec] && atIndex[rec] && atIndex[rec] === atMerge[rec]) {
+        rev = mergeHead;
+        joinIsNew = false;
+      }
+    }
+  }
+  return { rev, isNew: joinIsNew };
 }
 
 /** R-MA, push and ci: the McBylaws-Task trailer of a commit (cite-parse owns the trailer form), or null. */
@@ -502,21 +528,7 @@ export async function buildContext(parsed = {}, deps = {}) {
   // the push-and-CI source (the trailer of the commit that adds it in MERGE_HEAD's history) when the record is absent from HEAD's tree
   // and its index blob equals its MERGE_HEAD blob. Every other case keeps the join by the prereg HEAD's commit adds.
   const isNew = Boolean(last) && latest === last;
-  let joinRev = commit ? 'HEAD' : tip;
-  let joinIsNew = isNew;
-  if (commit && isNew) {
-    const mergeHead = singleMergeHead(git, root);
-    if (mergeHead) {
-      const rec = latest.path;
-      const atHead = git.blobIdsAt(root, 'HEAD', [rec]);
-      const atIndex = git.blobIdsAt(root, ':index', [rec]);
-      const atMerge = git.blobIdsAt(root, mergeHead, [rec]);
-      if (!atHead[rec] && atIndex[rec] && atIndex[rec] === atMerge[rec]) {
-        joinRev = mergeHead;
-        joinIsNew = false;
-      }
-    }
-  }
+  const { rev: joinRev, isNew: joinIsNew } = joinArgsFor({ git, root, mode, record: latest, isNew, tip });
   const join = findPreregFor({ git, root, mode, record: latest, isNew: joinIsNew, rev: joinRev });
   const prereg = join.prereg;
   const preregFile = join.preregFile;
@@ -591,6 +603,11 @@ export async function buildContext(parsed = {}, deps = {}) {
     run.baseRows = null;
   }
 
+  // R-MC (PR-79f-1, MB-79 (f); plan.v9.1.md 2.3): the door's facts, collected ONLY when the oracle-first refusal would fire.
+  const door = checkOracleFirst(asArray(commits), classify).length
+    ? await collectDoor({ git, root, mode, base, tip, commits, nameStatus, classify, newRecords, latest, isNew, rulings })
+    : null;
+
   return {
     mode,
     nameStatus,
@@ -619,7 +636,93 @@ export async function buildContext(parsed = {}, deps = {}) {
     newCases,
     rowsTouched,
     run,
+    ...(door ? { door } : {}),
   };
+}
+
+/**
+ * R-MC (PR-79f-1, MB-79 (f); plan.v9.1.md 2.3): `ctx.door`. Every record of the range is joined by (h)'s findPreregFor with the
+ * `{rev, isNew}` of joinArgsFor (V8-3: `isNew: true` for every new record at commit; the tip at push and ci). A record with no prereg
+ * returns the door at once, before any further git call (P-3). Otherwise the diffs of the eligible moved oracle paths, and per joined
+ * prereg that lists door entries its history (the door's own walk) and its authority (a) at the prereg's parent, plus (b), the
+ * pushed-ruling condition, at commit and push only (O-29 YES). Reads that fail with a named code answer null; log, rev-list,
+ * merge-base and an unresolvable commit propagate (P-18).
+ */
+async function collectDoor({ git, root, mode, base, tip, commits, nameStatus, classify, newRecords, latest, isNew, rulings }) {
+  const DG = await import('./loop-door-git.mjs');
+  const { pushedAuthority } = await import('./loop-door-remote.mjs');
+  const { ineligibleWhy } = await import('./loop-oracle-door.mjs');
+  const { rowOf, stemOf } = await import('./loop-door-authority.mjs');
+  const commit = mode === 'commit';
+  const lists = asArray(commits).map(asArray);
+  const perCommit = commit ? lists : lists.slice(0, -1);
+  const movedPaths = distinct(lists.flat().filter((x) => x && x.s !== 'A' && classify(x.p) === 'oracle').map((x) => x.p));
+  const moved = new Set(movedPaths);
+  const perCommitStatus = {};
+  for (const list of perCommit) {
+    for (const r of list) {
+      if (r && moved.has(r.p)) (perCommitStatus[r.p] = perCommitStatus[r.p] || []).push(r.s);
+    }
+  }
+  const net = {};
+  for (const r of asArray(nameStatus)) if (r && moved.has(r.p) && !(r.p in net)) net[r.p] = r.s;
+  const classes = {};
+  for (const p of movedPaths) classes[p] = classify(p);
+  const records = [];
+  const unjoined = [];
+  for (const rec of asArray(newRecords)) {
+    const args = joinArgsFor({ git, root, mode, record: rec, isNew: commit ? true : isNew, tip });
+    const j = findPreregFor({ git, root, mode, record: rec, isNew: args.isNew, rev: args.rev });
+    if (j.prereg) records.push({ recordPath: rec.path, prereg: j.prereg, preregFile: j.preregFile, task: j.task, source: j.source });
+    else unjoined.push({ recordPath: rec.path, violations: asArray(j.violations) });
+  }
+  const door = {
+    mode,
+    latestRecordPath: latest ? latest.path : null,
+    movedPaths,
+    perCommitStatus,
+    net,
+    classes,
+    diffs: {},
+    fileText: {},
+    records,
+    unjoined,
+    rulingsAtRevision: Object.fromEntries(rulings instanceof Map ? rulings : []),
+  };
+  if (unjoined.length || !records.length) return door;
+  for (const p of movedPaths) {
+    if (ineligibleWhy(p, door) !== null) continue;
+    door.diffs[p] = commit ? DG.stagedDiff(root, p) : DG.rangeDiff(root, base, tip, p);
+    // P-13: operator context only, never authority.
+    door.fileText[p] = { base: git.readAt(root, commit ? 'HEAD' : base, p), cur: git.readAt(root, commit ? ':index' : tip, p) };
+  }
+  const seen = new Map();
+  for (const r of records) {
+    if (seen.has(r.preregFile)) {
+      Object.assign(r, { history: seen.get(r.preregFile).history, authority: seen.get(r.preregFile).authority });
+      continue;
+    }
+    const entries = asArray(r.prereg.expected_value_changes).filter((e) => isObject(e) && typeof e.path === 'string');
+    let history = null;
+    let authority = { register: null, decisions: {}, pushed: commit || mode === 'push' ? {} : null };
+    if (entries.length) {
+      const h = DG.preregHistory(root, r.preregFile, tip, mode);
+      const first = h.commits.length ? h.commits[0].sha : null;
+      history = { ...h, work: DG.workCommits(root, { mode, base, tip, perCommit, first }) };
+      const parent = first ? DG.parentOf(root, first) : null;
+      const register = DG.registerAt(root, parent);
+      const keys = distinct(entries.map((e) => `${e.ruling}#${e.ruling_ref}`)).map((k) => ({ id: k.slice(0, k.indexOf('#')), ref: k.slice(k.indexOf('#') + 1) }));
+      const stems = keys.map((k) => (register ? stemOf(rowOf(register, k.id), k.ref) : null)).filter(Boolean);
+      authority = {
+        register,
+        decisions: DG.decisionsAt(root, parent, stems),
+        pushed: mode === 'ci' ? null : pushedAuthority(root, { parent, keys }),
+      };
+    }
+    Object.assign(r, { history, authority });
+    seen.set(r.preregFile, { history, authority });
+  }
+  return door;
 }
 
 /** The readers buildContext needs: the injected ones win, every default is imported lazily (loop-gate.mjs imports this module). */

@@ -14,6 +14,7 @@ import { checkOneIncrement, checkSkipAhead, incrementGreen } from './loop-increm
 import { checkRegression, checkCasesPresent } from './loop-regression.mjs';
 import { checkFloorEdit, checkCountFloors, checkOwedRatchet } from './loop-floors.mjs';
 import { checkPreregFile, checkPreregMoves, preregRefusesAccept, checkPreregHistory, checkMoveRulings } from './loop-prereg.mjs';
+import { checkOracleDoor, doorPassNotes } from './loop-oracle-door.mjs';
 
 const OUT_OF_SCOPE = 'out of scope: no code, oracle or generated path changed';
 const CI_NO_RUN = 'external groups: not run in CI';
@@ -134,12 +135,26 @@ function stageScopeAndRecords(ctx) {
   if (!commitStageFires(nameStatus, ctx.classify)) {
     return { early: true, outOfScope: true, violations: [] };
   }
+  // R-MC (PR-79f-1, MB-79 (f); plan.v9.1.md 2.4): the oracle-first door. Only when the oracle-first refusal fires and the context
+  // collected `ctx.door`: a green door drops the refusal and returns its pass notes; a red one keeps it and adds its own codes.
+  const first = checkOracleFirst(asArray(ctx.commits), ctx.classify);
+  let kept = first;
+  let doorCodes = [];
+  let notes = [];
+  if (first.length && isObject(ctx.door)) {
+    doorCodes = checkOracleDoor(ctx.door);
+    if (doorCodes.length === 0) {
+      kept = [];
+      notes = doorPassNotes(ctx.door);
+    }
+  }
   const violations = [
     ...checkRecordsAddOnly(nameStatus),
-    ...checkOracleFirst(asArray(ctx.commits), ctx.classify),
+    ...kept,
+    ...doorCodes,
     ...recordMissing(nameStatus, ctx.classify),
   ];
-  return { early: hasViolation(violations, 'record_missing'), outOfScope: false, violations };
+  return { early: hasViolation(violations, 'record_missing'), outOfScope: false, violations, notes };
 }
 
 /**
@@ -364,15 +379,17 @@ export function evaluateGate(ctx) {
   const scope = stageScopeAndRecords(ctx);
   if (scope.outOfScope) return { violations: [], notes: [OUT_OF_SCOPE] };
   const violations = [...scope.violations];
-  if (scope.early) return { violations: dedupe(violations), notes: [] };
+  // The door's notes come FIRST, so a cut of the arm's printed lines falls on the run notes, never on the entries (2.4).
+  const scopeNotes = asArray(scope.notes);
+  if (scope.early) return { violations: dedupe(violations), notes: [...scopeNotes] };
 
   // O68-15: a record at the round's revision that does not parse is a finding of its own, and it STOPS the record stage: a
   // malformed record can never fall back to the previous round's record (that would judge a round nobody recorded).
   const unparsable = asArray(ctx.unparsable).map((p) => `record_unparsable:${p}`);
-  if (unparsable.length) return { violations: dedupe([...violations, ...unparsable]), notes: [] };
+  if (unparsable.length) return { violations: dedupe([...violations, ...unparsable]), notes: [...scopeNotes] };
 
   const rec = ctx.latest ? ctx.latest.rec : null;
-  if (!rec) return { violations: dedupe([...violations, 'record_missing']), notes: [] };
+  if (!rec) return { violations: dedupe([...violations, 'record_missing']), notes: [...scopeNotes] };
 
   const runStage = stageRun(ctx, rec);
   const presence = withoutUnranGroups(
@@ -384,5 +401,5 @@ export function evaluateGate(ctx) {
   violations.push(...stageRatchet(ctx, rec, presence));
   violations.push(...runStage.violations);
   violations.push(...stageAccept(ctx, rec));
-  return { violations: dedupe(violations), notes: [...runStage.notes] };
+  return { violations: dedupe(violations), notes: [...scopeNotes, ...runStage.notes] };
 }
