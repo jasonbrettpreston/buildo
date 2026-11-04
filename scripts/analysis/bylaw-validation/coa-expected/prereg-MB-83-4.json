@@ -1,0 +1,100 @@
+{
+ "$comment": "M-321 pre-registration, task MB-83, prereg 4 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-83-3.json is batch part 3), the loop round that lands decision batch 2026-11-04-batch-az (CHAT-227), part 4: no new Spec 69a row; dated notes on the street-side row (the second oracle case G5-p, and a correction with no new ruling: the measured 88 of 140 corpus cells, 12 status moves plus 76 inputs-only changes) and on the roof-slope absence row (the second oracle case G5-p), with three queue dated lines. No re-pin: measured on 523cdc9c1, a dated note in a status cell adds no rule, so the regenerated Spec 133, the rule map and the Layer 2 table_version (301b22652dc2) are byte-identical, and expected-172.json, expected-4d.json, maxbld-amendment-index.json and bylaw-layer2-input.json are not changed (the 723dbc4b4 form). If any of the four changes at landing, the landing stops and returns to the operator for a named re-pin in the RP-2 form. Prepared on 523cdc9c1 as round 52, the round the orchestrator assigned in landing order (directly after the 1:4 re-key, round 51, prereg-MB-27-2, the highest on 523cdc9c1). It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the totals equal prereg-MB-27-2.json's and prereg-MB-83-3.json's totals, the floors file is unchanged and the floors check stays OK. One existing test assertion changes: the decision-log decisions count 779 to 780 (the one new decision). rules[] names only rules the registers read as RULED with no OWED marker.",
+ "schema": "coa-round-prereg-v1",
+ "round": 52,
+ "task": "MB-83",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-IL"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-83; ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers D-S1, Q-P3W, Q-CLASS, Q-K4P); ~/Buildo-scratch/mcbylaws/MB-27L2/door/ (M-475.door.txt, G5-p.door.txt: the measured corpus move and the G5-p case); ~/Buildo-scratch/mcbylaws/MB-27L2/gate/night-patch.md; ~/Buildo-scratch/mcbylaws/coa-classifier/plan.v2.md; drafts ~/Buildo-scratch/mcbylaws/MB-83/part4/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "none in this round: the four files are not changed (measured: Spec 133, the rule map and table_version 301b22652dc2 regenerate byte-identical); any change to them stops the landing and returns to the operator for a named re-pin in the RP-2 form",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 779,
+   "to": 780,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "the batch 2026-11-04-batch-az decision CHAT-227.D-S1 (one; operator \"D-s1-a\", ~/Buildo-scratch/mcbylaws/inc2/open-questions.md)"
+  }
+ ]
+}
