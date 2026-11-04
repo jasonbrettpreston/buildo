@@ -1,0 +1,109 @@
+{
+ "$comment": "M-321 pre-registration, task MB-83, prereg 3 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-83-1.json is batch part 1 and prereg-MB-83-2.json is batch part 2), the loop round that lands decision batch 2026-11-04-batch-ay (CHAT-226), part 3: six new Spec 69a rows (the principal roof-slope absence row, the Spec 134 type amendment row, the three 1:4 re-key rows and the gfa_pitched_m2 catalogue row) and dated notes on the street-side row, on the Layer 3 forms and switchboard confidence rows (naming their locks, no new ruling), on the switched-off formula row (D3 a), on the free-share geometry row (N4 a) and on the blank-wall row (Q-L18-4, Q-L18-2 a), with ONE named Layer 2 re-pin (operator 'V8-Q4a', RP-11: version/hash/commit fields only in the four regenerated files; any other change stops the landing and returns to the operator). Each new row adds one rule to Spec 133 and the rule map, hashed into the Layer 2 table_version. Prepared on 723dbc4b4 as the next round (50; round 49, prereg-MB-83-2, is the highest on origin), committed alone directly under the batch commit (R-LZ, R-MA); the orchestrator assigned round 50 in landing order. It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the totals equal prereg-MB-83-2.json's totals, the floors file is unchanged and the floors check stays OK. Two existing test assertions change: the decision-log decisions count 769 to 779 (the ten new decisions), and the pinned candidate list of the register-conflicts CLI test, which reads the live register, gains M-482 (operator Q-K4P a). rules[] names only rules the registers read as RULED with no OWED marker.",
+ "schema": "coa-round-prereg-v1",
+ "round": 50,
+ "task": "MB-83",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-IL"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-83; ~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md (sections 1-3 and section 5 row 2) and v8-open-questions.md; ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers Q-RSM, Q-STOR, V8-Q1, V8-Q3, V8-Q4, D-RK, the 1:4 card reading (ii), F-1, F-2, D1, Q-K4P); ~/Buildo-scratch/mcbylaws/MB-27L2/plan-1in4-rekey.md and rekey/stored-move-groups.json (the 1:4 re-key rows); drafts ~/Buildo-scratch/mcbylaws/MB-83/part3/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "expected-172.json and expected-4d.json: inputs.table_version and commit only; maxbld-amendment-index.json layer2_table_version; bylaw-layer2-input.json table_version",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 769,
+   "to": 779,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "the batch 2026-11-04-batch-ay decisions CHAT-226.* (ten; operator answers in ~/Buildo-scratch/mcbylaws/inc2/open-questions.md, and \"V8-Q4a\")"
+  },
+  {
+   "file": "src/tests/mcbylaws-conflicts.logic.test.ts",
+   "line": 86,
+   "row": "the --text CLI candidate list (r.stdout lines)",
+   "from": "TEN (M-60, M-173, M-180, M-207, M-234, M-237, M-240, M-252, M-265, M-376)",
+   "to": "[...TEN, 'M-482']",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "operator \"D1 and QK4p\", then \"a\" (Q-K4P a, ~/Buildo-scratch/mcbylaws/inc2/open-questions.md:400-402): the pinned list gains M-482 because the CLI reads the live register and the Q-RSM row's verbatim text holds houseplex, exception and detached"
+  }
+ ]
+}
