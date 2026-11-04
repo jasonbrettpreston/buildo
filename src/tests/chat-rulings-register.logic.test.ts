@@ -1289,3 +1289,92 @@ describe('CHAT-227 (batch 2026-11-04-batch-az): 1 ruling recorded as dated notes
     for (const w of ['88 of 140', '12 status moves', '76 inputs-only changes', '5fd41d6b…2892', '09b2b8ea…cddf']) expect(row, w).toContain(w);
   });
 });
+
+// CHAT-228 (batch 2026-11-04-batch-ba): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-228 (batch 2026-11-04-batch-ba): 11 rulings recorded as dated notes on M-472, M-461, M-400, M-415, M-476, M-229 and M-435 (increment 2, part 5); the builds are OWED to MB-27 and MB-27.L2', () => {
+  it('M-472 carries 2026-11-04-batch-ba#CHAT-228.Q-MECH0 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-MECH0').toContain("2026-11-04-batch-ba#CHAT-228.Q-MECH0");
+    expect(M, 'CHAT-228.Q-MECH0 rule text').toContain("(a) Declare the refuse word `no_permitted_gfa_base` (the M-428 form, added to M-64's closed list). The mechanical outside-GFA rows become `if(attic_counted_x <= 0 m2; 0 m2; if(regulated(fsi); min(…); refuse(no_permitted_gfa_base)))`: no counted attic gives 0; an FSI cap gives \"mechanical area: not yet stored\" until the increment-3 night (Q-M1 b+); no FSI cap gives not_evaluated:no_permitted_gfa_base, disclosed \"not applied\" (M-472 \"disclosed, not applied, never zero\"; ATTIC-22, ATTIC-23). Red-first, lands with lane K's rows; table_version moves inside that re-pin. Record: ~/Buildo-scratch/mcbylaws/MB-27/rows/Q-MECH0.md.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-472** |')) as string;
+    expect(row, 'M-472 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-MECH0");
+  });
+  it('M-461 carries 2026-11-04-batch-ba#CHAT-228.Q-T61 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-T61').toContain("2026-11-04-batch-ba#CHAT-228.Q-T61");
+    expect(M, 'CHAT-228.Q-T61 rule text').toContain("(a) Where slot 61 pitched_roof_slope_min is unregulated (RT by absence, ABS-8) or not_applicable, the pitched form is offered: both arms read `if(regulated(pitched_roof_slope_min) and roof_pitch_x < l2(pitched_roof_slope_min); refuse(pitched_form_not_offered); …)`. Where a threshold exists it still refuses below it (M-461). Built red-first by lane K (lock T61 + R2 OR-8 ii/iii), lands with lane K's rows before the axis night; table_version moves inside that commit's re-pin. Record: ~/Buildo-scratch/mcbylaws/MB-27/rows/Q-T61.md.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-461** |')) as string;
+    expect(row, 'M-461 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-T61");
+  });
+  it('M-400 carries 2026-11-04-batch-ba#CHAT-228.L3-F2 and its Rule text', () => {
+    expect(M, 'CHAT-228.L3-F2').toContain("2026-11-04-batch-ba#CHAT-228.L3-F2");
+    expect(M, 'CHAT-228.L3-F2 rule text').toContain("the catalogue is evaluated once per design option, l2() reading that option's stored row, and the catalogue rows are unchanged (the card's reading of the answer).");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-400** |')) as string;
+    expect(row, 'M-400 row').toContain("2026-11-04-batch-ba#CHAT-228.L3-F2");
+  });
+  it('M-400 carries 2026-11-04-batch-ba#CHAT-228.Q-R1 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-R1').toContain("2026-11-04-batch-ba#CHAT-228.Q-R1");
+    expect(M, 'CHAT-228.Q-R1 rule text').toContain("(a) A row with no roof option (wall_storeys, storeys_max, storeys_above_wall) that reads an option target is evaluated in the run of the row reading it, and reported from the base run (L3-F2 a, \"catalogue rows unchanged\"). No duplicated rows.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-400** |')) as string;
+    expect(row, 'M-400 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-R1");
+  });
+  it('M-229 carries 2026-11-04-batch-ba#CHAT-228.Q-M1 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-M1').toContain("2026-11-04-batch-ba#CHAT-228.Q-M1");
+    expect(M, 'CHAT-228.Q-M1 rule text').toContain("(b+) The two mechanical-attic literals of 10.5.40.40(2) (\"not more than 5% … to a maximum of 20 square metres\"; M-229 (4)) are keyed now in Layer 1 (mechanical_attic_share_pct, mechanical_attic_area_max_m2; the CHAT-9 / M-239 form; no storage; this supersedes the 2026-10-08 Q8 adjudication \"→ none\", named in the conflict check). They are stored on the increment-3 Layer 2 night, not the axis night. Migration 295 and P3 are unchanged.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-229** |')) as string;
+    expect(row, 'M-229 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-M1");
+  });
+  it('M-400 carries 2026-11-04-batch-ba#CHAT-228.Q-R2 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-R2').toContain("2026-11-04-batch-ba#CHAT-228.Q-R2");
+    expect(M, 'CHAT-228.Q-R2 rule text').toContain("(a) The Layer 3 reader calls Layer 2's own withNotAbove (P3 adds a one-line export inside P3, so the #44 witness is not disturbed after the night) to carry ROOF-5's not_above word. No logicalRowsOf recompute.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-400** |')) as string;
+    expect(row, 'M-400 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-R2");
+  });
+  it('M-229 carries 2026-11-04-batch-ba#CHAT-228.Q-M2 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-M2').toContain("2026-11-04-batch-ba#CHAT-228.Q-M2");
+    expect(M, 'CHAT-228.Q-M2 rule text').toContain("(a) D-6 is amended: one P3-0 commit carries the SINCE_PIN / left-out entries for pitched_roof_slope_min, mechanical_attic_share_pct and mechanical_attic_area_max_m2 (bylaw-eval-perf and bylaw-permission-disclosure). It is oracle-only and green on base. The mechanical keying (Layer 1) lands after P3-0.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-229** |')) as string;
+    expect(row, 'M-229 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-M2");
+  });
+  it('M-476 carries 2026-11-04-batch-ba#CHAT-228.Q-DEFAULT and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-DEFAULT').toContain("2026-11-04-batch-ba#CHAT-228.Q-DEFAULT");
+    expect(M, 'CHAT-228.Q-DEFAULT rule text').toContain("(a) The increment-2 headline revision (formula:gfa_max_m2:increment_2, and the flat and pitched rows it reads) defaults OFF in the switchboard. It is switched on, by one data change with its own prereg, after the axis night and the Layer 3 reader (R2) land. Until then golden-25 stays 29/29 and increment-1 results are unchanged (M-476: a switched-off revision reverts to the increment-1 formula). Increment 2's examples go green on the 25 at the switch-on.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-476** |')) as string;
+    expect(row, 'M-476 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-DEFAULT");
+  });
+  it('M-476 carries 2026-11-04-batch-ba#CHAT-228.Q-K1 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-K1').toContain("2026-11-04-batch-ba#CHAT-228.Q-K1");
+    expect(M, 'CHAT-228.Q-K1 rule text').toContain("(a) D3 a is read literally: only the row whose own switch is off (and that has no increment-1 formula) is hidden. A row that only reads a switched-off row (e.g. gfa_pitched_m2 while the arms are off, or total_floor_area_pitched_*) is shown as not_evaluated with reason switched_off:<switch>. Principle 5 (not_evaluated always shown). Lane K's current filter already does this.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-476** |')) as string;
+    expect(row, 'M-476 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-K1");
+  });
+  it('M-435 carries 2026-11-04-batch-ba#CHAT-228.Q-L18-4 and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-L18-4').toContain("2026-11-04-batch-ba#CHAT-228.Q-L18-4");
+    expect(M, 'CHAT-228.Q-L18-4 rule text').toContain("The O-l1 scorer arm (operator \"0-11 y\": a notice citing 10.10.40.70(4) is scored on the blank_side_wall arm) is labelled 4D-S4e, not the retired R5-7 label 4D-S4d, which coa-scorecard-r5-7.logic.test.ts:25 asserts no row carries. Compliance: the substance is unchanged, no oracle door line is needed, and no gate is changed. A dated note on the ruling is owed (lane R, next batch). It closes MB-18 (l) panel item F3.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-435** |')) as string;
+    expect(row, 'M-435 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-L18-4");
+  });
+  it('M-415 carries 2026-11-04-batch-ba#CHAT-228.Q-RND and its Rule text', () => {
+    expect(M, 'CHAT-228.Q-RND').toContain("2026-11-04-batch-ba#CHAT-228.Q-RND");
+    expect(M, 'CHAT-228.Q-RND rule text').toContain("(a) The Layer 3 runner (scripts/lib/compute/maxbld/rows.js) uses the evaluator's own 9-place comparison rounding instead of the identity round9, as its own red-first commit. Locks: PITCH-9 (the exact 1:10 edge offered), ATTIC-13 and ATTIC-15 (exact block/no-block ties). Golden-25 is unchanged. ATTIC-10's key gets a one-line ledger correction to 5.616 (MCPROOF A7).");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-415** |')) as string;
+    expect(row, 'M-415 row').toContain("2026-11-04-batch-ba#CHAT-228.Q-RND");
+  });
+  it('each note names its lock in the status cell, prior status text kept', () => {
+    for (const [id, lock, head] of [['M-472', 'increment2-revisions.logic.test.ts` › "MB-27 Q-MECH0"', 'M-246, prior status text kept;'], ['M-461', 'increment2-revisions.logic.test.ts` › "MB-27 slot 61"', 'M-246, prior status text kept;'], ['M-400', 'option-runs.logic.test.ts', 'M-246, prior status text kept;'], ['M-415', 'comparison-rounding.logic.test.ts', 'M-246, prior status text kept;'], ['M-476', 'increment2-revisions.logic.test.ts` › "MB-27 Q-DEFAULT"', 'M-246, prior status text kept;'], ['M-229', 'bylaw-mb27l2-mech-attic.logic.test.ts', 'MB-27 mechanical keying, lane MK;'], ['M-435', 'bylaw-mb18l-scorer.logic.test.ts', 'M-246, prior status text kept;']]) {
+      const row = M.split('\n').find((l) => l.startsWith('| **' + id + '** |')) as string;
+      const status = row.split(' | ').pop() as string;
+      expect(status, id).toContain('· *Dated note 2026-11-04 (' + head);
+      expect(status, id).toContain(lock);
+    }
+  });
+  it('M-229 carries no new OWED marker; the storage-half sentence sits on M-472, which is already OWED', () => {
+    const r229 = M.split('\n').find((l) => l.startsWith('| **M-229** |')) as string;
+    const r472 = M.split('\n').find((l) => l.startsWith('| **M-472** |')) as string;
+    expect(r229.split(' | ').pop() as string).not.toMatch(/\bOWED\b/);
+    expect(r472).toContain("M-472's storage half stays OWED to the increment-3 night.");
+  });
+  it('M-472 names the ATTIC-23 fixture correction and the M-428 relation', () => {
+    const row = M.split('\n').find((l) => l.startsWith('| **M-472** |')) as string;
+    expect(row).toContain('Relation: Extends M-64 (the M-428 form)');
+    expect(row).toContain("ATTIC-23's two checks are corrected from `value 0` to `not_evaluated` with reason `no_permitted_gfa_base`");
+  });
+});

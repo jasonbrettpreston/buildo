@@ -1,0 +1,97 @@
+{
+  "source": "operator chat 2026-11-04 (L3-F2: 2026-11-03)",
+  "decided_at": "2026-11-04",
+  "operator_quote": "a",
+  "context": "Recorded by lane R (MB-83, McBylaws queue, lane R), stage 9: decision batch 2026-11-04-batch-ba, part 5 (register dated notes; documents only): dated notes on M-472 (Q-MECH0 a; the storage half of Q-M1 b+), M-461 (Q-T61 a), M-400 (the Layer 3 reader R2: L3-F2 a, Q-r1 a, Q-r2 a and the trace convention), M-415 (Q-r1 a, Q-RND a), M-476 (Q-default a, Q-k1a), M-229 (lane MK's keying note: Q-M1 b+, Q-M2 a) and M-435 (the 4D-S4e label as built, Q-L18-4), with queue notes Q-G25B a, Q9-1 a and Q9-2 a. Every answer is quoted verbatim in its answer file (~/Buildo-scratch/mcbylaws/inc2/open-questions.md; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md; ~/Buildo-scratch/p2close/CARD-l3-schema-forms.md).",
+  "decisions": [
+    {
+      "id": "CHAT-228.Q-MECH0",
+      "subject": "M-472: the refuse word no_permitted_gfa_base joins M-64's closed reason list (the M-428 form); no FSI cap gives not_evaluated:no_permitted_gfa_base on the mechanical rows, never zero.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-MECH0\"): \"a\". Rule text: (a) Declare the refuse word `no_permitted_gfa_base` (the M-428 form, added to M-64's closed list). The mechanical outside-GFA rows become `if(attic_counted_x <= 0 m2; 0 m2; if(regulated(fsi); min(…); refuse(no_permitted_gfa_base)))`: no counted attic gives 0; an FSI cap gives \"mechanical area: not yet stored\" until the increment-3 night (Q-M1 b+); no FSI cap gives not_evaluated:no_permitted_gfa_base, disclosed \"not applied\" (M-472 \"disclosed, not applied, never zero\"; ATTIC-22, ATTIC-23). Red-first, lands with lane K's rows; table_version moves inside that re-pin. Record: ~/Buildo-scratch/mcbylaws/MB-27/rows/Q-MECH0.md.",
+      "quote_ref": "q_qmech0"
+    },
+    {
+      "id": "CHAT-228.Q-T61",
+      "subject": "M-461: where slot 61 pitched_roof_slope_min is unregulated or not_applicable, the pitched form is offered; a stored threshold still refuses below it.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-T61\"): \"(a) Offer the pitched form in both cases (recommended). approved\". Rule text: (a) Where slot 61 pitched_roof_slope_min is unregulated (RT by absence, ABS-8) or not_applicable, the pitched form is offered: both arms read `if(regulated(pitched_roof_slope_min) and roof_pitch_x < l2(pitched_roof_slope_min); refuse(pitched_form_not_offered); …)`. Where a threshold exists it still refuses below it (M-461). Built red-first by lane K (lock T61 + R2 OR-8 ii/iii), lands with lane K's rows before the axis night; table_version moves inside that commit's re-pin. Record: ~/Buildo-scratch/mcbylaws/MB-27/rows/Q-T61.md.",
+      "quote_ref": "q_qt61"
+    },
+    {
+      "id": "CHAT-228.L3-F2",
+      "subject": "M-400: the roof design option is a run input: the Layer 3 reader evaluates the catalogue once per option, l2() reading that option's stored row; catalogue rows unchanged.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/p2close/CARD-l3-schema-forms.md, \"L3-F2\"): \"L3-F2 a\". Rule text: the catalogue is evaluated once per design option, l2() reading that option's stored row, and the catalogue rows are unchanged (the card's reading of the answer).",
+      "quote_ref": "q_l3f2",
+      "decided_at": "2026-11-03"
+    },
+    {
+      "id": "CHAT-228.Q-R1",
+      "subject": "M-400: an option-less row that reads an option target is evaluated in the run of the row reading it and reported from the base run.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-R1\"): \"Q-r1 a\". Rule text: (a) A row with no roof option (wall_storeys, storeys_max, storeys_above_wall) that reads an option target is evaluated in the run of the row reading it, and reported from the base run (L3-F2 a, \"catalogue rows unchanged\"). No duplicated rows.",
+      "quote_ref": "q_qr1"
+    },
+    {
+      "id": "CHAT-228.Q-M1",
+      "subject": "M-229: the two mechanical-attic literals of 10.5.40.40(2) are keyed now in Layer 1, stored on the increment-3 night.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-M1\"): \"Q-M1 b+\". Rule text: (b+) The two mechanical-attic literals of 10.5.40.40(2) (\"not more than 5% … to a maximum of 20 square metres\"; M-229 (4)) are keyed now in Layer 1 (mechanical_attic_share_pct, mechanical_attic_area_max_m2; the CHAT-9 / M-239 form; no storage; this supersedes the 2026-10-08 Q8 adjudication \"→ none\", named in the conflict check). They are stored on the increment-3 Layer 2 night, not the axis night. Migration 295 and P3 are unchanged.",
+      "quote_ref": "q_qm1"
+    },
+    {
+      "id": "CHAT-228.Q-R2",
+      "subject": "M-400: the Layer 3 reader calls Layer 2's own withNotAbove to carry ROOF-5's not_above word; no logicalRowsOf recompute.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-R2\"): \"Q-r2 a\". Rule text: (a) The Layer 3 reader calls Layer 2's own withNotAbove (P3 adds a one-line export inside P3, so the #44 witness is not disturbed after the night) to carry ROOF-5's not_above word. No logicalRowsOf recompute.",
+      "quote_ref": "q_qr2"
+    },
+    {
+      "id": "CHAT-228.Q-M2",
+      "subject": "M-229: D-6 is amended: one P3-0 commit carries the left-out entries for the three new targets in bylaw-eval-perf and bylaw-permission-disclosure; the mechanical keying lands after P3-0.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-M2\"): \"Q-M2 a\". Rule text: (a) D-6 is amended: one P3-0 commit carries the SINCE_PIN / left-out entries for pitched_roof_slope_min, mechanical_attic_share_pct and mechanical_attic_area_max_m2 (bylaw-eval-perf and bylaw-permission-disclosure). It is oracle-only and green on base. The mechanical keying (Layer 1) lands after P3-0.",
+      "quote_ref": "q_qm2"
+    },
+    {
+      "id": "CHAT-228.Q-DEFAULT",
+      "subject": "M-476: the increment-2 headline revision and the flat and pitched rows it reads default off in the switchboard until the axis night and R2 land.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-DEFAULT\"): \"Q-default a\". Rule text: (a) The increment-2 headline revision (formula:gfa_max_m2:increment_2, and the flat and pitched rows it reads) defaults OFF in the switchboard. It is switched on, by one data change with its own prereg, after the axis night and the Layer 3 reader (R2) land. Until then golden-25 stays 29/29 and increment-1 results are unchanged (M-476: a switched-off revision reverts to the increment-1 formula). Increment 2's examples go green on the 25 at the switch-on.",
+      "quote_ref": "q_qdef"
+    },
+    {
+      "id": "CHAT-228.Q-K1",
+      "subject": "M-476: D3 a is read literally: only a row whose own switch is off is hidden; a row that reads it is shown not_evaluated switched_off:<switch>.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-K1\"): \"Q-k1a\". Rule text: (a) D3 a is read literally: only the row whose own switch is off (and that has no increment-1 formula) is hidden. A row that only reads a switched-off row (e.g. gfa_pitched_m2 while the arms are off, or total_floor_area_pitched_*) is shown as not_evaluated with reason switched_off:<switch>. Principle 5 (not_evaluated always shown). Lane K's current filter already does this.",
+      "quote_ref": "q_qk1"
+    },
+    {
+      "id": "CHAT-228.Q-L18-4",
+      "subject": "M-435: the O-l1 scorer arm is labelled 4D-S4e, not the retired R5-7 label 4D-S4d; recorded as built with its lock and record.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-L18-4\"): \"\"4D-S4e ok\" as long as its complaint\". Rule text: The O-l1 scorer arm (operator \"0-11 y\": a notice citing 10.10.40.70(4) is scored on the blank_side_wall arm) is labelled 4D-S4e, not the retired R5-7 label 4D-S4d, which coa-scorecard-r5-7.logic.test.ts:25 asserts no row carries. Compliance: the substance is unchanged, no oracle door line is needed, and no gate is changed. A dated note on the ruling is owed (lane R, next batch). It closes MB-18 (l) panel item F3.",
+      "quote_ref": "q_ql184"
+    },
+    {
+      "id": "CHAT-228.Q-RND",
+      "subject": "M-415: the Layer 3 runner uses the evaluator's own 9-place comparison rounding.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-RND\"): \"Q-RND a\". Rule text: (a) The Layer 3 runner (scripts/lib/compute/maxbld/rows.js) uses the evaluator's own 9-place comparison rounding instead of the identity round9, as its own red-first commit. Locks: PITCH-9 (the exact 1:10 edge offered), ATTIC-13 and ATTIC-15 (exact block/no-block ties). Golden-25 is unchanged. ATTIC-10's key gets a one-line ledger correction to 5.616 (MCPROOF A7).",
+      "quote_ref": "q_qrnd"
+    }
+  ],
+  "q_qmech0": "a",
+  "q_qt61": "(a) Offer the pitched form in both cases (recommended). approved",
+  "q_l3f2": "L3-F2 a",
+  "q_qr1": "Q-r1 a",
+  "q_qm1": "Q-M1 b+",
+  "q_qr2": "Q-r2 a",
+  "q_qm2": "Q-M2 a",
+  "q_qdef": "Q-default a",
+  "q_qk1": "Q-k1a",
+  "q_qrnd": "Q-RND a",
+  "q_ql184": "\"4D-S4e ok\" as long as its complaint"
+}
