@@ -5,7 +5,7 @@
     "coa4d cases": 496
   },
   "owed_baseline": {
-    "article 10.5.40 accuracy": 91.7
+    "article 10.5.40 accuracy": 90.2
   },
   "rulings": [
     {
@@ -37,6 +37,17 @@
           "to": 91.7
         }
       ]
+    },
+    {
+      "ruling": "M-435",
+      "lines": [
+        {
+          "line": "owed_baseline article 10.5.40 accuracy",
+          "from": 91.7,
+          "to": 90.2
+        }
+      ],
+      "quote": "\"Q-L18-2 a\" - honest truth - that what we need\""
     }
   ]
 }

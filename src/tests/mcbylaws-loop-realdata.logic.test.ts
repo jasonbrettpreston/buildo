@@ -518,10 +518,11 @@ describe('MB-68 O5: the REAL CLI over the REAL 172 and 4d CoA data (git clone of
     expect(floors.schema).toBe('loop-floors-v1');
     expect(floors.lines?.['coa172 cases']).toBe(698);
     expect(floors.lines?.['coa4d cases']).toBe(496);
-    expect(floors.owed_baseline?.['article 10.5.40 accuracy']).toBe(91.7);
+    // MB-79 (Q-L18-5 a): the OWED baseline set 91.7 -> 90.2 through floors-write --owed-baseline under M-435 (operator Q-L18-2 a)
+    expect(floors.owed_baseline?.['article 10.5.40 accuracy']).toBe(90.2);
     const rulings = Array.isArray(floors.rulings) ? floors.rulings : [];
     expect(rulings.length).toBeGreaterThan(0);
-    for (const entry of rulings) expect(['M-330', 'M-372']).toContain(entry.ruling);
+    for (const entry of rulings) expect(['M-330', 'M-372', 'M-435']).toContain(entry.ruling);
     // the clone holds the same file: the floor lines the steps below move are the ones asserted above
     expect(readText(path.join(clone, COUNT_FLOORS))).toBe(readText(realFile));
 
