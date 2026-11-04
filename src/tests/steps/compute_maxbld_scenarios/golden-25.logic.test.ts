@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-72, M-377 (MB-31 Layer 3 step; increment 1 acceptance, ~/Buildo-scratch/mcbylaws/MB-31/inc1-plan.md sections 0 and 2.3)
 //
-// MB-31 increment 1 acceptance, mode A: MB-18 (k) in, (j) (i) (l) out. The 25 golden cases are replayed through
+// MB-31 increment 1 acceptance, mode B: MB-18 (k), (j) and (i) in, (l) out (inc1 plan 2.2; mode A until 2026-11-04). The 25 golden cases are replayed through
 // the step's OWN compute (`buildParcelRows`) and compared cell by cell against the answer key; the key's own
 // consistency (manifest shas, the McProof check, the 175-cell census) is checked first.
 import { describe, expect, it, beforeAll } from 'vitest';
@@ -30,9 +30,9 @@ const loadSeeds = (): Json => ({
 });
 
 const FIX = 'src/tests/fixtures/layer3/golden-25';
-const MANIFEST_SHA = '79efb4e262057f1c70d51f890c7cedd1cb5c290ab40a94e58719a4a7de846c3d';
+const MANIFEST_SHA = '9b55ff6384600182f4076a045cf6246aa06f0daf1dbdf92bb0ad18a455107cb8'; // mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in
 const META: Json = { layer2_table_version: 'golden-25', settings_sha: 'golden-25' };
-const MANIFESTED = ['inputs.jsonl', 'expected.jsonl', 'refusals.json', 'mcproof-e25.json', 'source-inputs.jsonl', 'parcels-rows.json', 'flag-corrections.json'];
+const MANIFESTED = ['inputs.jsonl', 'expected.jsonl', 'refusals.json', 'mcproof-e25.json', 'source-inputs.jsonl', 'parcels-rows.json', 'flag-corrections.json', 'mode-b-derivation.md'];
 /** The tolerances of the independent McProof check (front, footprint, gfa, height, storeys, units). */
 const TOL = { front: 0.0005, footprint: 0.005, gfa: 0.01, height: 1e-9, storeys: 1e-9, units: 1e-9 } as Record<string, number>;
 /** The seven compared cells: field id of the step's rows -> key of the expected case. */
@@ -79,7 +79,7 @@ const parcelInput = (line: Json, parcelId: number): Json => {
   };
 };
 
-describe('MB-31 increment 1 acceptance: the 25 golden cases (mode A: MB-18 (k) in, (j) (i) (l) out)', () => {
+describe('MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (j) (i) in, (l) out)', () => {
   let S: Json;
   let SEEDS: Json;
   const cases: Json[] = readJsonl(`${FIX}/inputs.jsonl`);
@@ -106,7 +106,7 @@ describe('MB-31 increment 1 acceptance: the 25 golden cases (mode A: MB-18 (k) i
     expect(rows.filter((r: Json) => !r.ok), 'mcproof-e25.json: every row ok').toEqual([]);
   });
 
-  it('there are 175 cells: 25 permitted, 137 numbers, 13 refusals', () => {
+  it('there are 175 cells: 25 permitted, 144 numbers, 6 refusals (mode B: the 7 cells MB-18 (i) and (j) moved are numbers)', () => {
     const census = { permitted: 0, number: 0, not_evaluated: 0 };
     for (const e of expected) {
       for (const [, key] of FIELDS) {
@@ -117,11 +117,11 @@ describe('MB-31 increment 1 acceptance: the 25 golden cases (mode A: MB-18 (k) i
       }
     }
     expect(census.permitted, 'census: permitted cells').toBe(25);
-    expect(census.number, 'census: number cells').toBe(137);
-    expect(census.not_evaluated, 'census: not_evaluated cells').toBe(13);
+    expect(census.number, 'census: number cells').toBe(144);
+    expect(census.not_evaluated, 'census: not_evaluated cells').toBe(6);
     expect(expected.length * FIELDS.length, 'census: 175 cells in all').toBe(175);
     const listed = refusals.cells || [];
-    expect(listed.length, 'refusals.json: 13 entries').toBe(13);
+    expect(listed.length, 'refusals.json: 6 entries').toBe(6);
     for (const e of expected) {
       for (const [, key] of FIELDS) {
         if (key === 'permitted' || (e[key] || {}).s !== 'not_evaluated') continue;

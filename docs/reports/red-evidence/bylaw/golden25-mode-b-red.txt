@@ -1,0 +1,8 @@
+== golden-25 mode B red (MB-31 inc1 plan 2.2): the revised expected.jsonl, refusals.json, manifest and golden-25.logic.test.ts run over the mode A inputs.jsonl of f58048c9a (before the regeneration with MB-18 (i) and (j) in); green after the regeneration
+   × MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (j) (i) in, (l) out) > the fixture files match their manifest 4ms
+   × MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (j) (i) in, (l) out) > case A0067_26SC 4ms
+   × MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (j) (i) in, (l) out) > case A0097_26SC 1ms
+   × MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (j) (i) in, (l) out) > case A0553_26TEY 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  4 failed | 25 passed (29)
