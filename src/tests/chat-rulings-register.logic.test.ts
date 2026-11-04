@@ -1255,3 +1255,37 @@ describe('CHAT-226 (batch 2026-11-04-batch-ay): 10 rulings recorded in 6 new row
     }
   });
 });
+
+// CHAT-227 (batch 2026-11-04-batch-az): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-227 (batch 2026-11-04-batch-az): 1 ruling recorded as dated notes on M-475 and M-482 (increment 2, part 4); the door items are OWED to MB-27.L2', () => {
+  it('M-475 and M-482 carry 2026-11-04-batch-az#CHAT-227.D-S1 and its Rule text', () => {
+    expect(M, 'CHAT-227.D-S1').toContain("2026-11-04-batch-az#CHAT-227.D-S1");
+    expect(M, 'CHAT-227.D-S1 rule text').toContain("(a) The second oracle file, src/tests/bylaw-permission-disclosure.logic.test.ts test G5-p (it hashes the bylaw-eval-perf corpus against prereg-g5.json golden_from 3440a284…), moves through the MB-79 (f) door. Dated notes on M-475 and M-482 (next lane R batch) name it as a case. G5-p's expected hash changes through the door (trimmed-line form, entries shown to the operator in chat); prereg-g5.json stays untouched as history.");
+    for (const id of ['M-475', 'M-482']) {
+      const row = M.split('\n').find((l) => l.startsWith('| **' + id + '** |')) as string;
+      expect(row, id).toContain("2026-11-04-batch-az#CHAT-227.D-S1");
+    }
+  });
+  it('the G5-p notes name the MB-79 (f) case tokens, prior status text kept', () => {
+    for (const [id, tok, prior] of [
+      ['M-475', 'A0375 bylaw-permission-disclosure G5-p street side', 'is restated here so that the status cell names it (no new ruling). Nothing else in this row changes. · *Dated note 2026-11-04 (M-246, prior text kept; a correction'],
+      ['M-482', 'A0179 bylaw-permission-disclosure G5-p roof slope', '· the lock is `src/tests/bylaw-mb27l2-roof-slope.logic.test.ts` (new, oracle-class, red first) · *Dated note 2026-11-04 (M-246, prior text kept; the second oracle case'],
+    ]) {
+      const row = M.split('\n').find((l) => l.startsWith('| **' + id + '** |')) as string;
+      const status = row.split(' | ').pop() as string;
+      expect(status, id).toContain(tok);
+      expect(status, id).toContain(prior);
+      expect(status.split('|').map((c) => c.trim()).filter(Boolean).pop(), id).toMatch(/^RULED\b/);
+    }
+  });
+  it('M-480 carries the Q-K5 a dated note (operator "Q-K5 a"), prior status text kept', () => {
+    const row = M.split('\n').find((l) => l.startsWith('| **M-480** |')) as string;
+    const status = row.split(' | ').pop() as string;
+    expect(status).toContain("build owed until that commit lands · *Dated note 2026-11-04 (M-246, prior status text kept; operator \"Q-K5 a\"");
+    expect(status).toContain("flag() accepts the parameterised word `headline_lower_bound: <reason>`, where <reason> is a closed vocab word (e.g. main_wall_shares_not_resolved). Lane E adds it to the forms build, red-first, before forms lands. gfa_flat_m2 raises it directly; lane K's zero-valued carrier term is dropped. The register note must land before or with the forms code commit, so that arm C sees the ruling.");
+  });
+  it('the M-475 correction records the measured 88 of 140 (12 status moves plus 76 inputs-only changes) and the new digests', () => {
+    const row = M.split('\n').find((l) => l.startsWith('| **M-475** |')) as string;
+    for (const w of ['88 of 140', '12 status moves', '76 inputs-only changes', '5fd41d6b…2892', '09b2b8ea…cddf']) expect(row, w).toContain(w);
+  });
+});

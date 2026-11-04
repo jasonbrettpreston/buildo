@@ -1,30 +1,55 @@
 {
   "task": "MB-83",
-  "item": "decision batch 2026-11-04-batch-ay, part 3 (six Spec 69a rows: the roof-slope absence row, the Spec 134 type amendment row, three 1:4 re-key rows and the gfa_pitched_m2 catalogue row; dated notes on the street-side row and (naming their locks, no new ruling) on the Layer 3 forms and switchboard confidence rows; the Q-K4P pinned-list change; one named Layer 2 re-pin, RP-11)",
+  "item": "decision batch 2026-11-04-batch-az, part 4 (no new row: dated notes on M-475 and M-482 naming the second oracle case G5-p, with the measured M-475 correction; three queue dated lines, Q-P3W a, Q-K4P card owed, Q-CLASS a; a Q-K5 a dated note on M-480; no re-pin)",
   "class": "R",
   "stage": 8,
   "date": "2026-11-04",
-  "head": "7ee1ff893",
+  "head": "656168fa0",
   "commits_reviewed": [
-    "7ee1ff893",
-    "the staged batch commit (13 files, with round-18.json)"
+    "656168fa0",
+    "the staged batch commit (9 files, with the loop record)"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers \"Q-RSM confirmed\", \"Q-STOR a\", \"V8-Q1a\", \"V8-Q2a\", \"V8-Q3a\", \"V8-Q4a\", \"D-RK a\", the 1:4 card reading (ii) \"approved\", \"f-1 a\", \"... F-2 a\", \"D1 and QK4p\" then \"a\" (D1 a, Q-K4P a))",
-    "~/Buildo-scratch/mcbylaws/MB-27L2/plan-1in4-rekey.md and rekey/stored-move-groups.json (the 1:4 re-key rows and their measured notes)"
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers \"D-s1-a\", \"Q-P3w a\", Q-CLASS, \"D1 and QK4p\" then \"a\")",
+    "~/Buildo-scratch/mcbylaws/MB-27L2/door/ (M-475.door.txt, G5-p.door.txt, Q-RSM.door.txt)"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md sections 1-3 and section 5 row 2, with v8-open-questions.md; drafts ~/Buildo-scratch/mcbylaws/MB-83/part3/ (texts.mjs, rows.mjs, rows-rekey.mjs, conflicts.mjs, build-p3.mjs, make-prereg.mjs, land-p3.sh). The gfa_pitched_m2 row was held for McProof D1 and is recorded as variant (a), with the gfa_max_m2 ceiling, after the operator ruled D1 a.",
-  "output": "Stage 8 OUTPUT panel, two independent read-only seats. Seat 1 ~/Buildo-scratch/mcbylaws/MB-83/part3/output-panel.md (brief panel-brief.md): PASS WITH MINOR, 0 BLOCKER, 0 MAJOR; F-1 (the RD page sentence quoted normalised) fixed to the exact page text; F-2 (plan detail beside the ruled text in the gfa_pitched_m2 row) moot, the row is held; F-3, F-4 INFO. It verified the MB-79 (f) door checkAuthority (ci) returns [] for the roof-slope entry with case A0179 bylaw-eval-perf. Re-check 1 ~/Buildo-scratch/mcbylaws/MB-83/part3/output-panel-recheck-1.md (after the held row was taken out and the three 1:4 re-key rows added): PASS WITH MINOR; R1-1 (two rule texts quoted as exact prefixes, the cut tails not relied on) kept; R1-2 (the x70 total 1,178 versus 1,172 ungated) fixed in the note. Re-check 2 ~/Buildo-scratch/mcbylaws/MB-83/part3/output-panel-recheck-2.md (the ruled gfa_pitched_m2 row, the M-480 and M-481 lock notes, the Q-K4P pinned list): PASS WITH MINOR; F1 (the gfa_pitched_m2 status cell names no lock path yet, so arm C cannot use it until a dated note names the lock its build plan fixes) is a follow-up; F2 (cite D1 a and M-480 (3) for the l2(gfa_m2) ceiling term) fixed in the row. After re-check 2, the dated notes from the later answers (D3 a on the switched-off formula row, N4 a on the free-share row, Q-L18-4 and Q-L18-2 a on the blank-wall row, the F1-up confirmation on the 971(B) row) are verbatim operator text, recorder-checked by a containment script against the answer file and by an old-line-is-prefix check on every changed row; they were not seat-reviewed (disclosed). All seats: quotes verbatim, arm K [], RP-11 holds (version/hash/commit fields only; table_version 0371f8a1ed87), decision-log clean (779 decisions), prereg round 50 with zero moves, round-18 zero moves, no personal names or /Users/ paths.",
+  "plan": "drafts ~/Buildo-scratch/mcbylaws/MB-83/part4/ (build-p4.mjs, make-prereg.mjs, land-p4.sh)",
+  "output": "Stage 8 OUTPUT panel, one independent read-only seat (a dated-note batch, no new row): ~/Buildo-scratch/mcbylaws/MB-83/part4/output-panel.md. PASS WITH MINOR, 0 BLOCKER, 0 MAJOR. F-1 (the earlier note quoted as one contiguous string that it holds in two places) fixed: the two pieces are quoted separately. F-2 (the Q-P3W lock wording) fixed: \"the hunk and its two test locks (the three diffs of the manifest)\". F-3 and the M-50 tag note INFO. The seat verified the quotes verbatim, every number and digest against the lane D files, prior status text kept (append only), the door case tokens (A0375 / A0179, bylaw-permission-disclosure, G5-p), no re-pin, zero moves, and no personal names or /Users/ paths. The M-480 Q-K5 a note (added after the seat, verbatim operator text) is recorder-checked by a containment script against the answer file and a prior-text-is-prefix check, not seat-reviewed (disclosed). Recorder checks: checkOracleDoor (ci) over lane D G5-p entries passes for M-475 and M-482 with both the pushed refs and CHAT-227.D-S1 (only prereg_not_committed); decision-log clean (780); arm K []; queue check clean; gate --staged OK.",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "card owed (Q-K4P a): point the register-conflicts CLI test at a frozen register fixture (gate code, its own item)",
-    "the Spec 134 section 3 pointer line waits for Spec 134 room (27,456 of 27,458 B)",
-    "a dated note names the gfa_pitched_m2 lock in its status cell when the lane E build plan fixes the path (re-check 2 F1)",
-    "round 50 assigned by the orchestrator in landing order"
+    "the four flag-code vocab entries: a later batch, after the night",
+    "the Q-K4P frozen-register card (gate code, its own item)"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-83/part3/ (panel-brief.md, output-panel.md, output-panel-recheck-1.md, log/)",
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-83/part4/ (output-panel.md, log/)",
   "previous": [
+    {
+      "task": "MB-83",
+      "item": "decision batch 2026-11-04-batch-ay, part 3 (six Spec 69a rows: the roof-slope absence row, the Spec 134 type amendment row, three 1:4 re-key rows and the gfa_pitched_m2 catalogue row; dated notes on the street-side row and (naming their locks, no new ruling) on the Layer 3 forms and switchboard confidence rows; the Q-K4P pinned-list change; one named Layer 2 re-pin, RP-11)",
+      "class": "R",
+      "stage": 8,
+      "date": "2026-11-04",
+      "head": "7ee1ff893",
+      "commits_reviewed": [
+        "7ee1ff893",
+        "the staged batch commit (13 files, with round-18.json)"
+      ],
+      "cards": [
+        "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers \"Q-RSM confirmed\", \"Q-STOR a\", \"V8-Q1a\", \"V8-Q2a\", \"V8-Q3a\", \"V8-Q4a\", \"D-RK a\", the 1:4 card reading (ii) \"approved\", \"f-1 a\", \"... F-2 a\", \"D1 and QK4p\" then \"a\" (D1 a, Q-K4P a))",
+        "~/Buildo-scratch/mcbylaws/MB-27L2/plan-1in4-rekey.md and rekey/stored-move-groups.json (the 1:4 re-key rows and their measured notes)"
+      ],
+      "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md sections 1-3 and section 5 row 2, with v8-open-questions.md; drafts ~/Buildo-scratch/mcbylaws/MB-83/part3/ (texts.mjs, rows.mjs, rows-rekey.mjs, conflicts.mjs, build-p3.mjs, make-prereg.mjs, land-p3.sh). The gfa_pitched_m2 row was held for McProof D1 and is recorded as variant (a), with the gfa_max_m2 ceiling, after the operator ruled D1 a.",
+      "output": "Stage 8 OUTPUT panel, two independent read-only seats. Seat 1 ~/Buildo-scratch/mcbylaws/MB-83/part3/output-panel.md (brief panel-brief.md): PASS WITH MINOR, 0 BLOCKER, 0 MAJOR; F-1 (the RD page sentence quoted normalised) fixed to the exact page text; F-2 (plan detail beside the ruled text in the gfa_pitched_m2 row) moot, the row is held; F-3, F-4 INFO. It verified the MB-79 (f) door checkAuthority (ci) returns [] for the roof-slope entry with case A0179 bylaw-eval-perf. Re-check 1 ~/Buildo-scratch/mcbylaws/MB-83/part3/output-panel-recheck-1.md (after the held row was taken out and the three 1:4 re-key rows added): PASS WITH MINOR; R1-1 (two rule texts quoted as exact prefixes, the cut tails not relied on) kept; R1-2 (the x70 total 1,178 versus 1,172 ungated) fixed in the note. Re-check 2 ~/Buildo-scratch/mcbylaws/MB-83/part3/output-panel-recheck-2.md (the ruled gfa_pitched_m2 row, the M-480 and M-481 lock notes, the Q-K4P pinned list): PASS WITH MINOR; F1 (the gfa_pitched_m2 status cell names no lock path yet, so arm C cannot use it until a dated note names the lock its build plan fixes) is a follow-up; F2 (cite D1 a and M-480 (3) for the l2(gfa_m2) ceiling term) fixed in the row. After re-check 2, the dated notes from the later answers (D3 a on the switched-off formula row, N4 a on the free-share row, Q-L18-4 and Q-L18-2 a on the blank-wall row, the F1-up confirmation on the 971(B) row) are verbatim operator text, recorder-checked by a containment script against the answer file and by an old-line-is-prefix check on every changed row; they were not seat-reviewed (disclosed). All seats: quotes verbatim, arm K [], RP-11 holds (version/hash/commit fields only; table_version 0371f8a1ed87), decision-log clean (779 decisions), prereg round 50 with zero moves, round-18 zero moves, no personal names or /Users/ paths.",
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "card owed (Q-K4P a): point the register-conflicts CLI test at a frozen register fixture (gate code, its own item)",
+        "the Spec 134 section 3 pointer line waits for Spec 134 room (27,456 of 27,458 B)",
+        "a dated note names the gfa_pitched_m2 lock in its status cell when the lane E build plan fixes the path (re-check 2 F1)",
+        "round 50 assigned by the orchestrator in landing order"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/MB-83/part3/ (panel-brief.md, output-panel.md, output-panel-recheck-1.md, log/)"
+    },
     {
       "task": "MB-83",
       "item": "decision batch 2026-11-03-batch-ax, part 2 (sixteen Spec 69a rows M-465 and M-467..M-481, six dated notes; one named Layer 2 re-pin, RP-2), with the Spec 133 leaner rendering commit below its prereg (Q-133 3, Q-133b)",

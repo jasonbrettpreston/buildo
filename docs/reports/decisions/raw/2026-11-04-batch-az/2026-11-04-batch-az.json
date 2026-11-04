@@ -1,0 +1,15 @@
+{
+  "source": "operator chat 2026-11-04",
+  "operator_quote": "D-s1-a",
+  "context": "Recorded by lane R (MB-83, McBylaws queue, lane R), stage 9: decision batch 2026-11-04-batch-az, part 4 (small dated notes the door items need): dated notes on M-475 (the second oracle case G5-p, with the correction no new ruling: 12 status moves plus 76 inputs-only changes, 88 of 140 corpus cells change bytes) and on M-482 (the second oracle case G5-p). Every answer is quoted verbatim in its answer file (~/Buildo-scratch/mcbylaws/inc2/open-questions.md).",
+  "decisions": [
+    {
+      "id": "CHAT-227.D-S1",
+      "subject": "M-475 and M-482 (dated notes): the second oracle file, src/tests/bylaw-permission-disclosure.logic.test.ts test G5-p, moves through the MB-79 (f) door and is named as a case; prereg-g5.json stays untouched.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"D-S1\"): \"D-s1-a\". Rule text: (a) The second oracle file, src/tests/bylaw-permission-disclosure.logic.test.ts test G5-p (it hashes the bylaw-eval-perf corpus against prereg-g5.json golden_from 3440a284…), moves through the MB-79 (f) door. Dated notes on M-475 and M-482 (next lane R batch) name it as a case. G5-p's expected hash changes through the door (trimmed-line form, entries shown to the operator in chat); prereg-g5.json stays untouched as history.",
+      "quote_ref": "q_ds1"
+    }
+  ],
+  "q_ds1": "D-s1-a"
+}
